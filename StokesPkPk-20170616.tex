@@ -1,0 +1,635 @@
+%
+%------------------------------------------------------------------------
+% AMS-LaTeX Paper ********************************************************
+% ------------------------------------------------------------------------
+% This is a journal top-matter template file for use with AMS-LaTeX.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\documentclass[12pt]{amsart}
+%
+%   (3 March 2009 / revised: 30 November 2009 [HB])
+%    IMAJNA / AI-2009-033
+%
+%\documentclass[final,leqno]{siamltex704}
+\documentclass[leqno]{siamltex704}
+\usepackage{amssymb,amsmath,graphicx,amscd,mathrsfs}
+%\usepackage{fancybox}
+\usepackage{color,xcolor,amsmath}
+%\usepackage{epsfig}
+%\usepackage{latexsym}
+%\usepackage{graphicx}
+%\usepackage{booktabs}
+
+%\documentclass[leqno]{siamltex704}
+\usepackage{amsmath}
+\usepackage{graphicx}
+%\usepackage[notcite,notref]{showkeys}
+\usepackage{mathrsfs}
+%\usepackage{graphics}
+%% or use the graphicx package for more complicated commands
+\usepackage{float}
+\usepackage{amsfonts,amssymb}
+%\usepackage{natbib}
+\usepackage{dsfont}
+\usepackage{pifont}
+%\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{multirow}
+\numberwithin{equation}{section}
+%% The amssymb package provides various useful mathematical symbols
+%\usepackage{amssymb}
+%\usepackage{float}
+%% The amsthm package provides extended theorem environments
+%\usepackage{amsthm}
+%\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{lemma}[theorem]{Lemma}
+%\newtheorem{proposition}[theorem]{Proposition}
+%\newtheorem{corollary}[theorem]{Corollary}
+%\newtheorem{remark}[theorem]{Remark}
+\def\3bar{{|\hspace{-.02in}|\hspace{-.02in}|}}
+\def\E{{\mathcal{E}}}
+\def\T{{\mathcal{T}}}
+\def\Q{{\mathcal{Q}}}
+\def\dQ{{\mathbb{Q}}}
+\def\bQ{{\mathbf{Q}}}
+\def\hna{\hat{\nabla}}
+\def\bL{\boldsymbol{L}}
+\def\bH{\boldsymbol{H}}
+\def\btau{\boldsymbol{\tau}}
+\def\blambda{\boldsymbol{\lambda}}
+\def\bzeta{\boldsymbol{\zeta}}
+\def\bmu{\boldsymbol{\mu}}
+\def\bxi{\boldsymbol{\xi}}
+\def\b0{\boldsymbol{0}}
+\def\bphi{\boldsymbol{\phi}}            %new
+\def\bpsi{\boldsymbol{\psi}}            %new
+\def\ddelta{\boldsymbol{\delta}}        %new
+\def\sumT{\sum_{T\in\mathcal{T}_h}}     %new
+\def\sumE{\sum_{e\in\E_h}}            %new
+\def\trb{|\!|\!|}
+\def\la{\langle}
+\def\ra{\rangle_{\partial T}}
+\def\w{\psi}
+\def\v{\varphi}
+\def\e{\varepsilon}
+\def\bw{{\mathbf{w}}}
+\def\bu{{\mathbf{u}}}
+\def\bv{{\mathbf{v}}}
+\def\bn{{\mathbf{n}}}
+\def\be{{\mathbf{e}}}
+\def\bf{{\mathbf{f}}}
+\def\bq{{\mathbf{q}}}
+\def\bg{{\mathbf{g}}}
+\newtheorem{defi}{Definition}[section]
+\newtheorem{example}{\bf Example}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{algorithm1}{Weak Galerkin Algorithm}
+\newtheorem{algorithm2}{Hybridized Weak Galerkin (HWG) Algorithm}
+\newtheorem{algorithm3}{Variable Reduction Algorithm}
+%\journal{}
+
+% \newtheorem{theorem}{Theorem}[section]
+% \newtheorem{corollary}[theorem]{Corollary}
+%  \newtheorem{definition}[theorem]{Defintion}
+% \newtheorem{lemma}[theorem]{Lemma}
+% \newtheorem{proposition}[theorem]{Proposition}
+% \theoremstyle{definition}
+ %\newtheorem{defn}[thm]{Definition}
+% \theoremstyle{remark}
+% \newtheorem{remark}[theorem]{Remark}
+%\newtheorem{example}[theorem]{\bf Example}
+% \numberwithin{equation}{section}
+% MATH -------------------------------------------------------------------
+% \DeclareMathOperator{\RE}{Re}
+% \DeclareMathOperator{\IM}{Im}
+% \DeclareMathOperator{\ess}{ess}
+% THEOREM Environments ---------------------------------------------------
+ \newcommand{\eps}{\varepsilon}
+ \newcommand{\To}{\longrightarrow}
+ \newcommand{\h}{\mathcal{H}}
+ \newcommand{\s}{\mathcal{S}}
+ \newcommand{\A}{\mathcal{A}}
+ \newcommand{\J}{\mathcal{J}}
+ \newcommand{\M}{\mathcal{M}}
+ \newcommand{\W}{\mathcal{W}}
+ \newcommand{\X}{\mathcal{X}}
+ \newcommand{\V}{\mathcal{V}}
+ \newcommand{\BOP}{\mathbf{B}}
+ \newcommand{\BH}{\mathbf{B}(\mathcal{H})}
+ \newcommand{\KH}{\mathcal{K}(\mathcal{H})}
+ \newcommand{\Real}{\mathbb{R}}
+ \newcommand{\Complex}{\mathbb{C}}
+ \newcommand{\Field}{\mathbb{F}}
+ \newcommand{\RPlus}{\Real^{+}}
+ \newcommand{\Polar}{\mathcal{P}_{\s}}
+ \newcommand{\Poly}{\mathcal{P}(E)}
+ \newcommand{\EssD}{\mathcal{D}}
+ \newcommand{\Lom}{\mathcal{L}}
+ \newcommand{\States}{\mathcal{T}}
+ \newcommand{\abs}[1]{\left\vert#1\right\vert}
+ \newcommand{\set}[1]{\left\{#1\right\}}
+ \newcommand{\seq}[1]{\left<#1\right>}
+ \newcommand{\norm}[1]{\left\Vert#1\right\Vert}
+ \newcommand{\essnorm}[1]{\norm{#1}_{\ess}}
+
+
+\newcommand{\RR}{\mathrm{I\!R\!}}
+\newcommand{\NN}{\mathrm{I\!N\!}}
+
+%\renewcommand{\baselinestretch}{1.4}
+
+
+\setlength{\parindent}{0.25in} \setlength{\parskip}{0.08in}
+
+%\title{A New Modified Weak Galerkin Finite Element Scheme for Solving the Stationary Stokes Equations}
+%\author{ Tian Tian\thanks{School of Mathematics, Jilin University, Changchun 130012,
+%China and School of Mathematical Sciences, Peking University, Beijing 100871, China (1501110025@pku.edu.
+%cn). } \and Qilong Zhai
+%\thanks{School of Mathematics, Jilin University, Changchun 130012,
+%China (diql15@mails.jlu.edu.cn). } \and Ran Zhang\thanks{School of Mathematics, Jilin University, Changchun 130012, China
+%(zhangran@mail.jlu.edu.cn). The research of Zhang was supported in
+%part by China Natural National Science Foundation(11271157,
+%11371171, 11471141, U1530116, J1310022), and by the Program for New Century Excellent
+%Talents in University of Ministry of Education of China.}
+% }
+
+
+\begin{document}
+
+%\maketitle
+
+%\begin{abstract}
+%In this paper, a modified weak Galerkin method is proposed for the Stokes problem.
+%The numerical scheme is based on a novel variational form of the Stokes problem. The
+%degree of freedoms in the modified weak Galerkin method is less than that in the original
+%weak Galerkin method, while the accuracy stays the same. In this paper, the optimal convergence orders
+%are given and some numerical experiments are presented to verify the theory.
+%\end{abstract}
+%
+%\begin{keywords} weak Galerkin finite element methods,
+%weak gradient, Stokes equations, polytopal meshes.
+%\end{keywords}
+%
+%\begin{AMS}
+%Primary, 65N30, 65N15, 65N12, 74N20; Secondary, 35B45, 35J50, 35J35
+%\end{AMS}
+
+
+
+
+\section{Introduction}
+
+In this paper, we consider the Stokes problem
+\begin{eqnarray}
+\label{problem-eq1}-{\color{red}\epsilon^2}\Delta \textbf{u}+{\color{red}\bu}+\nabla p &=& \textbf{f}, \quad
+{\rm in}\ \Omega,\\
+\label{problem-eq2}\nabla \cdot\textbf{u}&=&0,\quad {\rm in}\ \Omega,
+\\
+\label{problem-eq3}\textbf{u}&=&\textbf{g},\quad {\rm on}\ \partial\Omega,
+\end{eqnarray}
+where $\Omega$ is a polygonal or polyhedral domain in $\Real^d$ $(d=2,3)$.
+The right-hand side $\bf\in [L^2(\Omega)]^d$ is the source term, and
+$\bg$ is the boundary condition satisfying
+\begin{eqnarray*}
+\int_{\partial\Omega}\bg\cdot\bn =0,
+\end{eqnarray*}
+where $\bn$ is the unit outward normal vector of $\partial\Omega$.
+
+\section{A WG scheme}
+WG finite element space:
+\begin{eqnarray*}
+  &&V_h = \{\bv=(\bv_0,\bv_b): \bv_0\in [P_k(T)]^d, \bv_b\in [P_k(e)]^d\},
+  \\
+  &&V_h^0 = \{\bv\in V_h, \bv_b = 0,\text{ on }\partial\Omega\},
+  \\
+  &&W_h = \{q\in P_k(T), \int_\Omega q = 0\}.
+\end{eqnarray*}
+
+Weak gradient and weak divergence:
+\begin{definition}\label{def-wgrad}
+  For any $\bv\in V_h$ and on each element $T$, $\nabla_w \bv$ is the unique polynomial in $[P_k(T)]^{d\times d}$
+  satisfying
+  \begin{eqnarray*}
+    (\nabla_w \bv, \varphi)_T = -(\bv_0,\nabla\cdot\varphi)_T + \langle \bv_b , \varphi\cdot\bn\ra, \quad\forall \varphi\in [P_k(T)]^{d\times d}.
+  \end{eqnarray*}
+\end{definition}
+
+\begin{definition}\label{def-wdiv}
+  For any $\bv\in V_h$ and on each element $T$, $\nabla_w\cdot \bv$ is the unique polynomial in $P_k(T)$
+  satisfying
+  \begin{eqnarray*}
+    (\nabla_w\cdot\bv, q)_T = -(\bv_0,\nabla q)_T + \langle \bv_b\cdot\bn , q\ra, \quad\forall q\in P_k(T).
+  \end{eqnarray*}
+\end{definition}
+
+Bilinear forms:
+For any $\bv,\bw \in V_h$, $q\in W_h$,
+\begin{eqnarray*}
+  s(\bv,\bw) &=& \sumT h_T^{-\frac13}\la \bv_0-\bv_b, \bw_0-\bw_b\ra,
+  \\
+  a(\bv,\bw) &=& (\nabla_w \bv,\nabla_w \bw) + s(\bv,\bw),
+  \\
+  b(\bv,q) &=& (\nabla_w\cdot \bv,q).
+\end{eqnarray*}
+
+%-------Lin Changed
+{\color{red}
+\begin{eqnarray*}
+  s(\bv,\bw) &=& \sumT h_T^{-1}\la \bv_0-\bv_b, \bw_0-\bw_b\ra,
+  \\
+  a(\bv,\bw) &=& (\epsilon^2\nabla_w \bv,\nabla_w \bw)+(\bv_0,\bw_0) + s(\bv,\bw),
+  \\
+  b(\bv,q) &=& (\nabla_w\cdot \bv,q).
+\end{eqnarray*}
+}
+%----------------
+
+Norm:
+\begin{eqnarray*}
+  \trb \bv\trb^2 = a(\bv,\bv).
+\end{eqnarray*}
+
+WG scheme:
+\begin{algorithm1}\label{wg-alg}
+  Find $\bu_h\in V_h$ and $p_h\in W_h$, such that $\bu_b = Q_b \bg$ on $\partial\Omega$ and
+  \begin{eqnarray}\label{wg-scheme1}
+    a(\bu_h , \bv) - b(\bv,p_h) &=& (\bf,\bv_0),\quad \forall \bv\in V_h^0,
+    \\ \label{wg-scheme2}
+    b(\bu_h,q) &=& 0, \quad\quad\quad\forall q\in W_h.
+  \end{eqnarray}
+\end{algorithm1}
+
+\section{Solvability}
+\begin{lemma}
+  Algorithm \ref{wg-alg} has one unique solution.
+\end{lemma}
+\begin{proof}
+  Since (\ref{wg-scheme1})-(\ref{wg-scheme2}) is a linear system, we only need to verify the
+  uniqueness of the homogenous problem. Assume $\bf=0$ and $\bg=0$. Letting $\bv=\bu_h$ in (\ref{wg-scheme1})
+  and $q=p_h$ in (\ref{wg-scheme2}), adding (\ref{wg-scheme1}) and (\ref{wg-scheme2}) we have
+  \begin{eqnarray*}
+    \trb u_h\trb ^2 = a(\bu_h,\bu_h) = 0,
+  \end{eqnarray*}
+  which implies $\bu_h = 0$.
+
+  Then, it follows from (\ref{wg-scheme1}) that
+  \begin{eqnarray*}
+    b(\bv,p_h) = 0 ,\quad \forall \bv\in V_h^0.
+  \end{eqnarray*}
+  Denote $[\![ p_h ]\!] = p_h|_{T_1}\bn_1+p_h|_{T_2}\bn2$. Letting $v = \{-\nabla p_h,[\![ p_h ]\!]\}$,
+  we have
+  \begin{eqnarray*}
+    0 &=& b(\bv,p_h)
+    \\
+    &=& (\nabla_w\cdot v,p_h)
+    \\
+    &=& -(\bv_0,\nabla p_h) + \sumT\la \bv_b\cdot\bn,p_h\ra
+    \\
+    &=& (\nabla p_h,\nabla p_h) + \sumE \|[\![ p_h ]\!]\|_e^2,
+  \end{eqnarray*}
+  which implies $\nabla p_h=0$ on each element $T$ and $[\![ p_h ]\!]=0$ on each edge $e$.
+  Then $p_h$ is a constant. Notice that $\int_\Omega p_h=0$, we have $p_h=0$, which completes the proof.
+\end{proof}
+
+\begin{lemma}\label{commu-prop}
+  For any $\bw\in [H^1(\Omega)]^d$, we have
+  \begin{eqnarray*}
+    &&\nabla_w Q_h \bw = \bQ_h(\nabla \bw),
+    \\
+    && \nabla_w \cdot Q_h \bw = \dQ_h(\nabla\cdot \bw).
+  \end{eqnarray*}
+\end{lemma}
+\begin{proof}
+  On each element $T$ and for any $\varphi\in [P_k(T)]^{d\times d}$, from the Definition \ref{def-wgrad}
+  and the integration by parts we have
+  \begin{eqnarray*}
+    &&(\nabla_w Q_h \bw,\varphi)_T
+    \\
+    &=& -(Q_0\bw,\nabla\cdot\varphi)_T +\la Q_b\bw,\varphi\cdot\bn\ra
+    \\
+    &=& -(\bw,\nabla\cdot\varphi)_T +\la \bw,\varphi\cdot\bn\ra
+    \\
+    &=& (\nabla \bw,\varphi)
+    \\
+    &=& (\bQ_h\nabla\bw,\varphi).
+  \end{eqnarray*}
+  The proof for the weak divergence is similar.
+\end{proof}
+
+\begin{lemma}\label{inf-sup}
+  For any $q\in W_h$, we have
+  \begin{eqnarray*}
+    \sup_{\bv\in V_h^0, \bv\ne 0}\dfrac{b(\bv,q)}{\trb \bv\trb}\ge C\|q\|,
+  \end{eqnarray*}
+  where $C$ is a constant independent of $q$.
+\end{lemma}
+\begin{proof}
+  Since $q\in W_h\subset L_0^2(\Omega)$, there exists $\tilde\bv\in [H^1(\Omega)]^d$, 
+  such that
+  \begin{eqnarray*}
+    \dfrac{(\nabla\cdot \tilde\bv,q)}{\|\tilde\bv\|_1} \ge C\|q\|.
+  \end{eqnarray*}
+  Define $\bv = Q_h\tilde\bv$, from Lemma \ref{commu-prop} it follows that
+  \begin{eqnarray*}
+    &&(\nabla_w \cdot\bv,q) = (\dQ_h \nabla\cdot\tilde\bv,q) = (\nabla\cdot\tilde\bv,q).
+  \end{eqnarray*}
+  Then, we only need to prove $\trb\bv\trb\le C\|\tilde\bv\|_1$. From Lemma \ref{commu-prop}
+  we have
+  \begin{eqnarray*}
+    \|\nabla_w \bv\| = \|\bQ_h\nabla\tilde\bv\| \le \|\tilde\bv\|_1.
+  \end{eqnarray*}
+  From the trace inequality and the property of the projection operator we have
+  \begin{eqnarray*}
+    &&\sumT h_T^{-\frac12}\|\bv_0-\bv_b\|_{\partial T}^2
+    \\
+    &=&\sumT h_T^{-\frac12}\|Q_0\tilde\bv-Q_b\tilde\bv\|_{\partial T}^2
+    \\
+    &\le&C\sumT h_T^{-\frac12}(\|Q_0\tilde\bv-\tilde\bv\|_{\partial T}^2+\|\tilde\bv-Q_b\tilde\bv\|_{\partial T}^2)
+    \\
+    &\le& C\sumT h_T^{-\frac12}\|Q_0\tilde\bv-\tilde\bv\|_{\partial T}^2
+    \\
+    &\le& Ch^{\frac12}\|\tilde\bv\|_1.
+  \end{eqnarray*}
+  Thus, we have
+  \begin{eqnarray*}
+    \trb\bv\trb\le C\|\tilde\bv\|_1,
+  \end{eqnarray*}
+  which implies
+  \begin{eqnarray*}
+    \dfrac{b(\bv,q)}{\trb \bv\trb}\ge C\|q\|.
+  \end{eqnarray*}
+\end{proof}
+
+\section{Error estimate}
+
+Error equation:
+\begin{lemma}
+  Suppose $(\bu,p)\in [H^2(\Omega)]^d\times H^1(\Omega)$ is the solution of (\ref{problem-eq1})-
+  (\ref{problem-eq3}), and $(\bu_h,p_h)$ is the solution of (\ref{wg-scheme1})-(\ref{wg-scheme2}).
+  Denote $\be_h = Q_h\bu-\bu_h$ and $\e_h=\dQ_h p-p_h$.
+  Then, we have
+  \begin{eqnarray} \label{err-eqn1}
+    a(\be_h,\bv)-b(\bv,\e_h) &=& l_{\bu,p}(\bv),\quad\forall\bv\in V_h^0,
+    \\ \label{err-eqn2}
+    b(\be_h,q) &=& 0,\quad\quad\quad\forall q\in W_h,
+  \end{eqnarray}
+  where
+  \begin{eqnarray*}
+    l_{\bu,p}(\bv)=\sumT\la (\nabla\bu-\bQ_h\nabla\bu)\cdot\bn,\bv_0-\bv_b\ra - \sumT\la p-\dQ_h p,(\bv_0-\bv_b)\cdot\bn\ra + s(Q_h\bu,\bv).
+  \end{eqnarray*}
+\end{lemma}
+\begin{proof}
+  For any $\bv\in V_h^0$, from Lemma \ref{commu-prop} we have
+  \begin{eqnarray} \nonumber
+    &&a(Q_h\bu,\bv)-b(\bv,\dQ_h p)
+    \\ \nonumber
+    &=&(\nabla_w Q_h\bu,\nabla_w\bv)-(\nabla_w\cdot\bv,\dQ_h p)+ s(Q_h\bu,\bv)
+    \\ \nonumber
+    &=&(\bQ_h\nabla \bu,\nabla_w\bv)-(\nabla_w\cdot\bv,\dQ_h p)+ s(Q_h\bu,\bv)
+    \\ \nonumber
+    &=&-(\bv_0,\nabla\cdot\bQ_h\nabla \bu)+\sumT\la\bv_b,\bQ_h\nabla\bu\cdot\bn\ra
+    +(\bv_0,\nabla\dQ_h p)
+    \\ \nonumber
+    &&-\sumT\la\bv_b\cdot\bn,\dQ_h p\ra + s(Q_h\bu,\bv)
+    \\ \label{err-est1}
+    &=&(\bQ_h\nabla\bu,\nabla\bv_0) - (\nabla\cdot\bv_0,\dQ_h p)
+    -\sumT\la \bv_0-\bv_b,\bQ_h\nabla \bu\cdot\bn\ra
+    \\ \nonumber
+    && + \sumT\la (\bv_0-\bv_b)\cdot\bn,\dQ_h p\ra
+    +s(Q_h\bu,\bv).
+  \end{eqnarray}
+  
+
+  Testing (\ref{problem-eq1}) by $\bv_0$ and using the integration by parts we have
+  \begin{eqnarray} \label{err-est2}
+    &&(\bf,\bv_0)
+    \\ \nonumber
+    &=&(-\Delta u,\bv_0) + (\nabla p,\bv_0)
+    \\ \nonumber
+    &=& (\nabla\bu,\nabla\bv_0) - (\nabla\cdot\bv_0,p) 
+    -\sumT\la \nabla\bu\cdot\bn,\bv_0\ra + \sumT\la p,\bv_0\cdot\bn\ra
+    \\ \nonumber
+    &=&(\bQ_h\nabla\bu,\nabla\bv_0) - (\nabla\cdot\bv_0,\dQ_h p)
+    -\sumT\la \nabla\bu\cdot\bn,\bv_0-\bv_b\ra
+    \\ \nonumber
+    && + \sumT\la p,(\bv_0-\bv_b)\cdot\bn\ra.
+  \end{eqnarray}
+  
+    
+  %------Lin Add
+
+  Assume $\epsilon=1$,
+  {\color{red}
+    \begin{eqnarray*} 
+        &&a(Q_h\bu,\bv)-b(\bv,\dQ_h p)
+    \\ \nonumber
+    &=&(\epsilon^2\nabla_w Q_h\bu,\nabla_w\bv)+(Q_0\bu,\bv_0)-(\nabla_w\cdot\bv,\dQ_h p)+ s(Q_h\bu,\bv)
+    \\ \nonumber
+    &=&(\epsilon^2\bQ_h\nabla \bu,\nabla_w\bv)+(Q_0\bu,\bv_0)-(\nabla_w\cdot\bv,\dQ_h p)+ s(Q_h\bu,\bv)
+    \\ \nonumber
+    &=&\epsilon^2\bigg(-(\bv_0,\nabla\cdot\bQ_h\nabla \bu)+\sumT\la\bv_b,\bQ_h\nabla\bu\cdot\bn\ra\bigg)+(Q_0\bu,\bv_0)
+    +(\bv_0,\nabla\dQ_h p)
+    \\ \nonumber
+    &&-\sumT\la\bv_b\cdot\bn,\dQ_h p\ra + s(Q_h\bu,\bv)
+    \\ %\label{err-est1}
+    &=&\epsilon^2(\bQ_h\nabla\bu,\nabla\bv_0)+(Q_0\bu,\bv_0) - (\nabla\cdot\bv_0,\dQ_h p)
+    -\sumT\la \bv_0-\bv_b,\bQ_h\nabla \bu\cdot\bn\ra
+    \\ \nonumber
+    && + \sumT\la (\bv_0-\bv_b)\cdot\bn,\dQ_h p\ra
+    +s(Q_h\bu,\bv).
+  \end{eqnarray*}
+  }
+  %-------------
+      %----Lin Add
+  {\color{red}
+    \begin{eqnarray*} %\label{err-est2}
+    &&(\bf,\bv_0)
+    \\ \nonumber
+    &=&(-\Delta u,\bv_0)+(\bu,\bv_0) + (\nabla p,\bv_0)
+    \\ \nonumber
+    &=& (\nabla\bu,\nabla\bv_0)+(\bu_0,\bv_0) - (\nabla\cdot\bv_0,p) 
+    -\sumT\la \nabla\bu\cdot\bn,\bv_0\ra + \sumT\la p,\bv_0\cdot\bn\ra
+    \\ \nonumber
+    &=&(\bQ_h\nabla\bu,\nabla\bv_0)+(Q_0\bu,\bv_0) - (\nabla\cdot\bv_0,\dQ_h p)
+    -\sumT\la \nabla\bu\cdot\bn,\bv_0-\bv_b\ra
+    \\ \nonumber
+    && + \sumT\la p,(\bv_0-\bv_b)\cdot\bn\ra.
+  \end{eqnarray*}
+  }
+  %-------
+  
+  Subtracting (\ref{err-est2}) from (\ref{err-est1}) and using (\ref{wg-scheme1}) we have
+  \begin{eqnarray*}
+    &&a(\be_h,\bv) - b(\bv,\e_h)
+    \\
+    &=& a(Q_h\bu,\bv) - b(\bv,\dQ_h p) - a(\bu_h,\bv) + b(\bv,p_h)
+    \\
+    &=& \sumT\la (\nabla\bu-\bQ_h\nabla\bu)\cdot\bn,\bv_0-\bv_b\ra - \sumT\la p-\dQ_h p,(\bv_0-\bv_b)\cdot\bn\ra + s(Q_h\bu,\bv).
+  \end{eqnarray*} 
+
+  
+  As to the second equation, for any $q\in W_h$ it follows from (\ref{wg-scheme2}), (\ref{problem-eq2}) and Lemma \ref{commu-prop} that
+  \begin{eqnarray*}
+    &&b(\e_h,q)
+    \\
+    &=& (\nabla_w \cdot Q_h\bu,q) - (\nabla_w \cdot\bu_h,q)
+    \\
+    &=& (\dQ_h\nabla\cdot\bu,q)
+    \\
+    &=& (\nabla\cdot\bu,q) = 0,
+  \end{eqnarray*}
+  which completes the proof.
+\end{proof}
+
+\begin{lemma}\label{remainder-est}
+  Suppose $\bw\in [H^{k+2}(\Omega)]$ and $q\in H^{k+1}(\Omega)$, then for any $\bv\in V_h^0$ we have
+  \begin{eqnarray*}
+    && \left|\sumT\la (\nabla\bw-\bQ_h\nabla\bw)\cdot\bn,\bv_0-\bv_b\ra\right|\le Ch^{k+\frac23}\|\bu\|_{k+2}\trb v\trb,
+    \\
+    && \left|\sumT\la q-\dQ_h q,(\bv_0-\bv_b)\cdot\bn\ra\right| \le Ch^{k+\frac23}\|q\|_{k+1}\trb v\trb,
+    \\
+    && |s(Q_h\bw,\bv)| \le Ch^{k+\frac23}\|\bu\|_{k+1} \trb v\trb.
+  \end{eqnarray*}
+\end{lemma}
+\begin{proof}
+  From the trace inequality and the property of the projection operator we have
+  \begin{eqnarray*}
+    && \left|\sumT\la (\nabla\bw-\bQ_h\nabla\bw)\cdot\bn,\bv_0-\bv_b\ra\right|
+    \\
+    &\le& \left(\sumT h_T^{\frac13}\|\nabla\bw-\bQ_h\nabla\bw\|_{\partial T}^2\right)^\frac12
+    \left(\sumT h_T^{-\frac13}\|\bv_0-\bv_b\|_{\partial T}^2\right)^\frac12
+    \\
+    &\le& C\left(\sumT h_T^{-\frac23}\|\nabla\bw-\bQ_h\nabla\bw\|_{T}^2 + \sumT h_T^{\frac13}\|\nabla\bw-\bQ_h\nabla\bw\|_{1,T}^2\right)^\frac12\trb v\trb
+    \\
+    &\le& Ch^{k+\frac23}\|\bw\|_{k+2}\trb v\trb.
+  \end{eqnarray*}
+  
+  %-------Lin Add
+
+  {\color{red}
+    For Example, let $k=1$,
+   \begin{eqnarray*}
+    && \left|\sumT\la (\nabla\bw-\bQ_h\nabla\bw)\cdot\bn,\bv_0-\bv_b\ra\right|
+    \\
+    &\le& \left(\sumT h_T^{1}\|\nabla\bw-\bQ_h\nabla\bw\|_{\partial T}^2\right)^\frac12
+    \left(\sumT h_T^{-1}\|\bv_0-\bv_b\|_{\partial T}^2\right)^\frac12
+    \\
+    &\le& C\left(\sumT h_T^{0}\|\nabla\bw-\bQ_h\nabla\bw\|_{T}^2 + \sumT h_T^{2}\|\nabla\bw-\bQ_h\nabla\bw\|_{1,T}^2\right)^\frac12\trb v\trb
+    \\
+    &\le& Ch\|\bw\|_{2}\trb v\trb.
+  \end{eqnarray*}
+  }
+  %----------------
+  
+  Similarly, for the second term we have
+  \begin{eqnarray*}
+    && \left|\sumT\la q-\dQ_h q,(\bv_0-\bv_b)\cdot\bn\ra\right|
+    \\
+    &\le& \left(\sumT h_T^{\frac13}\| q-\dQ_h q\|_{\partial T}^2\right)^\frac12
+    \left(\sumT h_T^{-\frac13}\|\bv_0-\bv_b\|_{\partial T}^2\right)^\frac12
+    \\
+    &\le&  C\left(\sumT h_T^{-\frac23}\| q-\dQ_h q\|_{T}^2 + \sumT h_T^{\frac13}\| q-\dQ_h q\|_{1,T}^2\right)^\frac12\trb v\trb
+    \\
+    &\le& Ch^{k+\frac23}\|q\|_{k+1}\trb v\trb.
+  \end{eqnarray*}
+  
+  %--------Lin Add
+  {\color{red}
+   \begin{eqnarray*}
+    && \left|\sumT\la q-\dQ_h q,(\bv_0-\bv_b)\cdot\bn\ra\right|
+    \\
+    &\le& \left(\sumT h_T\| q-\dQ_h q\|_{\partial T}^2\right)^\frac12
+    \left(\sumT h_T^{-1}\|\bv_0-\bv_b\|_{\partial T}^2\right)^\frac12
+    \\
+    &\le&  C\left(\sumT \| q-\dQ_h q\|_{T}^2 + \sumT h_T^{2}\| q-\dQ_h q\|_{1,T}^2\right)^\frac12\trb v\trb
+    \\
+    &\le& Ch\|q\|_{1}\trb v\trb.
+  \end{eqnarray*}
+  The stabilizer will have the estimate
+   \begin{eqnarray*}
+    && |s(Q_h\bw,\bv)|
+\le Ch\|\bw\|_{2}\trb v\trb.
+  \end{eqnarray*}
+  Thus, we have the estimate $\3bar e_h\3bar\le Ch(\|\bu\|_2+\|p\|_1)$. But the estimate for pressure is not optimal, which is shown as follows,
+  \begin{eqnarray*}
+  b(\bv,\epsilon_h)=a(e_h,\bv)-\ell(\bv)\le C\3bar \bv\3bar\bigg(\|\bu\|_2+\|p\|_1\bigg).
+  \end{eqnarray*}
+  The inf-sup condition gives
+  \begin{eqnarray*}
+  \|\epsilon_h\|\le C\sum_{\bv\in V_h^0,\bv\neq 0}\frac{b(\bv,\epsilon_h)}{\3bar\bv\3bar}\le Ch(\|\bu\|_2+\|p\|_1).
+  \end{eqnarray*}
+  The optimal rate for pressure (since $p\in P_1(T)$) is $\mathcal{O}(h^2)$. But here we can only achieve the rate $\mathcal{O}(h)$. We tried different schemes for BDDC methods (Brinkman Equations), it only works if we set the polynomial of pressure as the same degree as that of the polynomial of velocity. It makes me think that maybe the preconditioner only works for higher order in pressure. Thus, we may begin this scheme.
+  
+Let try precoditioner likes
+\begin{eqnarray*}
+B_{\epsilon}=\begin{pmatrix}
+(I-\epsilon^2\Delta)^{-1} & 0\\
+0 &(I-\epsilon^2\Delta)^{-1}
+\end{pmatrix}
+\end{eqnarray*}  
+and solves the problems
+\begin{eqnarray*}
+B_{\epsilon}A_{\epsilon}\begin{pmatrix}
+u\\
+p
+\end{pmatrix}=B_{\epsilon}\begin{pmatrix}
+f\\ 0
+\end{pmatrix}.
+\end{eqnarray*}
+ }
+  %------------------
+  
+  For the last term we have
+  \begin{eqnarray*}
+    && |s(Q_h\bw,\bv)|
+    \\
+    &=& \left|\sumT h_T^{-\frac13}\la Q_0\bw-Q_b\bw,\bv_0-\bv_b\ra\right|
+    \\
+    &\le& \left(\sumT h_T^{-\frac13}\| Q_0\bw-Q_b\bw\|_{\partial T}^2\right)^\frac12
+    \left(\sumT h_T^{-\frac13}\|\bv_0-\bv_b\|_{\partial T}^2\right)^\frac12
+    \\
+    &\le& \left(\sumT h_T^{-\frac13}\| Q_0\bw-\bw\|_{\partial T}^2\right)^\frac12
+    \left(\sumT h_T^{-\frac13}\|\bv_0-\bv_b\|_{\partial T}^2\right)^\frac12
+    \\
+    &\le&  C\left(\sumT h_T^{-\frac23}\| Q_0\bw-\bw\|_{T}^2 + \sumT h_T^{\frac13}\| Q_0\bw-\bw\|_{1,T}^2\right)^\frac12\trb v\trb
+    \\
+    &\le& Ch^{k+\frac23}\|\bw\|_{k+1}\trb v\trb,
+  \end{eqnarray*}
+  which completes the proof.
+\end{proof}
+
+\begin{theorem}
+  Suppose $(\bu,p)\in [H^{k+2}(\Omega)]^d\times H^{k+1}(\Omega)$ is the exact solution of (\ref{problem-eq1})-(\ref{problem-eq3}),
+  and $(\bu_h,p_h)$ is the numerical solution of (\ref{wg-scheme1})-(\ref{wg-scheme2}). Then, we have
+  \begin{eqnarray*}
+    \trb \be_h\trb + \|\e_h\| \le Ch^{k+\frac23}(\|\bu\|_{k+2}+\|p\|_{k+1}).
+  \end{eqnarray*}
+\end{theorem}
+\begin{proof}
+  Letting $\bv=\be_h$ in (\ref{err-eqn1}), $q=\e_h$ in (\ref{err-eqn2}), and adding (\ref{err-eqn1}) and (\ref{err-eqn2}) together, 
+  then from Lemma \ref{remainder-est} we have
+  \begin{eqnarray*}
+    \trb\be_h\trb^2 = l_{\bu,p}(\be_h) \le Ch^{k+\frac23}(\|\bu\|_{k+2}+\|p\|_{k+1})\trb\be_h\trb,
+  \end{eqnarray*}
+  which implies
+  \begin{eqnarray*}
+    \trb\be_h\trb \le Ch^{k+\frac23}(\|\bu\|_{k+2}+\|p\|_{k+1}).
+  \end{eqnarray*}
+  Then, it follows from (\ref{err-eqn1}) that for any $\bv\in V_h^0$,
+  \begin{eqnarray*}
+    b(\bv,\e_h) = a(\be_h,\bv) - l_{\bu,p}(\bv) \le Ch^{k+\frac23}(\|\bu\|_{k+2}+\|p\|_{k+1})\trb\bv\trb.
+  \end{eqnarray*}
+  From Lemma \ref{inf-sup} we have
+  \begin{eqnarray*}
+    \|\e_h\| \le C\sup_{\bv\in V_h^0,\bv\ne 0}\dfrac{b(\bv,\e_h)}{\trb\bv\trb}\le Ch^{k+\frac23}(\|\bu\|_{k+2}+\|p\|_{k+1}),
+  \end{eqnarray*}
+  which completes the proof.
+\end{proof}
+
+%\bibliographystyle{siam}
+%\bibliography{library}
+
+
+
+
+\end{document}
