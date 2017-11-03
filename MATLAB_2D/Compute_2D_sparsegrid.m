@@ -6,6 +6,7 @@ A_s = sparse(dof_sparse,dof_sparse);
 b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
 
+count=1;
 % Stiffness Matrix
 for my=0:n
     if my==0
@@ -33,6 +34,14 @@ for my=0:n
         Jx=[1:k*2^(n-ny)];
         
         tmp=(kron(M_mass(Iy,Jy),Stiff_1D(Ix,Jx))+kron(Stiff_1D(Iy,Jy),M_mass(Ix,Jx)));
+        
+        % save matrices to files
+        Mass_tmp=M_mass(Iy,Jy);Stiff_tmp=Stiff_1D(Ix,Jx);
+        save(['./Data/M_mass1_',num2str(count),'.mat'],'Mass_tmp','Stiff_tmp')
+        Mass_tmp=M_mass(Ix,Jx);Stiff_tmp=Stiff_1D(Iy,Jy);
+        save(['./Data/M_mass2_',num2str(count),'.mat'],'Mass_tmp','Stiff_tmp')
+        save(['./Data/Index_',num2str(count),'.mat'],'IndexI','IndexJ')
+        count=count+1;
         
         [xindex,yindex]=meshgrid(IndexI,IndexJ);
         

@@ -16,7 +16,7 @@ format short e
 Np = 5;
 k=2;
 scheme='sparse';
-
+mkdir('Data')
 
 % n: the level for finest mesh
 % l: places for the functions, l=0,...,2^n-1
