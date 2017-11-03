@@ -33,14 +33,18 @@ for my=0:n
         nx=[0:n-ny];
         Jx=[1:k*2^(n-ny)];
         
-        tmp=(kron(M_mass(Iy,Jy),Stiff_1D(Ix,Jx))+kron(Stiff_1D(Iy,Jy),M_mass(Ix,Jx)));
+        tmp=(kron(M_mass(Iy,Jy),Stiff_1D(Ix,Jx))...
+            +kron(Stiff_1D(Iy,Jy),M_mass(Ix,Jx)));
         
         % save matrices to files
-        Mass_tmp=M_mass(Iy,Jy);Stiff_tmp=Stiff_1D(Ix,Jx);
-        save(['./Data/M_mass1_',num2str(count),'.mat'],'Mass_tmp','Stiff_tmp')
-        Mass_tmp=M_mass(Ix,Jx);Stiff_tmp=Stiff_1D(Iy,Jy);
-        save(['./Data/M_mass2_',num2str(count),'.mat'],'Mass_tmp','Stiff_tmp')
-        save(['./Data/Index_',num2str(count),'.mat'],'IndexI','IndexJ')
+        A_encode{count}.A=M_mass(Iy,Jy);
+        A_encode{count}.B=Stiff_1D(Ix,Jx);
+        A_encode{count}.C=Stiff_1D(Iy,Jy);
+        A_encode{count}.D=M_mass(Ix,Jx);
+        A_encode{count}.IndexI=IndexI;
+        A_encode{count}.IndexJ=IndexJ;
+        
+        
         count=count+1;
         
         [xindex,yindex]=meshgrid(IndexI,IndexJ);
@@ -53,6 +57,8 @@ for my=0:n
     b_s(IndexI)=b_s(IndexI)+tmp;
     
 end
+
+save(['./Data/A_encode.mat'],'A_encode');
 
 tic
 sol_s = A_s\b_s*pi^2*2;
