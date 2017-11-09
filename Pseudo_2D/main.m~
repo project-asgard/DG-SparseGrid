@@ -74,6 +74,8 @@ tic
 sol_s = A_s\b_s*pi^2*2;
 toc
 
+full(sol_s)
+
     function z=Map_1D(level,cell,poly,k)
         if level==0
             z=poly;
