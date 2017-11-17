@@ -1,5 +1,12 @@
 % Computing on the sparse grid for Poisson Eq
+% 4-dimensional calculation
+%------------------------------------------------
+% A_s: Matrix
+% b_s: RHS
+% sol_s: Solution
+% uu_s: Interpolation
 % Loop sum_level
+%------------------------------------------------
 
 dim=4;
 
@@ -38,18 +45,7 @@ b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
 uu_s=sparse(dof_sparse,1);
 
-% % Compute Error
-% h=2^(-n);
-% xnode=[0:h:1];
-% xnode=[xnode(1:end-1);xnode(2:end)];
-% xnode=xnode(:);
-% 
-% I=1:(2^n/4):length(xnode);
-% xxnode=xnode(I);
-% MMeval=Meval(I,:);
-% MapMW2DG=sparse(dof_sparse,size(xxnode,1)^4);
-
-% Method 
+% Method
 for sum_level=0:n
     for i1_level=0:sum_level
         for i2_level=0:sum_level-i1_level
@@ -79,18 +75,32 @@ for sum_level=0:n
                 b_s(Real_index(Index_I+1))=b_s(Real_index(Index_I+1))+tmp;
                 uu_s(Real_index(Index_I+1))=uu_s(Real_index(Index_I+1))+...
                     kron(kron(kron(coef_MW(I1),coef_MW(I2)),coef_MW(I3)),coef_MW(I4));
-%                 % for Error
-%                 M1=MMeval(:,I1);
-%                 M2=MMeval(:,I2);
-%                 M3=MMeval(:,I3);
-%                 M4=MMeval(:,I4);
-%                 
-%                 tmp=kron(M1,kron(M2,kron(M3,M4)));
-% %                 tmp=kron(kron(kron(M1,M2),M3),M4);
-%                 [iii,jjj,val]=find(tmp');
-%                 III=double(Real_index(Index_I+1));
-%                 MapMW2DG=MapMW2DG+sparse(III(iii), jjj,val,dof_sparse,size(xxnode,1)^4);
                 
+                % save matrices to files
+                A_encode{count}.A1=Stiff_1D(I1,I1);
+                A_encode{count}.A2=M_mass(I2,I2);
+                A_encode{count}.A3=M_mass(I3,I3);
+                A_encode{count}.A4=M_mass(I4,I4);
+                
+                A_encode{count}.B1=M_mass(I1,I1);
+                A_encode{count}.B2=Stiff_1D(I2,I2);
+                A_encode{count}.B3=M_mass(I3,I3);
+                A_encode{count}.B4=M_mass(I4,I4);
+                
+                A_encode{count}.C1=M_mass(I1,I1);
+                A_encode{count}.C2=M_mass(I2,I2);
+                A_encode{count}.C3=Stiff_1D(I3,I3);
+                A_encode{count}.C4=M_mass(I4,I4);
+                
+                A_encode{count}.D1=M_mass(I1,I1);
+                A_encode{count}.D2=M_mass(I2,I2);
+                A_encode{count}.D3=M_mass(I3,I3);
+                A_encode{count}.D4=Stiff_1D(I4,I4);
+                
+                A_encode{count}.IndexI=double(Real_index(Index_I+1));
+                A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                
+                count=count+1;
                 
                 % Term 2: S*I*I*I--Assume j2_level==i2_level
                 % j3_level==i3_level j4_level==i4_level
@@ -110,6 +120,54 @@ for sum_level=0:n
                     
                     A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
                     
+                    % save matrices to files
+                    A_encode{count}.A1=Stiff_1D(J1,I1);
+                    A_encode{count}.A2=M_mass(J2,I2);
+                    A_encode{count}.A3=M_mass(J3,I3);
+                    A_encode{count}.A4=M_mass(J4,I4);
+                    
+                    A_encode{count}.B1=0;
+                    A_encode{count}.B2=0;
+                    A_encode{count}.B3=0;
+                    A_encode{count}.B4=0;
+                    
+                    A_encode{count}.C1=0;
+                    A_encode{count}.C2=0;
+                    A_encode{count}.C3=0;
+                    A_encode{count}.C4=0;
+                    
+                    A_encode{count}.D1=0;
+                    A_encode{count}.D2=0;
+                    A_encode{count}.D3=0;
+                    A_encode{count}.D4=0;
+                    
+                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
+                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    
+                    A_encode{count+1}.A1=Stiff_1D(J1,I1)';
+                    A_encode{count+1}.A2=M_mass(J2,I2)';
+                    A_encode{count+1}.A3=M_mass(J3,I3)';
+                    A_encode{count+1}.A4=M_mass(J4,I4)';
+                    
+                    A_encode{count+1}.B1=0;
+                    A_encode{count+1}.B2=0;
+                    A_encode{count+1}.B3=0;
+                    A_encode{count+1}.B4=0;
+                    
+                    A_encode{count+1}.C1=0;
+                    A_encode{count+1}.C2=0;
+                    A_encode{count+1}.C3=0;
+                    A_encode{count+1}.C4=0;
+                    
+                    A_encode{count+1}.D1=0;
+                    A_encode{count+1}.D2=0;
+                    A_encode{count+1}.D3=0;
+                    A_encode{count+1}.D4=0;
+                    
+                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
+                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    
+                    count=count+2;
                     
                 end
                 
@@ -131,6 +189,54 @@ for sum_level=0:n
                     
                     A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
                     
+                    % save matrices to files
+                    A_encode{count}.A1=0;
+                    A_encode{count}.A2=0;
+                    A_encode{count}.A3=0;
+                    A_encode{count}.A4=0;
+                    
+                    A_encode{count}.B1=M_mass(J1,I1);
+                    A_encode{count}.B2=Stiff_1D(J2,I2);
+                    A_encode{count}.B3=M_mass(J3,I3);
+                    A_encode{count}.B4=M_mass(J4,I4);
+                    
+                    A_encode{count}.C1=0;
+                    A_encode{count}.C2=0;
+                    A_encode{count}.C3=0;
+                    A_encode{count}.C4=0;
+                    
+                    A_encode{count}.D1=0;
+                    A_encode{count}.D2=0;
+                    A_encode{count}.D3=0;
+                    A_encode{count}.D4=0;
+                    
+                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
+                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    
+                    A_encode{count+1}.A1=0;
+                    A_encode{count+1}.A2=0;
+                    A_encode{count+1}.A3=0;
+                    A_encode{count+1}.A4=0;
+                    
+                    A_encode{count+1}.B1=M_mass(J1,I1)';
+                    A_encode{count+1}.B2=Stiff_1D(J2,I2)';
+                    A_encode{count+1}.B3=M_mass(J3,I3)';
+                    A_encode{count+1}.B4=M_mass(J4,I4)';
+                    
+                    A_encode{count+1}.C1=0;
+                    A_encode{count+1}.C2=0;
+                    A_encode{count+1}.C3=0;
+                    A_encode{count+1}.C4=0;
+                    
+                    A_encode{count+1}.D1=0;
+                    A_encode{count+1}.D2=0;
+                    A_encode{count+1}.D3=0;
+                    A_encode{count+1}.D4=0;
+                    
+                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
+                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    count=count+2;
+                    
                 end
                 
                 % Term 4: I*I*S*I--Assume j1_level==i1_level
@@ -150,6 +256,54 @@ for sum_level=0:n
                     tmp=kron(kron(kron(M_mass(J1,I1),M_mass(J2,I2)),Stiff_1D(J3,I3)),M_mass(J4,I4));
                     A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
                     
+                    % save matrices to files
+                    A_encode{count}.A1=0;
+                    A_encode{count}.A2=0;
+                    A_encode{count}.A3=0;
+                    A_encode{count}.A4=0;
+                    
+                    A_encode{count}.B1=0;
+                    A_encode{count}.B2=0;
+                    A_encode{count}.B3=0;
+                    A_encode{count}.B4=0;
+                    
+                    A_encode{count}.C1=M_mass(J1,I1);
+                    A_encode{count}.C2=M_mass(J2,I2);
+                    A_encode{count}.C3=Stiff_1D(J3,I3);
+                    A_encode{count}.C4=M_mass(J4,I4);
+                    
+                    A_encode{count}.D1=0;
+                    A_encode{count}.D2=0;
+                    A_encode{count}.D3=0;
+                    A_encode{count}.D4=0;
+                    
+                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
+                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    
+                    A_encode{count+1}.A1=0;
+                    A_encode{count+1}.A2=0;
+                    A_encode{count+1}.A3=0;
+                    A_encode{count+1}.A4=0;
+                    
+                    A_encode{count+1}.B1=0;
+                    A_encode{count+1}.B2=0;
+                    A_encode{count+1}.B3=0;
+                    A_encode{count+1}.B4=0;
+                    
+                    A_encode{count+1}.C1=M_mass(J1,I1)';
+                    A_encode{count+1}.C2=M_mass(J2,I2)';
+                    A_encode{count+1}.C3=Stiff_1D(J3,I3)';
+                    A_encode{count+1}.C4=M_mass(J4,I4)';
+                    
+                    A_encode{count+1}.D1=0;
+                    A_encode{count+1}.D2=0;
+                    A_encode{count+1}.D3=0;
+                    A_encode{count+1}.D4=0;
+                    
+                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
+                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    
+                    count=count+2;
                 end
                 
                 % Term 5: I*I*I*S--Assume j1_level==i1_level
@@ -169,6 +323,55 @@ for sum_level=0:n
                     tmp=kron(kron(kron(M_mass(J1,I1),M_mass(J2,I2)),M_mass(J3,I3)),Stiff_1D(J4,I4));
                     A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
                     
+                    % save matrices to files
+                    A_encode{count}.A1=0;
+                    A_encode{count}.A2=0;
+                    A_encode{count}.A3=0;
+                    A_encode{count}.A4=0;
+                    
+                    A_encode{count}.B1=0;
+                    A_encode{count}.B2=0;
+                    A_encode{count}.B3=0;
+                    A_encode{count}.B4=0;
+                    
+                    A_encode{count}.C1=0;
+                    A_encode{count}.C2=0;
+                    A_encode{count}.C3=0;
+                    A_encode{count}.C4=0;
+                    
+                    A_encode{count}.D1=M_mass(J1,I1);
+                    A_encode{count}.D2=M_mass(J2,I2);
+                    A_encode{count}.D3=M_mass(J3,I3);
+                    A_encode{count}.D4=Stiff_1D(J4,I4);
+                    
+                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
+                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    
+                    A_encode{count+1}.A1=0;
+                    A_encode{count+1}.A2=0;
+                    A_encode{count+1}.A3=0;
+                    A_encode{count+1}.A4=0;
+                    
+                    A_encode{count+1}.B1=0;
+                    A_encode{count+1}.B2=0;
+                    A_encode{count+1}.B3=0;
+                    A_encode{count+1}.B4=0;
+                    
+                    A_encode{count+1}.C1=0;
+                    A_encode{count+1}.C2=0;
+                    A_encode{count+1}.C3=0;
+                    A_encode{count+1}.C4=0;
+                    
+                    A_encode{count+1}.D1=M_mass(J1,I1)';
+                    A_encode{count+1}.D2=M_mass(J2,I2)';
+                    A_encode{count+1}.D3=M_mass(J3,I3)';
+                    A_encode{count+1}.D4=Stiff_1D(J4,I4)';
+                    
+                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
+                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    
+                    count=count+2;
+                    
                 end
                 
                 
@@ -185,15 +388,19 @@ eigs(A_s,3,'SM')
 % tic
 sol_s = A_s\b_s*pi^2*4;
 % toc
+
+save(['./Data/A_4D_encode.mat'],'A_encode');
+
+
 ['Done of Solution']
 % check error
 norm(sol_s-uu_s)
 
 % disp('Done of MapMW2DG')
-% 
+%
 % val=MapMW2DG'*sol_s;
 % [x1,x2,x3,x4]=ndgrid(xxnode);
-% 
+%
 % sol=exactu_4D(x1(:),x2(:),x3(:),x4(:));
 % norm(val-sol(:))
 % max(abs(val-sol(:)))
