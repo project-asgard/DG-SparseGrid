@@ -36,7 +36,7 @@ A_s = sparse(dof_sparse,dof_sparse);
 
 b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
-
+uu_s=sparse(dof_sparse,1);
 
 % Method 2
 for sum_level=0:n
@@ -58,7 +58,7 @@ for sum_level=0:n
         tmp=kron(b(Ix),b(Iy));
 
         b_s(Real_index(Index_I+1))=b_s(Real_index(Index_I+1))+tmp;
-              
+        uu_s(Real_index(Index_I+1))=uu_s(Real_index(Index_I+1))+kron(coef_MW(Ix),coef_MW(Iy));
         % Term 2: SxI--Assume jy_level==iy_level
         jy_level=iy_level;
         for jx_level=0:ix_level-1
@@ -75,7 +75,6 @@ for sum_level=0:n
             
             
             tmp=kron(Stiff_1D(Jx,Ix),M_mass(Jy,Iy));
-            
             A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
             
             
@@ -113,6 +112,8 @@ spy(A_s)
 sol_s = A_s\b_s*pi^2*2;
 % toc
 
+% compare the solution with interpolation
+norm(sol_s-uu_s)
 function Ix=Index_1D(k,level)
 
 if level==0

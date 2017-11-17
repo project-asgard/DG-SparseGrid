@@ -11,7 +11,7 @@ format short e
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------
-Np = 3;
+Np = 6;
 k=2;
 
 mkdir('Data')
@@ -23,7 +23,7 @@ addpath(genpath(pwd))
 
 n = Np;h = 2^(-n-1);
 %% Compute 1D solution
-[Stiff_1D,b,Meval] = LaplacianMatrix2(n,k);
+[Stiff_1D,b,Meval,coef_MW] = LaplacianMatrix2(n,k);
 M_mass=speye(size(Stiff_1D,1),size(Stiff_1D,1));
 
 %% 2D sparse-grid
@@ -33,7 +33,7 @@ run Compute_2D_sparsegrid.m
 toc
 ['Compute_2D_sparsegrid.m is done']
 
-run plotsol_2D.m
+% run plotsol_2D.m
 
 tic
 run Compute_4D_sparsegrid.m

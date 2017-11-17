@@ -55,7 +55,8 @@ mesh(xx,yy,exactu_2D(xx,yy), 'FaceColor','interp',...
     'EdgeColor','interp');
 
 ['The error for 2D approximation is:']
-max(max(val-sol))
+norm(val-sol)
+max(max(abs(val-sol)))
 
 
 function z=Index1D(level,cell,degree,k)

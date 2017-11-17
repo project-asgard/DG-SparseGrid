@@ -1,4 +1,4 @@
-function [L_MWDG,RHS_MWDG,Meval]=LaplacianMatrix2(n,k)
+function [L_MWDG,RHS_MWDG,Meval,coef_MW]=LaplacianMatrix2(n,k)
 % PDE dependent Stiffness Matrix
 % working version with two-scale relation
 %--DG parameters
@@ -32,7 +32,7 @@ Dp_val = dlegendre(quad_x,k);
 dof_1D=k*2^n;
 M_stiff=sparse(dof_1D,dof_1D);
 b=sparse(dof_1D,1);
-
+coef_DG=sparse(dof_1D,1);
 % generate 1D stiffness matrix for DG 
 for LL=0:2^n-1
     
@@ -70,8 +70,10 @@ for LL=0:2^n-1
      b(Iu)=p_val'*(quad_w.*ff)*2^(-n)/2*2^(n/2);
      
      
+     
      Meval(2*LL+1:2*LL+2,Iu)=2^(n/2)*legendre([-1,1],k);
-
+     uu=exactu( quad_x*2^(-n-1)+2^(-n)*(LL+0.5) );
+     coef_DG(Iu)=p_val'*(quad_w.*uu)*2^(-n)/2*2^(n/2);
 end
 
 % full(M_stiff)
@@ -147,6 +149,13 @@ L_MWDG(find(abs(L_MWDG)<epsilon_MWDG))=0;
 % Meval=FMWT_COMP*Meval;
 
 Meval=Meval*iFMWT_COMP;
+% 
+coef_MW=FMWT_COMP*coef_DG;
+
+% figure
+% plot(Meval*(coef_DG))
+% hold on
+% plot(Meval*b,'ro')
 return
 % Compute the solution from MWDG
 sol_MW=(L_MWDG\RHS_MWDG);

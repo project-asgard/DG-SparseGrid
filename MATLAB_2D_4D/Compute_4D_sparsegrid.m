@@ -36,9 +36,20 @@ Real_index=All_index'+1;
 A_s = sparse(dof_sparse,dof_sparse);
 b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
+uu_s=sparse(dof_sparse,1);
 
+% % Compute Error
+% h=2^(-n);
+% xnode=[0:h:1];
+% xnode=[xnode(1:end-1);xnode(2:end)];
+% xnode=xnode(:);
+% 
+% I=1:(2^n/4):length(xnode);
+% xxnode=xnode(I);
+% MMeval=Meval(I,:);
+% MapMW2DG=sparse(dof_sparse,size(xxnode,1)^4);
 
-% Method 2
+% Method 
 for sum_level=0:n
     for i1_level=0:sum_level
         for i2_level=0:sum_level-i1_level
@@ -50,6 +61,8 @@ for sum_level=0:n
                 I3=Index_1D(k,i3_level);
                 I4=Index_1D(k,i4_level);
                 
+                
+                
                 key_i=GenerateKey(I1,I2,I3,I4,Key1dMesh);
                 Index_I=findvs(Hash,key_i);
                 
@@ -59,13 +72,26 @@ for sum_level=0:n
                     kron(kron(kron(M_mass(I1,I1),M_mass(I2,I2)),Stiff_1D(I3,I3)),M_mass(I4,I4))+...
                     kron(kron(kron(M_mass(I1,I1),M_mass(I2,I2)),M_mass(I3,I3)),Stiff_1D(I4,I4));
                 
-                
                 [II,JJ]=meshgrid(Real_index(Index_I+1),Real_index(Index_I+1));
                 A_s=A_s+sparse(double(II),double(JJ),tmp,dof_sparse,dof_sparse);
-
-               tmp=kron(kron(kron(b(I1),b(I2)),b(I3)),b(I4));
-               b_s(Real_index(Index_I+1))=b_s(Real_index(Index_I+1))+tmp;
-               
+                
+                tmp=kron(kron(kron(b(I1),b(I2)),b(I3)),b(I4));
+                b_s(Real_index(Index_I+1))=b_s(Real_index(Index_I+1))+tmp;
+                uu_s(Real_index(Index_I+1))=uu_s(Real_index(Index_I+1))+...
+                    kron(kron(kron(coef_MW(I1),coef_MW(I2)),coef_MW(I3)),coef_MW(I4));
+%                 % for Error
+%                 M1=MMeval(:,I1);
+%                 M2=MMeval(:,I2);
+%                 M3=MMeval(:,I3);
+%                 M4=MMeval(:,I4);
+%                 
+%                 tmp=kron(M1,kron(M2,kron(M3,M4)));
+% %                 tmp=kron(kron(kron(M1,M2),M3),M4);
+%                 [iii,jjj,val]=find(tmp');
+%                 III=double(Real_index(Index_I+1));
+%                 MapMW2DG=MapMW2DG+sparse(III(iii), jjj,val,dof_sparse,size(xxnode,1)^4);
+                
+                
                 % Term 2: S*I*I*I--Assume j2_level==i2_level
                 % j3_level==i3_level j4_level==i4_level
                 j2_level=i2_level;j3_level=i3_level;j4_level=i4_level;
@@ -83,7 +109,7 @@ for sum_level=0:n
                     tmp=kron(kron(kron(Stiff_1D(J1,I1),M_mass(J2,I2)),M_mass(J3,I3)),M_mass(J4,I4));
                     
                     A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
-
+                    
                     
                 end
                 
@@ -102,7 +128,7 @@ for sum_level=0:n
                     [II,JJ]=meshgrid(Real_index(Index_J+1),Real_index(Index_I+1));
                     
                     tmp=kron(kron(kron(M_mass(J1,I1),Stiff_1D(J2,I2)),M_mass(J3,I3)),M_mass(J4,I4));
-
+                    
                     A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
                     
                 end
@@ -154,15 +180,24 @@ end
 figure;
 spy(A_s)
 
-% eigs(A_s,3,'SM')
+eigs(A_s,3,'SM')
 
 % tic
 sol_s = A_s\b_s*pi^2*4;
 % toc
-
-
+['Done of Solution']
 % check error
-run ComputeError4D.m
+norm(sol_s-uu_s)
+
+% disp('Done of MapMW2DG')
+% 
+% val=MapMW2DG'*sol_s;
+% [x1,x2,x3,x4]=ndgrid(xxnode);
+% 
+% sol=exactu_4D(x1(:),x2(:),x3(:),x4(:));
+% norm(val-sol(:))
+% max(abs(val-sol(:)))
+% run ComputeError4D.m
 
 function Ix=Index_1D(k,level)
 
