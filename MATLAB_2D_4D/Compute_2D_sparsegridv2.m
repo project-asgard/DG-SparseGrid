@@ -41,7 +41,7 @@ for sum_level=0:n
         Ix=Index_1D(k,ix_level);
         Iy=Index_1D(k,iy_level);
         
-        key_i=GenerateKey(Ix,Iy,Key1dMesh);
+        key_i=GenerateKey2D(Ix,Iy,Key1dMesh);
         for iii=1:size(key_i,1)
             Index_I(iii,1)=database.(sprintf('i%g_',key_i(iii,:)));
         end
@@ -73,7 +73,7 @@ for sum_level=0:n
             Jx=Index_1D(k,jx_level);
             Jy=Iy;
             
-            key_j=GenerateKey(Jx,Jy,Key1dMesh);
+            key_j=GenerateKey2D(Jx,Jy,Key1dMesh);
             for jjj=1:size(key_j,1)
                 Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
             end
@@ -107,7 +107,7 @@ for sum_level=0:n
             Jx=Ix;
             Jy=Index_1D(k,jy_level);
             
-            key_j=GenerateKey(Jx,Jy,Key1dMesh);
+            key_j=GenerateKey2D(Jx,Jy,Key1dMesh);
             for jjj=1:size(key_j,1)
                 Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
             end
@@ -145,6 +145,8 @@ for sum_level=0:n
 end
 figure;
 spy(A_s)
+title(sprintf('4D problem, n=%d,nnz=%g,condest=%g',...
+    size(A_s,1),nnz(A_s),condest(A_s)  ));
 % Check matrix
 % eigs(A_s,3,'SM')
 
@@ -166,7 +168,7 @@ end
 
 end
 
-function key=GenerateKey(Ix,Iy,Key1dMesh)
+function key=GenerateKey2D(Ix,Iy,Key1dMesh)
 
 tmp_x=Key1dMesh(Ix,:);
 tmp_y=Key1dMesh(Iy,:);

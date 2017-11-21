@@ -45,6 +45,7 @@ b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
 uu_s=sparse(dof_sparse,1);
 
+total_kron_flops = 0;
 % Method
 for sum_level=0:n
     for i1_level=0:sum_level
@@ -81,21 +82,29 @@ for sum_level=0:n
                 A_encode{count}.A2=M_mass(I2,I2);
                 A_encode{count}.A3=M_mass(I3,I3);
                 A_encode{count}.A4=M_mass(I4,I4);
+
+                total_kron_flops = total_kron_flops + kron_mult_cost4( A1,A2,A3,A4);
                 
                 A_encode{count}.B1=M_mass(I1,I1);
                 A_encode{count}.B2=Stiff_1D(I2,I2);
                 A_encode{count}.B3=M_mass(I3,I3);
                 A_encode{count}.B4=M_mass(I4,I4);
+
+                total_kron_flops = total_kron_flops + kron_mult_cost4( B1,B2,B3,B4);
                 
                 A_encode{count}.C1=M_mass(I1,I1);
                 A_encode{count}.C2=M_mass(I2,I2);
                 A_encode{count}.C3=Stiff_1D(I3,I3);
                 A_encode{count}.C4=M_mass(I4,I4);
+
+                total_kron_flops = total_kron_flops + kron_mult_cost4(C1,C2,C3,C4);
                 
                 A_encode{count}.D1=M_mass(I1,I1);
                 A_encode{count}.D2=M_mass(I2,I2);
                 A_encode{count}.D3=M_mass(I3,I3);
                 A_encode{count}.D4=Stiff_1D(I4,I4);
+
+                total_kron_flops = total_kron_flops + kron_mult_cost4(D1,D2,D3,D4);
                 
                 A_encode{count}.IndexI=double(Real_index(Index_I+1));
                 A_encode{count}.IndexJ=double(Real_index(Index_I+1));
@@ -125,6 +134,8 @@ for sum_level=0:n
                     A_encode{count}.A2=M_mass(J2,I2);
                     A_encode{count}.A3=M_mass(J3,I3);
                     A_encode{count}.A4=M_mass(J4,I4);
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(A1,A2,A3,A4);
                     
                     A_encode{count}.B1=0;
                     A_encode{count}.B2=0;
@@ -148,6 +159,8 @@ for sum_level=0:n
                     A_encode{count+1}.A2=M_mass(J2,I2)';
                     A_encode{count+1}.A3=M_mass(J3,I3)';
                     A_encode{count+1}.A4=M_mass(J4,I4)';
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(A1,A2,A3,A4);
                     
                     A_encode{count+1}.B1=0;
                     A_encode{count+1}.B2=0;
@@ -199,6 +212,8 @@ for sum_level=0:n
                     A_encode{count}.B2=Stiff_1D(J2,I2);
                     A_encode{count}.B3=M_mass(J3,I3);
                     A_encode{count}.B4=M_mass(J4,I4);
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(B1,B2,B3,B4);
                     
                     A_encode{count}.C1=0;
                     A_encode{count}.C2=0;
@@ -222,6 +237,8 @@ for sum_level=0:n
                     A_encode{count+1}.B2=Stiff_1D(J2,I2)';
                     A_encode{count+1}.B3=M_mass(J3,I3)';
                     A_encode{count+1}.B4=M_mass(J4,I4)';
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(B1,B2,B3,B4);
                     
                     A_encode{count+1}.C1=0;
                     A_encode{count+1}.C2=0;
@@ -271,6 +288,8 @@ for sum_level=0:n
                     A_encode{count}.C2=M_mass(J2,I2);
                     A_encode{count}.C3=Stiff_1D(J3,I3);
                     A_encode{count}.C4=M_mass(J4,I4);
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(C1,C2,C3,C4);
                     
                     A_encode{count}.D1=0;
                     A_encode{count}.D2=0;
@@ -294,6 +313,8 @@ for sum_level=0:n
                     A_encode{count+1}.C2=M_mass(J2,I2)';
                     A_encode{count+1}.C3=Stiff_1D(J3,I3)';
                     A_encode{count+1}.C4=M_mass(J4,I4)';
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(C1,C2,C3,C4);
                     
                     A_encode{count+1}.D1=0;
                     A_encode{count+1}.D2=0;
@@ -343,6 +364,8 @@ for sum_level=0:n
                     A_encode{count}.D2=M_mass(J2,I2);
                     A_encode{count}.D3=M_mass(J3,I3);
                     A_encode{count}.D4=Stiff_1D(J4,I4);
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(D1,D2,D3,D4);
                     
                     A_encode{count}.IndexI=double(Real_index(Index_J+1));
                     A_encode{count}.IndexJ=double(Real_index(Index_I+1));
@@ -366,6 +389,8 @@ for sum_level=0:n
                     A_encode{count+1}.D2=M_mass(J2,I2)';
                     A_encode{count+1}.D3=M_mass(J3,I3)';
                     A_encode{count+1}.D4=Stiff_1D(J4,I4)';
+
+                    total_kron_flops = total_kron_flops + kron_mult_cost4(D1,D2,D3,D4);
                     
                     A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
                     A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
@@ -384,6 +409,9 @@ figure;
 spy(A_s)
 
 eigs(A_s,3,'SM')
+
+disp(sprintf('nnz(A_s)=%g', nnz(A_s)));
+disp(sprintf('total kron flops=%g ', total_kron_flops ));
 
 % tic
 sol_s = A_s\b_s*pi^2*4;

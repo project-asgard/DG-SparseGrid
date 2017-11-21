@@ -154,6 +154,8 @@ for sum_level=0:n
 end
 figure;
 spy(A_s)
+title(sprintf('4D problem, n=%d,nnz=%g,condest=%g',...
+    size(A_s,1),nnz(A_s),condest(A_s)  ));
 % Check matrix
 % eigs(A_s,3,'SM')
 

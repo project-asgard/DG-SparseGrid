@@ -41,10 +41,10 @@ toc
 ['Compute_4D_sparsegrid.m is done']
 
 
-function I=Index1D(mx,ix,n)
-% index for 1D
-I=(2^mx+ix);
-end
+%  function I=Index1D(mx,ix,n)
+%  % index for 1D
+%  I=(2^mx+ix);
+%  end
 
 
 

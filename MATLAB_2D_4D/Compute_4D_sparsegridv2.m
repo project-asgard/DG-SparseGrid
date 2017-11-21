@@ -51,7 +51,7 @@ for sum_level=0:n
                 
                 
                 
-                key_i=GenerateKey(I1,I2,I3,I4,Key1dMesh);
+                key_i=GenerateKey4D(I1,I2,I3,I4,Key1dMesh);
                 for iii=1:size(key_i,1)
                     Index_I(iii,1)=database.(sprintf('i%g_',key_i(iii,:)));
                 end
@@ -106,7 +106,7 @@ for sum_level=0:n
                     J1=Index_1D(k,j1_level);
                     J2=I2;J3=I3;J4=I4;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                        Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -177,7 +177,7 @@ for sum_level=0:n
                     J2=Index_1D(k,j2_level);
                     J1=I1;J3=I3;J4=I4;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                         Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -248,7 +248,7 @@ for sum_level=0:n
                     J3=Index_1D(k,j3_level);
                     J1=I1;J2=I2;J4=I4;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                         Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -319,7 +319,7 @@ for sum_level=0:n
                     J4=Index_1D(k,j4_level);
                     J1=I1;J2=I2;J3=I3;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                         Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -388,6 +388,8 @@ for sum_level=0:n
 end
 figure;
 spy(A_s)
+title(sprintf('4D problem, n=%d,nnz=%g,condest=%g',...
+    size(A_s,1),nnz(A_s),condest(A_s)  ));
 
 eigs(A_s,3,'SM')
 
@@ -413,7 +415,7 @@ end
 
 end
 
-function key=GenerateKey(I1,I2,I3,I4,Key1dMesh)
+function key=GenerateKey4D(I1,I2,I3,I4,Key1dMesh)
 
 tmp_1=Key1dMesh(I1,:);
 tmp_2=Key1dMesh(I2,:);
