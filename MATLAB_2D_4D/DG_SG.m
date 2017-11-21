@@ -11,7 +11,7 @@ format short e
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------
-Np = 6;
+Np = 5;
 k=2;
 
 mkdir('Data')
@@ -28,15 +28,15 @@ M_mass=speye(size(Stiff_1D,1),size(Stiff_1D,1));
 
 %% 2D sparse-grid
 tic
-% run Compute_2D_sparsegridv2.m
-run Compute_2D_sparsegrid.m
+run Compute_2D_sparsegridv2.m
+% run Compute_2D_sparsegrid.m
 toc
 ['Compute_2D_sparsegrid.m is done']
 
-% run plotsol_2D.m
 
 tic
-run Compute_4D_sparsegrid.m
+run Compute_4D_sparsegridv2.m
+% run Compute_4D_sparsegrid.m
 toc
 ['Compute_4D_sparsegrid.m is done']
 
