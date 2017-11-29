@@ -75,7 +75,12 @@ elseif (nkron == 2),
   flops_method2 = 2.0*nnz_A1 * ncolA2 + ...
                   2.0*nnz_A2 * ncolA1;
 
-  flops = min(flops_method1,flops_method2)*ncolX;
+  % -----------------------------------------
+  % expand kron(A1,A2), then perform multiply
+  % -----------------------------------------
+  flops_method3 = 2.0 * nnz_A1*nnz_A2;
+
+  flops = min(flops_method1,min(flops_method2,flops_method3))*ncolX;
   schedule = [1];
 
   if (idebug >= 1),
