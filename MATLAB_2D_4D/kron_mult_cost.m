@@ -108,7 +108,16 @@ elseif (nkron >= 3),
 
   [min_flops, min_k] = min( flopsvec );
   flops = min_flops;
-  schedule = [sch{min_k}];
+
+  % -------------------------------------
+  % consider case of very sparse matrices
+  % -------------------------------------
+  sparse_flops = 2.0*prod(nz(1:nkron));
+  if (sparse_flops < min_flops),
+    schedule = [0];
+  else 
+    schedule = [sch{min_k}];
+  end;
 end;
 
   
