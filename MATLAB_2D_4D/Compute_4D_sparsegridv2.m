@@ -510,8 +510,9 @@ end
 % -----------------------
 A_s  = (A_s + A_s')/2;
 
-disp(sprintf('Np=%d,k=%d, kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g', ...
-              Np, k, kron_flops,    kron_nnz, nnz(A_s)  ));
+disp(sprintf('Np=%d,k=%d, n=%d, kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g', ...
+              Np, k, size(A_s), ...
+              kron_flops,    kron_nnz, nnz(A_s)  ));
 
 figure;
 spy(A_s)
