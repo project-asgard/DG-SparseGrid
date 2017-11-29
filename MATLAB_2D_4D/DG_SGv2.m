@@ -12,7 +12,7 @@ format short e
 % Set Parameters
 %------------------------------------------------
 Np = 5;
-k=4;
+k=3;
 
 mkdir('Data')
 addpath(genpath(pwd))
