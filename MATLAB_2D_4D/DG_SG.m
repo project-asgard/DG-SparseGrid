@@ -31,14 +31,14 @@ tic
 run Compute_2D_sparsegridv2.m
 % run Compute_2D_sparsegrid.m
 toc
-['Compute_2D_sparsegrid.m is done']
+['Compute_2D_sparsegridv2.m is done']
 
 
 tic
 run Compute_4D_sparsegridv2.m
 % run Compute_4D_sparsegrid.m
 toc
-['Compute_4D_sparsegrid.m is done']
+['Compute_4D_sparsegridv2.m is done']
 
 
 %  function I=Index1D(mx,ix,n)
