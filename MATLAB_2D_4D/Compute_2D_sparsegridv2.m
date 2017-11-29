@@ -32,6 +32,9 @@ b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
 uu_s=sparse(dof_sparse,1);
 
+kron_flops = 0;
+kron_nnz = 0;
+
 count=1;
 % Method 2
 for sum_level=0:n
@@ -64,6 +67,25 @@ for sum_level=0:n
         A_encode{count}.B2=Stiff_1D(Iy,Iy);
         A_encode{count}.IndexI=double(Index_I);
         A_encode{count}.IndexJ=double(Index_I);
+
+        kron_flops = kron_flops + ...
+                     kron_mult_cost2( ...
+                        A_encode{count}.A1, ...
+                        A_encode{count}.A2);
+
+        kron_flops = kron_flops + ...
+                     kron_mult_cost2( ...
+                        A_encode{count}.B1, ...
+                        A_encode{count}.B2);
+
+        kron_nnz = kron_nnz + ...
+                     length(A_encode{count}.IndexI ) + ...
+                     length(A_encode{count}.IndexJ );
+                      
+                        
+                     
+               
+
         count=count+1;
         
         % Term 2: SxI--Assume jy_level==iy_level
@@ -90,6 +112,17 @@ for sum_level=0:n
             A_encode{count}.B2=0;
             A_encode{count}.IndexI=Index_J;
             A_encode{count}.IndexJ=Index_I;
+
+            kron_flops = kron_flops + ...
+                     kron_mult_cost2( ...
+                        A_encode{count}.A1, ...
+                        A_encode{count}.A2);
+
+
+            kron_nnz = kron_nnz + ...
+                     length(A_encode{count}.IndexI ) + ...
+                     length(A_encode{count}.IndexJ );
+                      
             
             A_encode{count+1}.A1=Stiff_1D(Jx,Ix)';
             A_encode{count+1}.A2=M_mass(Jy,Iy)';
@@ -98,6 +131,18 @@ for sum_level=0:n
             A_encode{count+1}.IndexI=Index_I;
             A_encode{count+1}.IndexJ=Index_J;
             
+            kron_flops = kron_flops + ...
+                     kron_mult_cost2( ...
+                        A_encode{count+1}.A1, ...
+                        A_encode{count+1}.A2);
+
+
+            kron_nnz = kron_nnz + ...
+                     length(A_encode{count+1}.IndexI ) + ...
+                     length(A_encode{count+1}.IndexJ );
+
+
+
             count=count+2;
             clear Index_J
         end
@@ -127,13 +172,42 @@ for sum_level=0:n
             A_encode{count}.B2=Stiff_1D(Jy,Iy);
             A_encode{count}.IndexI=Index_J;
             A_encode{count}.IndexJ=Index_I;
+
+            kron_flops = kron_flops + ...
+                     kron_mult_cost2( ...
+                        A_encode{count}.B1, ...
+                        A_encode{count}.B2);
+
+
+            kron_nnz = kron_nnz + ...
+                     length(A_encode{count}.IndexI ) + ...
+                     length(A_encode{count}.IndexJ );
             
-            A_encode{count+1}.A=0;
-            A_encode{count+1}.B=0;
-            A_encode{count+1}.C=M_mass(Jx,Ix)';
-            A_encode{count+1}.D=Stiff_1D(Jy,Iy)';
+%EFD  ---------------------------------------
+%EFD  use A1,A2,B1,B2 instead of A,B,C,D
+%EFD 
+%EFD             A_encode{count+1}.A=0;
+%EFD             A_encode{count+1}.B=0;
+%EFD             A_encode{count+1}.C=M_mass(Jx,Ix)';
+%EFD             A_encode{count+1}.D=Stiff_1D(Jy,Iy)';
+%EFD  ------------------------------------
+
+            A_encode{count+1}.A1=0;
+            A_encode{count+1}.A2=0;
+            A_encode{count+1}.B1=M_mass(Jx,Ix)';
+            A_encode{count+1}.B2=Stiff_1D(Jy,Iy)';
             A_encode{count+1}.IndexI=Index_I;
             A_encode{count+1}.IndexJ=Index_J;
+
+            kron_flops = kron_flops + ...
+                     kron_mult_cost2( ...
+                        A_encode{count+1}.B1, ...
+                        A_encode{count+1}.B2);
+
+
+            kron_nnz = kron_nnz + ...
+                     length(A_encode{count+1}.IndexI ) + ...
+                     length(A_encode{count+1}.IndexJ );
             
             count=count+2;
             clear Index_J
@@ -143,12 +217,24 @@ for sum_level=0:n
     end
     
 end
+% -----------------------
+% ensure A_s is symmetric
+% -----------------------
+A_s = (A_s + A_s')/2;
+
+disp(sprintf('Np=%d,k=%d, kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g', ...
+              Np, k, kron_flops,    kron_nnz, nnz(A_s)  ));
+
 figure;
 spy(A_s)
-title(sprintf('2D problem, n=%d,nnz=%g,condest=%g',...
+title(sprintf('2D problem, Np=%d,k=%d, n=%d,nnz=%g,condest=%g',...
+    Np, k, ...
     size(A_s,1),nnz(A_s),condest(A_s)  ));
 % Check matrix
-% eigs(A_s,3,'SM')
+% -------------------------
+% estimate condition number
+% -------------------------
+% eigs( A_s, 2, 'BE');
 
 save(['./Data/A_2D_encode.mat'],'A_encode');
 
