@@ -505,15 +505,24 @@ for sum_level=0:n
     
 end
 
-disp(sprintf('kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g', ...
-              kron_flops,    kron_nnz, nnz(A_s)  ));
+% -----------------------
+% ensure A_s is symmetric
+% -----------------------
+A_s  = (A_s + A_s')/2;
+
+disp(sprintf('Np=%d,k=%d, kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g', ...
+              Np, k, kron_flops,    kron_nnz, nnz(A_s)  ));
 
 figure;
 spy(A_s)
-title(sprintf('4D problem, n=%d,nnz=%g,condest=%g',...
-    size(A_s,1),nnz(A_s),condest(A_s)  ));
+title(sprintf('4D problem, Np=%d,k=%d, n=%d,nnz=%g',...
+    Np, k, ...
+    size(A_s,1),nnz(A_s)  ));
 
-eigs(A_s,3,'SM')
+% -------------------------
+% estimate condition number
+% -------------------------
+%eigs(A_s,2,'BE')
 
 % tic
 sol_s = A_s\b_s*pi^2*4;
