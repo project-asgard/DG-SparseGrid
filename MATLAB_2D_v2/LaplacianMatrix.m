@@ -5,7 +5,7 @@ function [M_stiff,b,xnode,Meval,uu]=LaplacianMatrix(n,k)
 %--DG parameters
 h=1/2^n;
 theta=1;
-sigma=1*h^(-1);
+sigma=100*h^(-1);
 quad_num=10;
 %---------------
 

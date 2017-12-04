@@ -81,6 +81,10 @@ for LL=0:2^n-1
 
 end
 
+% full(M_stiff)
+% 
+% return
+
 sol_1D=M_stiff\b*pi^2;
 
 % % max(sol_1D-b)
@@ -131,11 +135,11 @@ for j=1:n
         cFMWT(1:cn/2,1:cn)=FMWT(1:cn/2,1:cn);
         cFMWT(cn/2+1:cn,1:cn)=FMWT(k*Np/2+1:k*Np/2+cn/2,1:cn);
     end
-    j
-    cFMWT
+%     j
+%     cFMWT
 
     FMWT_COMP = cFMWT*FMWT_COMP;
-    FMWT_COMP
+%     FMWT_COMP
 end
 
 iFMWT_COMP=FMWT_COMP';

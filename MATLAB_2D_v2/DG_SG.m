@@ -13,8 +13,8 @@ format short e
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------
-Np = 4;
-k=2;
+Np = 5;
+k=3;
 scheme='sparse';
 mkdir('Data')
 
@@ -26,30 +26,18 @@ n = Np;h = 2^(-n-1);
 %% Compute 1D solution
 run Comp_1D_DG.m
 ['Comp_1D_DG.m is done']
-
-
-%% 2D full-grid
-% run Compute_2D_fullgrid.m
-% ['Compute_2D_fullgrid.m is done']
+% return
 
 %% 2D sparse-grid
-run Compute_2D_sparsegrid.m
+tic
+run Compute_2D_sparsegrid_v3.m
+toc
 ['Compute_2D_sparsegrid.m is done']
 
-return
-%% comparing sparsity
-run Sparsity.m
-['Sparsity.m is done']
-
-run PlotSolution.m
-['PlotSolution.m is done']
-
-% Comparing Error and Condition Number for Sparse Grid and Full Grid
-disp(' ')
-disp('Max Error of 2D Computing     Condition Number of 2D Computing ')
-disp('Sparse Grid       Full Grid           Sparse Grid       Full Grid')
-formatSpec = '%6.4e      %6.4e      %6.4e      %6.4e \n';
-fprintf(formatSpec, Lmax_2D_s,Lmax_2D,cond_sparse,cond_full)
+tic
+run Compute_4D_sparsegrid.m
+toc
+['Compute_2D_sparsegrid.m is done']
 
 
 function I=Index1D(mx,ix,n)

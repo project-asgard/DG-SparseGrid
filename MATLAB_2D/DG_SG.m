@@ -14,7 +14,7 @@ format short e
 % Set Parameters
 %------------------------------------------------
 Np = 5;
-k=2;
+k=3;
 scheme='sparse';
 mkdir('Data')
 
@@ -27,6 +27,7 @@ n = Np;h = 2^(-n-1);
 run Comp_1D_DG.m
 ['Comp_1D_DG.m is done']
 
+return
 
 %% 2D full-grid
 run Compute_2D_fullgrid.m

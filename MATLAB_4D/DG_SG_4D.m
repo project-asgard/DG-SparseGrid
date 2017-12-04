@@ -38,10 +38,27 @@ Real_index=All_index'+1;
 %% 4. 1D matrix generation
 ['Generate 1D Laplacian Matrix']
 tic
-% % [Stiff_1D,b] = LaplacianMatrix2(N_max,k);
+[Stiff_1D,b] = LaplacianMatrix2(n,k);
 % [Stiff_1D,b1,b2,xnode,Meval,uu]=LaplacianMatrix(N_max,k);
-load(['Gauss_L12_k',num2str(k),'.mat'])
+% load(['Gauss_L12_k',num2str(k),'.mat'])
 toc
+
+['Generate 1D keys']
+% tic
+nx=[];px=[];kx=[];
+for Lx=0:n
+    for Px=0:2^max(0,Lx-1)-1
+        for Kx=1:k
+            nx=[nx;Lx];
+            px=[px;Px];
+            kx=[kx;Kx];
+            
+        end
+    end
+end
+%
+Key1dMesh=[nx,px,kx];
+% toc
 
 %% 5. Construct 4D stiffness matrix
 A_s = sparse(dof_sparse,dof_sparse);
@@ -94,7 +111,7 @@ end
 toc
 
 
-tic % varying n2
+tic 
 for n1=0:n
     for p1=0:2^max(n1-1,0)-1
         for k1=1:k % for Group1

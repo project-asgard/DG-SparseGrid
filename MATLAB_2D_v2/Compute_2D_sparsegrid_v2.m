@@ -125,7 +125,7 @@ end
 
 spy(A_s)
 
-eigs(A_s,3,'SM')
+eigs(A_s,10,'SM')
 % Method 1
 
 
