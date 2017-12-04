@@ -29,23 +29,18 @@ Key1dMesh=[nx,px,kx];
 % toc
 
 ['Generate ',num2str(dim),'-D Hash Table']
-% tic
-Hash =Mesh_interface;
-Hash.init (dim,n,k-1,k^dim);
-% toc
-dof_sparse = double(Hash.size);
+run hashTest4D.m
 
-% sort the index
-All_index=allv(Hash);
-All_index=sort(All_index);
-Real_index=All_index'+1;
 
 A_s = sparse(dof_sparse,dof_sparse);
 b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
 uu_s=sparse(dof_sparse,1);
 
-total_kron_flops = 0;
+kron_flops = 0;
+kron_nnz = 0;
+
+
 % Method
 for sum_level=0:n
     for i1_level=0:sum_level
@@ -60,8 +55,12 @@ for sum_level=0:n
                 
                 
                 
-                key_i=GenerateKey(I1,I2,I3,I4,Key1dMesh);
-                Index_I=findvs(Hash,key_i);
+                key_i=GenerateKey4D(I1,I2,I3,I4,Key1dMesh);
+                for iii=1:size(key_i,1)
+                    Index_I(iii,1)=database.(sprintf('i%g_',key_i(iii,:)));
+                end
+                
+                
                 
                 % Term 1: S*I*I*I+I*S*I*I+I*I*S*I+I*I*I*S at the diagonal entry
                 tmp=kron(kron(kron(Stiff_1D(I1,I1),M_mass(I2,I2)),M_mass(I3,I3)),M_mass(I4,I4))+...
@@ -69,12 +68,12 @@ for sum_level=0:n
                     kron(kron(kron(M_mass(I1,I1),M_mass(I2,I2)),Stiff_1D(I3,I3)),M_mass(I4,I4))+...
                     kron(kron(kron(M_mass(I1,I1),M_mass(I2,I2)),M_mass(I3,I3)),Stiff_1D(I4,I4));
                 
-                [II,JJ]=meshgrid(Real_index(Index_I+1),Real_index(Index_I+1));
-                A_s=A_s+sparse(double(II),double(JJ),tmp,dof_sparse,dof_sparse);
+                [II,JJ]=meshgrid(Index_I,Index_I);
+                A_s=A_s+sparse(II,JJ,tmp,dof_sparse,dof_sparse);
                 
                 tmp=kron(kron(kron(b(I1),b(I2)),b(I3)),b(I4));
-                b_s(Real_index(Index_I+1))=b_s(Real_index(Index_I+1))+tmp;
-                uu_s(Real_index(Index_I+1))=uu_s(Real_index(Index_I+1))+...
+                b_s(Index_I)=b_s(Index_I)+tmp;
+                uu_s(Index_I)=uu_s(Index_I)+...
                     kron(kron(kron(coef_MW(I1),coef_MW(I2)),coef_MW(I3)),coef_MW(I4));
                 
                 % save matrices to files
@@ -83,31 +82,54 @@ for sum_level=0:n
                 A_encode{count}.A3=M_mass(I3,I3);
                 A_encode{count}.A4=M_mass(I4,I4);
 
-                total_kron_flops = total_kron_flops + kron_mult_cost4( A1,A2,A3,A4);
+                kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.A1, ...
+                                  A_encode{count}.A2, ...
+                                  A_encode{count}.A3, ...
+                                  A_encode{count}.A4 );
                 
                 A_encode{count}.B1=M_mass(I1,I1);
                 A_encode{count}.B2=Stiff_1D(I2,I2);
                 A_encode{count}.B3=M_mass(I3,I3);
                 A_encode{count}.B4=M_mass(I4,I4);
 
-                total_kron_flops = total_kron_flops + kron_mult_cost4( B1,B2,B3,B4);
+                kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.B1, ...
+                                  A_encode{count}.B2, ...
+                                  A_encode{count}.B3, ...
+                                  A_encode{count}.B4 );
                 
                 A_encode{count}.C1=M_mass(I1,I1);
                 A_encode{count}.C2=M_mass(I2,I2);
                 A_encode{count}.C3=Stiff_1D(I3,I3);
                 A_encode{count}.C4=M_mass(I4,I4);
 
-                total_kron_flops = total_kron_flops + kron_mult_cost4(C1,C2,C3,C4);
+                kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.C1, ...
+                                  A_encode{count}.C2, ...
+                                  A_encode{count}.C3, ...
+                                  A_encode{count}.C4 );
                 
                 A_encode{count}.D1=M_mass(I1,I1);
                 A_encode{count}.D2=M_mass(I2,I2);
                 A_encode{count}.D3=M_mass(I3,I3);
                 A_encode{count}.D4=Stiff_1D(I4,I4);
 
-                total_kron_flops = total_kron_flops + kron_mult_cost4(D1,D2,D3,D4);
+                kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.D1, ...
+                                  A_encode{count}.D2, ...
+                                  A_encode{count}.D3, ...
+                                  A_encode{count}.D4 );
                 
-                A_encode{count}.IndexI=double(Real_index(Index_I+1));
-                A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                A_encode{count}.IndexI=double(Index_I);
+                A_encode{count}.IndexJ=double(Index_I);
+
+                kron_nnz = kron_nnz + length( A_encode{count}.IndexI);
+                kron_nnz = kron_nnz + length( A_encode{count}.IndexJ);
                 
                 count=count+1;
                 
@@ -119,15 +141,17 @@ for sum_level=0:n
                     J1=Index_1D(k,j1_level);
                     J2=I2;J3=I3;J4=I4;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    for jjj=1:size(key_j,1)
+                       Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
+                    end
                     
-                    Index_J=findvs(Hash,key_j);
                     
-                    [II,JJ]=meshgrid(Real_index(Index_J+1),Real_index(Index_I+1));
+                    [II,JJ]=meshgrid(Index_J,Index_I);
                     
                     tmp=kron(kron(kron(Stiff_1D(J1,I1),M_mass(J2,I2)),M_mass(J3,I3)),M_mass(J4,I4));
                     
-                    A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
+                    A_s=A_s+sparse([II,JJ],[JJ,II],[tmp',tmp'],dof_sparse,dof_sparse);
                     
                     % save matrices to files
                     A_encode{count}.A1=Stiff_1D(J1,I1);
@@ -135,7 +159,13 @@ for sum_level=0:n
                     A_encode{count}.A3=M_mass(J3,I3);
                     A_encode{count}.A4=M_mass(J4,I4);
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(A1,A2,A3,A4);
+                    
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.A1, ...
+                                  A_encode{count}.A2, ...
+                                  A_encode{count}.A3, ...
+                                  A_encode{count}.A4 );
                     
                     A_encode{count}.B1=0;
                     A_encode{count}.B2=0;
@@ -152,15 +182,24 @@ for sum_level=0:n
                     A_encode{count}.D3=0;
                     A_encode{count}.D4=0;
                     
-                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
-                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    A_encode{count}.IndexI=Index_J;
+                    A_encode{count}.IndexJ=Index_I;
+
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexJ);
+
                     
                     A_encode{count+1}.A1=Stiff_1D(J1,I1)';
                     A_encode{count+1}.A2=M_mass(J2,I2)';
                     A_encode{count+1}.A3=M_mass(J3,I3)';
                     A_encode{count+1}.A4=M_mass(J4,I4)';
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(A1,A2,A3,A4);
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count+1}.A1, ...
+                                  A_encode{count+1}.A2, ...
+                                  A_encode{count+1}.A3, ...
+                                  A_encode{count+1}.A4 );
                     
                     A_encode{count+1}.B1=0;
                     A_encode{count+1}.B2=0;
@@ -177,11 +216,14 @@ for sum_level=0:n
                     A_encode{count+1}.D3=0;
                     A_encode{count+1}.D4=0;
                     
-                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
-                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    A_encode{count+1}.IndexI=Index_I;
+                    A_encode{count+1}.IndexJ=Index_J;
+
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexJ);
                     
                     count=count+2;
-                    
+                    clear Index_J
                 end
                 
                 % Term 3: I*S*I*I--Assume j1_level==i1_level
@@ -192,15 +234,18 @@ for sum_level=0:n
                     J2=Index_1D(k,j2_level);
                     J1=I1;J3=I3;J4=I4;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    for jjj=1:size(key_j,1)
+                        Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
+                    end
                     
-                    Index_J=findvs(Hash,key_j);
                     
-                    [II,JJ]=meshgrid(Real_index(Index_J+1),Real_index(Index_I+1));
+                    
+                    [II,JJ]=meshgrid(Index_J,Index_I);
                     
                     tmp=kron(kron(kron(M_mass(J1,I1),Stiff_1D(J2,I2)),M_mass(J3,I3)),M_mass(J4,I4));
                     
-                    A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
+                    A_s=A_s+sparse([II,JJ],[JJ,II],[tmp',tmp'],dof_sparse,dof_sparse);
                     
                     % save matrices to files
                     A_encode{count}.A1=0;
@@ -213,7 +258,12 @@ for sum_level=0:n
                     A_encode{count}.B3=M_mass(J3,I3);
                     A_encode{count}.B4=M_mass(J4,I4);
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(B1,B2,B3,B4);
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.B1, ...
+                                  A_encode{count}.B2, ...
+                                  A_encode{count}.B3, ...
+                                  A_encode{count}.B4 );
                     
                     A_encode{count}.C1=0;
                     A_encode{count}.C2=0;
@@ -225,8 +275,11 @@ for sum_level=0:n
                     A_encode{count}.D3=0;
                     A_encode{count}.D4=0;
                     
-                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
-                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    A_encode{count}.IndexI=Index_J;
+                    A_encode{count}.IndexJ=Index_I;
+
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexJ);
                     
                     A_encode{count+1}.A1=0;
                     A_encode{count+1}.A2=0;
@@ -238,7 +291,12 @@ for sum_level=0:n
                     A_encode{count+1}.B3=M_mass(J3,I3)';
                     A_encode{count+1}.B4=M_mass(J4,I4)';
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(B1,B2,B3,B4);
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count+1}.B1, ...
+                                  A_encode{count+1}.B2, ...
+                                  A_encode{count+1}.B3, ...
+                                  A_encode{count+1}.B4 );
                     
                     A_encode{count+1}.C1=0;
                     A_encode{count+1}.C2=0;
@@ -250,10 +308,14 @@ for sum_level=0:n
                     A_encode{count+1}.D3=0;
                     A_encode{count+1}.D4=0;
                     
-                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
-                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    A_encode{count+1}.IndexI=Index_I;
+                    A_encode{count+1}.IndexJ=Index_J;
+
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexJ);
+
                     count=count+2;
-                    
+                    clear Index_J
                 end
                 
                 % Term 4: I*I*S*I--Assume j1_level==i1_level
@@ -264,14 +326,17 @@ for sum_level=0:n
                     J3=Index_1D(k,j3_level);
                     J1=I1;J2=I2;J4=I4;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    for jjj=1:size(key_j,1)
+                        Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
+                    end
                     
-                    Index_J=findvs(Hash,key_j);
                     
-                    [II,JJ]=meshgrid(Real_index(Index_J+1),Real_index(Index_I+1));
+                    
+                    [II,JJ]=meshgrid(Index_J,Index_I);
                     
                     tmp=kron(kron(kron(M_mass(J1,I1),M_mass(J2,I2)),Stiff_1D(J3,I3)),M_mass(J4,I4));
-                    A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
+                    A_s=A_s+sparse([II,JJ],[JJ,II],[tmp',tmp'],dof_sparse,dof_sparse);
                     
                     % save matrices to files
                     A_encode{count}.A1=0;
@@ -289,15 +354,23 @@ for sum_level=0:n
                     A_encode{count}.C3=Stiff_1D(J3,I3);
                     A_encode{count}.C4=M_mass(J4,I4);
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(C1,C2,C3,C4);
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.C1, ...
+                                  A_encode{count}.C2, ...
+                                  A_encode{count}.C3, ...
+                                  A_encode{count}.C4 );
                     
                     A_encode{count}.D1=0;
                     A_encode{count}.D2=0;
                     A_encode{count}.D3=0;
                     A_encode{count}.D4=0;
                     
-                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
-                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    A_encode{count}.IndexI=Index_J;
+                    A_encode{count}.IndexJ=Index_I;
+
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexJ);
                     
                     A_encode{count+1}.A1=0;
                     A_encode{count+1}.A2=0;
@@ -314,17 +387,26 @@ for sum_level=0:n
                     A_encode{count+1}.C3=Stiff_1D(J3,I3)';
                     A_encode{count+1}.C4=M_mass(J4,I4)';
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(C1,C2,C3,C4);
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count+1}.C1, ...
+                                  A_encode{count+1}.C2, ...
+                                  A_encode{count+1}.C3, ...
+                                  A_encode{count+1}.C4 );
                     
                     A_encode{count+1}.D1=0;
                     A_encode{count+1}.D2=0;
                     A_encode{count+1}.D3=0;
                     A_encode{count+1}.D4=0;
                     
-                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
-                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    A_encode{count+1}.IndexI=Index_I;
+                    A_encode{count+1}.IndexJ=Index_J;
+
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexJ);
                     
                     count=count+2;
+                    clear Index_J
                 end
                 
                 % Term 5: I*I*I*S--Assume j1_level==i1_level
@@ -335,14 +417,15 @@ for sum_level=0:n
                     J4=Index_1D(k,j4_level);
                     J1=I1;J2=I2;J3=I3;
                     
-                    key_j=GenerateKey(J1,J2,J3,J4,Key1dMesh);
-                    
-                    Index_J=findvs(Hash,key_j);
-                    
-                    [II,JJ]=meshgrid(Real_index(Index_J+1),Real_index(Index_I+1));
+                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    for jjj=1:size(key_j,1)
+                        Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
+                    end
+ 
+                    [II,JJ]=meshgrid(Index_J,Index_I);
                     
                     tmp=kron(kron(kron(M_mass(J1,I1),M_mass(J2,I2)),M_mass(J3,I3)),Stiff_1D(J4,I4));
-                    A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
+                    A_s=A_s+sparse([II,JJ],[JJ,II],[tmp',tmp'],dof_sparse,dof_sparse);
                     
                     % save matrices to files
                     A_encode{count}.A1=0;
@@ -365,10 +448,18 @@ for sum_level=0:n
                     A_encode{count}.D3=M_mass(J3,I3);
                     A_encode{count}.D4=Stiff_1D(J4,I4);
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(D1,D2,D3,D4);
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count}.D1, ...
+                                  A_encode{count}.D2, ...
+                                  A_encode{count}.D3, ...
+                                  A_encode{count}.D4 );
                     
-                    A_encode{count}.IndexI=double(Real_index(Index_J+1));
-                    A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+                    A_encode{count}.IndexI=Index_J;
+                    A_encode{count}.IndexJ=Index_I;
+
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count}.IndexJ);
                     
                     A_encode{count+1}.A1=0;
                     A_encode{count+1}.A2=0;
@@ -390,28 +481,49 @@ for sum_level=0:n
                     A_encode{count+1}.D3=M_mass(J3,I3)';
                     A_encode{count+1}.D4=Stiff_1D(J4,I4)';
 
-                    total_kron_flops = total_kron_flops + kron_mult_cost4(D1,D2,D3,D4);
+                    kron_flops = kron_flops + ...
+                              kron_mult_cost4( ...
+                                  A_encode{count+1}.D1, ...
+                                  A_encode{count+1}.D2, ...
+                                  A_encode{count+1}.D3, ...
+                                  A_encode{count+1}.D4 );
                     
-                    A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
-                    A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+                    A_encode{count+1}.IndexI=Index_I;
+                    A_encode{count+1}.IndexJ=Index_J;
+
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexI);
+                    kron_nnz = kron_nnz + length( A_encode{count+1}.IndexJ);
                     
                     count=count+2;
-                    
+                    clear Index_J
                 end
                 
-                
+                clear Index_I
             end
         end
     end
     
 end
+
+% -----------------------
+% ensure A_s is symmetric
+% -----------------------
+A_s  = (A_s + A_s')/2;
+
+disp(sprintf('Np=%d,k=%d, n=%d, kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g ', ...
+              Np, k, size(A_s,1), ...
+              kron_flops,    kron_nnz, nnz(A_s)  ));
+
 figure;
 spy(A_s)
+title(sprintf('4D problem, Np=%d,k=%d, n=%d,nnz=%g',...
+    Np, k, ...
+    size(A_s,1),nnz(A_s)  ));
 
-eigs(A_s,3,'SM')
-
-disp(sprintf('nnz(A_s)=%g', nnz(A_s)));
-disp(sprintf('total kron flops=%g ', total_kron_flops ));
+% -------------------------
+% estimate condition number
+% -------------------------
+%eigs(A_s,2,'BE')
 
 % tic
 sol_s = A_s\b_s*pi^2*4;
@@ -424,15 +536,6 @@ save(['./Data/A_4D_encode.mat'],'A_encode');
 % check error
 norm(sol_s-uu_s)
 
-% disp('Done of MapMW2DG')
-%
-% val=MapMW2DG'*sol_s;
-% [x1,x2,x3,x4]=ndgrid(xxnode);
-%
-% sol=exactu_4D(x1(:),x2(:),x3(:),x4(:));
-% norm(val-sol(:))
-% max(abs(val-sol(:)))
-% run ComputeError4D.m
 
 function Ix=Index_1D(k,level)
 
@@ -444,7 +547,7 @@ end
 
 end
 
-function key=GenerateKey(I1,I2,I3,I4,Key1dMesh)
+function key=GenerateKey4D(I1,I2,I3,I4,Key1dMesh)
 
 tmp_1=Key1dMesh(I1,:);
 tmp_2=Key1dMesh(I2,:);

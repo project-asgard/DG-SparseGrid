@@ -1,5 +1,11 @@
 % Computing on the sparse grid for Poisson Eq
+% 2-dimensional calculation
+%------------------------------------------------
+% A_s: Matrix
+% b_s: RHS
+% sol_s: Solution
 % Loop sum_level
+%------------------------------------------------
 dim=2;
 
 % ['Generate 1D keys']
@@ -22,7 +28,7 @@ Key1dMesh=[nx,px,kx];
 ['Generate ',num2str(dim),'-D Hash Table']
 % tic
 Hash =Mesh_interface;
-Hash.init (dim,n,k-1,20);
+Hash.init (dim,n,k-1,k^dim);
 % toc
 dof_sparse = double(Hash.size);
 
@@ -36,8 +42,9 @@ A_s = sparse(dof_sparse,dof_sparse);
 
 b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
+uu_s=sparse(dof_sparse,1);
 
-
+count=1;
 % Method 2
 for sum_level=0:n
     for ix_level=0:sum_level
@@ -54,9 +61,21 @@ for sum_level=0:n
         [II,JJ]=meshgrid(Real_index(Index_I+1),Real_index(Index_I+1));
 
         A_s=A_s+sparse(double(II),double(JJ),tmp,dof_sparse,dof_sparse);
+        
         tmp=kron(b(Ix),b(Iy));
-        b_s(Index_I+1)=b_s(Index_I+1)+tmp;
-              
+
+        b_s(Real_index(Index_I+1))=b_s(Real_index(Index_I+1))+tmp;
+        uu_s(Real_index(Index_I+1))=uu_s(Real_index(Index_I+1))+kron(coef_MW(Ix),coef_MW(Iy));
+        
+                % save matrices to files
+        A_encode{count}.A1=Stiff_1D(Ix,Ix);
+        A_encode{count}.A2=M_mass(Iy,Iy);
+        A_encode{count}.B1=M_mass(Ix,Ix);
+        A_encode{count}.B2=Stiff_1D(Iy,Iy);
+        A_encode{count}.IndexI=double(Real_index(Index_I+1));
+        A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+        count=count+1;
+        
         % Term 2: SxI--Assume jy_level==iy_level
         jy_level=iy_level;
         for jx_level=0:ix_level-1
@@ -73,9 +92,24 @@ for sum_level=0:n
             
             
             tmp=kron(Stiff_1D(Jx,Ix),M_mass(Jy,Iy));
-            
             A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
             
+            % save matrices to files
+            A_encode{count}.A1=Stiff_1D(Jx,Ix);
+            A_encode{count}.A2=M_mass(Jy,Iy);
+            A_encode{count}.B1=0;
+            A_encode{count}.B2=0;
+            A_encode{count}.IndexI=double(Real_index(Index_J+1));
+            A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+
+            A_encode{count+1}.A1=Stiff_1D(Jx,Ix)';
+            A_encode{count+1}.A2=M_mass(Jy,Iy)';
+            A_encode{count+1}.B1=0;
+            A_encode{count+1}.B2=0;
+            A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
+            A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+            
+            count=count+2;
             
         end
         % Term 3: S*I
@@ -95,6 +129,22 @@ for sum_level=0:n
             
             A_s=A_s+sparse([double(II),double(JJ)],[double(JJ),double(II)],[tmp',tmp'],dof_sparse,dof_sparse);
             
+                        % save matrices to files
+            A_encode{count}.A1=0;
+            A_encode{count}.A2=0;
+            A_encode{count}.B1=M_mass(Jx,Ix);
+            A_encode{count}.B2=Stiff_1D(Jy,Iy);
+            A_encode{count}.IndexI=double(Real_index(Index_J+1));
+            A_encode{count}.IndexJ=double(Real_index(Index_I+1));
+
+            A_encode{count+1}.A=0;
+            A_encode{count+1}.B=0;
+            A_encode{count+1}.C=M_mass(Jx,Ix)';
+            A_encode{count+1}.D=Stiff_1D(Jy,Iy)';
+            A_encode{count+1}.IndexI=double(Real_index(Index_I+1));
+            A_encode{count+1}.IndexJ=double(Real_index(Index_J+1));
+            
+            count=count+2;
             
         end
         
@@ -104,13 +154,19 @@ for sum_level=0:n
 end
 figure;
 spy(A_s)
+title(sprintf('4D problem, n=%d,nnz=%g,condest=%g',...
+    size(A_s,1),nnz(A_s),condest(A_s)  ));
+% Check matrix
+% eigs(A_s,3,'SM')
 
-eigs(A_s,3,'SM')
+save(['./Data/A_2D_encode.mat'],'A_encode');
 
 % tic
-% sol_s = A_s\b_s*pi^2*2;
+sol_s = A_s\b_s*pi^2*2;
 % toc
 
+% compare the solution with interpolation
+norm(sol_s-uu_s)
 function Ix=Index_1D(k,level)
 
 if level==0
