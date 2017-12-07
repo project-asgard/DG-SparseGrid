@@ -55,7 +55,7 @@ for sum_level=0:n
                 
                 
                 
-                key_i=GenerateKey4D(I1,I2,I3,I4,Key1dMesh);
+                key_i=GenerateKey4Dv2(I1,I2,I3,I4,Key1dMesh);
                 for iii=1:size(key_i,1)
                     Index_I(iii,1)=database.(sprintf('i%g_',key_i(iii,:)));
                 end
@@ -141,7 +141,7 @@ for sum_level=0:n
                     J1=Index_1D(k,j1_level);
                     J2=I2;J3=I3;J4=I4;
                     
-                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4Dv2(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                        Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -234,7 +234,7 @@ for sum_level=0:n
                     J2=Index_1D(k,j2_level);
                     J1=I1;J3=I3;J4=I4;
                     
-                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4Dv2(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                         Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -326,7 +326,7 @@ for sum_level=0:n
                     J3=Index_1D(k,j3_level);
                     J1=I1;J2=I2;J4=I4;
                     
-                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4Dv2(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                         Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -417,7 +417,7 @@ for sum_level=0:n
                     J4=Index_1D(k,j4_level);
                     J1=I1;J2=I2;J3=I3;
                     
-                    key_j=GenerateKey4D(J1,J2,J3,J4,Key1dMesh);
+                    key_j=GenerateKey4Dv2(J1,J2,J3,J4,Key1dMesh);
                     for jjj=1:size(key_j,1)
                         Index_J(jjj,1)=database.(sprintf('i%g_',key_j(jjj,:)));
                     end
@@ -526,7 +526,64 @@ title(sprintf('4D problem, Np=%d,k=%d, n=%d,nnz=%g',...
 %eigs(A_s,2,'BE')
 
 % tic
-sol_s = A_s\b_s*pi^2*4;
+is_small_A_s = (size(A_s,1) <= 4*1024);
+use_direct_solve = is_small_A_s;
+if (use_direct_solve),
+  sol_s = A_s\b_s*pi^2*4;
+else
+  x0 = 0*b_s;
+  tol = 1e-9;
+  maxit = min( 1000, size(A_s,1)+10);
+
+  use_ilu = 0;
+  if (use_ilu),
+    % ---------------------------------
+    % use Incomplete LU  factorization as
+    % preconditioner
+    % ---------------------------------
+    time_ilu = -time();
+    ilu_opts.type = 'nofill';
+    % ----------------
+    % M1 is L, M2 is U
+    % ----------------
+    [M1,M2] = ilu(A_s);   
+    time_ilu = time_ilu + time();
+    disp(sprintf('time for ILU=%g sec ', time_ilu ));
+
+   else
+    % ---------------------------
+    % use simple diagonal scaling
+    % ---------------------------
+    n = size(A_s,1);
+    d = diag(A_s,0);
+    d( abs(d) < eps ) = 1;
+    M1 = sparse( 1:n,1:n, d,  n,n);
+    M2 = [];
+   end;
+  
+  
+  time_iter = -time();
+  [sol_s,flag,relres,iter,resvec,eigest] = pcg( ...
+     A_s, b_s*pi^2*4, tol, maxit, M1, M2, x0 );
+  time_iter = time_iter + time();
+  disp(sprintf('time for iterative method=%g ', time_iter));
+  isok = (flag == 0);
+  if (isok),
+    disp(sprintf('convergence after %d iterations',iter));
+  else
+    disp(sprintf('NO convergence after %d iterations',iter));
+  end;
+
+  condest = eigest(2) / eigest(1);
+  disp(sprintf('eigest=(%g, %g), condest=%g', ...
+          eigest(1),eigest(2), condest ));
+
+
+  figure;
+  semilogy( resvec  );
+  title('converge of iterative method ');
+end;
+  
 % toc
 
 save(['./Data/A_4D_encode.mat'],'A_encode');
@@ -547,7 +604,7 @@ end
 
 end
 
-function key=GenerateKey4D(I1,I2,I3,I4,Key1dMesh)
+function key=GenerateKey4Dv2_org(I1,I2,I3,I4,Key1dMesh)
 
 tmp_1=Key1dMesh(I1,:);
 tmp_2=Key1dMesh(I2,:);
