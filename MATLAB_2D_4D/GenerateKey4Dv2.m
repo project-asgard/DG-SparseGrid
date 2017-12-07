@@ -22,13 +22,17 @@ idx2 = [2:dim:3*dim];
 idx3 = [3:dim:3*dim];
 idx4 = [4:dim:3*dim];
 
+use_loop = (n4 <= 8);
+i4 = reshape(1:n4,n4,1);
 for i1=1:n1
     row(idx1) = tmp_1(i1,:);
     for i2=1:n2
         row(idx2) = tmp_2(i2,:);
         for i3=1:n3
             row(idx3) = tmp_3(i3,:);
-            for i4=1:n4
+
+            if (use_loop),
+             for i4=1:n4
                 row(idx4) = tmp_4(i4,:);
                 key(count,:) = row;
 
@@ -37,7 +41,13 @@ for i1=1:n1
                 % key(count,[3:dim:3*dim])=tmp_3(i3,:);
                 % key(count,[4:dim:3*dim])=tmp_4(i4,:);
                 count=count+1;
-            end
+             end
+            else
+             mat = repmat(row, [n4,1]);
+             mat(i4,idx4) = tmp_4(i4,:);
+             key(count:(count+n4-1),1:(3*dim)) = mat(1:n4,1:(3*dim));
+             count = count + n4;
+            end;
         end
     end
 end
