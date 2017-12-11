@@ -505,6 +505,11 @@ for sum_level=0:n
     
 end
 
+save(['./Data/A_4D_encode.mat'],'A_encode');
+
+B_encode{1} = count
+B_encode{2} = A_encode;
+
 % -----------------------
 % ensure A_s is symmetric
 % -----------------------
@@ -525,6 +530,54 @@ title(sprintf('4D problem, Np=%d,k=%d, n=%d,nnz=%g',...
 % -------------------------
 %eigs(A_s,2,'BE')
 
+function y = apply_As(x, varargin)
+  As = varargin{1};
+  y = As * x;
+endfunction
+
+function y = apply_Aencode(x, varargin)
+  Bencode = varargin{1};
+  N = Bencode{1}
+  Aencode = Bencode{2};
+  %celldisp (Aencode(1))
+  %N = prod(size(Aencode));
+  for count = 1: N
+    
+    nkron = 4;
+    IndexI = Aencode{count}.IndexJ;
+    IndexJ = Aencode{count}.IndexJ;
+    my_X = x(IndexI);
+
+    Acell{1} = Aencode{count}.A1;
+    Acell{2} = Aencode{count}.A2;
+    Acell{3} = Aencode{count}.A3;
+    Acell{4} = Aencode{count}.A4;
+    my_Y = kron_multd(nkron, Acell, my_X);
+    y(IndexJ) = y(IndexJ) + my_Y;
+
+    Bcell{1} = Aencode{count}.B1;
+    Bcell{2} = Aencode{count}.B2;
+    Bcell{3} = Aencode{count}.B3;
+    Bcell{4} = Aencode{count}.B4;
+    my_Y = kron_multd(nkron, Bcell, my_X);
+    y(IndexJ) = y(IndexJ) + my_Y;
+    
+    Ccell{1} = Aencode{count}.C1;
+    Ccell{2} = Aencode{count}.C2;
+    Ccell{3} = Aencode{count}.C3;
+    Ccell{4} = Aencode{count}.C4;
+    my_Y = kron_multd(nkron, Ccell, my_X);
+    y(IndexJ) = y(IndexJ) + my_Y;
+
+    Dcell{1} = Aencode{count}.D1;
+    Dcell{2} = Aencode{count}.D2;
+    Dcell{3} = Aencode{count}.D3;
+    Dcell{4} = Aencode{count}.D4;
+    my_Y = kron_multd(nkron, Dcell, my_X);
+    y(IndexJ) = y(IndexJ) + my_Y;
+    
+  endfor 
+endfunction
 % tic
 is_small_A_s = (size(A_s,1) <= 4*1024);
 use_direct_solve = is_small_A_s;
@@ -560,11 +613,24 @@ else
     M1 = sparse( 1:n,1:n, d,  n,n);
     M2 = [];
    end;
-  
-  
+
+  use_function_handle = true
+  use_Aencode = true
   time_iter = -time();
-  [sol_s,flag,relres,iter,resvec,eigest] = pcg( ...
-     A_s, b_s*pi^2*4, tol, maxit, M1, M2, x0 );
+  if (use_function_handle),
+    if (use_Aencode),
+      myfun = "apply_Aencode";
+      myarg = B_encode;
+    else
+      myfun = "apply_As"
+      myarg = A_s
+    end;
+    [sol_s,flag,relres,iter,resvec,eigest] = pcg( ...
+       myfun, b_s*pi^2*4, tol, maxit, M1, M2, x0, myarg );
+  else
+    [sol_s,flag,relres,iter,resvec,eigest] = pcg( ...
+        A_s, b_s*pi^2*4, tol, maxit, M1, M2, x0 );
+  end;
   time_iter = time_iter + time();
   disp(sprintf('time for iterative method=%g ', time_iter));
   isok = (flag == 0);
@@ -592,7 +658,6 @@ save(['./Data/A_4D_encode.mat'],'A_encode');
 ['Done of Solution']
 % check error
 norm(sol_s-uu_s)
-
 
 function Ix=Index_1D(k,level)
 
