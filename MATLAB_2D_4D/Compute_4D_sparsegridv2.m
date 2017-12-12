@@ -42,6 +42,8 @@ kron_nnz = 0;
 
 
 % Method
+count = 1;
+clear A_encode;
 for sum_level=0:n
     for i1_level=0:sum_level
         for i2_level=0:sum_level-i1_level
@@ -507,9 +509,6 @@ end
 
 save(['./Data/A_4D_encode.mat'],'A_encode');
 
-B_encode{1} = count
-B_encode{2} = A_encode;
-
 % -----------------------
 % ensure A_s is symmetric
 % -----------------------
@@ -536,48 +535,111 @@ function y = apply_As(x, varargin)
 endfunction
 
 function y = apply_Aencode(x, varargin)
-  Bencode = varargin{1};
-  N = Bencode{1}
-  Aencode = Bencode{2};
+  
+  Aencode = varargin{1};
   %celldisp (Aencode(1))
-  %N = prod(size(Aencode));
+  N = prod(size(Aencode));
+  y = zeros(size(x));
   for count = 1: N
     
     nkron = 4;
-    IndexI = Aencode{count}.IndexJ;
+    IndexI = Aencode{count}.IndexI;
     IndexJ = Aencode{count}.IndexJ;
-    my_X = x(IndexI);
-
-    Acell{1} = Aencode{count}.A1;
-    Acell{2} = Aencode{count}.A2;
-    Acell{3} = Aencode{count}.A3;
-    Acell{4} = Aencode{count}.A4;
-    my_Y = kron_multd(nkron, Acell, my_X);
-    y(IndexJ) = y(IndexJ) + my_Y;
-
-    Bcell{1} = Aencode{count}.B1;
-    Bcell{2} = Aencode{count}.B2;
-    Bcell{3} = Aencode{count}.B3;
-    Bcell{4} = Aencode{count}.B4;
-    my_Y = kron_multd(nkron, Bcell, my_X);
-    y(IndexJ) = y(IndexJ) + my_Y;
+%    printf("Count = %d  size(indexI) = %d  %d  size(indexJ) = %d  %d\n", ...
+%            count, size(IndexI), size(IndexJ));
+    my_X_I = x(IndexI);
+    my_X_J = x(IndexJ);
+%    printf("my_X_I = %f  \n", my_X_I);
+%    printf("my_X_J = %f  \n", my_X_J);
     
-    Ccell{1} = Aencode{count}.C1;
-    Ccell{2} = Aencode{count}.C2;
-    Ccell{3} = Aencode{count}.C3;
-    Ccell{4} = Aencode{count}.C4;
-    my_Y = kron_multd(nkron, Ccell, my_X);
-    y(IndexJ) = y(IndexJ) + my_Y;
+    Acell{1} = Aencode{count}.A1';
+    Acell{2} = Aencode{count}.A2';
+    Acell{3} = Aencode{count}.A3';
+    Acell{4} = Aencode{count}.A4';
+    if (sum(sum(Acell{1})) && sum(sum(Acell{2})) &&  ...
+        sum(sum(Acell{3})) && sum(sum(Acell{4}))),
+      my_Y = kron_multd(nkron, Acell, my_X_I);
+%      count
+%      size(my_X)
+%      size(my_Y)
+      y(IndexJ) = y(IndexJ) + my_Y;
 
-    Dcell{1} = Aencode{count}.D1;
-    Dcell{2} = Aencode{count}.D2;
-    Dcell{3} = Aencode{count}.D3;
-    Dcell{4} = Aencode{count}.D4;
-    my_Y = kron_multd(nkron, Dcell, my_X);
-    y(IndexJ) = y(IndexJ) + my_Y;
+      Acell{1} = Aencode{count}.A1;
+      Acell{2} = Aencode{count}.A2;
+      Acell{3} = Aencode{count}.A3;
+      Acell{4} = Aencode{count}.A4;
+      my_Y = kron_multd(nkron, Acell, my_X_J);
+      y(IndexI) = y(IndexI) + my_Y;
+   endif;
     
+    Bcell{1} = Aencode{count}.B1';
+    Bcell{2} = Aencode{count}.B2';
+    Bcell{3} = Aencode{count}.B3';
+    Bcell{4} = Aencode{count}.B4';
+    if (sum(sum(Bcell{1})) && sum(sum(Bcell{2})) &&  sum(sum(Bcell{3})) ...
+      && sum(sum(Bcell{4}))),
+      my_Y = kron_multd(nkron, Bcell, my_X_I);
+      y(IndexJ) = y(IndexJ) + my_Y;
+      
+      Bcell{1} = Aencode{count}.B1;
+      Bcell{2} = Aencode{count}.B2;
+      Bcell{3} = Aencode{count}.B3;
+      Bcell{4} = Aencode{count}.B4;
+      my_Y = kron_multd(nkron, Bcell, my_X_J);
+      y(IndexI) = y(IndexI) + my_Y;
+    endif;
+    
+    Ccell{1} = Aencode{count}.C1';
+    Ccell{2} = Aencode{count}.C2';
+    Ccell{3} = Aencode{count}.C3';
+    Ccell{4} = Aencode{count}.C4';
+    if (sum(sum(Ccell{1})) && sum(sum(Ccell{2})) &&  sum(sum(Ccell{3})) ...
+      && sum(sum(Ccell{4}))),
+      my_Y = kron_multd(nkron, Ccell, my_X_I);
+      y(IndexJ) = y(IndexJ) + my_Y;
+
+      Ccell{1} = Aencode{count}.C1;
+      Ccell{2} = Aencode{count}.C2;
+      Ccell{3} = Aencode{count}.C3;
+      Ccell{4} = Aencode{count}.C4; 
+      my_Y = kron_multd(nkron, Ccell, my_X_J);
+      y(IndexI) = y(IndexI) + my_Y;
+    endif;
+    
+    Dcell{1} = Aencode{count}.D1';
+    Dcell{2} = Aencode{count}.D2';
+    Dcell{3} = Aencode{count}.D3';
+    Dcell{4} = Aencode{count}.D4';
+    if (sum(sum(Dcell{1})) && sum(sum(Dcell{2})) &&  sum(sum(Dcell{3})) ...
+      && sum(sum(Dcell{4}))),
+      my_Y = kron_multd(nkron, Dcell, my_X_I);
+      size(my_X_I);
+      size(my_Y);
+      size(y(IndexJ));
+      y(IndexJ) = y(IndexJ) + my_Y;
+      
+      Dcell{1} = Aencode{count}.D1;
+      Dcell{2} = Aencode{count}.D2;
+      Dcell{3} = Aencode{count}.D3;
+      Dcell{4} = Aencode{count}.D4;
+      my_Y = kron_multd(nkron, Dcell, my_X_J);
+      y(IndexI) = y(IndexI) + my_Y;
+    endif;
   endfor 
 endfunction
+
+testX = ones(size(b_s));
+Y1 = apply_As(testX, A_s);
+Y2 = apply_Aencode(testX, A_encode);
+
+size(Y1)
+Y1(1:200)
+size(Y2)
+0.5 * Y2(1:200)
+
+sum(Y1 - 0.5 * Y2)
+exit
+
 % tic
 is_small_A_s = (size(A_s,1) <= 4*1024);
 use_direct_solve = is_small_A_s;
@@ -620,7 +682,7 @@ else
   if (use_function_handle),
     if (use_Aencode),
       myfun = "apply_Aencode";
-      myarg = B_encode;
+      myarg = A_encode;
     else
       myfun = "apply_As"
       myarg = A_s
