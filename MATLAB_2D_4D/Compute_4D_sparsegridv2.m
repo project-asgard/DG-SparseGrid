@@ -456,13 +456,35 @@ disp(sprintf('Np=%d,k=%d, n=%d, kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g ', ...
               Np, k, size(A_s,1), ...
               kron_flops,    kron_nnz, nnz(A_s)  ));
 
-use_dense_matrix = 0;
+use_dense_matrix = 1;
 if (use_dense_matrix),
+  ratio = 0.25;
   for count=1:length(A_encode),
-     A_encode{count}.A1 = full(A_encode{count}.A1);
-     A_encode{count}.A2 = full(A_encode{count}.A2);
-     A_encode{count}.A3 = full(A_encode{count}.A3);
-     A_encode{count}.A4 = full(A_encode{count}.A4);
+
+     is_very_sparse = (nnz(A_encode{count}.A1) < ...
+                      ratio*prod(size(A_encode{count}.A1)));
+     if (~is_very_sparse),
+       A_encode{count}.A1 = full(A_encode{count}.A1);
+     end;
+
+     is_very_sparse = (nnz(A_encode{count}.A2) < ...
+                      ratio*prod(size(A_encode{count}.A2)));
+     if (~is_very_sparse),
+       A_encode{count}.A2 = full(A_encode{count}.A2);
+     end;
+
+     is_very_sparse = (nnz(A_encode{count}.A3) < ...
+                      ratio*prod(size(A_encode{count}.A3)));
+     if (~is_very_sparse),
+       A_encode{count}.A3 = full(A_encode{count}.A3);
+     end;
+
+     is_very_sparse = (nnz(A_encode{count}.A4) < ...
+                      ratio*prod(size(A_encode{count}.A4)));
+     if (~is_very_sparse),
+       A_encode{count}.A4 = full(A_encode{count}.A4);
+     end;
+
   end;
 end;
   

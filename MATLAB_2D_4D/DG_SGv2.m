@@ -45,6 +45,3 @@ toc
 %  % index for 1D
 %  I=(2^mx+ix);
 %  end
-
-
-
