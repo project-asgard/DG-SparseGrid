@@ -549,6 +549,9 @@ function y = apply_Aencode(x, varargin)
 %            count, size(IndexI), size(IndexJ));
     my_X_I = x(IndexI);
     my_X_J = x(IndexJ);
+    
+    do_transpose = all(size(IndexI) == size(IndexJ)) && all(IndexI == InexJ)
+    
 %    printf("my_X_I = %f  \n", my_X_I);
 %    printf("my_X_J = %f  \n", my_X_J);
     
@@ -564,12 +567,14 @@ function y = apply_Aencode(x, varargin)
 %      size(my_Y)
       y(IndexJ) = y(IndexJ) + my_Y;
 
-      Acell{1} = Aencode{count}.A1;
-      Acell{2} = Aencode{count}.A2;
-      Acell{3} = Aencode{count}.A3;
-      Acell{4} = Aencode{count}.A4;
-      my_Y = kron_multd(nkron, Acell, my_X_J);
-      y(IndexI) = y(IndexI) + my_Y;
+      if (do_transpose),
+        Acell{1} = Aencode{count}.A1;
+        Acell{2} = Aencode{count}.A2;
+        Acell{3} = Aencode{count}.A3;
+        Acell{4} = Aencode{count}.A4;
+        my_Y = kron_multd(nkron, Acell, my_X_J);
+        y(IndexI) = y(IndexI) + my_Y;
+      endif;      
    endif;
     
     Bcell{1} = Aencode{count}.B1';
@@ -581,13 +586,16 @@ function y = apply_Aencode(x, varargin)
       my_Y = kron_multd(nkron, Bcell, my_X_I);
       y(IndexJ) = y(IndexJ) + my_Y;
       
-      Bcell{1} = Aencode{count}.B1;
-      Bcell{2} = Aencode{count}.B2;
-      Bcell{3} = Aencode{count}.B3;
-      Bcell{4} = Aencode{count}.B4;
-      my_Y = kron_multd(nkron, Bcell, my_X_J);
-      y(IndexI) = y(IndexI) + my_Y;
+      if (do_transpose),
+        Bcell{1} = Aencode{count}.B1;
+        Bcell{2} = Aencode{count}.B2;
+        Bcell{3} = Aencode{count}.B3;
+        Bcell{4} = Aencode{count}.B4;
+        my_Y = kron_multd(nkron, Bcell, my_X_J);
+        y(IndexI) = y(IndexI) + my_Y;
+      endif;
     endif;
+    
     
     Ccell{1} = Aencode{count}.C1';
     Ccell{2} = Aencode{count}.C2';
@@ -598,13 +606,15 @@ function y = apply_Aencode(x, varargin)
       my_Y = kron_multd(nkron, Ccell, my_X_I);
       y(IndexJ) = y(IndexJ) + my_Y;
 
-      Ccell{1} = Aencode{count}.C1;
-      Ccell{2} = Aencode{count}.C2;
-      Ccell{3} = Aencode{count}.C3;
-      Ccell{4} = Aencode{count}.C4; 
-      my_Y = kron_multd(nkron, Ccell, my_X_J);
-      y(IndexI) = y(IndexI) + my_Y;
-    endif;
+      if (do_transpose),
+        Ccell{1} = Aencode{count}.C1;
+        Ccell{2} = Aencode{count}.C2;
+        Ccell{3} = Aencode{count}.C3;
+        Ccell{4} = Aencode{count}.C4; 
+        my_Y = kron_multd(nkron, Ccell, my_X_J);
+        y(IndexI) = y(IndexI) + my_Y;
+      endif;
+    endif;    
     
     Dcell{1} = Aencode{count}.D1';
     Dcell{2} = Aencode{count}.D2';
@@ -618,13 +628,15 @@ function y = apply_Aencode(x, varargin)
       size(y(IndexJ));
       y(IndexJ) = y(IndexJ) + my_Y;
       
-      Dcell{1} = Aencode{count}.D1;
-      Dcell{2} = Aencode{count}.D2;
-      Dcell{3} = Aencode{count}.D3;
-      Dcell{4} = Aencode{count}.D4;
-      my_Y = kron_multd(nkron, Dcell, my_X_J);
-      y(IndexI) = y(IndexI) + my_Y;
-    endif;
+      if (do_transpose),
+        Dcell{1} = Aencode{count}.D1;
+        Dcell{2} = Aencode{count}.D2;
+        Dcell{3} = Aencode{count}.D3;
+        Dcell{4} = Aencode{count}.D4;
+        my_Y = kron_multd(nkron, Dcell, my_X_J);
+        y(IndexI) = y(IndexI) + my_Y;
+      endif;
+    endif;    
   endfor 
 endfunction
 
