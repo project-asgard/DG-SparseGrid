@@ -550,7 +550,9 @@ function y = apply_Aencode(x, varargin)
     my_X_I = x(IndexI);
     my_X_J = x(IndexJ);
     
-    do_transpose = not(all(size(IndexI) == size(IndexJ)) && all(IndexI == IndexJ))
+    do_transpose = not(all(size(IndexI) == size(IndexJ)) && ...
+                       all(IndexI == IndexJ));
+%    do_transpose = true;
     
 %    printf("my_X_I = %f  \n", my_X_I);
 %    printf("my_X_J = %f  \n", my_X_J);
@@ -647,9 +649,9 @@ Y2 = apply_Aencode(testX, A_encode);
 size(Y1)
 Y1(1:200)
 size(Y2)
-0.5 * Y2(1:200)
+Y2(1:200)
 
-sum(Y1 - 0.5 * Y2)
+sum(Y1 - Y2)
 exit
 
 % tic
