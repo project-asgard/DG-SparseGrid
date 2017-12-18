@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include "amgx_c.h"
 
 int main(int argc, char** argv) {
@@ -11,60 +12,56 @@ int main(int argc, char** argv) {
     AMGX_config_create(&config, "");
 
     // Simple GPU resource handle
-    AMGX_resources_handle rsrc;
-    AMGX_resources_create_simple(&rsrc, config);
+    AMGX_resources_handle resource;
+    AMGX_resources_create_simple(&resource, config);
 
     // Create a solver based upon the config
     AMGX_solver_handle solver;
-    AMGX_solver_create(&solver, rsrc, AMGX_mode_dDDI, config);
+    AMGX_solver_create(&solver, resource, AMGX_mode_dDDI, config);
 
-    //
-    // Create double precision device matrix/vectors for system: matrix * soln = rhs
-    // After creating on the host they will be sent to the solver
-    // pinned memory could also be used
-    //
+    // Create double precision device matrix/vectors for system: A*x = b
     
-    // matrix, 4x4 identity
-    AMGX_matrix_handle matrix;
-    AMGX_matrix_create(&matrix, rsrc, AMGX_mode_dDDI);
-    double data[] = {1, 1, 1, 1};
-    int col_ind[] = {0, 1, 2, 3};
-    int row_ptr[] = {0, 1, 2, 3, 4};
-    AMGX_matrix_upload_all(matrix, 4, 4, 1, 1, row_ptr, col_ind, data, 0);
+    // A, 4 x 4 identity matrix
+    AMGX_matrix_handle A;
+    AMGX_matrix_create(&A, resource, AMGX_mode_dDDI);
+    std::vector<double> A_data = {1.0, 1.0, 1.0, 1.0};
+    std::vector<int> A_row_ptr = {0,1,2,3,4};
+    std::vector<int> A_column_indices = {0,1,2,3};
+    AMGX_matrix_upload_all(A, 4, 4, 1, 1, A_row_ptr.data(), A_column_indices.data(), A_data.data(), 0);
 
-    // rhs, set to all 1's
-    AMGX_vector_handle rhs;
-    AMGX_vector_create(&rhs, rsrc, AMGX_mode_dDDI);
-    double rhs_data[] = {1,2,1,1};
-    AMGX_vector_upload(rhs, 4, 1, rhs_data);
+    // b(right hand side)
+    AMGX_vector_handle b;
+    AMGX_vector_create(&b, resource, AMGX_mode_dDDI);
+    std::vector<double> b_data = {1.0, 0.5, 0.25, 0.125};
+    AMGX_vector_upload(b, 4, 1, b_data.data());
 
-    // Initial guess is zero for simplicity
-    AMGX_vector_handle soln;
-    AMGX_vector_create(&soln, rsrc, AMGX_mode_dDDI);
-    AMGX_vector_set_zero(soln, 4, 1);
+    // Initial guess for x is zero vector
+    AMGX_vector_handle x;
+    AMGX_vector_create(&x, resource, AMGX_mode_dDDI);
+    AMGX_vector_set_zero(x, 4, 1);
 
     // setup and kickoff Solver
-    AMGX_solver_setup(solver, matrix);
-    AMGX_solver_solve(solver, rhs, soln);
+    AMGX_solver_setup(solver, A);
+    AMGX_solver_solve(solver, b, x);
 
     // Download solution vector from solver
-    double soln_data[4];
-    AMGX_vector_download(soln, soln_data);
+    std::vector<double> x_data(4);
+    AMGX_vector_download(x, x_data.data());
 
     // Print results
-    std::cout<<soln_data[0]<<std::endl;
-    std::cout<<soln_data[1]<<std::endl;
-    std::cout<<soln_data[2]<<std::endl;
-    std::cout<<soln_data[3]<<std::endl;
+    std::cout<<x_data[0]<<std::endl;
+    std::cout<<x_data[1]<<std::endl;
+    std::cout<<x_data[2]<<std::endl;
+    std::cout<<x_data[3]<<std::endl;
 
     // Cleanup matrix/vectors
-    AMGX_matrix_destroy(matrix);
-    AMGX_vector_destroy(rhs);
-    AMGX_vector_destroy(soln);
+    AMGX_matrix_destroy(A);
+    AMGX_vector_destroy(x);
+    AMGX_vector_destroy(b);
 
     // Destroy solver components
     AMGX_solver_destroy(solver);
-    AMGX_resources_destroy(rsrc);
+    AMGX_resources_destroy(resource);
     AMGX_config_destroy(config);
 
     // Finalize AMGX
