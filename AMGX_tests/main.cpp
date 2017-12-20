@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     // A, 4 x 4 identity matrix
     AMGX_matrix_handle A;
     AMGX_matrix_create(&A, resource, AMGX_mode_dDDI);
-    std::vector<double> A_data = {1.0, 1.0, 1.0, 1.0};
+    std::vector<double> A_data = {1.0, 0.5, 0.25, 0.125};
     std::vector<int> A_row_ptr = {0,1,2,3,4};
     std::vector<int> A_column_indices = {0,1,2,3};
     AMGX_matrix_upload_all(A, 4, 4, 1, 1, A_row_ptr.data(), A_column_indices.data(), A_data.data(), 0);
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     // b(right hand side)
     AMGX_vector_handle b;
     AMGX_vector_create(&b, resource, AMGX_mode_dDDI);
-    std::vector<double> b_data = {1.0, 0.5, 0.25, 0.125};
+    std::vector<double> b_data = {1.0, 1.0, 1.0, 1.0};
     AMGX_vector_upload(b, 4, 1, b_data.data());
 
     // Initial guess for x is zero vector
