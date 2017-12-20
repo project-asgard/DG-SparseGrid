@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
     // Create double precision device matrix/vectors for system: A*x = b
     
-    // A, 4 x 4 identity matrix
+    // A, 4 x 4 matrix
     AMGX_matrix_handle A;
     AMGX_matrix_create(&A, resource, AMGX_mode_dDDI);
     std::vector<double> A_data = {1.0, 0.5, 0.25, 0.125};
