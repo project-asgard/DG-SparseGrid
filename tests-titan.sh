@@ -26,4 +26,4 @@ EOF
 chmod +x ./aprun_command
 
 # Run through tests
-qsub -ASTF007 -lwalltime=00:05:00,nodes=1 -I -x ./aprun_command
+qsub -ASTF007 -lwalltime=00:05:00,nodes=1 -I -x $(pwd)/aprun_command
