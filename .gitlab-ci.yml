@@ -1,16 +1,16 @@
 stages:
-  - compile
+  - tests
 
-compile-titan:
+tests-titan:
   script:
-  - ./compile-titan.sh $CI_COMMIT_TAG
+  - ./tests-titan.sh $CI_COMMIT_TAG
   tags:
   - titan
-  stage: compile
+  stage: tests
 
-compile-summitdev:
+tests-summitdev:
   script:
-  - ./compile-summitdev.sh $CI_COMMIT_TAG
+  - ./tests-summitdev.sh $CI_COMMIT_TAG
   tags:
   - summitdev
-  stage: compile
+  stage: tests

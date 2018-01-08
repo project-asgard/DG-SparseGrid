@@ -7,3 +7,5 @@ mkdir build
 cd build
 cmake ..
 make
+
+echo "don't know how to block bsub"
