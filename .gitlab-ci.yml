@@ -1,0 +1,16 @@
+stages:
+  - compile
+
+compile-titan:
+  script:
+  - ./compile-titan.sh $CI_COMMIT_TAG
+  tags:
+  - titan
+  stage: compile
+
+compile-summitdev:
+  script:
+  - ./compile-summitdev.sh $CI_COMMIT_TAG
+  tags:
+  - summitdev
+  stage: compile
