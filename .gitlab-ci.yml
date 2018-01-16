@@ -1,0 +1,16 @@
+stages:
+  - tests
+
+tests-titan:
+  script:
+  - ./tests-titan.sh $CI_COMMIT_TAG
+  tags:
+  - titan
+  stage: tests
+
+tests-summitdev:
+  script:
+  - ./tests-summitdev.sh $CI_COMMIT_TAG
+  tags:
+  - summitdev
+  stage: tests
