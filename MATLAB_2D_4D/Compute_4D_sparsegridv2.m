@@ -488,6 +488,41 @@ if (use_dense_matrix),
 
   end;
 end;
+
+% -----------------------------------
+% estimate work using fixed kron strategy and 
+% strategy to minimize work
+% assume all matrices A1..A4 are dense
+% -----------------------------------
+flops_fixed = 0.0;
+flops_min = 0.0;
+for icount=1:length(A_encode),
+    nrow1 = size(A_encode{icount}.A1,1);
+    nrow2 = size(A_encode{icount}.A2,1);
+    nrow3 = size(A_encode{icount}.A3,1);
+    nrow4 = size(A_encode{icount}.A4,1);
+    
+    ncol1 = size(A_encode{icount}.A1,2);
+    ncol2 = size(A_encode{icount}.A2,2);
+    ncol3 = size(A_encode{icount}.A3,2);
+    ncol4 = size(A_encode{icount}.A4,2);
+
+    rc = [nrow1, ncol1; ...
+          nrow2, ncol2; ...
+          nrow3, ncol3; ...
+          nrow4, ncol4 ];
+    rc = transpose(rc);
+
+    flops1 = kron_cost_fixed(rc);
+    [flops2,isplit,imethod] = kron_minflops( rc );
+
+    flops_fixed = flops_fixed + flops1;
+    flops_min = flops_min + flops2;
+end;
+disp(sprintf('flops for fixed kron strategy is %g', flops_fixed));
+disp(sprintf('flops for min kron strategy is %g', flops_min));
+    
+    
   
 
 figure;
