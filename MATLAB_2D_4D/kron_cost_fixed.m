@@ -30,7 +30,7 @@ else
  m1 = prod( rc(1,1:nm1) );
  n1 = prod( rc(2,1:nm1) );
  m2 = rc(1,n);
- n2 = rc(1,n);
+ n2 = rc(2,n);
 
  flops_Z = 2.0*m2 * n2 * n1;
  flops1 = kron_cost_fixed( rc(1:2,1:(nm1)) );
