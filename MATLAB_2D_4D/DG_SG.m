@@ -28,7 +28,7 @@ M_mass=speye(size(Stiff_1D,1),size(Stiff_1D,1));
 
 %% 2D sparse-grid
 tic
-run Compute_2D_sparsegridv2.m
+% run Compute_2D_sparsegridv2.m
 % run Compute_2D_sparsegrid.m
 toc
 ['Compute_2D_sparsegridv2.m is done']
