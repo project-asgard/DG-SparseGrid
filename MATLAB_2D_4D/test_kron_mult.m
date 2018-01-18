@@ -16,6 +16,7 @@ for k=1:nkron,
   rc(2,k) = size( Acell{k},2);
 end;
 
+nerrors = 0;
 nkron = 6;
 for k=2:nkron,
   isizeX = prod(rc(2,1:k));
@@ -47,7 +48,15 @@ for k=2:nkron,
     err = norm(Y(:) - Ykron(:));
     if (err > 1.0e-6),
       disp(sprintf('k=%g, err=%g',k,err));
+      nerrors = nerrors + 1;
     end;
+end;
+
+
+if (nerrors == 0),
+   disp(sprintf('ALL OK'));
+else
+   disp(sprintf('there are %d errors ', nerrors ));
 end;
 
 
