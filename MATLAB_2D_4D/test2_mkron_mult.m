@@ -36,3 +36,9 @@ disp(sprintf('2nd mkron_mult_took %g sec', toc(t1)));
 err = abs(Y1-Y2);
 err = max( abs(err(:)) );
 disp(sprintf('max error is %g ', err ));
+
+flops_fixed = kron_cost_fixed( rc );
+disp(sprintf('flops for fixed strategy %g ', flops_fixed));
+
+[flops_min,isplit,imethod] = kron_minflops( rc );
+disp(sprintf('flops for minimize strategy %g ', flops_min));
