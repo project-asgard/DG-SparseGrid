@@ -100,8 +100,9 @@ for k=1:(n-1),
   % method 2
   % --------
   %  --------------------------------------
-  % X = reshape( X, n1, n2 )
-  % T2 = kron(A1...Ak)* X^t
+  % X = reshape( X, n2, n1 )
+  % Xt = reshape( transpose(X)  , n1, n2)
+  % T2 = kron(A1...Ak)* Xt
   % T2 is  m1 by n2
   % T2t = reshape( transpose(T2), n2, m1)
   % Y = kron(Akp1..An) * T2t
@@ -125,8 +126,9 @@ end;
 [flops, isplit] = min( total_flops );
 imethod = kron_method(isplit);
 
+
 kron_minflops_.(key) = flops;
-kron_split_.(key) = k;
+kron_split_.(key) = isplit;
 kron_method_.(key) = imethod;
 
 
