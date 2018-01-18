@@ -37,6 +37,7 @@ b_s = sparse(dof_sparse,1);
 sol_s = sparse(dof_sparse,1);
 uu_s=sparse(dof_sparse,1);
 
+count = 1;
 kron_flops = 0;
 kron_nnz = 0;
 
