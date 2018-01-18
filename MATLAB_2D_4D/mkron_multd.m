@@ -31,7 +31,43 @@ end;
 if (nkron == 1),
   nc = size(Acell{1},2);
   Y = Acell{1} * reshape(X, [nc, prod(size(X))/nc]);
-else
+elseif (nkron == 2),
+  [flops,isplit,imethod] = kron_minflops(rc(1:2,1:nkron));
+  A = Acell{1}; nrowA = size(A,1); ncolA = size(A,2);
+  B = Acell{2}; nrowB = size(B,1); ncolB = size(B,2);
+  nvec = prod(size(X))/(ncolB*ncolA);
+  X = reshape( X, ncolB*ncolA, nvec);
+  Y = zeros( nrowB*nrowA, nvec);
+
+  if (imethod == 1),
+    % ----------------------
+    % Y = (B*X)*transpose(A)
+    % BX = B * X;
+    % ----------------------
+    
+    BX = reshape(B * X, [nrowB*ncolA,nvec]);
+    
+    for i=1:nvec,
+       BXi = reshape( BX(:,i), nrowB, ncolA);
+       Yi = BXi(1:nrowB,1:ncolA) * transpose( A(1:nrowA,1:ncolA)); % Yi is nrowB by nrowA
+       Y(:,i) = reshape(Yi, nrowB*nrowA,1);
+    end;
+  else
+    % ------------------------
+    % Y = B * (X*transpose(A))
+    % ------------------------
+    XAt = zeros(ncolB*nrowA,nvec);
+    for i=1:nvec,
+      Xi = reshape(X(:,i), ncolB,ncolA);
+      XiAt = Xi(1:ncolB,1:ncolA) * transpose(A(1:nrowA,1:ncolA)); % XiAt is ncolB by nrowA
+      XAt(:,i) = reshape( XiAt, ncolB*nrowA,1);
+    end;
+    XAt = reshape( XAt, ncolB, nrowA*nvec );
+    Y = B(1:nrowB,1:ncolB) * XAt(1:ncolB, 1:(nrowA*nvec) );
+    Y = reshape( Y, nrowB*nrowA, nvec );
+  end; % if (imethod)
+     
+elseif (nkron >= 3),     
   % ------------------------------
   % general case require recursion
   % ------------------------------
@@ -54,8 +90,6 @@ else
     %  Y = transpose(kron( A1..Ak) * T1t)
   
     
-    for ivec=1:nvec,
-       Xi = reshape( X(:,ivec), n2,n1);
 
        % --------------------------
        % copy Acell1 = Acell{kp1:n}
@@ -63,36 +97,57 @@ else
        for j=1:(n-kp1+1),
           Acell1{j} = Acell{k+j};
        end;
-       T1 = mkron_multd( (n-kp1+1), Acell1, Xi);
+       X = reshape( X, n2, n1*nvec );
+       T1all = mkron_multd( (n-kp1+1), Acell1, X ); % note T1all is m2 by (n1*nvec)
+       T1all = reshape( T1all, m2*n1, nvec );
 
+      T1tall = zeros(n1, m2*nvec );
+      for i=1:nvec,
+       T1 = reshape( T1all(:,i), m2,n1);
        T1t = reshape( transpose(T1), n1,m2);
-       Yit = mkron_multd( k, Acell, T1t); % Y1t is m1 by m2
-       Yi =  reshape(transpose(Yit), m2,m1); 
-       Y(1:(m1*m2),ivec) = reshape(Yi, m1*m2,1);
-    end;
+       T1tall(:,i) = reshape( T1t, n1*m2,1);
+      end;
+
+       Yitall = mkron_multd( k, Acell, T1tall); % Y1tall is m1 by m2*nvec
+       Yitall = reshape( Yit, m1*m2, nvec);
+       for i=1:nvec,
+         Yit = reshape( Yitall(:,i), m1,m2);
+         Yi =  reshape(transpose(Yit), m2,m1); 
+         Y(1:(m1*m2),ivec) = reshape(Yi, m1*m2,1);
+        end;
   else
     % Xt = reshape( transpose(X), n1,n2);
     % T2 = kron( A1..Ak ) * Xt, T2 is m1 by n2
     % T2t = reshape(transpose(T2), n2, m1 )
     % Y = kron( Akp1..An) * T2t
    
+    Xt = zeros( n1*n2, nvec );
     for ivec=1:nvec,
       Xi = reshape(X(:,ivec), n2,n1);
       Xit = reshape(transpose(Xi), n1, n2);
-
-      T2 = mkron_multd( k, Acell, Xit );
-      T2t = reshape( transpose(T2), n2, m1 );
-      
-      % --------------------------
-      % copy Acell2 = Acell{kp1:n}
-      % --------------------------
-      for j=1:(n-kp1+1),
-         Acell2{j} = Acell{k+j};
-      end;
-      Yi = mkron_multd( (n-kp1+1), Acell2, T2t ); % Yi is m2 by m1
-
-      Y(1:(m1*m2),ivec) = reshape( Yi, m1*m2,1);
+      Xt(:,ivec) = reshape(Xit, n1*n2,1);
     end;
+    Xt = reshape( Xt, n1, n2*nvec );
+    T2all = mkron_multd( k, Acell, Xt ); % note T2all is m1 by (n2*nvec)
+    T2all = reshape( T2all, m1*n2, nvec );
+    % --------------------------
+    % copy Acell2 = Acell{kp1:n}
+    % --------------------------
+    for j=1:(n-kp1+1),
+         Acell2{j} = Acell{k+j};
+    end;
+
+    T2tall = zeros( m1*n2, nvec );
+    for i=1:nvec,
+      T2 = reshape( T2all(:,i), m1, n2 );
+      T2t = reshape( transpose(T2), n2, m1 );
+      T2tall(:,i) = reshape( T2t, n2*m1,1);
+    end;
+    T2tall = reshape( T2tall, n2, m1*nvec );
+      
+      Yi = mkron_multd( (n-kp1+1), Acell2, T2tall ); % Yi is m2 by m1*nvec
+
+      Y(1:(m1*m2),1:nvec) = reshape( Yi, m1*m2,nvec);
   end; % if (imethod)
  end; % if (nkron == 1)
 end;
