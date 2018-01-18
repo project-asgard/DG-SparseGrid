@@ -4,6 +4,7 @@ function Y = kron_multd( nkron, Acell, X )
 %
 % reference implementation
 %
+idebug = 0;
 isok = (length(Acell) >= nkron);
 if (~isok),
   error(sprintf('kron_multd: invalid nkron=%d, length(Acell)=%d', ...
@@ -34,7 +35,50 @@ else
   % ------------------------------
   % general case require recursion
   % ------------------------------
-  
+  use_split_first = 1;
+
+  if (use_split_first),
+  % -------------------------------
+  % kron(A(1), ..., A(nkron)) * X
+  %
+  % use simplified fixed algorithm
+  % computed as
+  %
+  % kron( A(2)... A(n-1))*X * transpose(A(1))
+  % -------------------------------
+  n = nkron;
+  nm1 = n-1;
+
+  m1 = rc(1,1);
+  n1 = rc(2,1);
+  m2 = prod( rc(1,2:n));
+  n2 = prod( rc(2,2:n));
+
+  for i=1:nm1,
+    Acell_tmp{i} = Acell{1+i};
+  end;
+
+  X = reshape( X, n2, n1*nvec );
+  Z = kron_multd( nm1, Acell_tmp, X ); % note Z is m2 by (n1*nvec)
+  Z = reshape( Z, m2*n1, nvec );
+  Y = zeros( m2*m1, nvec );
+  A1 = Acell{1}; % note An is m1 by n1
+
+  if (idebug >= 1),
+    disp(sprintf('kron_multd: nkron=%d,m1=%d,n1=%d,m2=%d,n2=%d', ...
+                              nkron,   m1,   n1,   m2,   n2 ));
+    disp(sprintf('size(A1)=(%d,%d), size(Z)=(%d,%d)', ...
+                  size(A1,1),size(A1,2),  size(Z,1),size(Z,2) ));
+  end;
+
+
+  for i=1:nvec,
+    Zi = reshape( Z(:,i), m2,n1);
+    Yi = Zi * transpose( A1 ); % note Yi is m2 by m1
+    Y(:,i) = reshape( Yi, m2*m1,1);
+  end;
+
+  else  
   
   % -------------------------------
   % kron(A(1), ..., A(nkron)) * X
@@ -74,4 +118,6 @@ else
   
    Y(:,k) = reshape(transpose(Ytmp), [isizeY,1]);
   end;
+
+ end;
 end;

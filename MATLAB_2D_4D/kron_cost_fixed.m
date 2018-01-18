@@ -26,15 +26,39 @@ else
  % -------------
  % use recursion
  % -------------
- nm1 = n - 1;
- m1 = prod( rc(1,1:nm1) );
- n1 = prod( rc(2,1:nm1) );
- m2 = rc(1,n);
- n2 = rc(2,n);
-
- flops_Z = 2.0*m2 * n2 * n1;
- flops1 = kron_cost_fixed( rc(1:2,1:(nm1)) );
- flops = flops1 * m2 + flops_Z;
+ use_split_first = 1;
+ if (use_split_first),
+   % ---------------------------------------
+   % evaluate as
+   % kron(A(2)...A(n)) * X * transpose(A(1))
+   % ---------------------------------------
+   m1 = rc(1,1);
+   n1 = rc(2,1);
+   m2 = prod( rc(1,2:n));
+   n2 = prod( rc(2,2:n));
+   % ----------------------------------
+   % Z = kron( A(2)...A(n) ) *X, 
+   % Y = Z * transpose(A(1))
+   % note X is n2 by n1,  Z is m2 by n1
+   % ----------------------------------
+   flops1 = kron_cost_fixed( rc(1:2, 2:n) );
+   flops_Z = flops1 * n1;
+   flops =  2.0*m2 * n1 * m1 + flops_Z;
+ else
+   % -----------------------------------------
+   % evaluate as
+   % A(n) * X * transpose(kron(A(1)...A(n-1))
+   % -----------------------------------------
+   nm1 = n - 1;
+   m1 = prod( rc(1,1:nm1) );
+   n1 = prod( rc(2,1:nm1) );
+   m2 = rc(1,n);
+   n2 = rc(2,n);
+  
+   flops_Z = 2.0*m2 * n2 * n1;
+   flops1 = kron_cost_fixed( rc(1:2,1:(nm1)) );
+   flops = flops1 * m2 + flops_Z;
+ end;
 end;
 return;
 end;
