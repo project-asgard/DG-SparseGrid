@@ -1,21 +1,28 @@
-function Y = kron_multd( nkron, Acell, X )
-%  Y = kron_multd( Acell, X )
+function Y = kron_multd( nkron, Acell, X, offset_in )
+%  Y = kron_multd( nkron, Acell, X [,offset] )
 %  generic multi-dimension kron product
 %
 % reference implementation
 %
 idebug = 0;
-isok = (length(Acell) >= nkron);
+offset = 0;
+if (nargin >= 4),
+  offset = offset_in;
+end;
+
+isok = (length(Acell) + offset>= nkron);
 if (~isok),
-  error(sprintf('kron_multd: invalid nkron=%d, length(Acell)=%d', ...
-        nkron, length(Acell) ));
+  error(sprintf('kron_multd: invalid nkron=%d, length(Acell)=%d, offset=%d', ...
+        nkron, length(Acell), offset ));
   return;
 end;
 
+
+
   rc = zeros(2,nkron);
   for k=1:nkron,
-    rc(1,k) = size( Acell{k},1);
-    rc(2,k) = size( Acell{k},2);
+    rc(1,k) = size( Acell{offset+k},1);
+    rc(2,k) = size( Acell{offset+k},2);
   end;
   
   isizeX = prod( rc(2,1:nkron) );
@@ -29,8 +36,8 @@ end;
   end;
 
 if (nkron == 1),
-  nc = size(Acell{1},2);
-  Y = Acell{1} * reshape(X, [nc, prod(size(X))/nc]);
+  nc = size(Acell{offset+1},2);
+  Y = Acell{offset+1} * reshape(X, [nc, prod(size(X))/nc]);
 else
   % ------------------------------
   % general case require recursion
@@ -54,15 +61,12 @@ else
   m2 = prod( rc(1,2:n));
   n2 = prod( rc(2,2:n));
 
-  for i=1:nm1,
-    Acell_tmp{i} = Acell{1+i};
-  end;
 
   X = reshape( X, n2, n1*nvec );
-  Z = kron_multd( nm1, Acell_tmp, X ); % note Z is m2 by (n1*nvec)
+  Z = kron_multd( nm1, Acell, X, offset+1 ); % note Z is m2 by (n1*nvec)
   Z = reshape( Z, m2*n1, nvec );
   Y = zeros( m2*m1, nvec );
-  A1 = Acell{1}; % note An is m1 by n1
+  A1 = Acell{offset+1}; % note An is m1 by n1
 
   if (idebug >= 1),
     disp(sprintf('kron_multd: nkron=%d,m1=%d,n1=%d,m2=%d,n2=%d', ...
@@ -102,18 +106,18 @@ else
   
    Xk = X(:,k);
 
-   nc = size(Acell{nkron},2);
-   Z = Acell{nkron} * reshape( Xk, [nc, prod(size(Xk))/nc]);
+   nc = size(Acell{offset+nkron},2);
+   Z = Acell{offset+nkron} * reshape( Xk, [nc, prod(size(Xk))/nc]);
  
    nc2 = prod( rc(2,1:(nkron-1)) );
    isok = mod(prod(size(Z)),nc2) == 0;
    if (~isok),
-     error(sprintf('kron_multd: invalid size(Z)=%g, size(Acell{nkron},2)=%g', ...
-           prod(size(Z)), size(Acell{nkron},2) ));
+     error(sprintf('kron_multd: invalid size(Z)=%g, size(Acell{offset+nkron},2)=%g', ...
+           prod(size(Z)), size(Acell{offset+nkron},2) ));
     return;
    end;
 
-   Ytmp = kron_multd( nkron-1,Acell, transpose(Z));
+   Ytmp = kron_multd( nkron-1,Acell, transpose(Z), offset);
 
   
    Y(:,k) = reshape(transpose(Ytmp), [isizeY,1]);
