@@ -1,5 +1,5 @@
 %**************************************************************************
-% This MATLAB-Interface
+% This MATLAB-Interface for DG-SG Vlasov
 % is an example to solve Vlasov Equations with Poisson/Maxwell Equations
 % Vlasov Equation with Poisson solver:
 % (1). f_t + v*grad_x f + E*grad_v f=0;
@@ -14,52 +14,75 @@ close all
 format short e
 
 addpath(genpath(pwd))
-
 %=============================================================
-%% Step 1. Setting Initial Data and Parameters
+%% Step 1. Setting Parameters
 % Lev: Level of the Mesh
-%   Lev, Lev_x, and Lev_v
-% k: Degree of Polynomial
-% dim: dimensionality
-%   dim, dim_x, and dim_v
+%   Lev, LevX, and LevV
+% Deg: Degree of Polynomial
+% Dim: dimensionality
+%   Dim, Dim_x, and Dim_v
 % Lmax: x in [0,Lmax]
 % Vmax: v in [-Vmax,Vmax]
 % fval: initial condition for f
 % rho: initial value of int_v fdv
 % Maxwell coefficients: nu and eps
 %=============================================================
+% Test PDE and Ending Time
 
-% Ending time and test pde
-T = 5;
 pde = Vlasov4;
 Vmax = pde.Vmax;
 Lmax = pde.Lmax;
+TEND = 60;
 
 % Level information
-Lev = 2;
-Lev_x = Lev;Lev_v = Lev;
+Lev = 7;
+LevX = Lev;LevV = Lev;
 
 % Polynomial Degree
-k = 1;
+Deg = 2;
 
 % Dimensionality
-dim = 2;
-dim_x = 1;dim_v = 1;
+Dim = 2;
+DimX = 1;DimV = 1;
 
 % Time step
-dt = Lmax/2^Lev_x/Vmax/(2*k+1)/5;
+dt = Lmax/2^LevX/Vmax/(2*Deg+1);
 
-%********************************
+
+%*************************************************
+%% Step 1.1. Set Up Matrices for Multi-wavelet
+% Input:  Deg and Lev
+% Output: Convert Matrix FMWT_COMP
+%*************************************************
+FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
+FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
+
+
+%*************************************************
+%% Step 1.2. Initial Data according to Hash
 % Generate the initial condition
-% Input: Lev_x,Lev_v,k,Lmax,Vmax,pde
-% Output: fval--intial condition f(x,v,t=0)
-%                rho--intial condition rho(x,t=0)
-%                Eng--computed energy
-%********************************
-[fval,rho,Eng] = Intial_Con(Lev_x,Lev_v,k,Lmax,Vmax,pde);
+% Input: LevX,LevV,Deg,Lmax,Vmax,pde
+% Output: fval (fv and fx)--intial condition f(x,v,t=0)
+%         rho--intial condition rho(x,t=0)
+%*************************************************
+[fv,fx,rho] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
+    FMWT_COMP_x,FMWT_COMP_v);
 
 %=============================================================
-%% Step 2. Generate time-independent coefficient matrices
+%% Step 2. Generate Sparse Grids/Hash Table
+% Input:    Lev-Level of the Mesh
+%           Deg-Degree of Polynomial
+%           Dim-dimensionality
+% Output: HASH and HashInv
+%=============================================================
+[HASH,HashInv] = HashTable(LevV,LevX,Deg,Dim);
+    
+% Generate the Initial Condition w.r.t Grids
+fval = fv(HashInv.x1).*fx(HashInv.x2);
+clear fv fx
+
+%=============================================================
+%% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
 %   Operators:  vMassV: int_v v*l_i(v)*l_j(v)dv
 %               GradV: int_v (l_i(v))'*l_j(v)dv
@@ -68,33 +91,30 @@ dt = Lmax/2^Lev_x/Vmax/(2*k+1)/5;
 %   Operators: DelaX: int_x (m_i(x))''*m_j(x)dx
 % Maxwell Solver:
 %   Operators: CurlCurlX: int_x curl(m_i(x))*m_j(x)dx
-% Input: Lev_x, Lev_v, k, dim, Lmax, Vmax
+% Input: LevX, LevV, k, dim, Lmax, Vmax
 % Output: 2D Matrices--vMassV,GradV,GradX,DeltaX, and CurlCurl(missing)
 %=============================================================
-[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(Lev_x,Lev_v,k,Lmax,Vmax);
+[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
+    FMWT_COMP_x,FMWT_COMP_v);
 
+% Generate A_encode for Time-independent Matrix
+A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
 
-%=============================================================
-%% Step 3. Generate Sparse Grids/Hash Table
-% Input:    Lev-Level of the Mesh
-%           k  -Degree of Polynomial
-%           dim-dimensionality
-% Output: Hash Table
-%=============================================================
-% SparseGrid;
-
-
-%=============================================================
+%====================================================================
 %% Step 4. Generate time-independent global Matrix
-% Compute the global matrix for spacial variables "X" by
+% Compute the global matrix for spacial variables "x" by
 %
-% Poisson Solver: A_Poisson (Hash, Dim_x,k,Lev_x,DeltaX)
-% or Maxwell Solver: A_Maxwell (Hash,Dim_x,k,Lev_x,nu,eps,CurlCurlX)
-% Input: Hash, Dim_x,k,Lev_x,DeltaX,or nu, eps,CurlCurlX
+% Poisson Solver: A_Poisson (Hash, Dim_x,k,LevX,DeltaX)
+% or Maxwell Solver: A_Maxwell (Hash,Dim_x,k,LevX,nu,eps,CurlCurlX)
+% Input: Hash, Dim_x,k,LevX,DeltaX,or nu, eps, CurlCurlX
 % Output: A_Poisson or A_Maxwell
-%=============================================================
-% return
-
+% Another Idea is to solve Poisson Equation on the finest full grid
+%====================================================================
+if DimX>1
+    % Construct DeltaX for DimX
+else
+    A_Poisson = DeltaX;
+end
 
 %=============================================================
 %% Step 5. Time Loop
@@ -116,63 +136,93 @@ dt = Lmax/2^Lev_x/Vmax/(2*k+1)/5;
 %	f =1/3*f0+2/3*f2+2/3*dt*(A*f2)
 % capability: vary the time-integration order of RK methods
 %=============================================================
-% Preparing the Plotting Data
-% Plotting Data
-[Meval_v,v_node,Meval_x,x_node]=matrix_plot(Lev_x,Lev_v,k,Lmax,Vmax);
-[xx,vv]=meshgrid(x_node,v_node);
+if isplot==1
+    % Preparing the Plotting Data
 
-count=1;
-for step_num = 1:floor(T/dt)
-    %     time = dt*step_num;
+    % Plotting Data
+    [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
+        FMWT_COMP_x,FMWT_COMP_v);
     
-    %=============================================================
-    %% Step 5.3. Generate time-dependent coefficient matrix
-    % Vlasolv Solver:
-    %   Operators:  EMassX: int_x E(x)*m_i(x)*m_j(x)dx
-    % Input: Lev, k, dim, Lmax, Vmax
-    % Output: EMassX
-    % Note: E is solved by Poisson or Maxwell's equation
-    %=============================================================
-    % Solve E from rho
-    EE = Poisson_solver(Lev_x,k,Lmax,rho,DeltaX,Eng);
-    % Construct EMassX
-    EMassX = matrix_coeff_TD(Lev_x,k,Lmax,EE);
+    [xx,vv]=meshgrid(x_node,v_node);
+    tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
     
-    %====================================
-    % RK Time Stepping Method
-    %====================================
-    f_1 = fval+dt*(Multi_2D(vMassV,GradX,fval)+Multi_2D(GradV,EMassX,fval));
-    f_2 = 3/4*fval+1/4*f_1+1/4*dt*(Multi_2D(vMassV,GradX,f_1)+Multi_2D(GradV,EMassX,f_1));
-    fval = 1/3*fval+2/3*f_2+2/3*dt*(Multi_2D(vMassV,GradX,f_2)+Multi_2D(GradV,EMassX,f_2));
-    
-    % Compute rho from f(x,v,t=time)
-    [rho,Eng]=Comput_rho(Lev_x,Lev_v,k,Lmax,Vmax,fval);
-    
-    % Check conservation properties
-    
-    % Plot solution
-    time(count)=step_num*dt;
-    rho_time(count)=abs(rho(1));
-    
-    count=count+1;
-    
-    
-    % Plotting Numerical Solution
-    figure(1000)
-    set(gcf, 'Position', [100, 100, 1200, 900])
-    subplot(1,2,1)
-    tmp=Multi_2D(Meval_v,Meval_x,fval);
-    
-    mesh(xx,vv,reshape(tmp,k*2^Lev_x,k*2^Lev_v)','FaceColor','interp','EdgeColor','interp');
+    %---------------------
+    % plot for validating
+    %---------------------
+    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
     axis([0 Lmax -Vmax Vmax])
     view(0,90)
     colorbar
     
-    title(['Time at ',num2str(step_num*dt)])
-    subplot(1,2,2);hold on;
-    semilogy(time,rho_time,'r--');
-    title([' step num = ',num2str(step_num)])
+    % % for LevX neq LevV, the following is not right
+    [val_x,val_u]=CrossSection(Meval_v,Meval_x,fval,Hash,BasisType,HashInv);
+    figure(20)
+    subplot(1,2,1)
+    plot(x_node,val_u,'r-o')
     
-    pause(0.01)
+    subplot(1,2,2)
+    plot(v_node,val_x,'r-o')
+    
+end
+
+
+count=1;
+
+
+for L = 1:floor(T/dt)
+    %     current_time = dt*L;
+    %=============================================================
+    %% Step 5.3. Generate time-dependent coefficient matrix
+    % Vlasolv Solver:
+    %   Operators:  EMassX: int_x E(x)*m_i(x)*m_j(x)dx
+    % Input: Lev, Deg, Lmax, Vmax
+    % Output: EMassX
+    % Note: E is solved by Poisson or Maxwell's equation
+    %=============================================================
+    % Compute rho from fval
+    f_tmp=Multi_2D(FMWT_COMP_v',FMWT_COMP_x',fval,1,HASH,HashInv);
+    rho=Comput_rho(LevX,LevV,Deg,Lmax,Vmax,f_tmp);
+         
+    % Poisson Solver: Solve E from rho
+    E = PoissonSolve(LevX,Deg,Lmax,rho,A_Poisson);
+    
+    % Generate EMassX matrix
+    EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
+    
+    % B_encode for Time-Dependent Matrices
+    B_encode = GlobalMatrixSG(GradV,EMassX,HASH);
+    C_encode=[A_encode B_encode]; % This step is GlobalVlasov
+    
+    %====================================
+    % RK Time Stepping Method
+    %====================================
+    fval = TimeAdvance(C_encode,fval, dt);
+    
+    
+    time(count) = L*dt;
+         
+    count=count+1;
+    
+    if isplot==1
+        
+        % Plotting Numerical Solution
+        figure(1000)
+        set(gcf, 'Position', [100, 100, 1200, 900])
+        subplot(1,2,1)
+        tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
+        mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
+        axis([0 Lmax -Vmax Vmax])
+        view(0,90)
+        colorbar
+        
+        title(['Time at ',num2str(L*dt)])
+        subplot(1,2,2);hold on;
+        semilogy(time,rho_time,'r--');
+        title([' step num = ',num2str(L)])
+        
+        
+        pause (0.01)
+        
+    end
     
 end
