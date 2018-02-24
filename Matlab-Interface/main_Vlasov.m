@@ -35,7 +35,7 @@ Lmax = pde.Lmax;
 TEND = 60;
 
 % Level information
-Lev = 7;
+Lev = 4;
 LevX = Lev;LevV = Lev;
 
 % Polynomial Degree
@@ -76,7 +76,7 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Output: HASH and HashInv
 %=============================================================
 [HASH,HashInv] = HashTable(LevV,LevX,Deg,Dim);
-    
+
 % Generate the Initial Condition w.r.t Grids
 fval = fv(HashInv.x1).*fx(HashInv.x2);
 clear fv fx
@@ -136,40 +136,32 @@ end
 %	f =1/3*f0+2/3*f2+2/3*dt*(A*f2)
 % capability: vary the time-integration order of RK methods
 %=============================================================
-if isplot==1
-    % Preparing the Plotting Data
 
-    % Plotting Data
-    [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
-        FMWT_COMP_x,FMWT_COMP_v);
-    
-    [xx,vv]=meshgrid(x_node,v_node);
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
-    
-    %---------------------
-    % plot for validating
-    %---------------------
-    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
-    axis([0 Lmax -Vmax Vmax])
-    view(0,90)
-    colorbar
-    
-    % % for LevX neq LevV, the following is not right
-    [val_x,val_u]=CrossSection(Meval_v,Meval_x,fval,Hash,BasisType,HashInv);
-    figure(20)
-    subplot(1,2,1)
-    plot(x_node,val_u,'r-o')
-    
-    subplot(1,2,2)
-    plot(v_node,val_x,'r-o')
-    
-end
+% Preparing the Plotting Data
+
+% Plotting Data
+[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
+    FMWT_COMP_x,FMWT_COMP_v);
+
+[xx,vv]=meshgrid(x_node,v_node);
+tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
+
+%---------------------
+% plot for validating
+%---------------------
+figure(1000)
+set(gcf, 'Position', [100, 100, 1200, 900])
+mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
+axis([0 Lmax -Vmax Vmax])
+view(0,90)
+colorbar
+
 
 
 count=1;
 
 
-for L = 1:floor(T/dt)
+for L = 1:floor(TEND/dt)
     %     current_time = dt*L;
     %=============================================================
     %% Step 5.3. Generate time-dependent coefficient matrix
@@ -180,9 +172,9 @@ for L = 1:floor(T/dt)
     % Note: E is solved by Poisson or Maxwell's equation
     %=============================================================
     % Compute rho from fval
-    f_tmp=Multi_2D(FMWT_COMP_v',FMWT_COMP_x',fval,1,HASH,HashInv);
+    f_tmp=Multi_2D(FMWT_COMP_v',FMWT_COMP_x',fval, HASH,1,HashInv);
     rho=Comput_rho(LevX,LevV,Deg,Lmax,Vmax,f_tmp);
-         
+    
     % Poisson Solver: Solve E from rho
     E = PoissonSolve(LevX,Deg,Lmax,rho,A_Poisson);
     
@@ -200,29 +192,26 @@ for L = 1:floor(T/dt)
     
     
     time(count) = L*dt;
-         
+    
     count=count+1;
     
-    if isplot==1
-        
-        % Plotting Numerical Solution
-        figure(1000)
-        set(gcf, 'Position', [100, 100, 1200, 900])
-        subplot(1,2,1)
-        tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
-        mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
-        axis([0 Lmax -Vmax Vmax])
-        view(0,90)
-        colorbar
-        
-        title(['Time at ',num2str(L*dt)])
-        subplot(1,2,2);hold on;
-        semilogy(time,rho_time,'r--');
-        title([' step num = ',num2str(L)])
-        
-        
-        pause (0.01)
-        
-    end
+    
+    % Plotting Numerical Solution
+    figure(1000)
+    set(gcf, 'Position', [100, 100, 1200, 900])
+    
+    tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
+    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
+    axis([0 Lmax -Vmax Vmax])
+    view(0,90)
+    colorbar
+    
+    title(['Time at ',num2str(L*dt)])
+    
+    
+    
+    pause (0.01)
+    
+    
     
 end
