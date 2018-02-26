@@ -39,7 +39,7 @@ Lev = 4;
 LevX = Lev;LevV = Lev;
 
 % Polynomial Degree
-Deg = 2;
+Deg = 2;% Deg = 2 Means Linear Element
 
 % Dimensionality
 Dim = 2;
