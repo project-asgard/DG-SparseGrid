@@ -11,7 +11,7 @@ for n1=0:n
         for n2=0:n-n1
             for i2=0:max(0,2^max(0,n2-1)-1)
                         
-                for n3=0:n-n2
+                for n3=0:n-n1-n2
                     for i3=0:max(0,2^max(0,n3-1)-1)                        
                         
                         for n4=0:n-n1-n2-n3
