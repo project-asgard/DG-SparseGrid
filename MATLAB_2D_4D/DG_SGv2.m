@@ -7,7 +7,8 @@ clear all
 clc
 format short e
 
-
+global Stiff_1D;
+global M_mass;
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------

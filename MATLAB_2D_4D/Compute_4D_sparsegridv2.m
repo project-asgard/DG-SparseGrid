@@ -10,6 +10,8 @@
 
 dim=4;
 
+global firsttime = true
+
 % Key1DMesh
 % ['Generate 1D keys']
 % tic
@@ -87,6 +89,18 @@ for sum_level=0:n
                 A_encode{count}.A2=M_mass(I2,I2);
                 A_encode{count}.A3=M_mass(I3,I3);
                 A_encode{count}.A4=M_mass(I4,I4);
+                A_encode{count}.A1_I = I1;
+                A_encode{count}.A1_J = I1;
+                A_encode{count}.A1_stiff_or_mass = 'SN';
+                A_encode{count}.A2_I = I2;
+                A_encode{count}.A2_J = I2;
+                A_encode{count}.A2_stiff_or_mass = 'MN';
+                A_encode{count}.A3_I = I3;
+                A_encode{count}.A3_J = I3;
+                A_encode{count}.A3_stiff_or_mass = 'MN';
+                A_encode{count}.A4_I = I4;
+                A_encode{count}.A4_J = I4;
+                A_encode{count}.A4_stiff_or_mass = 'MN';
 
                 A_encode{count}.IndexI = Index_I;
                 A_encode{count}.IndexJ = Index_I;
@@ -106,6 +120,18 @@ for sum_level=0:n
                 A_encode{count}.A2=Stiff_1D(I2,I2);
                 A_encode{count}.A3=M_mass(I3,I3);
                 A_encode{count}.A4=M_mass(I4,I4);
+                A_encode{count}.A1_I = I1;
+                A_encode{count}.A1_J = I1;
+                A_encode{count}.A1_stiff_or_mass = 'MN';
+                A_encode{count}.A2_I = I2;
+                A_encode{count}.A2_J = I2;
+                A_encode{count}.A2_stiff_or_mass = 'SN';
+                A_encode{count}.A3_I = I3;
+                A_encode{count}.A3_J = I3;
+                A_encode{count}.A3_stiff_or_mass = 'MN';
+                A_encode{count}.A4_I = I4;
+                A_encode{count}.A4_J = I4;
+                A_encode{count}.A4_stiff_or_mass = 'MN';
 
                 A_encode{count}.IndexI = Index_I;
                 A_encode{count}.IndexJ = Index_I;
@@ -125,6 +151,18 @@ for sum_level=0:n
                 A_encode{count}.A2=M_mass(I2,I2);
                 A_encode{count}.A3=Stiff_1D(I3,I3);
                 A_encode{count}.A4=M_mass(I4,I4);
+                A_encode{count}.A1_I = I1;
+                A_encode{count}.A1_J = I1;
+                A_encode{count}.A1_stiff_or_mass = 'MN';
+                A_encode{count}.A2_I = I2;
+                A_encode{count}.A2_J = I2;
+                A_encode{count}.A2_stiff_or_mass = 'MN';
+                A_encode{count}.A3_I = I3;
+                A_encode{count}.A3_J = I3;
+                A_encode{count}.A3_stiff_or_mass = 'SN';
+                A_encode{count}.A4_I = I4;
+                A_encode{count}.A4_J = I4;
+                A_encode{count}.A4_stiff_or_mass = 'MN';
 
                 A_encode{count}.IndexI = Index_I;
                 A_encode{count}.IndexJ = Index_I;
@@ -147,6 +185,19 @@ for sum_level=0:n
                 A_encode{count}.A2=M_mass(I2,I2);
                 A_encode{count}.A3=M_mass(I3,I3);
                 A_encode{count}.A4=Stiff_1D(I4,I4);
+
+                A_encode{count}.A1_I = I1;
+                A_encode{count}.A1_J = I1;
+                A_encode{count}.A1_stiff_or_mass = 'MN';
+                A_encode{count}.A2_I = I2;
+                A_encode{count}.A2_J = I2;
+                A_encode{count}.A2_stiff_or_mass = 'MN';
+                A_encode{count}.A3_I = I3;
+                A_encode{count}.A3_J = I3;
+                A_encode{count}.A3_stiff_or_mass = 'MN';
+                A_encode{count}.A4_I = I4;
+                A_encode{count}.A4_J = I4;
+                A_encode{count}.A4_stiff_or_mass = 'SN';
 
                 A_encode{count}.IndexI=Index_I;
                 A_encode{count}.IndexJ=Index_I;
@@ -195,6 +246,19 @@ for sum_level=0:n
                     A_encode{count}.A3=M_mass(J3,I3);
                     A_encode{count}.A4=M_mass(J4,I4);
 
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'SN';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'MN';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'MN';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'MN';
+
                     A_encode{count}.IndexI=Index_J;
                     A_encode{count}.IndexJ=Index_I;
                     
@@ -218,6 +282,19 @@ for sum_level=0:n
                     A_encode{count}.A2=M_mass(J2,I2)';
                     A_encode{count}.A3=M_mass(J3,I3)';
                     A_encode{count}.A4=M_mass(J4,I4)';
+
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'ST';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'MT';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'MT';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'MT';
 
                     A_encode{count}.IndexI=Index_I;
                     A_encode{count}.IndexJ=Index_J;
@@ -267,6 +344,19 @@ for sum_level=0:n
                     A_encode{count}.A3=M_mass(J3,I3);
                     A_encode{count}.A4=M_mass(J4,I4);
 
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'MN';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'SN';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'MN';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'MN';
+
                     A_encode{count}.IndexI=Index_J;
                     A_encode{count}.IndexJ=Index_I;
 
@@ -287,6 +377,19 @@ for sum_level=0:n
                     A_encode{count}.A2=Stiff_1D(J2,I2)';
                     A_encode{count}.A3=M_mass(J3,I3)';
                     A_encode{count}.A4=M_mass(J4,I4)';
+
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'MT';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'ST';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'MT';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'MT';
 
                     A_encode{count}.IndexI=Index_I;
                     A_encode{count}.IndexJ=Index_J;
@@ -334,6 +437,19 @@ for sum_level=0:n
                     A_encode{count}.A3=Stiff_1D(J3,I3);
                     A_encode{count}.A4=M_mass(J4,I4);
 
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'MN';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'MN';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'SN';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'MN';
+
                     A_encode{count}.IndexI=Index_J;
                     A_encode{count}.IndexJ=Index_I;
 
@@ -354,6 +470,19 @@ for sum_level=0:n
                     A_encode{count}.A2=M_mass(J2,I2)';
                     A_encode{count}.A3=Stiff_1D(J3,I3)';
                     A_encode{count}.A4=M_mass(J4,I4)';
+
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'MT';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'MT';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'ST';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'MT';
 
                     A_encode{count}.IndexI=Index_I;
                     A_encode{count}.IndexJ=Index_J;
@@ -400,6 +529,19 @@ for sum_level=0:n
                     A_encode{count}.A3=M_mass(J3,I3);
                     A_encode{count}.A4=Stiff_1D(J4,I4);
 
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'MN';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'MN';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'MN';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'SN';
+
                     kron_flops = kron_flops + ...
                               kron_mult_cost4( ...
                                   A_encode{count}.A1, ...
@@ -420,6 +562,19 @@ for sum_level=0:n
                     A_encode{count}.A2=M_mass(J2,I2)';
                     A_encode{count}.A3=M_mass(J3,I3)';
                     A_encode{count}.A4=Stiff_1D(J4,I4)';
+
+                    A_encode{count}.A1_I = J1;
+                    A_encode{count}.A1_J = I1;
+                    A_encode{count}.A1_stiff_or_mass = 'MT';
+                    A_encode{count}.A2_I = J2;
+                    A_encode{count}.A2_J = I2;
+                    A_encode{count}.A2_stiff_or_mass = 'MT';
+                    A_encode{count}.A3_I = J3;
+                    A_encode{count}.A3_J = I3;
+                    A_encode{count}.A3_stiff_or_mass = 'MT';
+                    A_encode{count}.A4_I = J4;
+                    A_encode{count}.A4_J = I4;
+                    A_encode{count}.A4_stiff_or_mass = 'ST';
 
                     A_encode{count}.IndexI=Index_I;
                     A_encode{count}.IndexJ=Index_J;
@@ -541,8 +696,29 @@ function y = apply_As(x, varargin)
   y = As * x;
 endfunction
 
+
+function write_Index(A_count, count, IA, JA, XY)
+      if (XY == false),
+        fname = sprintf("Data/A%d_IJ_%d.dat", A_count, count);
+      else
+        fname = sprintf("Data/XY_IJ_%d.dat", count);
+      end;
+      
+    fid = fopen (fname, "w");
+    fprintf(fid, "%d\n", size(IA)(2));
+    fprintf(fid, "%d ", IA);
+    fprintf(fid, "\n");
+    fprintf(fid, "%d\n", size(JA)(2));
+    fprintf(fid, "%d ", JA);
+    fprintf(fid, "\n");
+    fclose(fid);
+endfunction;
+
 function y = apply_Aencode(x, varargin)
   
+  global firsttime;
+  global M_mass;
+  global Stiff_1D;
   Aencode = varargin{1};
   N = prod(size(Aencode));
   y = zeros(size(x));
@@ -550,16 +726,73 @@ function y = apply_Aencode(x, varargin)
     
     Index_I = Aencode{count}.IndexI;
     Index_J = Aencode{count}.IndexJ;
-
+   
     A1 = Aencode{count}.A1;
     A2 = Aencode{count}.A2;
     A3 = Aencode{count}.A3;
     A4 = Aencode{count}.A4;
+    
+    if (firsttime == true),
+    
+      A1_I = Aencode{count}.A1_I;
+      A2_I = Aencode{count}.A2_I;
+      A3_I = Aencode{count}.A3_I;
+      A4_I = Aencode{count}.A4_I;
+    
+      A1_J = Aencode{count}.A1_J;
+      A2_J = Aencode{count}.A2_J;
+      A3_J = Aencode{count}.A3_J;
+      A4_J = Aencode{count}.A4_J;
 
+      A1_stiff_or_mass = Aencode{count}.A1_stiff_or_mass;
+      A2_stiff_or_mass = Aencode{count}.A2_stiff_or_mass;
+      A3_stiff_or_mass = Aencode{count}.A3_stiff_or_mass;
+      A4_stiff_or_mass = Aencode{count}.A4_stiff_or_mass;
+      
+      M = M_mass;
+      S = Stiff_1D;
+      
+      save("Data/M_mass.dat", "M");
+      save("Data/Stiff_1D.dat", "S");
+      
+      X = x(Index_J);
+      Y = kron_mult4(A1,A2,A3,A4, X);
+      f_x = sprintf("Data/X_%d.dat", count);
+      save(f_x, "X");
+      f_y = sprintf("Data/Y_%d.dat", count);
+      save(f_y, "Y");
+      f_a1 = sprintf("Data/A1_%d.dat", count);
+      save(f_a1, "A1");
+      f_a2 = sprintf("Data/A2_%d.dat", count);
+      save(f_a2, "A2");
+      f_a3 = sprintf("Data/A3_%d.dat", count);
+      save(f_a3, "A3");
+      f_a4 = sprintf("Data/A4_%d.dat", count);
+      save(f_a4, "A4");
+      
+      write_Index(0, count, Index_J', Index_I', true);
+      
+      write_Index(1, count, A1_I, A1_J, false);
+      write_Index(2, count, A2_I, A2_J, false);
+      write_Index(3, count, A3_I, A3_J, false);
+      write_Index(4, count, A4_I, A4_J, false);
+      
+      source = sprintf("%s%s%s%s\n", A1_stiff_or_mass, ...
+             A2_stiff_or_mass,A3_stiff_or_mass,A4_stiff_or_mass);
+      f = sprintf("Data/source_%d.dat", count);
+      fid = fopen (f, "w");
+      fputs (fid, source);
+      fclose (fid);
+    end;
 
     y(Index_I) = y(Index_I) + kron_mult4(A1,A2,A3,A4, x(Index_J));
   end;
-
+  if (firsttime == true),
+    save("Data/X.mat", "x");
+    save("Data/Y.mat", "y");
+    firsttime = false;
+  end;
+  
 endfunction
 
 testX = 2*rand(size(b_s))-1;
@@ -614,7 +847,7 @@ else
    end;
 
   use_function_handle = true
-  use_Aencode = false
+  use_Aencode = true
   time_iter = -time();
   if (use_function_handle),
     if (use_Aencode),
