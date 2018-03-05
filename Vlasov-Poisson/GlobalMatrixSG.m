@@ -119,7 +119,9 @@ for Lx=0:Lev
         end
     end
 end
-%
+% all possible combinations for 1D mesh
+% can be moved outside and only needed to be computed once and then
+% kept all along the computation
 Key1dMesh=[nx,px,kx];
 
 % Second generate the 2D Key
@@ -128,5 +130,20 @@ tmp_y=Key1dMesh(Iy,:);
 tmp_ix=reshape(repmat(tmp_x,1,size(tmp_y,1))',3,size(tmp_x,1)*size(tmp_y,1) )';
 tmp_iy=repmat(tmp_y,size(tmp_x,1),1);
 key=[tmp_ix(:,1),tmp_iy(:,1),tmp_ix(:,2),tmp_iy(:,2),tmp_ix(:,3)-1,tmp_iy(:,3)-1];
-
+%**********************************************
+% The above code is acting as follows:
+% for 1 variable keys in v and
+%     1 variable keys in x
+% generate all the keys in the 2D Hash
+%==============================================
+% count=1;
+% for i=1:size(tmp_x,1)
+%   for j=1:size(tmp_y,1)
+%      key(count)=[tmp_x(i,1),tmp_y(j,1),...
+%                  tmp_x(i,2),tmp_y(j,2),...
+%                  tmp_x(i,3)-1,tmp_y(j,3)-1];
+%       count=count+1;
+%   end
+% end
+%**********************************************
 end
