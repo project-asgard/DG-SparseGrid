@@ -46,7 +46,6 @@ for j=1:n
         cFMWT(1:cn/2,1:cn)=FMWT(1:cn/2,1:cn);
         cFMWT(cn/2+1:cn,1:cn)=FMWT(k*Np/2+1:k*Np/2+cn/2,1:cn);
     end
-%     cFMWT
 
     FMWT_COMP = cFMWT*FMWT_COMP;
 end

@@ -11,7 +11,7 @@ count=0;
 % Note: SG needs Iv+Ix<=Lev and Jv+Jx<=Lev
 %=====================================================
 Deg = Hash.Deg;
-Lev = Hash.Lev_1;
+Lev = Hash.Lev;
 tic
 for sum = 0:Lev % Loop for Total Sum
 %     Count=((sum+1)^2*(sum+2)+sum*(sum+1)^2)2
@@ -71,7 +71,7 @@ end
 function [index_I,index_J,tmpA,tmpB]=ComputeGlobalIndex(Ix,Jx,Iv,Jv,Hash,A,B)
 
 k = Hash.Deg;
-lev = Hash.Lev_2;
+lev = Hash.Lev;
 
 index_I_x = IndexMapping(Ix,k);
 index_J_x = IndexMapping(Jx,k);

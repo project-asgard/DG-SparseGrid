@@ -26,12 +26,17 @@ dof_1D_x=k*nx;
 
 EMassX=sparse(dof_1D_x,dof_1D_x);
 
+%===================================
+% Convert E to the DG scaling basis
+% So EE has local support
+%===================================
+EE = FMWT_COMP_x'*EE;
+
 for LL=0:nx-1
     Iu=[meshgrid(k*LL+1:k*(LL+1))]';
     Iv=[meshgrid(k*LL+1:k*(LL+1))];
 
     % Generate EE
-%     ff=EE(LL+1);% Wrong!
 %     ff=legendre(0,k)*EE(k*LL+1:k*(LL+1)); % use the middle point-value
     ff=p_val*EE(k*LL+1:k*(LL+1));
     

@@ -13,6 +13,7 @@ clear
 close all
 format short e
 
+
 addpath(genpath(pwd))
 %=============================================================
 %% Step 1. Setting Parameters
@@ -32,10 +33,10 @@ addpath(genpath(pwd))
 pde = Vlasov4;
 Vmax = pde.Vmax;
 Lmax = pde.Lmax;
-TEND = 60;
+TEND = 10;
 
 % Level information
-Lev = 4;
+Lev = 3;
 LevX = Lev;LevV = Lev;
 
 % Polynomial Degree
@@ -63,7 +64,7 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Output: fval (fv and fx)--intial condition f(x,v,t=0)
 %         rho--intial condition rho(x,t=0)
 %*************************************************
-[fv,fx,rho] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
+[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
     FMWT_COMP_x,FMWT_COMP_v);
 
 %=============================================================
@@ -77,7 +78,9 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 
 % Generate the Initial Condition w.r.t Grids
 fval = fv(HashInv.x1).*fx(HashInv.x2);
+
 clear fv fx
+
 
 %=============================================================
 %% Step 3. Generate time-independent coefficient matrices
@@ -121,8 +124,7 @@ end
 %       Generate global matrix A_Vlasov(Hash,coef_mat,Dim)
 %       Apply A_Vlasov->f by RK
 %	Step 5.2 Poisson Equation
-%       Calculate rho(f)
-%       Solve Poisson Equation sol_Poisson by A_Poisson(rho)
+%       Solve Poisson Equation sol_Poisson by A_Poisson(f)
 %       Compute E=(sol_Poisson)'
 %or Step 5.2 Maxwell Equation
 %       Calculate J(f)
@@ -140,21 +142,20 @@ end
 % Plotting Data
 [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
-
-[xx,vv]=meshgrid(x_node,v_node);
-tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
-
 %---------------------
 % plot for validating
 %---------------------
+[xx,vv]=meshgrid(x_node,v_node);
+tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,HashInv);
+
 figure(1000)
-set(gcf, 'Position', [100, 100, 1200, 900])
 mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
 axis([0 Lmax -Vmax Vmax])
 view(0,90)
 colorbar
 
 count=1;
+% return
 
 for L = 1:floor(TEND/dt)
     %=============================================================
@@ -165,13 +166,9 @@ for L = 1:floor(TEND/dt)
     % Output: EMassX
     % Note: E is solved by Poisson or Maxwell's equation
     %=============================================================
-    % Compute rho from fval
-    f_tmp=Multi_2D(FMWT_COMP_v',FMWT_COMP_x',fval, HASH,1,HashInv);
-    rho=Comput_rho(LevX,LevV,Deg,Lmax,Vmax,f_tmp);
-    
-    % Poisson Solver: Solve E from rho
-    E = PoissonSolve(LevX,Deg,Lmax,rho,A_Poisson);
-    
+    % Poisson Solver: Solve E from 1-rho=1-int f dv
+    E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+
     % Generate EMassX matrix
     EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
     
@@ -191,9 +188,8 @@ for L = 1:floor(TEND/dt)
     % plot for validating
     %---------------------
     figure(1000)
-    set(gcf, 'Position', [100, 100, 1200, 900])
-    
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,1,HashInv);
+
+    tmp=Multi_2D(Meval_v,Meval_x,fval,HASH,HashInv);
     mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
     axis([0 Lmax -Vmax Vmax])
     view(0,90)

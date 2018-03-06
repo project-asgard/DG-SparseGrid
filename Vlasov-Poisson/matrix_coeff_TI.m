@@ -161,5 +161,8 @@ vMassV = FMWT_COMP_v*vMassV*FMWT_COMP_v';
 GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
 GradV = FMWT_COMP_v*GradV*FMWT_COMP_v';
 
-% DeltaX is on the finest grid by DG scaling functions
-    
+DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
+                DeltaX*...
+         blkdiag(FMWT_COMP_x',FMWT_COMP_x');
+
+

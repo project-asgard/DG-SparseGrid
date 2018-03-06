@@ -8,6 +8,7 @@ function [database,Inv]=HashTable(Lev_1,Lev_2,Deg,Dim)
 %        Dim:: Dimensionality
 % Output: database:: HashTable
 %         Inv:: Inverse Looking up for Hash
+% Update the Loop for k1
 %-------------------------------------------------
 
 count=1;
@@ -16,12 +17,10 @@ Inv=struct();
 
 for n1=0:Lev_1
     for i1=0:max(0,2^max(0,n1-1)-1)
-        
-        
-        for n2=0:Lev_2-n1
-            for i2=0:max(0,2^max(0,n2-1)-1)
-                
-                for k1=0:Deg-1
+        for k1=0:Deg-1
+            
+            for n2=0:Lev_2-n1
+                for i2=0:max(0,2^max(0,n2-1)-1)
                     for k2=0:Deg-1
                         
                         key=[n1,n2,i1,i2,k1,k2];
@@ -64,6 +63,7 @@ database.Deg=Deg;
 database.dof=dof_sparse;
 database.Lev_1=Lev_1;
 database.Lev_2=Lev_2;
+database.Lev=min(Lev_1,Lev_2);
 
 
 
