@@ -6,7 +6,7 @@ in the 2D setting (1x1v).
 
 ### Run after cloning
 
-run main_Vlasov.m
+> run main_Vlasov.m
 
 ### Modifying and Run other tests
 
