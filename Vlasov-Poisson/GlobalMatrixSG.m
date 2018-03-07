@@ -85,14 +85,36 @@ tmpB = B(index_I_x,index_J_x);
 Key_I = GenerateKey2D(index_I_v,index_I_x,k,lev);
 Key_J = GenerateKey2D(index_J_v,index_J_x,k,lev);
 
+% Original keygen
+%
+% index_I=zeros(size(Key_I,1),1);
+% for i=1:size(Key_I,1)
+%     index_I(i) = Hash.(sprintf('i%g_',Key_I(i,:)));
+% end
+% 
+% index_J=zeros(size(Key_J,1),1);
+% for i=1:size(Key_J,1)
+%     index_J(i) = Hash.(sprintf('i%g_',Key_J(i,:)));
+% end
+
+
+% Faster keygen
+% The "sprintf" line is slow. Instead of calling it
+% multiple times, this calls it once and chops up 
+% the single string.
+
 index_I=zeros(size(Key_I,1),1);
+keysI = sprintf('i%g_',Key_I');
+keyLenI = size(Key_I,2)*3;
 for i=1:size(Key_I,1)
-    index_I(i) = Hash.(sprintf('i%g_',Key_I(i,:)));
+    index_I(i) = Hash.(keysI((i-1)*keyLenI+1:i*keyLenI));
 end
 
 index_J=zeros(size(Key_J,1),1);
+keysJ = sprintf('i%g_',Key_J');
+keyLenJ = size(Key_J,2)*3;
 for i=1:size(Key_J,1)
-    index_J(i) = Hash.(sprintf('i%g_',Key_J(i,:)));
+    index_J(i) = Hash.(keysJ((i-1)*keyLenJ+1:i*keyLenJ));
 end
 
 end
