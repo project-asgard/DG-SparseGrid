@@ -4,14 +4,13 @@ Matlab version of
 A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson 
 in the 2D setting (1x1v).
 
-Run
-after cloning
+### Run after cloning
 
 run main_Vlasov.m
 
 Modifying and Run other tests
 
-Parameters can be modified in
+### Parameters can be modified in
 ./PDE/Vlasov*.m
 % which defines the domain Lmax, Vmax, and Initial condition f(x,v,t=0)
 
