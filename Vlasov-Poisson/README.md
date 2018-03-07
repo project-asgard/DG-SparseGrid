@@ -12,7 +12,7 @@ in the 2D setting (1x1v).
 
 **Tests can be modified in**
 * ./PDE/Vlasov*.m
-* which defines the domain Lmax, Vmax, and Initial condition f(x,v,t=0)*
+_ which defines the domain Lmax, Vmax, and Initial condition f(x,v,t=0)_
 
 **Parameters can be modifies in**
 * main_Vlasov.m::
