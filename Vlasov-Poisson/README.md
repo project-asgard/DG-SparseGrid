@@ -16,6 +16,6 @@ in the 2D setting (1x1v).
 
 **Parameters can be modifies in**
 * main_Vlasov.m::
- - TEND *%The ending test for test*
+ - TEND *%The ending time for test*
  - Lev  *%The mesh's resolution-->with size h=2^(-Lev)*
  - Deg  *%The degree of polynomial--> Deg=2 means linear element*
