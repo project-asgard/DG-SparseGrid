@@ -129,18 +129,54 @@ end
 end
 
 function key=GenerateKey2D(Ix,Iy,Deg,Lev)
+
 % First generate Key1dMesh
-nx=[];px=[];kx=[];
+
+% % Original 
+% % 
+% nx=[];px=[];kx=[];
+% for Lx=0:Lev
+%     for Px=0:2^max(0,Lx-1)-1
+%         for Kx=1:Deg
+%             nx=[nx;Lx];
+%             px=[px;Px];
+%             kx=[kx;Kx];         
+%         end
+%     end
+% end
+
+% Faster
+% Simply pre allocate for speed, but
+% then extract out that part of the array 
+% we did not use.
+
+N1 = Lev+1;
+N2 = (2^(Lev-1))-1;
+N3 = Deg;
+
+MAXN = N1*N2*N3;
+
+% First generate Key1dMesh
+nx0=zeros(MAXN);px0=zeros(MAXN);kx0=zeros(MAXN);
+cnt=1;
 for Lx=0:Lev
     for Px=0:2^max(0,Lx-1)-1
         for Kx=1:Deg
-            nx=[nx;Lx];
-            px=[px;Px];
-            kx=[kx;Kx];
+            
+            nx0(cnt) = Lx;
+            px0(cnt) = Px;
+            kx0(cnt) = Kx;
+            
+            cnt = cnt + 1;
             
         end
     end
 end
+
+nx = nx0(1:cnt-1)';
+px = px0(1:cnt-1)';
+kx = kx0(1:cnt-1)';
+
 % all possible combinations for 1D mesh
 % can be moved outside and only needed to be computed once and then
 % kept all along the computation
