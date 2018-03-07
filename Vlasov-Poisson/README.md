@@ -8,9 +8,9 @@ in the 2D setting (1x1v).
 
 run main_Vlasov.m
 
-Modifying and Run other tests
+### Modifying and Run other tests
 
-### Parameters can be modified in
+Parameters can be modified in
 ./PDE/Vlasov*.m
 % which defines the domain Lmax, Vmax, and Initial condition f(x,v,t=0)
 
