@@ -1,4 +1,4 @@
-Matlab Implementation of 2D Vlasov-Poisson Equations
+# Matlab Implementation of 2D Vlasov-Poisson Equations
 
 Matlab version of 
 A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson 
