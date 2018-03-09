@@ -70,6 +70,8 @@ end
 
 function [index_I,index_J,tmpA,tmpB]=ComputeGlobalIndex(Ix,Jx,Iv,Jv,Hash,A,B)
 
+global hash_format
+
 k = Hash.Deg;
 lev = Hash.Lev;
 
@@ -87,14 +89,14 @@ Key_J = GenerateKey2D(index_J_v,index_J_x,k,lev);
 
 % Original keygen
 %
-% index_I=zeros(size(Key_I,1),1);
+% index_I0=zeros(size(Key_I,1),1);
 % for i=1:size(Key_I,1)
-%     index_I(i) = Hash.(sprintf('i%g_',Key_I(i,:)));
+%     index_I0(i) = Hash.(sprintf(hash_format,Key_I(i,:)));
 % end
 % 
 % index_J=zeros(size(Key_J,1),1);
 % for i=1:size(Key_J,1)
-%     index_J(i) = Hash.(sprintf('i%g_',Key_J(i,:)));
+%     index_J(i) = Hash.(sprintf(hash_format,Key_J(i,:)));
 % end
 
 
@@ -103,16 +105,18 @@ Key_J = GenerateKey2D(index_J_v,index_J_x,k,lev);
 % multiple times, this calls it once and chops up 
 % the single string.
 
+hash_str_len = numel(sprintf(hash_format,1));
+
 index_I=zeros(size(Key_I,1),1);
-keysI = sprintf('i%g_',Key_I');
-keyLenI = size(Key_I,2)*3;
+keysI = sprintf(hash_format,Key_I');
+keyLenI = size(Key_I,2)*hash_str_len;
 for i=1:size(Key_I,1)
     index_I(i) = Hash.(keysI((i-1)*keyLenI+1:i*keyLenI));
 end
 
 index_J=zeros(size(Key_J,1),1);
-keysJ = sprintf('i%g_',Key_J');
-keyLenJ = size(Key_J,2)*3;
+keysJ = sprintf(hash_format,Key_J');
+keyLenJ = size(Key_J,2)*hash_str_len;
 for i=1:size(Key_J,1)
     index_J(i) = Hash.(keysJ((i-1)*keyLenJ+1:i*keyLenJ));
 end
@@ -156,7 +160,6 @@ N3 = Deg;
 
 MAXN = N1*N2*N3;
 
-% First generate Key1dMesh
 nx0=zeros(MAXN);px0=zeros(MAXN);kx0=zeros(MAXN);
 cnt=1;
 for Lx=0:Lev
