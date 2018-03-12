@@ -158,13 +158,31 @@ N1 = Lev+1;
 N2 = (2^(Lev-1))-1;
 N3 = Deg;
 
-MAXN = N1*N2*N3;
+% ------------------------------
+% Using
+% MAXN = N1*N2*N3;
+% may be too large 
+% consider computing MAXN in a short loop
+% ------------------------------
+MAXN = 0;
+for Lx=0:Lev,
+  istart = 0;
+  iend = 2^max(0,Lx-1)-1;
+  MAXN = MAXN + (iend-istart+1);
+end;
+MAXN = MAXN * Deg;
 
-nx0=zeros(MAXN);px0=zeros(MAXN);kx0=zeros(MAXN);
+  
+
+% nx0=zeros(MAXN);px0=zeros(MAXN);kx0=zeros(MAXN);
+nx0(MAXN) = 0; px0(MAXN) = 0; kx0(MAXN) = 0;
+use_loop = 0;
 cnt=1;
+Kx = 1:Deg;
 for Lx=0:Lev
     for Px=0:2^max(0,Lx-1)-1
-        for Kx=1:Deg
+        if (use_loop),
+         for Kx=1:Deg
             
             nx0(cnt) = Lx;
             px0(cnt) = Px;
@@ -172,13 +190,25 @@ for Lx=0:Lev
             
             cnt = cnt + 1;
             
+         end
+        else
+            ip = cnt-1+Kx;
+            nx0(ip) = Lx;
+            px0(ip) = Px;
+            kx0(ip) = Kx;
+            cnt = cnt + Deg;
         end
     end
 end
 
-nx = nx0(1:cnt-1)';
-px = px0(1:cnt-1)';
-kx = kx0(1:cnt-1)';
+nz = cnt -1;
+nx = reshape( nx0(1:nz), nz,1);
+px = reshape( px0(1:nz), nz,1);
+kx = reshape( kx0(1:nz), nz,1);
+
+% nx = nx0(1:cnt-1)';
+% px = px0(1:cnt-1)';
+% kx = kx0(1:cnt-1)';
 
 % all possible combinations for 1D mesh
 % can be moved outside and only needed to be computed once and then
