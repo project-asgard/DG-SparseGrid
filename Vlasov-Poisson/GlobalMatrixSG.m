@@ -110,16 +110,31 @@ hash_str_len = numel(sprintf(hash_format,1));
 index_I=zeros(size(Key_I,1),1);
 keysI = sprintf(hash_format,Key_I');
 keyLenI = size(Key_I,2)*hash_str_len;
-for i=1:size(Key_I,1)
+use_original = 0;
+if (use_original),
+  for i=1:size(Key_I,1)
     index_I(i) = Hash.(keysI((i-1)*keyLenI+1:i*keyLenI));
-end
+  end
+else
+  keysImat = reshape( keysI, keyLenI, numel(keysI)/keyLenI );
+  for i=1:size(Key_I,1),
+    index_I(i) = Hash.( keysImat(:,i) );
+  end;
+end;
 
 index_J=zeros(size(Key_J,1),1);
 keysJ = sprintf(hash_format,Key_J');
 keyLenJ = size(Key_J,2)*hash_str_len;
-for i=1:size(Key_J,1)
+if (use_original),
+  for i=1:size(Key_J,1)
     index_J(i) = Hash.(keysJ((i-1)*keyLenJ+1:i*keyLenJ));
-end
+  end
+else
+  keysJmat = reshape( keysJ, keyLenJ, numel(keysJ)/keyLenJ );
+  for i=1:size(Key_J,1),
+     index_J(i) = Hash.( keysJmat(:,i) );
+  end;
+end;
 
 end
 
