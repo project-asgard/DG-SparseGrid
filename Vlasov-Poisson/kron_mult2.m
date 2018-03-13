@@ -6,6 +6,8 @@ if (nargin >= 4),
   idebug = idebug_in;
 end;
 
+flops_performed = 0;
+
 use_kron_multd = 0;
 if (use_kron_multd),
   Acell{1} = A;
@@ -29,28 +31,9 @@ else
   end;
   nvec = numel(X)/(nrowX*ncolX);
   
+  nnzA = nnz(A);
+  nnzB = nnz(B);
 
-  % ----------------------------------------------
-  % assume dense matrix operations are 10 times faster
-  % compared to sparse matrix operations
-  % ----------------------------------------------
-  dense_flop_discount = 0.1;
-  nnzB = (nrowB*ncolB); 
-  nnzA = (nrowA*ncolA);
-  if (issparse(B)),
-      nnzB = nnz(B);
-      if (nnzB > dense_flop_discount * nrowB*ncolB),
-          B = full(B);
-          nnzB = nrowB*ncolB;
-      end;
-  end;
-  if (issparse(A)),
-     nnzA = nnz(A);
-     if (nnzA > dense_flop_discount * nrowA*ncolA),
-         A = full(A);
-         nnzA = nrowA*ncolA;
-     end;
-  end;
 
   if (idebug >= 1),
     disp(sprintf('nvec=%d, size(A)=(%d,%d), nnzA=%g, size(B)=(%d,%d),nnzB=%g', ...
@@ -103,22 +86,28 @@ else
   X = reshape( X, [ nrowX, ncolX, nvec ] );
   Y = zeros( [nrowY, ncolY, nvec ] );
   flops_performed = min_flops * nvec;
-  if (flops_method(1) == min_flops),
-     for k=1:nvec,
-         BX = B * X(1:nrowX,1:ncolX,k);
-         Y(1:nrowY,1:ncolY,k) = BX* transpose(A);
-     end;
-     Y = reshape( Y, [nrowY*ncolY,nvec]);
 
-  elseif (flops_method(2) == min_flops),
+  if (flops_method(3) <=  min_flops),
+
+    Y = kron(A,B)*reshape( X, nrowX*ncolX, nvec );
+
+  elseif (flops_method(2) <=  min_flops),
+
      for k=1:nvec,
         XAt = X(1:nrowX,1:ncolX,k) * transpose(A);
         Y(1:nrowY,1:ncolY,k) = B * XAt;
       end;
      Y = reshape( Y, nrowY*ncolY,nvec);
+
   else
-    Y = kron(A,B)*reshape( X, nrowX*ncolX, nvec );
+
+     for k=1:nvec,
+         BX = B * X(1:nrowX,1:ncolX,k);
+         Y(1:nrowY,1:ncolY,k) = BX* transpose(A);
+     end;
+     Y = reshape( Y, [nrowY*ncolY,nvec]);
   end;
+
   
 
 end;
