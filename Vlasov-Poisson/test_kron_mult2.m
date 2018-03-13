@@ -1,8 +1,9 @@
 nvec = 5;
-maxit = 1;
+maxit = 100;
 nerr = 0;
 total_flops_performed = 0;
-idebug = 1;
+idebug = 0;
+total_time = 0;
 
 for it=1:maxit,
   idim = round( rand(4,1) * 100 ) + 1;
@@ -40,7 +41,7 @@ if (nerr == 0),
   disp(sprintf('ALL OK after %g tests', maxit)); 
   gflops = total_flops_performed * 10^(-9)/total_time;
 
-  disp(sprintf('overall rate is %g ', gflops ));
+  disp(sprintf('overall rate is effectively %g Gflops/sec', gflops ));
 else
   disp(sprintf('%d errors ', nerr ));
 end;
