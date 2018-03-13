@@ -35,17 +35,21 @@ else
   % compared to sparse matrix operations
   % ----------------------------------------------
   dense_flop_discount = 0.1;
-  sparsity_ratio_B = nnz(B)/(nrowB*ncolB);
-  sparsity_ratio_A = nnz(A)/(nrowA*ncolA);
-  nnzB = nnz(B);
-  nnzA = nnz(A);
-  if (sparsity_ratio_B >= dense_flop_discount),
-      B = full(B);
-      nnzB = dense_flop_discount *(nrowB*ncolB);
+  nnzB = (nrowB*ncolB); 
+  nnzA = (nrowA*ncolA);
+  if (issparse(B)),
+      nnzB = nnz(B);
+      if (nnzB > dense_flop_discount * nrowB*ncolB),
+          B = full(B);
+          nnzB = nrowB*ncolB;
+      end;
   end;
-  if (sparsity_ratio_B >= dense_flop_discount),
-      A = full(A);
-      nnzA = dense_flop_discount * (nrowA*ncolA);
+  if (issparse(A)),
+     nnzA = nnz(A);
+     if (nnzA > dense_flop_discount * nrowA*ncolA),
+         A = full(A);
+         nnzA = nrowA*ncolA;
+     end;
   end;
 
   if (idebug >= 1),
@@ -88,7 +92,7 @@ else
   % ------------------
   flops_method(3) = 2.0*nnzA*nnzB;
 
-  [min_flops,imethod] = min( flops_method(1:3) );
+  min_flops = min( flops_method(1), min( flops_method(2), flops_method(3) ) );
   if (idebug >= 1),
     disp(sprintf('flops_method(:)=(%g,%g,%g) ', ...
            flops_method(1), flops_method(2), flops_method(3)));
@@ -99,14 +103,14 @@ else
   X = reshape( X, [ nrowX, ncolX, nvec ] );
   Y = zeros( [nrowY, ncolY, nvec ] );
   flops_performed = min_flops * nvec;
-  if (imethod == 1),
+  if (flops_method(1) == min_flops),
      for k=1:nvec,
          BX = B * X(1:nrowX,1:ncolX,k);
          Y(1:nrowY,1:ncolY,k) = BX* transpose(A);
      end;
      Y = reshape( Y, [nrowY*ncolY,nvec]);
 
-  elseif (imethod == 2),
+  elseif (flops_method(2) == min_flops),
      for k=1:nvec,
         XAt = X(1:nrowX,1:ncolX,k) * transpose(A);
         Y(1:nrowY,1:ncolY,k) = B * XAt;
