@@ -26,9 +26,14 @@ dof_1D_v=Deg*2^(Lev_v);
     
     tic
     
+    use_kron_mult2 = 1;
     for ii=1:Hash.dof
+     if (use_kron_mult2),
+        tmp=kron_mult2(A(:,HashInv.x1(ii)),B(:,HashInv.x2(ii)),f(ii));
+     else
         tmp=kron(A(:,HashInv.x1(ii)),B(:,HashInv.x2(ii)))*f(ii);
-        fnew=fnew+tmp;
+     end;
+     fnew=fnew+tmp;
     end
     
 

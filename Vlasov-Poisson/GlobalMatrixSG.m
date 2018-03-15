@@ -70,6 +70,8 @@ end
 
 function [index_I,index_J,tmpA,tmpB]=ComputeGlobalIndex(Ix,Jx,Iv,Jv,Hash,A,B)
 
+global hash_format
+
 k = Hash.Deg;
 lev = Hash.Lev;
 
@@ -85,15 +87,54 @@ tmpB = B(index_I_x,index_J_x);
 Key_I = GenerateKey2D(index_I_v,index_I_x,k,lev);
 Key_J = GenerateKey2D(index_J_v,index_J_x,k,lev);
 
+% Original keygen
+%
+% index_I0=zeros(size(Key_I,1),1);
+% for i=1:size(Key_I,1)
+%     index_I0(i) = Hash.(sprintf(hash_format,Key_I(i,:)));
+% end
+% 
+% index_J=zeros(size(Key_J,1),1);
+% for i=1:size(Key_J,1)
+%     index_J(i) = Hash.(sprintf(hash_format,Key_J(i,:)));
+% end
+
+
+% Faster keygen
+% The "sprintf" line is slow. Instead of calling it
+% multiple times, this calls it once and chops up 
+% the single string.
+
+hash_str_len = numel(sprintf(hash_format,1));
+
 index_I=zeros(size(Key_I,1),1);
-for i=1:size(Key_I,1)
-    index_I(i) = Hash.(sprintf('i%g_',Key_I(i,:)));
-end
+keysI = sprintf(hash_format,Key_I');
+keyLenI = size(Key_I,2)*hash_str_len;
+use_original = 0;
+if (use_original),
+  for i=1:size(Key_I,1)
+    index_I(i) = Hash.(keysI((i-1)*keyLenI+1:i*keyLenI));
+  end
+else
+  keysImat = reshape( keysI, keyLenI, numel(keysI)/keyLenI );
+  for i=1:size(Key_I,1),
+    index_I(i) = Hash.( keysImat(:,i) );
+  end;
+end;
 
 index_J=zeros(size(Key_J,1),1);
-for i=1:size(Key_J,1)
-    index_J(i) = Hash.(sprintf('i%g_',Key_J(i,:)));
-end
+keysJ = sprintf(hash_format,Key_J');
+keyLenJ = size(Key_J,2)*hash_str_len;
+if (use_original),
+  for i=1:size(Key_J,1)
+    index_J(i) = Hash.(keysJ((i-1)*keyLenJ+1:i*keyLenJ));
+  end
+else
+  keysJmat = reshape( keysJ, keyLenJ, numel(keysJ)/keyLenJ );
+  for i=1:size(Key_J,1),
+     index_J(i) = Hash.( keysJmat(:,i) );
+  end;
+end;
 
 end
 
@@ -107,18 +148,83 @@ end
 end
 
 function key=GenerateKey2D(Ix,Iy,Deg,Lev)
+
 % First generate Key1dMesh
-nx=[];px=[];kx=[];
+
+% % Original 
+% % 
+% nx=[];px=[];kx=[];
+% for Lx=0:Lev
+%     for Px=0:2^max(0,Lx-1)-1
+%         for Kx=1:Deg
+%             nx=[nx;Lx];
+%             px=[px;Px];
+%             kx=[kx;Kx];         
+%         end
+%     end
+% end
+
+% Faster
+% Simply pre allocate for speed, but
+% then extract out that part of the array 
+% we did not use.
+
+N1 = Lev+1;
+N2 = (2^(Lev-1))-1;
+N3 = Deg;
+
+% ------------------------------
+% Using
+% MAXN = N1*N2*N3;
+% may be too large 
+% consider computing MAXN in a short loop
+% ------------------------------
+MAXN = 0;
+for Lx=0:Lev,
+  istart = 0;
+  iend = 2^max(0,Lx-1)-1;
+  MAXN = MAXN + (iend-istart+1);
+end;
+MAXN = MAXN * Deg;
+
+  
+
+% nx0=zeros(MAXN);px0=zeros(MAXN);kx0=zeros(MAXN);
+nx0(MAXN) = 0; px0(MAXN) = 0; kx0(MAXN) = 0;
+use_loop = 0;
+cnt=1;
+Kx = 1:Deg;
 for Lx=0:Lev
     for Px=0:2^max(0,Lx-1)-1
-        for Kx=1:Deg
-            nx=[nx;Lx];
-            px=[px;Px];
-            kx=[kx;Kx];
+        if (use_loop),
+         for Kx=1:Deg
             
+            nx0(cnt) = Lx;
+            px0(cnt) = Px;
+            kx0(cnt) = Kx;
+            
+            cnt = cnt + 1;
+            
+         end
+        else
+            ip = cnt-1+Kx;
+            nx0(ip) = Lx;
+            px0(ip) = Px;
+            kx0(ip) = Kx;
+            cnt = cnt + Deg;
         end
     end
 end
+
+nz = cnt -1;
+nx = reshape( nx0(1:nz), nz,1);
+px = reshape( px0(1:nz), nz,1);
+kx = reshape( kx0(1:nz), nz,1);
+
+% nx = nx0(1:cnt-1)';
+% px = px0(1:cnt-1)';
+% kx = kx0(1:cnt-1)';
+
 % all possible combinations for 1D mesh
 % can be moved outside and only needed to be computed once and then
 % kept all along the computation

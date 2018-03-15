@@ -11,6 +11,11 @@ function [database,Inv]=HashTable(Lev_1,Lev_2,Deg,Dim)
 % Update the Loop for k1
 %-------------------------------------------------
 
+global hash_format
+% Specifies the number of allowable integers in the elements of the hash key
+% If more are needed, i.e., > 99, then change to 'i%3.3i_'.
+hash_format = 'i%2.2i_'; 
+
 count=1;
 database=struct();
 Inv=struct();
@@ -24,7 +29,7 @@ for n1=0:Lev_1
                     for k2=0:Deg-1
                         
                         key=[n1,n2,i1,i2,k1,k2];
-                        database.(sprintf('i%g_',key))=count;
+                        database.(sprintf(hash_format,key))=count;
                         inv{count}=key;
                         
                         % local position for v
