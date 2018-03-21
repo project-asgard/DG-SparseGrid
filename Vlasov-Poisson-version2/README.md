@@ -1,6 +1,6 @@
 # Matlab Implementation of 2D Vlasov-Poisson Equations
 
-Matlab version of 
+Matlab version 2 of 
 A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson 
 in the 2D setting (1x1v).
 
@@ -19,3 +19,7 @@ in the 2D setting (1x1v).
  - TEND *%The ending time for test*
  - Lev  *%The mesh's resolution-->with size h=2^(-Lev)*
  - Deg  *%The degree of polynomial--> Deg=2 means linear element*
+ 
+* Note::
+ - The Hash Table only contains information from Lev
+ - The globa matrix is generated through looping over Hash Table
