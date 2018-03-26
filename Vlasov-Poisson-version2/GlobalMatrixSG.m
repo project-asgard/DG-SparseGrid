@@ -32,7 +32,6 @@ for i=1:HASH.dof
     J1=LevCell2index(m1,p1);
     J2=LevCell2index(m2,p2);
     
-    % another approach
     index_I1=[(I1-1)*Deg+1:I1*Deg];
     index_I2=[(I2-1)*Deg+1:I2*Deg];
     
