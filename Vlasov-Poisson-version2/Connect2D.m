@@ -39,12 +39,12 @@ Key1dMesh=[nx,px];
 for ii=1:HASH.dof
     ll=HASHInv{ii};
     
-    n1=ll(1);c1=ll(3);
-    n2=ll(2);c2=ll(4);
+    n1=ll(1);p1=ll(3);
+    n2=ll(2);p2=ll(4);
     
-    I1=LevCell2index(n1,c1);
+    I1=LevCell2index(n1,p1);
     J1=Con(I1,:);
-    I2=LevCell2index(n2,c2);
+    I2=LevCell2index(n2,p2);
     J2=Con(I2,:);
     
     [i,j,val]=find(Con(I1,:));
