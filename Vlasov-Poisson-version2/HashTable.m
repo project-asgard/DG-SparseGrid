@@ -12,7 +12,8 @@ function [database,inv,Inv]=HashTable(Lev,Dim)
 global hash_format
 % Specifies the number of allowable integers in the elements of the hash key
 % If more are needed, i.e., > 99, then change to 'i%3.3i_'.
-hash_format = 'i%2.2i_';
+% hash_format = 'i%2.2i_';
+hash_format =  'i%04.4d_';% suggested by Ed
 
 count=1;
 database=struct();
@@ -26,8 +27,8 @@ for n1=0:Lev
             for i2=0:max(0,2^max(0,n2-1)-1)
                 
                 key=[n1,n2,i1,i2];
-                database.(sprintf('i%g_',key))=count;
-                
+%                 database.(sprintf('i%g_',key))=count;
+                database.(sprintf(hash_format,key))=count;
                 inv{count}=key;
                 
                 Inv.x1(count)=LevCell2index(n1,i1);

@@ -14,6 +14,7 @@ function Con2D=Connect2D(Lev,HASH,HASHInv)
 % we consider the most numbers for connected case
 % (ignoring Deg)
 %=============================================================
+global hash_format
 Con=Connect1D(Lev);
 
 %% Step 2. All possible combinations for 1D mesh
@@ -58,7 +59,8 @@ for ii=1:HASH.dof
         for i2=1:size(LevCell2,1)
             if LevCell1(i1,1)+LevCell2(i2,1)<=Lev
                 key=[LevCell1(i1,1) LevCell2(i2,1) LevCell1(i1,2) LevCell2(i2,2)];
-                index_J = [index_J, HASH.(sprintf('i%g_',key))];
+%                 index_J = [index_J, HASH.(sprintf('i%g_',key))];
+                    index_J = [index_J, HASH.(sprintf(hash_format,key))]; % suggested by Ed
             end
         end
     end
