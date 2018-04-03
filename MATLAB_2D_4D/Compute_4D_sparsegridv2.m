@@ -792,7 +792,7 @@ function y = apply_Aencode(x, varargin)
     save("Data/Y.mat", "y");
     firsttime = false;
   end;
-  
+  exit (0)
 endfunction
 
 testX = 2*rand(size(b_s))-1;
