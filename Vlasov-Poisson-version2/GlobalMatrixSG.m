@@ -28,13 +28,24 @@ for i=1:HASH.dof
     m1=JJ(1:4:end);p1=JJ(3:4:end);
     m2=JJ(2:4:end);p2=JJ(4:4:end);
     
+    %================================================================
     % 1D index
+    % This is to compute the 1D index from (Lev_1D,Cell_1D)-->index
+    % index={ 2^(Lev-1)+Cell+1, if Lev~= 0
+    %       { 1               , if Lev== 0
+    %================================================================
     J1=LevCell2index(m1,p1);
     J2=LevCell2index(m2,p2);
     
     index_I1=[(I1-1)*Deg+1:I1*Deg];
     index_I2=[(I2-1)*Deg+1:I2*Deg];
     
+    %================================================================
+    % Since the HashTable only contains the (Lev_2D,Cell_2D), we have
+    % to associate the 2D global index with Deg::
+    % For example, if the HashTable with index value "1"
+    % Then the global index (with Deg) will be [1,2,3,4,...,Deg^2]
+    %================================================================
     IndexI=[Deg^2*(i-1)+1:Deg^2*i];
     
     for jjj = 1:size(J1,2)
