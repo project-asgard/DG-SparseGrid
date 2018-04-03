@@ -47,8 +47,8 @@ for i=1:HASH.dof
                 
                 for jjj = 1:size(J1,2)
                     
-                    for kk1=1:Deg
-                        for kk2=1:Deg
+                    for kk2=1:Deg
+                        for kk1=1:Deg
                         
                             index_J1=(J1(jjj)-1)*Deg+kk1;
                             index_J2=(J2(jjj)-1)*Deg+kk2;
