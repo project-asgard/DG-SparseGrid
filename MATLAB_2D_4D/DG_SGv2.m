@@ -7,12 +7,13 @@ clear all
 clc
 format short e
 
-
+global Stiff_1D;
+global M_mass;
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------
-Np = 5;
-k=4;
+Np = 6;
+k=5;
 
 mkdir('Data')
 addpath(genpath(pwd))
