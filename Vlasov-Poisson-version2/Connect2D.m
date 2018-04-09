@@ -26,15 +26,15 @@ Con=Connect1D(Lev);
 nx=[];px=[];
 for Lx=0:Lev
     for Px=0:2^max(0,Lx-1)-1
-            nx=[nx;Lx];
-            px=[px;Px];
+        nx=[nx;Lx];
+        px=[px;Px];
     end
 end
 Key1dMesh=[nx,px];
 
 %% Step 3. 2D connectivity
 %--------------------------------------
-% construct 2D connectivity 
+% construct 2D connectivity
 % (ignoring Deg)
 %--------------------------------------
 for ii=1:HASH.dof
@@ -43,9 +43,10 @@ for ii=1:HASH.dof
     n1=ll(1);p1=ll(3);
     n2=ll(2);p2=ll(4);
     
-    I1=LevCell2index(n1,p1);
+    % modified the LevCell2index by the HashInv
+    I1=ll(5);%LevCell2index(n1,p1);
     J1=Con(I1,:);
-    I2=LevCell2index(n2,p2);
+    I2=ll(6);%LevCell2index(n2,p2);
     J2=Con(I2,:);
     
     [i,j,val]=find(Con(I1,:));
@@ -53,20 +54,20 @@ for ii=1:HASH.dof
     
     [i,j,val]=find(Con(I2,:));
     LevCell2=Key1dMesh(j,:);
- 
+    
     index_J=[];
     for i1=1:size(LevCell1,1)
         for i2=1:size(LevCell2,1)
             if LevCell1(i1,1)+LevCell2(i2,1)<=Lev
                 key=[LevCell1(i1,1) LevCell2(i2,1) LevCell1(i1,2) LevCell2(i2,2)];
-%                 index_J = [index_J, HASH.(sprintf('i%g_',key))];
-                    index_J = [index_J, HASH.(sprintf(hash_format,key))]; % suggested by Ed
+                %                 index_J = [index_J, HASH.(sprintf('i%g_',key))];
+                index_J = [index_J, HASH.(sprintf(hash_format,key))]; % suggested by Ed
             end
         end
     end
     
-Con2D{ii}=index_J;
-
+    Con2D{ii}=index_J;
+    
 end
 
 %% Plotting for validation
@@ -77,7 +78,7 @@ end
 % for i=1:size(Con2D,2)
 %     Con2D_full(i,Con2D{i})=1;
 % end
-% 
+%
 % figure;spy(Con2D_full)
 % return
 end
@@ -135,6 +136,18 @@ end
 end
 
 
+
+function index=LevCell2index(Lev,Cell)
+%=============================================================
+% for given Lev_1D and Cell_1D, determine Index_1D
+%=============================================================
+
+index=2.^(Lev-1)+Cell+1;
+
+ix = find(Lev ==0);
+index(ix)=1;
+
+end
 
 
 

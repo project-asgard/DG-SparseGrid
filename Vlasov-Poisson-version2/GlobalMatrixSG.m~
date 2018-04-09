@@ -34,12 +34,9 @@ for i=1:HASH.dof
     J2=JJ(6:6:end);
     
     % Unique of the index J1 and then group the submatrix
-    % A(index_I1,index_J1)
-    %----------------------
-    % More work can be done but not work now
-    %----------------------
-%     [~,JJ1,~]=unique(J1);
-
+    J1
+    [~,JJ1,~]=unique(J1);
+    JJ1
    
     index_I1=[(I1-1)*Deg+1:I1*Deg];
     index_I2=[(I2-1)*Deg+1:I2*Deg];

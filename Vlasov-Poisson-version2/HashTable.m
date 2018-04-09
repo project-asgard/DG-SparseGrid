@@ -1,4 +1,4 @@
-function [database,inv,Inv]=HashTable(Lev,Dim)
+function [database,inv]=HashTable(Lev,Dim)
 %-------------------------------------------------
 % Matlab Version of
 % Generate 2D Hash Table s.t n1+n2<=Lev
@@ -7,6 +7,8 @@ function [database,inv,Inv]=HashTable(Lev,Dim)
 % Output: database:: HashTable
 %         inv:: Inverse Looking up for Hash
 % Major Change:: ignoring the Deg from mesh
+% Adding the 1D index into HashTable with 
+%   (Lev_1D,Cell_1D)->Index_1D
 %-------------------------------------------------
 
 global hash_format
@@ -29,7 +31,10 @@ for n1=0:Lev
                 key=[n1,n2,i1,i2];
 %                 database.(sprintf('i%g_',key))=count;
                 database.(sprintf(hash_format,key))=count;
-                inv{count}=key;
+                index_1 = LevCell2index(n1,i1);
+                index_2 = LevCell2index(n2,i2);
+                
+                inv{count}=[key,index_1,index_2];
                 
                 Inv.x1(count)=LevCell2index(n1,i1);
                 Inv.x2(count)=LevCell2index(n2,i2);

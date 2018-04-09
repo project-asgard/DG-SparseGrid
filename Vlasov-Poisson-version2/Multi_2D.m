@@ -5,8 +5,7 @@ function [fnew]=Multi_2D(A,B,f,Hash,HashInv,Deg)
 %        Matrix: B (size nB1*nB2)
 %        Vector: f (size nf*1)
 %        Hash Table: Hash
-%        isFull: isFull=1--output the fullgrid vector
-%                    isFull=0--output the sparsegrid vector
+%        HashInv: inverse of the Hash Table
 % Output: Vector: fnew (size nf*1)
 %====================================================================
 
@@ -28,48 +27,23 @@ fnew=sparse(dof_1D_v*dof_1D_x,1);
 tic
 
 for ii=1:Hash.dof
-    %         ii
-    %         n1=ll(1);c1=ll(3);
-    %         n2=ll(2);c2=ll(4);
-    
-    I1=HashInv.x1(ii);%LevCell2index(n1,c1);
-    n1=ceil(log2(I1));
-    I2=HashInv.x2(ii);%LevCell2index(n2,c2);
-    n2=ceil(log2(I2));
+ 
+    I1=HashInv{ii}(5);
+    n1=HashInv{ii}(1);
+    I2=HashInv{ii}(6);
+    n2=HashInv{ii}(2);
     
     index_I1=[(I1-1)*Deg+1:I1*Deg];
     index_I2=[(I2-1)*Deg+1:I2*Deg];
     
     Index = Deg^2*(ii-1)+1:Deg^2*ii;
-    %         [n1 n2 Index]
     
     tmp=kron(...
         A(:,index_I1),...
         B(:,index_I2) ...
         )*f(Index(:));
     fnew=fnew+tmp;
-    
-    
-    %         Deg*(HashInv.x1(ii)-1)+1:Deg*HashInv.x1(ii)
-    %         Deg*(HashInv.x2(ii)-1)+1:Deg*HashInv.x2(ii)
-    %         2^n1*2^n2
-    % %         +[Deg*(ii-1)+1:Deg*ii]
-    % %         Deg*(HashInv.x2(ii)-1)+1:Deg*HashInv.x2(ii)
-    %         disp('========')
-    % % size(A(:,Deg*(HashInv.x1(ii)-1)+1:Deg*HashInv.x1(ii)))
-    % % size(B(:,Deg*(HashInv.x2(ii)-1)+1:Deg*HashInv.x2(ii)))
-    % % Deg*(HashInv.x1(ii)-1)+1:Deg*HashInv.x1(ii))
-    %
-    % % size(kron(...
-    % %                             A(:,Deg*(HashInv.x1(ii)-1)+1:Deg*HashInv.x1(ii)),...
-    % %                             B(:,Deg*(HashInv.x2(ii)-1)+1:Deg*HashInv.x2(ii)) ...
-    % %                            ))
-    % %   size(f(Deg^2*(ii-1)+1:Deg^2*ii))
-    %         tmp=kron(...
-    %                             A(:,Deg*(HashInv.x1(ii)-1)+1:Deg*HashInv.x1(ii)),...
-    %                             B(:,Deg*(HashInv.x2(ii)-1)+1:Deg*HashInv.x2(ii)) ...
-    %                            )*f(Deg^2*(ii-1)+1:Deg^2*ii);
-    %         fnew=fnew+tmp;
+
 end
 
 
