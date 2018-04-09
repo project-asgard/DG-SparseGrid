@@ -9,6 +9,8 @@ function [database,inv]=HashTable(Lev,Dim)
 % Major Change:: ignoring the Deg from mesh
 % Adding the 1D index into HashTable with 
 %   (Lev_1D,Cell_1D)->Index_1D
+% so the inv = (Lev_1,Lev_2,Cell_1,Cell_2,Index_1,Index_2)
+%        key = [Lev_1,Lev_2,Cell_1,Cell_2]
 %-------------------------------------------------
 
 global hash_format
