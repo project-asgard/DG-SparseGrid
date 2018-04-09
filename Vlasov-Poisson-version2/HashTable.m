@@ -19,7 +19,7 @@ hash_format =  'i%04.4d_';% suggested by Ed
 
 count=1;
 database=struct();
-Inv=struct();
+%Inv=struct();
 
 
 for n1=0:Lev
@@ -36,8 +36,8 @@ for n1=0:Lev
                 
                 inv{count}=[key,index_1,index_2];
                 
-                Inv.x1(count)=LevCell2index(n1,i1);
-                Inv.x2(count)=LevCell2index(n2,i2);
+                %Inv.x1(count)=LevCell2index(n1,i1);
+                %Inv.x2(count)=LevCell2index(n2,i2);
                 
                 count=count+1;
             end
