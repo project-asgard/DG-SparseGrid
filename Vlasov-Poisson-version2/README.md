@@ -24,4 +24,4 @@ in the 2D setting (1x1v).
  - The Hash Table only contains information from Lev
  - The globa matrix is generated through looping over Hash Table
  - Insert the 1D index mapping to HashTable
- 
+ - Slow Version of GlobalMatrix_SG is updated in the slowversion foler
