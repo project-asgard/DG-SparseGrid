@@ -1,4 +1,4 @@
-function [Meval_v,v_node,Meval_x,x_node]=matrix_plot(Lev_x,Lev_v,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v);
+function [Meval_v,v_node,Meval_x,x_node]=matrix_plot(Lev_x,Lev_v,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=========================================
 % Generate the evaluation matrix and plotting points
 %=========================================
@@ -52,7 +52,6 @@ end
 Meval_v = Meval_v*FMWT_COMP_v';
 Meval_x = Meval_x*FMWT_COMP_x';
 
-% DeltaX is on the finest grid by DG scaling functions
     
 
 

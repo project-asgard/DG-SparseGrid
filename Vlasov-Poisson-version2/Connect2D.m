@@ -15,7 +15,9 @@ function Con2D=Connect2D(Lev,HASH,HASHInv)
 % (ignoring Deg)
 %=============================================================
 global hash_format
-Con=Connect1D(Lev);
+
+Con = Connect1D(Lev);
+HASHDOF = size(HASHInv,2);
 
 %% Step 2. All possible combinations for 1D mesh
 %--------------------------------------
@@ -37,28 +39,32 @@ Key1dMesh=[nx,px];
 % construct 2D connectivity
 % (ignoring Deg)
 %--------------------------------------
-for ii=1:HASH.dof
+for ii=1:HASHDOF
     ll=HASHInv{ii};
     
-    n1=ll(1);p1=ll(3);
-    n2=ll(2);p2=ll(4);
+    % for the ii-th row, (Lev,Cell) is not needed
+%     n1=ll(1);p1=ll(3);
+%     n2=ll(2);p2=ll(4);
     
-    % modified the LevCell2index by the HashInv
-    I1=ll(5);%LevCell2index(n1,p1);
+    % 1D indices by the HashInv
+    I1=ll(5);I2=ll(6);
+    % find the connected information
     J1=Con(I1,:);
-    I2=ll(6);%LevCell2index(n2,p2);
     J2=Con(I2,:);
     
+    % find the connectivity from 1D connected mesh
     [i,j,val]=find(Con(I1,:));
+    % Get (m1,cell1) from Key1DMesh
     LevCell1=Key1dMesh(j,:);
     
     [i,j,val]=find(Con(I2,:));
+    % Get (m2,cell2) from Key1DMesh
     LevCell2=Key1dMesh(j,:);
     
     index_J=[];
     for i1=1:size(LevCell1,1)
         for i2=1:size(LevCell2,1)
-            if LevCell1(i1,1)+LevCell2(i2,1)<=Lev
+            if LevCell1(i1,1)+LevCell2(i2,1)<=Lev % check whether m1+m2<=Lev
                 key=[LevCell1(i1,1) LevCell2(i2,1) LevCell1(i1,2) LevCell2(i2,2)];
                 %                 index_J = [index_J, HASH.(sprintf('i%g_',key))];
                 index_J = [index_J, HASH.(sprintf(hash_format,key))]; % suggested by Ed
