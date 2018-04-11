@@ -19,6 +19,7 @@ in the 2D setting (1x1v).
  - TEND *%The ending time for test*
  - Lev  *%The mesh's resolution-->with size h=2^(-Lev)*
  - Deg  *%The degree of polynomial--> Deg=2 means linear element*
+ - IsSlowVersion *%IsSlowVersion=1 means using the slow version; other values means using the fast version*
  
 * Note::
  - The Hash Table only contains information from Lev
