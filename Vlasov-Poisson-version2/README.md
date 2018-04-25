@@ -1,6 +1,5 @@
-# Matlab Implementation of 2D Vlasov-Poisson Equations
+# Reference matlab implementation of FK6D
 
-Matlab version 2 of 
 A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson 
 in the 2D setting (1x1v).
 
