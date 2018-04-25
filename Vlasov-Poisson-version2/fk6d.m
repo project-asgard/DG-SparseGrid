@@ -1,3 +1,5 @@
+function [fval] = fk6d(pde,Lev,Deg,TEND,quiet,slow)
+
 %**************************************************************************
 % This MATLAB-Interface for DG-SG Vlasov
 % is an example to solve Vlasov Equations with Poisson Equations
@@ -13,11 +15,10 @@
 % Note 1: the number of A_encode is much larger than the previous version
 % Note 2: the ordering is different of previous version
 %**************************************************************************
-clc
-clear
-close all
+% clc
+% clear
+% close all
 format short e
-
 
 addpath(genpath(pwd))
 %=============================================================
@@ -34,17 +35,37 @@ addpath(genpath(pwd))
 % Maxwell coefficients: nu and eps
 %=============================================================
 % Test PDE and Ending Time
-pde = Vlasov4;
+
+if ~exist('pde','var') || isempty(pde)
+    % Equation setup
+    pde = Vlasov4;
+end
+if ~exist('TEND','var') || isempty(TEND)
+    % End time
+    TEND = 1;
+end
+if ~exist('Lev','var') || isempty(Lev)
+    % Number of levels
+    Lev = 3;
+end
+if ~exist('Deg','var') || isempty(Deg)
+    % Polynomial degree
+    Deg = 2; % Deg = 2 Means Linear Element
+end
+if ~exist('quiet','var') || isempty(quiet)
+    % Enable / disable print statements
+    quiet = 0;
+end
+if ~exist('slow','var') || isempty(slow)
+    % Use or not the slow reference version
+    slow = 0;
+end
+
 Vmax = pde.Vmax;
 Lmax = pde.Lmax;
-TEND = 10;
 
 % Level information
-Lev = 4;
 LevX = Lev;LevV = Lev;
-
-% Polynomial Degree
-Deg = 2;% Deg = 2 Means Linear Element
 
 % Dimensionality
 Dim = 2;
@@ -52,9 +73,6 @@ DimX = 1;DimV = 1;
 
 % Time step
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
-
-% if chosen slowversion, one needs to set IsSlowVersion=1
-IsSlowVersion=1;
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
@@ -71,6 +89,7 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Output: fval (fv and fx)--intial condition f(x,v,t=0)
 %         rho--intial condition rho(x,t=0)
 %*************************************************
+if ~quiet; disp('[0] Setting up initial condition'); end
 [fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
     FMWT_COMP_x,FMWT_COMP_v);
 
@@ -82,35 +101,37 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Major Change: Ignoring the Deg from Hash Table
 %   Assuming the uniform Deg for all components
 %=============================================================
+if ~quiet; disp('[1] Constructing hash and inverse hash tables'); end
 [HASH,HASHInv] = HashTable(Lev,Dim);
 HASHDOF = size(HASHInv,2);
 
 % 2D connectivity
+if ~quiet; disp('[2] Constructing connectivity table'); end
 Con2D=Connect2D(Lev,HASH,HASHInv);
 
 %*******************************************
 % Generate the Initial Condition w.r.t Grids
 %*******************************************
 fval = sparse(Deg^Dim*HASHDOF,1);
-
-if IsSlowVersion ~= 1
+if ~quiet; disp('[3] Calculate initial condition on the sparse-grid'); end
+if slow ~= 1
     for i=1:HASH.dof
-    ll=HASHInv{i};
-
-    % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
-    I1=ll(5);
-    I2=ll(6);
-    
-    Index1 = Deg*(I1-1)+1:Deg*I1;
-    Index2 = Deg*(I2-1)+1:Deg*I2;
-    
-    Index = Deg^Dim*(i-1)+1:Deg^Dim*i; 
-    
-    fval = fval + sparse(Index,ones(size(Index,1),1),...
-        kron(fv(Index1),fx(Index2)),...
-        Deg^Dim*HASH.dof,1);
+        ll=HASHInv{i};
+        
+        % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
+        I1=ll(5);
+        I2=ll(6);
+        
+        Index1 = Deg*(I1-1)+1:Deg*I1;
+        Index2 = Deg*(I2-1)+1:Deg*I2;
+        
+        Index = Deg^Dim*(i-1)+1:Deg^Dim*i;
+        
+        fval = fval + sparse(Index,ones(size(Index,1),1),...
+            kron(fv(Index1),fx(Index2)),...
+            Deg^Dim*HASH.dof,1);
     end
-elseif IsSlowVersion == 1
+elseif slow == 1
     for i=1:HASH.dof
         ll=HASHInv{i};
         
@@ -154,11 +175,13 @@ clear fv fx
 % Output:
 %               2D Matrices--vMassV,GradV,GradX,DeltaX
 %=============================================================
+if ~quiet; disp('[4] Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
+if ~quiet; disp('[5] Generate A_encode data structure for time independent coefficients'); end
 % Generate A_encode for Time-independent Matrix
-if IsSlowVersion ~= 1
+if slow ~= 1
     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
 else
     A_encode=GlobalMatrixSG_SlowVersion(vMassV,GradX,HASHInv,Con2D,Deg);
@@ -198,24 +221,34 @@ end
 % At Time = 0
 % Preparing the Plotting Data
 % Plotting Data
-[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
-    FMWT_COMP_x,FMWT_COMP_v);
-%---------------------
-% plot for validating
-%---------------------
-[xx,vv]=meshgrid(x_node,v_node);
-tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+if ~quiet; disp('[6] Plotting intial condition'); end
 
-figure(1000)
-mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
-axis([0 Lmax -Vmax Vmax])
-view(0,90)
-colorbar
+if ~quiet
+    [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
+        FMWT_COMP_x,FMWT_COMP_v);
+    %---------------------
+    % plot for validating
+    %---------------------
+    [xx,vv]=meshgrid(x_node,v_node);
+    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+    
+    figure(1000)
+    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
+    axis([0 Lmax -Vmax Vmax])
+    view(0,90)
+    colorbar
+end
 
 
 count=1;
+plotFreq = 10;
 
+if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
+    
+    timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
+    if ~quiet; disp(timeStr); end
+    
     %=============================================================
     %% Step 5.3. Generate time-dependent coefficient matrix
     % Vlasolv Solver:
@@ -225,13 +258,16 @@ for L = 1:floor(TEND/dt)
     % Note: E is solved by Poisson or Maxwell's equation
     %=============================================================
     % Poisson Solver: Solve E from 1-rho=1-int f dv
+    if ~quiet; disp('    [a] Solve poisson'); end
     E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
     
     % Generate EMassX matrix
+    if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
     EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
     
     % B_encode for Time-Dependent Matrices
-    if IsSlowVersion ~= 1
+    if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
+    if slow ~= 1
         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
     else
         B_encode = GlobalMatrixSG_SlowVersion(GradV,EMassX,HASHInv,Con2D,Deg);
@@ -241,25 +277,30 @@ for L = 1:floor(TEND/dt)
     %====================================
     % RK Time Stepping Method
     %====================================
+    if ~quiet; disp('    [d] RK3 time step'); end
     fval = TimeAdvance(C_encode,fval, dt);
     
     time(count) = L*dt;
     count=count+1;
     
-    %---------------------
-    % plot for validating
-    %---------------------
-    figure(1000)
     
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
-    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
-    axis([0 Lmax -Vmax Vmax])
-    view(0,90)
-    colorbar
+    if mod(L,plotFreq)==0 && ~quiet
+        %---------------------
+        % plot for validating
+        %---------------------
+        figure(1000)
+        
+        tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+        mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
+        axis([0 Lmax -Vmax Vmax])
+        view(0,90)
+        colorbar
+        
+        title(['Time at ',num2str(L*dt)])
+        pause (0.01)
+    end
     
-    title(['Time at ',num2str(L*dt)])
-    pause (0.01)
-    
-    
+end
+
 end
 
