@@ -1,62 +1,97 @@
-function A_encode=GlobalMatrixSG_SlowVersion(A,B,HASHInv,Con2D,Deg)
-% Global Matrix construction from Matrices A and B
-% by Hash Table
-% Expanding Deg
-% w.r.t HASH table
-%-----------------------------------------------------------
-HASHDOF = size(HASHInv,2);
+function A_encode=GlobalMatrixSG_SlowVersion(coeffMat1,coeffMat2,HASHInv,connectivity,Deg)
+% Global Matrix construction from the coefficient matricies coeffMat1 and
+% coeffMat2 by looping over each grid point (i.e., elements of the hash).
+% Each grid point is represented by a row in the global system matrix A,
+% with the non-zero elements of that row being the other grid points to
+% which the point is connected.
+
+nRows = size(HASHInv,2);
 
 count = 1;
 
-for i = 1:HASHDOF
-    % get the mesh information for Row i with 
-    % (Lev1,Lev2,Cel1,Cel2,Index1,Index2)
-    ll = HASHInv{i};
+for thisRow = 1:nRows
     
-    % 1D index through (Lev1,Cel1) and (Lev2,Cel2)
-    I1 = ll(5);
-    I2 = ll(6);
+    % Get the coordinates in the basis function space for myRow (this
+    % element). (Lev1,Lev2,Cel1,Cel2,idx1D_1,idx1D_2)
+    % Lev1,Lev2,Cel1,Cel2 are NOT used here. 
     
-    % the nonzero columns for Row i
-    j = Con2D{i};
+    thisRowBasisCoords = HASHInv{thisRow};
     
-    % the key for nonzero columns
-    JJ = [HASHInv{j}];
+    % Get the 1D indexes into the [lev,pos] space for this element (row)
     
-    % 1D indices for (Lev_1D,Cell_1D)
-    J1 = JJ(5:6:end);
-    J2 = JJ(6:6:end);
+    idx1D_1 = thisRowBasisCoords(5);
+    idx1D_2 = thisRowBasisCoords(6);
     
-    % loop of Deg
+    % Get the global index of non-zero (connected) columns for this row
+    
+    connectedCols = connectivity{thisRow};
+    
+    % Get the local (basis) coords the connected elements
+    %
+    % Hash :    local coords  -> global index
+    % HashInv:  global index  -> local coords
+    
+    connectedColsBasisCoords = [HASHInv{connectedCols}];
+    
+    % Get the 1D indices into the [lev,pos] space for the connected elements (cols)
+    
+    connected_idx1D_1 = connectedColsBasisCoords(5:6:end);
+    connected_idx1D_2 = connectedColsBasisCoords(6:6:end);
+    
+    % Loop over dim1 Deg for this element
     for k1 = 1:Deg
-        index_I1 = (I1-1)*Deg+k1;
+        
+        
+        % Get dim1 1D index into [lev,pos,deg] space (for this element)
+        index_I1 = (idx1D_1-1)*Deg+k1;
+        
+        
+        % Loop over dim2 Deg for this element
         for k2 = 1:Deg
             
-            index_I2 = (I2-1)*Deg+k2;
-            IndexI = Deg^2*(i-1)+Deg*(k1-1)+k2;
             
-            for jjj = 1:size(J1,2)
+            % Get dim2 1D index into [lev,pos,deg] space (for this element)
+            index_I2 = (idx1D_2-1)*Deg+k2;
+            
+            % Get the global row index for this element
+            globalRow = Deg^2*(thisRow-1)+Deg*(k1-1)+k2;
+            
+            
+            % Loop over connected elements
+            for jjj = 1:size(connected_idx1D_1,2)
                 
+                % Loop over dim1 Deg for the connected elements
                 for kk1 = 1:Deg
                     
-                    index_J1 = (J1(jjj)-1)*Deg+kk1;
                     
+                    % Get dim1 1D index into [lev,pos,deg] space 
+                    % (for connected element)
+                    index_J1 = (connected_idx1D_1(jjj)-1)*Deg+kk1;
+                    
+                    
+                    % Loop over dim2 Deg for connected elements
                     for kk2 = 1:Deg
+                       
+                        
+                        % Get dim2 1D index into [lev,pos,deg] space
+                        % (for connected element)
+                        index_J2 = (connected_idx1D_2(jjj)-1)*Deg+kk2;
                         
                         
-                        index_J2 = (J2(jjj)-1)*Deg+kk2;
-                        IndexJ=Deg^2*(j(jjj)-1)+Deg*(kk1-1)+kk2;
+                        % Get the global column index for this connected
+                        % element.
+                        globalCol = Deg^2*(connectedCols(jjj)-1)+Deg*(kk1-1)+kk2;
                         
-                        tmpA=A(index_I1,index_J1);
-                        tmpB=B(index_I2,index_J2);
+                        tmpA = coeffMat1(index_I1,index_J1);
+                        tmpB = coeffMat2(index_I2,index_J2);
                         
-                        A_encode{count}.IndexI = IndexI;
+                        A_encode{count}.IndexI = globalRow;
                         
                         A_encode{count}.A1=tmpA;
                         A_encode{count}.A2=tmpB;
                         
                         
-                        A_encode{count}.IndexJ = IndexJ;
+                        A_encode{count}.IndexJ = globalCol;
                         
                         count = count+1;
                     end
@@ -67,10 +102,5 @@ for i = 1:HASHDOF
         end
     end
     
-    
-    
-    
-    
-    
-    
+     
 end

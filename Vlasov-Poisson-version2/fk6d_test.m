@@ -21,7 +21,7 @@ load('tests/vlasov4/solution.mat');
 
 exp_f = fval;
 
-verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4)
+verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 
 end
 
@@ -43,7 +43,7 @@ load('tests/vlasov4/solution.mat');
 
 exp_f = fval;
 
-verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4)
+verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 
 end
 

@@ -36,7 +36,10 @@ tmpA=A{i}.A1;
 tmpB=A{i}.A2;
 IndexI=A{i}.IndexI;
 IndexJ=A{i}.IndexJ;
-ftmp(IndexI)=ftmp(IndexI)+kron_mult2(tmpA,tmpB,f(IndexJ));
+
+ ftmp(IndexI)=ftmp(IndexI)+kron_mult2(tmpA,tmpB,f(IndexJ));
+% ftmp(IndexI)=ftmp(IndexI)+tmpA*tmpB*f(IndexJ);
+
 end
 
 end
