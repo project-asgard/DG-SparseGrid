@@ -6,6 +6,8 @@ end
 
 function fk6d_vlasov4_fast_test(testCase)
 
+addpath(genpath(pwd));
+
 disp('Testing with vlasov4 (fast implementation)');
 
 quiet = 1;
@@ -25,6 +27,8 @@ end
 
 
 function fk6d_vlasov4_slow_test(testCase)
+
+addpath(genpath(pwd));
 
 disp('Testing with vlasov4 (slow reference implementation)');
 
