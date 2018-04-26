@@ -131,7 +131,7 @@ if slow ~= 1
             kron(fv(Index1),fx(Index2)),...
             Deg^Dim*HASH.dof,1);
     end
-elseif slow == 1
+else
     for i=1:HASH.dof
         ll=HASHInv{i};
         
@@ -184,7 +184,14 @@ if ~quiet; disp('[5] Generate A_encode data structure for time independent coeff
 if slow ~= 1
     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
 else
-    A_encode=GlobalMatrixSG_SlowVersion(vMassV,GradX,HASHInv,Con2D,Deg);
+    %[A_encode,A_data]=GlobalMatrixSG_SlowVersion(vMassV,GradX,HASHInv,Con2D,Deg);
+    
+    % Generate the data required to construct A
+    % This will be done only once per grid refinement, so can be done on
+    % the host side.
+    
+    A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con2D,Deg);
+    
 end
 %====================================================================
 %% Step 4. Generate time-independent global Matrix
@@ -269,16 +276,25 @@ for L = 1:floor(TEND/dt)
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
     if slow ~= 1
         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
+        C_encode=[A_encode B_encode]; % This step is GlobalVlasov
     else
-        B_encode = GlobalMatrixSG_SlowVersion(GradV,EMassX,HASHInv,Con2D,Deg);
+        %B_encode = GlobalMatrixSG_SlowVersion(GradV,EMassX,HASHInv,Con2D,Deg);
+        %C_encode=[A_encode B_encode]; % This step is GlobalVlasov
     end
-    C_encode=[A_encode B_encode]; % This step is GlobalVlasov
     
     %====================================
     % RK Time Stepping Method
     %====================================
     if ~quiet; disp('    [d] RK3 time step'); end
-    fval = TimeAdvance(C_encode,fval, dt);
+    if slow ~= 1
+        fval = TimeAdvance(C_encode,fval, dt,slow);
+    else
+        A_data{1}.vMassV    = vMassV;
+        A_data{1}.GradX     = GradX;
+        A_data{1}.GradV     = GradV;
+        A_data{1}.EMassX    = EMassX;
+        fval = TimeAdvance(A_data,fval, dt,slow);
+    end
     
     time(count) = L*dt;
     count=count+1;
