@@ -12,6 +12,7 @@ function [x,w]=lgwt(N,a,b)
 % the definite integral using sum(f.*w);
 %
 % Written by Greg von Winckel - 02/25/2004
+
 N=N-1;
 N1=N+1; N2=N+2;
 

@@ -183,9 +183,7 @@ if ~quiet; disp('[5] Generate A_encode data structure for time independent coeff
 % Generate A_encode for Time-independent Matrix
 if compression == 3
     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
-else
-    %[A_encode,A_data]=GlobalMatrixSG_compressionVersion(vMassV,GradX,HASHInv,Con2D,Deg);
-    
+else    
     % Generate the data required to construct A
     % This will be done only once per grid refinement, so can be done on
     % the host side.
