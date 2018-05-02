@@ -1,0 +1,9 @@
+before_script:
+
+test-reference:
+    script:
+            - cd Vlasov-Poisson-version2 && /Applications/MATLAB_R2017a.app/bin/matlab -nodesktop -nosplash -nojvm -nodisplay -r "runtests('fk6d_test.m'); exit;" 
+    only:
+            - reference
+
+                    
