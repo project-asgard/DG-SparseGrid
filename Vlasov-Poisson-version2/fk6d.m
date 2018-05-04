@@ -84,12 +84,12 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 
 %*************************************************
 %% Step 1.2. Initial Data according to Hash
-% Generate the initial condition
+% Generate the 1D initial conditions
 % Input: LevX,LevV,Deg,Lmax,Vmax,pde
 % Output: fval (fv and fx)--intial condition f(x,v,t=0)
 %         rho--intial condition rho(x,t=0)
 %*************************************************
-if ~quiet; disp('[0] Setting up initial condition'); end
+if ~quiet; disp('[0] Setting up 1D initial conditions'); end
 [fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
 
 %=============================================================
@@ -102,62 +102,19 @@ if ~quiet; disp('[0] Setting up initial condition'); end
 %=============================================================
 if ~quiet; disp('[1] Constructing hash and inverse hash tables'); end
 [HASH,HASHInv] = HashTable(Lev,Dim);
+nHash = numel(HASHInv);
 
 % 2D connectivity
 if ~quiet; disp('[2] Constructing connectivity table'); end
-Con2D=Connect2D(Lev,HASH,HASHInv);
+Con2D = Connect2D(Lev,HASH,HASHInv);
 
 %*******************************************
-% Generate the Initial Condition w.r.t Grids
+% Generate the 2D Initial Condition w.r.t Grids
 %*******************************************
-fval = sparse(Deg^Dim * numel(HASHInv),1);
-if ~quiet; disp('[3] Calculate initial condition on the sparse-grid'); end
-if compression == 3
-    for i=1:numel(HASHInv)
-        ll=HASHInv{i};
-        
-        % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
-        I1=ll(5);
-        I2=ll(6);
-        
-        Index1 = Deg*(I1-1)+1:Deg*I1;
-        Index2 = Deg*(I2-1)+1:Deg*I2;
-        
-        Index = Deg^Dim*(i-1)+1:Deg^Dim*i;
-        
-        fval = fval + sparse(Index,ones(size(Index,1),1),...
-            kron(fv(Index1),fx(Index2)),...
-            Deg^Dim*numel(HASHInv),1);
-    end
-else
-    for i=1:numel(HASHInv)
-        ll=HASHInv{i};
-        
-        % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
-        I1=ll(5);
-        I2=ll(6);
-        
-        for k1 = 1:Deg
-            
-            Index1 = Deg*(I1-1)+k1;
-            
-            for k2 = 1:Deg
-                
-                Index2 = Deg*(I2-1)+k2;
-                Index = Deg^2*(i-1)+Deg*(k1-1)+k2;
-                
-                fval = fval + sparse(Index,ones(size(Index,1),1),...
-                    kron(fv(Index1),fx(Index2)),...
-                    Deg^Dim*numel(HASHInv),1);
-            end
-        end
-        
-        
-    end
-end
+if ~quiet; disp('[3] Calculate 2D initial condition on the sparse-grid'); end
+fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
 
 clear fv fx
-
 
 %=============================================================
 %% Step 3. Generate time-independent coefficient matrices
@@ -181,7 +138,7 @@ if ~quiet; disp('[5] Generate A_encode data structure for time independent coeff
 % Generate A_encode for Time-independent Matrix
 if compression == 3
     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
-else    
+else
     % Generate the data required to construct A
     % This will be done only once per grid refinement, so can be done on
     % the host side.
@@ -274,7 +231,7 @@ for L = 1:floor(TEND/dt)
         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
         C_encode=[A_encode B_encode]; % This step is GlobalVlasov
     else
-
+        
     end
     
     %====================================
