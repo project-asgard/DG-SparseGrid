@@ -77,7 +77,7 @@ end
 
 % Transfer to multi-DG bases
 
-f_v = FMWT_COMP_v * f_v;
-f_x = FMWT_COMP_x * f_x;
+f_v = mtimes( FMWT_COMP_v, f_v );
+f_x = mtimes( FMWT_COMP_x, f_x );
 
 

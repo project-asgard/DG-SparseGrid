@@ -90,8 +90,7 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 %         rho--intial condition rho(x,t=0)
 %*************************************************
 if ~quiet; disp('[0] Setting up initial condition'); end
-[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
-    FMWT_COMP_x,FMWT_COMP_v);
+[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
 
 %=============================================================
 %% Step 2. Generate Sparse Grids/Hash Table
@@ -103,7 +102,6 @@ if ~quiet; disp('[0] Setting up initial condition'); end
 %=============================================================
 if ~quiet; disp('[1] Constructing hash and inverse hash tables'); end
 [HASH,HASHInv] = HashTable(Lev,Dim);
-HASHDOF = size(HASHInv,2);
 
 % 2D connectivity
 if ~quiet; disp('[2] Constructing connectivity table'); end
@@ -112,10 +110,10 @@ Con2D=Connect2D(Lev,HASH,HASHInv);
 %*******************************************
 % Generate the Initial Condition w.r.t Grids
 %*******************************************
-fval = sparse(Deg^Dim*HASHDOF,1);
+fval = sparse(Deg^Dim * numel(HASHInv),1);
 if ~quiet; disp('[3] Calculate initial condition on the sparse-grid'); end
 if compression == 3
-    for i=1:HASH.dof
+    for i=1:numel(HASHInv)
         ll=HASHInv{i};
         
         % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
@@ -129,10 +127,10 @@ if compression == 3
         
         fval = fval + sparse(Index,ones(size(Index,1),1),...
             kron(fv(Index1),fx(Index2)),...
-            Deg^Dim*HASH.dof,1);
+            Deg^Dim*numel(HASHInv),1);
     end
 else
-    for i=1:HASH.dof
+    for i=1:numel(HASHInv)
         ll=HASHInv{i};
         
         % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
@@ -150,7 +148,7 @@ else
                 
                 fval = fval + sparse(Index,ones(size(Index,1),1),...
                     kron(fv(Index1),fx(Index2)),...
-                    Deg^Dim*HASHDOF,1);
+                    Deg^Dim*numel(HASHInv),1);
             end
         end
         
