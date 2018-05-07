@@ -50,7 +50,7 @@ if ~exist('quiet','var') || isempty(quiet)
 end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
-    compression = 0;
+    compression = 4;
 end
 
 % Get x and v domain ranges.
@@ -215,7 +215,13 @@ for L = 1:floor(TEND/dt)
         A_data{1}.GradX     = GradX;
         A_data{1}.GradV     = GradV;
         A_data{1}.EMassX    = EMassX;
+        
+        % Write the A_data structure components for use in HPC version.
+        write_A_data = 1;
+        if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
+        
         fval = TimeAdvance(A_data,fval, dt,compression,Deg);
+        
     end
     
     time(count) = L*dt;
