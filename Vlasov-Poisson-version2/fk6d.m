@@ -61,8 +61,8 @@ if ~exist('compression','var') || isempty(compression)
     compression = 0;
 end
 
-Vmax = pde.Vmax;
-Lmax = pde.Lmax;
+Vmax = pde.params.Vmax;
+Lmax = pde.params.Lmax;
 
 % Level information
 LevX = Lev;LevV = Lev;

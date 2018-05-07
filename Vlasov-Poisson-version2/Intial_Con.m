@@ -33,6 +33,7 @@ dof_1D_v=k*nv;
 f_v=zeros(dof_1D_v,1);
 
 % Initial Condition for f_x
+params = pde.params;
 
 for i=0:nx-1
     
@@ -40,7 +41,7 @@ for i=0:nx-1
     xi_x = hx*(quad_x/2+1/2+i);
     
     % Get the f(x) initial condition at the quadrature points.
-    fxHere = pde.Fx_0(xi_x);
+    fxHere = pde.Fx_0(xi_x, params);
        
     % Generate the coefficients for DG basis    
     for thisk=1:k
@@ -61,7 +62,7 @@ for i=0:nv-1
     xi_v=(( (quad_x+1)/2+i)*hv-Vmax);
     
     % Get the f(v) initial condition at the quadrature points
-    fvHere = pde.Fv_0(xi_v);
+    fvHere = pde.Fv_0(xi_v, params);
     
     % Generate the coefficients for DG basis 
     for thisk=1:k
