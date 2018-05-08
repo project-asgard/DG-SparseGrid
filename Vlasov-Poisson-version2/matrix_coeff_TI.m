@@ -108,14 +108,34 @@ for Lx=0:nx-1
     Iu = transpose(Iv);
 
     if (use_dense),
-      %GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
       GradX(i1:i2,i1:i2) = GradX(i1:i2,i1:i2) + val(1:k,1:k); 
     else
       GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
     end;
     
-    DeltaX=DeltaX+sparse([Iu,dof_1D_x+Iu,Iu],[dof_1D_x+Iv,Iv,Iv],...
+    if (use_dense),
+      size_DeltaX = 2*dof_1D_x;
+      % --------------------------------------------------------------------------
+      % DeltaX = DeltaX + sparse( Iu, dof_1D_x+Iv, val, size_DeltaX, size_DeltaX);
+      % --------------------------------------------------------------------------
+      DeltaX(i1:i2, (i1+dof_1D_x):(i2+dof_1D_x)) = ...
+            DeltaX(i1:i2,(i1+dof_1D_x):(i2+dof_1D_x)) + val(1:k,1:k);
+
+      % --------------------------------------------------------------------------
+      % DeltaX = DeltaX + sparse( dof_1D_x+Iu, Iv, val, size_DeltaX, size_DeltaX);
+      % --------------------------------------------------------------------------
+      DeltaX( (i1+dof_1D_x):(i2+dof_1D_x), i1:i2 ) = ...
+            DeltaX( (i1+dof_1D_x):(i2+dof_1D_x), i1:i2) + val(1:k,1:k);
+
+      % ----------------------------------------------------------------------
+      % DeltaX = DeltaX + sparse( Iu, Iv, eye(k,k), size_DeltaX, size_DeltaX);
+      % ----------------------------------------------------------------------
+      DeltaX(i1:i2,i1:i2) = DeltaX(i1:i2,i1:i2) + eye(k,k);
+      
+    else
+      DeltaX=DeltaX+sparse([Iu,dof_1D_x+Iu,Iu],[dof_1D_x+Iv,Iv,Iv],...
         [val,val,diag(ones(1,k))],2*dof_1D_x,2*dof_1D_x);
+    end;
     
     
     % ------------------
@@ -145,30 +165,85 @@ for Lx=0:nx-1
     val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
     val_s=1/hx*[-p_1'*p_2, p_2'*p_2];
     
+    
     Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+
+    istart = zeros(4,1);
+    iend = zeros(4,1);
+    jstart = zeros(4,1);
+    jend = zeros(4,1);
+  
+    istart(1) = c1; iend(1) = c2;
+    istart(2) = c1; iend(2) = c2;
+    istart(3) = c1; iend(3) = c2;
+    istart(4) = c1; iend(4) = c2;
+
     
     if Lx<nx-1 && Lx>0
         
         Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
-%         val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
+       
+        jstart(1) = p1; jend(1) = p2;
+        jstart(2) = c1; jend(2) = c2;
+        jstart(3) = c1; jend(3) = c2;
+        jstart(4) = l1; jend(4) = l2;
     
     elseif Lx==0
         
         Iu=[meshgrid([k*(nx-1)+1:k*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
-%         val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
+
+        jstart(1) = (k*(nx-1)+1); jend(1) = k*(nx);
+        jstart(2) = c1;           jend(2) = c2;
+        jstart(3) = c1;           jend(3) = c2;
+        jstart(4) = l1;           jend(4) = l2;
    
     elseif Lx==nx-1
         
         Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
-%         val_u=1/hx*[-p_1'*p_1, p_2'*(p_1-p_1)];
+
+        jstart(1) = p1; jend(1) = p2;
+        jstart(2) = c1; jend(2) = c2;
+        jstart(3) = c1; jend(3) = c2;
+        jstart(4) =  1; jend(4) = k;
     
     end
     
-    GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
-    DeltaX=DeltaX+sparse([Iv(:,1:2*k),Iv(:,1:2*k)+dof_1D_x],...
+    if (use_dense),
+      % ---------------------
+      % note subtraction used
+      % ---------------------
+      GradX(istart(1):iend(1), jstart(1):jend(1)) = ...
+           GradX(istart(1):iend(1), jstart(1):jend(1)) - ...
+             val( 1:k, 1:k);
+
+      GradX(istart(2):iend(2), jstart(2):jend(2)) = ...
+           GradX(istart(2):iend(2), jstart(2):jend(2)) - ...
+             val( 1:k, k+(1:k));
+
+      GradX(istart(3):iend(3), jstart(3):jend(3)) = ...
+           GradX(istart(3):iend(3), jstart(3):jend(3)) - ...
+             val( 1:k, 2*k+(1:k));
+
+      GradX(istart(4):iend(4), jstart(4):jend(4)) = ...
+           GradX(istart(4):iend(4), jstart(4):jend(4)) - ...
+             val( 1:k, 3*k+(1:k));
+
+    else
+      GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
+    end;
+
+    if (use_dense),
+      DeltaX=DeltaX - ...
+       sparse([Iv(:,1:2*k),Iv(:,1:2*k)+dof_1D_x],...
+              [Iu(:,2*k+1:end)+dof_1D_x,Iu(:,1:2*k)],...
+              [val_u,val_s],2*dof_1D_x,2*dof_1D_x);
+
+    else
+      DeltaX=DeltaX+sparse([Iv(:,1:2*k),Iv(:,1:2*k)+dof_1D_x],...
         ...[Iu(:,1:2*k)+dof_1D_x,Iu(:,2*k+1:end)],...
         [Iu(:,2*k+1:end)+dof_1D_x,Iu(:,1:2*k)],...
         -[val_u,val_s],2*dof_1D_x,2*dof_1D_x);
+    end;
     
     
 end
