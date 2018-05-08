@@ -32,15 +32,30 @@ Dp_val = dlegendre(quad_x,k);
 nx=2^(Lev_x);hx=Lmax/nx;
 Jacobi_x=hx;
 dof_1D_x=k*nx;
-GradX=sparse(dof_1D_x,dof_1D_x);
-DeltaX=sparse(2*dof_1D_x,2*dof_1D_x);
+
+nmax = 2*1024;
+use_dense = (dof_1D_x <= nmax);
+
+if (use_dense),
+  GradX=zeros(dof_1D_x,dof_1D_x);
+  DeltaX=zeros(2*dof_1D_x,2*dof_1D_x);
+else
+  GradX=sparse(dof_1D_x,dof_1D_x);
+  DeltaX=sparse(2*dof_1D_x,2*dof_1D_x);
+end;
 
 
 nv=2^(Lev_v);hv=2*Vmax/nv;
 Jacobi_v=hv;
 dof_1D_v=k*nv;
-vMassV=sparse(dof_1D_v,dof_1D_v);
-GradV=sparse(dof_1D_v,dof_1D_v);
+
+if (use_dense),
+  vMassV=zeros(dof_1D_v,dof_1D_v);
+  GradV=zeros(dof_1D_v,dof_1D_v);
+else
+  vMassV=sparse(dof_1D_v,dof_1D_v);
+  GradV=sparse(dof_1D_v,dof_1D_v);
+end;
 
 %======================================
 % Matrices related to x variable
@@ -54,9 +69,22 @@ for Lx=0:nx-1
     % Matrix GradX and EMassX
     %---------------------------------------------
     val=1/hx*[Dp_val'*(quad_w.*p_val)];
+
+    i1 = k*Lx+1;
+    i2 = k*(Lx+1);
+    % -----------------------------
+    % note  (i2-i1+1) is equal to k
+    % -----------------------------
     
-    Iu=[meshgrid(k*Lx+1:k*(Lx+1))]';
-    Iv=[meshgrid(k*Lx+1:k*(Lx+1))];
+    % note Iv(:,:) is  k by k
+    % Iv = [  i1, i1+1, ..., i2; 
+    %         i1, i1+1, ..., i2;
+    %         ...
+    %         i1, i1+1, ..., i2]
+    %
+    Iv = meshgrid(i1:i2);
+    Iu = transpose(Iv);
+
     GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
     
     DeltaX=DeltaX+sparse([Iu,dof_1D_x+Iu,Iu],[dof_1D_x+Iv,Iv,Iv],...
@@ -161,8 +189,51 @@ vMassV = FMWT_COMP_v*vMassV*FMWT_COMP_v';
 GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
 GradV = FMWT_COMP_v*GradV*FMWT_COMP_v';
 
-DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
+use_blkdiag = 0;
+if (use_blkdiag),
+  DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
                 DeltaX*...
-         blkdiag(FMWT_COMP_x',FMWT_COMP_x');
+           blkdiag(FMWT_COMP_x',FMWT_COMP_x');
+else
+ % ----------------------------------------
+ % note blkdiag(A,B) creates a block diagonal matrix
+ % [A, 0;
+ % [0, B]
+ %
+ % let F = FMWT_COMP_x
+ %
+ % DeltaX = [F, 0;   [D11,  D12;   [F', 0;
+ %           0, F] * [D21,  D22] *  0 , F']
+ % DeltaX = [ F*D11*F',    F*D12*F';
+ %            F*D21*F',    F*D22*F']
+ % computed as
+ % step 1:  DeltaX = blkdiag(F,F) * DeltaX
+ % to form  [F * D11, F * D12;
+ %           F * D21, F * D22 ]
+ %
+ % step 2:  DeltaX = DeltaX * blkdiag(F',F')
+ % to form [ (F*D11)*F',   (F*D12)*F';
+ %           (F*D21)*F',   (F*D22)*F']
+ % ----------------------------------------
 
+ % ---------------------------------
+ % note shape of DeltaX matrix 
+ % is  (2*dof_1D_x)  by (2*dof_1D_x)
+ % ---------------------------------
+ m = dof_1D_x;
+ F = FMWT_COMP_x;
 
+ % --------------------------------
+ % step 1: multiply by blkdiag(F,F) on left
+ % --------------------------------
+ 
+ DeltaX(1:m, 1:(2*m)) = F * DeltaX(1:m,1:(2*m));
+ DeltaX((m+1):(2*m), 1:(2*m)) = F * DeltaX( (m+1):(2*m), 1:(2*m) );
+
+ % -----------------------------------
+ % multiply by blkdiag(F',F') on right
+ % -----------------------------------
+
+ DeltaX(1:(2*m), 1:m) = DeltaX(1:(2*m),1:m) * F';
+ DeltaX(1:(2*m), (m+1):(2*m)) = DeltaX(1:(2*m),(m+1):(2*m)) * F';
+end;
