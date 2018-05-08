@@ -49,7 +49,8 @@ use_dense = (dof_1D_x <= nmax);
 
 if (use_dense),
   GradX=zeros(dof_1D_x,dof_1D_x);
-  DeltaX=zeros(2*dof_1D_x,2*dof_1D_x);
+  size_DeltaX = 2*dof_1D_x;
+  DeltaX=zeros(size_DeltaX,size_DeltaX);
 else
   GradX=sparse(dof_1D_x,dof_1D_x);
   DeltaX=sparse(2*dof_1D_x,2*dof_1D_x);
@@ -114,7 +115,6 @@ for Lx=0:nx-1
     end;
     
     if (use_dense),
-      size_DeltaX = 2*dof_1D_x;
       % --------------------------------------------------------------------------
       % DeltaX = DeltaX + sparse( Iu, dof_1D_x+Iv, val, size_DeltaX, size_DeltaX);
       % --------------------------------------------------------------------------
@@ -168,6 +168,9 @@ for Lx=0:nx-1
     
     Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
 
+    % -----------------------------------------------
+    % setup ranges for row indices and column indices
+    % -----------------------------------------------
     istart = zeros(4,1);
     iend = zeros(4,1);
     jstart = zeros(4,1);
@@ -233,10 +236,73 @@ for Lx=0:nx-1
     end;
 
     if (use_dense),
-      DeltaX=DeltaX - ...
-       sparse([Iv(:,1:2*k),Iv(:,1:2*k)+dof_1D_x],...
-              [Iu(:,2*k+1:end)+dof_1D_x,Iu(:,1:2*k)],...
-              [val_u,val_s],2*dof_1D_x,2*dof_1D_x);
+% ------------------------------------------
+%      DeltaX=DeltaX - ...
+%       sparse([Iv(:,1:2*k),Iv(:,1:2*k)+dof_1D_x],...
+%              [Iu(:,2*k+1:end)+dof_1D_x,Iu(:,1:2*k)],...
+%              [val_u,val_s],2*dof_1D_x,2*dof_1D_x);
+% ------------------------------------------
+
+
+%        ---------------------------------------
+%        DeltaX = DeltaX - ...
+%          sparse( Iv(1:k, 1:k), ...
+%                  Iu(1:k, 2*k + (1:k)) + dof_1D_x, ...
+%                  val_u(1:k,1:k), ...
+%                  size_DeltaX,size_DeltaX);
+%        ---------------------------------------
+         ia1 = istart(1);
+         ia2 = iend(1);
+         ja1 = jstart(3) + dof_1D_x;
+         ja2 = jend(3)   + dof_1D_x;
+
+         DeltaX(ia1:ia2, ja1:ja2) = DeltaX(ia1:ia2, ja1:ja2) - ...
+              val_u(1:k,1:k);
+
+%        ---------------------------------------
+%        DeltaX = DeltaX - ...
+%          sparse( Iv(1:k, k + (1:k)), ...
+%                  Iu(1:k, 3*k  (1:k)) + dof_1D_x, ...
+%                  val_u(1:k, k+(1:k)), ...
+%                  size_DeltaX,size_DeltaX);
+%        ---------------------------------------
+         ia1 = istart(2);
+         ia2 = iend(2);
+         ja1 = jstart(4) + dof_1D_x;
+         ja2 = jend(4)   + dof_1D_x;
+  
+         DeltaX(ia1:ia2,ja1:ja2) = DeltaX(ia1:ia2,ja1:ja2) - ...
+              val_u(1:k, k + (1:k) );
+
+%        ---------------------------------------
+%        DeltaX = DeltaX - ...
+%          sparse( Iv(1:k, 1:k) + dof_1D_x, ...
+%                  Iu(1:k, 1:k), ...
+%                  val_s(1:k, 1:k), ...
+%                  size_DeltaX,size_DeltaX);
+%        ---------------------------------------
+         ia1 = istart(1) + dof_1D_x;
+         ia2 = iend(1)   + dof_1D_x;
+         ja1 = jstart(1);
+         ja2 = jend(1);
+
+         DeltaX(ia1:ia2, ja1:ja2) = DeltaX(ia1:ia2, ja1:ja2) - ...
+              val_s(1:k, 1:k);
+
+%        ---------------------------------------
+%        DeltaX = DeltaX - ...
+%          sparse( Iv(1:k, k + (1:k)) + dof_1D_x, ...
+%                  Iu(1:k, k + (1:k)), ...
+%                  val_s(1:k, k+(1:k)), ...
+%                  size_DeltaX,size_DeltaX);
+%        ---------------------------------------
+         ia1 = istart(2) + dof_1D_x; 
+         ia2 = iend(2)   + dof_1D_x;
+         ja1 = jstart(2);
+         ja2 = jend(2);
+        
+         DeltaX(ia1:ia2, ja1:ja2) = DeltaX(ia1:ia2,ja1:ja2) - ...
+              val_s(1:k, k+(1:k) );
 
     else
       DeltaX=DeltaX+sparse([Iv(:,1:2*k),Iv(:,1:2*k)+dof_1D_x],...
@@ -252,8 +318,7 @@ end
 DeltaX(dof_1D_x+1,:)=0;
 DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
 
-iend = 2*dof_1D_x;
-size_DeltaX = 2*dof_1D_x;
+iend = size_DeltaX;
 DeltaX(iend,1:size_DeltaX)=0;
 % ---------------------------------------------------
 % DeltaX(iend,iend-k+[1:k])=sqrt(1/hx)*legendre(1,k);
