@@ -17,10 +17,20 @@ function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmax,Vmax,FMW
 quad_num=10;
 %---------------
 
+% ------------------------------------
 % compute the trace values
+% note vector p_1[] is 1 by k, 
+%      vector p_2[] is 1 by k
+% ------------------------------------
 p_1 = legendre(-1,k);
 p_2 = legendre(1,k);
 
+% ----------------------------------
+% note quad_x(:) is quad_num by 1
+%      quad_w(:) is quad_num by 1
+%      p_val(:,:) is quad_num by k
+%      Dp_val(:,:) is quad_num by k
+% ----------------------------------
 [quad_x,quad_w]=lgwt(quad_num,-1,1);
 p_val = legendre(quad_x,k);
 Dp_val = dlegendre(quad_x,k);
@@ -29,7 +39,8 @@ Dp_val = dlegendre(quad_x,k);
 % Jacobi of variable x and v
 % Define Matrices
 %---------------------------
-nx=2^(Lev_x);hx=Lmax/nx;
+nx=2^(Lev_x);
+hx=Lmax/nx;
 Jacobi_x=hx;
 dof_1D_x=k*nx;
 
@@ -45,7 +56,8 @@ else
 end;
 
 
-nv=2^(Lev_v);hv=2*Vmax/nv;
+nv=2^(Lev_v);
+hv=2*Vmax/nv;
 Jacobi_v=hv;
 dof_1D_v=k*nv;
 
@@ -68,7 +80,11 @@ for Lx=0:nx-1
     %---------------------------------------------
     % Matrix GradX and EMassX
     %---------------------------------------------
-    val=1/hx*[Dp_val'*(quad_w.*p_val)];
+
+    % -----------------------
+    % note val(:,:) is k by k
+    % -----------------------
+    val=(1/hx)*[Dp_val'*(quad_w.*p_val)];
 
     i1 = k*Lx+1;
     i2 = k*(Lx+1);
@@ -76,23 +92,52 @@ for Lx=0:nx-1
     % note  (i2-i1+1) is equal to k
     % -----------------------------
     
+    % ----------------------------
     % note Iv(:,:) is  k by k
     % Iv = [  i1, i1+1, ..., i2; 
     %         i1, i1+1, ..., i2;
     %         ...
     %         i1, i1+1, ..., i2]
     %
+    % Iu = [ i1,   i1,   ..., i1;
+    %        i1+1, i1+1, ..., i1+1;
+    %        ...
+    %        i2,   i2,   ..., i2]
+    % ----------------------------
     Iv = meshgrid(i1:i2);
     Iu = transpose(Iv);
 
-    GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
+    if (use_dense),
+      %GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
+      GradX(i1:i2,i1:i2) = GradX(i1:i2,i1:i2) + val(1:k,1:k); 
+    else
+      GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
+    end;
     
     DeltaX=DeltaX+sparse([Iu,dof_1D_x+Iu,Iu],[dof_1D_x+Iv,Iv,Iv],...
         [val,val,diag(ones(1,k))],2*dof_1D_x,2*dof_1D_x);
     
-    c=k*Lx+1:k*(Lx+1);
-    p=k*(Lx-1)+1:k*Lx;
-    l=k*(Lx+1)+1:k*(Lx+2);
+    
+    % ------------------
+    % c=k*Lx+1:k*(Lx+1);
+    % ------------------
+    c1 = k*Lx+1;
+    c2 = k*(Lx+1);
+    c = c1:c2;
+
+    % ------------------
+    % p=k*(Lx-1)+1:k*Lx;
+    % ------------------
+    p1 = k*(Lx-1)+1;
+    p2 = k*Lx;
+    p = p1:p2;
+
+    % ----------------------
+    % l=k*(Lx+1)+1:k*(Lx+2);
+    % ----------------------
+    l1 = k*(Lx+1)+1;
+    l2 = k*(Lx+2);
+    l = l1:l2;
     
     val=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
         p_2'*p_2/2   p_2'*p_1/2];     % for x2
@@ -132,8 +177,17 @@ end
 DeltaX(dof_1D_x+1,:)=0;
 DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
 
-DeltaX(end,:)=0;
-DeltaX(end,end-k+[1:k])=sqrt(1/hx)*legendre(1,k);
+iend = 2*dof_1D_x;
+size_DeltaX = 2*dof_1D_x;
+DeltaX(iend,1:size_DeltaX)=0;
+% ---------------------------------------------------
+% DeltaX(iend,iend-k+[1:k])=sqrt(1/hx)*legendre(1,k);
+% ---------------------------------------------------
+leg_1_k = zeros(1,k);
+leg_1_k(1:k) = legendre(1,k);
+k1 = (iend-k+1);
+k2 = iend-k+k;
+DeltaX(iend,k1:k2) = sqrt(1/hx)*leg_1_k(1:k);
 
 %======================================
 % Matrices related to v variable
@@ -155,11 +209,29 @@ for Lv=0:nv-1
     Iv=[meshgrid(k*Lv+1:k*(Lv+1))];
     GradV=GradV+sparse(Iu,Iv,val,dof_1D_v,dof_1D_v);
     
-    c=k*Lv+1:k*(Lv+1);
-    p=k*(Lv-1)+1:k*Lv;
-    l=k*(Lv+1)+1:k*(Lv+2);
+    % -----------------
+    % c=k*Lv+1:k*(Lv+1);
+    % -----------------
+    c1 = k*Lv+1;
+    c2 = k*(Lv+1);
+    c = c1:c2;
+
+
+    % ------------------
+    % p=k*(Lv-1)+1:k*Lv;
+    % ------------------
+    p1 = k*(Lv-1)+1;
+    p2 = k*Lv;
+    p = p1:p2;
+
+    % ----------------------
+    % l=k*(Lv+1)+1:k*(Lv+2);
+    % ----------------------
+    l1 = k*(Lv+1)+1;
+    l2 = k*(Lv+2);
+    l = l1:l2;
     
-    val=1/hv*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
+    val=(1/hv)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
         p_2'*p_2/2   p_2'*p_1/2];     % for x2
     
     if Lv<nv-1 && Lv>0
