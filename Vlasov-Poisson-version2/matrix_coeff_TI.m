@@ -373,9 +373,19 @@ for Lv=0:nv-1
     end;
     
     val=1/hv*[Dp_val'*(quad_w.*p_val)];
-    Iu=[meshgrid(k*Lv+1:k*(Lv+1))]';
-    Iv=[meshgrid(k*Lv+1:k*(Lv+1))];
-    GradV=GradV+sparse(Iu,Iv,val,dof_1D_v,dof_1D_v);
+    if (use_dense),
+      i1 = k*Lv+1;
+      i2 = k*(Lv+1);
+      % -------------------
+      % note (i2-i1+1) == k
+      % -------------------
+      GradV(i1:i2, i1:i2) = GradV(i1:i2, i1:i2) +  ...
+           val(1:k,1:k);
+    else
+      Iu=[meshgrid(k*Lv+1:k*(Lv+1))]';
+      Iv=[meshgrid(k*Lv+1:k*(Lv+1))];
+      GradV=GradV+sparse(Iu,Iv,val,dof_1D_v,dof_1D_v);
+    end;
     
     % -----------------
     % c=k*Lv+1:k*(Lv+1);
