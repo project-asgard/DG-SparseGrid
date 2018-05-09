@@ -412,22 +412,109 @@ for Lv=0:nv-1
     val=(1/hv)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
         p_2'*p_2/2   p_2'*p_1/2];     % for x2
     
+    istart = zeros(4,1);
+    iend = zeros(4,1);
+    jstart = zeros(4,1);
+    jend = zeros(4,1);
+
     if Lv<nv-1 && Lv>0
-        
+     if (use_dense)
+        % -----------------------------------------------------
+        % Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
+        % -----------------------------------------------------
+        jstart(1) = p1; jend(1) = p2;
+        jstart(2) = c1; jend(2) = c2;
+        jstart(3) = c1; jend(3) = c2;
+        jstart(4) = l1; jend(4) = l2;
+
+        % --------------------------------------------------------
+        % Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+        % --------------------------------------------------------
+        istart(1) = c1; iend(1) = c2;
+        istart(2) = c1; iend(2) = c2;
+        istart(3) = c1; iend(3) = c2;
+        istart(4) = c1; iend(4) = c2;
+
+
+     else   
         Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
         Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+     end;
         
     elseif Lv==0
+      if (use_dense),
+        % ----------------------------------------------------------------------
+        % Iu=[meshgrid([k*(nv-1)+1:k*(nv)]),meshgrid(c),meshgrid(c),meshgrid(l)];
+        % ----------------------------------------------------------------------
+        jstart(1) = k*(nv-1)+1; jend(1) = k*(nv);
+        jstart(2) = c1;         jend(2) = c2;
+        jstart(3) = c1;         jend(3) = c2;
+        jstart(4) = l1;         jend(4) = l2;
         
+        % ----------------------------------------------------------------------
+        % Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+        % ----------------------------------------------------------------------
+        istart(1) = c1;  iend(1) = c2;
+        istart(2) = c1;  iend(2) = c2;
+        istart(3) = c1;  iend(3) = c2;
+        istart(4) = c1;  iend(4) = c2;
+
+      else 
         Iu=[meshgrid([k*(nv-1)+1:k*(nv)]),meshgrid(c),meshgrid(c),meshgrid(l)];
         Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+      end;
         
     elseif Lv==nv-1
         
+     if (use_dense),
+        % ---------------------------------------------------------
+        % Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
+        % ---------------------------------------------------------
+        jstart(1) = p1; jend(1) = p2;
+        jstart(2) = c1; jend(2) = c2;
+        jstart(3) = c1; jend(3) = c2;
+        jstart(4) = 1;  jend(4) = k;
+
+        % ---------------------------------------------------------
+        % Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+        % ---------------------------------------------------------
+        istart(1) = c1; iend(1) = c2;
+        istart(2) = c1; iend(2) = c2;
+        istart(3) = c1; iend(3) = c2;
+        istart(4) = c1; iend(4) = c2;
+     else
         Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
         Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+     end;
     end
-    GradV=GradV-sparse(Iv,Iu,val,dof_1D_v,dof_1D_v);
+
+    if (use_dense),
+       % ---------------------
+       % note subtraction used
+       % ---------------------
+       ia1 = istart(1); ia2 = iend(1);
+       ja1 = jstart(1); ja2 = jend(1);
+
+       GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
+            val(1:k, 1:k);
+
+       ia1 = istart(2); ia2 = iend(2);
+       ja1 = jstart(2); ja2 = jend(2);
+       GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
+            val(1:k, k + (1:k));
+
+       ia1 = istart(3); ia2 = iend(3);
+       ja1 = jstart(3); ja2 = jend(3);
+       GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
+            val(1:k, 2*k + (1:k));
+
+       ia1 = istart(4); ia2 = iend(4);
+       ja1 = jstart(4); ja2 = jend(4);
+       GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
+            val(1:k, 3*k + (1:k));
+    else
+       GradV=GradV-sparse(Iv,Iu,val,dof_1D_v,dof_1D_v);
+    end;
 end
 
 %***************************************
