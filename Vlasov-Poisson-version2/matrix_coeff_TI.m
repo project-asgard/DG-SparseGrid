@@ -358,8 +358,19 @@ for Lv=0:nv-1
     %---------------------------------------------
     % value of local matrix
     val_loc=p_val'*(p_val.*xi_v.*quad_w)*Jacobi_v/2/hv;
-    Iu=meshgrid(k*Lv+1:k*(Lv+1));
-    vMassV=vMassV+sparse(Iu',Iu,val_loc,dof_1D_v,dof_1D_v);
+
+    if (use_dense),
+      i1 = k*Lv+1;
+      i2 = k*(Lv+1);
+      % --------------------
+      % note (i2-i1+1) == k
+      % --------------------
+      vMassV(i1:i2, i1:i2) = vMassV(i1:i2, i1:i2) + ...
+            val_loc(1:k,1:k);
+    else
+      Iu=meshgrid(k*Lv+1:k*(Lv+1));
+      vMassV=vMassV+sparse(Iu',Iu,val_loc,dof_1D_v,dof_1D_v);
+    end;
     
     val=1/hv*[Dp_val'*(quad_w.*p_val)];
     Iu=[meshgrid(k*Lv+1:k*(Lv+1))]';
