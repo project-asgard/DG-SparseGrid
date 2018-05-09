@@ -16,7 +16,23 @@ connected_local_2_index = A_data{1}.connected_local_2_index;
 
 LevDegStr = sprintf('lev-%i_deg-%i',Lev,Deg);
 
-if ~exist(['data/' LevDegStr]); mkdir('data/',LevDegStr); end
+if ~exist(['data'],'dir'),
+   [status, msg, msgid] = mkdir('data');
+   isok = (status == 1);
+   if (~isok),
+     error(sprintf('problem in creating directory %s,msg=%g,msgid=%g', ...
+             'data', msg, msgid ));
+   end;
+end;
+
+if ~exist(['data/' LevDegStr],'dir'), 
+  [status, msg, msgid] = mkdir('data/',LevDegStr); 
+  isok = (status == 1);
+  if (~isok),
+    error(sprintf('problem in creating director %s,msg=%g,msgid=%g', ...
+            ['data/' LevDegStr], msg, msgid));
+  end;
+end;
 
 save(['data/' LevDegStr '/vMassV.mat'],'vMassV');
 save(['data/' LevDegStr '/GradX.mat'],'GradX');
