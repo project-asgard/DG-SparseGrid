@@ -215,20 +215,37 @@ for Lx=0:nx-1
       % ---------------------
       % note subtraction used
       % ---------------------
-      GradX(istart(1):iend(1), jstart(1):jend(1)) = ...
-           GradX(istart(1):iend(1), jstart(1):jend(1)) - ...
+      ia1 = istart(1); 
+      ia2 = iend(1);
+      ja1 = jstart(1); 
+      ja2 = jend(1);
+
+      GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, 1:k);
 
-      GradX(istart(2):iend(2), jstart(2):jend(2)) = ...
-           GradX(istart(2):iend(2), jstart(2):jend(2)) - ...
+      ia1 = istart(2); 
+      ia2 = iend(2);
+      ja1 = jstart(2); 
+      ja2 = jend(2);
+
+      GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, k+(1:k));
 
-      GradX(istart(3):iend(3), jstart(3):jend(3)) = ...
-           GradX(istart(3):iend(3), jstart(3):jend(3)) - ...
+
+      ia1 = istart(3); 
+      ia2 = iend(3);
+      ja1 = jstart(3); 
+      ja2 = jend(3);
+      
+      GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, 2*k+(1:k));
 
-      GradX(istart(4):iend(4), jstart(4):jend(4)) = ...
-           GradX(istart(4):iend(4), jstart(4):jend(4)) - ...
+      ia1 = istart(4); 
+      ia2 = iend(4);
+      ja1 = jstart(4); 
+      ja2 = jend(4);
+
+      GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, 3*k+(1:k));
 
     else
