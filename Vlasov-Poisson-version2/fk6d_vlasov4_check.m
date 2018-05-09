@@ -1,6 +1,7 @@
 function isok = fk6d_vlasov4_check(testCase)
 % isok = fk6d_vlasov4_check(testCase)
 %
+  idebug = 1;
   addpath(genpath(pwd));
   disp(sprintf('Testing with valsov4, testCase=%d',testCase));
   
@@ -28,6 +29,15 @@ function isok = fk6d_vlasov4_check(testCase)
   
   tol = 1e-4;
   isok = all(   abs(act_f(:)-exp_f(:)) <= tol * abs( exp_f(:) ) );
+
+  if (idebug >= 1),
+    if (~isok),
+       maxerr = max(abs(act_f(:)-exp_f(:)));
+       error(sprintf('testCase=%d, maxerr = %g', testCase,maxerr ));
+    end;
+  end;
+
+
   if (~isOctave),
     verifyEqual(testCase,act_f,exp_f,'RelTol',tol);
   end;
