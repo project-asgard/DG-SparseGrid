@@ -93,6 +93,10 @@ for Lx=0:nx-1
     % note  (i2-i1+1) is equal to k
     % -----------------------------
     
+
+    if (use_dense),
+      GradX(i1:i2,i1:i2) = GradX(i1:i2,i1:i2) + val(1:k,1:k); 
+    else
     % ----------------------------
     % note Iv(:,:) is  k by k
     % Iv = [  i1, i1+1, ..., i2; 
@@ -105,12 +109,8 @@ for Lx=0:nx-1
     %        ...
     %        i2,   i2,   ..., i2]
     % ----------------------------
-    Iv = meshgrid(i1:i2);
-    Iu = transpose(Iv);
-
-    if (use_dense),
-      GradX(i1:i2,i1:i2) = GradX(i1:i2,i1:i2) + val(1:k,1:k); 
-    else
+      Iv = meshgrid(i1:i2);
+      Iu = transpose(Iv);
       GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
     end;
     
@@ -166,48 +166,75 @@ for Lx=0:nx-1
     val_s=1/hx*[-p_1'*p_2, p_2'*p_2];
     
     
-    Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-
+    if (use_dense),
     % -----------------------------------------------
     % setup ranges for row indices and column indices
     % -----------------------------------------------
-    istart = zeros(4,1);
-    iend = zeros(4,1);
-    jstart = zeros(4,1);
-    jend = zeros(4,1);
-  
-    istart(1) = c1; iend(1) = c2;
-    istart(2) = c1; iend(2) = c2;
-    istart(3) = c1; iend(3) = c2;
-    istart(4) = c1; iend(4) = c2;
+     istart = zeros(4,1);
+     iend = zeros(4,1);
+     jstart = zeros(4,1);
+     jend = zeros(4,1);
+
+
+     % ----------------------------------------------------------
+     % Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+     % ----------------------------------------------------------
+   
+     istart(1) = c1; iend(1) = c2;
+     istart(2) = c1; iend(2) = c2;
+     istart(3) = c1; iend(3) = c2;
+     istart(4) = c1; iend(4) = c2;
+
+    else
+      Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+    end;
+
 
     
     if Lx<nx-1 && Lx>0
         
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
+     if (use_dense),
+        % ----------------------------------------------------
+        % Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
+        % ----------------------------------------------------
        
         jstart(1) = p1; jend(1) = p2;
         jstart(2) = c1; jend(2) = c2;
         jstart(3) = c1; jend(3) = c2;
         jstart(4) = l1; jend(4) = l2;
+      else
+        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
+      end;
     
     elseif Lx==0
         
-        Iu=[meshgrid([k*(nx-1)+1:k*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
-
+      if (use_dense),
+        % ----------------------------------------------------------------------
+        % Iu=[meshgrid([k*(nx-1)+1:k*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
+        % ----------------------------------------------------------------------
         jstart(1) = (k*(nx-1)+1); jend(1) = k*(nx);
         jstart(2) = c1;           jend(2) = c2;
         jstart(3) = c1;           jend(3) = c2;
         jstart(4) = l1;           jend(4) = l2;
+
+      else
+        Iu=[meshgrid([k*(nx-1)+1:k*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
+      end;
    
     elseif Lx==nx-1
         
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
-
+      if (use_dense),
+        % ---------------------------------------------------------
+        % Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
+        % ---------------------------------------------------------
         jstart(1) = p1; jend(1) = p2;
         jstart(2) = c1; jend(2) = c2;
         jstart(3) = c1; jend(3) = c2;
         jstart(4) =  1; jend(4) = k;
+
+      else
+        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
+      end;
     
     end
     
