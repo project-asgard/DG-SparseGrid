@@ -40,11 +40,11 @@ Lmax = pde.Lmax;
 TEND = 10;
 
 % Level information
-Lev = 4;
+Lev = 3;
 LevX = Lev;LevV = Lev;
 
 % Polynomial Degree
-Deg = 2;% Deg = 2 Means Linear Element
+Deg = 4;% Deg = 2 Means Linear Element
 
 % Dimensionality
 Dim = 2;
@@ -54,7 +54,7 @@ DimX = 1;DimV = 1;
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
 
 % if chosen slowversion, one needs to set IsSlowVersion=1
-IsSlowVersion=1;
+IsSlowVersion=0;
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
