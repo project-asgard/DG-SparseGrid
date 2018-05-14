@@ -34,7 +34,12 @@ if ~exist(['data/' LevDegStr],'dir'),
   end;
 end;
 
-options = '-ascii';
+options = '';
+be_compatible_with_matlab = 0;
+if (be_compatible_with_matlab),
+  options = '-ascii';
+end;
+
 save(['data/' LevDegStr '/vMassV.mat'],'vMassV', options);
 save(['data/' LevDegStr '/GradX.mat'],'GradX', options);
 save(['data/' LevDegStr '/GradV.mat'],'GradV', options);
