@@ -34,18 +34,26 @@ if ~exist(['data/' LevDegStr],'dir'),
   end;
 end;
 
-save(['data/' LevDegStr '/vMassV.mat'],'vMassV');
-save(['data/' LevDegStr '/GradX.mat'],'GradX');
-save(['data/' LevDegStr '/GradV.mat'],'GradV');
-save(['data/' LevDegStr '/EMassX.mat'],'EMassX');
+options = '-ascii';
+save(['data/' LevDegStr '/vMassV.mat'],'vMassV', options);
+save(['data/' LevDegStr '/GradX.mat'],'GradX', options);
+save(['data/' LevDegStr '/GradV.mat'],'GradV', options);
+save(['data/' LevDegStr '/EMassX.mat'],'EMassX', options);
 
-save(['data/' LevDegStr '/element_global_row_index.mat'],'element_global_row_index');
-save(['data/' LevDegStr '/element_local_1_index.mat'],'element_local_1_index');
-save(['data/' LevDegStr '/element_local_2_index.mat'],'element_local_2_index');
-save(['data/' LevDegStr '/element_n_connected.mat'],'element_n_connected');
+save(['data/' LevDegStr '/element_global_row_index.mat'],...
+                         'element_global_row_index', options);
+save(['data/' LevDegStr '/element_local_1_index.mat'],...
+                        'element_local_1_index', options);
+save(['data/' LevDegStr '/element_local_2_index.mat'],...
+                        'element_local_2_index', options);
+save(['data/' LevDegStr '/element_n_connected.mat'],...
+                        'element_n_connected', options);
 
-save(['data/' LevDegStr '/connected_global_col_index.mat'],'connected_global_col_index');
-save(['data/' LevDegStr '/connected_local_1_index.mat'],'connected_local_1_index');
-save(['data/' LevDegStr '/connected_local_2_index.mat'],'connected_local_2_index');
+save(['data/' LevDegStr '/connected_global_col_index.mat'],...
+                        'connected_global_col_index', options);
+save(['data/' LevDegStr '/connected_local_1_index.mat'],...
+                        'connected_local_1_index', options);
+save(['data/' LevDegStr '/connected_local_2_index.mat'],...
+                        'connected_local_2_index', options);
 
 end
