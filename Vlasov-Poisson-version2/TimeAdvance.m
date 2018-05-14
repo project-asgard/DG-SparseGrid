@@ -187,6 +187,9 @@ elseif compression == 3
     % Tensor product encoding over Deg (A_encode),
     % i.e., tmpA and tmpB are Deg x Deg matricies
     
+    % Note: here A_data == A_encode and follows the A_encode data
+    % structure.
+    
     for i=1:size(A_Data,2)
         
         tmpA=A_Data{i}.A1;
