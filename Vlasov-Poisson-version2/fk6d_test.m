@@ -5,11 +5,11 @@ isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
     % -----------------------------
     % perform octave test framework
     % -----------------------------
-    reporting_level = "quiet";
-    reporting_level = "verbose";
-    reporting_level = "normal";
+    reporting_level = 'quiet';
+    reporting_level = 'verbose';
+    reporting_level = 'normal';
   
-    [n,nmax,nxfail,nskip] = test( "fk6d_vlasov4_check", reporting_level);
+    [n,nmax,nxfail,nskip] = test( 'fk6d_vlasov4_check', reporting_level);
     disp(sprintf('%d tests were executed', nmax));
     disp(sprintf('%d tests passed ',n));
     disp(sprintf('%d tests failed ', nxfail));
