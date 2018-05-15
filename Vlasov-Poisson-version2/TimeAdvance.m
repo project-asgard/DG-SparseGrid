@@ -35,7 +35,7 @@ if compression == 0
     
     % Explicitly construct the full A matrix (largest memory)
     
-    dof = numel(A_Data{1}.element_global_row_index);
+    dof = numel(A_Data.element_global_row_index);
     
     dofCnt = 1;
     conCnt = 1;
@@ -44,29 +44,29 @@ if compression == 0
     
     for i=1:dof
         
-        nConnected = A_Data{1}.element_n_connected(i);
+        nConnected = A_Data.element_n_connected(i);
         
         for j=1:nConnected
             
-            Index_I1 = A_Data{1}.element_local_1_index(dofCnt);
-            Index_I2 = A_Data{1}.element_local_2_index(dofCnt);
-            Index_J1 = A_Data{1}.connected_local_1_index(conCnt);
-            Index_J2 = A_Data{1}.connected_local_2_index(conCnt);
+            Index_I1 = A_Data.element_local_1_index(dofCnt);
+            Index_I2 = A_Data.element_local_2_index(dofCnt);
+            Index_J1 = A_Data.connected_local_1_index(conCnt);
+            Index_J2 = A_Data.connected_local_2_index(conCnt);
             
-            IndexI = A_Data{1}.element_global_row_index(dofCnt);
-            IndexJ = A_Data{1}.connected_global_col_index(conCnt);
+            IndexI = A_Data.element_global_row_index(dofCnt);
+            IndexJ = A_Data.connected_global_col_index(conCnt);
             
             % Apply term1 v.d_dx (vMassV . GradX)
             
-            tmpA = A_Data{1}.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.GradX(Index_I2,Index_J2);
+            tmpA = A_Data.vMassV(Index_I1,Index_J1);
+            tmpB = A_Data.GradX(Index_I2,Index_J2);
             
             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
             
             % Apply term 2 E.d_dv (EMassX . GradV)
             
-            tmpA = A_Data{1}.GradV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.EMassX(Index_I2,Index_J2);
+            tmpA = A_Data.GradV(Index_I1,Index_J1);
+            tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
             
@@ -87,7 +87,7 @@ elseif compression == 1
     
     % Explicitly construct the sparse A matrix
     
-    dof = numel(A_Data{1}.element_global_row_index);
+    dof = numel(A_Data.element_global_row_index);
     
     dofCnt = 1;
     conCnt = 1;
@@ -96,29 +96,29 @@ elseif compression == 1
     
     for i=1:dof
         
-        nConnected = A_Data{1}.element_n_connected(i);
+        nConnected = A_Data.element_n_connected(i);
         
         for j=1:nConnected
             
-            Index_I1 = A_Data{1}.element_local_1_index(dofCnt);
-            Index_I2 = A_Data{1}.element_local_2_index(dofCnt);
-            Index_J1 = A_Data{1}.connected_local_1_index(conCnt);
-            Index_J2 = A_Data{1}.connected_local_2_index(conCnt);
+            Index_I1 = A_Data.element_local_1_index(dofCnt);
+            Index_I2 = A_Data.element_local_2_index(dofCnt);
+            Index_J1 = A_Data.connected_local_1_index(conCnt);
+            Index_J2 = A_Data.connected_local_2_index(conCnt);
             
-            IndexI = A_Data{1}.element_global_row_index(dofCnt);
-            IndexJ = A_Data{1}.connected_global_col_index(conCnt);
+            IndexI = A_Data.element_global_row_index(dofCnt);
+            IndexJ = A_Data.connected_global_col_index(conCnt);
             
             % Apply term1 v.d_dx (vMassV . GradX)
             
-            tmpA = A_Data{1}.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.GradX(Index_I2,Index_J2);
+            tmpA = A_Data.vMassV(Index_I1,Index_J1);
+            tmpB = A_Data.GradX(Index_I2,Index_J2);
             
             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
             
             % Apply term 2 E.d_dv (EMassX . GradV)
             
-            tmpA = A_Data{1}.GradV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.EMassX(Index_I2,Index_J2);
+            tmpA = A_Data.GradV(Index_I1,Index_J1);
+            tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
             
@@ -140,36 +140,36 @@ elseif compression == 2
     % Elementwise matrix-vector multipliction (no tensor product encoding),
     % i.e., tmpA and tmpB are scalars
     
-    dof = numel(A_Data{1}.element_global_row_index);
+    dof = numel(A_Data.element_global_row_index);
     
     dofCnt = 1;
     conCnt = 1;
     
     for i=1:dof
         
-        nConnected = A_Data{1}.element_n_connected(i);
+        nConnected = A_Data.element_n_connected(i);
         
         for j=1:nConnected
             
-            Index_I1 = A_Data{1}.element_local_1_index(dofCnt);
-            Index_I2 = A_Data{1}.element_local_2_index(dofCnt);
-            Index_J1 = A_Data{1}.connected_local_1_index(conCnt);
-            Index_J2 = A_Data{1}.connected_local_2_index(conCnt);
+            Index_I1 = A_Data.element_local_1_index(dofCnt);
+            Index_I2 = A_Data.element_local_2_index(dofCnt);
+            Index_J1 = A_Data.connected_local_1_index(conCnt);
+            Index_J2 = A_Data.connected_local_2_index(conCnt);
             
-            IndexI = A_Data{1}.element_global_row_index(dofCnt);
-            IndexJ = A_Data{1}.connected_global_col_index(conCnt);
+            IndexI = A_Data.element_global_row_index(dofCnt);
+            IndexJ = A_Data.connected_global_col_index(conCnt);
             
             % Apply term1 v.d_dx (vMassV . GradX)
             
-            tmpA = A_Data{1}.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.GradX(Index_I2,Index_J2);
+            tmpA = A_Data.vMassV(Index_I1,Index_J1);
+            tmpB = A_Data.GradX(Index_I2,Index_J2);
             
             ftmp(IndexI)=ftmp(IndexI)+tmpA*tmpB*f(IndexJ);
             
             % Apply term 2 E.d_dv (EMassX . GradV)
             
-            tmpA = A_Data{1}.GradV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.EMassX(Index_I2,Index_J2);
+            tmpA = A_Data.GradV(Index_I1,Index_J1);
+            tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
             ftmp(IndexI)=ftmp(IndexI)+tmpA*tmpB*f(IndexJ);
             
@@ -187,7 +187,7 @@ elseif compression == 3
     % Tensor product encoding over Deg (A_encode),
     % i.e., tmpA and tmpB are Deg x Deg matricies
     
-    % Note: here A_data == A_encode and follows the A_encode data
+    % Note: here A_Data == A_encode and follows the A_encode data
     % structure.
     
     for i=1:size(A_Data,2)
@@ -203,20 +203,20 @@ elseif compression == 3
     
 elseif compression == 4
     
-    % Tensor product encoding over Deg (A_data),
+    % Tensor product encoding over Deg (A_Data),
     % i.e., tmpA and tmpB are Deg x Deg matricies
     
-    nWork = numel(A_Data{1}.element_global_row_index);
+    nWork = numel(A_Data.element_global_row_index);
     
     workCnt = 1;
     conCnt = 1;
     
     for workItem=1:nWork
         
-        nConnected = A_Data{1}.element_n_connected(workItem);
+        nConnected = A_Data.element_n_connected(workItem);
         
-        element_idx1D_1 = A_Data{1}.element_local_1_index(workCnt);
-        element_idx1D_2 = A_Data{1}.element_local_2_index(workCnt);
+        element_idx1D_1 = A_Data.element_local_1_index(workCnt);
+        element_idx1D_2 = A_Data.element_local_2_index(workCnt);
                 
         % Expand out the local and global indicies for this compressed item
         
@@ -237,9 +237,9 @@ elseif compression == 4
         
         for j=1:nConnected
             
-            connected_idx1D_1 = A_Data{1}.connected_local_1_index(conCnt);
-            connected_idx1D_2 = A_Data{1}.connected_local_2_index(conCnt);
-            connectedCol = A_Data{1}.connected_global_col_index(conCnt);
+            connected_idx1D_1 = A_Data.connected_local_1_index(conCnt);
+            connected_idx1D_2 = A_Data.connected_local_2_index(conCnt);
+            connectedCol = A_Data.connected_global_col_index(conCnt);
             
             % Expand out the global col indicies for this compressed
             % connected item.
@@ -261,15 +261,15 @@ elseif compression == 4
             
             % Apply term1 v.d_dx (vMassV . GradX)
             
-            tmpA = A_Data{1}.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.GradX(Index_I2,Index_J2);
+            tmpA = A_Data.vMassV(Index_I1,Index_J1);
+            tmpB = A_Data.GradX(Index_I2,Index_J2);
             
             ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
             
             % Apply term 2 E.d_dv (EMassX . GradV)
             
-            tmpA = A_Data{1}.GradV(Index_I1,Index_J1);
-            tmpB = A_Data{1}.EMassX(Index_I2,Index_J2);
+            tmpA = A_Data.GradV(Index_I1,Index_J1);
+            tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
             ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
                  

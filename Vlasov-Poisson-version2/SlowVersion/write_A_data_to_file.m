@@ -1,18 +1,18 @@
-function [] = write_A_data_to_file(A_data,Lev,Deg)
+function [] = write_A_Data_to_file(A_Data,Lev,Deg)
 
-vMassV = A_data{1}.vMassV;
-GradX  = A_data{1}.GradX;
-GradV  = A_data{1}.GradV;
-EMassX = A_data{1}.EMassX;
+vMassV = A_Data.vMassV;
+GradX  = A_Data.GradX;
+GradV  = A_Data.GradV;
+EMassX = A_Data.EMassX;
 
-element_global_row_index = A_data{1}.element_global_row_index;
-element_local_1_index = A_data{1}.element_local_1_index;
-element_local_2_index = A_data{1}.element_local_2_index;
-element_n_connected = A_data{1}.element_n_connected;
+element_global_row_index = A_Data.element_global_row_index;
+element_local_1_index = A_Data.element_local_1_index;
+element_local_2_index = A_Data.element_local_2_index;
+element_n_connected = A_Data.element_n_connected;
 
-connected_global_col_index = A_data{1}.connected_global_col_index;
-connected_local_1_index = A_data{1}.connected_local_1_index;
-connected_local_2_index = A_data{1}.connected_local_2_index;
+connected_global_col_index = A_Data.connected_global_col_index;
+connected_local_1_index = A_Data.connected_local_1_index;
+connected_local_2_index = A_Data.connected_local_2_index;
 
 LevDegStr = sprintf('lev-%i_deg-%i',Lev,Deg);
 

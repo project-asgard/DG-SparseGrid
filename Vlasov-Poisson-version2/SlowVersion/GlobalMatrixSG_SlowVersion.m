@@ -1,6 +1,6 @@
-%function [A_encode,A_data] = GlobalMatrixSG_SlowVersion(coeffMat1,coeffMat2,HASHInv,connectivity,Deg)
+%function [A_encode,A_Data] = GlobalMatrixSG_SlowVersion(coeffMat1,coeffMat2,HASHInv,connectivity,Deg)
 
-function [A_data] = GlobalMatrixSG_SlowVersion(HASHInv,connectivity,Deg,compression)
+function [A_Data] = GlobalMatrixSG_SlowVersion(HASHInv,connectivity,Deg,compression)
 
 % Global Matrix construction from the coefficient matricies coeffMat1 and
 % coeffMat2 by looping over each grid point (i.e., elements of the hash).
@@ -144,17 +144,17 @@ if compression < 3
     
     % Wrap the arrays up into a struct just for ease of passing around.
     
-    A_data{1}.element_global_row_index = element_global_row_index;
-    A_data{1}.element_local_1_index = element_local_1_index;
-    A_data{1}.element_local_2_index = element_local_2_index;
-    A_data{1}.element_n_connected = element_n_connected;
+    A_Data.element_global_row_index = element_global_row_index;
+    A_Data.element_local_1_index = element_local_1_index;
+    A_Data.element_local_2_index = element_local_2_index;
+    A_Data.element_n_connected = element_n_connected;
     
     % Allocate connected element arraysn (these won't be filled, and we remove
     % the extra zeros after their construction).
     
-    A_data{1}.connected_global_col_index = connected_global_col_index(1:sum(element_n_connected));
-    A_data{1}.connected_local_1_index = connected_local_1_index(1:sum(element_n_connected));
-    A_data{1}.connected_local_2_index = connected_local_2_index(1:sum(element_n_connected));
+    A_Data.connected_global_col_index = connected_global_col_index(1:sum(element_n_connected));
+    A_Data.connected_local_1_index = connected_local_1_index(1:sum(element_n_connected));
+    A_Data.connected_local_2_index = connected_local_2_index(1:sum(element_n_connected));
     
     
 elseif compression == 4
@@ -235,17 +235,17 @@ elseif compression == 4
     
     % Wrap the arrays up into a struct just for ease of passing around.
     
-    A_data{1}.element_global_row_index = element_global_row_index;
-    A_data{1}.element_local_1_index = element_local_1_index;
-    A_data{1}.element_local_2_index = element_local_2_index;
-    A_data{1}.element_n_connected = element_n_connected;
+    A_Data.element_global_row_index = element_global_row_index;
+    A_Data.element_local_1_index = element_local_1_index;
+    A_Data.element_local_2_index = element_local_2_index;
+    A_Data.element_n_connected = element_n_connected;
     
     % Allocate connected element arraysn (these won't be filled, and we remove
     % the extra zeros after their construction).
     
-    A_data{1}.connected_global_col_index = connected_global_col_index(1:sum(element_n_connected));
-    A_data{1}.connected_local_1_index = connected_local_1_index(1:sum(element_n_connected));
-    A_data{1}.connected_local_2_index = connected_local_2_index(1:sum(element_n_connected));
+    A_Data.connected_global_col_index = connected_global_col_index(1:sum(element_n_connected));
+    A_Data.connected_local_1_index = connected_local_1_index(1:sum(element_n_connected));
+    A_Data.connected_local_2_index = connected_local_2_index(1:sum(element_n_connected));
     
 end
 

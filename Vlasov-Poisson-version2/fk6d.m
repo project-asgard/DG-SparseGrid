@@ -211,10 +211,10 @@ for L = 1:floor(TEND/dt)
     if compression == 3
         fval = TimeAdvance(C_encode,fval, dt,compression,Deg);
     else
-        A_data{1}.vMassV    = vMassV;
-        A_data{1}.GradX     = GradX;
-        A_data{1}.GradV     = GradV;
-        A_data{1}.EMassX    = EMassX;
+        A_data.vMassV    = vMassV;
+        A_data.GradX     = GradX;
+        A_data.GradV     = GradV;
+        A_data.EMassX    = EMassX;
         
         % Write the A_data structure components for use in HPC version.
         write_A_data = 1;
