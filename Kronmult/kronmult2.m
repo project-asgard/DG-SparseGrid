@@ -54,6 +54,10 @@ if (use_single_call),
 
 else
   n1 = nrowYtmp/ncol1;
+
+% ----------------------------------
+% note may be batched gemm operation
+% ----------------------------------
   for i=1:nvec,
    Yi = reshape( Ytmp(:,i), [n1, ncol1])*transpose(A1);
    Y(:,i) = reshape(Yi, nrowY,1);

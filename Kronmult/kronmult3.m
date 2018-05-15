@@ -21,6 +21,9 @@ nrowYtmp = size(Ytmp,1);
 
 Y = zeros(nrowY, nvec);
 
+% -----------------------------------------------------
+% note: may be task parallelism or batch gemm operation
+% -----------------------------------------------------
 for i=1:nvec,
   Yi = reshape(Ytmp(:,i), [nrowYtmp/ncol1, ncol1])*transpose(A1);
   Y(:,i) = reshape(Yi, nrowY,1);
