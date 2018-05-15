@@ -2,7 +2,7 @@ function [fval] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
-% 
+%
 % $$f_t + v\frac{\partial f}{\partial x} + E\left(x,t\right)\frac{\partial f}{\partial v} f=0$$
 %
 % $$-\frac{\partial^2\phi}{\partial x^2} = \rho - 1$$
@@ -18,7 +18,7 @@ addpath(genpath(pwd))
 % pde :  A structure containing the initial condition and domain information. See
 % PDE/vlasov4.m for and example.
 %
-% Lev: Maximum level of the mesh in all dimensions. 
+% Lev: Maximum level of the mesh in all dimensions.
 %
 % Deg: Degree of basis functions.
 %
@@ -130,7 +130,7 @@ if compression == 3
 else
     % A_data is constructed only once per grid refinement, so can be done on
     % the host side.
-    A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con2D,Deg,compression);  
+    A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con2D,Deg,compression);
 end
 
 %% Step 4. Generate time-independent global matrix
@@ -180,6 +180,10 @@ if ~quiet
 end
 
 
+% Write the initial condition to file.
+write_fval = 1;
+if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
+
 count=1;
 plotFreq = 10;
 
@@ -206,7 +210,7 @@ for L = 1:floor(TEND/dt)
         
     end
     
-    %%% Advance Vlasov in time with RK3 time stepping method.  
+    %%% Advance Vlasov in time with RK3 time stepping method.
     if ~quiet; disp('    [d] RK3 time step'); end
     if compression == 3
         fval = TimeAdvance(C_encode,fval, dt,compression,Deg);
@@ -224,12 +228,15 @@ for L = 1:floor(TEND/dt)
         
     end
     
+    % Write the present fval to file.
+    if write_fval; write_fval_to_file(fval,Lev,Deg,L); end
+    
     time(count) = L*dt;
     count=count+1;
     
     %%% Plot results
     if mod(L,plotFreq)==0 && ~quiet
-                
+        
         figure(1000)
         
         tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
