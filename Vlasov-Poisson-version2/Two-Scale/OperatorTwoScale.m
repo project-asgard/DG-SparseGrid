@@ -1,13 +1,16 @@
-function FMWT_COMP = OperatorTwoScale(k,Np)
+function FMWT_COMP = OperatorTwoScale(k,Lev)
 %----------------------------------
 % Set-up Two-scale operator       %
 %----------------------------------
 % Input: Degree: k
 %        Level: Np
 % Output: Convert Matrix: FMWT_COMP
+% Note: Np is replaced by Lev
 %**********************************
 load(['two_scale_rel_',num2str(k),'.mat'])
-n=log2(Np);
+% n=log2(Np);
+% replaced by the following
+Np = 2^Lev;
 
 
 H0(find(abs(H0)<1e-5))=0;
@@ -35,7 +38,7 @@ iFMWT=FMWT';
 
 sp = [];
 FMWT_COMP = eye(k*Np);
-for j=1:n
+for j=1:Lev
     cFMWT = FMWT;
     % Reverse the index in matrix from Lin
     if j>1
