@@ -61,8 +61,11 @@ IsSlowVersion=0;
 % Input:  Deg and Lev
 % Output: Convert Matrix FMWT_COMP
 %*************************************************
-FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
-FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
+%FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
+%FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
+% changing the above two lines into following
+FMWT_COMP_x = OperatorTwoScale(Deg,LevX);
+FMWT_COMP_v = OperatorTwoScale(Deg,LevV);
 
 %*************************************************
 %% Step 1.2. Initial Data according to Hash
