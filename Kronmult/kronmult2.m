@@ -9,6 +9,14 @@ nrow2 = size(A2,1);
 ncol2 = size(A2,2);
 
 nrowX = ncol1*ncol2;
+
+isok = (mod(numel(X),nrowX) == 0);
+if (~isok),
+  error(sprintf('kronmult2: numel(X)=%g, nrowX=%g', ...
+                            numel(X),    nrowX ));
+  return;
+end;
+
 nvec = numel(X)/nrowX;
 
 nrowY = nrow1*nrow2;
@@ -24,6 +32,14 @@ if (use_single_call),
   % -------------------------------------------
   % note: just change of view, no data movement
   % -------------------------------------------
+  isok = (mod(numel(Ytmp), (ncol1*nvec)) == 0);
+  if (~isok),
+    error(sprtinf('kronmult2: numel(Ytmp)=%g, ncol1=%g, nvec=%g', ...
+                              numel(Ytmp),    ncol1,    nvec ));
+    return;
+  end;
+
+
   n1 = numel(Ytmp)/(ncol1*nvec);
   Ytmp =  reshape( Ytmp, [n1,ncol1,nvec]);
 
@@ -53,6 +69,13 @@ if (use_single_call),
   Y = reshape( Y, [nrowY, nvec] );
 
 else
+  isok = (mod(nrowYtmp,ncol1) == 0);
+  if (~isok),
+   error(sprintf('kronmult2: nrowYtmp=%g, ncol1=%g', ...
+                          nrowYtmp,    ncol1 ));
+   return;
+  end;
+
   n1 = nrowYtmp/ncol1;
 
 % ----------------------------------
