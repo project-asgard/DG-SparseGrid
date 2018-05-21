@@ -75,7 +75,8 @@ if porting; assert(isequal(FMWT,FMWT2)); end
 FMWT_COMP = eye(maxDeg*maxLev);
 FMWT_COMP2 = eye(maxDeg*maxLev);
 
-n=log2(maxLev);
+n = floor( log2(maxLev) );
+% n = maxLev;
 
 for j=1:n
     cFMWT = FMWT;
