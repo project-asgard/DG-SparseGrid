@@ -3,7 +3,8 @@ function [fval] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
 %
-% $$f_t + v\frac{\partial f}{\partial x} + E\left(x,t\right)\frac{\partial f}{\partial v} f=0$$
+% $$f_t + v\frac{\partial f}{\partial x} + E\left(x,t\right)\frac{\partial
+% f}{\partial v} f=0$$
 %
 % $$-\frac{\partial^2\phi}{\partial x^2} = \rho - 1$$
 %
@@ -15,14 +16,17 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Set input parameters
-% pde :  A structure containing the initial condition and domain information. See
-% PDE/vlasov4.m for and example.
+% pde :  A structure containing the initial condition and domain
+% information. See PDE/vlasov4.m for and example. Note that this does not
+% actually describe the PDE (that's done by the coefficient matricies), so
+% we should probably rename this.
 %
 % Lev: Maximum level of the mesh in all dimensions.
 %
 % Deg: Degree of basis functions.
 %
-% TEND : End time of the simulation.
+% TEND : End time of the simulation, i.e., run from t=0 to t=TEND in steps
+% of dt.
 %
 % quiet : Print debugging statements or not.
 %
@@ -69,7 +73,8 @@ DimV = 1;
 % Time step.
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
 
-%% Step 1.1. Set Up Matrices for Multi-wavelet
+%% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
+% 
 % Input:  Deg and Lev
 %
 % Output: Convert Matrix FMWT_COMP
@@ -78,9 +83,8 @@ FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
 FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 
 
-%% Step 1.2. Initial Data according to Hash
-% Generate the 1D initial conditions.
-% Input: LevX,LevV,Deg,Lmax,Vmax,pde
+%% Step 1.2. Apply the mulit-wavelet transform to the initial conditions in each dimension.
+% Generate the 1D initial conditions. Input: LevX,LevV,Deg,Lmax,Vmax,pde
 % Output: fval (fv and fx)--intial condition f(x,v,t=0)
 %         rho--intial condition rho(x,t=0)
 
@@ -88,7 +92,7 @@ if ~quiet; disp('[1.2] Setting up 1D initial conditions'); end
 [fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
 
 
-%% Step 2. Generate Sparse Grids/Hash Table
+%% Step 2. Generate Sparse-Grid (as the Hash + Connectivity tables).
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
@@ -99,7 +103,12 @@ nHash = numel(HASHInv);
 if ~quiet; disp('[2.2] Constructing connectivity table'); end
 Con2D = Connect2D(Lev,HASH,HASHInv);
 
-%%% Generate the 2D initial condition vector
+%%% Get the multi-wavelet coefficient representation on the sparse-grid,
+%%% i.e., above we transformed each of the initial condition 1D
+%%% dependencies into the multi-wavelet basis. Here we combine those N 1D
+%%% basis representations into the multi-D (here N=2, so 2D) initial
+%%% condition, multi-wavelet representation of the initial condition
+%%% specified in PDE. 
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
 
@@ -108,9 +117,8 @@ clear fv fx
 %% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
 %   Operators:
-%               vMassV: int_v v*l_i(v)*l_j(v)dv
-%               GradV: int_v (l_i(v))'*l_j(v)dv
-%               GradX: int_x (m_i(x))'*m_j(x)dx
+%               vMassV: int_v v*l_i(v)*l_j(v)dv GradV: int_v
+%               (l_i(v))'*l_j(v)dv GradX: int_x (m_i(x))'*m_j(x)dx
 % Poisson Solver:
 %               Operators: DelaX: int_x (m_i(x))''*m_j(x)dx
 % Input:
@@ -128,8 +136,8 @@ if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coe
 if compression == 3
     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
 else
-    % A_data is constructed only once per grid refinement, so can be done on
-    % the host side.
+    % A_data is constructed only once per grid refinement, so can be done
+    % on the host side.
     A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con2D,Deg,compression);
 end
 
@@ -138,8 +146,7 @@ end
 %
 % Poisson Solver: A_Poisson (Hash, Dim_x,k,LevX,DeltaX)
 %
-% Input: Hash, Dim_x,k,LevX,DeltaX,or nu, eps, CurlCurlX
-% Output: A_Poisson
+% Input: Hash, Dim_x,k,LevX,DeltaX,or nu, eps, CurlCurlX Output: A_Poisson
 % Another Idea is to solve Poisson Equation on the finest full grid
 
 if ~quiet; disp('[4] Construct matrix for Poisson solve'); end
@@ -152,12 +159,11 @@ end
 
 %% Step 5. Time Loop
 %	Step 5.1 Vlasov Equation
-%       Generate time dependent coefficient matrix
-%       Generate global matrix A_Vlasov(Hash,coef_mat,Dim)
-%       Apply A_Vlasov->f by RK
+%       Generate time dependent coefficient matrix Generate global matrix
+%       A_Vlasov(Hash,coef_mat,Dim) Apply A_Vlasov->f by RK
 %	Step 5.2 Poisson Equation
-%       Solve Poisson Equation sol_Poisson by A_Poisson(f)
-%       Compute E=(sol_Poisson)'
+%       Solve Poisson Equation sol_Poisson by A_Poisson(f) Compute
+%       E=(sol_Poisson)'
 
 
 % At time = 0 plotting.
