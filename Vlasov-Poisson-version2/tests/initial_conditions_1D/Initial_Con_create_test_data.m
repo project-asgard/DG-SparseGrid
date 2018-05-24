@@ -13,7 +13,7 @@ k = 2;
 fname = 'tests/initial_conditions_1D/matlab-inputs.mat';
 load(fname);
 
-[f_x,f_v] = Intial_Con(Lev_x,Lev_v,k,Lmax,Vmax,PDE,FMWT_COMP_x,FMWT_COMP_v);
+[f_v,f_x] = Intial_Con(Lev_x,Lev_v,k,Lmax,Vmax,PDE,FMWT_COMP_x,FMWT_COMP_v);
 
 fname = 'tests/initial_conditions_1D/matlab-inputs-FMWTx.dat';
 
