@@ -15,6 +15,19 @@ load(fname);
 
 [f_x,f_v] = Intial_Con(Lev_x,Lev_v,k,Lmax,Vmax,PDE,FMWT_COMP_x,FMWT_COMP_v);
 
+fname = 'tests/initial_conditions_1D/matlab-inputs-FMWTx.dat';
+
+fd = fopen(fname,'w'); % where file.dat is the name you want to save to
+fwrite(fd,FMWT_COMP_x,'double'); % where U is the vector/matrix you want to store, double is the typename
+fclose(fd);
+
+fname = 'tests/initial_conditions_1D/matlab-inputs-FMWTv.dat';
+
+fd = fopen(fname,'w'); % where file.dat is the name you want to save to
+fwrite(fd,FMWT_COMP_v,'double'); % where U is the vector/matrix you want to store, double is the typename
+fclose(fd);
+
+
 fname = 'tests/initial_conditions_1D/matlab-outputs-f_x.dat';
 
 fd = fopen(fname,'w'); % where file.dat is the name you want to save to
