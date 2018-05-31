@@ -19,5 +19,5 @@ in the 3D setting (3x). Here E=[Ex(x,y,z),Ey(x,y,z),Ez(x,y,z)] and B=[Bx(x,y,z),
  - Lev  *%The mesh's resolution-->with size h=2^(-Lev)*
  - Deg  *%The degree of polynomial--> Deg=2 means linear element*
  - pde  *%The test case*
- - MaxT *time advance steps*
- - dt   *time stepping*
+ - MaxT *%time advance steps*
+ - dt   *%time stepping*
