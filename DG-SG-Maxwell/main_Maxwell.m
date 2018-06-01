@@ -1,6 +1,6 @@
 %===================================================
 % This code solves Maxwell's equation by
-% DG-full grids methods
+% DG-SG grids methods
 %===================================================
 clc
 clear
