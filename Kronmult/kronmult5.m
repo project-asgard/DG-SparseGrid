@@ -1,6 +1,8 @@
 function Y = kronmult5(A1,A2,A3,A4,A5, X)
 % Y = kronmult5(A1,A2,A3,A4,A5, X)
 
+global idebug;
+
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
 
@@ -32,6 +34,10 @@ nrowY = nrow1*nrow2*nrow3*nrow4*nrow5;
 
 
 Ytmp = kronmult4( A2,A3,A4, A5, X );
+
+if (idebug >= 1),
+  disp(sprintf('kronmult5: numel(Ytmp)=%g', numel(Ytmp)));
+end;
 
 isok = (mod(numel(Ytmp),nvec) == 0);
 if (~isok),

@@ -1,5 +1,6 @@
 function Y = kronmult3(A1,A2,A3, X )
 % Y = kronmult3(A1,A2,A3, X )
+global idebug;
 
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
@@ -24,6 +25,9 @@ nvec = numel(X)/nrowX;
 nrowY = nrow1*nrow2*nrow3;
 
 Ytmp = kronmult2( A2,A3,X);
+if (idebug >= 1),
+  disp(sprintf('kronmult3: numel(Ytmp)=%g', numel(Ytmp)));
+end;
 
 isok = (mod( numel(Ytmp), nvec ) == 0);
 if (~isok),

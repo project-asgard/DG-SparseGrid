@@ -1,6 +1,6 @@
 function Y = kronmult2(A1,A2, X )
 % Y = kronmult2(A1,A2, X )
-idebug = 1;
+global idebug;
 
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
@@ -22,6 +22,10 @@ nvec = numel(X)/nrowX;
 nrowY = nrow1*nrow2;
 
 Ytmp  = kronmult1( A2, X );
+if (idebug >= 1),
+  disp(sprintf('kronmult2: numel(Ytmp)=%g', numel(Ytmp)));
+end;
+
 Ytmp = reshape( Ytmp, [numel(Ytmp)/nvec,nvec]);
 nrowYtmp = size(Ytmp,1);
 

@@ -1,3 +1,6 @@
+global idebug;
+idebug = 0;
+
 A1 = rand(2,3);
 A2 = rand(3,4);
 A3 = rand(4,5);
