@@ -2,6 +2,8 @@ function [batch_list1,Y] = kronmult1_batch(A1, X, batch_list1 )
 % [batch_list1,Y] = kronmult1_batch(A1, X, batch_list1 )
 % generate  list for dgemm_vbatch
 %
+global idebug;
+
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
 
@@ -17,6 +19,11 @@ if (~isok),
 end;
 
 nvec = numel(X)/ncol1;
+
+if (idebug >= 1),
+  disp(sprintf('kronmult1_batch: (%d,%d) nvec=%d', ...
+                    nrow1,    ncol1,    nvec));
+end;
 
 Y = zeros( nrow1, nvec );
 

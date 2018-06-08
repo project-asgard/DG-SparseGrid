@@ -36,6 +36,7 @@ batch_list5 = clear_batch_list();
 % --------------
 % check Y1 = A1*X1
 % --------------
+disp('========================');
 X1  = rand(ncol1,nvec);
 Y1ok = A1*X1;
 [batch_list1, Y1] = ...
@@ -58,6 +59,7 @@ batch_list5 = clear_batch_list();
 % -------------------------
 % check   Y = kron(A1,A2)*X
 % -------------------------
+disp('========================');
 X2  = rand( ncol1*ncol2, nvec);
 Y2ok = kron(A1,A2)*X2;
 [batch_list1, batch_list2, Y2 ] = ...
@@ -80,6 +82,7 @@ batch_list5 = clear_batch_list();
 % --------------------------
 % check Y = kron(A1,A2,A3)*X
 % --------------------------
+disp('========================');
 X3  = rand( ncol1*ncol2*ncol3, nvec);
 Y3ok = kron(A1,kron(A2,A3))*X3;
 [batch_list1, batch_list2, batch_list3,Y3] = ...
@@ -102,6 +105,7 @@ batch_list5 = clear_batch_list();
 % --------------------------
 % check Y = kron(A1,A2,A3,A4)*X
 % --------------------------
+disp('========================');
 X4  = rand( ncol1*ncol2*ncol3*ncol4, nvec);
 Y4ok = kron(A1,kron(A2,kron(A3,A4)))*X4;
 [batch_list1, batch_list2, batch_list3, batch_list4, Y4] = ...
@@ -124,6 +128,7 @@ batch_list5 = clear_batch_list();
 % --------------------------
 % check Y = kron(A1,A2,A3,A4,A5)*X
 % --------------------------
+disp('========================');
 X5  = rand( ncol1*ncol2*ncol3*ncol4*ncol5, nvec);
 Y5ok = kron(A1,kron(A2,kron(A3,kron(A4,A5))))*X5;
 [batch_list1, batch_list2, batch_list3, batch_list4, batch_list5, Y5]  = ...

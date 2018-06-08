@@ -33,6 +33,15 @@ end;
 
 
 nvec = numel( X )/nrowX;
+if (idebug >= 1),
+ disp(sprintf('kronmult5_batch: (%d,%d) (%d,%d) (%d,%d) (%d,%d) (%d,%d) nvec=%d', ...
+          nrow1,ncol1, ...
+          nrow2,ncol2, ...
+          nrow3,ncol3, ...
+          nrow4,ncol4, ...
+          nrow5,ncol5, ...
+          nvec ));
+end;
 
 nrowY = nrow1*nrow2*nrow3*nrow4*nrow5;
 
@@ -44,9 +53,6 @@ nrowY = nrow1*nrow2*nrow3*nrow4*nrow5;
      kronmult4_batch( A2,A3,A4, A5, X, ...
          batch_list1, batch_list2, batch_list3, batch_list4 );
 
-if (idebug >= 1),
-  disp(sprintf('kronmult5_batch: numel(Ytmp)=%g', numel(Ytmp)));
-end;
 
 isok = (mod(numel(Ytmp),nvec) == 0);
 if (~isok),

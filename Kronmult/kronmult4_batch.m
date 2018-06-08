@@ -29,6 +29,15 @@ end;
 
 nvec = numel( X )/nrowX;
 
+if (idebug >= 1),
+ disp(sprintf('kronmult4_batch: (%d,%d)  (%d,%d) (%d,%d) (%d,%d) nvec=%d', ...
+        nrow1,ncol1, ...
+        nrow2,ncol2, ...
+        nrow3,ncol3, ...
+        nrow4,ncol4, ...
+        nvec ));
+end;
+
 nrowY = nrow1*nrow2*nrow3*nrow4;
 
 
@@ -38,10 +47,6 @@ nrowY = nrow1*nrow2*nrow3*nrow4;
 [batch_list1, batch_list2, batch_list3, Ytmp] = ...
           kronmult3_batch(A2,A3,A4, X,  ...
                   batch_list1, batch_list2, batch_list3 );
-if (idebug >= 1),
-  disp(sprintf('kronmult4_batch: numel(Ytmp)=%g', numel(Ytmp)));
-end;
-
 
 % ------------------------------------------
 % X is  (ncol4*ncol3*ncol2*ncol1) by nvec

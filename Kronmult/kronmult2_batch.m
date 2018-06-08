@@ -20,6 +20,11 @@ end;
 
 nvec = numel(X)/nrowX;
 
+if (idebug >= 1),
+  disp(sprintf('kronmult2_batch: (%d,%d) (%d,%d) nvec=%d', ...
+            nrow1,   ncol1,    nrow2,   ncol2,    nvec));
+end;
+
 nrowY = nrow1*nrow2;
 
 % --------------------------
