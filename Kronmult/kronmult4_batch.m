@@ -42,8 +42,17 @@ if (idebug >= 1),
   disp(sprintf('kronmult4_batch: numel(Ytmp)=%g', numel(Ytmp)));
 end;
 
-Ytmp = reshape(Ytmp, [numel(Ytmp)/nvec, nvec]);
-nrowYtmp = size(Ytmp,1);
+
+% ------------------------------------------
+% X is  (ncol4*ncol3*ncol2*ncol1) by nvec
+%
+% Ytmp = kronmult3( A2,A3,A4,   X), so X appears to be (ncol4*ncol3*ncol2) by (ncol1*nvec)
+% Ytmp is  (nrow4*nrow3*nrow2) by (ncol1*nvec)
+% so Ytmp can be reshaped to be  (nrow4*nrow3*nrow2 * ncol1) by nvec
+% ------------------------------------------
+
+nrowYtmp = (nrow4*nrow3*nrow2)*ncol1;
+Ytmp = reshape(Ytmp, nrowYtmp, nvec );
 
 Y = zeros(nrowY, nvec);
 
@@ -70,9 +79,9 @@ for i=1:nvec,
  alpha = 1;
  beta = 0;
 
- Amat = reshape( Ytmp(:,i), mm,kk);
+ Amat = reshape( Ytmp(1:(mm*kk),i), mm,kk);
  Bmat = A1;
- Cmat = reshape( Y(:,i), mm, nn );
+ Cmat = reshape( Y(1:(mm*nn),i), mm, nn );
 
   nbatch =  batch_list4.nbatch;
   nbatch = nbatch+1;
@@ -97,7 +106,7 @@ for i=1:nvec,
 % ----------------------------------------
   Cmat = gemm( transA, transB, mm, nn,kk, alpha, Amat, Bmat, beta, Cmat);
 
-  Y(:,i) = reshape( Cmat, [nrowY,1]);
+  Y(1:nrowY,i) = reshape( Cmat(1:mm,1:nn), [nrowY,1]);
 end;
 
 end

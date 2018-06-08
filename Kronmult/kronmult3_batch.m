@@ -44,7 +44,16 @@ if (~isok),
   return;
 end;
 
-nrowYtmp = numel(Ytmp)/nvec;
+% -----------------------------------------------
+% X is ncol1*ncol2*ncol3 by nvec
+%
+% Ytmp = kronmult2(A2,A3,  X), X appears as (ncol3*ncol2) by (ncol1*nvec)
+% so Ytmp is  (nrow2*nrow3) by (ncol1*nvec)
+% and Ytmp can be reshaped to be (nrow2*nrow3*ncol1) by nvec
+% -----------------------------------------------
+%nrowYtmp = numel(Ytmp)/nvec;
+nrowYtmp = (nrow2*nrow3*ncol1);
+
 Ytmp = reshape( Ytmp, [nrowYtmp, nvec] );
 
 Y = zeros(nrowY, nvec);
@@ -73,9 +82,9 @@ for i=1:nvec,
   alpha = 1;
   beta = 0;
   
-  Amat = reshape( Ytmp(:,i), msize, ncol1);
+  Amat = reshape( Ytmp(1:(mm*kk),i), mm, kk);
   Bmat = A1;
-  Cmat = reshape( Y(:,i), mm,nn );
+  Cmat = reshape( Y(1:(mm*nn),i), mm,nn );
 
 
   nbatch = batch_list3.nbatch;
@@ -102,5 +111,5 @@ for i=1:nvec,
 % ----------------------------------------
   Cmat = gemm( transA, transB, mm, nn,kk, alpha, Amat, Bmat, beta, Cmat);
 
-  Y(:,i) = reshape(Cmat, nrowY,1);
+  Y(1:nrowY,i) = reshape(Cmat(1:mm,1:nn), nrowY,1);
 end;

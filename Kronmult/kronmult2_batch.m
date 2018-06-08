@@ -27,8 +27,22 @@ nrowY = nrow1*nrow2;
 % --------------------------
 [batch_list1, Ytmp] = kronmult1_batch( A2, X, batch_list1);
 
-Ytmp = reshape( Ytmp, [numel(Ytmp)/nvec,nvec]);
-nrowYtmp = size(Ytmp,1);
+% ---------------------
+% Ytmp is (nrow2*ncol1)  by nvec
+% ---------------------
+nrowYtmp = nrow2 * ncol1;
+isok = (numel(Ytmp) == (nrowYtmp * nvec ));
+if (~isok),
+  disp(sprintf('kronmult2_batch: numel(Ytmp)=%d,nrowYtmp=%d, nrow2=%d', ...
+                                 numel(Ytmp),   nrowYtmp,    nrow2 ));
+  disp(sprintf('nrow1=%d,ncol1=%d, nrow2=%d,ncol2=%d', ...
+                nrow1,   ncol1,    nrow2,   ncol2));
+  disp(sprintf('numel(X)=%d, nrowX=%d, nvec=%d', ...
+                numel(X),    nrowX,    nvec ));
+end;
+Ytmp = reshape( Ytmp, nrowYtmp, nvec );
+
+
 
 Y = zeros( nrowY, nvec );
 
@@ -55,9 +69,9 @@ Y = zeros( nrowY, nvec );
    nn = nrow1;
    alpha = 1;  
    beta = 0;
-   Amat = reshape( Ytmp(:,i), mm,kk);
+   Amat = reshape( Ytmp(1:(mm*kk),i), mm,kk);
    Bmat = A1;
-   Cmat = reshape( Y(:,i), mm,nn );
+   Cmat = reshape( Y(1:(mm*nn),i), mm,nn );
 
    nbatch = batch_list2.nbatch;
    nbatch = nbatch + 1;
