@@ -36,22 +36,58 @@ if (~isok),
   return;
 end;
 
-nrowYtmp = numel(Ytmp)/nvec;
-Ytmp = reshape( Ytmp, [nrowYtmp, nvec] );
 
 Y = zeros(nrowY, nvec);
 
-% -----------------------------------------------------
-% note: may be task parallelism or batch gemm operation
-% -----------------------------------------------------
-isok = (mod(nrowYtmp,ncol1) == 0);
-if (~isok),
-  error(sprintf('kronmult3: nrowYtmp=%g, ncol1=%g', ...
-                            nrowYtmp,    ncol1 ));
-  return;
+use_method_1 = 0;
+
+if (use_method_1),
+
+  nrowYtmp = numel(Ytmp)/nvec;
+  Ytmp = reshape( Ytmp, [nrowYtmp, nvec] );
+  
+  
+  % -----------------------------------------------------
+  % note: may be task parallelism or batch gemm operation
+  % -----------------------------------------------------
+  isok = (mod(nrowYtmp,ncol1) == 0);
+  if (~isok),
+    error(sprintf('kronmult3: nrowYtmp=%g, ncol1=%g', ...
+                              nrowYtmp,    ncol1 ));
+    return;
+  end;
+  msize  = nrowYtmp/ncol1;
+  for i=1:nvec,
+    Yi = reshape(Ytmp(:,i), [msize, ncol1])*transpose(A1);
+    Y(:,i) = reshape(Yi, nrowY,1);
+  end;
+else
+%  ---------------------------------------
+%  Y = kron( A2, A3) ( X * transpose(A1) )
+%  ---------------------------------------
+   X = reshape( X, nrowX, nvec );
+   Xi = zeros( ncol2*ncol3, ncol1 );
+   Ytmpi = zeros( ncol2*ncol3, nrow1 );
+   Ytmp = zeros( (ncol2*ncol3), nrow1*nvec );
+   for i=1:nvec,
+     % --------------------------------
+     % note  nrowX = ncol1*ncol2*ncol3;
+     % so nrowX/ncol1 =  ncol2 * ncol3
+     % --------------------------------
+     Xi = reshape( X(:,i), (ncol2 * ncol3), ncol1 );
+     Ytmpi(1:(ncol2*ncol3), 1:nrow1) = ...
+       Xi(1:(ncol2*ncol3), 1:ncol1) * transpose(A1(1:nrow1,1:ncol1));
+
+     i1 = 1 + (i-1)*nrow1;
+     i2 = i1 + nrow1 - 1;
+     Ytmp(:,i1:i2) = Ytmpi(1:(ncol2*ncol3), 1:nrow1 );
+   end;
+
+   Y = kronmult2( A2, A3, Ytmp );
+
 end;
-msize  = nrowYtmp/ncol1;
-for i=1:nvec,
-  Yi = reshape(Ytmp(:,i), [msize, ncol1])*transpose(A1);
-  Y(:,i) = reshape(Yi, nrowY,1);
-end;
+
+
+
+Y = reshape( Y, nrowY, nvec );
+end
