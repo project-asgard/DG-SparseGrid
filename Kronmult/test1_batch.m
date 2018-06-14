@@ -174,4 +174,6 @@ disp(sprintf('nbatch5=%d, total_flops5=%e, max_flops5=%e, min_flops=%e', ...
               nbatch5,    total_flops5,    max_flops5,    min_flops5 ));
 
 
+disp(sprintf('total work = %e ', ...
+    total_flops1 + total_flops2 + total_flops3 + total_flops4 + total_flops5 ));
 
