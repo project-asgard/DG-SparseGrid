@@ -24,24 +24,31 @@ nvec = numel(X)/nrowX;
 
 nrowY = nrow1*nrow2*nrow3;
 
-Ytmp = kronmult2( A2,A3,X);
-if (idebug >= 1),
-  disp(sprintf('kronmult3: numel(Ytmp)=%g', numel(Ytmp)));
-end;
-
-isok = (mod( numel(Ytmp), nvec ) == 0);
-if (~isok),
-  error(sprintf('kronmult3: numel(Ytmp)=%g, nvec=%g', ...
-                            numel(Ytmp),    nvec));
-  return;
-end;
 
 
 Y = zeros(nrowY, nvec);
 
-use_method_1 = 0;
+[flops1,flops2,imethod] = flops_kron3( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3 );
+if (idebug >= 1),
+  disp(sprintf('kronmult3: flops1=%g, flops2=%g, imethod=%d', ...
+                           flops1,    flops2,    imethod ));
+end;
+
+use_method_1 = (imethod == 1);
 
 if (use_method_1),
+
+  Ytmp = kronmult2( A2,A3,X);
+  if (idebug >= 1),
+    disp(sprintf('kronmult3: numel(Ytmp)=%g', numel(Ytmp)));
+  end;
+  
+  isok = (mod( numel(Ytmp), nvec ) == 0);
+  if (~isok),
+    error(sprintf('kronmult3: numel(Ytmp)=%g, nvec=%g', ...
+                              numel(Ytmp),    nvec));
+    return;
+  end;
 
   nrowYtmp = numel(Ytmp)/nvec;
   Ytmp = reshape( Ytmp, [nrowYtmp, nvec] );

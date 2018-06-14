@@ -1,5 +1,5 @@
 global idebug;
-idebug = 0;
+idebug = 1;
 
 A1 = rand(2,3);
 A2 = rand(3,4);

@@ -33,7 +33,13 @@ nvec = numel( X )/nrowX;
 nrowY = nrow1*nrow2*nrow3*nrow4*nrow5;
 Y = zeros(nrowY, nvec);
 
-use_method_1 = 0;
+[flops1,flops2,imethod] = flops_kron5( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3, nrow4,ncol4, nrow5,ncol5 );
+if (idebug >= 1),
+  disp(sprintf('kronmult5: flops1=%g, flops2=%g, imethod=%d', ...
+                           flops1,    flops2,    imethod ));
+end;
+
+use_method_1 = (imethod == 1);
 if (use_method_1),
   
   
@@ -89,14 +95,14 @@ else
            Ytmpi(1:(ncol2*ncol3*ncol4*ncol5), 1:nrow1);
     end;
 
-    if (idebug >= 1),
+    if (idebug >= 3),
       disp(sprintf('kronmult5: before kron(A2,A3,A4,A5,Ytmp), size(Ytmp)=(%d,%d)', ...
            size(Ytmp,1), size(Ytmp,2)   ));
     end;
 
     Y = kronmult4(A2,A3,A4,A5, Ytmp );
 
-    if (idebug >= 1),
+    if (idebug >= 3),
       disp(sprintf('kronmult5: after kron(A2,A3,A4,A5,Ytmp), size(Y)=(%d,%d)', ...
             size(Y,1), size(Y,2) ));
     end;
