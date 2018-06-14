@@ -34,7 +34,8 @@ end;
 nrowY = nrow1*nrow2*nrow3;
 Y = zeros(nrowY, nvec);
 
-use_method_1 = 0;
+[flops1,flops2,imethod] = flops_kron3( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3);
+use_method_1  = (imethod == 1);
 if (use_method_1),
 
   % --------------------------
