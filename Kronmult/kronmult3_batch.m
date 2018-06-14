@@ -184,3 +184,6 @@ else
 %    ------------------------------
    [batch_list2, batch_list3, Y] = kronmult2_batch( A2, A3, Ytmp, batch_list2, batch_list3 );
 end;
+
+Y = reshape(Y, nrowY, nvec );
+end
