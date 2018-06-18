@@ -1,3 +1,6 @@
+global idebug;
+idebug = 1;
+
 A1 = rand(2,3);
 A2 = rand(3,4);
 A3 = rand(4,5);
@@ -69,7 +72,7 @@ X5  = rand( ncol1*ncol2*ncol3*ncol4*ncol5, nvec);
 Y5ok = kron(A1,kron(A2,kron(A3,kron(A4,A5))))*X5;
 Y5 = kronmult5(A1,A2,A3,A4,A5,  X5);
 diff = max(abs(Y5ok(:)-Y5(:)));
-isok = (diff < tol * numel(Y4ok) );
+isok = (diff < tol * numel(Y5ok) );
 if (~isok),
   disp(sprintf('kronmult5 failed, diff=%g',diff));
   nerr = nerr + 1;
