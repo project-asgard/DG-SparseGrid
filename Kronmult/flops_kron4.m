@@ -52,7 +52,7 @@ end;
 % Y = Ytmp * transpose(A1)
 % ------------------------------------- 
 imem1 = imem1 + nrow_Ytmp * ncol_Ytmp;
-flops1 = flops1 + 2.0 * nrow_Ytmp * ncol1 * nrow1;
+flops1 = flops1 + (2.0 * nrow_Ytmp) * ncol1 * nrow1;
 
 
 % -------------- 
@@ -70,7 +70,7 @@ nrow_Ytmp = nrow_X;
 ncol_Ytmp = nrow1;
 
 imem2 = imem2 + nrow_Ytmp * ncol_Ytmp;
-flops2 =  2.0 * nrow_X * ncol1 * nrow1;
+flops2 =  flops2 + (2.0 * nrow_X ) * ncol1 * nrow1;
 
 % -------------------------
 % Y = kron(A2,A3,A4) * Ytmp

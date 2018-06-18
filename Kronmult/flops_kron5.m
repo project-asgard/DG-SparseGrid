@@ -13,7 +13,7 @@ function [flops1, flops2, imethod,imem1,imem2] = flops_kron5( nrow1,ncol1, ...
 % estimate flops (and temporary storage) for method 1 and method 2
 %
 flops1 = 0;
-flops2 = 0
+flops2 = 0;
 imem1 = 0;
 imem2 = 0;
 
@@ -48,7 +48,7 @@ nrow_Ytmp = (nrow2*nrow3*nrow4*nrow5);
 ncol_Ytmp = ncol_X;
 
 imem1 = imem1 + nrow_Ytmp * ncol_Ytmp;
-flops1 = flops1 + 2.0 * nrow_Ytmp * ncol1 * nrow1;
+flops1 = flops1 + (2.0 * nrow_Ytmp ) * ncol1 * nrow1;
 
 
 % -------------- 
@@ -70,7 +70,7 @@ ncol_Ytmp = nrow1;
 % Ytmp = X * transpose(A1)
 % ------------------------
 imem2 = imem2 + nrow_Ytmp * ncol_Ytmp;
-flops2 =  flops2 + 2.0 * nrow_X * ncol1 * nrow1;
+flops2 =  flops2 + (2.0 * nrow_X ) * ncol1 * nrow1;
 
 
 % ----------------------------

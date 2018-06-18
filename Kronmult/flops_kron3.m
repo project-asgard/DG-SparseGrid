@@ -13,17 +13,18 @@ flops2 = 0;
 imem1 = 0;
 imem2 = 0;
 
+% -----------------------------------
+% reshape X as (ncol2*ncol3) by ncol1;
+% -----------------------------------
+nrow_X = ncol2*ncol3;
+ncol_X = ncol1;
+
 % ----------------------
 % method 1:
 % Ytmp = kron(A2,A3)*X
 % Y = Ytmp * transpose(A1)
 % ----------------------
 
-% -----------------------------------
-% reshape X as (ncol2*ncol3) by ncol1;
-% -----------------------------------
-nrow_X = ncol2*ncol3;
-ncol_X = ncol1;
 
 % --------------------
 % Ytmp = kron(A2,A3)*X
@@ -43,8 +44,13 @@ end;
 nrow_Ytmp = (nrow2*nrow3);  
 ncol_Ytmp = ncol_X;
 
+
+
+% ------------------------
+% Y = Ytmp * transpose(A1)
+% ------------------------
 imem1 = imem1 +  nrow_Ytmp * ncol_Ytmp;
-flops1 = flops1 + 2.0 * nrow_Ytmp * ncol1 * nrow1;
+flops1 = flops1 + (2.0 * nrow_Ytmp) * ncol1 * nrow1;
 
 
 % -------------- 
@@ -53,11 +59,6 @@ flops1 = flops1 + 2.0 * nrow_Ytmp * ncol1 * nrow1;
 % Y = kron(A2,A3)*Ytmp
 % -------------- 
 
-% -------------------------------------
-% X reshaped as  (ncol2*ncol3) by ncol1
-% -------------------------------------
-nrow_X = (ncol2*ncol3);
-ncol_X = ncol1;
 
 % --------------------
 % Ytmp = X * transpose(A1)
@@ -66,7 +67,7 @@ ncol_X = ncol1;
 nrow_Ytmp = nrow_X;
 ncol_Ytmp = nrow1;
 
-flops2 =  flops2 + 2.0 * nrow_X * ncol1 * nrow1;
+flops2 =  flops2 + (2.0 * nrow_X) * ncol1 * nrow1;
 imem2 = imem2 + nrow_Ytmp * ncol_Ytmp;
 
 
