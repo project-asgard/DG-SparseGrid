@@ -4,8 +4,9 @@ Matlab version of
 A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson/Maxwell 
 in the general setting (1x1v,1x2v,3x3v).
 
->> 1x1v is for Vlasov-Poisson Solver
->> 1x2v if for Vlasov-Maxwell Solver of streaming Weibel (SW) instability
+> 1x1v is for Vlasov-Poisson Solver
+
+> 1x2v if for Vlasov-Maxwell Solver of streaming Weibel (SW) instability
 
 ### Run after cloning
 
