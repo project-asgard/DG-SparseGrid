@@ -1,0 +1,92 @@
+function [database,Inv]=HashTable(Lev_1,Lev_2,Deg,Dim)
+%-------------------------------------------------
+% Matlab Version of
+% Generate 2D Hash Table s.t n1+n2<=Lev
+% Input: Lev_1:: Level information for 1-component
+%        Lev_2:: Level information for 2-component
+%        Deg:: Degree of polynomial
+%        Dim:: Dimensionality
+% Output: database:: HashTable
+%         Inv:: Inverse Looking up for Hash
+%-------------------------------------------------
+
+count=1;
+database=struct();
+Inv=struct();
+
+Nm = 0;
+key = zeros(1,Dim*2);
+for i = 1:Dim
+    for n1 = 0:Lev_1
+        for i1 = 0:max(0,2^max(0,n1-1)-1)
+            key(i) = n1;
+            key(Dim+i) = i1;
+            
+        end
+    end
+%     key(i) = loc_Lev;
+%     key(Dim+i) = loc_cell;
+   
+end
+
+
+
+for loc_dim = 1:Dim
+    MatrixLev = ComLessLev(Lev);
+end
+
+count = 1;
+for i = 1:size(combination,1)
+    for loc_dim = 1:Dim
+        nlev = combination(i,loc_dim);
+        for loc_cell = 0:max(0,2^max(0,nlev-1)-1)
+            key(loc_dim)   = nlev;
+            key(loc_dim+i) = loc_cell;
+            
+            database.(sprintf('i%g_',key))=count;
+            
+            count=count+1;
+        end
+    end
+end
+
+Matrix = zeros(1,Dim);
+function Matrix = ComLessLev(Matrix,Lev)
+    sumLev = sum(Matrix(end,:));
+    if sumLev < Lev
+        Matrix(end+1,end)=Matrix(end+1,end)
+    end
+    
+
+end
+% for n1=0:Lev_1
+%     for i1=0:max(0,2^max(0,n1-1)-1)
+%             
+%             for n2=0:Lev_2-n1
+%                 for i2=0:max(0,2^max(0,n2-1)-1)
+%                         
+%                         key=[n1,n2,i1,i2];
+%                         database.(sprintf('i%g_',key))=count;
+%                         inv{count}=key;
+%                         
+%                         
+%                         count=count+1;
+%                 
+%             end
+%         end
+%         
+%     end
+% end
+% 
+% dof_sparse=count-1;
+% 
+% database.Dim=Dim;
+% database.Deg=Deg;
+% database.dof=dof_sparse;
+% database.Lev_1=Lev_1;
+% database.Lev_2=Lev_2;
+% database.Lev=min(Lev_1,Lev_2);
+
+
+
+
