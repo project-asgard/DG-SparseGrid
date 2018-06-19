@@ -1,8 +1,8 @@
-# Matlab Implementation of 2D Vlasov-Poisson Equations
+# Matlab Implementation of  Vlasov-Poisson/Maxwell Equations
 
 Matlab version of 
-A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson 
-in the 2D setting (1x1v).
+A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson/Maxwell 
+in the general setting (1x1v,1x2v,3x3v).
 
 ### Run after cloning
 
@@ -19,3 +19,7 @@ in the 2D setting (1x1v).
  - TEND *%The ending time for test*
  - Lev  *%The mesh's resolution-->with size h=2^(-Lev)*
  - Deg  *%The degree of polynomial--> Deg=2 means linear element*
+ 
+ * Vlasov*.m::
+ - DimX *% The dimensionality of X
+ - DimV *% The dimensionality of V
