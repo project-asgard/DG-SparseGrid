@@ -1,5 +1,5 @@
 %**************************************************************************
-% This MATLAB-Interface for DG-SG Vlasov
+% This MATLAB-Interface for DG-SG Vlasov Equations
 % is an example to solve Vlasov Equations with Poisson/Maxwell Equations
 % Vlasov Equation with Poisson solver:
 % (1). f_t + v*grad_x f + E*grad_v f=0;
@@ -7,6 +7,10 @@
 % Vlasov Equation with Maxwell solver:
 % (1). f_t + v*grad_x f + (E+B)*grad_v f=0;
 % (2). Maxwell Eq.
+% Input: Solver = "VM" -- Vlasov Maxwell Solver
+%                 "VP" -- Vlasov Poisson Solver
+% Dimensionality DimX = (Dim_x1,Dim_x2,Dim_x3)
+%                DimV = (Dim_v1,Dim_v2,Dim_v3)
 %**************************************************************************
 clc
 clear
@@ -14,7 +18,13 @@ close all
 format short e
 
 
+%------- Input Parameters
+Solver = 'VM';
+
+
 addpath(genpath(pwd))
+
+
 %=============================================================
 %% Step 1. Setting Parameters
 % Lev: Level of the Mesh
@@ -29,11 +39,22 @@ addpath(genpath(pwd))
 % Maxwell coefficients: nu and eps
 %=============================================================
 % Test PDE and Ending Time
+if Solver == 'VM'
+    pde = VlasovMaxwell1;
+    Vmax = pde.Vmax;
+    Lmax = pde.Lmax;
+    TEND = 10;
+    
+elseif Solver == 'VP'
+    pde = VlasovPoisson4;
+    Vmax = pde.Vmax;
+    Lmax = pde.Lmax;
+    TEND = 10;
 
-pde = Vlasov4;
-Vmax = pde.Vmax;
-Lmax = pde.Lmax;
-TEND = 10;
+end
+
+% Dimensionality
+Dim = pde.DimX+pde.DimV;
 
 % Level information
 Lev = 3;
@@ -42,9 +63,8 @@ LevX = Lev;LevV = Lev;
 % Polynomial Degree
 Deg = 2;% Deg = 2 Means Linear Element
 
-% Dimensionality
-Dim = 2;
-DimX = 1;DimV = 1;
+
+
 
 % Time step
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
@@ -64,8 +84,8 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Output: fval (fv and fx)--intial condition f(x,v,t=0)
 %         rho--intial condition rho(x,t=0)
 %*************************************************
-[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
-    FMWT_COMP_x,FMWT_COMP_v);
+InCond = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
+    FMWT_COMP_x,FMWT_COMP_v,Solver);
 
 %=============================================================
 %% Step 2. Generate Sparse Grids/Hash Table
@@ -75,7 +95,7 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Output: HASH and HashInv
 %=============================================================
 [HASH,HashInv] = HashTable(LevV,LevX,Deg,Dim);
-
+return
 % Generate the Initial Condition w.r.t Grids
 fval = fv(HashInv.x1).*fx(HashInv.x2);
 
@@ -84,7 +104,7 @@ clear fv fx
 
 %=============================================================
 %% Step 3. Generate time-independent coefficient matrices
-% Vlasolv Solver:
+% Vlasolv Solver: 
 %   Operators:  vMassV: int_v v*l_i(v)*l_j(v)dv
 %               GradV: int_v (l_i(v))'*l_j(v)dv
 %               GradX: int_x (m_i(x))'*m_j(x)dx
@@ -93,7 +113,7 @@ clear fv fx
 % Maxwell Solver:
 %   Operators: CurlCurlX: int_x curl(m_i(x))*m_j(x)dx
 % Input: LevX, LevV, k, dim, Lmax, Vmax
-% Output: 2D Matrices--vMassV,GradV,GradX,DeltaX, and CurlCurl(missing)
+% Output: 2D Matrices--vMassV,GradV,GradX,DeltaX
 %=============================================================
 [vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
@@ -111,10 +131,10 @@ A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
 % Output: A_Poisson or A_Maxwell
 % Another Idea is to solve Poisson Equation on the finest full grid
 %====================================================================
-if DimX>1
-    % Construct DeltaX for DimX
-else
-    A_Poisson = DeltaX;
+if Solver == 'VM'
+    A_Poisson = MaxwellSolver(DeltaX,DimX);
+elseif Solver =='VP'
+    A_Poisson = PoissonSolver(DeltaX,DimX);
 end
 
 %=============================================================
