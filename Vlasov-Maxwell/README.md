@@ -20,6 +20,6 @@ in the general setting (1x1v,1x2v,3x3v).
  - Lev  *%The mesh's resolution-->with size h=2^(-Lev)*
  - Deg  *%The degree of polynomial--> Deg=2 means linear element*
  
- * Vlasov*.m::
+* Vlasov*.m::
  - DimX *% The dimensionality of X
  - DimV *% The dimensionality of V
