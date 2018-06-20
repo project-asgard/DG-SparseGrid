@@ -7,9 +7,10 @@
 % Vlasov Equation with Maxwell solver:
 % (1). f_t + v*grad_x f + (E+B)*grad_v f=0;
 % (2). Maxwell Eq.
-% Input: Solver = "VM" -- Vlasov Maxwell Solver
-%                 "VP" -- Vlasov Poisson Solver
-% Dimensionality DimX = (Dim_x1,Dim_x2,Dim_x3)
+% Input: Solver = 'VM' -- Vlasov Maxwell Solver
+%                 'VP' -- Vlasov Poisson Solver
+%        pde = choosing your test from folder "PDE"
+%       DimX = (Dim_x1,Dim_x2,Dim_x3)
 %                DimV = (Dim_v1,Dim_v2,Dim_v3)
 %**************************************************************************
 clc
@@ -19,7 +20,7 @@ format short e
 
 
 %------- Input Parameters
-Solver = 'VM';
+Solver = 'VP';
 
 
 addpath(genpath(pwd))
@@ -50,8 +51,18 @@ elseif Solver == 'VP'
     Vmax = pde.Vmax;
     Lmax = pde.Lmax;
     TEND = 10;
-    CB1=0;Cb2=0;
+    Cb1=0;Cb2=0;Cb3=0;
 
+end
+
+% For dimensionality
+if pde.DimV == 1
+    Cv2=0;Cv3=0;
+end
+if pde.DimX ==1 && Solver == 'VP'
+    Cx2=0;Cx3=0;
+elseif pde.DimX ==1 && Solver == 'VM'
+    Cx1=0;Cx3=0;
 end
 
 % Dimensionality
@@ -97,7 +108,6 @@ InCond = Intial_Con(Lev,Deg,Lmax,Vmax,pde,...
 % Generate the Initial Condition w.r.t Grids
 % needs some work over here!!
 %%fval = fv(HashInv.x1).*fx(HashInv.x2);
-
 clear fv fx
 
 
@@ -120,6 +130,8 @@ clear fv fx
 % Generate A_encode for Time-independent Matrix
 A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
 
+% Building 12 matrices corresponding to each terms indicated as notes
+% I2=(v1)
 %====================================================================
 %% Step 4. Generate time-independent global Matrix
 % Compute the global matrix for spacial variables "x" by

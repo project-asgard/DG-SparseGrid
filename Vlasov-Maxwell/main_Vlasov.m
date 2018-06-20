@@ -130,6 +130,21 @@ clear fv fx
 % Generate A_encode for Time-independent Matrix
 A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
 
+% Building 12 matrices corresponding to each terms indicated as notes
+% Note: df/dxj and df/dvj mean the partial derivatives
+% I2 =  (v1*(df/dx1),w)
+% I3 =  (v2*(df/dx2),w)
+% I4 =  (v3*(df/dx3),w)
+% I5 =  (E1*(df/dv1),w)
+% I6 =  (v2*B3*(df/dv1),w)
+% I7 = -(v3*B2*(df/dv1),w)
+% I8 =  (E2*(df/dv2),w)
+% I9 =  (v3*B1*(df/dv2),w)
+% I10 = -(v1*B3*(df/dv2),w)
+% I11 = (E3*(df/dv3),w)
+% I12 = (v1*B2*(df/dv3),w)
+% I13 = -(v2*B1*(df/dv3),w)
+
 %====================================================================
 %% Step 4. Generate time-independent global Matrix
 % Compute the global matrix for spacial variables "x" by
