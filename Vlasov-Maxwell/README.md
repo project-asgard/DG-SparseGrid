@@ -32,4 +32,3 @@ in the general setting (1x1v,1x2v,3x3v).
  - DimV *% The dimensionality of V*
  
 ![Diagram](Vlasov-Maxwell/Notes/VlasovSolver (1).png)
-</a href="https://github.com/MollyRaver/drawio-github/blob/master/VlasovSolver.xml"> Edit
