@@ -10,7 +10,9 @@ in the general setting (1x1v,1x2v,3x3v).
 
 ### Run after cloning
 
+```
 > run main_Vlasov.m
+```
 
 ### Run other tests and Modifying the parameters
 
