@@ -30,3 +30,5 @@ in the general setting (1x1v,1x2v,3x3v).
 * Vlasov*.m::
  - DimX *% The dimensionality of X*
  - DimV *% The dimensionality of V*
+ 
+![Diagram](Vlasov-Maxwell/Notes/VlasovSolver (1).png)
