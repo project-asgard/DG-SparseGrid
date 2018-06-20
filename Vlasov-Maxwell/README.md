@@ -31,7 +31,7 @@ in the general setting (1x1v,1x2v,3x3v).
  - DimX *% The dimensionality of X*
  - DimV *% The dimensionality of V*
  
-![Diagram](http://jgraph.github.io/drawio-github/diagram.png)
+![Diagram](Vlasov-Maxwell/Notes/VlasovSolver (1).png)
 
 <a href="http://jgraph.github.io/drawio-github/edit-diagram.html?repo=drawio-github&path=diagram.png" target="_blank">Edit</a> | <a href="https://www.draw.io/#Uhttps%3A%2F%2Fjgraph.github.io%2Fdrawio-github%2Fdiagram.png" target="_blank">Edit As New</a>
 
