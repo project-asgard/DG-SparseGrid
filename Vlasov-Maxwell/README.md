@@ -31,15 +31,8 @@ in the general setting (1x1v,1x2v,3x3v).
  - DimX *% The dimensionality of X*
  - DimV *% The dimensionality of V*
  
- ```xml
-<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:Magento">
-    <soapenv:Header/
-    <soapenv:Body>
-        <urn:catalogCategoryTreevsoapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-            <sessionId xsi:type="xsd:string" xs:type="type:string" xmlns:xs="http://www.w3.org/2000/XMLSchema-instance">blablaa</sessionId>
-            <parentId xsi:type="xsd:string" xs:type="type:string" xmlns:xs="http://www.w3.org/2000/XMLSchema-instance">?</parentId>
-            <storeView xsi:type="xsd:string" xs:type="type:string" xmlns:xs="http://www.w3.org/2000/XMLSchema-instance">?</storeView>
-        </urn:catalogCategoryTree>
-    </soapenv:Body>
-</soapenv:Envelope>
-```
+![Diagram](http://jgraph.github.io/drawio-github/diagram.png)
+
+<a href="http://jgraph.github.io/drawio-github/edit-diagram.html?repo=drawio-github&path=diagram.png" target="_blank">Edit</a> | <a href="https://www.draw.io/#Uhttps%3A%2F%2Fjgraph.github.io%2Fdrawio-github%2Fdiagram.png" target="_blank">Edit As New</a>
+
+<a href="http://jgraph.github.io/drawio-github/edit-diagram.html" target="_blank">edit-diagram.html</a> does the I/O with GitHub and uses draw.io in embed mode for diagram editing. The page supports the following URL parameters: user, pass, repo, path, ref and action=open (the Edit link above is an example). Using action=open, links for immediate diagram editing in GitHub can be created (requires user and pass parameters). You can also use files on GitHub as templates in draw.io via the url parameter (see Edit As New above).
