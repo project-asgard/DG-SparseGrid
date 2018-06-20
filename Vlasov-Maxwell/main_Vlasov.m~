@@ -50,6 +50,7 @@ elseif Solver == 'VP'
     Vmax = pde.Vmax;
     Lmax = pde.Lmax;
     TEND = 10;
+    CB1=0;Cb2=0;
 
 end
 
@@ -58,24 +59,21 @@ Dim = pde.DimX+pde.DimV;
 
 % Level information
 Lev = 3;
-LevX = Lev;LevV = Lev;
+
 
 % Polynomial Degree
 Deg = 2;% Deg = 2 Means Linear Element
 
-
-
-
 % Time step
-dt = Lmax/2^LevX/Vmax/(2*Deg+1);
+dt = Lmax/2^Lev/Vmax/(2*Deg+1);
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
 % Input:  Deg and Lev
 % Output: Convert Matrix FMWT_COMP
 %*************************************************
-FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
-FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
+FMWT_COMP_x = OperatorTwoScale(Deg,2^Lev);
+FMWT_COMP_v = OperatorTwoScale(Deg,2^Lev);
 
 %*************************************************
 %% Step 1.2. Initial Data according to Hash
@@ -84,7 +82,7 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Output: fval (fv and fx)--intial condition f(x,v,t=0)
 %         rho--intial condition rho(x,t=0)
 %*************************************************
-InCond = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
+InCond = Intial_Con(Lev,Deg,Lmax,Vmax,pde,...
     FMWT_COMP_x,FMWT_COMP_v,Solver);
 
 %=============================================================
@@ -94,10 +92,11 @@ InCond = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
 %           Dim-dimensionality
 % Output: HASH and HashInv
 %=============================================================
-[HASH,HashInv] = HashTable(LevV,LevX,Deg,Dim);
-return
+[HASH,inverseHash] = HashTable(Lev,Dim);
+
 % Generate the Initial Condition w.r.t Grids
-fval = fv(HashInv.x1).*fx(HashInv.x2);
+% needs some work over here!!
+%%fval = fv(HashInv.x1).*fx(HashInv.x2);
 
 clear fv fx
 
@@ -115,7 +114,7 @@ clear fv fx
 % Input: LevX, LevV, k, dim, Lmax, Vmax
 % Output: 2D Matrices--vMassV,GradV,GradX,DeltaX
 %=============================================================
-[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
+[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(Lev,Deg,Lmax,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
 % Generate A_encode for Time-independent Matrix
@@ -131,12 +130,11 @@ A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
 % Output: A_Poisson or A_Maxwell
 % Another Idea is to solve Poisson Equation on the finest full grid
 %====================================================================
-if DimX>1
-    % Construct DeltaX for DimX
-else
-    A_Poisson = DeltaX;
+if Solver == 'VM'
+    A_Poisson = MaxwellSolver(DeltaX,DimX);
+elseif Solver =='VP'
+    A_Poisson = PoissonSolver(DeltaX,DimX);
 end
-if Solver == ''
 
 %=============================================================
 %% Step 5. Time Loop

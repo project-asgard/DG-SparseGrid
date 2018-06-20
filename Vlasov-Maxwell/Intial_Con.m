@@ -1,8 +1,8 @@
-function OutPut=Intial_Con(Lev_x,Lev_v,k,Lmax,Vmax,pde,...
+function OutPut=Intial_Con(Lev,k,Lmax,Vmax,pde,...
     FMWT_COMP_x,FMWT_COMP_v,Solver)
 %==================================================================
 % This code computes the initial conditions for f and rho=int_v fdv
-% Input: Lev_x,Lev_v,k,Lmax,Vmax,pde,DimX,DimV
+% Input: Lev,k,Lmax,Vmax,pde,DimX,DimV
 %   Here DimX is dimension for x, DimV is dimension for v
 %       FMWT_COMP_x and FMWT_COMP_v are matrices for converting
 % Output: f_v, f_x, rho, and Eng
@@ -18,7 +18,7 @@ p_val = legendre(quad_x,k);
 %---------------------------
 % Jacobi of variable x and v
 %---------------------------
-nx = 2^(Lev_x);hx = Lmax/nx;
+nx = 2^(Lev);hx = Lmax/nx;
 Jacobi_x = hx;
 dof_1D_x = k*nx;
 f_x = zeros(dof_1D_x,pde.DimX);
@@ -28,7 +28,7 @@ if Solver == 'VM'
 end
 
 
-nv=2^(Lev_v);hv=2*Vmax/nv;
+nv=2^(Lev);hv=2*Vmax/nv;
 Jacobi_v=hv;
 dof_1D_v=k*nv;
 f_v=zeros(dof_1D_v,pde.DimV);

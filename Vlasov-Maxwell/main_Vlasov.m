@@ -7,9 +7,10 @@
 % Vlasov Equation with Maxwell solver:
 % (1). f_t + v*grad_x f + (E+B)*grad_v f=0;
 % (2). Maxwell Eq.
-% Input: Solver = "VM" -- Vlasov Maxwell Solver
-%                 "VP" -- Vlasov Poisson Solver
-% Dimensionality DimX = (Dim_x1,Dim_x2,Dim_x3)
+% Input: Solver = 'VM' -- Vlasov Maxwell Solver
+%                 'VP' -- Vlasov Poisson Solver
+%        pde = choosing your test from folder "PDE"
+%       DimX = (Dim_x1,Dim_x2,Dim_x3)
 %                DimV = (Dim_v1,Dim_v2,Dim_v3)
 %**************************************************************************
 clc
@@ -19,7 +20,7 @@ format short e
 
 
 %------- Input Parameters
-Solver = 'VM';
+Solver = 'VP';
 
 
 addpath(genpath(pwd))
@@ -50,7 +51,18 @@ elseif Solver == 'VP'
     Vmax = pde.Vmax;
     Lmax = pde.Lmax;
     TEND = 10;
+    Cb1=0;Cb2=0;Cb3=0;
 
+end
+
+% For dimensionality
+if pde.DimV == 1
+    Cv2=0;Cv3=0;
+end
+if pde.DimX ==1 && Solver == 'VP'
+    Cx2=0;Cx3=0;
+elseif pde.DimX ==1 && Solver == 'VM'
+    Cx1=0;Cx3=0;
 end
 
 % Dimensionality
@@ -58,24 +70,21 @@ Dim = pde.DimX+pde.DimV;
 
 % Level information
 Lev = 3;
-LevX = Lev;LevV = Lev;
+
 
 % Polynomial Degree
 Deg = 2;% Deg = 2 Means Linear Element
 
-
-
-
 % Time step
-dt = Lmax/2^LevX/Vmax/(2*Deg+1);
+dt = Lmax/2^Lev/Vmax/(2*Deg+1);
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
 % Input:  Deg and Lev
 % Output: Convert Matrix FMWT_COMP
 %*************************************************
-FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
-FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
+FMWT_COMP_x = OperatorTwoScale(Deg,2^Lev);
+FMWT_COMP_v = OperatorTwoScale(Deg,2^Lev);
 
 %*************************************************
 %% Step 1.2. Initial Data according to Hash
@@ -84,7 +93,7 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 % Output: fval (fv and fx)--intial condition f(x,v,t=0)
 %         rho--intial condition rho(x,t=0)
 %*************************************************
-InCond = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
+InCond = Intial_Con(Lev,Deg,Lmax,Vmax,pde,...
     FMWT_COMP_x,FMWT_COMP_v,Solver);
 
 %=============================================================
@@ -94,11 +103,11 @@ InCond = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,...
 %           Dim-dimensionality
 % Output: HASH and HashInv
 %=============================================================
-[HASH,HashInv] = HashTable(LevV,LevX,Deg,Dim);
-return
-% Generate the Initial Condition w.r.t Grids
-fval = fv(HashInv.x1).*fx(HashInv.x2);
+[HASH,inverseHash] = HashTable(Lev,Dim);
 
+% Generate the Initial Condition w.r.t Grids
+% needs some work over here!!
+%%fval = fv(HashInv.x1).*fx(HashInv.x2);
 clear fv fx
 
 
@@ -115,7 +124,7 @@ clear fv fx
 % Input: LevX, LevV, k, dim, Lmax, Vmax
 % Output: 2D Matrices--vMassV,GradV,GradX,DeltaX
 %=============================================================
-[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
+[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(Lev,Deg,Lmax,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
 % Generate A_encode for Time-independent Matrix

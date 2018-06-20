@@ -1,4 +1,4 @@
-function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=============================================================
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -29,14 +29,14 @@ Dp_val = dlegendre(quad_x,k);
 % Jacobi of variable x and v
 % Define Matrices
 %---------------------------
-nx=2^(Lev_x);hx=Lmax/nx;
+nx=2^(Lev);hx=Lmax/nx;
 Jacobi_x=hx;
 dof_1D_x=k*nx;
 GradX=sparse(dof_1D_x,dof_1D_x);
 DeltaX=sparse(2*dof_1D_x,2*dof_1D_x);
 
 
-nv=2^(Lev_v);hv=2*Vmax/nv;
+nv=2^(Lev);hv=2*Vmax/nv;
 Jacobi_v=hv;
 dof_1D_v=k*nv;
 vMassV=sparse(dof_1D_v,dof_1D_v);

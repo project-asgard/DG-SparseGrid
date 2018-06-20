@@ -1,74 +1,122 @@
-function [database,Inv]=HashTable(Lev,Dim)
-%-------------------------------------------------
+function [forwardHash,inverseHash]=HashTable(Lev,Dim)
+%---------------------------------------------------------
 % Matlab Version of
-% Generate 2D Hash Table s.t n1+n2<=Lev
-% Input: Lev_1:: Level information for 1-component
-%        Lev_2:: Level information for 2-component
-%        Deg:: Degree of polynomial
+% Generate Dim-dimension Hash Table s.t sum(n(1:Dim))<=Lev
+% Input: Lev:: Level information 
 %        Dim:: Dimensionality
-% Output: database:: HashTable
-%         Inv:: Inverse Looking up for Hash
-%-------------------------------------------------
+% Output: forwardHash:: HashTable
+%         inverseHash:: Inverse Looking up for Hash
+%--------------------------------------------------------
 
-count=1;
-database=struct();
-Inv=struct();
+forwardHash=struct();
+inverseHash={};
 
-
-
-
-%    K = 3; % The required sum
-%    n = 4;  % The number of elements in the rows
-%    c = nmultichoosek(values, k);
-%    m = size(c,1);
-%    A = zeros(m,n);
-%    for ix = 1:m
-%      A(ix,:) = diff([0,c(ix,:),K+1]);
-%    end
-   
-% All combination
-combs = nmultichoosek(0:Lev, Dim)
+% All combinations from choosing Dim numbers from vector [0:Lev]
+combs = permn(0:Lev, Dim);
+nLev = zeros(1,Dim);
 
 key = zeros(1,2*Dim);
 count = 1;
 for i = 1:size(combs,1)
-    if sum(combs(i,:))<Lev
-        for loc_dim = 1:Dim
-            nlev = combs(i,loc_dim);
-            for loc_cell = 0:max(0,2^max(0,nlev-1)-1)
+    if sum(combs(i,:))<=Lev
+        nLev = combs(i,:);
+        nCell = AllCell(nLev);
+        nz = size(nCell,1);
+        for ii = 1:nz
+            key(1:Dim) = nLev;
+            key(Dim+1:end) = nCell(ii,:);
+            forwardHash.(sprintf('i%g_',key))=count;
+            
+            index_dim = LevCell2index(nLev,nCell(ii,:));
+            inverseHash{count} = [key,index_dim];
+
                 
-                key(loc_dim)   = nlev;
-                key(Dim+loc_dim) = loc_cell;
-                key
-                
-                [loc_dim,loc_cell,count]
-                database.(sprintf('i%g_',key))=count;
-                
-                count=count+1;
-            end
+            count=count+1;
         end
+        
+        
     end
 end
 
-
 dof_sparse=count-1;
 
-database.Dim=Dim;
-% database.Deg=Deg;
-database.dof=dof_sparse;
-% database.Lev_1=Lev_1;
-% database.Lev_2=Lev_2;
-% database.Lev=min(Lev_1,Lev_2);
+forwardHash.Dim=Dim;
+forwardHash.dof=dof_sparse;
+forwardHash.Lev=Lev;
 
-function combs = nmultichoosek(values, k)
-%// Return number of multisubsets or actual multisubsets.
-if numel(values)==1
-    n = values;
-    combs = nchoosek(n+k-1,k);
+end
+
+function [M, I] = permn(V, N)
+%========================================================
+% Compute all N combinators with repetition from vector V
+% PERMN - permutations with repetition
+%========================================================
+
+nV = numel(V) ;
+
+if nV==0 || N == 0
+    M = zeros(nV,N) ;
+    I = zeros(nV,N) ;
+    
+elseif N == 1
+    % return column vectors
+    M = V(:) ;
+    I = (1:nV).' ;
 else
-    n = numel(values);
-    combs = bsxfun(@minus, nchoosek(1:n+k-1,k), 0:k-1);
-    combs = reshape(values(combs),[],k);
+    % this is faster than the math trick used for the call with three
+    % arguments.
+    [Y{N:-1:1}] = ndgrid(1:nV) ;
+    I = reshape(cat(N+1,Y{:}),[],N) ;
+    M = V(I) ;
+end
+end
+
+
+function cell = AllCell(Lev)
+%===================================================
+% Compute all the cell information from Lev
+% Lev is 1xDim array
+% cell is *xDim array, and each row corresponding to
+%       varying Lev(i), i=1~Dim
+%===================================================
+dim = length(Lev);
+
+nMax = zeros(1,dim);
+for ii =1:dim
+    nMax(ii) = max(0,2^max(0,Lev(ii)-1)-1);
+end
+nz = prod(nMax+1);
+    
+
+cell = zeros(nz,dim);
+for ii=1:dim
+    % Both of the following two methods can work
+    % Method 1
+    % tmp=repmat([0:nMax(ii)]',nz/(nMax(ii)+1),1);
+    % cell(:,ii)=tmp(:);
+    % Method 2
+    cell(:,ii)=repmat([0:nMax(ii)]',nz/(nMax(ii)+1),1);
+end
+
+end
+
+function index = LevCell2index(Lev,Cell)
+%=============================================================
+% for given Lev and Cell, determine Index
+% Input::  Lev is 1xDim; Cell is 1xDim
+% Output:: index is 1xDim
+%=============================================================
+dim = length(Lev);
+index = zeros(1,dim);
+for ii = 1:dim
+   if Lev(ii) == 0
+       index(ii) = 1;
+   else
+       index(ii)=2.^(Lev(ii)-1)+Cell(ii)+1;
+   end
+
+end
+
 end
 
 
