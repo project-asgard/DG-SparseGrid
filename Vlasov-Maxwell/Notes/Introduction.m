@@ -10,5 +10,9 @@
 % * <TimeDependentMatrices.html Algorithm 4 for Time-dependent matrices>
 % * <GlobalVlasov.html Algorithm 6 for global Vlasov equation>
 % * <TimeAdvance.html Algorithm 7 for time advance method>
-% * <PoissonMaxwellSolver.html Algorithm 8 for Poisson/Maxwell solver>
+% * Algorithm 8 for Poisson/Maxwell solver
+% ** <PoissonSolver.html Poisson solver;>
+% ** <MaxwellSolver.html Maxwell solver>
+
+
 
