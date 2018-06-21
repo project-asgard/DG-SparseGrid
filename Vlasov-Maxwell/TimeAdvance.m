@@ -1,5 +1,6 @@
 function f = TimeAdvance(A,f,dt)
 %-------------------------------------------------
+% Algorithm 7: Time Advance Methods
 % Time Advance Method
 % Input: Matrix:: A
 %        Vector:: f

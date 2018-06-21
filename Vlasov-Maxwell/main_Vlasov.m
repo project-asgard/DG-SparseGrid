@@ -7,11 +7,13 @@
 % Vlasov Equation with Maxwell solver:
 % (1). f_t + v*grad_x f + (E+B)*grad_v f=0;
 % (2). Maxwell Eq.
-% Input: Solver = 'VM' -- Vlasov Maxwell Solver
-%                 'VP' -- Vlasov Poisson Solver
-%        pde = choosing your test from folder "PDE"
-%       DimX = (Dim_x1,Dim_x2,Dim_x3)
-%                DimV = (Dim_v1,Dim_v2,Dim_v3)
+% Input: 
+%           Solver = 'VM' -- Vlasov Maxwell Solver
+%                   'VP' -- Vlasov Poisson Solver
+%           pde = choosing your test from folder "PDE"
+%           DimX = (Dim_x1,Dim_x2,Dim_x3)
+%           DimV = (Dim_v1,Dim_v2,Dim_v3)
+% The documentation is located at ./Doc/html/Introduction.html
 %**************************************************************************
 clc
 clear
@@ -21,7 +23,7 @@ format short e
 
 %------- Input Parameters
 Solver = 'VP';
-
+pde = VlasovPoisson4;
 
 addpath(genpath(pwd))
 
@@ -39,15 +41,21 @@ addpath(genpath(pwd))
 % rho: initial value of int_v fdv
 % Maxwell coefficients: nu and eps
 %=============================================================
+%**************************
 % Test PDE and Ending Time
-if Solver == 'VM'
-    pde = VlasovMaxwell1;
+%**************************
+if Solver == 'VM' 
+    if isempty('pde')==0
+        pde = VlasovMaxwell1;
+    end
     Vmax = pde.Vmax;
     Lmax = pde.Lmax;
     TEND = 10;
     
-elseif Solver == 'VP'
-    pde = VlasovPoisson4;
+elseif Solver == 'VP' 
+    if isempty('pde')==0
+        pde = VlasovPoisson4;
+    end
     Vmax = pde.Vmax;
     Lmax = pde.Lmax;
     TEND = 10;
@@ -55,27 +63,38 @@ elseif Solver == 'VP'
 
 end
 
+%*********************
 % For dimensionality
+%*********************
 if pde.DimV == 1
     Cv2=0;Cv3=0;
 end
-if pde.DimX ==1 && Solver == 'VP'
+if (pde.DimX ==1) 
+    if (Solver == 'VP')
     Cx2=0;Cx3=0;
-elseif pde.DimX ==1 && Solver == 'VM'
+
+    elseif (Solver == 'VM')
     Cx1=0;Cx3=0;
+    end
 end
 
 % Dimensionality
 Dim = pde.DimX+pde.DimV;
 
+%*********************
 % Level information
+%*********************
 Lev = 3;
 
-
+%*********************
 % Polynomial Degree
+%*********************
 Deg = 2;% Deg = 2 Means Linear Element
 
+%*************************************
 % Time step
+% Need future effort for CFL condition
+%*************************************
 dt = Lmax/2^Lev/Vmax/(2*Deg+1);
 
 %*************************************************
@@ -108,7 +127,8 @@ InCond = Intial_Con(Lev,Deg,Lmax,Vmax,pde,...
 % Generate the Initial Condition w.r.t Grids
 % needs some work over here!!
 %%fval = fv(HashInv.x1).*fx(HashInv.x2);
-clear fv fx
+% % finit = Initial_Con_Grid(HASH,inverseHash,InCond);
+% % clear fv fx
 
 
 %=============================================================
@@ -124,9 +144,11 @@ clear fv fx
 % Input: LevX, LevV, k, dim, Lmax, Vmax
 % Output: 2D Matrices--vMassV,GradV,GradX,DeltaX
 %=============================================================
-[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(Lev,Deg,Lmax,Vmax,...
-    FMWT_COMP_x,FMWT_COMP_v);
+% [vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(Lev,Deg,Lmax,Vmax,...
+%     FMWT_COMP_x,FMWT_COMP_v);
+Matrix_TI=matrix_coeff_TI_v2(Lev,Deg,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v);
 
+return
 % Generate A_encode for Time-independent Matrix
 A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
 

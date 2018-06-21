@@ -1,5 +1,6 @@
 function EMassX=matrix_coeff_TD(Lev_x,k,Lmax,EE,FMWT_COMP_x)
 %=============================================================
+% Algorithm 4: Time-dependent Matrices
 % Generate time-dependent coefficient matrix
 % Vlasolv Solver:   
 %   Operators:  EMassX: int_x E(x)*m_i(x)*m_j(x)dx

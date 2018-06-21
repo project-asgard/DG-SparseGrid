@@ -1,8 +1,10 @@
-function [forwardHash,inverseHash]=HashTable(Lev,Dim)
+function [forwardHash,inverseHash]=HashTable(maxLev,Dim)
 %---------------------------------------------------------
+% Algorithm 2. Creating HashTable
 % Matlab Version of
-% Generate Dim-dimension Hash Table s.t sum(n(1:Dim))<=Lev
-% Input: Lev:: Level information 
+% Generate Dim-dimension Hash Table 
+%       s.t sum(n(1:Dim))<=maxLev
+% Input: maxLev:: Level information 
 %        Dim:: Dimensionality
 % Output: forwardHash:: HashTable
 %         inverseHash:: Inverse Looking up for Hash
@@ -11,14 +13,14 @@ function [forwardHash,inverseHash]=HashTable(Lev,Dim)
 forwardHash=struct();
 inverseHash={};
 
-% All combinations from choosing Dim numbers from vector [0:Lev]
-combs = permn(0:Lev, Dim);
+% All combinations from choosing Dim numbers from vector [0:maxLev]
+combs = permn(0:maxLev, Dim);
 nLev = zeros(1,Dim);
 
 key = zeros(1,2*Dim);
 count = 1;
 for i = 1:size(combs,1)
-    if sum(combs(i,:))<=Lev
+    if sum(combs(i,:))<=maxLev
         nLev = combs(i,:);
         nCell = AllCell(nLev);
         nz = size(nCell,1);
@@ -42,7 +44,7 @@ dof_sparse=count-1;
 
 forwardHash.Dim=Dim;
 forwardHash.dof=dof_sparse;
-forwardHash.Lev=Lev;
+forwardHash.Lev=maxLev;
 
 end
 

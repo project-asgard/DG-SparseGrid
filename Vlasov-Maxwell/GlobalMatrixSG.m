@@ -1,5 +1,7 @@
 function A_encode=GlobalMatrixSG(A,B,Hash)
-
+%=========================================
+% Algorithm 5: Global Assembling
+%=========================================
 % save the submatrix and apply A_encode to vector f
 count=0;
 %=====================================================

@@ -1,5 +1,6 @@
-function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+function [vMassV,GradV,GradX,DeltaX,NGradX,PGradX]=matrix_coeff_TI(Lev,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=============================================================
+% Algorithm 3:: Time-independent Matrices
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
 %   Operators:  vMassV: int_v v*l_i(v)*l_j(v)dv

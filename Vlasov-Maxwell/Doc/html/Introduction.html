@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Introduction of SG-DG</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-06-20"><meta name="DC.source" content="Introduction.m"><style type="text/css">
+      --><title>Sparse Grids Discontinous Galerkin Methods for Kinetic Equations</title><meta name="generator" content="MATLAB 9.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-06-21"><meta name="DC.source" content="Introduction.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,24 +66,44 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Introduction of SG-DG</h1><p>SG-DG is a MATLAB software package for solving Vlasov Maxwell/Poisson equations</p><div><ul><li><a href="NotesVM.html">Introduction of Vlasov equations</a></li><li><a href="WeakForms.html">Numerical Schemes</a></li><li><a href="HashTable.html">Algorithm 2 for HashTable</a></li><li><a href="TimeIndependentMatrices.html">Algorithm 3 for Time-independent matrices</a></li><li><a href="TimeDependentMatrices.html">Algorithm 4 for Time-dependent matrices</a></li><li><a href="GlobalVlasov.html">Algorithm 6 for global Vlasov equation</a></li><li><a href="TimeAdvance.html">Algorithm 7 for time advance method</a></li><li>Algorithm 8 for Poisson/Maxwell solver  <a href="PoissonSolver.html">Poisson solver;</a>  <a href="MaxwellSolver.html">Maxwell solver</a></li></ul></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017a</a><br></p></div><!--
+  </style></head><body><div class="content"><h1>Sparse Grids Discontinous Galerkin Methods for Kinetic Equations</h1><!--introduction--><p>SG-DG is a MATLAB software package for solving Vlasov Maxwell/Poisson equations:</p><p><img src="Introduction_eq03832058789794269072.png" alt="$$\frac{\partial f}{\partial t}+v\nabla_{x} f+F\cdot\nabla_{v}f = 0$$" style="width:125px;height:24px;"></p><p>where <img src="Introduction_eq13613105756609965536.png" alt="$f({\bf x},{\bf v},t)$" style="width:41px;height:11px;">, and <img src="Introduction_eq12726268460873931163.png" alt="$F={\bf E}+{\bf v}\times{\bf B}$" style="width:74px;height:9px;"> (Maxwell Equation) or <img src="Introduction_eq13774263864841295291.png" alt="$F={\bf E}$" style="width:31px;height:8px;"> (Poisson Equation).</p><p>This code is based on the general dimensionality, for example 1X1V, 1X2V, and 3X3V systems.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Section 1. Introduction</a></li><li><a href="#2">Section 2. Numerical Schemes</a></li><li><a href="#3">Section 3. HashTable</a></li><li><a href="#4">Set initial conditions based on the HashTable</a></li><li><a href="#5">Section 4. Time-independent Matrices</a></li><li><a href="#6">Section 5. Time-dependent Matrices</a></li><li><a href="#7">Section 6. Global Vlasov Equation</a></li><li><a href="#8">Section 7. Time Stepping Method</a></li><li><a href="#9">Section 8. Poisson/Maxwell Solver</a></li><li><a href="#10">Poisson Solver</a></li><li><a href="#11">Maxwell Solver</a></li></ul></div><h2 id="1">Section 1. Introduction</h2><p><a href="NotesVM.html">Introduction of Vlasov Maxwell/Poisson equations</a></p><h2 id="2">Section 2. Numerical Schemes</h2><p><a href="WeakForms.html">Weak Forms for VM and VP equations</a></p><h2 id="3">Section 3. HashTable</h2><p><a href="HashTable.html">Algorithm 2---HashTable</a></p><h2 id="4">Set initial conditions based on the HashTable</h2><p><a href="InitialCondition.html">Initial Conditions</a></p><h2 id="5">Section 4. Time-independent Matrices</h2><p><a href="TimeIndependentMatrices.html">Algorithm 3---Time-independent matrices</a></p><h2 id="6">Section 5. Time-dependent Matrices</h2><p><a href="TimeDependentMatrices.html">Algorithm 4---Time-dependent matrices</a></p><h2 id="7">Section 6. Global Vlasov Equation</h2><p><a href="GlobalVlasov.html">Algorithm 6---global Vlasov equation</a></p><h2 id="8">Section 7. Time Stepping Method</h2><p><a href="TimeAdvance.html">Algorithm 7---time advance method</a></p><h2 id="9">Section 8. Poisson/Maxwell Solver</h2><h2 id="10">Poisson Solver</h2><p><a href="PoissonSolver.html">Poisson solver</a></p><h2 id="11">Maxwell Solver</h2><p><a href="MaxwellSolver.html">Maxwell solver</a></p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
-%% Introduction of SG-DG
+%% Sparse Grids Discontinous Galerkin Methods for Kinetic Equations
 %
 % SG-DG is a MATLAB software package for solving Vlasov Maxwell/Poisson 
-% equations
+% equations:
 %
-% * <NotesVM.html Introduction of Vlasov equations> 
-% * <WeakForms.html Numerical Schemes>
-% * <HashTable.html Algorithm 2 for HashTable>
-% * <TimeIndependentMatrices.html Algorithm 3 for Time-independent matrices>
-% * <TimeDependentMatrices.html Algorithm 4 for Time-dependent matrices>
-% * <GlobalVlasov.html Algorithm 6 for global Vlasov equation>
-% * <TimeAdvance.html Algorithm 7 for time advance method>
-% * Algorithm 8 for Poisson/Maxwell solver
-% ** <PoissonSolver.html Poisson solver;>
-% ** <MaxwellSolver.html Maxwell solver>
+% $$\frac{\partial f}{\partial t}+v\nabla_{x} f+F\cdot\nabla_{v}f = 0$$
+% 
+% where $f({\bf x},{\bf v},t)$, and $F={\bf E}+{\bf v}\times{\bf B}$
+% (Maxwell Equation) or $F={\bf E}$ (Poisson Equation).
+%
+% This code is based on the general dimensionality, for example
+% 1X1V, 1X2V, and 3X3V systems.
+% 
 
+
+%% Section 1. Introduction
+% <NotesVM.html Introduction of Vlasov Maxwell/Poisson equations>
+%% Section 2. Numerical Schemes
+% <WeakForms.html Weak Forms for VM and VP equations>
+%% Section 3. HashTable
+% <HashTable.html Algorithm 2REPLACE_WITH_DASH_DASH-HashTable>
+%%% Set initial conditions based on the HashTable
+% <InitialCondition.html Initial Conditions>
+%% Section 4. Time-independent Matrices
+% <TimeIndependentMatrices.html Algorithm 3REPLACE_WITH_DASH_DASH-Time-independent matrices>
+%% Section 5. Time-dependent Matrices
+% <TimeDependentMatrices.html Algorithm 4REPLACE_WITH_DASH_DASH-Time-dependent matrices>
+%% Section 6. Global Vlasov Equation
+% <GlobalVlasov.html Algorithm 6REPLACE_WITH_DASH_DASH-global Vlasov equation>
+%% Section 7. Time Stepping Method
+% <TimeAdvance.html Algorithm 7REPLACE_WITH_DASH_DASH-time advance method>
+%% Section 8. Poisson/Maxwell Solver
+%%% Poisson Solver
+% <PoissonSolver.html Poisson solver>
+%%% Maxwell Solver
+% <MaxwellSolver.html Maxwell solver>
 
 
 
