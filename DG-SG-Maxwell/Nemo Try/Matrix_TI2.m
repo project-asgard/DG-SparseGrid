@@ -54,23 +54,22 @@ for Lx=0:nx-1
     p=Deg*(Lx-1)+1:Deg*Lx;
     l=Deg*(Lx+1)+1:Deg*(Lx+2);
     
-    val=1/hx*[-p_1'*p_0/2,  -p_1'*p_0/2,   p_1'*p_2,...    % for x1
-               p_2'*p_0/2,   p_2'*p_0/2,  -p_2'*p_2];     % for x2
+    val=1/hx*[-p_1'*p_2,p_2'*p_2];     
 
     
-    Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+    Iv=[meshgrid(c)',meshgrid(c)'];
     
     if Lx<nx-1 && Lx>0
         
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l),meshgrid(c),meshgrid(c)];
+        Iu=[meshgrid(p),meshgrid(c)];
     
     elseif Lx==0
         
-        Iu=[meshgrid([Deg*(nx-1)+1:Deg*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l),meshgrid(c),meshgrid(c)];
+        Iu=[meshgrid([Deg*(nx-1)+1:Deg*(nx)]),meshgrid(c)];
    
     elseif Lx==nx-1
         
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:Deg]),meshgrid(c),meshgrid(c)];
+        Iu=[meshgrid(p),meshgrid(c)];
     
     end
     
