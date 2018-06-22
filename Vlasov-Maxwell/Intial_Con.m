@@ -22,9 +22,10 @@ nx = 2^(Lev);hx = Lmax/nx;
 Jacobi_x = hx;
 dof_1D_x = k*nx;
 f_x = zeros(dof_1D_x,pde.DimX);
+
 if Solver == 'VM'
-    E_0 = zeros(dof_1D_x,pde.E_Dim);
-    B_0 = zeros(dof_1D_x,pde.B_Dim);
+    E_0 = zeros(dof_1D_x*pde.E_Dim,pde.DimX);
+    B_0 = zeros(dof_1D_x*pde.B_Dim,pde.DimX);
 end
 
 

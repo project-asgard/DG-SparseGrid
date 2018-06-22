@@ -70,15 +70,11 @@
 %
 % * Poisson equations are solved for each time step. When the solution $f_h^{n}$
 % is derived, we shall compute ${\bf E}_h^{n+1}=\nabla\phi({\bf x})$.
-% * Note:: This calculation is based on the full grids of scaling
-% functions.
 %%% Maxwell Solver
 % <MaxwellSolver.html Maxwell solver>
 %
 % * Maxwell equations are solved for each time step. When the solution $f_h^{n}$
 % is derived, we shall do time involution for ${\bf E}_h^{n+1},{\bf B}_h^{n+1}$
-% from the solutions of last time step ${\bf E}_h^{n},{\bf B}_h^{n}$.
-% * Note:: This calculation is based on the full grids of scaling
-% functions.
+% fro
 
 
