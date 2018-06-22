@@ -178,7 +178,7 @@ for T=1:MaxT
 
     bbb=MaxRhs*sin(omega*time);
 
-    MaxSol = TimeAdvance(MaxMat,MaxSol,dt,bbb);
+    MaxSol = TimeAdvance(-MaxMat,MaxSol,dt,bbb);
     
 end
 

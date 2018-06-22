@@ -83,8 +83,11 @@ for Lx=0:nx-1
     Grad2X=Grad2X+sparse(Iv,Iu2,val2,dof_1D_x,dof_1D_x);
     
 end
-
-
+figure;
+subplot(1,2,1)
+spy(Grad1X)
+subplot(1,2,2)
+spy(Grad2X)
 Grad1X = FMWT_COMP_x*Grad1X*FMWT_COMP_x';
 Grad2X = FMWT_COMP_x*Grad2X*FMWT_COMP_x';
 

@@ -11,7 +11,7 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 4;
+Lev = 7;
 Deg = 2;
 Dim = 3;
 

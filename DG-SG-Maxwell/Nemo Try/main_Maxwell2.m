@@ -11,7 +11,7 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 4;
+Lev = 2;
 Deg = 2;
 Dim = 3;
 
@@ -69,3 +69,4 @@ time=dt*MaxT;
 u_s=[E_s*cos(pde.w*time);B_s*sin(pde.w*time)];
 
 full([Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+full([sol_n u_s])
