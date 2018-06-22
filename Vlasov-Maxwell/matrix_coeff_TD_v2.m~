@@ -1,4 +1,4 @@
-function EMassX=matrix_coeff_TD(Lev_x,k,Lmax,EE,FMWT_COMP_x)
+function EMassX=matrix_coeff_TD_v2(Lev_x,k,Lmax,EE,FMWT_COMP_x)
 %=============================================================
 % Algorithm 4: Time-dependent Matrices
 % Generate time-dependent coefficient matrix
@@ -17,6 +17,7 @@ quad_num=10;
 [quad_x,quad_w]=lgwt(quad_num,-1,1);
 p_val = legendre(quad_x,k);
 
+EMassX
 
 %---------------------------
 % Jacobi of variable x and v

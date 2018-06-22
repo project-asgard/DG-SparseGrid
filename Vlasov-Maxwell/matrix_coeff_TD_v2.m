@@ -1,4 +1,4 @@
-function EMassX=matrix_coeff_TD(Lev_x,k,Lmax,EE,FMWT_COMP_x)
+function EMassX=matrix_coeff_TD_v2(Lev_x,k,Lmax,EE,FMWT_COMP_x)
 %=============================================================
 % Algorithm 4: Time-dependent Matrices
 % Generate time-dependent coefficient matrix
@@ -18,6 +18,7 @@ quad_num=10;
 p_val = legendre(quad_x,k);
 
 
+
 %---------------------------
 % Jacobi of variable x and v
 % Define Matrices
@@ -26,7 +27,10 @@ nx=2^(Lev_x);hx=Lmax/nx;
 Jacobi_x=hx;
 dof_1D_x=k*nx;
 
-EMassX=sparse(dof_1D_x,dof_1D_x);
+% EMassX=sparse(dof_1D_x,dof_1D_x);
+
+EMassX = sparse(dof_1D_x,dof_1D_x,dof_1D_x);
+
 
 %===================================
 % Convert E to the DG scaling basis

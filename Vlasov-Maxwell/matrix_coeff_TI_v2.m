@@ -1,4 +1,4 @@
-function Matrix_TI=matrix_coeff_TI_v2(Lev,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+function Matrix=matrix_coeff_TI_v2(Lev,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=============================================================
 % Algorithm 3:: Time-independent Matrices
 % Generate time-independent coefficient matrices
@@ -12,9 +12,8 @@ function Matrix_TI=matrix_coeff_TI_v2(Lev,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 % Choose Cval for upwinding or alternating flux
 % P.S. This is the full-grid version
 %=============================================================
-Matrix_TI = struct();
+Matrix = struct();
 
-Cval = 1/2;
 
 %--Quadrature
 quad_num=10;
@@ -91,16 +90,7 @@ GradXFluxJ = GradXFluxJ...
 % GradX denote the flux is taken as \hat{u}={u}
 PGradX = GradX+GradXFluxC+GradXFluxJ/2;
 NGradX = GradX+GradXFluxC-GradXFluxJ/2;
-GradX = GradX+GradXFluxC;
-
-% % DeltaX =[speye(dof_1D_x),PGradX;...
-% %          NGradX,zeros(dof_1D_x)];
-% % % Handle B.C. for Poisson solver
-% % DeltaX(dof_1D_x+1,:)=0;
-% % DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
-% % 
-% % DeltaX(end,:)=0;
-% % DeltaX(end,end-k+[1:k])=sqrt(1/hx)*legendre(1,k);     
+ GradX = GradX+GradXFluxC;
 
 %======================================
 % Matrices related to v variable
@@ -138,5 +128,5 @@ GradV = FMWT_COMP_v*GradV*FMWT_COMP_v';
 % %                 DeltaX*...
 % %          blkdiag(FMWT_COMP_x',FMWT_COMP_x');
 
-Matrix_TI = struct('GradX',GradX,'NGradX',NGradX,'PGradX',PGradX,...
-    'GradV',GradV,'vMassV',vMassV);
+Matrix = struct('GradX',GradX,'NGradX',NGradX,'PGradX',PGradX,...
+                'GradV',GradV,'vMassV',vMassV);
