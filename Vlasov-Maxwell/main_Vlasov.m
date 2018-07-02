@@ -20,6 +20,7 @@ clear
 close all
 format short e
 
+addpath(genpath(pwd))
 
 %------- Input Parameters
 Solver = 'VP';
