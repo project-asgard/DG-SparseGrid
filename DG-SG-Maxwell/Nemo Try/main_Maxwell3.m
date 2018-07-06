@@ -61,7 +61,7 @@ Con1D=Connect1D(Lev);
 [b_s,E_s,B_s]=GlobalRHS(Deg,F_1D,E_1D,B_1D,InvHash);
 
 %% Maxwell Solver
-[Eh,Bh] = MaxwellSolver3(Lev,Deg,Hash,InvHash,Con1D,Grad1X,Grad2X,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
+[Eh,Bh] = MaxwellSolver4(Lev,Deg,Hash,InvHash,Con1D,Grad1X,Grad2X,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
 sol_n=[Eh;Bh];
 
 %% Error Estimate
