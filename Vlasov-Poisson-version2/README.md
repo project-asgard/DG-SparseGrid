@@ -5,7 +5,7 @@ in the 2D setting (1x1v).
 
 ### Run after cloning
 
-> run main_Vlasov.m
+> runtests('fk6d_test.m')
 
 ### Run other tests and Modifying the parameters
 
