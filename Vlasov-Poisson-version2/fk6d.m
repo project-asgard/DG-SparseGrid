@@ -112,7 +112,7 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 %%% specified in PDE. 
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
-
+f0 = fval;
 clear fv fx
 
 %% Step 3. Generate time-independent coefficient matrices
@@ -234,8 +234,12 @@ for L = 1:floor(TEND/dt)
         % Write the A_data structure components for use in HPC version.
         write_A_data = 1;
         if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
-        
-        fval = TimeAdvance(A_data,fval, dt,compression,Deg);
+            if pde.IsExactE == 0
+                fval = TimeAdvance(A_data,fval, dt,compression,Deg);
+            else
+                source = f0*exp(-dt*L);
+                fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
+            end
         
     end
     
