@@ -32,15 +32,15 @@ addpath(genpath(pwd))
 
 pde = Vlasov4;
 Vmax = pde.Vmax;
-Lmax = pde.Lmax;
+Lmax = 1;%pde.Lmax;
 TEND = 10;
 
 % Level information
-Lev = 3;
+Lev = 4;
 LevX = Lev;LevV = Lev;
 
 % Polynomial Degree
-Deg = 2;% Deg = 2 Means Linear Element
+Deg = 3;% Deg = 2 Means Linear Element
 
 % Dimensionality
 Dim = 2;
@@ -155,7 +155,7 @@ view(0,90)
 colorbar
 
 count=1;
-% return
+return
 
 for L = 1:floor(TEND/dt)
     %=============================================================

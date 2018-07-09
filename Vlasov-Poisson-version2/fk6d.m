@@ -201,7 +201,11 @@ for L = 1:floor(TEND/dt)
     
     %%% Solve Poisson to get E from 1-rho=1-int f dv.
     if ~quiet; disp('    [a] Solve poisson'); end
-    E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+        if ~pde.exactE
+            E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+        else % projection of exact E %% need test
+            E = ProjCoef2Wav(LevX,Deg,Lmax,FMWT_COMP_x,pde.exactE);
+        end
     
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
