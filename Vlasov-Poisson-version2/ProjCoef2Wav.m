@@ -48,11 +48,11 @@ for i=0:nx-1
     
 end
 
-plot(x_node,Meval_x*f_x,'r-o',x_node,func(x_node),'b--')
+% plot(x_node,Meval_x*f_x,'r-o',x_node,func(x_node),'b--')
 % Transfer to multi-DG bases
 
 FF = mtimes( FMWT_COMP_x, f_x );
-figure
-plot(x_node,Meval_x*FMWT_COMP_x'*FF,'r-o',x_node,func(x_node),'b--')
+% figure
+% plot(x_node,Meval_x*FMWT_COMP_x'*FF,'r-o',x_node,func(x_node),'b--')
 
 end

@@ -1,4 +1,4 @@
-function tests = fk6d_test()
+function tests = fk6d_test_PDE7()
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
   if (isOctave),
@@ -9,8 +9,8 @@ isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
     reporting_level = 'verbose';
     reporting_level = 'normal';
   
-    [n,nmax,nxfail,nskip] = test( 'fk6d_vlasov4_check', reporting_level);
-
+%     [n,nmax,nxfail,nskip] = test( 'fk6d_vlasov4_check', reporting_level);
+    [n,nmax,nxfail,nskip] = test( 'fk6d_vlasov7_check', reporting_level);
     disp(sprintf('%d tests were executed', nmax));
     disp(sprintf('%d tests passed ',n));
     disp(sprintf('%d tests failed ', nxfail));
@@ -25,20 +25,20 @@ isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
 end
 
-function fk6d_vlasov4_compression0_test(testCase)
+function fk6d_vlasov7_compression0_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing with vlasov4 (compression==0)');
+disp('Testing with vlasov7 (compression==0)');
 
 quiet = 1;
 lev = 3;
 deg = 2;
 TEND = 1;
 compression = 0;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+act_f = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
 
-load('tests/vlasov4/solution.mat');
+load('tests/vlasov7/solution.mat');
 
 exp_f = fval;
 
@@ -47,20 +47,20 @@ verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 end
 
 
-function fk6d_vlasov4_compression1_test(testCase)
+function fk6d_vlasov7_compression1_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing with vlasov4 (compression==1)');
+disp('Testing with vlasov7 (compression==1)');
 
 quiet = 1;
 lev = 3;
 deg = 2;
 TEND = 1;
 compression = 1;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+act_f = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
 
-load('tests/vlasov4/solution.mat');
+load('tests/vlasov7/solution.mat');
 
 exp_f = fval;
 
@@ -68,20 +68,20 @@ verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 
 end
 
-function fk6d_vlasov4_compression2_test(testCase)
+function fk6d_vlasov7_compression2_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing with vlasov4 (compression==2)');
+disp('Testing with vlasov7 (compression==2)');
 
 quiet = 1;
 lev = 3;
 deg = 2;
 TEND = 1;
 compression = 2;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+act_f = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
 
-load('tests/vlasov4/solution.mat');
+load('tests/vlasov7/solution.mat');
 
 exp_f = fval;
 
@@ -89,20 +89,20 @@ verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 
 end
 
-function fk6d_vlasov4_compression3_test(testCase)
+function fk6d_vlasov7_compression3_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing with vlasov4 (compression==3)');
+disp('Testing with vlasov7 (compression==3)');
 
 quiet = 1;
 lev = 3;
 deg = 2;
 TEND = 1;
 compression = 3;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+act_f = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
 
-load('tests/vlasov4/solution.mat');
+load('tests/vlasov7/solution.mat');
 
 exp_f = fval;
 
@@ -110,20 +110,20 @@ verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 
 end
 
-function fk6d_vlasov4_compression4_test(testCase)
+function fk6d_vlasov7_compression4_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing with vlasov4 (compression==4)');
+disp('Testing with vlasov7 (compression==4)');
 
 quiet = 1;
 lev = 3;
 deg = 2;
 TEND = 1;
 compression = 4;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+act_f = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
 
-load('tests/vlasov4/solution.mat');
+load('tests/vlasov7/solution.mat');
 
 exp_f = fval;
 
@@ -131,9 +131,5 @@ verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 
 end
 
-%!test fk6d_vlasov4_compression0_test(1)
-%!test fk6d_vlasov4_compression1_test(2)
-%!test fk6d_vlasov4_compression2_test(3)
-%!test fk6d_vlasov4_compression3_test(4)
-%!test fk6d_vlasov4_compression4_test(5)
+
 

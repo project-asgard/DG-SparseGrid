@@ -4,9 +4,9 @@ function pde=Vlasov7
 % need to check whether E is correct
 
 % parameters
-k_0=0.5; % k_0=2*pi/Lmax
-A=0.5;%k_0;
-Vmax=5;Lmax=4*pi;
+k_0=0.5; 
+A=1;
+Vmax=1;Lmax=1;
 
 params.k_0 = k_0;
 params.A = A;
@@ -20,6 +20,7 @@ pde.Ex = @Ex;
 pde.Et = @Et;
 pde.E = @E;
 pde.rho = @rho;
+pde.IsExactE = IsExactE;
 pde.exactE = @exactE;
 pde.params = params;
 
@@ -35,8 +36,7 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-%         f=(1+0.3*cos(k_0*x))/sqrt(2*pi);
-        f=(1+A*cos(k_0*x));
+        f=cos(2*pi*x);
     end
 
     function f=Fv_0(v, params)
@@ -47,7 +47,7 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-        f=exp(-v.^2/2)/sqrt(2*pi);
+        f=exp(-k_0*v.^2/2);
     end
     function f=Fxv_0(x,v, params)
         A = params.A;
@@ -63,9 +63,7 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-
-        % f=-k_0*sin(k_0*x)*exp(-k_0*t^2/2);
-        f=-k_0*sin(k_0*x);
+        f=-2*pi/k_0*tan(2*pi*x);
     end
     function f=Et(t, params)
         A = params.A;
@@ -73,7 +71,7 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-        f=exp(-k_0*t^2/2);
+        f=t-t+1;
     end
     function f=E(x,t, params)
         A = params.A;
@@ -89,21 +87,26 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-        f=Fv_0(v).*(1+A*cos(k_0*(x-v*t)));
+        f=exp(-t)*exp(-k_0*v.^2/2).*cos(2*pi*x);
     end
     function f=rho(x,t, params)
+    % we do note use rho in this test, so I just write a arbitrary function
         A = params.A;
         k_0 = params.k_0;
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-       f=1+exp(-k_0^2*t.^2/2)*A.*cos(k_0*x);
+       f=x-x+1;
     end
-    function f=exactE(x,t, params)
-        A = params.A;
-        k_0 = params.k_0;
-        Lmax = params.Lmax;
-        Vmax = params.Vmax;
+    function f=IsExactE
+        % IsExactE = 1 means given function for E
 
-        f=Ex(x).*Et(t);
+        f=1;
     end
+    function f = exactE(x)
+    % Exact solution for E
+        k_0 = 0.5;
+        f=-2*pi/k_0*tan(2*pi*x);
+    end
+
+    

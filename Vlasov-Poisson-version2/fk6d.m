@@ -34,7 +34,8 @@ addpath(genpath(pwd))
 
 if ~exist('pde','var') || isempty(pde)
     % Equation setup
-    pde = Vlasov4;
+%     pde = Vlasov4;
+    pde = Vlasov7;
 end
 if ~exist('TEND','var') || isempty(TEND)
     % End time
@@ -201,9 +202,9 @@ for L = 1:floor(TEND/dt)
     
     %%% Solve Poisson to get E from 1-rho=1-int f dv.
     if ~quiet; disp('    [a] Solve poisson'); end
-        if ~pde.exactE
+        if pde.IsExactE == 0 % solve the Poisson equation with rho
             E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
-        else % projection of exact E %% need test
+        else % projection of exact E 
             E = ProjCoef2Wav(LevX,Deg,Lmax,FMWT_COMP_x,pde.exactE);
         end
     

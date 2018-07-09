@@ -21,6 +21,7 @@ pde.Ex = @Ex;
 pde.Et = @Et;
 pde.E = @E;
 pde.rho = @rho;
+pde.IsExactE = IsExactE;
 pde.params = params;
 
 % pde = struct('k_0',k_0,'Fx_0',@Fx_0,'Fv_0',@Fv_0,'Fxv_0',@Fxv_0,'Ex',@Ex,...
@@ -114,5 +115,8 @@ end
         Vmax = params.Vmax;
 
         f= -A*cos(k_0*x).*exp(-k_0*t);
+    end
+    function f=IsExactE
+        f = 0;
     end
 
