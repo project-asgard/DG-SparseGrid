@@ -15,21 +15,29 @@
 \newtheorem{defn}[thm]{Definition}
 \newtheorem{lem}[thm]{Lemma}
 %opening
-\title{Vlasov Equation-PDE7}
-\author{Lin Mu}
+\title{Vlasov Equation Test-Vlasov7}
+\author{}
+\date{}
 
 \begin{document}
 
 \maketitle
 
 
-\section{Vlasov7}
+\section{Test Case for Vlasov7}
 We consider the model problems
 \begin{equation}
 \frac{\partial f}{\partial t}+v\frac{\partial f}{\partial x}+E(x)\frac{\partial f}{\partial v}=g(x,v,t),
 \end{equation}
 with 
-$$f(x,v,t)=e^{-t}e^{-\frac{k_0v^2}{2}}\cos(2*pi*x)$$
+$$f(x,v,t)=e^{-t}e^{-\frac{k_0v^2}{2}}\cos(2\pi x).$$
+Here we have
+\begin{eqnarray}
+\frac{\partial f}{\partial t}&=&-e^{-t}e^{-\frac{k_0v^2}{2}}\cos(2\pi x),\\
+v\frac{\partial f}{\partial x}&=&-2\pi v e^{-t}e^{-\frac{k_0v^2}{2}}\sin(2\pi x),\\
+E\frac{\partial f}{\partial v}&=& -k_0 v Ee^{-t}e^{-\frac{k_0v^2}{2}}\cos(2\pi x),\\
+\mbox{ and thus } g(x,v,t)&=& \bigg(-\cos(2\pi x)-2\pi v \sin(2\pi x)-k_0 v E(x)\cos(2\pi x)\bigg)e^{-t}e^{-\frac{k_0v^2}{2}}.
+\end{eqnarray}
 
 
 \end{document}

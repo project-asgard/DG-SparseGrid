@@ -113,8 +113,7 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
 f0 = fval;
-fend = f0*dt*floor(TEND/dt);
-save('exactf.mat','fend')
+s
 clear fv fx
 
 %% Step 3. Generate time-independent coefficient matrices
@@ -239,7 +238,7 @@ for L = 1:floor(TEND/dt)
             if pde.IsExactE == 0
                 fval = TimeAdvance(A_data,fval, dt,compression,Deg);
             else
-                source = -f0*exp(-dt*L);
+                source = f0*exp(-dt*L);
                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
             end
         

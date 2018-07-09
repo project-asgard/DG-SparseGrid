@@ -23,6 +23,9 @@ function isok = fk6d_vlasov7_check(testCase)
   end;
   
   act_f = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+  save('exactf2.mat','act_f')
+  % projection of exact solution
+  
 
   load('tests/vlasov7/solution.mat');
   exp_f = fval;
