@@ -1,0 +1,35 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+% packages you might need
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[dvips]{graphicx}
+\usepackage{bm}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\numberwithin{equation}{section}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{lem}[thm]{Lemma}
+%opening
+\title{Vlasov Equation-PDE7}
+\author{Lin Mu}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Vlasov7}
+We consider the model problems
+\begin{equation}
+\frac{\partial f}{\partial t}+v\frac{\partial f}{\partial x}+E(x)\frac{\partial f}{\partial v}=g(x,v,t),
+\end{equation}
+with 
+$$f(x,v,t)=e^{-t}e^{-\frac{k_0v^2}{2}}\cos(2*pi*x)$$
+
+
+\end{document}
