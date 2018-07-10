@@ -1,5 +1,5 @@
 function [fval] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
-
+% need cleaning up
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
 %
