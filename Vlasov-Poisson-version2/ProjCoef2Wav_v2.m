@@ -1,4 +1,5 @@
-function f_coef_MWDG = ProjCoef2Wav_v2(Lev,Deg,Lmax,func)
+function f_coef_MWDG = ProjCoef2Wav_v2(Lev,Deg,Lstart,Lend,func)
+%f_coef_MWDG = ProjCoef2Wav_v2(Lev,Deg,Lmax,func)
 % projection from a given function to the Multiwavelet functions
 % Pro(func) = sum F_i*phi_i
 % FF = [F_i]
@@ -14,7 +15,7 @@ for j_x = 1:Deg
     end
 end
 
-quad_num = 10;
+quad_num = 20;
 [quad_x,quad_w] = lgwt(quad_num,-1,1);
 
 % Get the Legendre basis function evaluated at the Legendre-Gauss nodes up
@@ -30,9 +31,13 @@ for loc_lev = 0:Lev
     %--------------------------
     f_coef_DG = zeros(Deg*nx,1);
     for i = 0:nx-1
-        % Map quad_x from [-1,+1] to [0,LMax] physical domain.
-        hx = Lmax/nx;
-        xi_x = hx*(quad_x/2+1/2+i);
+        % Map quad_x from [-1,+1] to [Lstart,Lend] physical domain.
+        %hx = Lmax/nx;
+%         xi_x = hx*(quad_x/2+1/2+i);
+
+        hx = (Lend-Lstart)/nx;
+        xi_x = hx*(quad_x/2+1/2+i)+Lstart;
+        
         
         coef_DG = p_val*(quad_w.*func(xi_x))*hx*sqrt(1/hx)/2;
         
@@ -69,29 +74,29 @@ end
 
 % from MWDG to DG
 
-coef_DG_lowlev(1:Deg,1) = f_coef_MWDG(1:Deg);
-coef_DG(1:Deg,1)=coef_DG_lowlev;
-for loc_lev = 1:Lev
-    for i = 0:2^max(0,loc_lev-1)-1
-        
-        index_DG = Deg*i+[1:Deg];
-         index_MWDG1 = Deg*2^(loc_lev-1)+i*Deg+[1:Deg];
-        
-        index_DG1 = Deg*2*i+[1:Deg];
-        index_DG2 = Deg*2*i+Deg+[1:Deg];
-        
-        coef1 = coef_DG_lowlev(index_DG);
-        coef2 = f_coef_MWDG(index_MWDG1);
-        
-        coef = H0'*coef1+G0'*coef2;
-        coef_DG(index_DG1) = coef;
-                
-        coef = H1'*coef1+G1'*coef2;
-        coef_DG(index_DG2) = coef;
-    end
-    coef_DG_lowlev=coef_DG;
-end
+% % coef_DG_lowlev(1:Deg,1) = f_coef_MWDG(1:Deg);
+% % coef_DG(1:Deg,1)=coef_DG_lowlev;
+% % for loc_lev = 1:Lev
+% %     for i = 0:2^max(0,loc_lev-1)-1
+% %         
+% %         index_DG = Deg*i+[1:Deg];
+% %          index_MWDG1 = Deg*2^(loc_lev-1)+i*Deg+[1:Deg];
+% %         
+% %         index_DG1 = Deg*2*i+[1:Deg];
+% %         index_DG2 = Deg*2*i+Deg+[1:Deg];
+% %         
+% %         coef1 = coef_DG_lowlev(index_DG);
+% %         coef2 = f_coef_MWDG(index_MWDG1);
+% %         
+% %         coef = H0'*coef1+G0'*coef2;
+% %         coef_DG(index_DG1) = coef;
+% %                 
+% %         coef = H1'*coef1+G1'*coef2;
+% %         coef_DG(index_DG2) = coef;
+% %     end
+% %     coef_DG_lowlev=coef_DG;
+% % end
 
-[coef_DG f_coef_DG]
-plot(coef_DG- f_coef_DG)
+% % [coef_DG f_coef_DG]
+% % plot(coef_DG- f_coef_DG)
 end

@@ -112,9 +112,13 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 %%% specified in PDE. 
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
+
+% fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,0);%dt*floor(TEND/dt));
 f0 = fval;
-fend = f0*dt*floor(TEND/dt);
-save('exactf.mat','fend')
+fend = f0*exp(-floor(TEND/dt)*dt);
+% plot(f0-fend,'r-o')
+% fend = f0*dt*floor(TEND/dt);
+save('exactf.mat','fv','fx','fend','f0')
 clear fv fx
 
 %% Step 3. Generate time-independent coefficient matrices
@@ -207,7 +211,7 @@ for L = 1:floor(TEND/dt)
         if pde.IsExactE == 0 % solve the Poisson equation with rho
             E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
         else % projection of exact E 
-            E = ProjCoef2Wav(LevX,Deg,Lmax,FMWT_COMP_x,pde.exactE);
+            E = ProjCoef2Wav_v2(LevX,Deg,0,Lmax,pde.exactE);
         end
     
     %%% Generate EMassX time dependent coefficient matrix.
@@ -239,8 +243,11 @@ for L = 1:floor(TEND/dt)
             if pde.IsExactE == 0
                 fval = TimeAdvance(A_data,fval, dt,compression,Deg);
             else
-                source = ProCoef2SG(LevX,Deg,Lmax,FMWT_COMP_x,FMWT_COMP_v,pde);
+%                 source = ProCoef2SG(LevX,Deg,Lmax,FMWT_COMP_x,FMWT_COMP_v,pde);
+                source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
+                plot(fval-fend)
+                max(abs(fval-f0*exp(-dt*L)))
             end
         
     end
@@ -267,6 +274,7 @@ for L = 1:floor(TEND/dt)
     end
     
 end
+
 
 end
 
