@@ -21,6 +21,7 @@ pde.E = @E;
 pde.rho = @rho;
 pde.params = params;
 
+%---add following-------
 pde.IsExactE = IsExactE;
 pde.exactE = @exactE;
 
