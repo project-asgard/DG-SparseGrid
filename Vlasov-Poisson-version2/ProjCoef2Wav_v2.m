@@ -68,34 +68,30 @@ end
 % % plot(x_node,Meval_x*f_coef_DG,'r-o',x_node,func(x_node),'b-+')
 
 % from MWDG to DG
-coef_DG_lowlev(1:Deg) = f_coef_MWDG(1:Deg);
-coef_DG(1:Deg)=coef_DG_lowlev;
+
+coef_DG_lowlev(1:Deg,1) = f_coef_MWDG(1:Deg);
+coef_DG(1:Deg,1)=coef_DG_lowlev;
 for loc_lev = 1:Lev
     for i = 0:2^max(0,loc_lev-1)-1
-        index_DG = Deg*(2*i)+[1:Deg];
-        index_MWDG1 = Deg*(2*i+1)+[1:Deg];
-        index_DG1 = Deg*2*i+1:Deg*(2*i+1);%Deg*2^(loc_lev-1)+Deg*(2*i)+[1:Deg];
-        index_DG2 = Deg*(2*i+1)+1:Deg*(2*i+2);
         
-        [index_DG index_MWDG1 index_DG1 index_DG2]
+        index_DG = Deg*i+[1:Deg];
+         index_MWDG1 = Deg*2^(loc_lev-1)+i*Deg+[1:Deg];
+        
+        index_DG1 = Deg*2*i+[1:Deg];
+        index_DG2 = Deg*2*i+Deg+[1:Deg];
         
         coef1 = coef_DG_lowlev(index_DG);
-        
         coef2 = f_coef_MWDG(index_MWDG1);
         
-        coef = H0*coef1+G0*coef2;
+        coef = H0'*coef1+G0'*coef2;
         coef_DG(index_DG1) = coef;
-        
-%         index_DG1 = Deg*(i+1)+[1:Deg];
-%         coef1 = f_coef_DG(index_DG1);
-%         index_MWDG1 = Deg*(i+1)+[1:Deg];
-%         coef2 = f_coef_MWDG(index_MWDG1);
-        
-        coef = H1*coef1+G1*coef2;
+                
+        coef = H1'*coef1+G1'*coef2;
         coef_DG(index_DG2) = coef;
     end
-    coef_DG
+    coef_DG_lowlev=coef_DG;
 end
 
-[coef_DG' f_coef_DG]
+[coef_DG f_coef_DG]
+plot(coef_DG- f_coef_DG)
 end
