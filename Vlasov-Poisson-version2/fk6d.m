@@ -239,7 +239,7 @@ for L = 1:floor(TEND/dt)
             if pde.IsExactE == 0
                 fval = TimeAdvance(A_data,fval, dt,compression,Deg);
             else
-                source = -f0*exp(-dt*L);
+                source = ProCoef2SG(LevX,Deg,Lmax,FMWT_COMP_x,FMWT_COMP_v,pde);
                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
             end
         

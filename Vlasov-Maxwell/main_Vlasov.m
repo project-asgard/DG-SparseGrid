@@ -149,6 +149,8 @@ InCond = Intial_Con(Lev,Deg,Lmax,Vmax,pde,...
 %     FMWT_COMP_x,FMWT_COMP_v);
 Matrix_TI=matrix_coeff_TI_v2(Lev,Deg,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v);
 
+% for generating 6D matrix
+A_encode = GlobalMatrixSG(I1,I2,I3,I4,I5,I6,Hash);
 return
 % Generate A_encode for Time-independent Matrix
 A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
