@@ -4,7 +4,7 @@ function fval = source_vector2(LevX,LevV,Deg,HASHInv,pde,time)
 
 fx1 = ProjCoef2Wav_v2(LevX,Deg,0,pde.params.Lmax,pde.ExactFx);
 fv1 = ProjCoef2Wav_v2(LevV,Deg,-pde.params.Vmax,pde.params.Vmax,pde.ExactFv);
-ft1 = pde.source1t(time);
+ft1 = pde.ExactFt(time);
 
 
 

@@ -70,11 +70,11 @@ for loc_lev=1:Lev
     tmp_DG = tmp(:);
 end
 
-% by checking
-FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
-subplot(1,2,1)
-plot(tmp_DG-f_coef_DG)
-subplot(1,2,2)
-plot(f_coef_MWDG-FMWT_COMP*f_coef_DG)
+% % % by checking
+% % FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
+% % subplot(1,2,1)
+% % plot(tmp_DG-f_coef_DG)
+% % subplot(1,2,2)
+% % plot(f_coef_MWDG-FMWT_COMP*f_coef_DG)
 
 end
