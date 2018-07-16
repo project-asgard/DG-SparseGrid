@@ -59,14 +59,23 @@ for j_x = 1:k
     end
 end
 
+
+size(GradX)
+GG=[G0 G1 zeros(2,4) zeros(2,4) zeros(2,4);...
+    zeros(2,4) G0 G1 zeros(2,4) zeros(2,4);...
+    zeros(2,4) zeros(2,4) G0 G1 zeros(2,4);...
+    zeros(2,4) zeros(2,4) zeros(2,4) G0 G1];
+size(GG)
+full(GG*GradX*GG')
+
 FMWT_COMP_x = OperatorTwoScale(k,2^Lev);
 
 
 GradX  = FMWT_COMP_x*GradX*FMWT_COMP_x';
-
-% figure out the matrix here
-GradX [H0 H1]*GradX*[G0 G1]'
-  [G0 G1]*GradX*[H0 H1]' [G0 G1]*GradX*[G0 G1]'
+full(GradX)
+% % % figure out the matrix here
+% % GradX [H0 H1]*GradX*[G0 G1]'
+% %   [G0 G1]*GradX*[H0 H1]' [G0 G1]*GradX*[G0 G1]'
 return
 
 %****************************************

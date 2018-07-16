@@ -108,5 +108,9 @@ end
         k_0 = 0.5;
         f=-2*pi/k_0*tan(2*pi*x);
     end
+    function f = sourse(x,v,t)
+    % source term
+        f = 
+    end
 
     
