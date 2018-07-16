@@ -1,5 +1,5 @@
 function [fval] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
-
+% need cleaning up
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
 %
@@ -14,6 +14,7 @@ function [fval] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
 
 format short e
 addpath(genpath(pwd))
+
 
 %% Step 1. Set input parameters
 % pde :  A structure containing the initial condition and domain
@@ -112,11 +113,11 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 %%% specified in PDE. 
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
-f0 = fval;
-fend = f0*dt*floor(TEND/dt);
-save('exactf.mat','fend')
-clear fv fx
 
+fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,floor(TEND/dt)*dt);
+
+clear fv fx
+% return
 %% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
 %   Operators:
@@ -190,7 +191,7 @@ end
 
 
 % Write the initial condition to file.
-write_fval = 1;
+write_fval = 0;
 if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
 
 count=1;
@@ -207,7 +208,7 @@ for L = 1:floor(TEND/dt)
         if pde.IsExactE == 0 % solve the Poisson equation with rho
             E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
         else % projection of exact E 
-            E = ProjCoef2Wav(LevX,Deg,Lmax,FMWT_COMP_x,pde.exactE);
+            E = ProjCoef2Wav_v2(LevX,Deg,0,Lmax,pde.exactE);
         end
     
     %%% Generate EMassX time dependent coefficient matrix.
@@ -234,13 +235,14 @@ for L = 1:floor(TEND/dt)
         A_data.EMassX    = EMassX;
         
         % Write the A_data structure components for use in HPC version.
-        write_A_data = 1;
+        write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
             if pde.IsExactE == 0
                 fval = TimeAdvance(A_data,fval, dt,compression,Deg);
             else
-                source = ProCoef2SG(LevX,Deg,Lmax,FMWT_COMP_x,FMWT_COMP_v,pde);
+                source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
+                
             end
         
     end
@@ -267,6 +269,9 @@ for L = 1:floor(TEND/dt)
     end
     
 end
+
+plot(fval-fend)
+max(abs(fval-fend))
 
 end
 

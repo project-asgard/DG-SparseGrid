@@ -1,4 +1,4 @@
-function pde=Vlasov7
+function pde=Vlasov8
 % Numerical Example for Vlasov Equation
 % This test has given E and non-zero source term
 
@@ -35,7 +35,7 @@ pde.source2t = @source2t;
 
 pde.ExactFx = @ExactFx;
 pde.ExactFv = @ExactFv;
-
+pde.ExactFt = @ExactFt;
 
 % pde = struct('k_0',k_0,'Fx_0',@Fx_0,'Fv_0',@Fv_0,'Fxv_0',@Fxv_0,'Ex',@Ex,...
 %     'Et',@Et,'E',@E,'F',@F,'rho',@rho,'Vmax',Vmax,'Lmax',Lmax);
@@ -49,7 +49,7 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-        f=cos(2*pi*x);
+        f=x-x;
     end
 
     function f=Fv_0(v, params)
@@ -60,7 +60,7 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-        f=exp(-k_0*v.^2/2);
+        f=v-v+1;
     end
     function f=Fxv_0(x,v, params)
         A = params.A;
@@ -76,7 +76,7 @@ end
         Lmax = params.Lmax;
         Vmax = params.Vmax;
 
-        f=2*pi/k_0*sin(2*pi*x);
+        f=x-x+1;
     end
     function f=Et(t, params)
         A = params.A;
@@ -101,7 +101,7 @@ end
         Vmax = params.Vmax;
 
 %         f=exp(-t)*exp(-k_0*v.^2/2).*cos(2*pi*x);
-        f=t*exp(-k_0*v.^2/2).*cos(2*pi*x);
+        f=t*x.*(x-1);
     end
     function f=rho(x,t, params)
     % we do note use rho in this test, so I just write an arbitrary function
@@ -120,49 +120,48 @@ end
     function f = exactE(x)
     % Exact solution for E
         k_0 = 0.5;
-        f=2*pi/k_0*sin(2*pi*x);
+        f=x-x+1;
     end
     % source term--fully seperable functions
     % source = source1+source2
     % source term 1
     function f = source1x(x)
-        f = -cos(2*pi*x);
+        f = x.*(x-1);
     end
     function f = source1t(t)
-        f = exp(-t);
+        f = t-t+1;
     end
     function f = source1v(v)
         k_0 = 1/2;
-        f = exp(-k_0*v.^2/2);
+        f = v-v+1;
     end   
     function f = source1(x,v,t)
         f = source1x(x).*source1v(v).*source1t(t);
     end
     % source term 2
     function f = source2x(x)
-        f = -2*pi*sin(2*pi*x).*(1+cos(2*pi*x));
+        f = 2*x-1;
     end
     function f = source2t(t)
-        f = exp(-t);
+        f = t;
     end
     function f = source2v(v)
         k_0 = 1/2;
-        f = v.*exp(-k_0*v.^2/2);
+        f = v;
     end   
     function f = source2(x,v,t)
         f = source2x(x).*source2v(v).*source2t(t);
     end
     % Exact F
     function f=ExactFx(x)
-        f=cos(2*pi*x);
+        f=x.*(x-1);
     end
     function f=ExactFv(v)
         k_0 = 1/2;
-        f=exp(-k_0*v.^2/2);
+        f=v-v+1;
     end
-    function f = sourse(x,v,t)
-    % source term
-        f = 
+    function f=ExactFt(t)
+        f=t;
     end
 
     

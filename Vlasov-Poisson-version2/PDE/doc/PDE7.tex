@@ -32,12 +32,14 @@ We consider the model problems
 with 
 $$f(x,v,t)=e^{-t}e^{-\frac{k_0v^2}{2}}\cos(2\pi x).$$
 Here we have
-\begin{eqnarray}
+\begin{eqnarray*}
 \frac{\partial f}{\partial t}&=&-e^{-t}e^{-\frac{k_0v^2}{2}}\cos(2\pi x),\\
 v\frac{\partial f}{\partial x}&=&-2\pi v e^{-t}e^{-\frac{k_0v^2}{2}}\sin(2\pi x),\\
 E\frac{\partial f}{\partial v}&=& -k_0 v Ee^{-t}e^{-\frac{k_0v^2}{2}}\cos(2\pi x),\\
-\mbox{ and thus } g(x,v,t)&=& \bigg(-\cos(2\pi x)-2\pi v \sin(2\pi x)-k_0 v E(x)\cos(2\pi x)\bigg)e^{-t}e^{-\frac{k_0v^2}{2}}.
-\end{eqnarray}
+\mbox{ and thus } g(x,v,t)&=& \bigg(-\cos(2\pi x)-2\pi v \sin(2\pi x)-k_0 v E(x)\cos(2\pi x)\bigg)e^{-t}e^{-\frac{k_0v^2}{2}}\\
+&=& -\cos(2\pi x)e^{-t}e^{-\frac{k_0v^2}{2}}-2\pi\sin(2\pi x)(1+\cos(2\pi x))ve^{-t}e^{-\frac{k_0v^2}{2}}.
+\end{eqnarray*}
+Set $k_0=1/2$ and $E(x)=2\pi\sin(2\pi x)/k_0.$
 
 
 \end{document}
