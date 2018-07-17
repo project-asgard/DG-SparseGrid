@@ -160,9 +160,6 @@ end
         k_0 = 1/2;
         f=exp(-k_0*v.^2/2);
     end
-    function f = sourse(x,v,t)
-    % source term
-        f = 
-    end
+
 
     
