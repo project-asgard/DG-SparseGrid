@@ -73,8 +73,10 @@ DimX = 1;
 DimV = 1;
 
 % Time step.
-dt = Lmax/2^LevX/Vmax/(2*Deg+1);
+% dt = Lmax/2^LevX/Vmax/(2*Deg+1);
 
+CFL = 0.1;
+dt = Lmax/2^LevX/Vmax*CFL;
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
 % 
 % Input:  Deg and Lev
@@ -114,7 +116,7 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
 
-fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,floor(TEND/dt)*dt);
+% fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,0);%floor(TEND/dt)*dt);
 
 clear fv fx
 % return
@@ -240,9 +242,10 @@ for L = 1:floor(TEND/dt)
             if pde.IsExactE == 0
                 fval = TimeAdvance(A_data,fval, dt,compression,Deg);
             else
+                
                 source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
-                
+                fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
             end
         
     end
@@ -270,8 +273,9 @@ for L = 1:floor(TEND/dt)
     
 end
 
-plot(fval-fend)
+plot(fval-fend,'r-o')
 max(abs(fval-fend))
+L
 
 end
 
