@@ -35,6 +35,7 @@ pde.source2t = @source2t;
 
 pde.ExactFx = @ExactFx;
 pde.ExactFv = @ExactFv;
+pde.ExactFt = @ExactFt;
 
 
 % pde = struct('k_0',k_0,'Fx_0',@Fx_0,'Fv_0',@Fv_0,'Fxv_0',@Fxv_0,'Ex',@Ex,...
@@ -159,6 +160,9 @@ end
     function f=ExactFv(v)
         k_0 = 1/2;
         f=exp(-k_0*v.^2/2);
+    end
+    function f=ExactFt(t)
+        f=t;
     end
 
 
