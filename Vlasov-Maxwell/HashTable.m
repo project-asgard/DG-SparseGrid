@@ -41,7 +41,7 @@ inverseHash={};
 % end
 
 % Ed's code
-combs = perm_leq(Dim,maxLev);
+combs = perm_leq(Dim,maxLev)
 %icount = perm_leq_count(Dim,maxLev);
 
 nLev = zeros(1,Dim);

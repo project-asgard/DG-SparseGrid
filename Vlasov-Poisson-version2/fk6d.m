@@ -273,9 +273,9 @@ for L = 1:floor(TEND/dt)
     
 end
 
-plot(fval-fend,'r-o')
-max(abs(fval-fend))
-L
+% plot(fval-fend,'r-o')
+% max(abs(fval-fend))
+% L
 
 end
 
