@@ -11,16 +11,16 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 9;
+Lev = 10;
 Deg = 2;
 
 
 Lmax = 1;
-pde = Maxwell1;
-cfl=0.1;
-%dt = 2^(-Lev)*cfl;
-dt=1/80;
-MaxT = round(1/dt);
+pde = Maxwell3;
+cfl=100/2/2;
+dt = 2^(-Lev)*cfl;
+%dt=1/80;
+MaxT = ceil(1/dt);
 
 
 
@@ -61,13 +61,14 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % E_s and B_s are used for error estimate
 
 %% Maxwell Solver
-[Bh,E1h,E2h] = MaxwellSolver3(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
+[Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
     F_1D,E_1D.E1*cos(0),E_1D.E2*cos(0),B_1D.B*0);
 sol_n=[Bh;E1h;E2h];
 
 %% Error Estimate
 time=dt*MaxT;
 u_s=[B_1D.B*sin(pde.w*time);E_1D.E1*cos(pde.w*time);E_1D.E2*cos(pde.w*time)];
+
 Bs=[B_1D.B*sin(pde.w*time)];E1s=[E_1D.E1*cos(pde.w*time)];E2s=[E_1D.E2*cos(pde.w*time)];
 full([Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
 
