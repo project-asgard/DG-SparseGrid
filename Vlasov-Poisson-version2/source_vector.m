@@ -1,6 +1,6 @@
 function fval = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,time)
 % projection of given source function to sparse grids
-% here we assume source=source1+source2
+% here we assume source=source1+source2+source3
 
 fx1 = ProjCoef2Wav_v2(LevX,Deg,0, Lmax,pde.source1x);
 fv1 = ProjCoef2Wav_v2(LevV,Deg,-Vmax,Vmax,pde.source1v);
@@ -9,6 +9,10 @@ ft1 = pde.source1t(time);
 fx2 = ProjCoef2Wav_v2(LevX,Deg,0,Lmax,pde.source2x);
 fv2 = ProjCoef2Wav_v2(LevV,Deg,-Vmax,Vmax,pde.source2v);
 ft2 = pde.source2t(time);
+
+fx3 = ProjCoef2Wav_v2(LevX,Deg,0,Lmax,pde.source3x);
+fv3 = ProjCoef2Wav_v2(LevV,Deg,-Vmax,Vmax,pde.source3v);
+ft3 = pde.source3t(time);
 
 nHash = numel(HASHInv);
 Dim = 2;
@@ -34,7 +38,8 @@ for i=1:nHash
             ii = Index0;
             jj = 1;
             vv = kron( fv1(Index1), fx1(Index2) )*ft1+...
-                 kron( fv2(Index1), fx2(Index2) )*ft2;
+                 kron( fv2(Index1), fx2(Index2) )*ft2+...
+                 kron( fv3(Index1), fx3(Index2) )*ft3;
             mm = Deg^Dim * nHash;
             nn = 1;
             

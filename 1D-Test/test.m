@@ -1,10 +1,12 @@
 clc
 
-Lev = 3;
+Lev = 5;
 Dim = 2;
-Deg = 2;
+Deg = 1;
 
 count = 0;
+DoFs = Deg^2*(Start_LevCell(0,Lev)+Num4Cell(0,Lev));
+Mat_GL = sparse(DoFs,DoFs);
 
 for i_val = 0:Lev
     II = perm_eq(Dim,i_val);
@@ -20,21 +22,37 @@ for i_val = 0:Lev
             Iy = II(ceil(i/n2),2);
             Jx = JJ(i,1);
             Jy = JJ(i,2);
+<<<<<<< HEAD
              
             [Ix,Iy,Jx,Jy]
+=======
+            
+%             [Ix,Iy,Jx,Jy]
+>>>>>>> 204a25bfc18648bd60ff7b169ed34ffcafee6d1a
         
-            Mat1 = Matrix_Recur(Ix,Jx,Deg);
-            Mat2 = Matrix_Recur(Iy,Jy,Deg);
+            tmpMat1 = Matrix_Recur(Ix,Jx,Deg);
+            tmpMat2 = Matrix_Recur(Iy,Jy,Deg);
             
-            Index_I = GlobalIndexMap(Ix,Iy,Deg); 
-            Index_J = GlobalIndexMap(Jx,Jy,Deg); 
+            IndexI_loc = GlobalIndexMap(Ix,Iy,Deg);
+            IndexJ_loc = GlobalIndexMap(Jx,Jy,Deg);
             
-            count = count+1; 
+            IndexI = IndexI_loc'*ones(1,numel(IndexJ_loc));
+            IndexJ = ones(numel(IndexI_loc),1)*IndexJ_loc;
+            
+            num_size = length(IndexI);
+            Mat_GL = Mat_GL+sparse(IndexI,IndexJ,kron(tmpMat1,tmpMat2),DoFs,DoFs);
+            
+            count = count+1;
+            
+            A_encode{count}.IndexI = IndexI;
+            A_encode{count}.IndexJ = IndexJ;
+            A_encode{count}.A1=tmpMat1;
+            A_encode{count}.A2=tmpMat2;
+            
+             
         end
         
         
         
     end
 end
-
-count
