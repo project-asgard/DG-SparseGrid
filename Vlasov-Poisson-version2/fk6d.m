@@ -284,11 +284,17 @@ for L = 1:floor(TEND/dt)
 %     pause(0.01) 
 end
 
+<<<<<<< HEAD
 fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
 
 plot(fval-fend,'r-o')
 max(abs(fval-fend))
 L
+=======
+% plot(fval-fend,'r-o')
+% max(abs(fval-fend))
+% L
+>>>>>>> faf32a421de884276be18d97a163e6adc619e400
 
 end
 
