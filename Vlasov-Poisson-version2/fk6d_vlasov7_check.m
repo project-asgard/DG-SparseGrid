@@ -5,11 +5,11 @@ function isok = fk6d_vlasov7_check(testCase)
 
   idebug = 1;
   addpath(genpath(pwd));
-  disp(sprintf('Testing with valsov7, testCase=%d',testCase));
+  disp(sprintf('Testing with valsov10, testCase=%d',testCase));
   
   switch(testCase)
    case 1 
-      quiet = 1; lev = 3; deg = 2; TEND = 1; compression = 0;
+      quiet = 1; lev = 3; deg = 3; TEND = 1; compression = 0;
    case 2 
       quiet = 1; lev = 3; deg = 2; TEND = 1; compression = 1;
    case 3 
@@ -23,7 +23,7 @@ function isok = fk6d_vlasov7_check(testCase)
   end;
   
   
-  act_f = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+  act_f = fk6d(Vlasov10,lev,deg,TEND,quiet,compression);
   
 
   load('tests/vlasov7/solution.mat');

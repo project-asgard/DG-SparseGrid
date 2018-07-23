@@ -35,8 +35,7 @@ addpath(genpath(pwd))
 
 if ~exist('pde','var') || isempty(pde)
     % Equation setup
-%     pde = Vlasov4;
-    pde = Vlasov7;
+    pde = Vlasov4;
 end
 if ~exist('TEND','var') || isempty(TEND)
     % End time
@@ -229,7 +228,13 @@ for L = 1:floor(TEND/dt)
     %%% Advance Vlasov in time with RK3 time stepping method.
     if ~quiet; disp('    [d] RK3 time step'); end
     if compression == 3
-        fval = TimeAdvance(C_encode,fval, dt,compression,Deg);
+        if pde.IsExactE ==0
+            fval = TimeAdvance(C_encode,fval, dt,compression,Deg);
+        else
+            source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
+            fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
+%             fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
+        end
     else
         A_data.vMassV    = vMassV;
         A_data.GradX     = GradX;
@@ -245,7 +250,7 @@ for L = 1:floor(TEND/dt)
                 
                 source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
-                fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
+                fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,dt*L);
             end
         
     end
@@ -270,8 +275,16 @@ for L = 1:floor(TEND/dt)
         title(['Time at ',num2str(L*dt)])
         pause (0.01)
     end
-    
+%     subplot(1,3,1)
+%     plot(fval,'r-o');
+%     subplot(1,3,2)
+%     plot(fend,'r-o')
+%     subplot(1,3,3)
+%     plot(fval-fend,'r-o')
+%     pause(0.01) 
 end
+
+fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
 
 plot(fval-fend,'r-o')
 max(abs(fval-fend))
