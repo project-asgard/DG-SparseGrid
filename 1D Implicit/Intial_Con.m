@@ -27,6 +27,7 @@ dof_1D = Deg*nx;
 
 b1=sparse(dof_1D,1);
 b2=sparse(dof_1D,1);
+b3=sparse(dof_1D,1);
 
 E1=sparse(dof_1D,1);
 E2=sparse(dof_1D,1);
@@ -45,12 +46,14 @@ for LL=0:nx-1
     
     f1=pde.f1( xi_x );
     f2=pde.f2( xi_x );
+    f3=pde.f3( xi_x );% Added by Lin
     
     
     Iu=[Deg*LL+1:Deg*(LL+1)];
     
     b1(Iu)=p_val'*(quad_w.*f1)*Jacobi_x*sqrt(1/hx)/2;
     b2(Iu)=p_val'*(quad_w.*f2)*Jacobi_x*sqrt(1/hx)/2;
+    b3(Iu)=p_val'*(quad_w.*f3)*Jacobi_x*sqrt(1/hx)/2;
     
     
     valE1=pde.e1( xi_x );
@@ -68,6 +71,7 @@ end
 
 b1=FMWT_COMP*b1;
 b2=FMWT_COMP*b2;
+b3=FMWT_COMP*b3;
 
 
 E1=FMWT_COMP*E1;
@@ -77,7 +81,7 @@ E2=FMWT_COMP*E2;
 B=FMWT_COMP*B;
 
 % structure of b
-b = struct('b1',b1,'b2',b2);
+b = struct('b1',b1,'b2',b2,'b3',b3);
 
 % structure of E
 EE = struct('E1',E1,'E2',E2);

@@ -17,10 +17,10 @@ Deg = 2;
 
 Lmax = 1;
 pde = Maxwell3;
-cfl=1000/2/2/2;
+cfl=1000;
 dt = 2^(-Lev)*cfl;
 %dt=1/80;
-MaxT =100; %ceil(5/dt);
+MaxT =10; %ceil(5/dt);
 
 
 
@@ -76,4 +76,19 @@ subplot(1,2,1)
 plot(sol_n)
 subplot(1,2,2)
 plot(u_s)
+
+[M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
+figure;
+subplot(1,3,1)
+plot(N,M*E1h,'r--',N,M*E1s,'b--')
+legend('Numerical Sol','Real Solution')
+title('E1')
+subplot(1,3,2)
+plot(N,M*E2h,'r--',N,M*E2s,'b--')
+legend('Numerical Sol','Real Solution')
+title('E2')
+subplot(1,3,3)
+plot(N,M*Bh,'r--',N,M*Bs,'b--')
+legend('Numerical Sol','Real Solution')
+title('B')
 

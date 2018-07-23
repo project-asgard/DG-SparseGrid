@@ -5,7 +5,7 @@ function pde=Maxwell3
 
 
 c0=3e8;
-w=-1;%2*pi*sqrt(3)/2*c0;
+w=2*pi;%2*pi*sqrt(3)/2*c0;
 
     function E=exact_E1(x,t)
         E= -cos(2*pi*x).*exp(-t);
@@ -48,15 +48,15 @@ w=-1;%2*pi*sqrt(3)/2*c0;
         f= sin(2*pi*x);
     end
    
-%     function f=exact_f3(x,t)
-%         f= w*sin(2*pi*x).*exp(-t);
-%     end
+    function f=exact_f3(x,t)
+        f= 2*pi/w*sin(2*pi*x).*exp(-t)+2*pi*sin(2*pi*x).*exp(-t);
+    end
 
-%     function f=f3(x)
-%         f=;
-%     end
+    function f=f3(x)
+        f= 2*pi/w*sin(2*pi*x)+2*pi*sin(2*pi*x);
+    end
 
 pde = struct('w',w,'E1',@exact_E1,'E2',@exact_E2,'B',@exact_B,'F1',@exact_f1,'F2',@exact_f2,...
-    'f1',@f1,'f2',@f2,'e1',@E1,'e2',@E2,'b',@B);
+    'f1',@f1,'f2',@f2,'e1',@E1,'e2',@E2,'b',@B,'exact_f3',@exact_f3,'f3',@f3);
 
 end
