@@ -16,11 +16,11 @@ Deg = 2;
 
 
 Lmax = 1;
-pde = Maxwell3;
-cfl=1000;
+pde = Maxwell5;
+cfl=1000/2/2/2/2/2/2/2;
 dt = 2^(-Lev)*cfl;
 %dt=1/80;
-MaxT =10; %ceil(5/dt);
+MaxT =ceil(5/dt)
 
 
 
@@ -70,7 +70,11 @@ time=dt*MaxT;
 u_s=[B_1D.B*exp(-time);E_1D.E1*exp(-time);E_1D.E2*exp(-time)];
 
 Bs=[B_1D.B*exp(-time)];E1s=[E_1D.E1*exp(-time)];E2s=[E_1D.E2*exp(-time)];
-full([Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+
+% u_s=[B_1D.B;E_1D.E1;E_1D.E2];
+% 
+% Bs=[B_1D.B];E1s=[E_1D.E1];E2s=[E_1D.E2];
+full([dt Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
 
 subplot(1,2,1)
 plot(sol_n)

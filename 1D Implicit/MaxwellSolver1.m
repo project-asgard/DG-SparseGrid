@@ -82,6 +82,7 @@ MaxMat=-[zero,Mat,zero;
 MaxRhs = -[F_1D.b3;F_1D.b1;F_1D.b2];
 MaxSol = [B;E1;E2];
 s=eye(Dofs*3)-0.5*MaxMat*dt;
+
 H=inv(s);
 % % e=eigs(H*(eye(Dofs*3)+0.5*MaxMat*dt))
 % % e=abs(e)
