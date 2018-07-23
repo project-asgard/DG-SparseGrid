@@ -1,4 +1,4 @@
-function pde=Maxwell1
+function pde=Maxwell2
 %====================================
 % Numerical Test 1 for Maxwells' Eq.
 %====================================
@@ -8,7 +8,7 @@ c0=3e8;
 w=pi/2;%/2;%2*pi*sqrt(3)/2*c0;
 
     function E=exact_E1(x,t)
-        E= -cos(2*pi*x).*cos(w*t);
+        E= -cos(2*pi*x).*exp(-t);
     end
 
     function E=E1(x)% without t
@@ -16,7 +16,7 @@ w=pi/2;%/2;%2*pi*sqrt(3)/2*c0;
     end
     
     function E=exact_E2(x,t)
-        E= sin(2*pi*x).*cos(w*t);
+        E= sin(2*pi*x).*exp(-t);
     end
 
     function E=E2(x)
@@ -25,7 +25,7 @@ w=pi/2;%/2;%2*pi*sqrt(3)/2*c0;
     
     function B=exact_B(x,t)
         
-        B= 2*pi/w*sin(2*pi*x).*sin(w*t);
+        B= 2*pi/w*sin(2*pi*x).*exp(-t);
     end
 
     function B=B(x)
@@ -33,7 +33,7 @@ w=pi/2;%/2;%2*pi*sqrt(3)/2*c0;
     end
 
     function f=exact_f1(x,t)
-        f= (4*pi*pi/w-w)*cos(2*pi*x).*sin(w*t);
+        f= (4*pi*pi/w-w)*cos(2*pi*x).*exp(-t);
     end
 
     function f=f1(x)

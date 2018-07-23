@@ -11,15 +11,21 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 3;
+Lev = 10;
 Deg = 2;
 
 
 Lmax = 1;
 
+CFL = 1000/2/2/2/2/2/2;
+
 pde = Maxwell1;
-MaxT = 100;
-dt = 1/10000;
+% MaxT = 100;
+dx = 2^(-10);
+
+dt = CFL*dx;%1/10000;
+
+MaxT = 10;%ceil(0.1/dt);
 
 
 %*************************************************
@@ -59,7 +65,7 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % E_s and B_s are used for error estimate
 
 %% Maxwell Solver
-[Bh,E1h,E2h] = MaxwellSolver(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
+[Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
     F_1D,E_1D.E1*cos(0),E_1D.E2*cos(0),B_1D.B*0);
 sol_n=[Bh;E1h;E2h];
 
@@ -67,5 +73,8 @@ sol_n=[Bh;E1h;E2h];
 time=dt*MaxT;
 u_s=[B_1D.B*sin(pde.w*time);E_1D.E1*cos(pde.w*time);E_1D.E2*cos(pde.w*time)];
 
-full([Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
-
+full([dt Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+subplot(1,2,1)
+plot(u_s);
+subplot(1,2,2)
+plot(sol_n)
