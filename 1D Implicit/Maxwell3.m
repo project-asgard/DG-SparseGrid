@@ -1,4 +1,4 @@
-function pde=Maxwell1
+function pde=Maxwell3
 %====================================
 % Numerical Test 1 for Maxwells' Eq.
 %====================================
@@ -41,11 +41,11 @@ w=-1;%2*pi*sqrt(3)/2*c0;
     end
 
     function f=exact_f2(x,t)
-        f= -sin(2*pi*x).*exp(-t);
+        f= sin(2*pi*x).*exp(-t);
     end
 
     function f=f2(x)
-        f= -sin(2*pi*x);
+        f= sin(2*pi*x);
     end
    
 %     function f=exact_f3(x,t)
