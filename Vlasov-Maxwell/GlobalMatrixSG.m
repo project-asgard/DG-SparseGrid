@@ -1,6 +1,9 @@
-function A_encode=GlobalMatrixSG(mat,Hash)
+function A_encode=GlobalMatrixSG(Mat1,Mat2,Mat3,Mat4,Mat5,Mat6,Hash)
 %=========================================
 % Algorithm 5: Global Assembling
+% We will compute the global matrix through 6 matrices
+% if Matj==0, Matrix Matj=1
+% if Matj==1, Matrix Matj=Indentity_DoF1dxDoF1d
 %=========================================
 % save the submatrix and apply A_encode to vector f
 count=0;

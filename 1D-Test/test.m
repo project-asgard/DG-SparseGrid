@@ -20,7 +20,7 @@ for i_val = 0:Lev
             Iy = II(ceil(i/n2),2);
             Jx = JJ(i,1);
             Jy = JJ(i,2);
-            
+             
             [Ix,Iy,Jx,Jy]
         
             Mat1 = Matrix_Recur(Ix,Jx,Deg);
