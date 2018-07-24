@@ -109,7 +109,7 @@ k_0 = params.k_0;
 Lmax = params.Lmax;
 Vmax = params.Vmax;
 
-f=t.*x.*(1-x);%(v-Vmax).*(v+Vmax).*x.*(Lmax-x);%t*(v-Vmax).*(v+Vmax).*x.*(Lmax-x);
+f=t.*x.*(1-x).*(v-Vmax).*(v+Vmax);%.*x.*(Lmax-x);%t*(v-Vmax).*(v+Vmax).*x.*(Lmax-x);
 end
 function f=rho(x,t, params)
 % we do note use rho in this test, so I just write an arbitrary function
@@ -142,7 +142,7 @@ f = t-t+1;%+1;
 end
 function f = source1v(v)
 Vmax=5;Lmax=1;
-f = v-v+1;%(v-Vmax).*(v+Vmax);
+f = (v-Vmax).*(v+Vmax);
 end
 function f = source1(x,v,t)
 Vmax=5;Lmax=1;
@@ -156,11 +156,11 @@ f = (1-2*x);
 end
 function f = source2t(t)
 Vmax=5;Lmax=1;
-f = t-t+1;
+f = t;%-t+1;
 end
 function f = source2v(v)
 Vmax=5;Lmax=1;
-f = v;%.*(v-Vmax).*(v+Vmax);
+f = v.*(v-Vmax).*(v+Vmax);
 end
 function f = source2(x,v,t)
 Vmax=5;Lmax=1;
@@ -170,11 +170,11 @@ end
 % source term 3
 function f = source3x(x)
 Vmax=5;Lmax=1;
-f = x-x;%x.*(1-x);%.*exactE(x);
+f = x.*(1-x);%.*exactE(x);
 end
 function f = source3t(t)
 Vmax=5;Lmax=1;
-f = t-t+1;
+f = t;
 end
 function f = source3v(v)
 Vmax=5;Lmax=1;
@@ -192,7 +192,7 @@ f = x.*(1-x);
 end
 function f=ExactFv(v)
 Vmax=5;Lmax=1;
-f = v-v+1;%(v-Vmax).*(v+Vmax);
+f = (v-Vmax).*(v+Vmax);
 end
 function f=ExactFt(t)
 Vmax=5;Lmax=1;

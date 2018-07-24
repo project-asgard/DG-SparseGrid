@@ -9,7 +9,7 @@ function isok = fk6d_vlasov7_check(testCase)
   
   switch(testCase)
    case 1 
-      quiet = 1; lev = 3; deg = 3; TEND = 1; compression = 0;
+      quiet = 1; lev = 5; deg = 2; TEND = 1; compression = 0;
    case 2 
       quiet = 1; lev = 3; deg = 2; TEND = 1; compression = 1;
    case 3 

@@ -275,26 +275,27 @@ for L = 1:floor(TEND/dt)
         title(['Time at ',num2str(L*dt)])
         pause (0.01)
     end
-%     subplot(1,3,1)
-%     plot(fval,'r-o');
-%     subplot(1,3,2)
-%     plot(fend,'r-o')
-%     subplot(1,3,3)
-%     plot(fval-fend,'r-o')
-%     pause(0.01) 
+    % checking the coefficients
+    subplot(1,3,1)
+    plot(fval,'r-o');
+    subplot(1,3,2)
+    plot(fend,'r-o')
+    subplot(1,3,3)
+    plot(fval-fend,'r-o')
+    pause(0.01) 
 end
 
-<<<<<<< HEAD
+
 fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
 
 plot(fval-fend,'r-o')
 max(abs(fval-fend))
 L
-=======
+
 % plot(fval-fend,'r-o')
 % max(abs(fval-fend))
 % L
->>>>>>> faf32a421de884276be18d97a163e6adc619e400
+
 
 end
 
