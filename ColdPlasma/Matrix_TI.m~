@@ -97,14 +97,50 @@ Asub =  Dp_1'*p_2/2;
 Asup = -Dp_2'*p_1/2;
 T4 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 
-S = GG - T3 -T4+T2;
-H = -G'+T1;
-
+S = GG - T3 -T4+T2
 
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
-figure;subplot(1,2,1);spy(S);subplot(1,2,2);spy(H);
 
+for Lx=0:nx-1
 
+    %---------------------------------------------
+    % Matrix GradX and EMassX
+    %---------------------------------------------
+    val=-1/hx*[Dp_val'*(quad_w.*p_val)];
+    
+    Iu=[meshgrid(Deg*Lx+1:Deg*(Lx+1))]';
+    Iv=[meshgrid(Deg*Lx+1:Deg*(Lx+1))];
+    GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
+    
+    c=Deg*Lx+1:Deg*(Lx+1);
+    p=Deg*(Lx-1)+1:Deg*Lx;
+    l=Deg*(Lx+1)+1:Deg*(Lx+2);
+    
+    val=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
+               p_2'*p_2/2   p_2'*p_1/2];     % for x2
+
+    
+    Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+    
+    if Lx<nx-1 && Lx>0
+        
+        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
+    
+    elseif Lx==0
+        
+        Iu=[meshgrid([Deg*(nx-1)+1:Deg*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
+   
+    elseif Lx==nx-1
+        
+        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:Deg])];
+    
+    end
+    
+%     GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
+% %     GradX=GradX+sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
+    
+    
+end
 
 GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
 
