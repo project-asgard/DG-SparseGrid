@@ -16,11 +16,11 @@ Deg = 2;
 
 
 Lmax = 1;
-pde = Maxwell5;
-cfl=1000/2/2/2/2/2/2/2;
+pde = Maxwell3;
+cfl=20;
 dt = 2^(-Lev)*cfl;
 %dt=1/80;
-MaxT =ceil(5/dt)
+MaxT =10;
 
 
 
