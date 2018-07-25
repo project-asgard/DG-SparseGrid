@@ -48,7 +48,15 @@ w=pi/2;%2*pi*sqrt(3)/2*c0;
         f= w*sin(2*pi*x);
     end
 
+    function f=exact_f3(x,t)
+        f= 0;
+    end
+
+    function f=f3(x)
+        f= 0;
+    end
+
 pde = struct('w',w,'E1',@exact_E1,'E2',@exact_E2,'B',@exact_B,'F1',@exact_f1,'F2',@exact_f2,...
-    'f1',@f1,'f2',@f2,'e1',@E1,'e2',@E2,'b',@B);
+    'f1',@f1,'f2',@f2,'e1',@E1,'e2',@E2,'b',@B,'F3',@exact_f3,'f3',@f3);
 
 end
