@@ -53,57 +53,87 @@ val = Dp_val'*(quad_w*ones(1,2).*Dp_val)*1/hx;
 Ac = repmat({val},nx,1);
 GG = blkdiag(Ac{:});
 
-% Matrix for (u',v)
+% Matrix for (u,v')
 val = Dp_val'*(quad_w*ones(1,2).*p_val);
 Ac = repmat({val},nx,1);
 G = blkdiag(Ac{:});
+
+% Matrix for (u',v)
+val = p_val'*(quad_w*ones(1,2).*Dp_val);
+Ac = repmat({val},nx,1);
+G2 = blkdiag(Ac{:});
+
 
 % Matrix for (u,v) = eye
 
 
 %****************************************
 % Term for <{u_h},[v]>ds
-% Numerical Flux is taken as central flux
 %****************************************
 Amd  = -p_1'*p_1/2+p_2'*p_2/2;
 Asub = -p_1'*p_2/2;
 Asup =  p_2'*p_1/2;
-T1 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+K = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 
 %****************************************
-% Term for <[u_h],[v]>ds
-% Numerical Flux is taken as central flux
+% Term for <[u_h],{v}>ds
 %****************************************
-Amd =  p_1'*p_1+p_2'*p_2;
-Asub = -p_1'*p_2;
-Asup = -p_2'*p_1;
-T2 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx)*alpha;
+Amd  = p_1'*(-p_1)/2+p_2'*p_2/2;
+Asub =  p_1'*p_2/2;
+Asup =  p_2'*(-p_1)/2;
+H = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 
 %****************************************
 % Term for <{u_h'},[v]>ds
-% Numerical Flux is taken as central flux
 %****************************************
 Amd = -p_1'*Dp_1/2+p_2'*Dp_2/2;
 Asub =-p_1'*Dp_2/2;
 Asup = p_2'*Dp_1/2;
-T3 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+L = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 
 %****************************************
 % Term for <[u_h],{v'}>ds
-% Numerical Flux is taken as central flux
 %****************************************
-Amd = -Dp_1'*p_1/2+Dp_2'*p_2/2;
-Asub =  Dp_1'*p_2/2;
-Asup = -Dp_2'*p_1/2;
-T4 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+Amd = Dp_1'*(-p_1)/2+Dp_2'*p_2/2;
+Asub = Dp_1'*p_2/2;
+Asup = Dp_2'*(-p_1)/2;
+J = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 
-S = GG - T3 -T4+T2;
-H = -G'+T1;
+%****************************************
+% Term for <[u_h],[v]>ds
+%****************************************
+Amd  =  p_1'*(p_1)+p_2'*p_2;
+Asub = -p_1'*p_2/2;
+Asup =  p_2'*(-p_1)/2;
+Q = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 
+II = speye(dof_1D_x);
+T1=[...
+    kron(kron(II,GG),II)+kron(kron(II,II),GG),-kron(kron(G,G'),II),-kron(kron(G,II),G');...
+    -kron(kron(G',G),II),kron(kron(GG,II),II)+kron(kron(II,II),GG),-kron(kron(II,G),G');...
+    -kron(kron(G',II),G),-kron(kron(II,G'),G),kron(kron(GG,II),II)+kron(kron(II,GG),II);...
+];
+T2=[...
+    kron(kron(II,J),II)+kron(kron(II,II),J),-kron(kron(H,G'),II),-kron(kron(H,II),G');...
+    -kron(kron(G',H),II),kron(kron(J,II),II)+kron(kron(II,II),J),-kron(kron(II,H),G');...
+    -kron(kron(G',II),H),-kron(kron(II,G'),H),kron(kron(J,II),II)+kron(kron(II,J),II);...
+];
+T3=[...
+    kron(kron(II,L),II)+kron(kron(II,II),L),-kron(kron(G,K),II),-kron(kron(G,II),K);...
+    -kron(kron(K,G),II),kron(kron(L,II),II)+kron(kron(II,II),L),-kron(kron(II,G),K);...
+    -kron(kron(K,II),G),-kron(kron(II,K),G),kron(kron(L,II),II)+kron(kron(II,L),II);...
+];
+T4=[kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);...
+    zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
+    zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II)];
 
+Mat = T1-T2-T3+alpha*T4;
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
-figure;subplot(1,2,1);spy(S);subplot(1,2,2);spy(H);
+figure;spy(Mat);
 
+% handling boundary condition
+
+return
 
 
 GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';

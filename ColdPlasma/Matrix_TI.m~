@@ -53,94 +53,85 @@ val = Dp_val'*(quad_w*ones(1,2).*Dp_val)*1/hx;
 Ac = repmat({val},nx,1);
 GG = blkdiag(Ac{:});
 
-% Matrix for (u',v)
+% Matrix for (u,v')
 val = Dp_val'*(quad_w*ones(1,2).*p_val);
 Ac = repmat({val},nx,1);
 G = blkdiag(Ac{:});
+
+% Matrix for (u',v)
+val = p_val'*(quad_w*ones(1,2).*Dp_val);
+Ac = repmat({val},nx,1);
+G2 = blkdiag(Ac{:});
+
 
 % Matrix for (u,v) = eye
 
 
 %****************************************
 % Term for <{u_h},[v]>ds
-% Numerical Flux is taken as central flux
 %****************************************
 Amd  = -p_1'*p_1/2+p_2'*p_2/2;
 Asub = -p_1'*p_2/2;
 Asup =  p_2'*p_1/2;
-T1 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+K = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 
 %****************************************
-% Term for <[u_h],[v]>ds
-% Numerical Flux is taken as central flux
+% Term for <[u_h],{v}>ds
 %****************************************
-Amd =  p_1'*p_1+p_2'*p_2;
-Asub = -p_1'*p_2;
-Asup = -p_2'*p_1;
-T2 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx)*alpha;
+Amd  = p_1'*(-p_1)/2+p_2'*p_2/2;
+Asub =  p_1'*p_2/2;
+Asup =  p_2'*(-p_1)/2;
+H = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 
 %****************************************
 % Term for <{u_h'},[v]>ds
-% Numerical Flux is taken as central flux
 %****************************************
 Amd = -p_1'*Dp_1/2+p_2'*Dp_2/2;
 Asub =-p_1'*Dp_2/2;
 Asup = p_2'*Dp_1/2;
-T3 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+L = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 
 %****************************************
 % Term for <[u_h],{v'}>ds
-% Numerical Flux is taken as central flux
 %****************************************
-Amd = -Dp_1'*p_1/2+Dp_2'*p_2/2;
-Asub =  Dp_1'*p_2/2;
-Asup = -Dp_2'*p_1/2;
-T4 = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+Amd = Dp_1'*(-p_1)/2+Dp_2'*p_2/2;
+Asub = Dp_1'*p_2/2;
+Asup = Dp_2'*(-p_1)/2;
+J = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 
-S = GG - T3 -T4+T2
+%****************************************
+% Term for <[u_h],[v]>ds
+%****************************************
+Amd  =  p_1'*(p_1)+p_2'*p_2;
+Asub = -p_1'*p_2/2;
+Asup =  p_2'*(-p_1)/2;
+Q = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+
+II = speye(dof_1D_x);
+T1=[...
+    kron(kron(II,GG),II)+kron(kron(II,II),GG),-kron(kron(G,G'),II),-kron(kron(G,II),G');...
+    -kron(kron(G',G),II),kron(kron(GG,II),II)+kron(kron(II,II),GG),-kron(kron(II,G),G');...
+    -kron(kron(G',II),G),-kron(kron(II,G'),G),kron(kron(GG,II),II)+kron(kron(II,GG),II);...
+];
+T2=[...
+    kron(kron(II,JJ),II)+kron(kron(II,II))
+];
+
+
+
 
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
+figure;subplot(1,2,1);spy(S);subplot(1,2,2);spy(H);
 
-for Lx=0:nx-1
+Mat = [kron(kron(II,S),II)+kron(kron(II,II),S),kron(kron(G,H),II)+kron(kron(T4,II),II),kron(kron(G,II),H)+kron(kron(T4,II),II);...
+    kron(kron(H,G),II)+kron(kron(II,T4),II),kron(kron(S,II),II)+kron(kron(II,II),S),kron(kron(II,G),H)+kron(kron(II,T4),II);...
+    kron(kron(H,II),G)+kron(kron(II,II),T4),kron(kron(II,H),G)+kron(kron(II,II),T4),kron(kron(S,II),II)+kron(kron(II,S),II);...
+    ];
+Mat-Mat'
+figure
+spy(Mat)
 
-    %---------------------------------------------
-    % Matrix GradX and EMassX
-    %---------------------------------------------
-    val=-1/hx*[Dp_val'*(quad_w.*p_val)];
-    
-    Iu=[meshgrid(Deg*Lx+1:Deg*(Lx+1))]';
-    Iv=[meshgrid(Deg*Lx+1:Deg*(Lx+1))];
-    GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
-    
-    c=Deg*Lx+1:Deg*(Lx+1);
-    p=Deg*(Lx-1)+1:Deg*Lx;
-    l=Deg*(Lx+1)+1:Deg*(Lx+2);
-    
-    val=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
-               p_2'*p_2/2   p_2'*p_1/2];     % for x2
 
-    
-    Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-    
-    if Lx<nx-1 && Lx>0
-        
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
-    
-    elseif Lx==0
-        
-        Iu=[meshgrid([Deg*(nx-1)+1:Deg*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
-   
-    elseif Lx==nx-1
-        
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:Deg])];
-    
-    end
-    
-%     GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
-% %     GradX=GradX+sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
-    
-    
-end
 
 GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
 
