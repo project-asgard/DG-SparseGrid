@@ -11,16 +11,17 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 10;
+Lev = 3;
 Deg = 2;
+Dim = 3;
 
 
 Lmax = 1;
-pde = Maxwell3;
-cfl=20;
-dt = 2^(-Lev)*cfl;
-%dt=1/80;
-MaxT =10;
+
+cfl=0.01;
+pde = Maxwell1;
+dt = 2^((-Lev)/3)*cfl;
+MaxT= round(1/dt);
 
 
 
@@ -44,7 +45,7 @@ FMWT_COMP_x = OperatorTwoScale(Deg,2^Lev);
 %*************************************************
 %% Step 2. Hash Table and 1D Connectivity
 %*************************************************
-[Hash,InvHash]=HashTable(Lev);
+[Hash,InvHash]=HashTable2(Lev,Dim);
 %1D connectivity
 Con1D=Connect1D(Lev);
 
@@ -59,40 +60,15 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % global rhs, E0, and B0 vectors
 % b_s is the RHS vector
 % E_s and B_s are used for error estimate
+[b_s,E_s,B_s]=GlobalRHS(Deg,F_1D,E_1D,B_1D,InvHash);
 
 %% Maxwell Solver
-[Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
-    F_1D,E_1D.E1,E_1D.E2,B_1D.B);
-sol_n=[Bh;E1h;E2h];
+[Eh,Bh] = MaxwellSolver2(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
+sol_n=[Eh;Bh];
 
 %% Error Estimate
 time=dt*MaxT;
-u_s=[B_1D.B*exp(-time);E_1D.E1*exp(-time);E_1D.E2*exp(-time)];
-
-Bs=[B_1D.B*exp(-time)];E1s=[E_1D.E1*exp(-time)];E2s=[E_1D.E2*exp(-time)];
-
-% u_s=[B_1D.B;E_1D.E1;E_1D.E2];
-% 
-% Bs=[B_1D.B];E1s=[E_1D.E1];E2s=[E_1D.E2];
-full([dt Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
-
-% subplot(1,2,1)
-% plot(sol_n)
-% subplot(1,2,2)
-% plot(u_s)
-% 
-[M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
-figure;
-subplot(1,3,1)
-plot(N,M*E1h,'r--',N,M*E1s,'b--')
-legend('Numerical Sol','Real Solution')
-title('E1')
-subplot(1,3,2)
-plot(N,M*E2h,'r--',N,M*E2s,'b--')
-legend('Numerical Sol','Real Solution')
-title('E2')
-subplot(1,3,3)
-plot(N,M*Bh,'r--',N,M*Bs,'b--')
-legend('Numerical Sol','Real Solution')
-title('B')
+u_s=[E_s*cos(pde.w*time);B_s*sin(pde.w*time)];
+Es=[E_s*cos(pde.w*time)];Bs=[B_s*sin(pde.w*time)];
+full([Deg Lev  max(abs(sol_n-u_s)) norm(sol_n-u_s)])
 

@@ -91,8 +91,8 @@ for T=1:MaxT
 %     time=time+dt;
     time = T*dt;
     
-    bbb=MaxRhs*exp(-time);
-
+   bbb=MaxRhs*exp(-time);
+    %bbb=MaxRhs*sin(omega*time);
     MaxSol = ImplicitTime1(H,MaxMat,MaxSol,dt,bbb);
     
 end

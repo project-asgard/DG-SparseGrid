@@ -1,4 +1,4 @@
-function f = ImplicitTime2(h1,h2,A,f,dt,b) %Gauss-Legendre
+function f = TimeAdvance(A,f,dt,b)
 %-------------------------------------------------
 % Time Advance Method
 % Input: Matrix:: A
@@ -6,19 +6,21 @@ function f = ImplicitTime2(h1,h2,A,f,dt,b) %Gauss-Legendre
 %        Time Step:: dt
 % Output: Vector:: f
 %-------------------------------------------------
-f = Implicit(h1,h2,A,f,dt,b);
+f = RungeKutta3(A,f,dt,b);
 
 end
 
-function fval = Implicit(h1,h2,A,f,dt,b)
+function fval = RungeKutta3(A,f,dt,b)
 %----------------------------------
-% Implicit Method
+% 3-rd Order Runge Kutta Method
 %----------------------------------
-ftmp1=h1*(A*f+b);
-ftmp2=h2*(A*f+b);
-fval=f+1/2*ftmp1*dt+1/2*ftmp2*dt;
-%ftmp=H*(A*f+b);
-%fval=f+dt*ftmp;
+ftmp = ApplyA(A,f)+b;
+f_1 = f +dt *ftmp;
+ftmp = ApplyA(A,f_1)+b;
+f_2 = 3/4*f+1/4*f_1+1/4*dt*(ftmp);
+ftmp = ApplyA(A,f_2)+b;
+fval = 1/3*f+2/3*f_2+2/3*dt*(ftmp);
+
 %     sol_1=sol_n+dt*(A_s*sol_n+b_s*sin(pde.w*time));
 %     sol_2=3/4*sol_n+1/4*sol_1+1/4*dt*(A_s*sol_1+b_s*sin(pde.w*time));
 %     sol_n=1/3*sol_n+2/3*sol_2+2/3*dt*(A_s*sol_2+b_s*sin(pde.w*time));

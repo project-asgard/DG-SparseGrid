@@ -11,21 +11,16 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 10;
+Lev = 7;
 Deg = 2;
+Dim = 3;
 
 
 Lmax = 1;
 
-CFL = 1000/2/2/2/2/2/2;
-
 pde = Maxwell1;
-% MaxT = 100;
-dx = 2^(-10);
-
-dt = CFL*dx;%1/10000;
-
-MaxT = 10;%ceil(0.1/dt);
+MaxT = 100;
+dt = 1/10000;
 
 
 %*************************************************
@@ -48,7 +43,7 @@ FMWT_COMP_x = OperatorTwoScale(Deg,2^Lev);
 %*************************************************
 %% Step 2. Hash Table and 1D Connectivity
 %*************************************************
-[Hash,InvHash]=HashTable(Lev);
+[Hash,InvHash]=HashTable(Lev,Dim);
 %1D connectivity
 Con1D=Connect1D(Lev);
 
@@ -63,18 +58,15 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % global rhs, E0, and B0 vectors
 % b_s is the RHS vector
 % E_s and B_s are used for error estimate
+[b_s,E_s,B_s]=GlobalRHS(Deg,F_1D,E_1D,B_1D,InvHash);
 
 %% Maxwell Solver
-[Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
-    F_1D,E_1D.E1*cos(0),E_1D.E2*cos(0),B_1D.B*0);
-sol_n=[Bh;E1h;E2h];
+[Eh,Bh] = MaxwellSolver(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
+sol_n=[Eh;Bh];
 
 %% Error Estimate
 time=dt*MaxT;
-u_s=[B_1D.B*sin(pde.w*time);E_1D.E1*cos(pde.w*time);E_1D.E2*cos(pde.w*time)];
+u_s=[E_s*cos(pde.w*time);B_s*sin(pde.w*time)];
 
-full([dt Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
-subplot(1,2,1)
-plot(u_s);
-subplot(1,2,2)
-plot(sol_n)
+full([Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+
