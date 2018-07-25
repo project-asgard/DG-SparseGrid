@@ -2,7 +2,7 @@
 % This code solves Maxwell's equation by
 % DG-SG grids methods
 %===================================================
-%clc
+clc
 clear
 close all
 
@@ -11,18 +11,16 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 3;
+Lev = 7;
 Deg = 2;
 Dim = 3;
 
 
 Lmax = 1;
 
-cfl=0.01;
 pde = Maxwell1;
-dt = 2^((-Lev)/3)*cfl;
-MaxT= round(1/dt);
-
+MaxT = 100;
+dt = 1/10000;
 
 
 %*************************************************
@@ -45,7 +43,7 @@ FMWT_COMP_x = OperatorTwoScale(Deg,2^Lev);
 %*************************************************
 %% Step 2. Hash Table and 1D Connectivity
 %*************************************************
-[Hash,InvHash]=HashTable2(Lev,Dim);
+[Hash,InvHash]=HashTable(Lev,Dim);
 %1D connectivity
 Con1D=Connect1D(Lev);
 
@@ -63,12 +61,12 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 [b_s,E_s,B_s]=GlobalRHS(Deg,F_1D,E_1D,B_1D,InvHash);
 
 %% Maxwell Solver
-[Eh,Bh] = MaxwellSolver2(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
+[Eh,Bh] = MaxwellSolver(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
 sol_n=[Eh;Bh];
 
 %% Error Estimate
 time=dt*MaxT;
 u_s=[E_s*cos(pde.w*time);B_s*sin(pde.w*time)];
-Es=[E_s*cos(pde.w*time)];Bs=[B_s*sin(pde.w*time)];
-full([Deg Lev  max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+
+full([Deg Lev max(abs(sol_n-u_s)) norm(sol_n-u_s)])
 
