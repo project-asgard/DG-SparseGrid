@@ -2,7 +2,7 @@
 % This code solves Maxwell's equation by
 % DG-SG grids methods
 %===================================================
-clc
+%clc
 clear
 close all
 
