@@ -9,7 +9,6 @@ isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
     reporting_level = 'verbose';
     reporting_level = 'normal';
   
-%     [n,nmax,nxfail,nskip] = test( 'fk6d_vlasov4_check', reporting_level);
     [n,nmax,nxfail,nskip] = test( 'fk6d_vlasov7_check', reporting_level);
     disp(sprintf('%d tests were executed', nmax));
     disp(sprintf('%d tests passed ',n));

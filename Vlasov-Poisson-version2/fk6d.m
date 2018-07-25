@@ -232,7 +232,7 @@ for L = 1:floor(TEND/dt)
             fval = TimeAdvance(C_encode,fval, dt,compression,Deg);
         else
             source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
-            fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
+            fval = TimeAdvance2(C_encode,fval, dt,compression,Deg,source);
 %             fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
         end
     else
@@ -250,7 +250,7 @@ for L = 1:floor(TEND/dt)
                 
                 source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
-                fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,dt*L);
+%                 fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,dt*L);
             end
         
     end
@@ -265,36 +265,37 @@ for L = 1:floor(TEND/dt)
     if mod(L,plotFreq)==0 && ~quiet
         
         figure(1000)
-        
+%         subplot(1,2,1)
         tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
         mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
         axis([0 Lmax -Vmax Vmax])
         view(0,90)
         colorbar
-        
-        title(['Time at ',num2str(L*dt)])
-        pause (0.01)
+%         subplot(1,2,2)
+%         mesh(xx,vv,(xx.*(1-xx).*(vv-Vmax).*(vv+Vmax)*L*dt),'FaceColor','interp','EdgeColor','interp');
+%         axis([0 Lmax -Vmax Vmax])
+%         view(0,90)
+%         
+%         title(['Time at ',num2str(L*dt)])
+%         pause (0.01)
     end
-    % checking the coefficients
-    subplot(1,3,1)
-    plot(fval,'r-o');
-    subplot(1,3,2)
-    plot(fend,'r-o')
-    subplot(1,3,3)
-    plot(fval-fend,'r-o')
-    pause(0.01) 
+%     % checking the coefficients
+%     subplot(1,3,1)
+%     plot(fval,'r-o');
+%     subplot(1,3,2)
+%     plot(fend,'r-o')
+%     subplot(1,3,3)
+%     plot(fval-fend,'r-o')
+%     pause(0.01) 
 end
 
 
-fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
-
-plot(fval-fend,'r-o')
-max(abs(fval-fend))
-L
+% fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
 
 % plot(fval-fend,'r-o')
 % max(abs(fval-fend))
 % L
+
 
 
 end
