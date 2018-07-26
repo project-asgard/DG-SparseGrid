@@ -1,0 +1,184 @@
+
+\documentclass[final,leqno]{siamltex704}
+%\documentclass[leqno]{siamltex704}
+\usepackage{epsfig}
+\usepackage{amsmath,bm}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage[notcite,notref]{showkeys}
+\newtheorem{algorithm}{Weak Galerkin Algorithm}
+\newcommand{\bq}{{\bf q}}
+\newcommand{\bn}{{\bf n}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bv}{{\bf v}}
+\def\bbb{{\bf b}}
+\def\T{{\mathcal T}}
+\def\E{{\mathcal E}}
+\def\V{{\mathcal V}}
+\def\W{{\mathcal W}}
+\def\l{{\langle}}
+\def\r{{\rangle}}
+\def\jump#1{{[\![#1[\!]}}
+\def\bbF{{\bf F}}
+\def\bbf{{\bf f}}
+\def\bn{{\bf n}}
+\def\bq{{\bf q}}
+\def\bV{{\bf V}}
+\def\bu{{\bf u}}
+\def\bv{{\bf v}}
+\def\bw{{\bf w}}
+\def\br{{\bf r}}
+\def\bs{{\bf s}}
+\def\bbQ{\mathbb{Q}}
+\def\bfQ{\bf{Q}}
+\def\bcurl{ \textbf{curl }}
+\def\bE{{\bf E}}
+\def\bB{{\bf B}}
+\def\bx{{\bf x}}
+\def\bU{{\bf U}}
+\def\bV{{\bf V}}
+\def\bJ{{\bf J}}
+\def\be{{\bf e}}
+
+\def\ljump{{[\![}}
+\def\rjump{{]\!]}}
+
+\def\lavg{{\{\!\{}}
+\def\ravg{{\}\!\}}}
+
+\def\aa{\mathfrak{a}}
+\def\bbQ{\mathbb{Q}}
+\newcommand{\pT}{{\partial T}}
+\newtheorem{defi}{Definition}[section]
+\def\3bar{{|\hspace{-.02in}|\hspace{-.02in}|}}
+%\setlength{\textwidth}{6truein} \setlength{\textheight}{8truein}
+%\voffset=-0.55truein
+%\hoffset=-0.65truein
+\renewcommand{\ldots}{\dotsc}
+\setlength{\parskip}{1\parskip}
+
+\title{Discontinuous Galerkin Sparse Grids Methods for Maxwell's Equations of A Cold Plasma}
+
+
+\author{
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\end{abstract}
+
+\begin{keywords}
+Maxwell's equations, time domain, discontinuous Galerkin method, sparse grids methods.
+\end{keywords}
+
+\begin{AMS}
+Primary: 65N15, 65N30; Secondary: 35J50
+\end{AMS}
+\pagestyle{myheadings}
+
+\section{Introduction}
+Time-harmonic Maxwell's equations with dielectric tensor $\epsilon^{\nu}\in C^0(\Omega : \mathcal{M}^{d\times d})$:
+\begin{eqnarray}
+\nabla\times\nabla\times{\bE}-\frac{\omega^2}{c^2}\epsilon^{\nu}\bE = 0
+\end{eqnarray}
+with
+\begin{eqnarray*}
+\epsilon^{\nu}=\begin{pmatrix}
+1-\dfrac{\tilde{\omega}\omega_p^2}{\omega(\tilde{\omega}^2-\omega_c^2)}  & i\dfrac{\omega_c\omega_p^2}{\omega(\tilde{\omega}^2-\omega_c^2)} & 0\\
+-i\dfrac{\omega_c\omega_p^2}{\omega(\tilde{\omega}^2-\omega_c^2)}& 1-\dfrac{\tilde{\omega}\omega_p^2}{\omega(\tilde{\omega}^2-\omega_c^2)} & 0\\
+0 & 0 & 1-\dfrac{\omega_p^2}{\omega\tilde{\omega}}
+\end{pmatrix}.
+\end{eqnarray*}
+Here, $\omega_p({\bf x})^2=\frac{e^2N_e({\bf x})}{c^2\epsilon_0}$, $\omega_c({\bf x})=\frac{e|{\bf B}_0({\bf x})|}{m_e}$ and $\tilde{\omega}=\omega+i\nu.$ The collision frequency is $\nu>0$. it corresponds to friction on a bath of static ions. It is an extremely small quantity because the plasma has very low collisionality $\nu\approx 10^{-7}$ in a fusion plasma.
+
+In this equation, the dispersive media whose physical parameters are wavelength dependent.
+\begin{eqnarray}
+\nabla\times\nabla\times\bu-\kappa^2\bu =\bbf.
+\end{eqnarray}
+Formulation:
+\begin{eqnarray}
+A(\bu_h,\bv)&=&(\nabla_h\times \bu_h,\nabla_h\times \bv)-k^2(\bu_h,\bv)\notag\\
+&&-\langle\lavg\nabla_h\times \bu_h\ravg,\ljump \bv\rjump\rangle-\langle\ljump \bu_h\rjump,\lavg\nabla_h\times \bv\ravg\rangle
++\alpha h^{-1}\langle\ljump \bu_h\rjump,\ljump \bv\rjump\rangle
+\end{eqnarray}
+and
+\begin{eqnarray}
+A(\bu_h,\bv)=(\bbf,\bv).
+\end{eqnarray}
+
+%Let the test and trial functions as: 
+%\begin{eqnarray*}
+%\bm{\phi_{j,m}^l}:=\bigg(\phi^{l_1}_{j_1,m_1}(x_1)\phi^{l_2}_{j_2,m_2}(x_2)\cdots\bigg)\mbox{ and }
+%\bm{\phi_{i,n}^\ell}:=\bigg(\phi^{\ell_1}_{i_1,n_1}(x_1)\phi^{\ell_2}_{i_2,n_2}(x_2)\cdots\bigg)
+%\end{eqnarray*}
+%where $|\bm{l}|_1\le n$ and $|\bm{\ell}|_1\le n.$
+%Then the operator $\mathcal{A}$ acts on them are as follows:
+%\begin{eqnarray*}
+%\mathcal{A}(\bm{\phi_{j,m}^l},\bm{\phi_{i,n}^\ell})=A_1(\phi^{l_1}_{j_1,m_1},\phi^{\ell_1}_{i_1,n_1})\bigotimes A_2(\phi^{l_2}_{j_2,m_2},\phi^{\ell_2}_{i_2,n_2})\bigotimes\cdots
+%\end{eqnarray*}
+%Through mapping $(\bm{l,j,m})\to J$ and $(\bm{\ell,i,n})\to I$, we generate the entry $(\mathbb{A})_{I,J}$.
+%
+%\begin{eqnarray*}
+%\hat{\bE} &=& \frac{\bE^++\bE^-}{2},\ \hat{\bB} = \frac{\bB^++\bB^-}{2}\\
+%\hat{\bE} &=& \bE^+,\ \hat{\bB} = \bB^-,\mbox{ or }\hat{\bE} = \bE^-,\ \hat{\bB} = \bB^+\\
+%\hat{\bE} &=& \frac{\bE^++\bE^-}{2}+(\bB^+\times\bn^++\bB^-\times\bn^-),\ \hat{\bB} = \frac{\bB^++\bB^-}{2}-(\bE^+\times\bn^++\bE^-\times\bn^-)
+%\end{eqnarray*}
+%-------------------------------------------
+% Numerical Examples
+%-------------------------------------------
+\section{Numerical Examples}
+\subsection{Test 1}
+Let $\Omega=[0,1]^3$ and the exact solution is given by
+\begin{eqnarray}
+\bu(x,y,z)=\begin{pmatrix}
+\sin(\pi y)\sin(\pi z)\\
+\sin(\pi z)\sin(\pi x)\\
+\sin(\pi x)\sin(\pi y)
+\end{pmatrix}.
+\end{eqnarray}
+\begin{table}[htbp]
+  \centering
+  \caption{High-order Maxwell2}
+    \begin{tabular}{rrrrr}
+1/h & Max Error & Rate & L2 Error & Rate\\
+\multicolumn{5} {c}{k=1}	\\
+    \end{tabular}%
+\end{table}%
+
+
+\begin{thebibliography}{99}
+\bibitem{Dolean2010}
+V. Dolean, H. Fahs, L. Fezoui, and S. Lanteri. Locally implicit discontinous Galerkin method for time domain electromagnetics, J. Comput. Phys., 229 (2010): 512-526.
+
+\bibitem{GuoCheng2016}
+W. Guo and Y. Cheng. A Sparse Grid Discontinuous Galerkin Method for High-Dimensional Transport Equations and Its Application to Kinetic Simulations. SIAM J. Sci. Comput., 38(6), A3381-A3409. 
+
+\bibitem{Kopriva2002}
+D.A.Kopriva, S.L.Woodruff and M.Y.Hussaini. Computation of electromagnetic scattering with a non-conforming discontinuous spectral element method, Int. J. Numr. Meth. Engng, 53 (2002): 105-122.
+
+\bibitem{LiHesthaven2014}
+J. Li and J.S.Hesthaven. Analysis and application of the nodal discontinuous Galerkin method for wave propagation in metamaterials, J. Comput. Phys., 258 (2014): 915-930.
+
+\bibitem{ShuOsher1988}
+C.W. Shu and S. Osher. Efficient implementation of essentially non-oscillatory shock-capturing schemes. J. Comput.
+Phys., 77 (1988):439-471.
+
+
+\bibitem{Warburton2000}
+T. Warburton. Application of the discontinuous Galerkin method to Maxwell's equations using unstructured polymorphic hp-dinite elements, In Discontinuous Galerkin Methods, 2000, 451-458.
+
+\bibitem{XieWangZhang2013}
+Z. Xie, B. Wang and Z. Zhang. Space-Time discontinuous Galerkin method for Maxwell's equations, Commun. Comput.Phys., 14 (2013): 916-939.
+
+
+
+\end{thebibliography}
+
+\end{document}
+
+

@@ -1,4 +1,4 @@
-function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x)
+function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde)
 %========================================================
 % Construct the matrix for curl operator on [0,Lmax]
 % Input: 
@@ -34,6 +34,7 @@ Dp_2 = dlegendre(1,Deg);
 nx = 2^(Lev);
 hx = Lmax/nx;
 dof_1D_x = Deg*nx;
+dofs = 3*dof_1D_x^3;
 GradMat = sparse(dof_1D_x,dof_1D_x);
 GradGradMat = sparse(dof_1D_x,dof_1D_x);
 
@@ -114,23 +115,65 @@ T1=[...
     -kron(kron(G',II),G),-kron(kron(II,G'),G),kron(kron(GG,II),II)+kron(kron(II,GG),II);...
 ];
 T2=[...
-    kron(kron(II,JJ),II)+kron(kron(II,II))
+    kron(kron(II,J),II)+kron(kron(II,II),J),-kron(kron(H,G'),II),-kron(kron(H,II),G');...
+    -kron(kron(G',H),II),kron(kron(J,II),II)+kron(kron(II,II),J),-kron(kron(II,H),G');...
+    -kron(kron(G',II),H),-kron(kron(II,G'),H),kron(kron(J,II),II)+kron(kron(II,J),II);...
 ];
+T3=[...
+    kron(kron(II,L),II)+kron(kron(II,II),L),-kron(kron(G,K),II),-kron(kron(G,II),K);...
+    -kron(kron(K,G),II),kron(kron(L,II),II)+kron(kron(II,II),L),-kron(kron(II,G),K);...
+    -kron(kron(K,II),G),-kron(kron(II,K),G),kron(kron(L,II),II)+kron(kron(II,L),II);...
+];
+T4=[kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);...
+    zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
+    zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II)];
 
-
-
-
+% size(T1)
+% dofs
+Mat = T1-T2-T3+alpha*T4-pde.w2*eye(dofs,dofs);
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
-figure;subplot(1,2,1);spy(S);subplot(1,2,2);spy(H);
+figure;spy(Mat);
 
-Mat = [kron(kron(II,S),II)+kron(kron(II,II),S),kron(kron(G,H),II)+kron(kron(T4,II),II),kron(kron(G,II),H)+kron(kron(T4,II),II);...
-    kron(kron(H,G),II)+kron(kron(II,T4),II),kron(kron(S,II),II)+kron(kron(II,II),S),kron(kron(II,G),H)+kron(kron(II,T4),II);...
-    kron(kron(H,II),G)+kron(kron(II,II),T4),kron(kron(II,H),G)+kron(kron(II,II),T4),kron(kron(S,II),II)+kron(kron(II,S),II);...
-    ];
-Mat-Mat'
-figure
-spy(Mat)
+% handling boundary condition
 
+condest(Mat)
+
+Lend = Lmax;Lstart = 0;
+fx = zeros(quad_num,3);
+fy = zeros(quad_num,3);
+fz = zeros(quad_num,3);
+for i=1:2^Lev
+    hx = (Lend-Lstart)/nx;
+    xi_x = hx*(quad_x/2+1/2+i)+Lstart;
+    fx = pde.rhs(xi_x,1/2+xi_x-xi_x,1/2+xi_x-xi_x);
+    fy = pde.rhs(1/2+xi_x-xi_x,xi_x,1/2+xi_x-xi_x);
+    fz = pde.rhs(1/2+xi_x-xi_x,1/2+xi_x-xi_x,xi_x);
+    
+    index = Deg*i+1:Deg*(i+1);
+    f1x(index) = p_val*(quad_w.*fx(:,1))*hx*sqrt(1/hx)/2;
+    f1y(index) = p_val*(quad_w.*fy(:,1))*hx*sqrt(1/hx)/2;
+    f1z(index) = p_val*(quad_w.*fz(:,1))*hx*sqrt(1/hx)/2;
+%     f1 = kron(kron(f1x,f1y),f1z);
+
+
+    f2x(index) = p_val*(quad_w.*fx(:,2))*hx*sqrt(1/hx)/2;
+    f2y(index) = p_val*(quad_w.*fy(:,2))*hx*sqrt(1/hx)/2;
+    f2z(index) = p_val*(quad_w.*fz(:,2))*hx*sqrt(1/hx)/2;
+%     f2 = kron(kron(f2x,f2y),f2z);
+
+    f3x(index) = p_val*(quad_w.*fx(:,3))*hx*sqrt(1/hx)/2;
+    f3y(index) = p_val*(quad_w.*fy(:,3))*hx*sqrt(1/hx)/2;
+    f3z(index) = p_val*(quad_w.*fz(:,3))*hx*sqrt(1/hx)/2;
+%     f3 = kron(kron(f3x,f3y),f3z);
+
+end
+
+ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)];
+
+size(ff)
+% compute the RHS term
+
+return
 
 
 GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
