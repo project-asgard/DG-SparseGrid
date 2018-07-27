@@ -1,4 +1,5 @@
-function f = ImplicitTime2(h1,h2,A,f,dt,b) %Gauss-Legendre
+function f = ImplicitTime2(s1,s2,h1,h2,A,f,dt,b1,b2) %Gauss-Legendre
+%Still have some problem
 %-------------------------------------------------
 % Time Advance Method
 % Input: Matrix:: A
@@ -6,17 +7,21 @@ function f = ImplicitTime2(h1,h2,A,f,dt,b) %Gauss-Legendre
 %        Time Step:: dt
 % Output: Vector:: f
 %-------------------------------------------------
-f = Implicit(h1,h2,A,f,dt,b);
+f = Implicit(s1,s2,h1,h2,A,f,dt,b1,b2);
 
 end
 
-function fval = Implicit(h1,h2,A,f,dt,b)
+function fval = Implicit(s1,s2,h1,h2,A,f,dt,b1,b2)
 %----------------------------------
 % Implicit Method
 %----------------------------------
-ftmp1=h1*(A*f+b);
-ftmp2=h2*(A*f+b);
-fval=f+1/2*ftmp1*dt+1/2*ftmp2*dt;
+tmp1=s1*(b2-b1);
+tmp2=s2*(b1-b2);
+b1=(1/4-sqrt(3)/6)*A*dt*tmp1+b1;
+b2=(1/4+sqrt(3)/6)*A*dt*tmp2+b2;
+k1=h1*(A*f+b1);
+k2=h2*(A*f+b2);
+fval=f+1/2*k1*dt+1/2*k2*dt;
 %ftmp=H*(A*f+b);
 %fval=f+dt*ftmp;
 %     sol_1=sol_n+dt*(A_s*sol_n+b_s*sin(pde.w*time));

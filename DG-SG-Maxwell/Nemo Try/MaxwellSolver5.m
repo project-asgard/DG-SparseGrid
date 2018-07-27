@@ -155,7 +155,11 @@ MaxMat=[zero,zero,zero,zero,ComMat1/(eps*mu),-ComMat2/(eps*mu);
 MaxRhs = -[Rhs/(eps);zeros(Dofs3,1)];
 MaxSol = [E0;B0];
 S=eye(Dofs)-dt*MaxMat;
+<<<<<<< HEAD
 condest(S)
+=======
+% condest(S)
+>>>>>>> 5bf44261309be8643ab5808ecd37dae8d43c73c7
 H=inv(S);
 time=0;
 for T=1:MaxT
