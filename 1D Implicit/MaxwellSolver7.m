@@ -1,4 +1,4 @@
-function [Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,...
+function [Bh,E1h,E2h] = MaxwellSolver7(Lev,Deg,Hash,InvHash,Con1D,GradX,...
                                  omega,dt,MaxT,...
                                  F_1D,E1,E2,B)%Trapezoidal rule
 %=====================================================
@@ -83,6 +83,8 @@ MaxRhs = -[F_1D.b3;F_1D.b1;F_1D.b2];
 MaxSol = [B;E1;E2];
 
 % try
+% MaxMat = -speye(Dofs*3);
+
 
 s=eye(Dofs*3)-0.5*MaxMat*dt;
 
@@ -93,11 +95,10 @@ time=0;
 for T=1:MaxT
 %     time=time+dt;
     time = T*dt;
-    
-   bbb=MaxRhs*exp(-time);
-   b0=MaxRhs*exp(-(time-dt));
-%     bbb=MaxRhs*sin(omega*time);
-%     b0=MaxRhs*sin(omega*(time-dt));
+    bbb=-[F_1D.b3*(2*pi*time-1);F_1D.b1*(2*pi*time+1);F_1D.b2];
+    b0=-[F_1D.b3*(2*pi*(time-dt)-1);F_1D.b1*(2*pi*(time-dt)+1);F_1D.b2];
+%    bbb=zeros(Dofs*3,1);%MaxRhs*exp(-time);
+    %bbb=MaxRhs*sin(omega*time);
     MaxSol = ImplicitTime1(H,MaxMat,MaxSol,dt,b0,bbb);
     
 end

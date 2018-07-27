@@ -1,4 +1,4 @@
-function f = ImplicitTime1(H,A,f,dt,b0,b) %Trapezoidal rule
+function f = ImplicitTime(A,f,dt,b) %Backward Euler
 %-------------------------------------------------
 % Time Advance Method
 % Input: Matrix:: A
@@ -6,19 +6,19 @@ function f = ImplicitTime1(H,A,f,dt,b0,b) %Trapezoidal rule
 %        Time Step:: dt
 % Output: Vector:: f
 %-------------------------------------------------
-f = Implicit(H,A,f,dt,b0,b);
+f = Implicit(A,f,dt,b);
 
 end
 
-function fval = Implicit(H,A,f,dt,b0,b)
+function fval = Implicit(A,f,dt,b)
 %----------------------------------
 % Implicit Method
 %----------------------------------
 
-ftmp=f+1/2*dt*(A*f+b0)+1/2*b*dt;
-fval=H*ftmp;
-%ftmp=H*(A*f+b);
-%fval=f+dt*ftmp;
+%condest(S);
+%fval=H*(1/dt)*f+H*b;
+fval=A*(f+b*dt);
+
 %     sol_1=sol_n+dt*(A_s*sol_n+b_s*sin(pde.w*time));
 %     sol_2=3/4*sol_n+1/4*sol_1+1/4*dt*(A_s*sol_1+b_s*sin(pde.w*time));
 %     sol_n=1/3*sol_n+2/3*sol_2+2/3*dt*(A_s*sol_2+b_s*sin(pde.w*time));
