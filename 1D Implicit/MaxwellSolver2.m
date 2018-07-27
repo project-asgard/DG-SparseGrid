@@ -1,6 +1,7 @@
 function [Bh,E1h,E2h] = MaxwellSolver2(Lev,Deg,Hash,InvHash,Con1D,GradX,...
                                  omega,dt,MaxT,...
                                  F_1D,E1,E2,B)%Gauss-Legendre method
+%Still have some problem                        
 %=====================================================
 % Maxwell Solver on [0,1]^3
 % We use operator (du/dx,v) to construct (curl u,v)
@@ -82,17 +83,17 @@ MaxRhs = -[zeros(Dofs,1);F_1D.b1;F_1D.b2];
 MaxSol = [B;E1;E2];
 s1=inv(eye(Dofs*3)-sqrt(3)/6*MaxMat*dt);
 s2=inv(eye(Dofs*3)+sqrt(3)/6*MaxMat*dt);
-h1=inv(eye(Dofs*3)-1/4*MaxMat*dt-s1*(1/4-sqrt(3)/6)*MaxMat*dt);
-h2=inv(eye(Dofs*3)-1/4*MaxMat*dt-s2*(1/4+sqrt(3)/6)*MaxMat*dt);
+h1=inv(eye(Dofs*3)-1/4*MaxMat*dt-s1*(1/4-sqrt(3)/6)*(eye(Dofs*3)+sqrt(3)/6*MaxMat*dt)*MaxMat*dt);
+h2=inv(eye(Dofs*3)-1/4*MaxMat*dt-s2*(1/4+sqrt(3)/6)*(eye(Dofs*3)-sqrt(3)/6*MaxMat*dt)*MaxMat*dt);
 time=0;
-S=eye(Dofs*3)+1/2*h1*MaxMat*dt+1/2*h2*MaxMat*dt;
 %e=eigs(S,6,'largestabs','Tolerance',1e-2)
 for T=1:MaxT
     time=time+dt;
 
-    bbb=MaxRhs*sin(omega*time);
+    b1=MaxRhs*sin(omega*time+(1/2-1/6*sqrt(3))*dt);
+    b2=MaxRhs*sin(omega*time+(1/2+1/6*sqrt(3))*dt);
 
-    MaxSol = ImplicitTime2(h1,h2,MaxMat,MaxSol,dt,bbb);
+    MaxSol = ImplicitTime2(s1,s2,h1,h2,MaxMat,MaxSol,dt,b1,b2);
     
 end
 

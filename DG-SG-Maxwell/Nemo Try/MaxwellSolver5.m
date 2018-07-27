@@ -154,8 +154,8 @@ MaxMat=[zero,zero,zero,zero,ComMat1/(eps*mu),-ComMat2/(eps*mu);
 %% Time advance for solving Maxwell equation
 MaxRhs = -[Rhs/(eps);zeros(Dofs3,1)];
 MaxSol = [E0;B0];
-S=speye(Dofs)-dt*MaxMat;
-condest(S)
+S=eye(Dofs)-dt*MaxMat;
+% condest(S)
 H=inv(S);
 time=0;
 for T=1:MaxT

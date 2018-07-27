@@ -18,10 +18,10 @@ Deg = 2;
 
 Lmax = 1;
 pde = Maxwell1;
-cfl=125/4;
-dt = 2^(-Lev)*cfl;
+cfl=50/2/2/2/2/2/2/2/2;
+dt = 2^(-Lev/2)*cfl;
 % %dt=1/80;
-MaxT =ceil(1/dt);
+MaxT =ceil(2/dt);
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
