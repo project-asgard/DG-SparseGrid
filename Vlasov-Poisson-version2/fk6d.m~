@@ -232,11 +232,9 @@ for L = 1:floor(TEND/dt)
             fval = TimeAdvance(C_encode,fval, dt,compression,Deg);
         else
 % %             source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
-            % Kutta's third-order method
-            c2 = 1/2; c3 = 1;
             source1 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*(L-1));
-            source2 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*(L-1)+c2*dt);
-            source3 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*(L-1)+c3*dt);
+            source2 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
+            source3 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
             fval = TimeAdvance2(C_encode,fval, dt,compression,Deg,source1,source2,source3);
 %             fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
         end
@@ -253,14 +251,9 @@ for L = 1:floor(TEND/dt)
                 fval = TimeAdvance(A_data,fval, dt,compression,Deg);
             else
                 
-%                 source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
-%                 fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
-% %                 fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,dt*L);
-            c2 = 1/2; c3 = 1;
-            source1 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*(L-1));
-            source2 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*(L-1)+c2*dt);
-            source3 = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*(L-1)+c3*dt);
-            fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source1,source2,source3);
+                source = source_vector(LevX,LevV,Deg,Lmax,Vmax,HASHInv,pde,dt*L);
+                fval = TimeAdvance2(A_data,fval, dt,compression,Deg,source);
+%                 fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,dt*L);
             end
         
     end
@@ -301,13 +294,10 @@ end
 
 
 % fend = source_vector2(LevX,LevV,Deg,HASHInv,pde,L*dt);%floor(TEND/dt)*dt);
-% 
+
 % plot(fval-fend,'r-o')
 % max(abs(fval-fend))
 % L
-
-
-a=1;
 
 
 
