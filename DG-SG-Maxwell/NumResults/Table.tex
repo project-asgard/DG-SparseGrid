@@ -1,0 +1,324 @@
+\documentclass[a4paper]{article}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{geometry}
+
+\usepackage{bm}
+\usepackage{booktabs}
+
+\usepackage{graphicx}
+
+\geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+\begin{document}
+
+
+\section{Explicit}
+
+%---------------------
+% Table 1--Fig1
+%---------------------
+\begin{table}[htbp]
+\caption{\label{tab:test}The L2 error and accuracy of order with dt=1/1000 and MaxT=100}
+\centering
+\vspace{5pt}
+\begin{tabular}{cccccccc}
+\toprule
+deg &level &central flux &order &alternating flux &order &up-winding flux &order\\
+\midrule
+2 &3 &9.847E-03 &         &2.195E-02 &         &1.896E-02 &         \\
+2 &4 &9.020E-03 &0.127&1.529E-02 &0.521&1.245E-02 &0.607\\
+2 &5 &7.767E-03 &0.216&9.257E-03 &0.724&8.392E-03 &0.570\\
+2 &6 &5.017E-03 &0.631&5.265E-03 &0.814&4.035E-03 &1.056\\
+2 &7 &2.781E-03 &0.851&2.623E-03 &1.006&1.793E-03 &1.171\\
+2 &8 &1.463E-03 &0.927&1.182E-03 &1.150&7.015E-04 &1.354\\
+2 &9 &7.478E-04 &0.968&4.334E-04 &1.448&2.526E-04 &1.474\\
+\bottomrule
+\end{tabular}
+\end{table}
+% figure
+\begin{figure}
+\centering
+\includegraphics[width=.7\textwidth]{Table1_Figure1.eps}
+\end{figure}
+
+
+
+%---------------------
+% Table 2--Fig2
+%---------------------
+\begin{table}[htbp]
+\caption{\label{tab:test}The L2 error and accuracy of order with time period=1}
+\centering
+\vspace{5pt}
+\begin{tabular}{cccccccc}
+\toprule
+deg &level &central flux &order &alternating flux &order &up-winding flux &order\\
+       &        &CFL=0.0068 &         &CFL=0.0045       &         &CFL=0.00625         &         \\
+\midrule
+2 &4 &1.886E+00 &         &1.277E+00 &        &4.519E-01 &        \\
+2 &5 &1.501E+00 &0.332&9.158E-01 &0.480&2.224E-01 &1.023\\
+2 &6 &8.281E-01 &0.857&4.058E-01 &1.174&1.008E-01 &1.141\\
+2 &7 &4.749E-01 &0.802&1.858E-01 &1.127&3.425E-02 &1.558\\
+2 &8 &2.501E-01 &0.925&7.502E-01 &1.309&1.169E-02 &1.551\\
+2 &9 &1.255E-01 &0.995&2.748E-02 &1.450&4.294E-03 &1.445\\    
+\bottomrule
+\end{tabular}
+% figure
+%\begin{figure}
+%\centering
+%\includegraphics[width=.7\textwidth]{Table2_Figure2.pdf}
+%\end{figure}
+
+
+\end{table}
+
+
+\section{CFL condition}
+
+
+%---------------------
+% Flux comparing
+%---------------------
+\begin{table}
+\centering
+\caption*{Explicit 3rd Order TVD Runge-Kutta method with $k=1,\ h=2^{-8}$ for different fluxes.}
+\begin{tabular}{c|c|ccc}
+\toprule\hline
+&Flux & Conv. Order  & Spectral Radius  &CFL Number\\ \hline \vspace{1pt}
+%\multicolumn{4}{c}{Explicit 3rd Order TVD Runge-Kutta method with $k=1,\ h=2^{-8}$}\\ \hline
+Central Flux & $\hat{E}=\frac{E^++E^-}{2}$, $\hat{B}=\frac{B^++B^-}{2}$& $ \mathcal{O}(h)$ & 1.024E+03 &0.0107\\ \vspace{1pt}
+Alternating Flux&$\hat{E}=E^+,\ \hat{B}=B^-$  & $\mathcal{O}(h^{1.5})$ &1.536E+03 &0.0072\\ \vspace{1pt}
+Upwinding Flux &$\hat{E}=\{E\}+[B]$, $\hat{B}=\{B\}-[E]$  & $\mathcal{O}(h^{1.5})$ &1.465E+03 &0.0108\\ \hline\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\caption{\label{tab:test}The approximation of bounding CFL }
+\centering
+\vspace{5pt}
+\begin{tabular}{cccccccc}
+\toprule
+deg &level &central flux &CFL &alternating flux &CFL &up-winding flux &CFL\\
+       &        &spectral radius &         &spectral radius       &         &spectral radius        &         \\
+\midrule
+2 &3 &3.271E+01 &0.1059 &5.156E+01 &0.0672        &6.162E+01& 0.0811       \\
+2 &4 &6.428E+01 &0.0679 &9.815E+01 &0.0445         &1.089E+02 &0.0578\\
+2 &5 &1.282E+02 &0.0429 &1.931E+02 &0.0285&2.045E+02&0.0388\\
+2 &6 &2.561E+02 &0.0271 &3.846E+02 &0.0180&3.962E+02&0.0252\\
+2 &7 &5.121E+02 &0.0170 &7.683E+02 &0.0114&7.800E+02&0.0161\\
+2 &8 &1.024E+03 &0.0107&1.536E+03 &0.0072&1.465E+03 &0.0108\\ 
+
+\bottomrule
+\end{tabular}
+
+\caption{\label{tab:test}spectral radius for different degree for central flux}
+\centering
+\vspace{5pt}
+\begin{tabular}{cccccc}
+\toprule
+deg &level &spectral radius & CFL\\
+\midrule
+2&3&3.271E+01&0.1059\\
+2&4&6.428E+01&0.0679\\
+3&3&6.614E+01&0.0524\\
+3&4&1.298E+02&0.0336\\
+4&3&1.100E+02&0.0315\\
+4&4&2.146E+02&0.0203\\
+\bottomrule
+\end{tabular}
+
+\caption{\label{tab:test}spectral radius for full grid for central flux}
+\centering
+\vspace{5pt}
+\begin{tabular}{cccccc}
+\toprule
+deg &level &sparse grid&sparse grid&full grid&full grid\\
+       &        &spectral radius&CFL&spectral radius&CFL\\
+\midrule
+2&3&3.271E+01&0.1059&5.521E+01&0.0627\\
+2&4&6.428E+01&0.0679&1.104E+02&0.0395\\
+3&3&6.614E+01&0.0524&1.115E+02&0.0311\\
+3&4&1.298E+02&0.0336&2.230E+02&0.0196\\
+
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+\section{Implicit}
+
+
+\begin{table}[htbp]
+\caption{\label{tab:test}The L2 error and convergence rate for Backward Euler with time period=1.5}
+\centering
+\vspace{5pt}
+
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&$l-2$ error & convergence rate\\
+\midrule
+2&9&1.000E-01&6.085E-02&\\
+2&9&5.000E-02&2.967E-02&1.036\\
+2&9&2.500E-02&1.485E-02&0.999\\
+2&9&1.250E-02&7.729E-03&0.942\\
+2&9&6.250E-03&4.392E-03&0.815\\
+2&9&3.125E-03&2.992E-03&0.554\\
+2&9&1.563E-03&2.512E-03&0.252\\
+2&9&7.813E-04&2.377E-03&0.080\\
+
+\bottomrule
+\end{tabular}
+
+\caption{\label{tab:test}The L2 error and convergence rate for Trapezoidal rule with time period=2}
+\centering
+\vspace{5pt}
+
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&$l-2$ error & convergence rate\\
+\midrule
+2&10&7.813E-01&3.668E-01&\\
+2&10&3.906E-01&6.266E-02&2.560\\
+2&10&1.953E-01&2.437E-02&1.360\\
+2&10&9.766E-02&6.544E-03&1.900\\
+2&10&4.883E-02&1.636E-03&2.000\\
+2&10&2.441E-02&6.746E-04&1.278\\
+2&10&1.221E-02&5.705E-04&0.242\\
+2&10&6.104E-03&5.606E-04&0.025\\
+
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+
+\section{Comparison}
+
+\begin{table}[htbp]
+\caption{\label{tab:test}1D: The L2 error for Explicit 3rd Runge Kutta with time period=1.5}
+\centering
+\vspace{5pt}
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&$l-2$ error &CPU time \\
+\midrule
+2&9&8.000E-04&2.432E-03&4.154s\\
+\bottomrule
+\end{tabular}
+\caption{\label{tab:test}The L2 error for Semi-Implicit Backward Euler}
+\centering
+\vspace{5pt}
+
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&$l-2$ error &CPU time \\
+\midrule
+2&9&8.000E-04&2.377E-03&4.186s\\
+2&9&9.000E-04&2.383E-03&3.661s\\
+2&9&1.000E-03&4.285E+269&3.623s\\
+\bottomrule
+\end{tabular}
+
+
+\caption{\label{tab:test}The L2 error for Implicit scheme}
+\centering
+\vspace{5pt}
+
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&Backward Euler &CPU time &Trapezoidal rule&CPU time\\
+\midrule
+2&9&8.000E-04&2.379E-03&26.240s&2.335E-03&18.765s\\
+2&9&1.000E-03&2.406E-03&19.453s&2.335E-03&16.615s\\
+2&9&5.000E-03&3.789E-03&11.251s&2.346E-03&7.355s\\
+2&9&1.000E-02&6.357E-03&11.814s&2.381E-03&6.089s\\
+2&9&5.000E-02&2.967E-02&10.264s&2.989E-03&5.189s\\
+\bottomrule
+\end{tabular}
+
+
+\end{table}
+
+
+%--Im/Ex comparing------
+% Bad accuracy for 1D test
+\begin{table}
+\caption{Time Advance Method for 1D Maxwell's Equation of $k=1$, $h=2^{-9}$, Central Flux.}\vspace{5pt}
+\centering
+\begin{tabular}{c|c|c}\toprule\hline
+Time Advance Method & $L^2$-Error & Time Step \\ \hline
+Explicit 3rd TVD Runge-Kutta  & 2.432E-03 & 8.000E-04\\ %\hline
+Implicit Backward Euler & 2.406E-03 & 1.000E-03\\ %\hline
+Implicit Trapezoidal Rule & 2.381E-03 & 1.000E-02\\ %\hline
+Semi-implicit Backward Euler & 2.383E-03 & 9.000E-04\\ \hline
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% 3D %%
+
+\begin{table}[htbp]
+\caption{\label{tab:test}3D: The L2 error for Explicit 3rd Runge Kutta with time period=0.5}
+\centering
+\vspace{5pt}
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&$l-2$ error &CPU time \\
+\midrule
+2&4&2.000E-02&6.314E-03&1.365s\\
+\bottomrule
+\end{tabular}
+\caption{\label{tab:test}The L2 error for Semi-Implicit Backward Euler}
+\centering
+\vspace{5pt}
+
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&$l-2$ error &CPU time \\
+\midrule
+2&4&2.000E-02&6.259E-01&1.061s\\
+2&4&2.500E-02&6.451E-01&0.856s\\
+2&4&3.333E-02&6.604E-01&0.859s\\
+2&4&5.000E-02&6.964E-01&0.907s\\
+2&4&1.000E-01&4.246E+01&1.034s\\
+\bottomrule
+\end{tabular}
+
+
+\caption{\label{tab:test}The L2 error for Implicit scheme}
+\centering
+\vspace{5pt}
+
+\begin{tabular}{cccccccc}
+\toprule
+deg & level&dt&Backward Euler &CPU time &Trapezoidal rule&CPU time\\
+\midrule
+2&4&2.000E-02&6.259E-01&7.802s&6.116E-01&7.473s\\
+2&4&2.500E-02&6.301E-01&7.255s&6.118E-01&7.383s\\
+2&4&3.333E-02&6.371E-01&7.140s&6.123E-01&7.265s\\
+2&4&5.000E-02&6.515E-01&7.227s&6.132E-01&7.211s\\
+2&4&1.000E-01&6.955E-01&7.130s&6.128E-01&7.000s\\
+2&4&2.000E-01&1.029E+00&6.913s&8.188E-01&7.095s\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%--Im/Ex comparing------
+% Bad accuracy for 3D test
+\begin{table}
+\begin{tabular}{c|c|c}
+& $L^2$-Error & Time Step \\ \hline\hline
+Explicit 3rd TVD Runge-Kutta  & 6.314E-03 & 2.000E-02\\ \hline
+Implicit Backward Euler & 6.371E-01 & 2.500E-02\\ \hline
+Implicit Trapezoidal Rule & 6.128E-01 & 1.000E-01\\ \hline
+\hline
+\end{tabular}
+\end{table}
+
+
+
+
+
+\end{document}
