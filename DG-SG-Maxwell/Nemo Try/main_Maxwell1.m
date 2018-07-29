@@ -11,7 +11,7 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 7;
+Lev = 8;
 Deg = 2;
 Dim = 3;
 
@@ -19,9 +19,11 @@ Dim = 3;
 Lmax = 1;
 
 pde = Maxwell1;
-MaxT = 100;
-dt = 1/10000;
-
+CFL=0.007;
+dt=2^(-Lev/3)*CFL;
+MaxT=ceil(0.5/dt);
+% dt=1/10000;
+% MaxT=100;
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet

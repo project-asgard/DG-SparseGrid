@@ -75,6 +75,8 @@ end
 %MaxMat=-[zero,Mat,zero;
         %Mat,zero,zero;
         %zero,zero,zero];
+%  opts.tol=1e-3;
+%  e=eigs(Mat,1,'lm',opts)
 
 
 %% Time advance for solving Maxwell equation

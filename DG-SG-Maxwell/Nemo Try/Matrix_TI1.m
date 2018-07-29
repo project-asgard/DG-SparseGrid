@@ -45,7 +45,7 @@ for Lx=0:nx-1
     %---------------------------------------------
     % Matrix GradX and EMassX
     %---------------------------------------------
-    val=-1/hx*[Dp_val'*(quad_w.*p_val)];
+    val=-1/hx*[Dp_val'*(quad_w*ones(1,Deg).*p_val)];
     
     Iu=[meshgrid(Deg*Lx+1:Deg*(Lx+1))]';
     Iv=[meshgrid(Deg*Lx+1:Deg*(Lx+1))];
@@ -83,12 +83,12 @@ for Lx=0:nx-1
     Grad2X=Grad2X+sparse(Iv,Iu2,val2,dof_1D_x,dof_1D_x);
     
 end
-figure;
-subplot(1,2,1)
-spy(Grad1X)
-subplot(1,2,2)
-spy(Grad2X)
-Grad1X = FMWT_COMP_x*Grad1X*FMWT_COMP_x';
-Grad2X = FMWT_COMP_x*Grad2X*FMWT_COMP_x';
+% figure;
+% subplot(1,2,1)
+% spy(Grad1X)
+% subplot(1,2,2)
+% spy(Grad2X)
+ Grad1X = FMWT_COMP_x*Grad1X*FMWT_COMP_x';
+ Grad2X = FMWT_COMP_x*Grad2X*FMWT_COMP_x';
 
 end

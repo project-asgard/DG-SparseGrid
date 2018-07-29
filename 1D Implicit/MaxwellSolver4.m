@@ -75,8 +75,8 @@ zero=sparse(Dofs,Dofs);
 MaxMat=-[zero,Mat,zero;
         Mat,zero,zero;
         zero,zero,zero];
-
-%e=eigs(MaxMat,6,'largestabs','Tolerance',1e-3)
+% opts.tol=1e-3;
+% e=eigs(MaxMat,1,'lm',opts)
 %% Time advance for solving Maxwell equation
 MaxRhs = -[zeros(Dofs,1);F_1D.b1;F_1D.b2];
 MaxSol = [B;E1;E2];

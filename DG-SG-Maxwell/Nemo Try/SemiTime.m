@@ -1,4 +1,4 @@
-function f = ImplicitTime(A,f,dt,b) %Backward Euler
+function [E,B] = SemiTime(MaxMat1,MaxMat,dt,bbb,E0,B0) %Backward Euler
 %-------------------------------------------------
 % Time Advance Method
 % Input: Matrix:: A
@@ -6,20 +6,16 @@ function f = ImplicitTime(A,f,dt,b) %Backward Euler
 %        Time Step:: dt
 % Output: Vector:: f
 %-------------------------------------------------
-f = Implicit(A,f,dt,b);
+[E,B] = Semi(MaxMat1,MaxMat,dt,bbb,E0,B0);
 
 end
 
-function fval = Implicit(A,f,dt,b)
+function [E,B] = Semi(MaxMat1,MaxMat,dt,bbb,E0,B0)
 %----------------------------------
-% Implicit Method
-%----------------------------------
-
-%condest(S);
-%fval=H*(1/dt)*f+H*b;
-ftmp=f+b*dt;
-fval=ApplyA(A,ftmp);
-
+% Semi-Implicit Method
+%----------------------------------;
+E=E0+dt*(MaxMat1*B0+bbb);
+B=B0+dt*(MaxMat*E);
 %     sol_1=sol_n+dt*(A_s*sol_n+b_s*sin(pde.w*time));
 %     sol_2=3/4*sol_n+1/4*sol_1+1/4*dt*(A_s*sol_1+b_s*sin(pde.w*time));
 %     sol_n=1/3*sol_n+2/3*sol_2+2/3*dt*(A_s*sol_2+b_s*sin(pde.w*time));

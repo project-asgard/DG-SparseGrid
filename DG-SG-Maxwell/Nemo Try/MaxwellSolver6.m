@@ -1,4 +1,4 @@
-function [Eh,Bh] = MaxwellSolver(Lev,Deg,Hash,InvHash,Con1D,GradX,...
+function [Eh,Bh] = MaxwellSolver6(Lev,Deg,Hash,InvHash,Con1D,GradX,...
                                  eps,mu,omega,dt,MaxT,...
                                  Rhs,E0,B0)
 %=====================================================
@@ -148,22 +148,28 @@ MaxMat=[zero,zero,zero,zero,ComMat1/(eps*mu),-ComMat2/(eps*mu);
         zero,-ComMat1,ComMat2,zero,zero,zero;
         ComMat1,zero,-ComMat3,zero,zero,zero;
         -ComMat2,ComMat3,zero,zero,zero,zero;];
-e=eigs(MaxMat,1,'largest
+    
 
 
 %% Time advance for solving Maxwell equation
 MaxRhs = -[Rhs/(eps);zeros(Dofs3,1)];
 MaxSol = [E0;B0];
+s=eye(Dofs)-0.5*MaxMat*dt;
 
+H=inv(s);
+% % e=eigs(H*(eye(Dofs*3)+0.5*MaxMat*dt))
+% % e=abs(e)
 time=0;
 for T=1:MaxT
-    time=time+dt;
-
+%     time=time+dt;
+    time = T*dt;
+    
+%    bbb=MaxRhs*exp(-time);
+%    b0=MaxRhs*exp(-(time-dt));
     bbb=MaxRhs*sin(omega*time);
-
-    MaxSol = TimeAdvance(MaxMat,MaxSol,dt,bbb);
+    b0=MaxRhs*sin(omega*(time-dt));
+    MaxSol = ImplicitTime1(H,MaxMat,MaxSol,dt,b0,bbb);
     
 end
-
 Eh = MaxSol(1:Dofs3);
 Bh = MaxSol(Dofs3+1:end);

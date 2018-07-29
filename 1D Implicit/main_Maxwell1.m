@@ -12,16 +12,18 @@ addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
 
-Lev = 10;
+Lev = 9;
 Deg = 2;
 
 
 Lmax = 1;
 pde = Maxwell1;
-cfl=50/2/2/2/2/2/2/2/2;
-dt = 2^(-Lev/2)*cfl;
-% %dt=1/80;
-MaxT =ceil(2/dt);
+% cfl=1000/2/2/2;
+% dt = 2^(-Lev)*cfl;
+% % %dt=1/80;
+% MaxT =ceil(2/dt);
+dt=1/10/2;
+MaxT=ceil(1.5/dt);
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
@@ -68,26 +70,26 @@ sol_n=[Bh;E1h;E2h];
 time=dt*MaxT;
 u_s=[B_1D.B*sin(pde.w*time);E_1D.E1*cos(pde.w*time);E_1D.E2*cos(pde.w*time)];
 Bs=[B_1D.B*sin(pde.w*time)];E1s=[E_1D.E1*cos(pde.w*time)];E2s=[E_1D.E2*cos(pde.w*time)];
-full([Deg Lev cfl max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+full([Deg Lev dt max(abs(sol_n-u_s)) norm(sol_n-u_s)])
 %full([sol_n,u_s])
 % subplot(1,2,1)
 % plot(sol_n)
 % subplot(1,2,2)
 % plot(u_s)
 
-[M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
-figure;
-subplot(1,3,1)
-plot(N,M*E1h,'r--',N,M*E1s,'b--')
-legend('Numerical Sol','Real Solution')
-title('E1')
-subplot(1,3,2)
-plot(N,M*E2h,'r--',N,M*E2s,'b--')
-legend('Numerical Sol','Real Solution')
-title('E2')
-subplot(1,3,3)
-plot(N,M*Bh,'r--',N,M*Bs,'b--')
-legend('Numerical Sol','Real Solution')
-title('B')
+% [M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
+% figure;
+% subplot(1,3,1)
+% plot(N,M*E1h,'r--',N,M*E1s,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('E1')
+% subplot(1,3,2)
+% plot(N,M*E2h,'r--',N,M*E2s,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('E2')
+% subplot(1,3,3)
+% plot(N,M*Bh,'r--',N,M*Bs,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('B')
 
 

@@ -80,15 +80,16 @@ MaxMat=-[zero,Mat,zero;
 %% Time advance for solving Maxwell equation
 MaxRhs = -[zeros(Dofs,1);F_1D.b1;F_1D.b2];
 MaxSol = [B;E1;E2];
-S=eye(Dofs*3)-dt*MaxMat;
+S=speye(Dofs*3)-dt*MaxMat;
 %condest(S);
 H=inv(S);
+H=sparse(H);
 time=0;
 for T=1:MaxT
     time=time+dt;
 
-    bbb=MaxRhs*exp(-time);
-%      bbb=MaxRhs*sin(omega*time);
+%     bbb=MaxRhs*exp(-time);
+     bbb=MaxRhs*sin(omega*time);
     MaxSol = ImplicitTime(H,MaxSol,dt,bbb);
     
 end

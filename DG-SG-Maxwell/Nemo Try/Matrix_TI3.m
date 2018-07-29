@@ -44,7 +44,7 @@ for Lx=0:nx-1
     %---------------------------------------------
     % Matrix GradX and EMassX
     %---------------------------------------------
-    val=-1/hx*[Dp_val'*(quad_w.*p_val)];
+    val=-1/hx*[Dp_val'*(quad_w*ones(1,Deg).*p_val)];
     
     Iu=[meshgrid(Deg*Lx+1:Deg*(Lx+1))]';
     Iv=[meshgrid(Deg*Lx+1:Deg*(Lx+1))];

@@ -81,18 +81,18 @@ full([Deg Lev cfl max(abs(sol_n-u_s)) norm(sol_n-u_s)])
 % subplot(1,2,2)
 % plot(u_s)
 % 
-[M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
-figure;
-subplot(1,3,1)
-plot(N,M*E1h,'r--',N,M*E1s,'b--')
-legend('Numerical Sol','Real Solution')
-title('E1')
-subplot(1,3,2)
-plot(N,M*E2h,'r--',N,M*E2s,'b--')
-legend('Numerical Sol','Real Solution')
-title('E2')
-subplot(1,3,3)
-plot(N,M*Bh,'r--',N,M*Bs,'b--')
-legend('Numerical Sol','Real Solution')
-title('B')
+% [M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
+% figure;
+% subplot(1,3,1)
+% plot(N,M*E1h,'r--',N,M*E1s,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('E1')
+% subplot(1,3,2)
+% plot(N,M*E2h,'r--',N,M*E2s,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('E2')
+% subplot(1,3,3)
+% plot(N,M*Bh,'r--',N,M*Bs,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('B')
 

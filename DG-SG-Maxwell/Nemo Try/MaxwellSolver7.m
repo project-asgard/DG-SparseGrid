@@ -1,4 +1,4 @@
-function [Eh,Bh] = MaxwellSolver5(Lev,Deg,Hash,InvHash,Con1D,GradX,...
+function [Eh,Bh] = MaxwellSolver7(Lev,Deg,Hash,InvHash,Con1D,GradX,...
                                  eps,mu,omega,dt,MaxT,...
                                  Rhs,E0,B0)
 %=====================================================
@@ -142,29 +142,27 @@ for i = 1:Dof_Hash
         
 end
 zero=sparse(Dofs1,Dofs1);
-MaxMat=[zero,zero,zero,zero,ComMat1/(eps*mu),-ComMat2/(eps*mu);
-        zero,zero,zero,-ComMat1/(eps*mu),zero,ComMat3/(eps*mu);
-        zero,zero,zero,ComMat2/(eps*mu),-ComMat3/(eps*mu),zero;
-        zero,-ComMat1,ComMat2,zero,zero,zero;
-        ComMat1,zero,-ComMat3,zero,zero,zero;
-        -ComMat2,ComMat3,zero,zero,zero,zero;];
-    
-
+MaxMat=[zero,-ComMat1,ComMat2;
+        ComMat1,zero,-ComMat3;
+        -ComMat2,ComMat3,zero];
+MaxMat1=-MaxMat/(eps*mu);
+% opts.tol=1e-4;
+% e=eigs(MaxMat,1,'lm',opts)
+% s=norm(MaxMat,'fro')
 
 %% Time advance for solving Maxwell equation
 MaxRhs = -[Rhs/(eps);zeros(Dofs3,1)];
 MaxSol = [E0;B0];
-S=eye(Dofs)-dt*MaxMat;
-H=inv(S);
+
 time=0;
 for T=1:MaxT
     time=time+dt;
 
-    bbb=MaxRhs*sin(omega*time);
+    bbb=-Rhs/(eps)*sin(omega*time);
 
-    MaxSol = ImplicitTime(H,MaxSol,dt,bbb);
+    [E0,B0]= SemiTime(MaxMat1,MaxMat,dt,bbb,E0,B0);
     
 end
 
-Eh = MaxSol(1:Dofs3);
-Bh = MaxSol(Dofs3+1:end);
+Eh = E0;
+Bh = B0;

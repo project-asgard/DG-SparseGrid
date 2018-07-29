@@ -148,8 +148,9 @@ MaxMat=[zero,zero,zero,zero,ComMat1/(eps*mu),-ComMat2/(eps*mu);
         zero,-ComMat1,ComMat2,zero,zero,zero;
         ComMat1,zero,-ComMat3,zero,zero,zero;
         -ComMat2,ComMat3,zero,zero,zero,zero;];
-e=eigs(MaxMat,1,'largestabs','Tolerance',1e-4)
-
+% opts.tol=1e-4;
+% e=eigs(MaxMat,1,'lm',opts)
+% s=norm(MaxMat,'fro')
 
 %% Time advance for solving Maxwell equation
 MaxRhs = -[Rhs/(eps);zeros(Dofs3,1)];
