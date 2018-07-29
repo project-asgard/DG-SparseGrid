@@ -50,17 +50,17 @@ GradGradMat = sparse(dof_1D_x,dof_1D_x);
 % generate 1D matrix for DG
 
 % Matrix for (u',v')
-val = Dp_val'*(quad_w*ones(1,2).*Dp_val)*1/hx;
+val = Dp_val'*(quad_w*ones(1,Deg).*Dp_val)*1/hx;
 Ac = repmat({val},nx,1);
 GG = blkdiag(Ac{:});
 
 % Matrix for (u,v')
-val = Dp_val'*(quad_w*ones(1,2).*p_val);
+val = Dp_val'*(quad_w*ones(1,Deg).*p_val);
 Ac = repmat({val},nx,1);
 G = blkdiag(Ac{:});
 
 % Matrix for (u',v)
-val = p_val'*(quad_w*ones(1,2).*Dp_val);
+val = p_val'*(quad_w*ones(1,Deg).*Dp_val);
 Ac = repmat({val},nx,1);
 G2 = blkdiag(Ac{:});
 
@@ -174,7 +174,9 @@ ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]';
 sol = Mat\ff;
 % full([sol,ff/(2*pi^2-1)])
 figure;plot(sol-ff/(2*pi^2-1))
-max(abs(sol-ff/(2*pi^2-1)))/norm(ff/(2*pi^2-1))
+% max(abs(sol-ff/(2*pi^2-1)))/norm(ff/(2*pi^2-1))
+uu = ff/(2*pi^2-1);
+[max(abs(sol-uu)) norm(sol-uu)]
 % compute the RHS term
 
 return
