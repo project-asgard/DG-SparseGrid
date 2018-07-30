@@ -10,11 +10,12 @@ function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde)
 %   GradMat:  \int u'v dx
 %   GradGradMat: \int u'v' dx
 %========================================================
+close all
 %--DG parameters
 quad_num=10;
 %---------------
 
-alpha = 10;
+alpha = 100*Deg^3;
 
 
 % compute the trace values
@@ -90,7 +91,7 @@ H = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 Amd = -p_1'*Dp_1/2+p_2'*Dp_2/2;
 Asub =-p_1'*Dp_2/2;
 Asup = p_2'*Dp_1/2;
-L = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+L = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 
 %****************************************
 % Term for <[u_h],{v'}>ds
@@ -98,7 +99,7 @@ L = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 Amd = Dp_1'*(-p_1)/2+Dp_2'*p_2/2;
 Asub = Dp_1'*p_2/2;
 Asup = Dp_2'*(-p_1)/2;
-J = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+J = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 
 %****************************************
 % Term for <[u_h],[v]>ds
@@ -106,7 +107,7 @@ J = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
 Amd  =  p_1'*(p_1)+p_2'*p_2;
 Asub = -p_1'*p_2/2;
 Asup =  p_2'*(-p_1)/2;
-Q = blktridiag([Amd]/hx,[Asub]/hx,[Asup]/hx,nx);
+Q = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 
 II = speye(dof_1D_x);
 T1=[...
@@ -127,7 +128,9 @@ T3=[...
 T4=[kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);...
     zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
     zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II)];
-
+% full(Q)
+% alpha
+% hx
 % size(T1)
 % dofs
 Mat = T1-T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);
@@ -142,8 +145,11 @@ Lend = Lmax;Lstart = 0;
 fx = zeros(quad_num,3);
 fy = zeros(quad_num,3);
 fz = zeros(quad_num,3);
+
+hx = (Lend-Lstart)/nx;
+
 for i=0:2^Lev-1
-    hx = (Lend-Lstart)/nx;
+    
     xi_x = hx*(quad_x/2+1/2+i)+Lstart;
     fx = pde.rhs(xi_x,1/2+xi_x-xi_x,1/2+xi_x-xi_x);
     fy = pde.rhs(1/2+xi_x-xi_x,xi_x,1/2+xi_x-xi_x);
@@ -168,7 +174,7 @@ for i=0:2^Lev-1
 
 end
 
-ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]';
+ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]'*(2*pi^2-1);
 % size(ff)
 % size(Mat)
 sol = Mat\ff;
@@ -179,6 +185,7 @@ uu = ff/(2*pi^2-1);
 [max(abs(sol-uu)) norm(sol-uu)]
 % compute the RHS term
 
+% full([sol uu])
 return
 
 
