@@ -6,10 +6,10 @@ function pde=Maxwell1
 
 c0=3e8;
 w=pi/2;%2*pi*sqrt(3)/2*c0;
-mu=1;
-eps=1;
-% eps=8.854187187e-12;
-% mu=1.2566370614e-6;
+% mu=1;
+% eps=1;
+ eps=8.854187187e-12;
+ mu=1.2566370614e-6;
     function E=exact_E(x,y,z,t)
         E(:,1)=-cos(2*pi*x).*sin(2*pi*y).*sin(2*pi*z).*cos(w*t);
         E(:,2)= x-x;

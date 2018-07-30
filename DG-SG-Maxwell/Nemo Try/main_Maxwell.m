@@ -11,7 +11,7 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 4;
+Lev = 9;
 Deg = 2;
 Dim = 3;
 
@@ -23,8 +23,8 @@ pde = Maxwell1;
 % dt=2^(-Lev/3)*CFL;
 % MaxT=ceil(0.5/dt);
 % MaxT = 100;
-dt = 1/10;
-MaxT=ceil(0.5/dt);
+dt = 1/10000;
+MaxT=100;
 
 
 %*************************************************
@@ -65,7 +65,7 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 [b_s,E_s,B_s]=GlobalRHS(Deg,F_1D,E_1D,B_1D,InvHash);
 
 %% Maxwell Solver
-[Eh,Bh] = MaxwellSolver7(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
+[Eh,Bh] = MaxwellSolver(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
 sol_n=[Eh;Bh];
 
 %% Error Estimate
