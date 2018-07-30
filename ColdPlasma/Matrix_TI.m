@@ -11,6 +11,7 @@ function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde)
 %   GradGradMat: \int u'v' dx
 %========================================================
 close all
+format short e
 %--DG parameters
 quad_num=10;
 %---------------
@@ -76,6 +77,10 @@ Amd  = -p_1'*p_1/2+p_2'*p_2/2;
 Asub = -p_1'*p_2/2;
 Asup =  p_2'*p_1/2;
 K = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
+% Correction for boundary
+K(1:Deg,1:Deg) = K(1:Deg,1:Deg)+(-p_1'*p_1+p_2'*p_2)/hx/2;
+K(end-Deg+[1:Deg],end-Deg+[1:Deg]) = K(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+                (-p_1'*p_1+p_2'*p_2)/hx/2;
 
 %****************************************
 % Term for <[u_h],{v}>ds
@@ -84,6 +89,10 @@ Amd  = p_1'*(-p_1)/2+p_2'*p_2/2;
 Asub =  p_1'*p_2/2;
 Asup =  p_2'*(-p_1)/2;
 H = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
+% Correction for boundary
+H(1:Deg,1:Deg) = H(1:Deg,1:Deg)+(p_1'*(-p_1)+p_2'*p_2)/hx/2;
+H(end-Deg+[1:Deg],end-Deg+[1:Deg]) = H(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+                (p_1'*(-p_1)+p_2'*p_2)/hx/2;
 
 %****************************************
 % Term for <{u_h'},[v]>ds
@@ -92,6 +101,10 @@ Amd = -p_1'*Dp_1/2+p_2'*Dp_2/2;
 Asub =-p_1'*Dp_2/2;
 Asup = p_2'*Dp_1/2;
 L = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
+% Correction for boundary
+L(1:Deg,1:Deg) = L(1:Deg,1:Deg)+(-p_1'*Dp_1+p_2'*Dp_2)/hx/2;
+L(end-Deg+[1:Deg],end-Deg+[1:Deg]) = L(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+                (-p_1'*Dp_1+p_2'*Dp_2)/hx/2;
 
 %****************************************
 % Term for <[u_h],{v'}>ds
@@ -100,6 +113,10 @@ Amd = Dp_1'*(-p_1)/2+Dp_2'*p_2/2;
 Asub = Dp_1'*p_2/2;
 Asup = Dp_2'*(-p_1)/2;
 J = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
+% Correction for boundary
+J(1:Deg,1:Deg) = J(1:Deg,1:Deg)+(Dp_1'*(-p_1)+Dp_2'*p_2)/hx/2;
+J(end-Deg+[1:Deg],end-Deg+[1:Deg]) = J(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+                (Dp_1'*(-p_1)+Dp_2'*p_2)/hx/2;
 
 %****************************************
 % Term for <[u_h],[v]>ds
@@ -128,7 +145,7 @@ T3=[...
 T4=[kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);...
     zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
     zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II)];
-<<<<<<< HEAD
+
 
 % generate A_encode
 [IndexI,IndexJ]=meshgrid([1:dof_1D_x^3]);
@@ -333,11 +350,11 @@ A_encode{count}.A1=II;
 A_encode{count}.A2=G-J-L+alpha*Q;
 A_encode{count}.A3=II;
 
-=======
+
 % full(Q)
 % alpha
 % hx
->>>>>>> dc2ce206eb6b9316d90662a1914187286505da7d
+
 % size(T1)
 % dofs
 Mat = T1-T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);
@@ -392,7 +409,7 @@ uu = ff/(2*pi^2-1);
 [max(abs(sol-uu)) norm(sol-uu)]
 % compute the RHS term
 
-% full([sol uu])
+full([sol uu])
 return
 
 
