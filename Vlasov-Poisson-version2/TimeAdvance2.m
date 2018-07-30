@@ -1,4 +1,4 @@
-function f = TimeAdvance2(A,f,dt,compression,Deg,source)
+function f = TimeAdvance2(A,f,dt,compression,Deg,source1,source2,source3)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
@@ -6,21 +6,32 @@ function f = TimeAdvance2(A,f,dt,compression,Deg,source)
 % Output: Vector:: f
 %-------------------------------------------------
 
-f = RungeKutta3(A,f,dt,compression,Deg,source);
+f = RungeKutta3(A,f,dt,compression,Deg,source1,source2,source3);
 
 end
 
-function fval = RungeKutta3(A,f,dt,compression,Deg,source)
-%----------------------------------
-% 3-rd Order Runge Kutta Method
-%----------------------------------
-ftmp = ApplyA(A,f,compression,Deg)+source;
-f_1 = f +dt *ftmp;
-ftmp = ApplyA(A,f_1,compression,Deg)+source;
-f_2 = 3/4*f+1/4*f_1+1/4*dt*(ftmp);
-ftmp = ApplyA(A,f_2,compression,Deg)+source;
-fval = 1/3*f+2/3*f_2+2/3*dt*(ftmp);
+function fval = RungeKutta3(A,f,dt,compression,Deg,source1,source2,source3)
+% %----------------------------------
+% % 3-rd Order Runge Kutta Method
+% %----------------------------------
+% ftmp = ApplyA(A,f,compression,Deg)+source1;
+% f_1 = f +dt *ftmp;
+% ftmp = ApplyA(A,f_1,compression,Deg)+source2;
+% f_2 = 3/4*f+1/4*f_1+1/4*dt*(ftmp);
+% ftmp = ApplyA(A,f_2,compression,Deg)+source3;
+% fval = 1/3*f+2/3*f_2+2/3*dt*(ftmp);
 
+%----------------------------------
+% 3-rd Order Kutta Method
+%----------------------------------
+a21 = 1/2; a31 = -1; a32 = 2;
+b1 = 1/6; b2 = 2/3; b3 = 1/6;
+k_1 = ApplyA(A,f,compression,Deg)+source1;
+y_1 = f +dt *a21*k_1;
+k_2 = ApplyA(A,y_1,compression,Deg)+source2;
+y_2 = f+dt*(a31*k_1+a32*k_2);
+k_3 = ApplyA(A,y_2,compression,Deg)+source3;
+fval = f +dt*(b1*k_1+b2*k_2+b3*k_3);
 end
 
 function ftmp = ApplyA(A_Data,f,compression,Deg)
