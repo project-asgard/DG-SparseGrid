@@ -11,16 +11,16 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 10;
+Lev = 9;
 Deg = 5;
 
 
 Lmax = 1;
 pde = Maxwell6;
-cfl=1000;
+cfl=4000/2/2/2/2/2/2/2;
 dt = 2^(-Lev)*cfl;
 %dt=1/80;
-MaxT =ceil(10/dt);%10;
+MaxT =ceil(100/dt);%10;
 
 
 
