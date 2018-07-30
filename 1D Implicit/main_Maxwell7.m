@@ -16,8 +16,8 @@ Deg = 3;
 
 
 Lmax = 1;
-pde = Maxwell11;
-cfl=1000;
+pde = Maxwell12;
+cfl=100/2/2/2;
 dt = 2^(-Lev)*cfl;
 %dt=1/80;
 MaxT =ceil(1/dt);%10;
@@ -67,9 +67,9 @@ sol_n=[Bh;E1h;E2h];
 
 %% Error Estimate
 time=dt*MaxT;
-u_s=[B_1D.B*time^2;E_1D.E1*time^2;E_1D.E2*time^2];
+u_s=[B_1D.B*time^4;E_1D.E1*time^4;E_1D.E2*time^4];
 
-Bs=[B_1D.B*time^2];E1s=[E_1D.E1*time^2];E2s=[E_1D.E2*time^2];
+Bs=[B_1D.B*time^4];E1s=[E_1D.E1*time^4];E2s=[E_1D.E2*time^4];
 
 % u_s=[B_1D.B;E_1D.E1;E_1D.E2];
 % 

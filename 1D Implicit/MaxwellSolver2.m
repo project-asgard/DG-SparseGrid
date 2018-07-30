@@ -79,21 +79,30 @@ MaxMat=-[zero,Mat,zero;
 
 
 %% Time advance for solving Maxwell equation
-MaxRhs = -[zeros(Dofs,1);F_1D.b1;F_1D.b2];
+% MaxRhs = -[zeros(Dofs,1);F_1D.b1;F_1D.b2];
+MaxRhs=-[F_1D.b3;F_1D.b1;F_1D.b2];
+MaxMat=sparse(Dofs*3,Dofs*3);
 MaxSol = [B;E1;E2];
 s1=inv(eye(Dofs*3)-sqrt(3)/6*MaxMat*dt);
 s2=inv(eye(Dofs*3)+sqrt(3)/6*MaxMat*dt);
-h1=inv(eye(Dofs*3)-1/4*MaxMat*dt-s1*(1/4-sqrt(3)/6)*(eye(Dofs*3)+sqrt(3)/6*MaxMat*dt)*MaxMat*dt);
-h2=inv(eye(Dofs*3)-1/4*MaxMat*dt-s2*(1/4+sqrt(3)/6)*(eye(Dofs*3)-sqrt(3)/6*MaxMat*dt)*MaxMat*dt);
+h1=inv(eye(Dofs*3)-1/4*MaxMat*dt-MaxMat*s1*(1/4-sqrt(3)/6)*(eye(Dofs*3)+sqrt(3)/6*MaxMat*dt)*dt);
+h2=inv(eye(Dofs*3)-1/4*MaxMat*dt-MaxMat*s2*(1/4+sqrt(3)/6)*(eye(Dofs*3)-sqrt(3)/6*MaxMat*dt)*dt);
 time=0;
 %e=eigs(S,6,'largestabs','Tolerance',1e-2)
 for T=1:MaxT
     time=time+dt;
 
-    b1=MaxRhs*sin(omega*time+(1/2-1/6*sqrt(3))*dt);
-    b2=MaxRhs*sin(omega*time+(1/2+1/6*sqrt(3))*dt);
+%     b1=MaxRhs*sin(omega*(time+(1/2-1/6*sqrt(3))*dt));
+%     b2=MaxRhs*sin(omega*(time+(1/2+1/6*sqrt(3))*dt));
+%      b1=MaxRhs*(time-dt+(1/2-1/6*sqrt(3))*dt)^3;
+%      b2=MaxRhs*(time-dt+(1/2+1/6*sqrt(3))*dt)^3;
+     b1=MaxRhs*(time-dt+(1/2-1/6*sqrt(3))*dt);
+     b2=MaxRhs*(time-dt+(1/2+1/6*sqrt(3))*dt);
 
     MaxSol = ImplicitTime2(s1,s2,h1,h2,MaxMat,MaxSol,dt,b1,b2);
+    a=1;
+    
+    
     
 end
 

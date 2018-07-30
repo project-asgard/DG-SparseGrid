@@ -12,15 +12,15 @@ addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
 Lev = 10;
-Deg = 2;
+Deg = 5;
 
 
 Lmax = 1;
 pde = Maxwell6;
-cfl=10;
-dt = 2^(-Lev/2)*cfl;
+cfl=1000;
+dt = 2^(-Lev)*cfl;
 %dt=1/80;
-MaxT =ceil(0.01/dt);%10;
+MaxT =ceil(10/dt);%10;
 
 
 
@@ -61,7 +61,7 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % E_s and B_s are used for error estimate
 
 %% Maxwell Solver
-[Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
+[Bh,E1h,E2h] = MaxwellSolver2(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
     F_1D,E_1D.E1,E_1D.E2,B_1D.B);
 sol_n=[Bh;E1h;E2h];
 

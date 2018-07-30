@@ -87,7 +87,7 @@ MaxSol = [B;E1;E2];
 
 
 
-MaxMat=sparse(Dofs*3,Dofs*3);
+%MaxMat=sparse(Dofs*3,Dofs*3);
 s=speye(Dofs*3)-0.5*MaxMat*dt;
 H=inv(s);
 % % e=eigs(H*(eye(Dofs*3)+0.5*MaxMat*dt))
@@ -101,7 +101,7 @@ for T=1:MaxT
 %    bbb=zeros(Dofs*3,1);%MaxRhs*exp(-time);
     %bbb=MaxRhs*sin(omega*time);
     MaxSol = ImplicitTime1(H,MaxMat,MaxSol,dt,b0,bbb);
-   
+   a=1;
 end
 
 Bh = MaxSol(1:Dofs);

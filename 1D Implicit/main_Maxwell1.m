@@ -18,12 +18,12 @@ Deg = 2;
 
 Lmax = 1;
 pde = Maxwell1;
-% cfl=1000/2/2/2;
-% dt = 2^(-Lev)*cfl;
+cfl=1/2;
+dt = 2^(-Lev)*cfl;
 % % %dt=1/80;
-% MaxT =ceil(2/dt);
-dt=1/10/2;
-MaxT=ceil(1.5/dt);
+MaxT =ceil(0.5/dt);
+% dt=1/10/2;
+% MaxT=ceil(1.5/dt);
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
@@ -62,7 +62,7 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % E_s and B_s are used for error estimate
 
 %% Maxwell Solver
-[Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
+[Bh,E1h,E2h] = MaxwellSolver2(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
     F_1D,E_1D.E1*cos(0),E_1D.E2*cos(0),B_1D.B*0);
 sol_n=[Bh;E1h;E2h];
 

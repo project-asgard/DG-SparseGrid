@@ -31,5 +31,5 @@ n=A(:,2);
 e1=C(:,4);
 e2=A(:,4);
 e3=U(:,4);
-plot(n,e1,n,e2,n,e3)
+plot(n,e1,n,e2,n,e3,n,2.^(-n),n,2.^(-1.5*n))
 legend('central flux with CFL=0.0068','alternating flux with CFL=0.0045','up-winding flux with CFL=0.00625')
