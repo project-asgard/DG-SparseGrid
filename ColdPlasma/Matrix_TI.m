@@ -128,6 +128,209 @@ T4=[kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);
     zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
     zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II)];
 
+% generate A_encode
+[IndexI,IndexJ]=meshgrid([1:dof_1D_x^3]);
+% A11
+count = 1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=G-J-L+alpha*Q;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G-J-L+alpha*Q;
+
+% A12
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=-G;
+A_encode{count}.A2=G';
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=H;
+A_encode{count}.A2=G';
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=G;
+A_encode{count}.A2=H';
+A_encode{count}.A3=II;
+
+% A13
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=-G;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=H;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=G;
+A_encode{count}.A2=II;
+A_encode{count}.A3=H';
+
+% A21
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=-G';
+A_encode{count}.A2=G;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=G';
+A_encode{count}.A2=H;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=H';
+A_encode{count}.A2=G;
+A_encode{count}.A3=II;
+
+% A22
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=G-J-L+alpha*Q;
+A_encode{count}.A2=II;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G-J-L+alpha*Q;
+
+% A23
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=-II;
+A_encode{count}.A2=G;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=H;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=G;
+A_encode{count}.A3=H';
+
+% A31
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=-G';
+A_encode{count}.A2=II;
+A_encode{count}.A3=G;
+
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=G';
+A_encode{count}.A2=II;
+A_encode{count}.A3=H;
+
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=H';
+A_encode{count}.A2=II;
+A_encode{count}.A3=G;
+
+% A32
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=-II;
+A_encode{count}.A2=G';
+A_encode{count}.A3=G;
+
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=G';
+A_encode{count}.A3=H;
+
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=H';
+A_encode{count}.A3=G;
+
+% A33
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=G-J-L+alpha*Q;
+A_encode{count}.A2=II;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=G-J-L+alpha*Q;
+A_encode{count}.A3=II;
+
 % size(T1)
 % dofs
 Mat = T1-T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);

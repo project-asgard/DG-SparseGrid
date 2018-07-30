@@ -111,23 +111,23 @@ and
 A(\bu_h,\bv)=(\bbf,\bv).
 \end{eqnarray}
 
-%Let the test and trial functions as: 
-%\begin{eqnarray*}
-%\bm{\phi_{j,m}^l}:=\bigg(\phi^{l_1}_{j_1,m_1}(x_1)\phi^{l_2}_{j_2,m_2}(x_2)\cdots\bigg)\mbox{ and }
-%\bm{\phi_{i,n}^\ell}:=\bigg(\phi^{\ell_1}_{i_1,n_1}(x_1)\phi^{\ell_2}_{i_2,n_2}(x_2)\cdots\bigg)
-%\end{eqnarray*}
-%where $|\bm{l}|_1\le n$ and $|\bm{\ell}|_1\le n.$
-%Then the operator $\mathcal{A}$ acts on them are as follows:
-%\begin{eqnarray*}
-%\mathcal{A}(\bm{\phi_{j,m}^l},\bm{\phi_{i,n}^\ell})=A_1(\phi^{l_1}_{j_1,m_1},\phi^{\ell_1}_{i_1,n_1})\bigotimes A_2(\phi^{l_2}_{j_2,m_2},\phi^{\ell_2}_{i_2,n_2})\bigotimes\cdots
-%\end{eqnarray*}
-%Through mapping $(\bm{l,j,m})\to J$ and $(\bm{\ell,i,n})\to I$, we generate the entry $(\mathbb{A})_{I,J}$.
-%
-%\begin{eqnarray*}
-%\hat{\bE} &=& \frac{\bE^++\bE^-}{2},\ \hat{\bB} = \frac{\bB^++\bB^-}{2}\\
-%\hat{\bE} &=& \bE^+,\ \hat{\bB} = \bB^-,\mbox{ or }\hat{\bE} = \bE^-,\ \hat{\bB} = \bB^+\\
-%\hat{\bE} &=& \frac{\bE^++\bE^-}{2}+(\bB^+\times\bn^++\bB^-\times\bn^-),\ \hat{\bB} = \frac{\bB^++\bB^-}{2}-(\bE^+\times\bn^++\bE^-\times\bn^-)
-%\end{eqnarray*}
+Let the test and trial functions as: 
+\begin{eqnarray*}
+\bm{\phi_{i,n}^\ell}:=\bigg(\phi^{\ell_1}_{i_1,n_1}(x_1)\phi^{\ell_2}_{i_2,n_2}(x_2)\cdots\bigg)\mbox{ and }
+\bm{\phi_{j,m}^l}:=\bigg(\phi^{l_1}_{j_1,m_1}(x_1)\phi^{l_2}_{j_2,m_2}(x_2)\cdots\bigg)
+\end{eqnarray*}
+where $|\bm{l}|_1\le n$ and $|\bm{\ell}|_1\le n.$
+Then the operator $\mathcal{A}$ acts on them are as follows:
+\begin{eqnarray*}
+\mathcal{A}(\bm{\phi_{i,n}^l},\bm{\phi_{j,m}^\ell})=A_1(\phi^{l_1}_{i_1,n_1},\phi^{\ell_1}_{j_1,m_1})\bigotimes A_2(\phi^{l_2}_{i_2,n_2},\phi^{\ell_2}_{j_2,m_2})\bigotimes\cdots
+\end{eqnarray*}
+Through mapping $(\bm{\ell,i,n})\to I$ and $(\bm{l,j,m})\to J$, we generate the entry $(\mathbb{A})_{I,J}$.
+
+\begin{eqnarray*}
+\hat{\bE} &=& \frac{\bE^++\bE^-}{2},\ \hat{\bB} = \frac{\bB^++\bB^-}{2}\\
+\hat{\bE} &=& \bE^+,\ \hat{\bB} = \bB^-,\mbox{ or }\hat{\bE} = \bE^-,\ \hat{\bB} = \bB^+\\
+\hat{\bE} &=& \frac{\bE^++\bE^-}{2}+(\bB^+\times\bn^++\bB^-\times\bn^-),\ \hat{\bB} = \frac{\bB^++\bB^-}{2}-(\bE^+\times\bn^++\bE^-\times\bn^-)
+\end{eqnarray*}
 %-------------------------------------------
 % Numerical Examples
 %-------------------------------------------

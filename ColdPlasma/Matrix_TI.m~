@@ -128,21 +128,160 @@ T4=[kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);
     zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
     zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II)];
 
+% generate A_encode
+[IndexI,IndexJ]=meshgrid([1:dof_1D_x^3]);
+% A11
+count = 1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=G-J-L+alpha*Q;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G-J-L+alpha*Q;
+
+% A12
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=-G;
+A_encode{count}.A2=G';
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=H;
+A_encode{count}.A2=G';
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=G;
+A_encode{count}.A2=H';
+A_encode{count}.A3=II;
+
+% A13
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=-G;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=H;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=G;
+A_encode{count}.A2=II;
+A_encode{count}.A3=H';
+
+% A21
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=-G';
+A_encode{count}.A2=G;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=G';
+A_encode{count}.A2=H;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = IndexJ';
+
+A_encode{count}.A1=H';
+A_encode{count}.A2=G;
+A_encode{count}.A3=II;
+
+% A22
+count = 1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=G-J-L+alpha*Q;
+A_encode{count}.A2=II;
+A_encode{count}.A3=II;
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=II;
+A_encode{count}.A3=G-J-L+alpha*Q;
+
+% A23
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=-II;
+A_encode{count}.A2=G;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=H;
+A_encode{count}.A3=G';
+
+count = count+1;
+A_encode{count}.IndexI = dof_1D_x^3+IndexI';
+A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
+
+A_encode{count}.A1=II;
+A_encode{count}.A2=G;
+A_encode{count}.A3=H';
+
+% A31
+
+
 % size(T1)
 % dofs
-Mat = T1-T2-T3+alpha*T4-pde.w2*eye(dofs,dofs);
+Mat = T1-T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
 figure;spy(Mat);
 
 % handling boundary condition
 
-condest(Mat)
+% condest(Mat)
 
 Lend = Lmax;Lstart = 0;
 fx = zeros(quad_num,3);
 fy = zeros(quad_num,3);
 fz = zeros(quad_num,3);
-for i=1:2^Lev
+for i=0:2^Lev-1
     hx = (Lend-Lstart)/nx;
     xi_x = hx*(quad_x/2+1/2+i)+Lstart;
     fx = pde.rhs(xi_x,1/2+xi_x-xi_x,1/2+xi_x-xi_x);
@@ -150,27 +289,31 @@ for i=1:2^Lev
     fz = pde.rhs(1/2+xi_x-xi_x,1/2+xi_x-xi_x,xi_x);
     
     index = Deg*i+1:Deg*(i+1);
-    f1x(index) = p_val*(quad_w.*fx(:,1))*hx*sqrt(1/hx)/2;
-    f1y(index) = p_val*(quad_w.*fy(:,1))*hx*sqrt(1/hx)/2;
-    f1z(index) = p_val*(quad_w.*fz(:,1))*hx*sqrt(1/hx)/2;
+    f1x(index) = p_val'*(quad_w.*fx(:,1))*hx*sqrt(1/hx)/2;
+    f1y(index) = p_val'*(quad_w.*fy(:,1))*hx*sqrt(1/hx)/2;
+    f1z(index) = p_val'*(quad_w.*fz(:,1))*hx*sqrt(1/hx)/2;
 %     f1 = kron(kron(f1x,f1y),f1z);
 
 
-    f2x(index) = p_val*(quad_w.*fx(:,2))*hx*sqrt(1/hx)/2;
-    f2y(index) = p_val*(quad_w.*fy(:,2))*hx*sqrt(1/hx)/2;
-    f2z(index) = p_val*(quad_w.*fz(:,2))*hx*sqrt(1/hx)/2;
+    f2x(index) = p_val'*(quad_w.*fx(:,2))*hx*sqrt(1/hx)/2;
+    f2y(index) = p_val'*(quad_w.*fy(:,2))*hx*sqrt(1/hx)/2;
+    f2z(index) = p_val'*(quad_w.*fz(:,2))*hx*sqrt(1/hx)/2;
 %     f2 = kron(kron(f2x,f2y),f2z);
 
-    f3x(index) = p_val*(quad_w.*fx(:,3))*hx*sqrt(1/hx)/2;
-    f3y(index) = p_val*(quad_w.*fy(:,3))*hx*sqrt(1/hx)/2;
-    f3z(index) = p_val*(quad_w.*fz(:,3))*hx*sqrt(1/hx)/2;
+    f3x(index) = p_val'*(quad_w.*fx(:,3))*hx*sqrt(1/hx)/2;
+    f3y(index) = p_val'*(quad_w.*fy(:,3))*hx*sqrt(1/hx)/2;
+    f3z(index) = p_val'*(quad_w.*fz(:,3))*hx*sqrt(1/hx)/2;
 %     f3 = kron(kron(f3x,f3y),f3z);
 
 end
 
-ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)];
-
-size(ff)
+ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]';
+% size(ff)
+% size(Mat)
+sol = Mat\ff;
+% full([sol,ff/(2*pi^2-1)])
+figure;plot(sol-ff/(2*pi^2-1))
+max(abs(sol-ff/(2*pi^2-1)))/norm(ff/(2*pi^2-1))
 % compute the RHS term
 
 return
