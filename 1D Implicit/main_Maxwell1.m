@@ -19,9 +19,9 @@ Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
 cfl=1/2;
-dt = 8*10^(-4);
+dt = 8*10^(-2);
 % % %dt=1/80;
-MaxT =ceil(0.5/dt);
+MaxT =ceil(1.5/dt);
 % dt=1/10/2;
 % MaxT=ceil(1.5/dt);
 
