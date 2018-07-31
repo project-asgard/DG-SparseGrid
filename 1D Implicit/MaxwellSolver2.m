@@ -92,13 +92,13 @@ time=0;
 for T=1:MaxT
     time=time+dt;
 
-%     b1=MaxRhs*sin(omega*(time+(1/2-1/6*sqrt(3))*dt));
-%     b2=MaxRhs*sin(omega*(time+(1/2+1/6*sqrt(3))*dt));
+    b1=MaxRhs*sin(omega*(time-dt+(1/2-1/6*sqrt(3))*dt));
+    b2=MaxRhs*sin(omega*(time-dt+(1/2+1/6*sqrt(3))*dt));
 %      b1=MaxRhs*(time-dt+(1/2-1/6*sqrt(3))*dt)^3;
 %      b2=MaxRhs*(time-dt+(1/2+1/6*sqrt(3))*dt)^3;
 
-     b1=MaxRhs*exp(-(time-dt+(1/2-1/6*sqrt(3))*dt));
-     b2=MaxRhs*exp(-(time-dt+(1/2+1/6*sqrt(3))*dt));
+%      b1=MaxRhs*exp(-(time-dt+(1/2-1/6*sqrt(3))*dt));
+%      b2=MaxRhs*exp(-(time-dt+(1/2+1/6*sqrt(3))*dt));
 
     MaxSol = ImplicitTime2(s1,s2,h1,h2,MaxMat,MaxSol,dt,b1,b2);
     a=1;
