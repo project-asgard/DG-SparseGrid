@@ -1,5 +1,4 @@
 function [x,error,iter,flag]=cg(x,b,max_it,tol)
-global Mat A_encode
 %-------------------------------------------------------------
 % cg.m solves the symmetric positive definite linear system Ax=b 
 % using the Conjugate Gradient method with preconditioning.
@@ -27,8 +26,7 @@ global Mat A_encode
 %  r = b - A*x;
 %    r = b - Fc(x);
    r = b - ApplyA(x);
-%    r2 = b - ApplyAmatrix(x);
-%    plot(r-r2)
+
    
   error = norm( r ) / bnrm2;
   fprintf(' PCG residual(%d) = %g\n',iter,error)
@@ -49,7 +47,6 @@ global Mat A_encode
 %     q = A*p;
 %       q = Fc(p);
       q = ApplyA(p);
-	 q2 = ApplyAmatrix(p);
       
      alpha(iter) = rho / (p'*q );
      x = x + alpha(iter) * p;                    % update approximation vector
@@ -82,9 +79,11 @@ global Mat A_encode
      T(i,i+1)= s(i); T(i+1,i) = T(i,i+1);
      end
 %      lambda = eig(T);
-     lambda = eigs(T);
-     lambdamax = max(lambda);
-     lambdamin = min(lambda);
+%      lambda = eigs(T);
+%      lambdamax = max(lambda);
+%      lambdamin = min(lambda);
+     lambdamax = eigs(T,1,'LM');
+     lambdamin = eigs(T,1,'SM');
      condnumber = lambdamax/lambdamin;
      fprintf(' lambdamax = %f\n',lambdamax)
      fprintf(' lambdamin = %f\n',lambdamin)
