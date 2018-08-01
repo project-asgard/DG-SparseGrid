@@ -18,5 +18,6 @@ Acell{3} = tmpC;
 IndexI=A_encode{i}.IndexI;
 IndexJ=A_encode{i}.IndexJ;
 ftmp(IndexI)=ftmp(IndexI)+kron_multd(nkron,Acell,b(IndexJ));
-clear Acell
+% ftmp(IndexJ)=ftmp(IndexI)+kron_multd(nkron,Acell,b(IndexI));
+% clear Acell
 end

@@ -13,7 +13,7 @@ function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde)
 close all
 format short e
 
-global A_encode
+global A_encode Mat
 %--DG parameters
 quad_num=10;
 %---------------
@@ -269,7 +269,7 @@ if isGenAencode == 1
     A_encode{count}.IndexJ = IndexJ';
     
     A_encode{count}.A1=II;
-    A_encode{count}.A2=G-J-L+alpha*Q;
+    A_encode{count}.A2=G-J-L+alpha*Q-pde.w2*II;
     A_encode{count}.A3=II;
     
     count = count+1;
@@ -360,7 +360,7 @@ if isGenAencode == 1
     A_encode{count}.IndexI = dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=G-J-L+alpha*Q;
+    A_encode{count}.A1=G-J-L+alpha*Q-pde.w2*II;
     A_encode{count}.A2=II;
     A_encode{count}.A3=II;
     
@@ -452,7 +452,7 @@ if isGenAencode == 1
     A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=G-J-L+alpha*Q;
+    A_encode{count}.A1=G-J-L+alpha*Q-pde.w2*II;
     A_encode{count}.A2=II;
     A_encode{count}.A3=II;
     
@@ -515,9 +515,23 @@ ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]'*(
 
 sol = Mat\ff;
 
-x = sol-sol;
-% solve equation by cg methods
-x = cg(x,ff,1000,1e-3);
+
+% % x = sol;
+% x = sol-sol+1;
+% 
+dof = size(sol,1);
+x = zeros(dof,1);
+% x = rand(dof,1);
+% 
+% figure
+% plot(Mat*x-ApplyA(x));
+% %
+% return
+% solve equation by cg methods: done with stored matrix
+%  try with A_encode
+x = cg(x,ff,1000,1e-6);
+
+max(x-sol)
 
 return
 
