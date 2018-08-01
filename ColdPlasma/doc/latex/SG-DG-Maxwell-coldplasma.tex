@@ -111,23 +111,115 @@ and
 A(\bu_h,\bv)=(\bbf,\bv).
 \end{eqnarray}
 
-Let the test and trial functions as: 
+%Let the test and trial functions as: 
+%\begin{eqnarray*}
+%\bm{\phi_{i,n}^\ell}:=\bigg(\phi^{\ell_1}_{i_1,n_1}(x_1)\phi^{\ell_2}_{i_2,n_2}(x_2)\cdots\bigg)\mbox{ and }
+%\bm{\phi_{j,m}^l}:=\bigg(\phi^{l_1}_{j_1,m_1}(x_1)\phi^{l_2}_{j_2,m_2}(x_2)\cdots\bigg)
+%\end{eqnarray*}
+%where $|\bm{l}|_1\le n$ and $|\bm{\ell}|_1\le n.$
+%Then the operator $\mathcal{A}$ acts on them are as follows:
+%\begin{eqnarray*}
+%\mathcal{A}(\bm{\phi_{i,n}^l},\bm{\phi_{j,m}^\ell})=A_1(\phi^{l_1}_{i_1,n_1},\phi^{\ell_1}_{j_1,m_1})\bigotimes A_2(\phi^{l_2}_{i_2,n_2},\phi^{\ell_2}_{j_2,m_2})\bigotimes\cdots
+%\end{eqnarray*}
+%Through mapping $(\bm{\ell,i,n})\to I$ and $(\bm{l,j,m})\to J$, we generate the entry $(\mathbb{A})_{I,J}$.
+%
+%\begin{eqnarray*}
+%\hat{\bE} &=& \frac{\bE^++\bE^-}{2},\ \hat{\bB} = \frac{\bB^++\bB^-}{2}\\
+%\hat{\bE} &=& \bE^+,\ \hat{\bB} = \bB^-,\mbox{ or }\hat{\bE} = \bE^-,\ \hat{\bB} = \bB^+\\
+%\hat{\bE} &=& \frac{\bE^++\bE^-}{2}+(\bB^+\times\bn^++\bB^-\times\bn^-),\ \hat{\bB} = \frac{\bB^++\bB^-}{2}-(\bE^+\times\bn^++\bE^-\times\bn^-)
+%\end{eqnarray*}
+
+
+%---------------------
+% FEM space
+%---------------------
+Scaling functions
 \begin{eqnarray*}
-\bm{\phi_{i,n}^\ell}:=\bigg(\phi^{\ell_1}_{i_1,n_1}(x_1)\phi^{\ell_2}_{i_2,n_2}(x_2)\cdots\bigg)\mbox{ and }
-\bm{\phi_{j,m}^l}:=\bigg(\phi^{l_1}_{j_1,m_1}(x_1)\phi^{l_2}_{j_2,m_2}(x_2)\cdots\bigg)
+\phi_{\ell,j}^n = 2^{n/2}\sqrt{2j-1}P_j(2^{n+1}-2\ell-1).
 \end{eqnarray*}
-where $|\bm{l}|_1\le n$ and $|\bm{\ell}|_1\le n.$
-Then the operator $\mathcal{A}$ acts on them are as follows:
+Define average and jump as following
 \begin{eqnarray*}
-\mathcal{A}(\bm{\phi_{i,n}^l},\bm{\phi_{j,m}^\ell})=A_1(\phi^{l_1}_{i_1,n_1},\phi^{\ell_1}_{j_1,m_1})\bigotimes A_2(\phi^{l_2}_{i_2,n_2},\phi^{\ell_2}_{j_2,m_2})\bigotimes\cdots
+\ljump \bu \rjump_{\tau}={\bf n}^+\times\bu^++{\bf n}^-\times\bu^-,\mbox{ and }\lavg \bu\ravg=\frac{\bu^++\bu^-}{2}.
 \end{eqnarray*}
-Through mapping $(\bm{\ell,i,n})\to I$ and $(\bm{l,j,m})\to J$, we generate the entry $(\mathbb{A})_{I,J}$.
+If $e\in\partial\Omega$, the average and jump are defined as
+\begin{eqnarray*}
+\ljump \bu \rjump_{\tau}={\bf n}\times\bu,\mbox{ and }
+\end{eqnarray*}
+
+Here we have
+\begin{eqnarray*}
+\nabla_h\times\bv&=&(\partial_y v_3-\partial_zv_2,\partial_zv_1-\partial_xv_3,\partial_xv_2-\partial_yv_1)
+\end{eqnarray*}
 
 \begin{eqnarray*}
-\hat{\bE} &=& \frac{\bE^++\bE^-}{2},\ \hat{\bB} = \frac{\bB^++\bB^-}{2}\\
-\hat{\bE} &=& \bE^+,\ \hat{\bB} = \bB^-,\mbox{ or }\hat{\bE} = \bE^-,\ \hat{\bB} = \bB^+\\
-\hat{\bE} &=& \frac{\bE^++\bE^-}{2}+(\bB^+\times\bn^++\bB^-\times\bn^-),\ \hat{\bB} = \frac{\bB^++\bB^-}{2}-(\bE^+\times\bn^++\bE^-\times\bn^-)
+(\nabla_h\times\bv,\nabla_h\times\bw)&=&\sum_{T\in\mathcal{T}_h}\int_T
+	\begin{pmatrix}
+	\partial_y v_3-\partial_zv_2\\ \partial_zv_1-\partial_xv_3\\ \partial_xv_2-\partial_yv_1
+	\end{pmatrix}\cdot
+	\begin{pmatrix}
+	\partial_y w_3-\partial_zw_2\\ \partial_zw_1-\partial_xw_3\\ \partial_xw_2-\partial_yw_1
+	\end{pmatrix}dT \\&=&\sum_{T\in\mathcal{T}_h}\int_T
+\begin{pmatrix}
+\partial_y w_1\partial_y v_1+\partial_z w_1\partial_z v_1 & -\partial_y w_1\partial_x v_2 & -\partial_zw_1\partial_xv_3\\
+-\partial_xw_2\partial_yv_1 & \partial_xw_2\partial_xv_2+\partial_zw_2\partial_zv_2 &-\partial_zw_2\partial_yv_3\\
+-\partial_xw_3\partial_zv_1 & -\partial_yw_3\partial_zv_2 & \partial_xw_3\partial_xv_3+\partial_yw_3\partial_yv_3
+\end{pmatrix}dT\\
+&:=&\mathbb{K}.
 \end{eqnarray*}
+We shall compute each entry as follows:
+\begin{eqnarray*}
+\mathbb{K}_{11} &=& \int_T\partial_y w_1\partial_y v_1+\partial_z w_1\partial_z v_1dT\\
+&=&\int_{T_x}w_1(x)v_1(x)dx\int_{T_y} w_1'(y)v_1'(y)dy\int_{T_z}w_1(z)v_1(z)dz\\
+&&+\int_{T_x}w_1(x)v_1(x)dx\int_{T_y} w_1(y)v_1(y)dy\int_{T_z}w'_1(z)v'_1(z)dz\\
+&=&\mathbb{I}_x\bigotimes\mathbb{GG}_y\bigotimes\mathbb{I}_z+\mathbb{I}_x\bigotimes\mathbb{I}_y\bigotimes\mathbb{GG}_z
+\end{eqnarray*}
+with $\mathbb{GG}:=\int w'v'dx.$
+Also, we have
+\begin{eqnarray*}
+\mathbb{K}_{12}&=& \int_T -\partial_y w_1\partial_x v_2dT\\
+&=&\int_{T_x}w_1(x)v_2'(x)dx\int_{T_y}w_1'(y)v_2(y)dy\int_{T_z}w_1(z)v_2(z)dz\\
+&=&\mathbb{G}\bigotimes\mathbb{G}^\top\bigotimes\mathbb{I}
+\end{eqnarray*}
+with $\mathbb{G}=\int uv'dx.$
+\begin{eqnarray*}
+\langle\lavg\nabla\times\bu_h\ravg,\ljump\bv\rjump \rangle &=& \int_{\partial T}
+	\begin{pmatrix}
+	\partial_y u_3-\partial_zu_2\\ \partial_zu_1-\partial_xu_3\\ \partial_xu_2-\partial_yu_1
+	\end{pmatrix}\cdot
+	\begin{pmatrix}
+	n_2 v_3-n_z v_2\\ n_z v_1-n_x v_3\\ n_x v_2-n_yv_1
+	\end{pmatrix}ds\\
+	&=&\int_{\partial T}
+	\begin{pmatrix}
+	n_y v_1\partial_y u_1+n_z v_1\partial_z u_1 & -n_y v_1\partial_x u_2 & -n_zv_1\partial_xu_3\\
+	-n_xv_2\partial_yu_1 & n_xv_2\partial_xu_2+n_zv_2\partial_zu_2 &-n_zv_2\partial_yu_3\\
+	-n_xv_3\partial_zu_1 & -n_yv_3\partial_zu_2 & n_xv_3\partial_xu_3+n_yv_3\partial_yu_3
+	\end{pmatrix}ds
+\end{eqnarray*}
+So on $\partial T_x$ with $\bn=(1,0,0)$ or $\bn=(-1,0,0)$, we have
+\begin{eqnarray*}
+\int_{\partial T_x}
+	\begin{pmatrix}
+	0 & 0 & 0\\
+	-n_xv_2\partial_yu_1 & n_xv_2\partial_xu_2 &0\\
+	-n_xv_3\partial_zu_1 & 0 & n_xv_3\partial_xu_3
+	\end{pmatrix}ds
+	&=&
+\int_{\partial T_x}
+	\begin{pmatrix}
+	0 & 0 & 0\\
+	-\ljump v_2\rjump_x\lavg\partial_yu_1\ravg & \ljump v_2\rjump_x\lavg\partial_xu_2\ravg &0\\
+	-\ljump v_3\rjump_x\lavg\partial_zu_1\ravg & 0 & \ljump v_3\rjump_x\lavg\partial_xu_3\ravg
+	\end{pmatrix}	\\
+	&=&
+	\begin{pmatrix}
+	0 & 0 & 0\\
+	-\mathbb{K}\bigotimes\mathbb{G}\bigotimes\mathbb{I}&\mathbb{L}\bigotimes\mathbb{I}\bigotimes\mathbb{I} &0\\
+	-\mathbb{K}\bigotimes\mathbb{I}\bigotimes\mathbb{G} &0   & -\mathbb{L}\bigotimes\mathbb{I}\bigotimes\mathbb{I}
+	\end{pmatrix}	
+\end{eqnarray*}
+
+
 %-------------------------------------------
 % Numerical Examples
 %-------------------------------------------

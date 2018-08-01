@@ -12,6 +12,7 @@ function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde)
 %========================================================
 close all
 format short e
+delta = 1;
 %--DG parameters
 quad_num=10;
 %---------------
@@ -53,7 +54,7 @@ GradGradMat = sparse(dof_1D_x,dof_1D_x);
 % generate 1D matrix for DG
 
 % Matrix for (u',v')
-val = Dp_val'*(quad_w*ones(1,Deg).*Dp_val)*1/hx/hx*2;
+val = Dp_val'*(quad_w*ones(1,Deg).*Dp_val)*1/hx*2^(Lev+1);
 Ac = repmat({val},nx,1);
 GG = blkdiag(Ac{:});
 
@@ -362,7 +363,8 @@ end
 
 % size(T1)
 % dofs
-Mat = T1-T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);
+Mat = T1-delta*T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);
+% Mat = T1+delta*T2+T3+alpha*T4-pde.w2*speye(dofs,dofs);
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
 figure;spy(Mat);
 
