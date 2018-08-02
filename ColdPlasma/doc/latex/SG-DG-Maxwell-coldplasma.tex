@@ -97,19 +97,93 @@ with
 Here, $\omega_p({\bf x})^2=\frac{e^2N_e({\bf x})}{c^2\epsilon_0}$, $\omega_c({\bf x})=\frac{e|{\bf B}_0({\bf x})|}{m_e}$ and $\tilde{\omega}=\omega+i\nu.$ The collision frequency is $\nu>0$. it corresponds to friction on a bath of static ions. It is an extremely small quantity because the plasma has very low collisionality $\nu\approx 10^{-7}$ in a fusion plasma.
 
 In this equation, the dispersive media whose physical parameters are wavelength dependent.
+
+
+%------Equation--------------
+Find the vector unknown $\bu$ that satisfies
 \begin{eqnarray}
-\nabla\times\nabla\times\bu-\kappa^2\bu =\bbf.
+\nabla\times\nabla\times\bu-\kappa^2\bu &=&\bbf,\mbox{ in }\Omega,\label{eq:pde1}\\
+\bn\times\bu &=& 0, \mbox{ on }\Gamma.\label{eq:pde1-bc}
 \end{eqnarray}
-Formulation:
+Here, $\Omega$ is taken to be an open bounded Lipschitz polyhedron in $\mathbb{R}^3$ with boundary $\Gamma=\partial\Omega$ and outward normal unite vector $\bn.$ For simplicity, we assume $\Omega$ to be simply-connected and $\Gamma$ to be connected. The right-hand side $\bbf$ is a given external source field in $L^2(\Omega)^3.$ By introducing the Sobolev space
+\begin{eqnarray*}
+H_0(\text{curl};\Omega):=\{\bv\in L^2(\Omega)^3:\nabla\times\bv\in L^2(\Omega)^3,\bn\times\bv=0,\mbox{ on }\Gamma\},
+\end{eqnarray*}
+the weak form is given by: find $\bu\in H_0(\text{curl};\Omega)$ such that
+\begin{eqnarray*}
+A(\bu,\bv):=\int_{\Omega}\bigg((\nabla\times\bu)\cdot(\nabla\times\bv)+\bu\cdot\bv\bigg)dx=\int_{\Omega}\bbf\cdot\bv dx,\ \forall\bv\in H_0(\text{curl};\Omega).
+\end{eqnarray*}
+
+%-------Advantage of DG---------------
+The main motivation for using a discontinuous Galerkin (DG) approach for the numerical approximation of (\ref{eq:pde1})-(\ref{eq:pde1-bc}) is that DG methods, being based on discontinuous finite element spaces, can easily handle non-conforming meshes which contain hanging nodes and, in principle, local spaces of different polynomial orders. Moreover, the implementation of discontinuous elements can be based on standard shape functions, without the need to employ curl-conforming elemental mappings - a convenience that is particularly advantageous for high-order elements and that is not straightforwardly shared by standard edge or face elements commonly used in computational electromagnetics. A further benefit of DG methods is that inhomogeneous Dirichlet boundary conditions can easily be incorporated within the scheme, without the need to explicitly evaluate edge- and face-element interpolation operators.
+
+\section{Discontinous Galerkin discretization}
+In this section, we consider the interior penalty DG discretization of (\ref{eq:pde1})-(\ref{eq:pde1-bc}). We first introduce the following notations.
+
+\vspace{5pt}
+% Triangulation
+Let $\mathcal{T}_h$ be a conforming, shape-regular partition of domain $\Omega$. Denote $h=\max_{T\in\mathcal{T}_h}h_T$, with $h_T$ defined as the diameter of the element $T\in\mathcal{T}_h$. Let $\mathcal{F}_h,\ \mathcal{F}_h^I,\ \mathcal{F}_h^B$ denote the set of all faces, the interior faces and the boundary faces respectively. 
+For a piecewise smooth vector-valued function $\bv$, we shall introduce the following trace operators. Let $e\in\mathcal{F}_h^I$ be an interior face shared by two neighboring elements $K^+$ and $K^-$; $\bn^\pm$ be the unit outward normal vectors on the boundaries $\partial K^\pm$, and we can define average and jump across a face $e\in\mathcal{F}_h^I$ as following
+\begin{eqnarray*}
+\ljump \bu \rjump_{\tau}={\bf n}^+\times\bu^++{\bf n}^-\times\bu^-,\mbox{ and }\lavg \bu\ravg=\frac{\bu^++\bu^-}{2}.
+\end{eqnarray*}
+If $e\in\mathcal{F}_h^B$, the average and jump are defined as
+\begin{eqnarray*}
+\ljump \bu \rjump_{\tau}={\bf n}\times\bu,\mbox{ and } \lavg\bu\ravg=\bu.
+\end{eqnarray*}
+
+
+For a given partition $\mathcal{T}_h$ and an approximation degree $k\ge 1$, we introduce the following finite element space
 \begin{eqnarray}
-A(\bu_h,\bv)&=&(\nabla_h\times \bu_h,\nabla_h\times \bv)-k^2(\bu_h,\bv)\notag\\
-&&-\langle\lavg\nabla_h\times \bu_h\ravg,\ljump \bv\rjump\rangle-\langle\ljump \bu_h\rjump,\lavg\nabla_h\times \bv\ravg\rangle
-+\alpha h^{-1}\langle\ljump \bu_h\rjump,\ljump \bv\rjump\rangle
+V_h:=\{\bv\in L^2(\Omega)^3:\bv|_T\in P^k(T)^3,T\in\mathcal{T}_h\},
 \end{eqnarray}
-and
+where $P^k(T)$ denotes the space of polynomials of total degree at most $k$ on $T$. With this notation, we consider the following interior penalty DG method: find $\bu_h\in V_h$ such that
+%---------------------------
+% Numerical Scheme
+%---------------------------
 \begin{eqnarray}
-A(\bu_h,\bv)=(\bbf,\bv).
+A_h(\bu_h,\bv)=(\bbf,\bv),
 \end{eqnarray}
+with $A_h(\cdot,\cdot)$ is given by
+\begin{eqnarray}
+A_h(\bu_h,\bv)&=&(\nabla_h\times \bu_h,\nabla_h\times \bv)-k^2(\bu_h,\bv)\notag\\
+&-&\langle\lavg\nabla_h\times \bu_h\ravg,\ljump \bv\rjump\rangle_{\mathcal{F}_h}-\langle\ljump \bu_h\rjump,\lavg\nabla_h\times \bv\ravg\rangle_{\mathcal{F}_h}
++\alpha h^{-1}\langle\ljump \bu_h\rjump,\ljump \bv\rjump\rangle_{\mathcal{F}_h}.
+\end{eqnarray}
+Here, we use $\nabla_h$ to denote the elementwise application of the operator $\nabla$, and $\langle \bv, \bw\rangle_{\mathcal{F}_h}:=\sum_{e\in\mathcal{F}_h}\int_e \bv\cdot\bw ds.$
+Here $\alpha\ge \alpha_{\min}$ is a positive constant that is independent of the mesh size. The threshold value $\alpha_{\min}$ only depends on the shape-regularity of the mesh and the approximation order $k$.
+
+%---------------------
+% Norm
+%---------------------
+Here we define the following DG seminorm and norm on $V(h)$, respectively:
+\begin{eqnarray}
+%|\bv|_{\text{DG}}^2:=\|\nabla_h\times\bv\|_0^2+\|h^{-1/2}\ljump\bv\rjump_{\tau}\|_{0,\mathcal{F}_h}^2,\ 
+\3bar\bv\3bar^2:=\|\bv\|_0^2+\|\nabla_h\times\bv\|_0^2+\|h^{-1/2}\ljump\bv\rjump_{\tau}\|_{0,\mathcal{F}_h}^2.
+\end{eqnarray}
+
+%---------------------
+% theorem
+%---------------------
+\begin{theorem}
+Assume that $\bu\in H^s(\Omega)^3,\ \nabla\times\bu\in H^s(\Omega)^3$, for $s>1/2$. Furthermore, let $\bu_h$ denote the DG approximation with $\alpha\ge \alpha_{\min}.$ Then there is a mesh size $h_0>0$ such that for $0<h\le h_0$, we have the optimal a priori error bound
+\begin{eqnarray}
+\|\bu-\bu_h\|_{\text{DG}}\le Ch^{\min\{s,k\}}\bigg(\|\bu\|_s+\|\nabla\times\bu\|_s\bigg),
+\end{eqnarray}
+with a constant $C>0$ independent of the mesh size.
+\end{theorem}
+
+\begin{theorem}
+Assume that the exact solution $\bu$ satisfies the regularity assumption
+\begin{eqnarray}
+\bu\in H^{s+1}(\Omega)^3,\ \nabla\times\bu\in H^s(\Omega)^3,
+\end{eqnarray}
+for $s>1/2$. Let $\bu_h$ denote the DG approximation obtained by (?) with $\alpha\ge\alpha_{\min}$. Then we have the following error bound
+\begin{eqnarray}
+\|\bu-\bu_h\|\le Ch^{\min{s,k}+1}\bigg(\|\bu\|_{s+1}+\|\nabla\times\bu\|_s\bigg),
+\end{eqnarray}
+with a constant $C>0$ independent of the mesh size.
+\end{theorem}
 
 %Let the test and trial functions as: 
 %\begin{eqnarray*}
@@ -130,6 +204,7 @@ A(\bu_h,\bv)=(\bbf,\bv).
 %\end{eqnarray*}
 
 
+\section{Multiwavelet DG Method}
 %---------------------
 % FEM space
 %---------------------
@@ -137,14 +212,10 @@ Scaling functions
 \begin{eqnarray*}
 \phi_{\ell,j}^n = 2^{n/2}\sqrt{2j-1}P_j(2^{n+1}-2\ell-1).
 \end{eqnarray*}
-Define average and jump as following
-\begin{eqnarray*}
-\ljump \bu \rjump_{\tau}={\bf n}^+\times\bu^++{\bf n}^-\times\bu^-,\mbox{ and }\lavg \bu\ravg=\frac{\bu^++\bu^-}{2}.
-\end{eqnarray*}
-If $e\in\partial\Omega$, the average and jump are defined as
-\begin{eqnarray*}
-\ljump \bu \rjump_{\tau}={\bf n}\times\bu,\mbox{ and } \lavg\bu\ravg=\bu.
-\end{eqnarray*}
+
+
+
+
 
 Here we have
 \begin{eqnarray*}
@@ -219,6 +290,8 @@ So on $\partial T_x$ with $\bn=(1,0,0)$ or $\bn=(-1,0,0)$, we have
 	\end{pmatrix}	
 \end{eqnarray*}
 
+%\section{Implementation}
+%In this section, it will be discussed how the IP-DG scheme can be implemented for a domain $\Omega=[0,1]^3$. Let either
 
 %-------------------------------------------
 % Numerical Examples
@@ -243,6 +316,63 @@ We shall assume Dirichelet boundary condition for the test.
 
 
 
+%%-------------------
+%% Table
+%%-------------------
+%\begin{table}
+%\caption{Numerical performance of discontinuous Galerkin methods on the full grids with $\omega=1.$}
+%\begin{tabular}{cccccccc}\hline\hline
+%$h$ & DOFs & $L_{\infty}$-error & $L^2$-error & $\lambda_{\max}$ & $\lambda_{\min}$ & Cond & Iter \\ \hline
+%\multicolumn{8}{c}{$k=1$}\\ \hline
+%$2^{-2}$   &1536   &5.6951e-03   &4.6338e-02 &57024.430978    &18.878869 &3020.542718   &54\\
+%$2^{-3}$   &12288 &5.7293e-04   &1.1669e-02 &240478.526698   &18.944817 &12693.631670  &73\\
+%$2^{-4}$   &98304 &5.2287e-05   &2.9251e-03 &977313.341427   &18.792018 &52006.833005  &131\\
+%$2^{-5}$   &786432 &4.6595e-06   &7.3205e-04 &3926302.820517  &18.754528 &209352.263631 &273\\
+%$2^{-6}$   &6291456 &4.1286e-07   &1.8310e-04 &15722813.057832 &18.743123 &838857.696443 &511\\ \hline
+%\multicolumn{8}{c}{$k=2$}\\ \hline
+%$2^{-2}$   &5184 &2.2612e-04   &2.7613e-03 &390653.841257   &18.762569  &20820.914159   &104 \\
+%$2^{-3}$   &41472 &1.2008e-05   &3.5137e-04 &1631101.376555  &18.725176  &87107.398789   &138\\
+%$2^{-4}$   &331776 &5.5528e-07   &4.4120e-05 &6605880.278280  &18.739728  &352506.726599  &290\\
+%$2^{-5}$   &2654208 &2.4821e-08   &5.5220e-06 &26512507.597910 &18.739309  &1414807.078682 &571\\
+%$2^{-6}$   &21233664 &1.1009e-09   &6.9069e-07 &106137293.680189 &18.739221 &5663911.628555 &772\\ \hline
+%\multicolumn{8}{c}{$k=3$}\\ \hline
+%$2^{-2}$ &12288       &1.0338e-05   &1.2191e-04 &1558862.024776     &18.729517 &83230.229223     &90\\
+%$2^{-3}$ &98304       &2.6618e-07   &7.7191e-06 &6465795.265607     &18.739240 &345040.415361   &99\\
+%$2^{-4}$ &786432     &6.1067e-09   &4.8612e-07 &25880500.920109   &18.739210 &1381088.168674 &20\\
+%$2^{-5}$ &6291456   &1.3618e-10   &3.0310e-08 &104161989.481832 &18.739209 &5558505.186208 &18\\
+%$2^{-6}$ &50331648 &3.0148e-12   &1.8927e-09 &208632188.971009 &18.739209 &11133457.722958 &9\\ \hline\hline
+%\end{tabular}
+%\end{table}
+%
+%%---------------------
+%% Multiwavelet results
+%%---------------------------
+%\begin{table}
+%\caption{Numerical performance of multiwavelet discontinuous Galerkin methods on the full grids with $\omega=1.$}
+%\begin{tabular}{cccccccc}\hline\hline
+%$h$ & DOFs & $L_{\infty}$-error & $L^2$-error & $\lambda_{\max}$ & $\lambda_{\min}$ & Cond & Iter \\ \hline
+%\multicolumn{8}{c}{$k=1$}\\ \hline
+%$2^{-2}$	&1536 &2.2689e-02   &4.6338e-02   &57000.606538        &18.878870   &3019.280619       &53\\
+%$2^{-3}$   &12288 &5.5197e-03   &1.1669e-02   &240325.556323      &18.944817   &12685.557146    &73\\
+%$2^{-4}$   &98304 &1.3721e-03   &2.9251e-03   &967594.006696      &18.792019   &51489.625308    &125\\
+%$2^{-5}$   &786432 &3.4273e-04   &7.3205e-04   &3926302.538525    &18.754462   &209352.983582   &268\\
+%$2^{-6}$ &6291456 5.4864e-08   6.9069e-07 106137172.243337 18.739221 5663905.148146 772\\   \hline
+%\multicolumn{8}{c}{$k=2$}\\ \hline
+%$2^{-2}$	&5184	&5.8236e-04   &2.7613e-03	&390473.280474 &18.762345 &20811.538802 &103\\
+%$2^{-3}$	&41472	&7.1924e-05   &3.5137e-04    &1631109.965402 &18.725177 &87107.855082 &138\\
+%$2^{-4}$	&331776	&6.8607e-06   &4.4120e-05    &6606018.620291 &18.739728 &352514.116290 &290\\
+%$2^{-5}$	&2654208	&6.1784e-07   &5.5220e-06   &26512166.161984 &18.739309 &1414788.858359 &571\\
+%$2^{-6}$	&21233664&6291456 8.5683e-05   1.8310e-04 15722803.088791 18.743123 838857.164450 499\\
+%\hline
+%\multicolumn{8}{c}{$k=3$}\\ \hline
+%$2^{-2}$	&12288	&2.8315e-05   &1.2191e-04  &1558258.985809     &18.729508 &83198.075655     &90\\
+%$2^{-3}$	&98304	&1.7596e-06   &7.7191e-06  &6463584.921308     &18.739240 &344922.462667   &98\\
+%$2^{-4}$	&786432	&8.4061e-08   &4.8612e-07  &25880500.453577   &18.739210 &1381088.143797 &20\\
+%$2^{-5}$	&6291456	&3.7866e-09   &3.0309e-08  &104162860.983888 &18.739209 &5558551.693146  &18\\
+%$2^{-6}$	&50331648&1.6805e-10   &1.8926e-09  &208621237.804132 &18.739209 &11132873.324451 &9\\ \hline
+%\end{tabular}
+%\end{table}
+
 %-------------------
 % Table
 %-------------------
@@ -251,23 +381,23 @@ We shall assume Dirichelet boundary condition for the test.
 \begin{tabular}{cccccccc}\hline\hline
 $h$ & DOFs & $L_{\infty}$-error & $L^2$-error & $\lambda_{\max}$ & $\lambda_{\min}$ & Cond & Iter \\ \hline
 \multicolumn{8}{c}{$k=1$}\\ \hline
-$2^{-2}$   &1536   &5.6951e-03   &4.6338e-02 &57024.430978    &18.878869 &3020.542718   &54\\
-$2^{-3}$   &12288 &5.7293e-04   &1.1669e-02 &240478.526698   &18.944817 &12693.631670  &73\\
-$2^{-4}$   &98304 &5.2287e-05   &2.9251e-03 &977313.341427   &18.792018 &52006.833005  &131\\
-$2^{-5}$   &786432 &4.6595e-06   &7.3205e-04 &3926302.820517  &18.754528 &209352.263631 &273\\
-$2^{-6}$   &6291456 &4.1286e-07   &1.8310e-04 &15722813.057832 &18.743123 &838857.696443 &511\\ \hline
+$2^{-2}$   &1536       &5.70e-03   &4.63e-02 &57024.43       &18.88 &3020.54     &54\\
+$2^{-3}$   &12288     &5.73e-04   &1.17e-02 &240478.53     &18.94 &12693.63   &73\\
+$2^{-4}$   &98304     &5.23e-05   &2.93e-03 &977313.34     &18.79 &52006.83   &131\\
+$2^{-5}$   &786432   &4.66e-06   &7.32e-04 &3926302.82   &18.75 &209352.26 &273\\
+$2^{-6}$   &6291456 &4.13e-07   &1.83e-04 &15722813.06 &18.74 &838857.70 &511\\ \hline
 \multicolumn{8}{c}{$k=2$}\\ \hline
-$2^{-2}$   &5184 &2.2612e-04   &2.7613e-03 &390653.841257   &18.762569  &20820.914159   &104 \\
-$2^{-3}$   &41472 &1.2008e-05   &3.5137e-04 &1631101.376555  &18.725176  &87107.398789   &138\\
-$2^{-4}$   &331776 &5.5528e-07   &4.4120e-05 &6605880.278280  &18.739728  &352506.726599  &290\\
-$2^{-5}$   &2654208 &2.4821e-08   &5.5220e-06 &26512507.597910 &18.739309  &1414807.078682 &571\\
-$2^{-6}$   &21233664\\ \hline
+$2^{-2}$   &5184         &2.26e-04   &2.76e-03 &390653.84       &18.76  &20820.91     &104 \\
+$2^{-3}$   &41472       &1.20e-05   &3.51e-04 &1631101.38     &18.73  &87107.40     &138\\
+$2^{-4}$   &331776     &5.55e-07   &4.41e-05 &6605880.28     &18.74  &352506.73   &290\\
+$2^{-5}$   &2654208   &2.48e-08   &5.52e-06 &26512507.60   &18.74  &1414807.08 &571\\
+$2^{-6}$   &21233664 &1.10e-09   &6.91e-07 &106137293.68 &18.74 &5663911.63  &772\\ \hline
 \multicolumn{8}{c}{$k=3$}\\ \hline
-$2^{-2}$ &12288       &1.0338e-05   &1.2191e-04 &1558862.024776     &18.729517 &83230.229223     &90\\
-$2^{-3}$ &98304       &2.6618e-07   &7.7191e-06 &6465795.265607     &18.739240 &345040.415361   &99\\
-$2^{-4}$ &786432     &6.1067e-09   &4.8612e-07 &25880500.920109   &18.739210 &1381088.168674 &20\\
-$2^{-5}$ &6291456   &1.3618e-10   &3.0310e-08 &104161989.481832 &18.739209 &5558505.186208 &18\\
-$2^{-6}$ &50331648 &3.0148e-12   &1.8927e-09 &208632188.971009 &18.739209 &11133457.722958 &9\\ \hline\hline
+$2^{-2}$ &12288       &1.03e-05   &1.22e-04 &1558862.02     &18.73 &83230.23      &90\\
+$2^{-3}$ &98304       &2.66e-07   &7.72e-06 &6465795.27     &18.74 &345040.42    &99\\
+$2^{-4}$ &786432     &6.11e-09   &4.86e-07 &25880500.92   &18.74 &1381088.17  &20\\
+$2^{-5}$ &6291456   &1.36e-10   &3.03e-08 &104161989.48 &18.74 &5558505.19  &18\\
+$2^{-6}$ &50331648 &3.01e-12   &1.89e-09 &208632188.97 &18.74 &11133457.72 &9\\ \hline\hline
 \end{tabular}
 \end{table}
 
@@ -279,26 +409,27 @@ $2^{-6}$ &50331648 &3.0148e-12   &1.8927e-09 &208632188.971009 &18.739209 &11133
 \begin{tabular}{cccccccc}\hline\hline
 $h$ & DOFs & $L_{\infty}$-error & $L^2$-error & $\lambda_{\max}$ & $\lambda_{\min}$ & Cond & Iter \\ \hline
 \multicolumn{8}{c}{$k=1$}\\ \hline
-$2^{-2}$	&1536 &2.2689e-02   &4.6338e-02   &57000.606538        &18.878870   &3019.280619       &53\\
-$2^{-3}$   &12288 &5.5197e-03   &1.1669e-02   &240325.556323      &18.944817   &12685.557146    &73\\
-$2^{-4}$   &98304 &1.3721e-03   &2.9251e-03   &967594.006696      &18.792019   &51489.625308    &125\\
-$2^{-5}$   &786432 &3.4273e-04   &7.3205e-04   &3926302.538525    &18.754462   &209352.983582   &268\\
-$2^{-6}$ &6291456 \\   \hline
+$2^{-2}$	&1536      &2.27e-02   &4.63e-02   &57000.61        &18.88   &3019.28       &53\\
+$2^{-3}$   &12288    &5.52e-03   &1.17e-02   &240325.56      &18.94   &12685.56     &73\\
+$2^{-4}$   &98304    &1.37e-03   &2.93e-03   &967594.01      &18.79   &51489.63     &125\\
+$2^{-5}$   &786432  &3.43e-04   &7.32e-04   &3926302.54    &18.75   &209352.98   &268\\
+$2^{-6}$   &6291456 &8.57e-05  &1.83e-04   &15722803.09  &18.74   &838857.16   &499\\   \hline
 \multicolumn{8}{c}{$k=2$}\\ \hline
-$2^{-2}$	&5184	&5.8236e-04   &2.7613e-03	&390473.280474 &18.762345 &20811.538802 &103\\
-$2^{-3}$	&41472	&7.1924e-05   &3.5137e-04    &1631109.965402 &18.725177 &87107.855082 &138\\
-$2^{-4}$	&331776	&6.8607e-06   &4.4120e-05    &6606018.620291 &18.739728 &352514.116290 &290\\
-$2^{-5}$	&2654208	&6.1784e-07   &5.5220e-06   &26512166.161984 &18.739309 &1414788.858359 &571\\
-$2^{-6}$	&21233664&\\
+$2^{-2}$	&5184	&5.82e-04   &2.76e-03    &390473.28       &18.76 &20811.54     &103\\
+$2^{-3}$	&41472	&7.19e-05   &3.51e-04    &1631109.97     &18.73 &87107.86     &138\\
+$2^{-4}$	&331776	&6.86e-06   &4.41e-05    &6606018.62     &18.74 &352514.12   &290\\
+$2^{-5}$	&2654208	&6.18e-07   &5.52e-06    &26512166.16   &18.74 &1414788.86 &571\\
+$2^{-6}$	&21233664&5.49e-08  &6.91e-07   &106137172.24 &18.74 &5663905.15  &772\\
 \hline
 \multicolumn{8}{c}{$k=3$}\\ \hline
-$2^{-2}$	&12288	&2.8315e-05   &1.2191e-04  &1558258.985809     &18.729508 &83198.075655     &90\\
-$2^{-3}$	&98304	&1.7596e-06   &7.7191e-06  &6463584.921308     &18.739240 &344922.462667   &98\\
-$2^{-4}$	&786432	&8.4061e-08   &4.8612e-07  &25880500.453577   &18.739210 &1381088.143797 &20\\
-$2^{-5}$	&6291456	&3.7866e-09   &3.0309e-08  &104162860.983888 &18.739209 &5558551.693146  &18\\
-$2^{-6}$	&50331648&1.6805e-10   &1.8926e-09  &208621237.804132 &18.739209 &11132873.324451 &9\\ \hline
+$2^{-2}$	&12288	  &2.83e-05   &1.22e-04  &1558258.99     &18.73 &83198.08     &90\\
+$2^{-3}$	&98304	  &1.76e-06   &7.72e-06  &6463584.92     &18.74 &344922.46   &98\\
+$2^{-4}$	&786432	  &8.41e-08   &4.86e-07  &25880500.45   &18.74 &1381088.14 &20\\
+$2^{-5}$	&6291456	  &3.79e-09   &3.03e-08  &104162860.98 &18.74 &5558551.69  &18\\
+$2^{-6}$	&50331648&1.68e-10   &1.89e-09  &208621237.80 &18.74 &11132873.32 &9\\ \hline
 \end{tabular}
 \end{table}
+
 
 
 
@@ -308,6 +439,10 @@ V. Dolean, H. Fahs, L. Fezoui, and S. Lanteri. Locally implicit discontinous Gal
 
 \bibitem{GuoCheng2016}
 W. Guo and Y. Cheng. A Sparse Grid Discontinuous Galerkin Method for High-Dimensional Transport Equations and Its Application to Kinetic Simulations. SIAM J. Sci. Comput., 38(6), A3381-A3409. 
+
+\bibitem{HoustonPerugiaSchneebeli2005b}
+P. Houston, I. Perugia, A. Schneebeli, and D. Sch\"{o}tzau. Interior penalty method for the indefinite time-harmonic
+Maxwell equations. Numer. Math., 100 (2005): 485-518.
 
 \bibitem{Kopriva2002}
 D.A.Kopriva, S.L.Woodruff and M.Y.Hussaini. Computation of electromagnetic scattering with a non-conforming discontinuous spectral element method, Int. J. Numr. Meth. Engng, 53 (2002): 105-122.

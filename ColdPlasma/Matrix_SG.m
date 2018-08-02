@@ -26,7 +26,7 @@ c2 = 1;
 
 % parameters for cg method
 MaxIter = 1000;
-Tol = 1e-10;
+Tol = 1e-6;
 
 
 % compute the trace values
