@@ -1,4 +1,4 @@
-function [GradMat,GradGradMat] = Matrix_TI2(Lev,Deg,Lmax,pde)
+function [GradMat,GradGradMat] = Matrix_SG(Lev,Deg,Lmax,pde)
 %========================================================
 % Construct the matrix for curl operator on [0,Lmax]
 % Input:
@@ -27,7 +27,7 @@ c2 = 1;
 % parameters for cg method
 MaxIter = 1000;
 Tol = 1e-6;
-% Tol = 1e-10;
+
 
 % compute the trace values
 p_1 = legendre(-1,Deg);
@@ -138,6 +138,8 @@ Asub = -p_1'*p_2;
 Asup =  p_2'*(-p_1);
 Q = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
 
+% convert these matries to the multiwavelet basis
+FMWT_COMP = OperatorTwoScale(Deg,Lev);
 
 
 II = speye(dof_1D_x);
@@ -466,7 +468,7 @@ for i=0:2^Lev-1
     
 end
 
-ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]'*(2*pi^2-pde.w2);
+ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]'*(2*pi^2-1);
 
 if isAssemble == 1
 sol = Mat\ff;
@@ -480,9 +482,9 @@ sol = cg(x,ff,MaxIter,Tol);
 
 
 
-figure;plot(sol-ff/(2*pi^2-pde.w2))
+figure;plot(sol-ff/(2*pi^2-1))
 
-uu = ff/(2*pi^2-pde.w2);
+uu = ff/(2*pi^2-1);
 [max(abs(sol-uu)) norm(sol-uu)]
 % compute the RHS term
 

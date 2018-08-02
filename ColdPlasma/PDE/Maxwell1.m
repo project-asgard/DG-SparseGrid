@@ -7,7 +7,7 @@ function pde=Maxwell1
 
 mu = 1;
 eps = 1;
-w2 = 1;
+w2 = 1e-0;
 
     function E=exact_E(x,y,z)
         E(:,1)= sin(pi*y).*sin(pi*z);
@@ -17,11 +17,11 @@ w2 = 1;
 
 
     function f=rhs(x,y,z)
-        f(:,1) = (2*pi^2-1)*sin(pi*y).*sin(pi*z);
-        f(:,2) = (2*pi^2-1)*sin(pi*z).*sin(pi*x);
-        f(:,3) = (2*pi^2-1)*sin(pi*x).*sin(pi*y);
+        f(:,1) = (2*pi^2-pde.w2)*sin(pi*y).*sin(pi*z);
+        f(:,2) = (2*pi^2-pde.w2)*sin(pi*z).*sin(pi*x);
+        f(:,3) = (2*pi^2-pde.w2)*sin(pi*x).*sin(pi*y);
         
-        f = f/(2*pi^2-1);
+        f = f/(2*pi^2-pde.w2);
     end
 
 

@@ -25,6 +25,7 @@ function [x,error,iter,flag]=cg(x,b,max_it,tol)
 % full(Fc(x))
 %  r = b - A*x;
 %    r = b - Fc(x);
+
    r = b - ApplyA(x);
 
    
