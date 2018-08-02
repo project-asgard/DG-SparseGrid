@@ -1,4 +1,4 @@
-function [GradMat,GradGradMat] = Matrix_SG(Lev,Deg,Lmax,pde)
+function [GradMat,GradGradMat] = Matrix_SG2(Lev,Deg,Lmax,pde)
 %========================================================
 % Construct the matrix for curl operator on [0,Lmax]
 % Input:
@@ -26,7 +26,7 @@ c2 = 1;
 
 % parameters for cg method
 MaxIter = 1000;
-Tol = 1e-10;
+Tol = 1e-6;
 
 
 % compute the trace values
@@ -148,6 +148,31 @@ K = FMWT_COMP*K*FMWT_COMP';
 L = FMWT_COMP*L*FMWT_COMP';
 J = FMWT_COMP*J*FMWT_COMP';
 Q = FMWT_COMP*Q*FMWT_COMP';
+
+% Generate Hash Table
+[forwardHash,inverseHash]=HashTable(Lev,3);
+
+% Assemble the global matrix
+Dofs3 = forwardHash.dof;
+
+% generate the combination of lev
+for maxLev = 0:Lev
+    combs = perm_eq(3,maxLev);
+    
+    IndexI1 = ;
+    IndexI2 = ;
+    IndexI3 = ;
+    
+    IndexJ1 = ;
+    IndexJ2 = ;
+    IndexJ3 = ;
+    
+    IndexI = 
+    IndexJ =
+    
+    A_encode{count}
+end
+
 
 II = speye(dof_1D_x);
 

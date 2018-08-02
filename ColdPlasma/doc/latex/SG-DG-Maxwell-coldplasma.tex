@@ -143,7 +143,7 @@ Define average and jump as following
 \end{eqnarray*}
 If $e\in\partial\Omega$, the average and jump are defined as
 \begin{eqnarray*}
-\ljump \bu \rjump_{\tau}={\bf n}\times\bu,\mbox{ and }
+\ljump \bu \rjump_{\tau}={\bf n}\times\bu,\mbox{ and } \lavg\bu\ravg=\bu.
 \end{eqnarray*}
 
 Here we have
@@ -239,14 +239,8 @@ Let $\Omega=[0,1]^3$ and the exact solution is given by
 \sin(\pi x)\sin(\pi y)
 \end{pmatrix}.
 \end{eqnarray}
-\begin{table}[htbp]
-  \centering
-  \caption{High-order Maxwell2}
-    \begin{tabular}{rrrrr}
-1/h & Max Error & Rate & L2 Error & Rate\\
-\multicolumn{5} {c}{k=1}	\\
-    \end{tabular}%
-\end{table}%
+We shall assume Dirichelet boundary condition for the test.
+
 
 
 %-------------------
@@ -277,6 +271,34 @@ $2^{-6}$ &50331648 &3.0148e-12   &1.8927e-09 &208632188.971009 &18.739209 &11133
 \end{tabular}
 \end{table}
 
+%---------------------
+% Multiwavelet results
+%---------------------------
+\begin{table}
+\caption{Numerical performance of multiwavelet discontinuous Galerkin methods on the full grids with $\omega=1.$}
+\begin{tabular}{cccccccc}\hline\hline
+$h$ & DOFs & $L_{\infty}$-error & $L^2$-error & $\lambda_{\max}$ & $\lambda_{\min}$ & Cond & Iter \\ \hline
+\multicolumn{8}{c}{$k=1$}\\ \hline
+$2^{-2}$	&1536 &2.2689e-02   &4.6338e-02   &57000.606538        &18.878870   &3019.280619       &53\\
+$2^{-3}$   &12288 &5.5197e-03   &1.1669e-02   &240325.556323      &18.944817   &12685.557146    &73\\
+$2^{-4}$   &98304 &1.3721e-03   &2.9251e-03   &967594.006696      &18.792019   &51489.625308    &125\\
+$2^{-5}$   &786432 &3.4273e-04   &7.3205e-04   &3926302.538525    &18.754462   &209352.983582   &268\\
+$2^{-6}$ &6291456 \\   \hline
+\multicolumn{8}{c}{$k=2$}\\ \hline
+$2^{-2}$	&5184	&5.8236e-04   &2.7613e-03	&390473.280474 &18.762345 &20811.538802 &103\\
+$2^{-3}$	&41472	&7.1924e-05   &3.5137e-04    &1631109.965402 &18.725177 &87107.855082 &138\\
+$2^{-4}$	&331776	&6.8607e-06   &4.4120e-05    &6606018.620291 &18.739728 &352514.116290 &290\\
+$2^{-5}$	&2654208	&6.1784e-07   &5.5220e-06   &26512166.161984 &18.739309 &1414788.858359 &571\\
+$2^{-6}$	&21233664&\\
+\hline
+\multicolumn{8}{c}{$k=3$}\\ \hline
+$2^{-2}$	&12288	&2.8315e-05   &1.2191e-04  &1558258.985809     &18.729508 &83198.075655     &90\\
+$2^{-3}$	&98304	&1.7596e-06   &7.7191e-06  &6463584.921308     &18.739240 &344922.462667   &98\\
+$2^{-4}$	&786432	&8.4061e-08   &4.8612e-07  &25880500.453577   &18.739210 &1381088.143797 &20\\
+$2^{-5}$	&6291456	&3.7866e-09   &3.0309e-08  &104162860.983888 &18.739209 &5558551.693146  &18\\
+$2^{-6}$	&50331648&1.6805e-10   &1.8926e-09  &208621237.804132 &18.739209 &11132873.324451 &9\\ \hline
+\end{tabular}
+\end{table}
 
 
 
