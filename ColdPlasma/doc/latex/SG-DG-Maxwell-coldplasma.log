@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.10.20)  30 JUL 2018 23:13
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.10.20)  31 JUL 2018 22:12
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -563,7 +563,7 @@ Overfull \hbox (90.36104pt too wide) in alignment at lines 200--220
 Here is how much of TeX's memory you used:
  12524 strings out of 493054
  245954 string characters out of 6134759
- 293355 words of memory out of 5000000
+ 292355 words of memory out of 5000000
  15793 multiletter control sequences out of 15000+600000
  9357 words of font info for 35 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -585,7 +585,7 @@ onts/cm/cmsy10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfo
 nts/cm/cmsy7.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfont
 s/cm/cmti8.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/
 symbols/msbm10.pfb>
-Output written on SG-DG-Maxwell-coldplasma.pdf (3 pages, 182752 bytes).
+Output written on SG-DG-Maxwell-coldplasma.pdf (3 pages, 183272 bytes).
 PDF statistics:
  81 PDF objects out of 1000 (max. 8388607)
  59 compressed objects within 1 object stream
