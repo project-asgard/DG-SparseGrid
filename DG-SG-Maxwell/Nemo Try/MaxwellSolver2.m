@@ -1,4 +1,4 @@
-function [Eh,Bh] = MaxwellSolver(Lev,Deg,Hash,InvHash,Con1D,GradX,...
+function [Eh,Bh] = MaxwellSolver2(Lev,Deg,Hash,InvHash,Con1D,GradX,...
                                  eps,mu,omega,dt,MaxT,...
                                  Rhs,E0,B0)
 %=====================================================
@@ -63,7 +63,7 @@ for i = 1:Dof_Hash
         jCel1=iCel1;jCel2=iCel2;jCel3=max(jIndex1D(j)-1-2^(jLev3-1),0);
         
         
-        if jLev1+jLev2+jLev3<=Lev
+        if jLev1+jLev2+jLev3<=3*Lev
             jkey = [jLev1,jLev2,jLev3,jCel1,jCel2,jCel3];
 
             tmp = Hash.(sprintf('i%g_',jkey));
@@ -92,7 +92,7 @@ for i = 1:Dof_Hash
         jLev1=iLev1;jLev2=ceil(log2(jIndex1D(j)));jLev3=iLev3;
         jCel1=iCel1;jCel2=max(jIndex1D(j)-1-2^(jLev2-1),0);jCel3=iCel3;
         
-        if jLev1+jLev2+jLev3<=Lev
+        if jLev1+jLev2+jLev3<=3*Lev
             jkey = [jLev1,jLev2,jLev3,jCel1,jCel2,jCel3];
             % tmp is not contigent
             tmp = Hash.(sprintf('i%g_',jkey));
@@ -121,7 +121,7 @@ for i = 1:Dof_Hash
         jLev1=ceil(log2(jIndex1D(j)));jLev2=iLev2;jLev3=iLev3;
         jCel1=max(jIndex1D(j)-1-2^(jLev1-1),0);jCel2=iCel2;jCel3=iCel3;
         
-        if jLev1+jLev2+jLev3<=Lev
+        if jLev1+jLev2+jLev3<=3*Lev
             jkey = [jLev1,jLev2,jLev3,jCel1,jCel2,jCel3];
             % tmp is not contigent
             tmp = Hash.(sprintf('i%g_',jkey));
@@ -150,7 +150,7 @@ MaxMat=[zero,zero,zero,zero,ComMat1/(eps*mu),-ComMat2/(eps*mu);
         -ComMat2,ComMat3,zero,zero,zero,zero;];
 % opts.tol=1e-20;
  spy(MaxMat)
-% [V,D]=eigs(MaxMat,1);
+% e=eigs(MaxMat,1)
 % s=norm(MaxMat,'fro')
 %% Time advance for solving Maxwell equation
 MaxRhs = -[Rhs/(eps);zeros(Dofs3,1)];

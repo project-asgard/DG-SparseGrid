@@ -81,7 +81,7 @@ deg &level &central flux &order &alternating flux &order &up-winding flux &order
 %---------------------
 \begin{table}
 \centering
-\caption*{Explicit 3rd Order TVD Runge-Kutta method with $k=1,\ h=2^{-8}$ for different fluxes.}
+\caption{Explicit 3rd Order TVD Runge-Kutta method with $k=1,\ h=2^{-8}$ for different fluxes.}
 \begin{tabular}{c|c|ccc}
 \toprule\hline
 &Flux & Conv. Order  & Spectral Radius  &CFL Number\\ \hline \vspace{1pt}
@@ -267,6 +267,7 @@ Time Advance Method & $L^2$-Error & Time Step \\ \hline
 Explicit 3rd TVD Runge-Kutta  & 2.432E-03 & 8.000E-04\\ %\hline
 Implicit Backward Euler & 2.406E-03 & 1.000E-03\\ %\hline
 Implicit Trapezoidal Rule & 2.381E-03 & 1.000E-02\\ %\hline
+Implicit 4th Order Gauss-Legendre& 2.548E-03 &1.000E-01\\
 Semi-implicit Backward Euler & 2.383E-03 & 9.000E-04\\ \hline
 \bottomrule
 \end{tabular}
@@ -336,15 +337,15 @@ Implicit Trapezoidal Rule & 6.128E-01 & 1.000E-01\\ \hline
 
 %---Real Condition for the eigenvalue
 \begin{table}
-\begin{tabular}{c|c|r}
+\begin{tabular}{c|c|r|c}
 \toprule
 \hline
-Deg&Level &Eigenvalue \\ \hline\hline
-2&4&3.244E$+$01$-$1.928E+10i\\
-2&5&$-$1.967E$+$02$+$3.919E+10i\\
-2&6&1.032E$+$11$+$0.000E+00i\\
-2&7&$-$3.925E$+$03$+$2.276E+11i\\
-2&8&$-$1.815E$+$03$-$4.397E+11i\\ \hline
+Deg&Level &Eigenvalue&CFL Magnitude \\ \hline\hline
+2&4&$-$1.146E$+$02$+$2.248E+10i&E$-$11\\
+2&5&$-$1.779E$+$02$+$4.042E+10i&E$-$11\\
+2&6&$-$2.756E$+$01$+$7.854E+10i&E$-$11\\
+2&7&$-$3.326E$+$02$+$1.837E+11i&E$-$12\\
+2&8&$-$2.479E$+$03$-$3.114E+11i&E$-$12\\ \hline
 \bottomrule
 \end{tabular}
 \end{table}
