@@ -493,14 +493,14 @@ f3z = FMWT_COMP*f3z;
 ff =[kron(kron(f1x,f1y),f1z);kron(kron(f2x,f2y),f2z);kron(kron(f3x,f3y),f3z)]*(2*pi^2-pde.w2);
 
 if isAssemble == 1
-<<<<<<< HEAD
+
     sol = Mat\ff;
 
-=======
+
 sol = Mat\ff;
 % spy(Mat)
 % full(Mat)
->>>>>>> e512baccfdf3f8a14efc5bc97311075204aba250
+
 end
 
 if isGenAencode == 1
