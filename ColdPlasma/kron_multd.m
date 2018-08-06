@@ -23,8 +23,10 @@ end
   nvec = prod(size(X))/isizeX;
   isok = (mod( prod(size(X)), isizeX) == 0);
   if (~isok)
+
     error(sprintf('kron_multd:nkron=%d,prod(size(X))=%g,isizeX=%g', ...
                nkron, prod(size(X)), isizeX ));
+       
   end
 
 if (nkron == 1)
