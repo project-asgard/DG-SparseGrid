@@ -66,13 +66,6 @@ val = Dp_val'*(quad_w*ones(1,Deg).*Dp_val)*1/hx/hx*2;
 Ac = repmat({val},nx,1);
 GG = blkdiag(Ac{:});
 
-% Matrix for (u,v')
-% take derivative for test function v
-% val = Dp_val'*(quad_w*ones(1,Deg).*p_val)/hx;
-% Ac = repmat({val},nx,1);
-% G = blkdiag(Ac{:});
-
-
 % Matrix for (u',v)
 val = p_val'*(quad_w*ones(1,Deg).*Dp_val)/hx;
 Ac = repmat({val},nx,1);
@@ -153,22 +146,25 @@ Q = FMWT_COMP*Q*FMWT_COMP';
 [forwardHash,inverseHash]=HashTable(Lev,3);
 
 % Assemble the global matrix
-Dofs3 = forwardHash.dof;
+Dofs3 = 3*forwardHash.dof;
 
+combs = perm_leq(3,maxLev);
 % generate the combination of lev
-for maxLev = 0:Lev
-    combs = perm_eq(3,maxLev);
+for l1 = 1:size(combs,1)
+    row1 = Deg*(2^max(0,combs(l1,1)-1)+1:2^combs(l1,1));
+    row2 = Deg*(2^max(0,combs(l1,1)-1)+1:2^combs(l1,1));
+    row3 = Deg*(2^max(0,combs(l1,1)-1)+1:2^combs(l1,1));
     
-    IndexI1 = ;
-    IndexI2 = ;
-    IndexI3 = ;
+    IndexI = Deg^3*[];
     
-    IndexJ1 = ;
-    IndexJ2 = ;
-    IndexJ3 = ;
+    for l2 = 1:size(combs,1)
+        col1 = Deg*(2^max(0,combs(l2,1)-1)+1:2^combs(l2,1));
+        col2 = Deg*(2^max(0,combs(l2,1)-1)+1:2^combs(l2,1));
+        col3 = Deg*(2^max(0,combs(l2,1)-1)+1:2^combs(l2,1));
+
     
-    IndexI = 
-    IndexJ =
+        
+    end
     
     A_encode{count}
 end

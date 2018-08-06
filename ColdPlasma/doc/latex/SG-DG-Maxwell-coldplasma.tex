@@ -117,6 +117,13 @@ A(\bu,\bv):=\int_{\Omega}\bigg((\nabla\times\bu)\cdot(\nabla\times\bv)+\bu\cdot\
 %-------Advantage of DG---------------
 The main motivation for using a discontinuous Galerkin (DG) approach for the numerical approximation of (\ref{eq:pde1})-(\ref{eq:pde1-bc}) is that DG methods, being based on discontinuous finite element spaces, can easily handle non-conforming meshes which contain hanging nodes and, in principle, local spaces of different polynomial orders. Moreover, the implementation of discontinuous elements can be based on standard shape functions, without the need to employ curl-conforming elemental mappings - a convenience that is particularly advantageous for high-order elements and that is not straightforwardly shared by standard edge or face elements commonly used in computational electromagnetics. A further benefit of DG methods is that inhomogeneous Dirichlet boundary conditions can easily be incorporated within the scheme, without the need to explicitly evaluate edge- and face-element interpolation operators.
 
+
+%----Sparse grids
+
+
+%----organization of this paper
+
+
 \section{Discontinous Galerkin discretization}
 In this section, we consider the interior penalty DG discretization of (\ref{eq:pde1})-(\ref{eq:pde1-bc}). We first introduce the following notations.
 
@@ -205,90 +212,115 @@ with a constant $C>0$ independent of the mesh size.
 
 
 \section{Multiwavelet DG Method}
-%---------------------
-% FEM space
-%---------------------
-Scaling functions
-\begin{eqnarray*}
-\phi_{\ell,j}^n = 2^{n/2}\sqrt{2j-1}P_j(2^{n+1}-2\ell-1).
-\end{eqnarray*}
+In this section, we summarize some properties of the multiwavelet bases derived and introduce notations. 
 
+For $k=1,2,\dots,$ and $n=0,1,2,\dots,$ we define $V_n^k$ as a space of piecewise polynomial functions,
+\begin{eqnarray}
+V_n^k=\{f:f\in\Pi_k(I_{n,l},\text{ for }l=0,\dots,2^n-1,\text{ and }supp(f)=I_l^n)\},
+\end{eqnarray}
+where $\Pi_k(I_l^n)$ is the space of all polynomial of degree less than $k$ on the interval $I_l^n=[2^{-n}l,2^{-n}(l+1)]$. The space $V_n^k$ has dimension $2^nk$ and has the following nested property,
+\begin{eqnarray}
+V_0^k\subset V_1^k\subset\cdots\subset V_n^k\subset \cdots.
+\end{eqnarray}
+The multiwavelet subspace $W_n^k$, $n=0,1,2,\dots,$ is defined as the orthogonal complement of $V_n^k$ in $V_{n+1}^k$ or
+\begin{eqnarray}
+V_n^k\oplus W_n^k=V_{n+1}^k,\ W_n^k\perp V_n^k,
+\end{eqnarray}
+where the norm is defined as $\|f\|=\int_0^1 f(x)g(x)dx.$ 
 
+Given a basis $\phi_0,\dots,\phi_{k-1}$ of $V_0^k$, the space $V_n^k$ is spanned by $2^nk$ functions which are obtained from $\phi_0,\dots,\phi_{k-1}$ by dilation and translation,
+\begin{eqnarray}
+\phi_{jl}^n(x)=2^{n/2}\phi_j(2^nx-l),\ j=0,\dots,k-1,\ l=0,\dots,2^n-1.
+\end{eqnarray}
+It the piecewise polynomial functions, $\psi_0,\cdots,\psi_{k-1}$ form an orthonormal basis for $W_0^k$, then by dilation and translation the space $W_n^k$ is spanned by $2^nk$ functions
+\begin{eqnarray}
+\psi_{jl}^n=2^{n/2}\psi_j(2^nx-l),\ j=0,\dots,k-1,\ l=0,\dots,2^n-1.
+\end{eqnarray}
 
-
-
-Here we have
-\begin{eqnarray*}
-\nabla_h\times\bv&=&(\partial_y v_3-\partial_zv_2,\partial_zv_1-\partial_xv_3,\partial_xv_2-\partial_yv_1)
-\end{eqnarray*}
-
-\begin{eqnarray*}
-(\nabla_h\times\bv,\nabla_h\times\bw)&=&\sum_{T\in\mathcal{T}_h}\int_T
-	\begin{pmatrix}
-	\partial_y v_3-\partial_zv_2\\ \partial_zv_1-\partial_xv_3\\ \partial_xv_2-\partial_yv_1
-	\end{pmatrix}\cdot
-	\begin{pmatrix}
-	\partial_y w_3-\partial_zw_2\\ \partial_zw_1-\partial_xw_3\\ \partial_xw_2-\partial_yw_1
-	\end{pmatrix}dT \\&=&\sum_{T\in\mathcal{T}_h}\int_T
-\begin{pmatrix}
-\partial_y w_1\partial_y v_1+\partial_z w_1\partial_z v_1 & -\partial_y w_1\partial_x v_2 & -\partial_zw_1\partial_xv_3\\
--\partial_xw_2\partial_yv_1 & \partial_xw_2\partial_xv_2+\partial_zw_2\partial_zv_2 &-\partial_zw_2\partial_yv_3\\
--\partial_xw_3\partial_zv_1 & -\partial_yw_3\partial_zv_2 & \partial_xw_3\partial_xv_3+\partial_yw_3\partial_yv_3
-\end{pmatrix}dT\\
-&:=&\mathbb{K}.
-\end{eqnarray*}
-We shall compute each entry as follows:
-\begin{eqnarray*}
-\mathbb{K}_{11} &=& \int_T\partial_y w_1\partial_y v_1+\partial_z w_1\partial_z v_1dT\\
-&=&\int_{T_x}w_1(x)v_1(x)dx\int_{T_y} w_1'(y)v_1'(y)dy\int_{T_z}w_1(z)v_1(z)dz\\
-&&+\int_{T_x}w_1(x)v_1(x)dx\int_{T_y} w_1(y)v_1(y)dy\int_{T_z}w'_1(z)v'_1(z)dz\\
-&=&\mathbb{I}_x\bigotimes\mathbb{GG}_y\bigotimes\mathbb{I}_z+\mathbb{I}_x\bigotimes\mathbb{I}_y\bigotimes\mathbb{GG}_z
-\end{eqnarray*}
-with $\mathbb{GG}:=\int w'v'dx.$
-Also, we have
-\begin{eqnarray*}
-\mathbb{K}_{12}&=& \int_T -\partial_y w_1\partial_x v_2dT\\
-&=&\int_{T_x}w_1(x)v_2'(x)dx\int_{T_y}w_1'(y)v_2(y)dy\int_{T_z}w_1(z)v_2(z)dz\\
-&=&\mathbb{G}\bigotimes\mathbb{G}^\top\bigotimes\mathbb{I}
-\end{eqnarray*}
-with $\mathbb{G}=\int uv'dx.$
-\begin{eqnarray*}
-\langle\lavg\nabla\times\bu_h\ravg,\ljump\bv\rjump \rangle &=& \int_{\partial T}
-	\begin{pmatrix}
-	\partial_y u_3-\partial_zu_2\\ \partial_zu_1-\partial_xu_3\\ \partial_xu_2-\partial_yu_1
-	\end{pmatrix}\cdot
-	\begin{pmatrix}
-	n_2 v_3-n_z v_2\\ n_z v_1-n_x v_3\\ n_x v_2-n_yv_1
-	\end{pmatrix}ds\\
-	&=&\int_{\partial T}
-	\begin{pmatrix}
-	n_y v_1\partial_y u_1+n_z v_1\partial_z u_1 & -n_y v_1\partial_x u_2 & -n_zv_1\partial_xu_3\\
-	-n_xv_2\partial_yu_1 & n_xv_2\partial_xu_2+n_zv_2\partial_zu_2 &-n_zv_2\partial_yu_3\\
-	-n_xv_3\partial_zu_1 & -n_yv_3\partial_zu_2 & n_xv_3\partial_xu_3+n_yv_3\partial_yu_3
-	\end{pmatrix}ds
-\end{eqnarray*}
-So on $\partial T_x$ with $\bn=(1,0,0)$ or $\bn=(-1,0,0)$, we have
-\begin{eqnarray*}
-\int_{\partial T_x}
-	\begin{pmatrix}
-	0 & 0 & 0\\
-	-n_xv_2\partial_yu_1 & n_xv_2\partial_xu_2 &0\\
-	-n_xv_3\partial_zu_1 & 0 & n_xv_3\partial_xu_3
-	\end{pmatrix}ds
-	&=&
-\int_{\partial T_x}
-	\begin{pmatrix}
-	0 & 0 & 0\\
-	-\ljump v_2\rjump_x\lavg\partial_yu_1\ravg & \ljump v_2\rjump_x\lavg\partial_xu_2\ravg &0\\
-	-\ljump v_3\rjump_x\lavg\partial_zu_1\ravg & 0 & \ljump v_3\rjump_x\lavg\partial_xu_3\ravg
-	\end{pmatrix}	\\
-	&=&
-	\begin{pmatrix}
-	0 & 0 & 0\\
-	-\mathbb{K}\bigotimes\mathbb{G}\bigotimes\mathbb{I}&\mathbb{L}\bigotimes\mathbb{I}\bigotimes\mathbb{I} &0\\
-	-\mathbb{K}\bigotimes\mathbb{I}\bigotimes\mathbb{G} &0   & -\mathbb{L}\bigotimes\mathbb{I}\bigotimes\mathbb{I}
-	\end{pmatrix}	
-\end{eqnarray*}
+%%---------------------
+%% FEM space
+%%---------------------
+%Scaling functions
+%\begin{eqnarray*}
+%\phi_{\ell,j}^n = 2^{n/2}\sqrt{2j-1}P_j(2^{n+1}-2\ell-1).
+%\end{eqnarray*}
+%
+%
+%
+%
+%
+%Here we have
+%\begin{eqnarray*}
+%\nabla_h\times\bv&=&(\partial_y v_3-\partial_zv_2,\partial_zv_1-\partial_xv_3,\partial_xv_2-\partial_yv_1)
+%\end{eqnarray*}
+%
+%\begin{eqnarray*}
+%(\nabla_h\times\bv,\nabla_h\times\bw)&=&\sum_{T\in\mathcal{T}_h}\int_T
+%	\begin{pmatrix}
+%	\partial_y v_3-\partial_zv_2\\ \partial_zv_1-\partial_xv_3\\ \partial_xv_2-\partial_yv_1
+%	\end{pmatrix}\cdot
+%	\begin{pmatrix}
+%	\partial_y w_3-\partial_zw_2\\ \partial_zw_1-\partial_xw_3\\ \partial_xw_2-\partial_yw_1
+%	\end{pmatrix}dT \\&=&\sum_{T\in\mathcal{T}_h}\int_T
+%\begin{pmatrix}
+%\partial_y w_1\partial_y v_1+\partial_z w_1\partial_z v_1 & -\partial_y w_1\partial_x v_2 & -\partial_zw_1\partial_xv_3\\
+%-\partial_xw_2\partial_yv_1 & \partial_xw_2\partial_xv_2+\partial_zw_2\partial_zv_2 &-\partial_zw_2\partial_yv_3\\
+%-\partial_xw_3\partial_zv_1 & -\partial_yw_3\partial_zv_2 & \partial_xw_3\partial_xv_3+\partial_yw_3\partial_yv_3
+%\end{pmatrix}dT\\
+%&:=&\mathbb{K}.
+%\end{eqnarray*}
+%We shall compute each entry as follows:
+%\begin{eqnarray*}
+%\mathbb{K}_{11} &=& \int_T\partial_y w_1\partial_y v_1+\partial_z w_1\partial_z v_1dT\\
+%&=&\int_{T_x}w_1(x)v_1(x)dx\int_{T_y} w_1'(y)v_1'(y)dy\int_{T_z}w_1(z)v_1(z)dz\\
+%&&+\int_{T_x}w_1(x)v_1(x)dx\int_{T_y} w_1(y)v_1(y)dy\int_{T_z}w'_1(z)v'_1(z)dz\\
+%&=&\mathbb{I}_x\bigotimes\mathbb{GG}_y\bigotimes\mathbb{I}_z+\mathbb{I}_x\bigotimes\mathbb{I}_y\bigotimes\mathbb{GG}_z
+%\end{eqnarray*}
+%with $\mathbb{GG}:=\int w'v'dx.$
+%Also, we have
+%\begin{eqnarray*}
+%\mathbb{K}_{12}&=& \int_T -\partial_y w_1\partial_x v_2dT\\
+%&=&\int_{T_x}w_1(x)v_2'(x)dx\int_{T_y}w_1'(y)v_2(y)dy\int_{T_z}w_1(z)v_2(z)dz\\
+%&=&\mathbb{G}\bigotimes\mathbb{G}^\top\bigotimes\mathbb{I}
+%\end{eqnarray*}
+%with $\mathbb{G}=\int uv'dx.$
+%\begin{eqnarray*}
+%\langle\lavg\nabla\times\bu_h\ravg,\ljump\bv\rjump \rangle &=& \int_{\partial T}
+%	\begin{pmatrix}
+%	\partial_y u_3-\partial_zu_2\\ \partial_zu_1-\partial_xu_3\\ \partial_xu_2-\partial_yu_1
+%	\end{pmatrix}\cdot
+%	\begin{pmatrix}
+%	n_2 v_3-n_z v_2\\ n_z v_1-n_x v_3\\ n_x v_2-n_yv_1
+%	\end{pmatrix}ds\\
+%	&=&\int_{\partial T}
+%	\begin{pmatrix}
+%	n_y v_1\partial_y u_1+n_z v_1\partial_z u_1 & -n_y v_1\partial_x u_2 & -n_zv_1\partial_xu_3\\
+%	-n_xv_2\partial_yu_1 & n_xv_2\partial_xu_2+n_zv_2\partial_zu_2 &-n_zv_2\partial_yu_3\\
+%	-n_xv_3\partial_zu_1 & -n_yv_3\partial_zu_2 & n_xv_3\partial_xu_3+n_yv_3\partial_yu_3
+%	\end{pmatrix}ds
+%\end{eqnarray*}
+%So on $\partial T_x$ with $\bn=(1,0,0)$ or $\bn=(-1,0,0)$, we have
+%\begin{eqnarray*}
+%\int_{\partial T_x}
+%	\begin{pmatrix}
+%	0 & 0 & 0\\
+%	-n_xv_2\partial_yu_1 & n_xv_2\partial_xu_2 &0\\
+%	-n_xv_3\partial_zu_1 & 0 & n_xv_3\partial_xu_3
+%	\end{pmatrix}ds
+%	&=&
+%\int_{\partial T_x}
+%	\begin{pmatrix}
+%	0 & 0 & 0\\
+%	-\ljump v_2\rjump_x\lavg\partial_yu_1\ravg & \ljump v_2\rjump_x\lavg\partial_xu_2\ravg &0\\
+%	-\ljump v_3\rjump_x\lavg\partial_zu_1\ravg & 0 & \ljump v_3\rjump_x\lavg\partial_xu_3\ravg
+%	\end{pmatrix}	\\
+%	&=&
+%	\begin{pmatrix}
+%	0 & 0 & 0\\
+%	-\mathbb{K}\bigotimes\mathbb{G}\bigotimes\mathbb{I}&\mathbb{L}\bigotimes\mathbb{I}\bigotimes\mathbb{I} &0\\
+%	-\mathbb{K}\bigotimes\mathbb{I}\bigotimes\mathbb{G} &0   & -\mathbb{L}\bigotimes\mathbb{I}\bigotimes\mathbb{I}
+%	\end{pmatrix}	
+%\end{eqnarray*}
 
 %\section{Implementation}
 %In this section, it will be discussed how the IP-DG scheme can be implemented for a domain $\Omega=[0,1]^3$. Let either
