@@ -13,6 +13,7 @@ function [GradMat,GradGradMat] = Matrix_SG(Lev,Deg,Lmax,pde)
 close all
 format short e
 
+
 global A_encode %Mat Amat
 %--DG parameters
 quad_num=10;
@@ -20,7 +21,7 @@ quad_num=10;
 
 alpha = 10*Deg^3;
 isGenAencode = 1;
-isAssemble = 0;
+isAssemble = 1;
 c1 = 1;
 c2 = 1;
 
@@ -224,9 +225,10 @@ clear t1 t2 t3 t4 t5 t6 t7 t8 t9 tt
 Mat = T1-c1*T2-c2*T3+alpha*T4-pde.w2*speye(dofs,dofs);
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
 figure;spy(Mat);
-
+111
 end
 
+A_encode = [];
 
 if isGenAencode == 1
     % generate A_encode
@@ -491,15 +493,21 @@ f3z = FMWT_COMP*f3z;
 ff =[kron(kron(f1x,f1y),f1z);kron(kron(f2x,f2y),f2z);kron(kron(f3x,f3y),f3z)]*(2*pi^2-pde.w2);
 
 if isAssemble == 1
+<<<<<<< HEAD
     sol = Mat\ff;
 
+=======
+sol = Mat\ff;
+% spy(Mat)
+% full(Mat)
+>>>>>>> e512baccfdf3f8a14efc5bc97311075204aba250
 end
 
-
+if isGenAencode == 1
 x = zeros(dofs,1);
 
 sol = cg(x,ff,MaxIter,Tol);
-
+end
 
 
 figure;plot(sol-ff/(2*pi^2-pde.w2))

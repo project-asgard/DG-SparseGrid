@@ -12,6 +12,10 @@ function [GradMat,GradGradMat] = Matrix_SG2(Lev,Deg,Lmax,pde)
 %========================================================
 close all
 format short e
+% clear 
+
+
+% Lev = 1;Deg = 1;Lmax = 1;pde=Maxwell1;
 
 global A_encode %Mat Amat
 %--DG parameters
@@ -85,7 +89,7 @@ K = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 % Correction for boundary
 K(1:Deg,1:Deg) = K(1:Deg,1:Deg)+(-p_1'*p_1)/hx/2;
 K(end-Deg+[1:Deg],end-Deg+[1:Deg]) = K(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
-                (p_2'*p_2)/hx/2;
+    (p_2'*p_2)/hx/2;
 
 %****************************************
 % Term for <[u_h],{v}>ds
@@ -109,7 +113,7 @@ L = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2^(Lev+1);
 % Correction for boundary
 L(1:Deg,1:Deg) = L(1:Deg,1:Deg)+(-p_1'*Dp_1)/hx*2^(Lev+1)/2;
 L(end-Deg+[1:Deg],end-Deg+[1:Deg]) = L(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
-                (p_2'*Dp_2)/hx*2^(Lev+1)/2;
+    (p_2'*Dp_2)/hx*2^(Lev+1)/2;
 
 %****************************************
 % Term for <[u_h],{v'}>ds
@@ -146,320 +150,80 @@ Q = FMWT_COMP*Q*FMWT_COMP';
 [forwardHash,inverseHash]=HashTable(Lev,3);
 
 % Assemble the global matrix
-Dofs3 = 3*forwardHash.dof;
+Dofs = forwardHash.dof;
+Dofs3 = 3*Dofs;
 
-combs = perm_leq(3,maxLev);
+combs = perm_leq(3,Lev);
+combs_index = zeros(size(combs,1),2);
+count = 0;
+for l = 1:size(combs,1)
+    n1 = combs(l,1);
+    n2 = combs(l,2);
+    n3 = combs(l,3);
+    
+    nz1 = 2^max(n1-1,0);
+    nz2 = 2^max(n2-1,0);
+    nz3 = 2^max(n3-1,0);
+    
+    count_loc = nz1*nz2*nz3;
+    combs_index(l,:) = [count+1,count+count_loc];
+    count = count+count_loc;
+end
+
+combs = [0,0,0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1];
+
+% clear A_encode
+A_encode=[];
+
+count= 0;
 % generate the combination of lev
 for l1 = 1:size(combs,1)
-    row1 = Deg*(2^max(0,combs(l1,1)-1)+1:2^combs(l1,1));
-    row2 = Deg*(2^max(0,combs(l1,1)-1)+1:2^combs(l1,1));
-    row3 = Deg*(2^max(0,combs(l1,1)-1)+1:2^combs(l1,1));
+%     row1 = Deg*(2^max(0,combs(l1,1)-1)-1)+1:Deg*2^combs(l1,1);
+%     row2 = Deg*(2^max(0,combs(l1,2)-1)-1)+1:Deg*2^combs(l1,2);
+%     row3 = Deg*(2^max(0,combs(l1,3)-1)-1)+1:Deg*2^combs(l1,3);
+
+    row1 = Deg*(2^combs(l1,1)-2^max(0,combs(l1,1)-1))+1:Deg*2^combs(l1,1);
+    row2 = Deg*(2^combs(l1,2)-2^max(0,combs(l1,2)-1))+1:Deg*2^combs(l1,2);
+    row3 = Deg*(2^combs(l1,3)-2^max(0,combs(l1,3)-1))+1:Deg*2^combs(l1,3);
     
-    IndexI = 
+    IndexI = [Deg^3*(combs_index(l1,1)-1)+1:Deg^3*combs_index(l1,2)];
     
     for l2 = 1:size(combs,1)
-        col1 = Deg*(2^max(0,combs(l2,1)-1)+1:2^combs(l2,1));
-        col2 = Deg*(2^max(0,combs(l2,1)-1)+1:2^combs(l2,1));
-        col3 = Deg*(2^max(0,combs(l2,1)-1)+1:2^combs(l2,1));
+%         col1 = Deg*(2^max(0,combs(l2,1)-1)-1)+1:Deg*2^combs(l2,1);
+%         col2 = Deg*(2^max(0,combs(l2,2)-1)-1)+1:Deg*2^combs(l2,2);
+%         col3 = Deg*(2^max(0,combs(l2,3)-1)-1)+1:Deg*2^combs(l2,3);
 
-    
+        col1 = Deg*(2^combs(l2,1)-2^max(0,combs(l2,1)-1))+1:Deg*2^combs(l2,1);
+        col2 = Deg*(2^combs(l2,2)-2^max(0,combs(l2,2)-1))+1:Deg*2^combs(l2,2);
+        col3 = Deg*(2^combs(l2,3)-2^max(0,combs(l2,3)-1))+1:Deg*2^combs(l2,3);
         
+        IndexJ = [Deg^3*(combs_index(l2,1)-1)+1:Deg^3*combs_index(l2,2)];
+
+%         [l1 l2]
+        A_loc = AssembleAencodeMaxwell(IndexI,IndexJ,GG,G,J,H,K,L,Q,pde.w2,Deg^3*Dofs,row1,row2,row3,col1,col2,col3,alpha);
+        
+%                 if l2 == 5
+%             1111
+%                 end
+        
+        for nz = 1:size(A_loc,2)
+            A_encode{count+nz}.IndexI = A_loc{nz}.IndexI;
+            A_encode{count+nz}.IndexJ = A_loc{nz}.IndexJ;
+            A_encode{count+nz}.A1 = A_loc{nz}.A1;
+            A_encode{count+nz}.A2 = A_loc{nz}.A2;
+            A_encode{count+nz}.A3 = A_loc{nz}.A3;
+            
+            %             22222
+            %             A_encode
+        end
+        count = count+size(A_loc,2);
+        %
+        %         A_encode =
+        % 11111
     end
     
-    A_encode{count}
-end
-
-
-II = speye(dof_1D_x);
-
-if isAssemble == 1
-% tic
-% For T1
-t1 = kron(kron(II,GG),II);
-t2 = kron(kron(II,II),GG);
-t3 = kron(kron(GG,II),II);
-tt = kron(G,G');
-t4 = -kron(tt,II);
-t5 = -kron(kron(G,II),G');
-t6 = -kron(II,tt);
-
-T1=[...
-    t1+t2,t4,t5;...
-    t4',t2+t3,t6;...
-    t5',t6',t3+t1;...
-    ];
-
-
-% For T2
-
-t1 = kron(kron(II,J),II);
-t2 = kron(kron(II,II),J);
-t3 = kron(kron(J,II),II);
-tt = kron(H,G');
-t4 = -kron(tt,II);
-t5 = -kron(kron(H,II),G');
-t6 = -kron(II,tt);
-tt = kron(G',H);
-t7 = -kron(tt,II);
-t8 = -kron(kron(G',II),H);
-t9 = -kron(II,tt);
-
-
-T2=[...
-    t1+t2,t4,t5;...
-    t7,t2+t3,t6;...
-    t8,t9,t3+t1;...
-    ];
-
-
-% For T3
-t1 = kron(kron(II,L),II);
-t2 = kron(kron(II,II),L);
-t3 = kron(kron(L,II),II);
-tt = kron(G,K);
-t4 = -kron(tt,II);
-t5 = -kron(kron(G,II),K);
-t6 = -kron(II,tt);
-tt = kron(K,G);
-t7 = -kron(tt,II);
-t8 = -kron(kron(K,II),G);
-t9 = -kron(II,tt);
-
-
-T3=[...
-    t1+t2,t4,t5;...
-    t7,t2+t3,t6;...
-    t8,t9,t3+t1;...
-    ];
-
-
-% For T4
-t1 = kron(kron(II,Q),II);
-t2 = kron(kron(II,II),Q);
-t3 = kron(kron(Q,II),II);
-
-
-T4=blkdiag(t1+t2,t2+t3,t3+t1);
-clear t1 t2 t3 t4 t5 t6 t7 t8 t9 tt
-
-Mat = T1-c1*T2-c2*T3+alpha*T4-pde.w2*speye(dofs,dofs);
-figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
-figure;spy(Mat);
-
-end
-
-
-if isGenAencode == 1
-    % generate A_encode
-    IndexI = [1:dof_1D_x^3];
-    IndexJ = [1:dof_1D_x^3];
-    
-    % A11
-    count = 1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=II;
-    A_encode{count}.A2=GG-c1*J-c2*L+alpha*Q-pde.w2*II;
-    A_encode{count}.A3=II;
-%     full(sparse(IndexI',IndexJ',kron(II,kron(A_encode{count}.A2,II))))
-    
-    count = count+1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=II;
-    A_encode{count}.A2=II;
-    A_encode{count}.A3=GG-c1*J-c2*L+alpha*Q;
-    
-%     full(sparse(IndexI',IndexJ',kron(II,kron(II,A_encode{count}.A3))))
-    
-    % A12
-    count = count+1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=-G;
-    A_encode{count}.A2= G';
-    A_encode{count}.A3=II;
-    
-    count = count+1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=H;
-    A_encode{count}.A2=G';
-    A_encode{count}.A3=c1*II;
-    
-    count = count+1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=G;
-    A_encode{count}.A2=K;%H';
-    A_encode{count}.A3=c2*II;
-    
-    % A13
-    count = count+1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=-G;
-    A_encode{count}.A2=II;
-    A_encode{count}.A3=G';
-    
-    count = count+1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=H;
-    A_encode{count}.A2=c1*II;
-    A_encode{count}.A3=G';
-    
-    count = count+1;
-    A_encode{count}.IndexI = IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=G;
-    A_encode{count}.A2=c2*II;
-    A_encode{count}.A3=K;%H';
-    
-    % A21
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=-G';
-    A_encode{count}.A2=G;
-    A_encode{count}.A3=II;
-    
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=G';
-    A_encode{count}.A2=H;
-    A_encode{count}.A3=c1*II;
-    
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=K;%H';
-    A_encode{count}.A2=G;
-    A_encode{count}.A3=c2*II;
-    
-    % A22
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=GG-c1*J-c2*L+alpha*Q-pde.w2*II;
-    A_encode{count}.A2=II;
-    A_encode{count}.A3=II;
-    
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=II;
-    A_encode{count}.A2=II;
-    A_encode{count}.A3=GG-c1*J-c2*L+alpha*Q;
-    
-    % A23
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=-II;
-    A_encode{count}.A2=G;
-    A_encode{count}.A3=G';
-    
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=c1*II;
-    A_encode{count}.A2=H;
-    A_encode{count}.A3=G';
-    
-    count = count+1;
-    A_encode{count}.IndexI = dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=c2*II;
-    A_encode{count}.A2=G;
-    A_encode{count}.A3=K;%H';
-    
-    % A31
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=-G';
-    A_encode{count}.A2=II;
-    A_encode{count}.A3=G;
-    
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=G';
-    A_encode{count}.A2=c1*II;
-    A_encode{count}.A3=H;
-    
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = IndexJ';
-    
-    A_encode{count}.A1=K;%H';
-    A_encode{count}.A2=c2*II;
-    A_encode{count}.A3=G;
-    
-    % A32
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=-II;
-    A_encode{count}.A2=G';
-    A_encode{count}.A3=G;
-    
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=c1*II;
-    A_encode{count}.A2=G';
-    A_encode{count}.A3=H;
-    
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=c2*II;
-    A_encode{count}.A2=K;%H';
-    A_encode{count}.A3=G;
-    
-    % A33
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=GG-c1*J-c2*L+alpha*Q-pde.w2*II;
-    A_encode{count}.A2=II;
-    A_encode{count}.A3=II;
-    
-    count = count+1;
-    A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
-    A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
-    
-    A_encode{count}.A1=II;
-    A_encode{count}.A2=GG-c1*J-c2*L+alpha*Q;
-    A_encode{count}.A3=II;
     
 end
-
 
 
 Lend = Lmax;Lstart = 0;
@@ -508,17 +272,39 @@ f3x = FMWT_COMP*f3x;
 f3y = FMWT_COMP*f3y;
 f3z = FMWT_COMP*f3z;
 
+% Assemble the RHS term for Sparse Grids
+ff = sparse(Deg^3*Dofs3,1);
+for l1 = 1:size(combs,1)
+%     row1 = Deg*(2^max(0,combs(l1,1)-1)-1)+1:Deg*2^combs(l1,1);
+%     row2 = Deg*(2^max(0,combs(l1,2)-1)-1)+1:Deg*2^combs(l1,2);
+%     row3 = Deg*(2^max(0,combs(l1,3)-1)-1)+1:Deg*2^combs(l1,3);
 
-ff =[kron(kron(f1x,f1y),f1z);kron(kron(f2x,f2y),f2z);kron(kron(f3x,f3y),f3z)]*(2*pi^2-pde.w2);
-
-if isAssemble == 1
-sol = Mat\ff;
-
+    row1 = Deg*(2^combs(l1,1)-2^max(0,combs(l1,1)-1))+1:Deg*2^combs(l1,1);
+    row2 = Deg*(2^combs(l1,2)-2^max(0,combs(l1,2)-1))+1:Deg*2^combs(l1,2);
+    row3 = Deg*(2^combs(l1,3)-2^max(0,combs(l1,3)-1))+1:Deg*2^combs(l1,3);
+    
+    IndexI = [Deg^3*(combs_index(l1,1)-1)+1:Deg^3*combs_index(l1,2)];
+    
+    ff(IndexI) = kron(kron(f1x(row1),f1y(row2)),f1z(row3));
+    ff(Dofs+IndexI) = kron(kron(f2x(row1),f2y(row2)),f2z(row3));
+    ff(2*Dofs+IndexI) = kron(kron(f3x(row1),f3y(row2)),f3z(row3));
 end
 
+% ff =[kron(kron(f1x,f1y),f1z);kron(kron(f2x,f2y),f2z);kron(kron(f3x,f3y),f3z)]*(2*pi^2-pde.w2);
+ff = ff*(2*pi^2-pde.w2);
 
-x = zeros(dofs,1);
 
+
+x = ff/(2*pi^2-pde.w2);%zeros(Deg^3*Dofs3,1);%
+
+
+ftmp = ApplyA(x);
+
+
+plot(ftmp-ff,'r-o')
+
+
+return
 sol = cg(x,ff,MaxIter,Tol);
 
 
