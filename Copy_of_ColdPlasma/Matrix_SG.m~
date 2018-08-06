@@ -139,15 +139,8 @@ Asup =  p_2'*(-p_1);
 Q = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
 
 % convert these matries to the multiwavelet basis
-FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
+FMWT_COMP = OperatorTwoScale(Deg,Lev);
 
-GG = FMWT_COMP*GG*FMWT_COMP';
-G = FMWT_COMP*G*FMWT_COMP';
-H = FMWT_COMP*H*FMWT_COMP';
-K = FMWT_COMP*K*FMWT_COMP';
-L = FMWT_COMP*L*FMWT_COMP';
-J = FMWT_COMP*J*FMWT_COMP';
-Q = FMWT_COMP*Q*FMWT_COMP';
 
 II = speye(dof_1D_x);
 
@@ -457,41 +450,28 @@ for i=0:2^Lev-1
     
     
     index = Deg*i+1:Deg*(i+1);
-    f1x(index,1) = p_val'*(quad_w.*fx(:,1))*hx*sqrt(1/hx)/2;
-    f1y(index,1) = p_val'*(quad_w.*fy(:,1))*hx*sqrt(1/hx)/2;
-    f1z(index,1) = p_val'*(quad_w.*fz(:,1))*hx*sqrt(1/hx)/2;
+    f1x(index) = p_val'*(quad_w.*fx(:,1))*hx*sqrt(1/hx)/2;
+    f1y(index) = p_val'*(quad_w.*fy(:,1))*hx*sqrt(1/hx)/2;
+    f1z(index) = p_val'*(quad_w.*fz(:,1))*hx*sqrt(1/hx)/2;
     %     f1 = kron(kron(f1x,f1y),f1z);
     
     
-    f2x(index,1) = p_val'*(quad_w.*fx(:,2))*hx*sqrt(1/hx)/2;
-    f2y(index,1) = p_val'*(quad_w.*fy(:,2))*hx*sqrt(1/hx)/2;
-    f2z(index,1) = p_val'*(quad_w.*fz(:,2))*hx*sqrt(1/hx)/2;
+    f2x(index) = p_val'*(quad_w.*fx(:,2))*hx*sqrt(1/hx)/2;
+    f2y(index) = p_val'*(quad_w.*fy(:,2))*hx*sqrt(1/hx)/2;
+    f2z(index) = p_val'*(quad_w.*fz(:,2))*hx*sqrt(1/hx)/2;
     %     f2 = kron(kron(f2x,f2y),f2z);
     
-    f3x(index,1) = p_val'*(quad_w.*fx(:,3))*hx*sqrt(1/hx)/2;
-    f3y(index,1) = p_val'*(quad_w.*fy(:,3))*hx*sqrt(1/hx)/2;
-    f3z(index,1) = p_val'*(quad_w.*fz(:,3))*hx*sqrt(1/hx)/2;
+    f3x(index) = p_val'*(quad_w.*fx(:,3))*hx*sqrt(1/hx)/2;
+    f3y(index) = p_val'*(quad_w.*fy(:,3))*hx*sqrt(1/hx)/2;
+    f3z(index) = p_val'*(quad_w.*fz(:,3))*hx*sqrt(1/hx)/2;
     %     f3 = kron(kron(f3x,f3y),f3z);
     
 end
 
-f1x = FMWT_COMP*f1x;
-f1y = FMWT_COMP*f1y;
-f1z = FMWT_COMP*f1z;
-
-f2x = FMWT_COMP*f2x;
-f2y = FMWT_COMP*f2y;
-f2z = FMWT_COMP*f2z;
-
-f3x = FMWT_COMP*f3x;
-f3y = FMWT_COMP*f3y;
-f3z = FMWT_COMP*f3z;
-
-
-ff =[kron(kron(f1x,f1y),f1z);kron(kron(f2x,f2y),f2z);kron(kron(f3x,f3y),f3z)]*(2*pi^2-pde.w2);
+ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]'*(2*pi^2-1);
 
 if isAssemble == 1
-    sol = Mat\ff;
+sol = Mat\ff;
 
 end
 
@@ -502,9 +482,9 @@ sol = cg(x,ff,MaxIter,Tol);
 
 
 
-figure;plot(sol-ff/(2*pi^2-pde.w2))
+figure;plot(sol-ff/(2*pi^2-1))
 
-uu = ff/(2*pi^2-pde.w2);
+uu = ff/(2*pi^2-1);
 [max(abs(sol-uu)) norm(sol-uu)]
 % compute the RHS term
 

@@ -1,4 +1,4 @@
-function [GradMat,GradGradMat] = Matrix_SG(Lev,Deg,Lmax,pde)
+function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde)
 %========================================================
 % Construct the matrix for curl operator on [0,Lmax]
 % Input:
@@ -13,20 +13,14 @@ function [GradMat,GradGradMat] = Matrix_SG(Lev,Deg,Lmax,pde)
 close all
 format short e
 
-global A_encode %Mat Amat
+global A_encode Mat
 %--DG parameters
 quad_num=10;
 %---------------
 
-alpha = 10*Deg^3;
+alpha = 10*Deg^3;%*2^(2*Lev);
 isGenAencode = 1;
-isAssemble = 0;
-c1 = 1;
-c2 = 1;
-
-% parameters for cg method
-MaxIter = 1000;
-Tol = 1e-6;
+delta = 0;
 
 
 % compute the trace values
@@ -138,20 +132,10 @@ Asub = -p_1'*p_2;
 Asup =  p_2'*(-p_1);
 Q = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
 
-% convert these matries to the multiwavelet basis
-FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
 
-GG = FMWT_COMP*GG*FMWT_COMP';
-G = FMWT_COMP*G*FMWT_COMP';
-H = FMWT_COMP*H*FMWT_COMP';
-K = FMWT_COMP*K*FMWT_COMP';
-L = FMWT_COMP*L*FMWT_COMP';
-J = FMWT_COMP*J*FMWT_COMP';
-Q = FMWT_COMP*Q*FMWT_COMP';
 
 II = speye(dof_1D_x);
 
-if isAssemble == 1
 % tic
 % For T1
 t1 = kron(kron(II,GG),II);
@@ -221,17 +205,65 @@ t3 = kron(kron(Q,II),II);
 T4=blkdiag(t1+t2,t2+t3,t3+t1);
 clear t1 t2 t3 t4 t5 t6 t7 t8 t9 tt
 
-Mat = T1-c1*T2-c2*T3+alpha*T4-pde.w2*speye(dofs,dofs);
+Mat = T1-delta*T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
 figure;spy(Mat);
 
-end
+% % return
+% % 
+% % T1=[...
+% %     kron(kron(II,GG),II)+kron(kron(II,II),GG),-kron(kron(G,G'),II),-kron(kron(G,II),G');...
+% %     -kron(kron(G',G),II),kron(kron(GG,II),II)+kron(kron(II,II),GG),-kron(kron(II,G),G');...
+% %     -kron(kron(G',II),G),-kron(kron(II,G'),G),kron(kron(GG,II),II)+kron(kron(II,GG),II);...
+% %     ];
+% % 
+% % T2=[...
+% %     kron(kron(II,J),II)+kron(kron(II,II),J),-kron(kron(H,G'),II),-kron(kron(H,II),G');...
+% %     -kron(kron(G',H),II),kron(kron(J,II),II)+kron(kron(II,II),J),-kron(kron(II,H),G');...
+% %     -kron(kron(G',II),H),-kron(kron(II,G'),H),kron(kron(J,II),II)+kron(kron(II,J),II);...
+% %     ];
+% % T3=[...
+% %     kron(kron(II,L),II)+kron(kron(II,II),L),-kron(kron(G,K),II),-kron(kron(G,II),K);...
+% %     -kron(kron(K,G),II),kron(kron(L,II),II)+kron(kron(II,II),L),-kron(kron(II,G),K);...
+% %     -kron(kron(K,II),G),-kron(kron(II,K),G),kron(kron(L,II),II)+kron(kron(II,L),II);...
+% %     ];
+% % T4=[...
+% %     kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);...
+% %     zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
+% %     zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II);...
+% %     ];
+
+
+% T1=[...
+%     kron(kron(II,GG),II)+kron(kron(II,II),GG),-kron(kron(G,G'),II),-kron(kron(G,II),G');...
+%     -kron(kron(G',G),II),kron(kron(GG,II),II)+kron(kron(II,II),GG),-kron(kron(II,G),G');...
+%     -kron(kron(G',II),G),-kron(kron(II,G'),G),kron(kron(GG,II),II)+kron(kron(II,GG),II);...
+%     ];
+% 
+% 
+% 
+% T2=[...
+%     kron(kron(II,J),II)+kron(kron(II,II),J),-kron(kron(H,G'),II),-kron(kron(H,II),G');...
+%     -kron(kron(G',H),II),kron(kron(J,II),II)+kron(kron(II,II),J),-kron(kron(II,H),G');...
+%     -kron(kron(G',II),H),-kron(kron(II,G'),H),kron(kron(J,II),II)+kron(kron(II,J),II);...
+%     ];
+% T3=[...
+%     kron(kron(II,L),II)+kron(kron(II,II),L),-kron(kron(G,K),II),-kron(kron(G,II),K);...
+%     -kron(kron(K,G),II),kron(kron(L,II),II)+kron(kron(II,II),L),-kron(kron(II,G),K);...
+%     -kron(kron(K,II),G),-kron(kron(II,K),G),kron(kron(L,II),II)+kron(kron(II,L),II);...
+%     ];
+% T4=[...
+%     kron(kron(II,Q),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3),zeros(dof_1D_x^3);...
+%     zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,II),Q),zeros(dof_1D_x^3);...
+%     zeros(dof_1D_x^3),zeros(dof_1D_x^3),kron(kron(Q,II),II)+kron(kron(II,Q),II);...
+%     ];
+% generate T1,T2,T3,and T4
+
 
 
 if isGenAencode == 1
     % generate A_encode
-    IndexI = [1:dof_1D_x^3];
-    IndexJ = [1:dof_1D_x^3];
+    [IndexI,IndexJ]=meshgrid([1:dof_1D_x^3]);
     
     % A11
     count = 1;
@@ -249,7 +281,7 @@ if isGenAencode == 1
     
     A_encode{count}.A1=II;
     A_encode{count}.A2=II;
-    A_encode{count}.A3=GG-c1*J-c2*L+alpha*Q;
+    A_encode{count}.A3=GG-delta*J-L+alpha*Q;
     
 %     full(sparse(IndexI',IndexJ',kron(II,kron(II,A_encode{count}.A3))))
     
@@ -268,15 +300,15 @@ if isGenAencode == 1
     
     A_encode{count}.A1=H;
     A_encode{count}.A2=G';
-    A_encode{count}.A3=c1*II;
+    A_encode{count}.A3=II;
     
     count = count+1;
     A_encode{count}.IndexI = IndexI';
     A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
     
     A_encode{count}.A1=G;
-    A_encode{count}.A2=K;%H';
-    A_encode{count}.A3=c2*II;
+    A_encode{count}.A2=H';
+    A_encode{count}.A3=II;
     
     % A13
     count = count+1;
@@ -292,16 +324,16 @@ if isGenAencode == 1
     A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
     
     A_encode{count}.A1=H;
-    A_encode{count}.A2=c1*II;
+    A_encode{count}.A2=II;
     A_encode{count}.A3=G';
     
     count = count+1;
     A_encode{count}.IndexI = IndexI';
     A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=G;
-    A_encode{count}.A2=c2*II;
-    A_encode{count}.A3=K;%H';
+    A_encode{count}.A1=-G;
+    A_encode{count}.A2=II;
+    A_encode{count}.A3=H';
     
     % A21
     count = count+1;
@@ -318,22 +350,22 @@ if isGenAencode == 1
     
     A_encode{count}.A1=G';
     A_encode{count}.A2=H;
-    A_encode{count}.A3=c1*II;
+    A_encode{count}.A3=II;
     
     count = count+1;
     A_encode{count}.IndexI = dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = IndexJ';
     
-    A_encode{count}.A1=K;%H';
+    A_encode{count}.A1=H';
     A_encode{count}.A2=G;
-    A_encode{count}.A3=c2*II;
+    A_encode{count}.A3=II;
     
     % A22
     count = count+1;
     A_encode{count}.IndexI = dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=GG-c1*J-c2*L+alpha*Q-pde.w2*II;
+    A_encode{count}.A1=GG-J-L+alpha*Q-pde.w2*II;
     A_encode{count}.A2=II;
     A_encode{count}.A3=II;
     
@@ -343,7 +375,7 @@ if isGenAencode == 1
     
     A_encode{count}.A1=II;
     A_encode{count}.A2=II;
-    A_encode{count}.A3=GG-c1*J-c2*L+alpha*Q;
+    A_encode{count}.A3=GG-J-L+alpha*Q;
     
     % A23
     count = count+1;
@@ -358,7 +390,7 @@ if isGenAencode == 1
     A_encode{count}.IndexI = dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=c1*II;
+    A_encode{count}.A1=II;
     A_encode{count}.A2=H;
     A_encode{count}.A3=G';
     
@@ -366,9 +398,9 @@ if isGenAencode == 1
     A_encode{count}.IndexI = dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=c2*II;
+    A_encode{count}.A1=II;
     A_encode{count}.A2=G;
-    A_encode{count}.A3=K;%H';
+    A_encode{count}.A3=H';
     
     % A31
     count = count+1;
@@ -384,15 +416,15 @@ if isGenAencode == 1
     A_encode{count}.IndexJ = IndexJ';
     
     A_encode{count}.A1=G';
-    A_encode{count}.A2=c1*II;
+    A_encode{count}.A2=II;
     A_encode{count}.A3=H;
     
     count = count+1;
     A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = IndexJ';
     
-    A_encode{count}.A1=K;%H';
-    A_encode{count}.A2=c2*II;
+    A_encode{count}.A1=H';
+    A_encode{count}.A2=II;
     A_encode{count}.A3=G;
     
     % A32
@@ -408,7 +440,7 @@ if isGenAencode == 1
     A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=c1*II;
+    A_encode{count}.A1=II;
     A_encode{count}.A2=G';
     A_encode{count}.A3=H;
     
@@ -416,8 +448,8 @@ if isGenAencode == 1
     A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=c2*II;
-    A_encode{count}.A2=K;%H';
+    A_encode{count}.A1=II;
+    A_encode{count}.A2=H';
     A_encode{count}.A3=G;
     
     % A33
@@ -425,7 +457,7 @@ if isGenAencode == 1
     A_encode{count}.IndexI = 2*dof_1D_x^3+IndexI';
     A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
     
-    A_encode{count}.A1=GG-c1*J-c2*L+alpha*Q-pde.w2*II;
+    A_encode{count}.A1=GG-J-L+alpha*Q-pde.w2*II;
     A_encode{count}.A2=II;
     A_encode{count}.A3=II;
     
@@ -434,12 +466,36 @@ if isGenAencode == 1
     A_encode{count}.IndexJ = 2*dof_1D_x^3+IndexJ';
     
     A_encode{count}.A1=II;
-    A_encode{count}.A2=GG-c1*J-c2*L+alpha*Q;
+    A_encode{count}.A2=GG-J-L+alpha*Q;
     A_encode{count}.A3=II;
     
 end
 
 
+
+
+% Mat = T1-T2-T3+alpha*T4-pde.w2*speye(dofs,dofs);
+% figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
+% figure;spy(Mat);
+
+% handling boundary condition
+
+% condest(Mat)
+Amat = sparse(dofs,dofs);
+for i=1:size(A_encode,2)
+    tmpA=A_encode{i}.A1;
+    tmpB=A_encode{i}.A2;
+    tmpC=A_encode{i}.A3;
+    
+    IndexI=A_encode{i}.IndexI;
+    IndexJ=A_encode{i}.IndexJ;
+    
+    Amat = Amat+sparse(IndexI,IndexJ,kron(tmpA,kron(tmpB,tmpC)),dofs,dofs);
+    
+end
+
+figure;
+spy(Mat-Amat)
 
 Lend = Lmax;Lstart = 0;
 fx = zeros(quad_num,3);
@@ -457,54 +513,53 @@ for i=0:2^Lev-1
     
     
     index = Deg*i+1:Deg*(i+1);
-    f1x(index,1) = p_val'*(quad_w.*fx(:,1))*hx*sqrt(1/hx)/2;
-    f1y(index,1) = p_val'*(quad_w.*fy(:,1))*hx*sqrt(1/hx)/2;
-    f1z(index,1) = p_val'*(quad_w.*fz(:,1))*hx*sqrt(1/hx)/2;
+    f1x(index) = p_val'*(quad_w.*fx(:,1))*hx*sqrt(1/hx)/2;
+    f1y(index) = p_val'*(quad_w.*fy(:,1))*hx*sqrt(1/hx)/2;
+    f1z(index) = p_val'*(quad_w.*fz(:,1))*hx*sqrt(1/hx)/2;
     %     f1 = kron(kron(f1x,f1y),f1z);
     
     
-    f2x(index,1) = p_val'*(quad_w.*fx(:,2))*hx*sqrt(1/hx)/2;
-    f2y(index,1) = p_val'*(quad_w.*fy(:,2))*hx*sqrt(1/hx)/2;
-    f2z(index,1) = p_val'*(quad_w.*fz(:,2))*hx*sqrt(1/hx)/2;
+    f2x(index) = p_val'*(quad_w.*fx(:,2))*hx*sqrt(1/hx)/2;
+    f2y(index) = p_val'*(quad_w.*fy(:,2))*hx*sqrt(1/hx)/2;
+    f2z(index) = p_val'*(quad_w.*fz(:,2))*hx*sqrt(1/hx)/2;
     %     f2 = kron(kron(f2x,f2y),f2z);
     
-    f3x(index,1) = p_val'*(quad_w.*fx(:,3))*hx*sqrt(1/hx)/2;
-    f3y(index,1) = p_val'*(quad_w.*fy(:,3))*hx*sqrt(1/hx)/2;
-    f3z(index,1) = p_val'*(quad_w.*fz(:,3))*hx*sqrt(1/hx)/2;
+    f3x(index) = p_val'*(quad_w.*fx(:,3))*hx*sqrt(1/hx)/2;
+    f3y(index) = p_val'*(quad_w.*fy(:,3))*hx*sqrt(1/hx)/2;
+    f3z(index) = p_val'*(quad_w.*fz(:,3))*hx*sqrt(1/hx)/2;
     %     f3 = kron(kron(f3x,f3y),f3z);
     
 end
 
-f1x = FMWT_COMP*f1x;
-f1y = FMWT_COMP*f1y;
-f1z = FMWT_COMP*f1z;
+ff =[kron(kron(f1x,f1y),f1z),kron(kron(f2x,f2y),f2z),kron(kron(f3x,f3y),f3z)]'*(2*pi^2-1);
 
-f2x = FMWT_COMP*f2x;
-f2y = FMWT_COMP*f2y;
-f2z = FMWT_COMP*f2z;
-
-f3x = FMWT_COMP*f3x;
-f3y = FMWT_COMP*f3y;
-f3z = FMWT_COMP*f3z;
-
-
-ff =[kron(kron(f1x,f1y),f1z);kron(kron(f2x,f2y),f2z);kron(kron(f3x,f3y),f3z)]*(2*pi^2-pde.w2);
-
-if isAssemble == 1
-    sol = Mat\ff;
-
-end
-
-
-x = zeros(dofs,1);
-
-sol = cg(x,ff,MaxIter,Tol);
+sol = Mat\ff;
 
 
 
-figure;plot(sol-ff/(2*pi^2-pde.w2))
 
-uu = ff/(2*pi^2-pde.w2);
+% % x = sol;
+% x = sol-sol+1;
+% 
+dof = size(sol,1);
+x = zeros(dof,1);
+% x = rand(dof,1);
+% 
+% figure
+% plot(Mat*x-ApplyA(x));
+% %
+% return
+% solve equation by cg methods: done with stored matrix
+%  try with A_encode
+x = cg(x,ff,1000,1e-6);
+
+max(x-sol)
+
+return
+
+figure;plot(sol-ff/(2*pi^2-1))
+
+uu = ff/(2*pi^2-1);
 [max(abs(sol-uu)) norm(sol-uu)]
 % compute the RHS term
 
