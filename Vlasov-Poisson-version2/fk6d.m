@@ -64,17 +64,25 @@ Lmax = pde.params.Lmax;
 % Level information.
 LevX = Lev;
 LevV = Lev;
+pde.params.LevX = LevX;
+pde.params.LevV = LevV;
 
 % Dimensionality.
 Dim = 2;
 DimX = 1;
 DimV = 1;
+pde.params.DimX = DimX;
+pde.params.DimV = DimV;
+
+% Degree
+pde.params.Deg = Deg;
 
 % Time step.
-dt = Lmax/2^LevX/Vmax/(2*Deg+1);
+CFL = 0.1;
+dt = Lmax/2^LevX/Vmax*CFL;
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
-% 
+%
 % Input:  Deg and Lev
 %
 % Output: Convert Matrix FMWT_COMP
@@ -108,7 +116,7 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 %%% dependencies into the multi-wavelet basis. Here we combine those N 1D
 %%% basis representations into the multi-D (here N=2, so 2D) initial
 %%% condition, multi-wavelet representation of the initial condition
-%%% specified in PDE. 
+%%% specified in PDE.
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
 
@@ -187,7 +195,7 @@ end
 
 
 % Write the initial condition to file.
-write_fval = 1;
+write_fval = 0;
 if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
 
 count=1;
@@ -196,12 +204,23 @@ plotFreq = 10;
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
     
+    time(count) = L*dt;
     timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
+    
     if ~quiet; disp(timeStr); end
     
-    %%% Solve Poisson to get E from 1-rho=1-int f dv.
-    if ~quiet; disp('    [a] Solve poisson'); end
-    E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+    if pde.solvePoisson
+        %%% Solve Poisson to get E (from 1-rho=1-int f dv)
+        if ~quiet; disp('    [a] Solve poisson to get E'); end
+        E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+    end
+    
+    if pde.applySpecifiedE
+        %%% Apply specified E
+        if ~quiet; disp('    [a] Apply specified E'); end
+        % Does this take E(x) -> E(lev,pos,deg) ?
+        E = ProjCoef2Wav_v2(LevX,Deg,0,Lmax,pde.exactE);
+    end
     
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
@@ -230,15 +249,13 @@ for L = 1:floor(TEND/dt)
         write_A_data = 1;
         if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
         
-        fval = TimeAdvance(A_data,fval, dt,compression,Deg);
+        fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv);
         
     end
     
     % Write the present fval to file.
     if write_fval; write_fval_to_file(fval,Lev,Deg,L); end
     
-    time(count) = L*dt;
-    count=count+1;
     
     %%% Plot results
     if mod(L,plotFreq)==0 && ~quiet
@@ -251,10 +268,18 @@ for L = 1:floor(TEND/dt)
         view(0,90)
         colorbar
         
-        title(['Time at ',num2str(L*dt)])
+        title(['Time at ', timeStr])
         pause (0.01)
     end
     
+    if pde.checkAnalytic
+        %%% Check the solution with the analytic solution
+        fval_analytic = source_vector2(LevX,LevV,Deg,HASHInv,pde,time(count));
+        error = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2))
+    end
+    
+    count=count+1;
+  
 end
 
 end
