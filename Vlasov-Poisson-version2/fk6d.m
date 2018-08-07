@@ -1,4 +1,4 @@
-function [fval] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
+function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -78,8 +78,7 @@ pde.params.DimV = DimV;
 pde.params.Deg = Deg;
 
 % Time step.
-CFL = 0.1;
-dt = Lmax/2^LevX/Vmax*CFL;
+dt = Lmax/2^LevX/Vmax/(2*Deg+1);
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
 %
@@ -238,7 +237,7 @@ for L = 1:floor(TEND/dt)
     %%% Advance Vlasov in time with RK3 time stepping method.
     if ~quiet; disp('    [d] RK3 time step'); end
     if compression == 3
-        fval = TimeAdvance(C_encode,fval, dt,compression,Deg);
+        fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
     else
         A_data.vMassV    = vMassV;
         A_data.GradX     = GradX;
@@ -246,7 +245,7 @@ for L = 1:floor(TEND/dt)
         A_data.EMassX    = EMassX;
         
         % Write the A_data structure components for use in HPC version.
-        write_A_data = 1;
+        write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
         
         fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv);
@@ -275,7 +274,7 @@ for L = 1:floor(TEND/dt)
     if pde.checkAnalytic
         %%% Check the solution with the analytic solution
         fval_analytic = source_vector2(LevX,LevV,Deg,HASHInv,pde,time(count));
-        error = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2))
+        err = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2));
     end
     
     count=count+1;

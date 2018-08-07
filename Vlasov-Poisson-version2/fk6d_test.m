@@ -130,6 +130,42 @@ verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
 
 end
 
+function fk6d_vlasov7_compression4_lev3_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing with vlasov7 (compression==4, Lev=3)');
+
+quiet = 1;
+lev = 3;
+deg = 2;
+TEND = 0.05;
+compression = 4;
+[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+
+tol = 1e-2;
+assert(err(1) < tol);
+
+end
+
+function fk6d_vlasov7_compression4_lev4_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing with vlasov7 (compression==4, Lev=4)');
+
+quiet = 1;
+lev = 4;
+deg = 2;
+TEND = 0.05;
+compression = 4;
+[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+
+tol = 1e-2;
+assert(err(1) < tol);
+
+end
+
 %!test fk6d_vlasov4_compression0_test(1)
 %!test fk6d_vlasov4_compression1_test(2)
 %!test fk6d_vlasov4_compression2_test(3)
