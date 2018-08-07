@@ -7,7 +7,7 @@ function pde=Maxwell1
 
 mu = 1;
 eps = 1;
-w2 = 1e-0;
+w2 = 0;%1e-0;
 
     function E=exact_E(x,y,z)
         E(:,1)= sin(pi*y).*sin(pi*z);

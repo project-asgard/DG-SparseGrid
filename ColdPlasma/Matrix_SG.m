@@ -19,9 +19,9 @@ global A_encode %Mat Amat
 quad_num=10;
 %---------------
 
-alpha = 10*Deg^3;
+alpha = 1000*Deg^3;
 isGenAencode = 1;
-isAssemble = 1;
+isAssemble = 0;
 c1 = 1;
 c2 = 1;
 
@@ -90,6 +90,7 @@ Amd  = -p_1'*p_1/2+p_2'*p_2/2;
 Asub = -p_1'*p_2/2;
 Asup =  p_2'*p_1/2;
 K = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
+%% comment the following for checking
 % Correction for boundary
 K(1:Deg,1:Deg) = K(1:Deg,1:Deg)+(-p_1'*p_1)/hx/2;
 K(end-Deg+[1:Deg],end-Deg+[1:Deg]) = K(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
@@ -103,9 +104,10 @@ Asub =  p_1'*p_2/2;
 Asup =  p_2'*(-p_1)/2;
 H = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
 % Correction for boundary
-% H(1:Deg,1:Deg) = H(1:Deg,1:Deg)+(p_1'*(-p_1))/hx/2;
-% H(end-Deg+[1:Deg],end-Deg+[1:Deg]) = H(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
-%                 (p_2'*p_2)/hx/2;
+% symmetric
+H(1:Deg,1:Deg) = H(1:Deg,1:Deg)+(p_1'*(-p_1))/hx/2;
+H(end-Deg+[1:Deg],end-Deg+[1:Deg]) = H(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+                (p_2'*p_2)/hx/2;
 
 %****************************************
 % Term for <{u_h'},[v]>ds
@@ -114,6 +116,7 @@ Amd = -p_1'*Dp_1/2+p_2'*Dp_2/2;
 Asub =-p_1'*Dp_2/2;
 Asup = p_2'*Dp_1/2;
 L = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2^(Lev+1);
+%% comment following for checking
 % Correction for boundary
 L(1:Deg,1:Deg) = L(1:Deg,1:Deg)+(-p_1'*Dp_1)/hx*2^(Lev+1)/2;
 L(end-Deg+[1:Deg],end-Deg+[1:Deg]) = L(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
@@ -127,9 +130,10 @@ Asub = Dp_1'*p_2/2;
 Asup = Dp_2'*(-p_1)/2;
 J = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2^(Lev+1);
 % Correction for boundary
-% J(1:Deg,1:Deg) = J(1:Deg,1:Deg)+(Dp_1'*(-p_1))/hx*2^(Lev+1)/2;
-% J(end-Deg+[1:Deg],end-Deg+[1:Deg]) = J(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
-%                 (Dp_2'*p_2)/hx*2^(Lev+1)/2;
+% sysmmetric
+J(1:Deg,1:Deg) = J(1:Deg,1:Deg)+(Dp_1'*(-p_1))/hx*2^(Lev+1)/2;
+J(end-Deg+[1:Deg],end-Deg+[1:Deg]) = J(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+                (Dp_2'*p_2)/hx*2^(Lev+1)/2;
 
 %****************************************
 % Term for <[u_h],[v]>ds
@@ -149,6 +153,14 @@ K = FMWT_COMP*K*FMWT_COMP';
 L = FMWT_COMP*L*FMWT_COMP';
 J = FMWT_COMP*J*FMWT_COMP';
 Q = FMWT_COMP*Q*FMWT_COMP';
+
+GG(find(abs(GG)<1e-5))=0;
+G(find(abs(G)<1e-5))=0;
+H(find(abs(H)<1e-5))=0;
+K(find(abs(K)<1e-5))=0;
+L(find(abs(L)<1e-5))=0;
+J(find(abs(J)<1e-5))=0;
+Q(find(abs(Q)<1e-5))=0;
 
 II = speye(dof_1D_x);
 
@@ -223,9 +235,11 @@ T4=blkdiag(t1+t2,t2+t3,t3+t1);
 clear t1 t2 t3 t4 t5 t6 t7 t8 t9 tt
 
 Mat = T1-c1*T2-c2*T3+alpha*T4-pde.w2*speye(dofs,dofs);
+
 figure;subplot(2,2,1);spy(T1);subplot(2,2,2);spy(T2);subplot(2,2,3);spy(T3);subplot(2,2,4);spy(T4);
 figure;spy(Mat);
-111
+
+condest(Mat)
 end
 
 A_encode = [];
@@ -497,7 +511,7 @@ if isAssemble == 1
     sol = Mat\ff;
 
 
-sol = Mat\ff;
+% sol = Mat\ff;
 % spy(Mat)
 % full(Mat)
 

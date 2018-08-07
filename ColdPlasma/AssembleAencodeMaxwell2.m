@@ -21,320 +21,320 @@ count = 0;
 A1 = I1(row1,col1);
 A2 = GG(row2,col2)-J(row2,col2)-L(row2,col2)+alpha*Q(row2,col2)-w2*I2(row2,col2);%
 A3 = I3(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
     count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1 = A1;%I1(row1,col1);%speye(nx1,ny1);
 A{count}.A2 = A2;%GG(row2,col2)-J(row2,col2)-L(row2,col2)+alpha*Q(row2,col2)-w2*I2(row2,col2);%
 A{count}.A3 = A3;%I3(row3,col3);%
-end
+% end
 %     full(sparse(IndexI,IndexJ,kron(II,kron(A{count}.A2,II))))
 
 A1 = I1(row1,col1);
 A2 = I2(row2,col2);%
 A3 = GG(row3,col3)-J(row3,col3)-L(row3,col3)+alpha*Q(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;%I1(row1,col1);%speye(nx1,ny1);
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%GG(row3,col3)-J(row3,col3)-L(row3,col3)+alpha*Q(row3,col3);
-end
+% end
 %     full(sparse(IndexI,IndexJ,kron(II,kron(II,A{count}.A3))))
 
 % A12
 A1 = -G(row1,col1);
 A2 = GT(row2,col2);%G(row2,col2)';
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1 = A1;%-G(row1,col1);
 A{count}.A2 = A2;% GT(row2,col2);%G(row2,col2)';
 A{count}.A3 = A3;%I3(row3,col3);%
-end
+% end
 
 A1 = H(row1,col1);
 A2 = GT(row2,col2);%G(row2,col2)';
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1=A1;%H(row1,col1);
 A{count}.A2=A2;%GT(row2,col2);%G(row2,col2)';
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end
 
 A1 = G(row1,col1);
 A2 = K(row2,col2);%H';
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1=A1;%G(row1,col1);
 A{count}.A2=A2;%K(row2,col2);%H';
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end
 
 % A13
 A1 = -G(row1,col1);
 A2 = I2(row2,col2);%
 A3 = GT(row3,col3);%G(row3,col3)';
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%-G(row1,col1);
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%GT(row3,col3);%G(row3,col3)';
-end
+% end
 
 A1 = H(row1,col1);
 A2 = I2(row2,col2);%
 A3 = GT(row3,col3);%G(row3,col3)';
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%H(row1,col1);
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%GT(row3,col3);%G(row3,col3)';
-end
+% end
 
 A1 = G(row1,col1);
 A2 = I2(row2,col2);%
 A3 = K(row3,col3);%H';
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%G(row1,col1);
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%K(row3,col3);%H';
-end
+% end
 
 % A21
 A1 = -GT(row1,col1);%G(row1,col1)';
 A2 = G(row2,col2);
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;%-GT(row1,col1);%G(row1,col1)';
 A{count}.A2=A2;%G(row2,col2);
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end
 
 A1 = GT(row1,col1);%G(row1,col1)';
 A2 = H(row2,col2);
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;%GT(row1,col1);%G(row1,col1)';
 A{count}.A2=A2;%H(row2,col2);
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end
 
 A1 = K(row1,col1);%H';
 A2 = G(row2,col2);
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;%K(row1,col1);%H';
 A{count}.A2=A2;%G(row2,col2);
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end
 % A22
 A1 = GG(row1,col1)-J(row1,col1)-L(row1,col1)+alpha*Q(row1,col1)-w2*I1(row1,col1);%speye(nx1,ny1);
 A2 = I2(row2,col2);%
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1=A1;%GG(row1,col1)-J(row1,col1)-L(row1,col1)+alpha*Q(row1,col1)-w2*I1(row1,col1);%speye(nx1,ny1);
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end
 
 A1 = I1(row1,col1);%
 A2 = I2(row2,col2);%
 A3 = GG(row3,col3)-J(row3,col3)-L(row3,col3)+alpha*Q(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1=A1;%I1(row1,col1);%
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%GG(row3,col3)-J(row3,col3)-L(row3,col3)+alpha*Q(row3,col3);
-end
+% end
 
 % A23
 A1 = -I1(row1,col1);%
 A2 = G(row2,col2);
 A3 = GT(row3,col3);%G(row3,col3)';
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%-I1(row1,col1);%
 A{count}.A2=A2;%G(row2,col2);
 A{count}.A3=A3;%GT(row3,col3);%G(row3,col3)';
-end
+% end
 
 A1 = I1(row1,col1);%
 A2 = H(row2,col2);
 A3 = GT(row3,col3);%G(row3,col3)';
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%I1(row1,col1);%
 A{count}.A2=A2;%H(row2,col2);
 A{count}.A3=A3;%GT(row3,col3);%G(row3,col3)';
-end
+% end
 
 A1 = I1(row1,col1);%
 A2 = G(row2,col2);
 A3 = K(row3,col3);%H';
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = dof+IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%I1(row1,col1);%
 A{count}.A2=A2;%G(row2,col2);
 A{count}.A3=A3;%K(row3,col3);%H';
-end
+% end
 
 % A31
 A1 = -GT(row1,col1);%G(row1,col1)';
 A2 = I2(row2,col2);%
 A3 = G(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;%-GT(row1,col1);%G(row1,col1)';
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%G(row3,col3);
-end
+% end
 
 A1 = GT(row1,col1);%G(row1,col1)';
 A2 = I2(row2,col2);%
 A3 = H(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;%GT(row1,col1);%G(row1,col1)';
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%H(row3,col3);
-end
+% end
 
 A1 = K(row1,col1);%H';
 A2 = I2(row2,col2);%
 A3 = G(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;%K(row1,col1);%H';
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%G(row3,col3);
-end
+% end
 
 % A32
 A1 = -I1(row1,col1);%
 A2 = GT(row2,col2);%G(row2,col2)';
 A3 = G(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1=A1;%-I1(row1,col1);%
 A{count}.A2=A2;%GT(row2,col2);%G(row2,col2)';
 A{count}.A3=A3;%G(row3,col3);
-end
+% end
 
 A1 = I1(row1,col1);%
 A2 = GT(row2,col2);%G(row2,col2)';
 A3 = H(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1=A1;%I1(row1,col1);%
 A{count}.A2=A2;%GT(row2,col2);%G(row2,col2)';
 A{count}.A3=A3;%H(row3,col3);
-end
+% end
 
 A1 = I1(row1,col1);%
 A2 = K(row2,col2);%H';
 A3 = G(row3,col3);
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = dof+IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
 
 A{count}.A1=A1;%I1(row1,col1);%
 A{count}.A2=A2;%K(row2,col2);%H';
 A{count}.A3=A3;%G(row3,col3);
-end
+% end
 
 % A33
 A1 = GG(row1,col1)-J(row1,col1)-L(row1,col1)+alpha*Q(row1,col1)-w2*I1(row1,col1);%speye(nx1,ny1);
 A2 = I2(row2,col2);%
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%GG(row1,col1)-J(row1,col1)-L(row1,col1)+alpha*Q(row1,col1)-w2*I1(row1,col1);%speye(nx1,ny1);
 A{count}.A2=A2;%I2(row2,col2);%
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end
 
 A1 = I1(row1,col1);%
 A2 = GG(row2,col2)-J(row2,col2)-L(row2,col2)+alpha*Q(row2,col2);
 A3 = I3(row3,col3);%
-if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+% if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
-A{count}.IndexI = 2*dof+IndexI';
-A{count}.IndexJ = 2*dof+IndexJ';
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;%I1(row1,col1);%
 A{count}.A2=A2;%GG(row2,col2)-J(row2,col2)-L(row2,col2)+alpha*Q(row2,col2);
 A{count}.A3=A3;%I3(row3,col3);%
-end
+% end

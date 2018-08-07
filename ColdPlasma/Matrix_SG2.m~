@@ -22,7 +22,7 @@ global A_encode %Mat Amat
 quad_num=10;
 %---------------
 
-alpha = 10*Deg^3;
+alpha = 10;%*Deg^3;
 isGenAencode = 1;
 isAssemble = 0;
 c1 = 1;
@@ -86,10 +86,10 @@ Amd  = -p_1'*p_1/2+p_2'*p_2/2;
 Asub = -p_1'*p_2/2;
 Asup =  p_2'*p_1/2;
 K = 1/hx*blktridiag([Amd],[Asub],[Asup],nx);
-% Correction for boundary
-K(1:Deg,1:Deg) = K(1:Deg,1:Deg)+(-p_1'*p_1)/hx/2;
-K(end-Deg+[1:Deg],end-Deg+[1:Deg]) = K(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
-    (p_2'*p_2)/hx/2;
+% % % Correction for boundary
+% % K(1:Deg,1:Deg) = K(1:Deg,1:Deg)+(-p_1'*p_1)/hx/2;
+% % K(end-Deg+[1:Deg],end-Deg+[1:Deg]) = K(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+% %     (p_2'*p_2)/hx/2;
 
 %****************************************
 % Term for <[u_h],{v}>ds
@@ -110,10 +110,10 @@ Amd = -p_1'*Dp_1/2+p_2'*Dp_2/2;
 Asub =-p_1'*Dp_2/2;
 Asup = p_2'*Dp_1/2;
 L = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2^(Lev+1);
-% Correction for boundary
-L(1:Deg,1:Deg) = L(1:Deg,1:Deg)+(-p_1'*Dp_1)/hx*2^(Lev+1)/2;
-L(end-Deg+[1:Deg],end-Deg+[1:Deg]) = L(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
-    (p_2'*Dp_2)/hx*2^(Lev+1)/2;
+% % % Correction for boundary
+% % L(1:Deg,1:Deg) = L(1:Deg,1:Deg)+(-p_1'*Dp_1)/hx*2^(Lev+1)/2;
+% % L(end-Deg+[1:Deg],end-Deg+[1:Deg]) = L(end-Deg+[1:Deg],end-Deg+[1:Deg])+...
+% %     (p_2'*Dp_2)/hx*2^(Lev+1)/2;
 
 %****************************************
 % Term for <[u_h],{v'}>ds
@@ -154,6 +154,22 @@ Dofs = forwardHash.dof;
 Dofs3 = 3*Dofs;
 
 combs = perm_leq(3,Lev);
+
+% combs = [0,0,0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1];
+% Dofs = size(combs,1);
+% Dofs3 = 3*Dofs;
+
+% full grid
+val = [0:Lev];
+n3 = repmat(val,1,length(val)*length(val));
+n3 = n3(:);
+n2 = repmat(val,length(val),length(val));
+n2 = n2(:);
+n1 = repmat(val,length(val)*length(val),1);
+n1 = n1(:);
+
+combs = [n1,n2,n3];
+
 combs_index = zeros(size(combs,1),2);
 count = 0;
 for l = 1:size(combs,1)
@@ -169,8 +185,9 @@ for l = 1:size(combs,1)
     combs_index(l,:) = [count+1,count+count_loc];
     count = count+count_loc;
 end
-
-combs = [0,0,0;0 0 1;0 1 0;0 1 1;1 0 0;1 0 1;1 1 0;1 1 1];
+Dofs = count;
+Dofs3 = 3*Dofs;
+% [combs combs_index]
 
 % clear A_encode
 A_encode=[];
@@ -178,53 +195,52 @@ A_encode=[];
 count= 0;
 % generate the combination of lev
 for l1 = 1:size(combs,1)
-%     row1 = Deg*(2^max(0,combs(l1,1)-1)-1)+1:Deg*2^combs(l1,1);
-%     row2 = Deg*(2^max(0,combs(l1,2)-1)-1)+1:Deg*2^combs(l1,2);
-%     row3 = Deg*(2^max(0,combs(l1,3)-1)-1)+1:Deg*2^combs(l1,3);
 
     row1 = Deg*(2^combs(l1,1)-2^max(0,combs(l1,1)-1))+1:Deg*2^combs(l1,1);
     row2 = Deg*(2^combs(l1,2)-2^max(0,combs(l1,2)-1))+1:Deg*2^combs(l1,2);
     row3 = Deg*(2^combs(l1,3)-2^max(0,combs(l1,3)-1))+1:Deg*2^combs(l1,3);
     
     IndexI = [Deg^3*(combs_index(l1,1)-1)+1:Deg^3*combs_index(l1,2)];
+
+%     tmp = permute(reshape(IndexI,),[2,1])
     
     for l2 = 1:size(combs,1)
-%         col1 = Deg*(2^max(0,combs(l2,1)-1)-1)+1:Deg*2^combs(l2,1);
-%         col2 = Deg*(2^max(0,combs(l2,2)-1)-1)+1:Deg*2^combs(l2,2);
-%         col3 = Deg*(2^max(0,combs(l2,3)-1)-1)+1:Deg*2^combs(l2,3);
 
         col1 = Deg*(2^combs(l2,1)-2^max(0,combs(l2,1)-1))+1:Deg*2^combs(l2,1);
         col2 = Deg*(2^combs(l2,2)-2^max(0,combs(l2,2)-1))+1:Deg*2^combs(l2,2);
         col3 = Deg*(2^combs(l2,3)-2^max(0,combs(l2,3)-1))+1:Deg*2^combs(l2,3);
+
         
         IndexJ = [Deg^3*(combs_index(l2,1)-1)+1:Deg^3*combs_index(l2,2)];
 
-%         [l1 l2]
         A_loc = AssembleAencodeMaxwell(IndexI,IndexJ,GG,G,J,H,K,L,Q,pde.w2,Deg^3*Dofs,row1,row2,row3,col1,col2,col3,alpha);
-        
-%                 if l2 == 5
-%             1111
-%                 end
-        
-        for nz = 1:size(A_loc,2)
-            A_encode{count+nz}.IndexI = A_loc{nz}.IndexI;
-            A_encode{count+nz}.IndexJ = A_loc{nz}.IndexJ;
-            A_encode{count+nz}.A1 = A_loc{nz}.A1;
-            A_encode{count+nz}.A2 = A_loc{nz}.A2;
-            A_encode{count+nz}.A3 = A_loc{nz}.A3;
-            
-            %             22222
-            %             A_encode
+%         Mat = Aencode2Matrix(A_loc,Deg^3*Dofs3);
+%         spy(Mat(1:16,1:16))
+l2
+        if size(A_loc,2)>0 % only add the non-zero A_encode
+            for nz = 1:size(A_loc,2)
+                A_encode{count+nz}.IndexI = A_loc{nz}.IndexI;
+                A_encode{count+nz}.IndexJ = A_loc{nz}.IndexJ;
+                A_encode{count+nz}.A1 = A_loc{nz}.A1;
+                A_encode{count+nz}.A2 = A_loc{nz}.A2;
+                A_encode{count+nz}.A3 = A_loc{nz}.A3;
+  
+            end
         end
         count = count+size(A_loc,2);
-        %
-        %         A_encode =
-        % 11111
+
     end
     
     
 end
 
+size(A_encode)
+
+Mat = Aencode2Matrix(A_encode,Deg^3*Dofs3);
+figure;
+tmp = Mat-Mat';
+tmp(find(abs(tmp)<1e-5))=0;
+spy(tmp)
 
 Lend = Lmax;Lstart = 0;
 fx = zeros(quad_num,3);
@@ -275,38 +291,44 @@ f3z = FMWT_COMP*f3z;
 % Assemble the RHS term for Sparse Grids
 ff = sparse(Deg^3*Dofs3,1);
 for l1 = 1:size(combs,1)
-%     row1 = Deg*(2^max(0,combs(l1,1)-1)-1)+1:Deg*2^combs(l1,1);
-%     row2 = Deg*(2^max(0,combs(l1,2)-1)-1)+1:Deg*2^combs(l1,2);
-%     row3 = Deg*(2^max(0,combs(l1,3)-1)-1)+1:Deg*2^combs(l1,3);
 
+    
     row1 = Deg*(2^combs(l1,1)-2^max(0,combs(l1,1)-1))+1:Deg*2^combs(l1,1);
     row2 = Deg*(2^combs(l1,2)-2^max(0,combs(l1,2)-1))+1:Deg*2^combs(l1,2);
     row3 = Deg*(2^combs(l1,3)-2^max(0,combs(l1,3)-1))+1:Deg*2^combs(l1,3);
     
     IndexI = [Deg^3*(combs_index(l1,1)-1)+1:Deg^3*combs_index(l1,2)];
+%     [row1 row2 row3]
     
     ff(IndexI) = kron(kron(f1x(row1),f1y(row2)),f1z(row3));
     ff(Dofs+IndexI) = kron(kron(f2x(row1),f2y(row2)),f2z(row3));
     ff(2*Dofs+IndexI) = kron(kron(f3x(row1),f3y(row2)),f3z(row3));
 end
 
+
 % ff =[kron(kron(f1x,f1y),f1z);kron(kron(f2x,f2y),f2z);kron(kron(f3x,f3y),f3z)]*(2*pi^2-pde.w2);
 ff = ff*(2*pi^2-pde.w2);
 
 
 
-x = ff/(2*pi^2-pde.w2);%zeros(Deg^3*Dofs3,1);%
 
+% % % Mat = Aencode2Matrix(A_encode,Deg^3*Dofs3);
+% % % condest(Mat)
+% % % figure;
+% % % spy(Mat)
+% % % % return
+% % % sol = Mat\ff;
+% % % uu = ff/(2*pi^2-pde.w2);
+% % % % full([max(abs(sol-uu)) norm(sol-uu)/norm(uu)])
+% % % full([max(abs(sol-uu)) norm(sol-uu)])
+% % % figure
+% % % plot(sol-uu)
+% % % return
 
-ftmp = ApplyA(x);
-
-
-plot(ftmp-ff,'r-o')
-
-
-return
+x = zeros(Deg^3*Dofs3,1);%
 sol = cg(x,ff,MaxIter,Tol);
 
+% plot(sol2-sol)
 
 
 figure;plot(sol-ff/(2*pi^2-pde.w2))
@@ -314,7 +336,8 @@ figure;plot(sol-ff/(2*pi^2-pde.w2))
 uu = ff/(2*pi^2-pde.w2);
 [max(abs(sol-uu)) norm(sol-uu)]
 % compute the RHS term
-
+figure
+plot(sol-uu)
 % full([sol uu])
 return
 

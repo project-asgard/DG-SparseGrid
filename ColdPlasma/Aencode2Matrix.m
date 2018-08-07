@@ -10,14 +10,15 @@ for i=1:size(A_encode,2)
     
     IndexI=A_encode{i}.IndexI;
     IndexJ=A_encode{i}.IndexJ;
-    nI = size(IndexI,1);
-    nJ = size(IndexJ,1);
+    nI = length(IndexI);
+    nJ = length(IndexJ);
     
     
-    val = kron(tmpA,kron(tmpB,tmpC));
-    
-    
-%     Mat = Mat+sparse(ones(nJ,1)*IndexI',IndexJ*ones(1,nI),val,dof,dof);
+    val = kron(kron(tmpA,tmpB),tmpC);
+%     ones(nJ,1)*IndexI
+%     
+%     IndexJ'*ones(1,nI)
+%     Mat = Mat + sparse(IndexI'*ones(1,nJ),ones(nI,1)*IndexJ,val,dof,dof);
 %     spy(Mat)
     Mat = Mat+sparse(IndexI*ones(1,nJ),ones(nI,1)*IndexJ',val,dof,dof);
 end
