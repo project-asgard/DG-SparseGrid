@@ -12,6 +12,7 @@ function pde=Vlasov7
 %   formT2 = FuncMass :: \int_x E*phi_i*phi_j dx
 % Note: All terms will be constructed by weak forms
 %--------------------------------------------------
+Dim = 2;
 
 formT1.dim = 1;
 formT1.type = 'FuncMass';
