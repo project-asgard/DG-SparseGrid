@@ -136,7 +136,7 @@ clear fv fx
 %%% Build the time independent coefficient matricies.
 if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
-    FMWT_COMP_x,FMWT_COMP_v);
+    FMWT_COMP_x,FMWT_COMP_v,pde);
 
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end

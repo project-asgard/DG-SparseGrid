@@ -4,37 +4,37 @@ function pde=Vlasov7
 % d/dt(f) + v*d/dx(f) + E*d/dv(f)=0
 % term1 denotes v*d/dx(f)
 %   term1 = [formT1,formT2]
-%   formT1 = FuncMass :: \int_v v*phi_i*phi_j dv
-%   formT2 = FuncGrad :: \int_x phi_i'*phi_j dx
+%   form1 = FuncMass :: \int_v v*phi_i*phi_j dv
+%   form2 = FuncGrad :: \int_x phi_i'*phi_j dx
 % term2 denotes E*d/dv(f)
-%   term2 = [formT1,formT2]
-%   formT1 = FuncGrad :: \int_v phi_i'*phi_j dv
-%   formT2 = FuncMass :: \int_x E*phi_i*phi_j dx
+%   term2 = [form1,form2]
+%   form1 = FuncGrad :: \int_v phi_i'*phi_j dv
+%   form2 = FuncMass :: \int_x E*phi_i*phi_j dx
 % Note: All terms will be constructed by weak forms
 %--------------------------------------------------
 
-formT1.dim = 1;
-formT1.type = 'FuncMass';
-formT1.G = @(x)x;
+formt1.dim = 1;
+formt1.type = 'FuncMass';
+formt1.G = @(x)x;
 
-formT2.dim = 1;
-formT2.type = 'FuncGrad';
-formT2.G = @(x)1;
+formt2.dim = 1;
+formt2.type = 'FuncGrad';
+formt2.G = @(x)1;
 
-term1 = {formT1,formT2};
+term1 = [formt1,formt2];
 
-formT1.dim = 1;
-formT1.type = 'FuncMass';
-formT1.G = @(x)2*x;
+formt1.dim = 1;
+formt1.type = 'FuncMass';
+formt1.G = @(x)2*x;
 
-formT2.dim = 1;
-formT2.type = 'FuncGrad';
-formT2.G = @(x)2;
+formt2.dim = 1;
+formt2.type = 'FuncGrad';
+formt2.G = @(x)2;
 
-term2 = {formT1,formT2};
+term2 = [formt1,formt2];
 
 
-terms = {term1,term2};
+terms = [term1,term2];
 
 pde.terms = terms;
 

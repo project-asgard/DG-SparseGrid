@@ -1,4 +1,4 @@
-function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v,pde)
+function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=============================================================
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -381,16 +381,12 @@ DeltaX(iend,k1:k2) = sqrt(1/hx)*leg_1_k(1:k);
 for Lv=0:nv-1
     
     xi_v=(( (quad_x+1)/2+Lv)*hv-Vmax); % mapping from [-1,1] to physical domain
-    tmp_loc = pde.terms{1}{1}.G(xi_v) ;
-
-
+    G(xi_v)
     %---------------------------------------------
     % Matrix
     %---------------------------------------------
     % value of local matrix
-%     val_loc=p_val'*(p_val.*xi_v.*quad_w)*Jacobi_v/2/hv;
-    val_loc=p_val'*(p_val.*tmp_loc.*quad_w)*Jacobi_v/2/hv;
-    
+    val_loc=p_val'*(p_val.*xi_v.*quad_w)*Jacobi_v/2/hv;
 
     if (use_dense),
       i1 = k*Lv+1;
