@@ -1,4 +1,4 @@
-function [GradMat,GradGradMat] = Matrix_SG2(Lev,Deg,Lmax,pde)
+% function [GradMat,GradGradMat] = Matrix_SG2(Lev,Deg,Lmax,pde)
 %========================================================
 % Construct the matrix for curl operator on [0,Lmax]
 % Input:
@@ -12,7 +12,11 @@ function [GradMat,GradGradMat] = Matrix_SG2(Lev,Deg,Lmax,pde)
 %========================================================
 close all
 format short e
-% clear 
+clear 
+Lev = 4;
+Deg = 2;
+Lmax = 1;
+pde = Maxwell1;
 
 AssembleMatrix = 0;
 % Lev = 1;Deg = 1;Lmax = 1;pde=Maxwell1;
@@ -334,14 +338,16 @@ full([max(abs(sol-uu)) norm(sol-uu)])
 end
 
 x = zeros(Deg^3*Dofs3,1);%
-% sol = cg(x,ff,MaxIter,Tol);
-[sol,flag2,rr2,iter2,rv2] = pcg(@afun,ff,Tol,MaxIter);
+sol = cg(x,ff,MaxIter,Tol);
+
+% [sol2,flag2,rr2,iter2,rv2] = pcg(@afun,ff,Tol,MaxIter);
+
 % % plot(sol2-sol)
 
 % tol = 1e-6;  maxit = 1000; 
-% % % sol = gmres(@afun,ff,10,tol,maxit);
+% sol3 = gmres(@afun,ff,10,Tol,MaxIter);
 % % 
-% [sol,fl0,rr0,it0,rv0]= gmres(@afun,ff,10,tol,maxit);
+% [sol3,fl0,rr0,it0,rv0]= gmres(@afun,ff,10,Tol,MaxIter);
 % semilogy(0:length(rv0)-1,rv0/norm(ff),'-o');
 % xlabel('Iteration number');
 % ylabel('Relative residual');
@@ -356,11 +362,6 @@ uu = ff/(2*pi^2-pde.w2);
 figure
 plot(sol-uu)
 % full([sol uu])
-end
+% end
 
 
-    function y = afun(x)
-%     full(x)
-        y = ApplyA(x);
-        
-    end

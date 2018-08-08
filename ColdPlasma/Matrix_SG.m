@@ -19,15 +19,15 @@ global A_encode %Mat Amat
 quad_num=10;
 %---------------
 
-alpha = 1000*Deg^3;
+alpha = 10*Deg^3;
 isGenAencode = 1;
-isAssemble = 0;
+isAssemble = 1;
 c1 = 1;
 c2 = 1;
 
 % parameters for cg method
-MaxIter = 1000;
-Tol = 1e-6;
+MaxIter = 3000;
+Tol = 1e-10;
 
 
 % compute the trace values
