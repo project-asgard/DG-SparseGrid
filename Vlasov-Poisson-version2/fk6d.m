@@ -252,7 +252,7 @@ for L = 1:floor(TEND/dt)
         
     end
     
-    % Write the present fval to file.
+    %%% Write the present fval to file.
     if write_fval; write_fval_to_file(fval,Lev,Deg,L); end
     
     
@@ -272,7 +272,7 @@ for L = 1:floor(TEND/dt)
     end
     
     if pde.checkAnalytic
-        %%% Check the solution with the analytic solution
+        % Check the solution with the analytic solution
         fval_analytic = source_vector2(LevX,LevV,Deg,HASHInv,pde,time(count));
         err = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2));
     end
