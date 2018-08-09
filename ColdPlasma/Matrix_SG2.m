@@ -13,7 +13,7 @@
 close all
 format short e
 clear 
-Lev = 4;
+Lev = 5;
 Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
@@ -26,7 +26,7 @@ global A_encode %Mat Amat
 quad_num=10;
 %---------------
 
-alpha = 1000*Deg^3;
+alpha = 10*Deg*(Deg+1);
 isGenAencode = 1;
 isAssemble = 0;
 c1 = 1;
@@ -309,8 +309,8 @@ for l1 = 1:size(combs,1)
 %     [row1 row2 row3]
     
     ff(IndexI) = kron(kron(f1x(row1),f1y(row2)),f1z(row3));
-    ff(Dofs+IndexI) = kron(kron(f2x(row1),f2y(row2)),f2z(row3));
-    ff(2*Dofs+IndexI) = kron(kron(f3x(row1),f3y(row2)),f3z(row3));
+    ff(Deg^3*Dofs+IndexI) = kron(kron(f2x(row1),f2y(row2)),f2z(row3));
+    ff(2*Deg^3*Dofs+IndexI) = kron(kron(f3x(row1),f3y(row2)),f3z(row3));
 end
 
 

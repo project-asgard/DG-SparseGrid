@@ -15,6 +15,7 @@ tmpC=A_encode{i}.A3;
 IndexI=A_encode{i}.IndexI;
 IndexJ=A_encode{i}.IndexJ;
 
+
 val = kron_mult3(tmpA,tmpB,tmpC,f(IndexJ));
 ftmp(IndexI)=ftmp(IndexI)+val;
 
