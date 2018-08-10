@@ -58,8 +58,10 @@ if ~exist('compression','var') || isempty(compression)
 end
 
 % Get x and v domain ranges.
-Vmax = pde.params.Vmax;
+Lmin = pde.params.Lmin;
 Lmax = pde.params.Lmax;
+Vmin = pde.params.Vmin;
+Vmax = pde.params.Vmax;
 
 % Level information.
 LevX = Lev;
@@ -96,7 +98,9 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 %         rho--intial condition rho(x,t=0)
 
 if ~quiet; disp('[1.2] Setting up 1D initial conditions'); end
-[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
+%[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
+fx = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Fx_0,pde.params);
+fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 
 
 %% Step 2. Generate Sparse-Grid (as the Hash + Connectivity tables).
@@ -117,7 +121,7 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 %%% condition, multi-wavelet representation of the initial condition
 %%% specified in PDE.
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
-fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
+fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
 
 clear fv fx
 
@@ -217,8 +221,7 @@ for L = 1:floor(TEND/dt)
     if pde.applySpecifiedE
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
-        % Does this take E(x) -> E(lev,pos,deg) ?
-        E = ProjCoef2Wav_v2(LevX,Deg,0,Lmax,pde.exactE);
+        E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.exactE,pde.params);
     end
     
     %%% Generate EMassX time dependent coefficient matrix.
@@ -273,7 +276,7 @@ for L = 1:floor(TEND/dt)
     
     if pde.checkAnalytic
         % Check the solution with the analytic solution
-        fval_analytic = source_vector2(LevX,LevV,Deg,HASHInv,pde,time(count));
+        fval_analytic = source_vector2(HASHInv,pde,time(count));
         err = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2));
     end
     

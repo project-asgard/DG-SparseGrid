@@ -5,11 +5,15 @@ function pde=Vlasov7
 % parameters
 k_0=0.5;
 A=1;
-Vmax=5;Lmax=1;
+Lmin=0;Lmax=1;
+Vmin=-5;Vmax=+5;
 
 params.k_0 = k_0;
 params.A = A;
+
+params.Lmin = Lmin;
 params.Lmax = Lmax;
+params.Vmin = Vmin;
 params.Vmax = Vmax;
 
 pde.Fx_0 = @Fx_0;
@@ -120,22 +124,22 @@ Vmax = params.Vmax;
 f=x-x+1;
 end
 
-function f = exactE(x)
+function f = exactE(x, params)
 % Exact solution for E
 f=x-x+1;
 end
 % source term--fully seperable functions
 % source = source1+source2+source3
 % source term 1
-function f = source1x(x)
+function f = source1x(x,params)
 Vmax=5;Lmax=1;
 f = x.*(1-x);
 end
 function f = source1t(t)
 Vmax=5;Lmax=1;
-f = t-t+1;%+1;
+f = t-t+1;
 end
-function f = source1v(v)
+function f = source1v(v,params)
 Vmax=5;Lmax=1;
 f = (v-Vmax).*(v+Vmax);
 end
@@ -145,15 +149,15 @@ f = source1x(x).*source1v(v).*source1t(t);
 end
 
 % source term 2
-function f = source2x(x)
+function f = source2x(x,params)
 Vmax=5;Lmax=1;
 f = (1-2*x);
 end
 function f = source2t(t)
 Vmax=5;Lmax=1;
-f = t;%-t+1;
+f = t;
 end
-function f = source2v(v)
+function f = source2v(v,params)
 Vmax=5;Lmax=1;
 f = v.*(v-Vmax).*(v+Vmax);
 end
@@ -163,15 +167,15 @@ f = source2x(x).*source2v(v).*source2t(t);
 end
 
 % source term 3
-function f = source3x(x)
+function f = source3x(x,params)
 Vmax=5;Lmax=1;
-f = x.*(1-x);%.*exactE(x);
+f = x.*(1-x);
 end
 function f = source3t(t)
 Vmax=5;Lmax=1;
 f = t;
 end
-function f = source3v(v)
+function f = source3v(v,params)
 Vmax=5;Lmax=1;
 f = 2*v;
 end
@@ -181,17 +185,17 @@ f = source3x(x).*source3v(v).*source3t(t);
 end
 
 % Exact F
-function f=ExactFx(x)
+function f=ExactFx(x,params)
 Vmax=5;Lmax=1;
 f = x.*(1-x);
 end
-function f=ExactFv(v)
+function f=ExactFv(v,params)
 Vmax=5;Lmax=1;
 f = (v-Vmax).*(v+Vmax);
 end
 function f=ExactFt(t)
 Vmax=5;Lmax=1;
-f=t;%+1;
+f=t;
 end
 function f=ExactF(x,v,t)
 Vmax=5;Lmax=1;
