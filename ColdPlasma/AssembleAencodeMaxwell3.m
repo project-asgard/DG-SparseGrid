@@ -1,4 +1,6 @@
-function A = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat,w2,dof,row1,row2,row3,col1,col2,col3,alpha)
+function A = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat,w2,dof,row1,row2,row3,...
+    col1,col2,col3,alpha,alpha1)
+
     %GG,G,J,H,K,L,Q,
 % - Volume Integral
 %   DuDv = (u_h',v')
@@ -359,9 +361,11 @@ A{count}.A2=A2;
 A{count}.A3=A3;
 end
 
+A = [];
+count = 0;
 % following code deals with h<[curl uxn],[curl vxn]>_F
 % A11
-A1 = Mat.JuJv(row1,col1);
+A1 = alpha1*Mat.JuJv(row1,col1);
 A2 = Mat.DuDv(row2,col2);
 A3 = I3(row3,col3);
 if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
@@ -374,7 +378,7 @@ A{count}.A2=A2;
 A{count}.A3=A3;
 end
 
-A1 = Mat.JuJv(row1,col1);
+A1 = alpha1*Mat.JuJv(row1,col1);
 A2 = I2(row2,col2);
 A3 = Mat.DuDv(row3,col3);
 if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
@@ -388,7 +392,7 @@ A{count}.A3=A3;
 end
 
 A1 = I1(row1,col1);
-A2 = Mat.JDuJDv(row2,col2);
+A2 = alpha1*Mat.JDuJDv(row2,col2);
 A3 = I3(row3,col3);
 if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
@@ -402,7 +406,7 @@ end
 
 A1 = I1(row1,col1);
 A2 = I2(row2,col2);
-A3 = Mat.JDuJDv(row3,col3);
+A3 = alpha1*Mat.JDuJDv(row3,col3);
 if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
 A{count}.IndexI = IndexI;
@@ -414,13 +418,267 @@ A{count}.A3=A3;
 end
 
 % A12
-A1 = I1(row1,col1);
-A2 = I2(row2,col2);
-A3 = Mat.JDuJDv(row3,col3);
+A1 = -Mat.JDuJv(row1,col1);
+A2 = alpha1*Mat.IuDv(row2,col2);
+A3 = I3(row3,col3);
 if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
 A{count}.IndexI = IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = -Mat.DuIv(row1,col1);
+A2 = alpha1*Mat.JuJDv(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A13
+A1 = -Mat.JDuJv(row1,col1);
+A2 = I2(row2,col2);
+A3 = alpha1*Mat.IuDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = -Mat.DuIv(row1,col1);
+A2 = I2(row2,col2);
+A3 = alpha1*Mat.JuJDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A21
+A1 = -Mat.JuJDv(row1,col1);
+A2 = alpha1*Mat.DuDv(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = -Mat.IuDv(row1,col1);
+A2 = alpha1*Mat.JDuJv(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A22
+A1 = alpha1*Mat.JDuJDv(row1,col1);
+A2 = I2(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = alpha1*Mat.DuDv(row1,col1);
+A2 = Mat.JuJv(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = I1(row1,col1);
+A2 = alpha1*Mat.JuJv(row2,col2);
+A3 = Mat.DuDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = I1(row1,col1);
+A2 = I2(row2,col2);
+A3 = alpha1*Mat.JDuJDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A23
+A1 = -I1(row1,col1);
+A2 = Mat.DuIv(row2,col2);
+A3 = alpha1*Mat.JuJDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = -I1(row1,col1);
+A2 = Mat.JDuJv(row2,col2);
+A3 = alpha1*Mat.IuDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A31
+A1 = -Mat.JuJDv(row1,col1);
+A2 = I2(row2,col2);
+A3 = alpha1*Mat.DuIv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = -Mat.IuDv(row1,col1);
+A2 = I2(row2,col2);
+A3 = alpha1*Mat.JDuJv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A32
+A1 = -I1(row1,col1);
+A2 = Mat.IuDv(row2,col2);
+A3 = alpha1*Mat.JDuJv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = -I1(row1,col1);
+A2 = Mat.JuJDv(row2,col2);
+A3 = alpha1*Mat.DuIv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A33
+A1 = alpha1*Mat.JDuJDv(row1,col1);
+A2 = I2(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = alpha1*Mat.DuDv(row1,col1);
+A2 = I2(row2,col2);
+A3 = Mat.JuJv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = I1(row1,col1);
+A2 = alpha1*Mat.DuDv(row2,col2);
+A3 = Mat.JuJv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = I1(row1,col1);
+A2 = alpha1*Mat.JDuJDv(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = 2*dof+IndexI;
+A{count}.IndexJ = 2*dof+IndexJ;
 
 A{count}.A1=A1;
 A{count}.A2=A2;
