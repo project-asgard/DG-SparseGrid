@@ -79,12 +79,12 @@ function [x,error,iter,flag]=cg(x,b,max_it,tol)
      for i = 1:iter-1
      T(i,i+1)= s(i); T(i+1,i) = T(i,i+1);
      end
-%      lambda = eig(T);
+     lambda = eig(T);
 %      lambda = eigs(T);
-%      lambdamax = max(lambda);
-%      lambdamin = min(lambda);
-     lambdamax = eigs(T,1,'LM');
-     lambdamin = eigs(T,1,'SM');
+     lambdamax = max(lambda);
+     lambdamin = min(lambda);
+%      lambdamax = eigs(T,1,'LM');
+%      lambdamin = eigs(T,1,'SM');
      condnumber = lambdamax/lambdamin;
      fprintf(' lambdamax = %f\n',lambdamax)
      fprintf(' lambdamin = %f\n',lambdamin)

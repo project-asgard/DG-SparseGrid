@@ -13,7 +13,7 @@
 close all
 format short e
 clear 
-Lev = 4;
+Lev = 2;
 Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
@@ -21,12 +21,12 @@ pde = Maxwell1;
 AssembleMatrix = 0;
 % Lev = 1;Deg = 1;Lmax = 1;pde=Maxwell1;
 
-global A_encode %Mat Amat
+global A_encode invM%Mat Amat
 %--DG parameters
 quad_num=10;
 %---------------
 
-alpha = 1000*Deg^3;
+alpha = 2*(Deg + 1)*(Deg + 3);%1000*Deg^3;
 isGenAencode = 1;
 isAssemble = 0;
 c1 = 1;
@@ -166,15 +166,15 @@ combs = perm_leq(3,Lev);
 % Dofs3 = 3*Dofs;
 
 % full grid
-% val = [0:Lev];
-% n3 = repmat(val,1,length(val)*length(val));
-% n3 = n3(:);
-% n2 = repmat(val,length(val),length(val));
-% n2 = n2(:);
-% n1 = repmat(val,length(val)*length(val),1);
-% n1 = n1(:);
-% 
-% combs = [n1,n2,n3];
+val = [0:Lev];
+n3 = repmat(val,1,length(val)*length(val));
+n3 = n3(:);
+n2 = repmat(val,length(val),length(val));
+n2 = n2(:);
+n1 = repmat(val,length(val)*length(val),1);
+n1 = n1(:);
+
+combs = [n1,n2,n3];
 
 combs_index = zeros(size(combs,1),2);
 count = 0;
@@ -337,10 +337,32 @@ full([max(abs(sol-uu)) norm(sol-uu)])
 % return
 end
 
+% [ 'Mat_Lap.m'];
+
+% Lap = GG-L-J+alpha*Q;
+% 
+% dofs = size(Lap,1);
+% II = speye(dofs);
+% 
+% Mat_Lap = kron(II,kron(II,Lap))+kron(II,kron(Lap,II))+kron(Lap,kron(II,II));
+% 
+% invMat = inv(Mat_Lap);
+% 
+% invM = blkdiag(invMat,invMat,invMat);
+
+% % Mat = Aencode2Matrix(A_encode,Deg^3*Dofs3);
+% % MM = diag(diag(Mat));
+% % invM = inv(MM);
+
+
+
 x = zeros(Deg^3*Dofs3,1);%
 sol = cg(x,ff,MaxIter,Tol);
 
-% [sol2,flag2,rr2,iter2,rv2] = pcg(@afun,ff,Tol,MaxIter);
+% Mat = Aencode2Matrix(A_encode,Deg^3*Dofs3);
+% %  [sol] = amg(Mat,ff);
+% sol3 = Mat\ff;
+% [sol,flag2,rr2,iter2,rv2] = pcg(@afun,ff,Tol,MaxIter);
 
 % % plot(sol2-sol)
 

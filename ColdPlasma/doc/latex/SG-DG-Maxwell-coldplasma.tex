@@ -154,8 +154,8 @@ A_h(\bu_h,\bv)=(\bbf,\bv),
 with $A_h(\cdot,\cdot)$ is given by
 \begin{eqnarray}
 A_h(\bu_h,\bv)&=&(\nabla_h\times \bu_h,\nabla_h\times \bv)-k^2(\bu_h,\bv)\notag\\
-&-&\langle\lavg\nabla_h\times \bu_h\ravg,\ljump \bv\rjump\rangle_{\mathcal{F}_h}-\langle\ljump \bu_h\rjump,\lavg\nabla_h\times \bv\ravg\rangle_{\mathcal{F}_h}
-+\alpha h^{-1}\langle\ljump \bu_h\rjump,\ljump \bv\rjump\rangle_{\mathcal{F}_h}.
+&-&\langle\lavg\nabla_h\times \bu_h\ravg,\ljump \bv\rjump_{\tau}\rangle_{\mathcal{F}_h}-\langle\ljump \bu_h\rjump_{\tau},\lavg\nabla_h\times \bv\ravg\rangle_{\mathcal{F}_h}
++\alpha h^{-1}\langle\ljump \bu_h\rjump_{\tau},\ljump \bv\rjump_{\tau}\rangle_{\mathcal{F}_h}.
 \end{eqnarray}
 Here, we use $\nabla_h$ to denote the elementwise application of the operator $\nabla$, and $\langle \bv, \bw\rangle_{\mathcal{F}_h}:=\sum_{e\in\mathcal{F}_h}\int_e \bv\cdot\bw ds.$
 Here $\alpha\ge \alpha_{\min}$ is a positive constant that is independent of the mesh size. The threshold value $\alpha_{\min}$ only depends on the shape-regularity of the mesh and the approximation order $k$.
@@ -169,6 +169,20 @@ Here we define the following DG seminorm and norm on $V(h)$, respectively:
 \3bar\bv\3bar^2:=\|\bv\|_0^2+\|\nabla_h\times\bv\|_0^2+\|h^{-1/2}\ljump\bv\rjump_{\tau}\|_{0,\mathcal{F}_h}^2.
 \end{eqnarray}
 
+\begin{eqnarray*}
+A_h(\bv,\bv)=\|\nabla_h\times\bv\|_0^2-k^2\|\bv\|_0^2-2\langle\lavg\nabla_h\times\bv\ravg,\ljump\bv\rjump_{\tau}\rangle_{\mathcal{F}_h}+\alpha h^{-1}\|\ljump\bv\rjump_{\tau}\|_{\mathcal{F}_h}^2
+\end{eqnarray*}
+Here
+\begin{eqnarray*}
+\langle\lavg\nabla_h\times\bv\ravg,\ljump\bv\rjump_{\tau}\rangle_{\mathcal{F}_h}&\le& 
+\frac{\epsilon h\|\lavg\nabla_h\times\bv\ravg\|_{\mathcal{F}_h}^2}{2}
++\frac{h^{-1}\|\ljump\bv\rjump_{\tau}\|_{\mathcal{F}_h}^2}{2\epsilon}\\
+&\le& \frac{\epsilon(C_{\text{inv}}+1)}{2}\|\nabla_h\times\bv\|^2+\frac{h^{-1}\|\ljump\bv\rjump_{\tau}\|_{\mathcal{F}_h}^2}{2\epsilon}
+\end{eqnarray*}
+Thus
+\begin{eqnarray*}
+A_h(\bv,\bv)\ge \big(1-\epsilon(C_{\text{inv}}-1)\big)\|\nabla_h\times\bv_{\tau}\|_0^2+(\alpha-\frac{1}{2\epsilon})h^{-1}\|\ljump\bv\rjump\|_{\mathcal{F}_h}^2-k^2\|\bv\|_0^2
+\end{eqnarray*}
 %---------------------
 % theorem
 %---------------------
