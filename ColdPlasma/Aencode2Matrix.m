@@ -18,7 +18,7 @@ for i=1:size(A_encode,2)
 %     ones(nJ,1)*IndexI
 %     
 %     IndexJ'*ones(1,nI)
-%     Mat = Mat + sparse(IndexI'*ones(1,nJ),ones(nI,1)*IndexJ,val,dof,dof);
+    Mat = Mat + sparse(IndexI'*ones(1,nJ),ones(nI,1)*IndexJ,val,dof,dof);
 %     spy(Mat)
-    Mat = Mat+sparse(IndexI*ones(1,nJ),ones(nI,1)*IndexJ',val,dof,dof);
+%     Mat = Mat+sparse(IndexI*ones(1,nJ),ones(nI,1)*IndexJ',val,dof,dof);
 end
