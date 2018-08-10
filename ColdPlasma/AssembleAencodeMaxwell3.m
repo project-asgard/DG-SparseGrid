@@ -11,6 +11,8 @@ function A = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat,w2,dof,row1,row2,row3,col
 %   JuADv = <[u_h],{v'}>_F
 %   JuJv = <[u_h],[v]>_F
 %   JDuJDv = <[u_h'],[v']>_F
+%   JDuJv = <[u_h'],[v]>_F
+%   JuJDv = <[u_h],[v']>_F
 
     GG = Mat.DuDv;
     G = Mat.DuIv;
@@ -351,6 +353,74 @@ if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
 count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% following code deals with h<[curl uxn],[curl vxn]>_F
+% A11
+A1 = Mat.JuJv(row1,col1);
+A2 = Mat.DuDv(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = Mat.JuJv(row1,col1);
+A2 = I2(row2,col2);
+A3 = Mat.DuDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = I1(row1,col1);
+A2 = Mat.JDuJDv(row2,col2);
+A3 = I3(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+A1 = I1(row1,col1);
+A2 = I2(row2,col2);
+A3 = Mat.JDuJDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = IndexJ;
+
+A{count}.A1=A1;
+A{count}.A2=A2;
+A{count}.A3=A3;
+end
+
+% A12
+A1 = I1(row1,col1);
+A2 = I2(row2,col2);
+A3 = Mat.JDuJDv(row3,col3);
+if norm(A1-z1)>1e-4 && norm(A2-z2)>1e-4 && norm(A3-z3)>1e-4
+count = count+1;
+A{count}.IndexI = IndexI;
+A{count}.IndexJ = IndexJ;
 
 A{count}.A1=A1;
 A{count}.A2=A2;

@@ -12,6 +12,8 @@ function Mat = Matrix4CurlCurlOperator(Lev,Deg,Lmax)
 %   JuADv = <[u_h],{v'}>_F
 %   JuJv = <[u_h],[v]>_F
 %   JDuJDv = <[u_h'],[v']>_F
+%   JDuJv = <[u_h'],[v]>_F
+%   JuJDv = <[u_h],[v']>_F
 % Note:: AuJv = JuAv'; ADuJv = JuADv';
 %--------by Lin Mu, 08-09-2018------------
 
@@ -96,14 +98,25 @@ Asub = -p_1'*p_2;
 Asup =  p_2'*(-p_1);
 JuJv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
 
-% Matrix for <[u_h'],[v']>
+% Matrix for <[u_h'],[v']>*hx
 Amd  =  Dp_1'*(Dp_1)+Dp_2'*Dp_2;
 Asub = -Dp_1'*Dp_2;
 Asup =  Dp_2'*(-Dp_1);
-JDuJDv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
+JDuJDv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)/hx;
 
 % Matrix for <[u_h],[v']>
-% JuJDv = 
+Amd  =  Dp_1'*(p_1)+Dp_2'*p_2;
+Asub = -Dp_1'*p_2;
+Asup =  Dp_2'*(-p_1);
+JuJDv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)/hx;
+
+% Matrix for <[u_h],[v']>
+Amd  =  p_1'*(Dp_1)+p_2'*Dp_2;
+Asub = -p_1'*Dp_2;
+Asup =  p_2'*(-Dp_1);
+JDuJv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)/hx;
+
+
 
 % convert to multiwavelet basis
 FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
@@ -116,6 +129,8 @@ ADuJv = FMWT_COMP*ADuJv*FMWT_COMP';
 JuADv = FMWT_COMP*JuADv*FMWT_COMP';
 JuJv = FMWT_COMP*JuJv*FMWT_COMP';
 JDuJDv = FMWT_COMP*JDuJDv*FMWT_COMP';
+JDuJv = FMWT_COMP*JDuJv*FMWT_COMP';
+JuJDv = FMWT_COMP*JuJDv*FMWT_COMP';
 
 % DuDv(find(abs(DuDv)<1e-5))=0;
 % DuIv(find(abs(DuIv)<1e-5))=0;
@@ -127,4 +142,5 @@ JDuJDv = FMWT_COMP*JDuJDv*FMWT_COMP';
 
 
 Mat = struct('DuDv',DuDv,'DuIv',DuIv,'IuIv',IuIv,'AuJv',AuJv,'JuAv',JuAv,...
-    'ADuJv',ADuJv,'JuADv',JuADv,'JuJv',JuJv,'JDuJDv',JDuJDv);
+    'ADuJv',ADuJv,'JuADv',JuADv,'JuJv',JuJv,'JDuJDv',JDuJDv,'JDuJv',JDuJv,...
+    'JuJDv',JuJDv);
