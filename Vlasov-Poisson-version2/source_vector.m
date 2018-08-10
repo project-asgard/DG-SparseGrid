@@ -1,6 +1,6 @@
 function fval = source_vector(HASHInv,pde,time)
-% projection of given source function to sparse grids
-% here we assume source=source1+source2+source3
+
+% Returns the wavelet transformed source
 
 LevX = pde.params.LevX;
 LevV = pde.params.LevV;

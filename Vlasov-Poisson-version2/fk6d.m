@@ -276,7 +276,7 @@ for L = 1:floor(TEND/dt)
     
     if pde.checkAnalytic
         % Check the solution with the analytic solution
-        fval_analytic = source_vector2(HASHInv,pde,time(count));
+        fval_analytic = exact_solution_vector(HASHInv,pde,time(count));
         err = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2));
     end
     

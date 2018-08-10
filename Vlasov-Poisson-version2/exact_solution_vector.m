@@ -1,6 +1,6 @@
-function fval = source_vector2(HASHInv,pde,time)
-% projection of given source function to sparse grids
-% here we assume source=source1+source2
+function fval = exact_solution_vector(HASHInv,pde,time)
+
+% Returns the wavelet transformed exact solution
 
 LevX = pde.params.LevX;
 LevV = pde.params.LevV;
