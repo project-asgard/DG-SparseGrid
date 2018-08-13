@@ -41,7 +41,7 @@ phys.e = 1.60217662*10.^(-19); %charge of electron (C)
 phys.eo = 8.854187817*10.^(-12); %epsilon0 (C/Vm) or (F/m)
 phys.kb = 1.38064852e-23;
 
-#Ecomp
+%Ecomp
 formT1.dim = 2;
 formT1.type = 'FuncMass';
 formT1.G = @(x)x; %xi
@@ -58,7 +58,7 @@ formT2.type = 'FuncGrad';
 formT2.G = @(x)(1-x.^2); %xi
 term2 = {formT1,formT2};
 
-#RadComp
+%RadComp
 formT1.dim = 2;
 formT1.type = 'FuncMass';
 formT1.G = @(x)(1-x.^2);%xi
@@ -77,7 +77,7 @@ formT2.type = 'FuncGrad';
 formT2.G = @(x)x*(1-x.^2);%xi
 term4 = {formT1,formT2};
 
-#CollComp
+%CollComp
 formT1.dim = 2;
 formT1.type = 'FuncMass';
 formT1.G = @(x)1;%xi
