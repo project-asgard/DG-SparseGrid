@@ -27,86 +27,84 @@ function pde=Vlasov_RE
 % Note: All terms are constructed by weak forms
 %--------------------------------------------------
 Dim = 2;
-tauR=re_tauR(B)
+B = 10000;
+tauR=re_tauR(B);
 C1 = 1.6e-19 .* E(x,t,params);
 C2 = -1/tauR;
 ne = 1e19;
 Te = 10;
 Zeff = 1.4;
-v = re_v(p); #I'm not sure how to deal with this. p is taken as a function of the formTx below, not as an overall piece of this function.
-ve = re_vThermal(Te);
-x = re_x(v,ve);
-Psi = re_Psi(x);
-delta = re_delta(ve);
-lowerGamma = re_lowerGamma(v);
-coulombLog = re_coulombLog(ne,Te);
-Gamma = re_Gamma(ne,coulombLog);
-[C_A,C_B,C_F] = re_C_ABF(Te,Zeff,Gamma,delta,v,x,Psi);
+phys.c = 2.99792458*10.^8; %speed of light(m/s)
+phys.me = 9.10938356*10.^(-31); %mass of electron (kg)
+phys.me_keV = 511.000;
+phys.e = 1.60217662*10.^(-19); %charge of electron (C)
+phys.eo = 8.854187817*10.^(-12); %epsilon0 (C/Vm) or (F/m)
+phys.kb = 1.38064852e-23;
 
 #Ecomp
 formT1.dim = 2;
 formT1.type = 'FuncMass';
-formT1.G = @(x)x; #xi
+formT1.G = @(x)x; %xi
 formT2.dim = 1;
 formT2.type = 'FuncGrad';
-formT2.G = @(x)1; #p
+formT2.G = @(x)1; %p
 term1 = {formT1,formT2};
 
 formT1.dim = 1;
 formT1.type = 'FuncMass';
-formT1.G = @(x)1/x; #1/p
+formT1.G = @(x)1/x; %1/p
 formT2.dim = 2;
 formT2.type = 'FuncGrad';
-formT2.G = @(x)(1-x.^2); #xi
+formT2.G = @(x)(1-x.^2); %xi
 term2 = {formT1,formT2};
 
 #RadComp
 formT1.dim = 2;
 formT1.type = 'FuncMass';
-formT1.G = @(x)(1-x.^2);#xi
+formT1.G = @(x)(1-x.^2);%xi
 formT2.dim = 1;
 formT2.type = 'FuncGrad2';
-formT2.G = @(x)lowerGamma.*x;#lowerGamma*p
-formT2.G1 = @(x)lowerGamma.*x.^3;#lowerGamma*p^3
-formT2.G2 = @(x)1/x.^2;#1/p^2
+formT2.G = @(x)re_lowerGamma(re_v(x)).*x;%lowerGamma*p
+formT2.G1 = @(x)re_lowerGamma(re_v(x)).*x.^3;%lowerGamma*p^3
+formT2.G2 = @(x)1/x.^2;%1/p^2
 term3 = {formT1,formT2};
 
 formT1.dim = 1;
 formT1.type = 'FuncMass';
-formT1.G = @(x)1/lowerGamma;#1/lowerGamma
+formT1.G = @(x)1/re_lowerGamma(re_v(x));%1/lowerGamma
 formT2.dim = 2;
 formT2.type = 'FuncGrad';
-formT2.G = @(x)x*(1-x.^2);#xi
+formT2.G = @(x)x*(1-x.^2);%xi
 term4 = {formT1,formT2};
 
 #CollComp
 formT1.dim = 2;
 formT1.type = 'FuncMass';
-formT1.G = @(x)1;#xi
+formT1.G = @(x)1;%xi
 formT2.dim = 1;
 formT2.type = 'FuncGrad2';
-formT2.G = @(x)C_F; #C_F
-formT2.G1 = @(x)C_F.*x.^2;#p^2*C_F
-formT2.G2 = @(x)1/x.^2;#1/p^2
+formT2.G = @(x)re_C_F(Te,   re_Gamma(ne,re_coulombLog(ne,Te)),   re_Psi(re_x(re_v(x),re_vThermal(Te)))); %C_F
+formT2.G1 = @(x)re_C_F(Te,   re_Gamma(ne,re_coulombLog(ne,Te)),   re_Psi(re_x(re_v(x),re_vThermal(Te)))).*x.^2;%p^2*C_F
+formT2.G2 = @(x)1/x.^2;%1/p^2
 term5 = {formT1,formT2};
 
 formT1.dim = 2;
 formT1.type = 'FuncMass';
-formT1.G = @(x)1;#xi
+formT1.G = @(x)1;%xi
 formT2.dim = 1;
 formT2.type = 'FuncGrad2';
-formT2.G = @(x)C_A.*x;#C_A
-formT2.G1 = @(x)C_A.*x.^2;#C_A*p^2
-formT2.G2 = @(x)1/x.^2;#1/p^2
+formT2.G = @(x)re_C_A(re_Gamma(ne,re_coulombLog(ne,Te)),   re_v(x),   re_Psi(re_x(re_v(x),re_vThermal(Te))));%C_A
+formT2.G1 = @(x)re_C_A(re_Gamma(ne,re_coulombLog(ne,Te)),   re_v(x),   re_Psi(re_x(re_v(x),re_vThermal(Te)))).*x.^2;%C_A*p^2
+formT2.G2 = @(x)1/x.^2;%1/p^2
 term6 = {formT1,formT2};
 
 formT1.dim = 1;
 formT1.type = 'FuncMass';
-formT1.G = @(x)C_B/x.^2;#C_B/p^2
+formT1.G = @(x)re_C_B(Zeff,  re_Gamma(ne,re_coulombLog(ne,Te)),  re_delta(re_vThermal(Te)),  re_v(x),  re_x(re_v(x),re_vThermal(Te)),  re_Psi(re_x(re_v(x),re_vThermal(Te))))/x.^2;%C_B/p^2
 formT2.dim = 2;
 formT2.type = 'FuncLap';
-formT2.G = @(x)(1-x.^2);#xi
-formT2.G1 = @(x)(1-x.^2);#xi
+formT2.G = @(x)(1-x.^2);%xi
+formT2.G1 = @(x)(1-x.^2);%xi
 formT2.G2 = @(x)1;
 term7 = {formT1,formT2};
 
@@ -313,57 +311,45 @@ function f=ExactF(x,v,t)
 Vmax=5;Lmax=1;
 f = ExactFx(x).*ExactFv(v).*ExactFt(t);
 end
-function[C_A,C_B,C_F] = re_C_ABF(Te,Zeff,Gamma,delta,v,x,Psi)
-  #used to calculate the quantities C_A, C_B, and C_F
-  global phys
+function[C_A] = re_C_A(Gamma,v,Psi)
   C_A = Gamma./v.*Psi;
-  
+endfunction
+function[C_B] = re_C_B(Zeff,Gamma,delta,v,x,Psi)
   C_B = Gamma./(2 .*v).*(Zeff .+erf(x).-Psi.+delta.^4.*x.^2 ./2);
-  
-  C_F = Gamma./Te.*Psi ;
+endfunction
+function[C_F] = re_C_F(Te,Gamma,Psi)
+  C_F = Gamma./Te.*Psi;
 endfunction
 function [Gamma] = re_Gamma(ne,coulombLog)
   %used to calculate uppercase Gamma from the electron density (ne) and the background electron Temperature (Te)
-  global phys
   Gamma = ne*phys.e.^4*coulombLog/(4*pi*phys.eo.^2);
 endfunction
 function [coulombLog] = re_coulombLog(ne,Te)
   %used to calculate the coulombLog
-  global phys
-  #coulombLog = 25.3-1.15*log10(10.^(-6)*ne)+2.3*log10(Te.*phys.e/phys.c);
   coulombLog = 24 .-log(sqrt(ne/1e6)./(Te*1e3));
 endfunction
 function [lowerGamma] = re_lowerGamma(v)
   %used to calculate the relativistic gamma if given velocity
-  global phys
   lowerGamma = 1./sqrt(1-rdivide(v.^2, phys.c.^2)); 
 endfunction
 function [delta] = re_delta(ve)
   %used to calculate delta from the background electron Temperature (Te)
-  global phys
   delta = ve/phys.c;
 endfunction
 function[ve]=re_vThermal(Te)
-  global phys;
-  #returns the thermal velocity from the temperature (keV) and the mass (kg).
   ve = sqrt(2*Te*phys.e/phys.me);
 endfunction
 function [v] = re_v(rho)
   %used to calculate velocity if given momentum
-  global phys
   v = rho./sqrt((rho./phys.c).^2+phys.me.^2);
 endfunction
 function [x] = re_x(v,ve)
-  #used to calculate x
-  global phys
   x=v/ve;
 endfunction
 function [Psi] = re_Psi(x)
   %used to calculate Psi
-  global phys
   Psi = 1 ./(2 .*x.^2).*(erf(x) .-x .*(2 ./sqrt(pi) .*exp(-x.^2))); 
 endfunction
 function[tauR]=re_tauR(B)
-  global phys
   tauR = 6*pi*phys.eo*(phys.me*phys.c).^3/phys.e.^4/B.^2;
 endfunction
