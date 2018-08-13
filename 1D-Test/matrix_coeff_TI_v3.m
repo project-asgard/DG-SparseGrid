@@ -96,7 +96,7 @@ GradV=sparse(dof_1D_v,dof_1D_v);
 val = 1/hx*[Dp_val'*(quad_w.*p_val)];
 Ac = repmat({val},nx,1);
 GradX = blkdiag(Ac{:});
-% full(GradX)
+full(GradX)
 
 GradX  = FMWT_COMP*GradX*FMWT_COMP';
 % full(GradX)
@@ -142,7 +142,12 @@ B = [...
     A{5,1} A{5,2} A{5,3} A{5,4} A{5,5};...
     ];
 
+spy(B)
+figure
+spy(GradX)
+
 save('mat.mat','B')
+
 return
 Dim = 2;
 for i_val = 0:Lev

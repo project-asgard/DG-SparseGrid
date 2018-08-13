@@ -1,6 +1,6 @@
 clc
 
-Lev = 5;
+Lev = 2;
 Dim = 2;
 Deg = 1;
 
@@ -22,13 +22,10 @@ for i_val = 0:Lev
             Iy = II(ceil(i/n2),2);
             Jx = JJ(i,1);
             Jy = JJ(i,2);
-<<<<<<< HEAD
+
              
             [Ix,Iy,Jx,Jy]
-=======
-            
-%             [Ix,Iy,Jx,Jy]
->>>>>>> 204a25bfc18648bd60ff7b169ed34ffcafee6d1a
+
         
             tmpMat1 = Matrix_Recur(Ix,Jx,Deg);
             tmpMat2 = Matrix_Recur(Iy,Jy,Deg);

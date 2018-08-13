@@ -5,7 +5,7 @@ close all
 format short e
 
 % Test for generating 1D matrices
-Lev = 1;
+Lev = 3;
 Deg = 2;
 Np = 2^Lev;
 
