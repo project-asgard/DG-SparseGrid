@@ -15,9 +15,10 @@ close all
 format short e
 global A_encode
 
+addpath(genpath(pwd))
 
-Lev = 4;
-Deg = 2;
+Lev = 3;
+Deg = 3;
 Lmax = 1;
 pde = Maxwell1;
 
@@ -43,10 +44,10 @@ sigma = 1;
 % if use iterative solver
 if isequal(TypeSolver,'cg') == 1
     MaxIter = 3000;
-    Tol = 1e-6;
+    Tol = 1e-4;
 elseif isequal(TypeSolver,'gmres') == 1
     MaxIter = 3000;
-    Tol = 1e-6;
+    Tol = 1e-4;
 elseif isequal(TypeSolver,'multigrid')==1
     % set parameters for multigrid
 end
@@ -164,14 +165,24 @@ end
 
 ff = ff*(2*pi^2-pde.w2);
 
+Tol = Tol*norm(ff);
 x = zeros(Dofs3,1);
 sol = cg(x,ff,MaxIter,Tol);
 
 uu = ff/(2*pi^2-pde.w2);
 [max(abs(sol-uu)) norm(sol-uu)]
 
+[sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun,ff,Tol,MaxIter);
+semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o','linewidth',2,'markersize',8);
+hold on;
+[max(abs(sol_CG-uu)) norm(sol_CG-uu)]
 
-[sol_GMRES,fl0,rr0,it0,rv0]= gmres(@afun,ff,10,Tol,MaxIter);
-% semilogy(0:length(rv0)-1,rv0/norm(ff),'-o');
-% xlabel('Iteration number');
-% ylabel('Relative residual');
+[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,10,Tol,MaxIter);
+semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
+legend('CG','GMRES','fontsize',20)
+xlabel('Iteration number');
+ylabel('Relative residual');
+[max(abs(sol_GMRES-uu)) norm(sol_GMRES-uu)]
+
+
+

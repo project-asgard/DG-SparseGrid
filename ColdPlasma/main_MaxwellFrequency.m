@@ -15,6 +15,7 @@ close all
 format short e
 global A_encode
 
+addpath(genpath(pwd))
 
 Lev = 3;
 Deg = 2;
@@ -22,8 +23,8 @@ Lmax = 1;
 pde = Maxwell1;
 
 TypeSolver = 'cg';
-TypeMesh = 'fullgrids';%'sparsegrids';%
-TypeAssembleMatrix = '';%'elementwise';%
+TypeMesh = 'sparsegrids';%'fullgrids';%
+TypeAssembleMatrix = 'elementwise';%'';%
 
 % DG scheme as following:
 % (curl U,curl V)_T-k^2(U,V)_T
@@ -42,11 +43,11 @@ sigma = 1;
 
 % if use iterative solver
 if isequal(TypeSolver,'cg') == 1
-    MaxIter = 3000;
-    Tol = 1e-6;
+    MaxIter = 1000;
+    Tol = 1e-3;
 elseif isequal(TypeSolver,'gmres') == 1
-    MaxIter = 3000;
-    Tol = 1e-6;
+    MaxIter = 1000;
+    Tol = 1e-3;
 elseif isequal(TypeSolver,'multigrid')==1
     % set parameters for multigrid
 end
@@ -164,18 +165,24 @@ end
 
 ff = ff*(2*pi^2-pde.w2);
 
+% Tol = Tol*norm(ff);
 x = zeros(Dofs3,1);
-sol = cg(x,ff,MaxIter,Tol);
-
 uu = ff/(2*pi^2-pde.w2);
-[max(abs(sol-uu)) norm(sol-uu)]
+
+% sol = cg(x,ff,MaxIter,Tol);
+% [max(abs(sol-uu)) norm(sol-uu)]
 
 [sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun,ff,Tol,MaxIter);
-semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o');
+semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o','linewidth',2,'markersize',8);
 hold on;
+[max(abs(sol_CG-uu)) norm(sol_CG-uu)]
 
 [sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,10,Tol,MaxIter);
-semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o');
+semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
+legend({'CG','GMRES'},'fontsize',20)
 xlabel('Iteration number');
 ylabel('Relative residual');
+[max(abs(sol_GMRES-uu)) norm(sol_GMRES-uu)]
+
+
 
