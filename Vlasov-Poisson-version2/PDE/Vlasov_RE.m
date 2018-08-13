@@ -34,6 +34,7 @@ C2 = -1/tauR;
 ne = 1e19;
 Te = 10;
 Zeff = 1.4;
+global phys;
 phys.c = 2.99792458*10.^8; %speed of light(m/s)
 phys.me = 9.10938356*10.^(-31); %mass of electron (kg)
 phys.me_keV = 511.000;
@@ -312,44 +313,56 @@ Vmax=5;Lmax=1;
 f = ExactFx(x).*ExactFv(v).*ExactFt(t);
 end
 function[C_A] = re_C_A(Gamma,v,Psi)
+global phys;
   C_A = Gamma./v.*Psi;
 endfunction
 function[C_B] = re_C_B(Zeff,Gamma,delta,v,x,Psi)
+global phys;
   C_B = Gamma./(2 .*v).*(Zeff .+erf(x).-Psi.+delta.^4.*x.^2 ./2);
 endfunction
 function[C_F] = re_C_F(Te,Gamma,Psi)
+global phys;
   C_F = Gamma./Te.*Psi;
 endfunction
 function [Gamma] = re_Gamma(ne,coulombLog)
+global phys;
   %used to calculate uppercase Gamma from the electron density (ne) and the background electron Temperature (Te)
   Gamma = ne*phys.e.^4*coulombLog/(4*pi*phys.eo.^2);
 endfunction
 function [coulombLog] = re_coulombLog(ne,Te)
+global phys;
   %used to calculate the coulombLog
   coulombLog = 24 .-log(sqrt(ne/1e6)./(Te*1e3));
 endfunction
 function [lowerGamma] = re_lowerGamma(v)
+global phys;
   %used to calculate the relativistic gamma if given velocity
   lowerGamma = 1./sqrt(1-rdivide(v.^2, phys.c.^2)); 
 endfunction
 function [delta] = re_delta(ve)
+global phys;
   %used to calculate delta from the background electron Temperature (Te)
   delta = ve/phys.c;
 endfunction
 function[ve]=re_vThermal(Te)
+global phys;
   ve = sqrt(2*Te*phys.e/phys.me);
 endfunction
 function [v] = re_v(rho)
+global phys;
   %used to calculate velocity if given momentum
   v = rho./sqrt((rho./phys.c).^2+phys.me.^2);
 endfunction
 function [x] = re_x(v,ve)
+global phys;
   x=v/ve;
 endfunction
 function [Psi] = re_Psi(x)
+global phys;
   %used to calculate Psi
   Psi = 1 ./(2 .*x.^2).*(erf(x) .-x .*(2 ./sqrt(pi) .*exp(-x.^2))); 
 endfunction
 function[tauR]=re_tauR(B)
+global phys;
   tauR = 6*pi*phys.eo*(phys.me*phys.c).^3/phys.e.^4/B.^2;
 endfunction
