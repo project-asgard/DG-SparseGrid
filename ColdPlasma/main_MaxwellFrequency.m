@@ -15,7 +15,11 @@ close all
 format short e
 global A_encode
 
+<<<<<<< HEAD
 Lev = 4;
+=======
+Lev = 2;
+>>>>>>> 4264a8f52d8fa8a7605676b584f3933214bf08f3
 Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
@@ -31,6 +35,7 @@ TypeAssembleMatrix = '';%'elementwise';%
 % parameter for DG penalty
 % alpha h^{-1}<[Uxn],[Vxn]>_F
 alpha = 1000*(Deg)*(Deg+1);
+alpha1 = 1;%1000;
 % IPDG symmetric or non-symmetric
 % sigma = 1 --> symmetric
 % sigma =-1 --> non-symmetric
@@ -111,7 +116,8 @@ if isequal(TypeAssembleMatrix,'elementwise') == 1
             
             IndexJ = [Deg^3*(combs_index(l2,1)-1)+1:Deg^3*combs_index(l2,2)];
             
-            A_loc = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat1D,pde.w2,Dofs,row1,row2,row3,col1,col2,col3,alpha);
+            A_loc = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat1D,pde.w2,Dofs,...
+                row1,row2,row3,col1,col2,col3,alpha,alpha1);
             
             A_encode = [A_encode,A_loc];
             
@@ -129,7 +135,8 @@ else
     row3 = IndexI;col3 = IndexI;
     IndexI = [1:Dofs];
     IndexJ = [1:Dofs];
-    A_encode = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat1D,pde.w2,Dofs,row1,row2,row3,col1,col2,col3,alpha);
+    A_encode = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat1D,pde.w2,Dofs,...
+        row1,row2,row3,col1,col2,col3,alpha,alpha1);
 end
 
 % Mat = Aencode2Matrix(A_encode,Dofs3);

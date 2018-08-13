@@ -12,6 +12,8 @@ function Mat = Matrix4CurlCurlOperator(Lev,Deg,Lmax)
 %   JuADv = <[u_h],{v'}>_F
 %   JuJv = <[u_h],[v]>_F
 %   JDuJDv = <[u_h'],[v']>_F
+%   JDuJv = <[u_h'],[v]>_F
+%   JuJDv = <[u_h],[v']>_F
 % Note:: AuJv = JuAv'; ADuJv = JuADv';
 %--------by Lin Mu, 08-09-2018------------
 
@@ -96,26 +98,47 @@ Asub = -p_1'*p_2;
 Asup =  p_2'*(-p_1);
 JuJv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
 
-% Matrix for <[u_h'],[v']>
+% Matrix for <[u_h'],[v']>*hx
 Amd  =  Dp_1'*(Dp_1)+Dp_2'*Dp_2;
 Asub = -Dp_1'*Dp_2;
 Asup =  Dp_2'*(-Dp_1);
 JDuJDv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
+% Boundary condition
+JDuJDv(1:Deg,:) = 0;
+JDuJDv(end-Deg+1:end,:) = 0;
 
 % Matrix for <[u_h],[v']>
-% JuJDv = 
+Amd  =  Dp_1'*(p_1)+Dp_2'*p_2;
+Asub = -Dp_1'*p_2;
+Asup =  Dp_2'*(-p_1);
+JuJDv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
+% Boundary condition
+JuJDv(1:Deg,:) = 0;
+JuJDv(end-Deg+1:end,:) = 0;
+
+% Matrix for <[u_h'],[v]>
+Amd  =  p_1'*(Dp_1)+p_2'*Dp_2;
+Asub = -p_1'*Dp_2;
+Asup =  p_2'*(-Dp_1);
+JDuJv = 1/hx*blktridiag([Amd],[Asub],[Asup],nx)*2/hx;
+% Boundary condition
+JDuJv(1:Deg,:) = 0;
+JDuJv(end-Deg+1:end,:) = 0;
+
 
 % convert to multiwavelet basis
 FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
 
-DuDv = FMWT_COMP*DuDv*FMWT_COMP';
-DuIv = FMWT_COMP*DuIv*FMWT_COMP';
-AuJv = FMWT_COMP*AuJv*FMWT_COMP';
-JuAv = FMWT_COMP*JuAv*FMWT_COMP';
-ADuJv = FMWT_COMP*ADuJv*FMWT_COMP';
-JuADv = FMWT_COMP*JuADv*FMWT_COMP';
-JuJv = FMWT_COMP*JuJv*FMWT_COMP';
-JDuJDv = FMWT_COMP*JDuJDv*FMWT_COMP';
+% % DuDv = FMWT_COMP*DuDv*FMWT_COMP';
+% % DuIv = FMWT_COMP*DuIv*FMWT_COMP';
+% % AuJv = FMWT_COMP*AuJv*FMWT_COMP';
+% % JuAv = FMWT_COMP*JuAv*FMWT_COMP';
+% % ADuJv = FMWT_COMP*ADuJv*FMWT_COMP';
+% % JuADv = FMWT_COMP*JuADv*FMWT_COMP';
+% % JuJv = FMWT_COMP*JuJv*FMWT_COMP';
+% % JDuJDv = FMWT_COMP*JDuJDv*FMWT_COMP';
+% % JDuJv = FMWT_COMP*JDuJv*FMWT_COMP';
+% % JuJDv = FMWT_COMP*JuJDv*FMWT_COMP';
 
 % DuDv(find(abs(DuDv)<1e-5))=0;
 % DuIv(find(abs(DuIv)<1e-5))=0;
@@ -126,5 +149,6 @@ JDuJDv = FMWT_COMP*JDuJDv*FMWT_COMP';
 % JDuJDv(find(abs(JDuJDv)<1e-5))=0;
 
 
-Mat = struct('DuDv',DuDv,'DuIv',DuIv,'IuIv',IuIv,'AuJv',AuJv,'JuAv',JuAv,...
-    'ADuJv',ADuJv,'JuADv',JuADv,'JuJv',JuJv,'JDuJDv',JDuJDv);
+Mat = struct('DuDv',DuDv,'DuIv',DuIv,'IuDv',DuIv','IuIv',IuIv,'AuJv',AuJv,'JuAv',JuAv,...
+    'ADuJv',ADuJv,'JuADv',JuADv,'JuJv',JuJv,'JDuJDv',JDuJDv,'JDuJv',JDuJv,...
+    'JuJDv',JuJDv);
