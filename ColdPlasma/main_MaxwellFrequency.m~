@@ -31,7 +31,7 @@ TypeAssembleMatrix = '';%'elementwise';%
 % DG scheme as following:
 % (curl U,curl V)_T-k^2(U,V)_T
 % -<{curl U},[Vxn]>_F-sigma*<{curl V},[Uxn]>_F+alpha*<[Uxn],[Vxn]>_F
-% +alpha_1*<[curl Uxn],[curl Vxn]>_F
+% +alpha_1*<[curl Uxn],[curl V]>
 % = (f,V)
 % parameter for DG penalty
 % alpha h^{-1}<[Uxn],[Vxn]>_F
