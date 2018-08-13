@@ -26,11 +26,11 @@ term1 = {formT1,formT2};
 
 formT1.dim = 1;
 formT1.type = 'FuncMass';
-formT1.G = @(x)2*x;
+formT1.G = @(x)x;
 
 formT2.dim = 1;
 formT2.type = 'FuncGrad';
-formT2.G = @(x)2;
+formT2.G = @(x)1;
 
 term2 = {formT1,formT2};
 
