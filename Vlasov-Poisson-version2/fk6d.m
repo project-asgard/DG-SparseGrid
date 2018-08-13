@@ -46,7 +46,7 @@ if ~exist('Lev','var') || isempty(Lev)
 end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
-    Deg = 2; % Deg = 2 Means Linear Element
+    Deg = 3; % Deg = 2 Means Linear Element
 end
 if ~exist('quiet','var') || isempty(quiet)
     % Enable / disable print statements
@@ -223,7 +223,7 @@ for L = 1:floor(TEND/dt)
     
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
-    EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
+    EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x,pde);
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end

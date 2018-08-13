@@ -1,40 +1,41 @@
-function pde=Vlasov7
+function pde=Vlasov8
 % Numerical Example for Vlasov Equation
 %--------------------------------------------------
 % d/dt(f) + v*d/dx(f) + E*d/dv(f)=0
 % term1 denotes v*d/dx(f)
 %   term1 = [formT1,formT2]
-%   form1 = FuncMass :: \int_v v*phi_i*phi_j dv
-%   form2 = FuncGrad :: \int_x phi_i'*phi_j dx
+%   formT1 = FuncMass :: \int_v v*phi_i*phi_j dv
+%   formT2 = FuncGrad :: \int_x phi_i'*phi_j dx
 % term2 denotes E*d/dv(f)
-%   term2 = [form1,form2]
-%   form1 = FuncGrad :: \int_v phi_i'*phi_j dv
-%   form2 = FuncMass :: \int_x E*phi_i*phi_j dx
+%   term2 = [formT1,formT2]
+%   formT1 = FuncGrad :: \int_v phi_i'*phi_j dv
+%   formT2 = FuncMass :: \int_x E*phi_i*phi_j dx
 % Note: All terms will be constructed by weak forms
 %--------------------------------------------------
+Dim = 2;
 
-formt1.dim = 1;
-formt1.type = 'FuncMass';
-formt1.G = @(x)x;
+formT1.dim = 1;
+formT1.type = 'FuncMass';
+formT1.G = @(x)x;
 
-formt2.dim = 1;
-formt2.type = 'FuncGrad';
-formt2.G = @(x)1;
+formT2.dim = 1;
+formT2.type = 'FuncGrad';
+formT2.G = @(x)1;
 
-term1 = [formt1,formt2];
+term1 = {formT1,formT2};
 
-formt1.dim = 1;
-formt1.type = 'FuncMass';
-formt1.G = @(x)2*x;
+formT1.dim = 1;
+formT1.type = 'FuncMass';
+formT1.G = @(x)1;
 
-formt2.dim = 1;
-formt2.type = 'FuncGrad';
-formt2.G = @(x)2;
+formT2.dim = 1;
+formT2.type = 'FuncGrad';
+formT2.G = @(x)1;
 
-term2 = [formt1,formt2];
+term2 = {formT1,formT2};
 
 
-terms = [term1,term2];
+terms = {term1,term2};
 
 pde.terms = terms;
 
@@ -148,7 +149,7 @@ k_0 = params.k_0;
 Lmax = params.Lmax;
 Vmax = params.Vmax;
 
-f=t.*x.*(1-x).*(v-Vmax).*(v+Vmax);%.*x.*(Lmax-x);%t*(v-Vmax).*(v+Vmax).*x.*(Lmax-x);
+f=t.*x.*(1-x);%t.*x.*(1-x).*(v-Vmax).*(v+Vmax);%.*x.*(Lmax-x);%t*(v-Vmax).*(v+Vmax).*x.*(Lmax-x);
 end
 function f=rho(x,t, params)
 % we do note use rho in this test, so I just write an arbitrary function
@@ -177,7 +178,7 @@ f = t-t+1;%+1;
 end
 function f = source1v(v)
 Vmax=5;Lmax=1;
-f = (v-Vmax).*(v+Vmax);
+f = v-v+1;%(v-Vmax).*(v+Vmax);
 end
 function f = source1(x,v,t)
 Vmax=5;Lmax=1;
@@ -195,7 +196,7 @@ f = t;%-t+1;
 end
 function f = source2v(v)
 Vmax=5;Lmax=1;
-f = v.*(v-Vmax).*(v+Vmax);
+f = v;%v.*(v-Vmax).*(v+Vmax);
 end
 function f = source2(x,v,t)
 Vmax=5;Lmax=1;
@@ -209,7 +210,7 @@ f = x.*(1-x);%.*exactE(x);
 end
 function f = source3t(t)
 Vmax=5;Lmax=1;
-f = t;
+f = 0;%t;
 end
 function f = source3v(v)
 Vmax=5;Lmax=1;
@@ -227,7 +228,7 @@ f = x.*(1-x);
 end
 function f=ExactFv(v)
 Vmax=5;Lmax=1;
-f = (v-Vmax).*(v+Vmax);
+f = v-v+1;%(v-Vmax).*(v+Vmax);
 end
 function f=ExactFt(t)
 Vmax=5;Lmax=1;

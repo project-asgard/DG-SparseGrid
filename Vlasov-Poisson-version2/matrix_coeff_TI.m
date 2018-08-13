@@ -87,7 +87,15 @@ for Lx=0:nx-1
     % -----------------------
     % note val(:,:) is k by k
     % -----------------------
-    val=(1/hx)*[Dp_val'*(quad_w.*p_val)];
+%     val = (1/hx)*[Dp_val'*(quad_w.*p_val)];
+    
+% replaced by following
+    
+    xi_x = (( (quad_x+1)/2+Lx)*hx); % mapping from [-1,1] to physical domain
+    tmp_loc = pde.terms{1}{2}.G(xi_x);
+    val = Dp_val'*(p_val.*tmp_loc.*quad_w)/hx;
+    
+
 
     i1 = k*Lx+1;
     i2 = k*(Lx+1);
@@ -161,13 +169,24 @@ for Lx=0:nx-1
     l2 = k*(Lx+2);
     l = l1:l2;
     
-    val=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
-        p_2'*p_2/2   p_2'*p_1/2];     % for x2
+%     val=1/hx*[...
+%         -p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
+%          p_2'*p_2/2   p_2'*p_1/2];     % for x2
+%     
+%     val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
+%     val_s=1/hx*[-p_1'*p_2, p_2'*p_2];
     
-    val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
-    val_s=1/hx*[-p_1'*p_2, p_2'*p_2];
+    % replaced by following
+    func_1 = pde.terms{1}{2}.G(hx*Lx);
+    func_2 = pde.terms{1}{2}.G(hx*(Lx+1));
+    val=1/hx*[...
+        -p_1'*p_2/2*func_1  -p_1'*p_1/2*func_1,...   % for x1
+         p_2'*p_2/2*func_2   p_2'*p_1/2*func_2];     % for x2
     
+    val_u=1/hx*[-p_1'*p_1*func_1, p_2'*p_1*func_1];
+    val_s=1/hx*[-p_1'*p_2*func_2, p_2'*p_2*func_2];    
     
+
     if (use_dense),
     % -----------------------------------------------
     % setup ranges for row indices and column indices
@@ -416,8 +435,11 @@ for Lv=0:nv-1
       vMassV=vMassV+sparse(Iu',Iu,val_loc,dof_1D_v,dof_1D_v);
     end;
     
-    val=1/hv*[Dp_val'*(quad_w.*p_val)];
-    
+%     val=1/hv*[Dp_val'*(quad_w.*p_val)];
+    % replaced by the following
+    tmp_loc = pde.terms{2}{1}.G(xi_v);
+    val = Dp_val'*(p_val.*tmp_loc.*quad_w)/hv;
+
     if (use_dense),
       i1 = k*Lv+1;
       i2 = k*(Lv+1);
@@ -454,8 +476,14 @@ for Lv=0:nv-1
     l2 = k*(Lv+2);
     l = l1:l2;
     
-    val=(1/hv)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
-        p_2'*p_2/2   p_2'*p_1/2];     % for x2
+%     val=(1/hv)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
+%         p_2'*p_2/2   p_2'*p_1/2];     % for x2
+    % replaced by the following
+    func_1 = pde.terms{2}{1}.G(hv*Lv);
+    func_2 = pde.terms{2}{2}.G(hv*(Lv+1));
+    val=(1/hv)*[...
+        -p_1'*p_2/2*func_1  -p_1'*p_1/2*func_1,...   % for x1
+         p_2'*p_2/2*func_2   p_2'*p_1/2*func_2];     % for x2    
     
     istart = zeros(4,1);
     iend = zeros(4,1);

@@ -1,4 +1,4 @@
-function EMassX=matrix_coeff_TD(Lev_x,k,Lmax,EE,FMWT_COMP_x)
+function EMassX=matrix_coeff_TD(Lev_x,k,Lmax,EE,FMWT_COMP_x,pde)
 %=============================================================
 % Generate time-dependent coefficient matrix
 % Vlasolv Solver:
@@ -67,8 +67,14 @@ for LL=0:nx-1
     %       i1,i1+1, ...,i2]
     % --------------------------
     
+%     tmp = EE(i1:i2);
+%     ff=p_val*EE(i1:i2);
+
+    % replaced by following
     tmp = EE(i1:i2);
     ff=p_val*EE(i1:i2);
+    xi_x = (( (quad_x+1)/2+LL)*hx);
+    ff = pde.terms{2}{2}.G(xi_x).*ff;
     
     tmpA = quad_w.*p_val.*ff;
     tmpB = p_val';

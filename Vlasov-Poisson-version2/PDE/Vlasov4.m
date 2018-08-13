@@ -2,8 +2,35 @@ function pde=Vlasov4
 % Numerical Example for Vlasov Equation
 % Bump-on-tail instability
 
-% Parameters
 
+Dim = 2;
+
+formT1.dim = 1;
+formT1.type = 'FuncMass';
+formT1.G = @(x)x;
+
+formT2.dim = 1;
+formT2.type = 'FuncGrad';
+formT2.G = @(x)1;
+
+term1 = {formT1,formT2};
+
+formT1.dim = 1;
+formT1.type = 'FuncMass';
+formT1.G = @(x)1;
+
+formT2.dim = 1;
+formT2.type = 'FuncGrad';
+formT2.G = @(x)1;
+
+term2 = {formT1,formT2};
+
+
+terms = {term1,term2};
+
+pde.terms = terms;
+
+% Parameters
 k_0=0.3;
 A=0.04;
 Lmax=20*pi/3;
