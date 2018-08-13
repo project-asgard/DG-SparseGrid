@@ -15,11 +15,8 @@ close all
 format short e
 global A_encode
 
-<<<<<<< HEAD
-Lev = 4;
-=======
-Lev = 2;
->>>>>>> 4264a8f52d8fa8a7605676b584f3933214bf08f3
+
+Lev = 3;
 Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
@@ -35,8 +32,8 @@ TypeAssembleMatrix = '';%'elementwise';%
 % = (f,V)
 % parameter for DG penalty
 % alpha h^{-1}<[Uxn],[Vxn]>_F
-alpha = 1000*(Deg)*(Deg+1);
-alpha1 = 1;%1000;
+alpha = (2*Deg*(Deg+2))*100;%1000*(Deg)*(Deg+1);
+alpha1 = 0;%1e-2;%1e-1;%1e-4;
 % IPDG symmetric or non-symmetric
 % sigma = 1 --> symmetric
 % sigma =-1 --> non-symmetric
@@ -142,7 +139,7 @@ end
 
 % Mat = Aencode2Matrix(A_encode,Dofs3);
 
-
+% return
 % Assemble the RHS term for Sparse Grids
 ff = sparse(Dofs3,1);
 if isequal(TypeAssembleMatrix,'elementwise') == 1
@@ -172,3 +169,13 @@ sol = cg(x,ff,MaxIter,Tol);
 
 uu = ff/(2*pi^2-pde.w2);
 [max(abs(sol-uu)) norm(sol-uu)]
+
+[sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun,ff,Tol,MaxIter);
+semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o');
+hold on;
+
+[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,10,Tol,MaxIter);
+semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o');
+xlabel('Iteration number');
+ylabel('Relative residual');
+

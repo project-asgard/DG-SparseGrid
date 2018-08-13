@@ -18,6 +18,7 @@
 \def\E{{\mathcal E}}
 \def\V{{\mathcal V}}
 \def\W{{\mathcal W}}
+\def\F{{\mathcal F}}
 \def\l{{\langle}}
 \def\r{{\rangle}}
 \def\jump#1{{[\![#1[\!]}}
@@ -154,8 +155,8 @@ A_h(\bu_h,\bv)=(\bbf,\bv),
 with $A_h(\cdot,\cdot)$ is given by
 \begin{eqnarray}
 A_h(\bu_h,\bv)&=&(\nabla_h\times \bu_h,\nabla_h\times \bv)-k^2(\bu_h,\bv)\notag\\
-&-&\langle\lavg\nabla_h\times \bu_h\ravg,\ljump \bv\rjump_{\tau}\rangle_{\mathcal{F}_h}-\langle\ljump \bu_h\rjump_{\tau},\lavg\nabla_h\times \bv\ravg\rangle_{\mathcal{F}_h}
-+\alpha h^{-1}\langle\ljump \bu_h\rjump_{\tau},\ljump \bv\rjump_{\tau}\rangle_{\mathcal{F}_h}.
+&-&\langle\lavg\nabla_h\times \bu_h\ravg,\ljump \bv\rjump_{\tau}\rangle_{\mathcal{F}_h}-\langle\ljump \bu_h\rjump_{\tau},\lavg\nabla_h\times \bv\ravg\rangle_{\mathcal{F}_h}\\
+&+&\alpha h^{-1}\langle\ljump \bu_h\rjump_{\tau},\ljump \bv\rjump_{\tau}\rangle_{\mathcal{F}_h}+\alpha_1 h\langle\ljump \nabla\times\bu_h\rjump,\ljump\nabla\times\bv\rjump\rangle_{\mathcal{F}_h}.
 \end{eqnarray}
 Here, we use $\nabla_h$ to denote the elementwise application of the operator $\nabla$, and $\langle \bv, \bw\rangle_{\mathcal{F}_h}:=\sum_{e\in\mathcal{F}_h}\int_e \bv\cdot\bw ds.$
 Here $\alpha\ge \alpha_{\min}$ is a positive constant that is independent of the mesh size. The threshold value $\alpha_{\min}$ only depends on the shape-regularity of the mesh and the approximation order $k$.
@@ -183,6 +184,47 @@ Thus
 \begin{eqnarray*}
 A_h(\bv,\bv)\ge \big(1-\epsilon(C_{\text{inv}}-1)\big)\|\nabla_h\times\bv_{\tau}\|_0^2+(\alpha-\frac{1}{2\epsilon})h^{-1}\|\ljump\bv\rjump\|_{\mathcal{F}_h}^2-k^2\|\bv\|_0^2
 \end{eqnarray*}
+1111
+
+\begin{eqnarray*}
+\langle\lavg\nabla_h\times\bu_h\ravg,\ljump\bu_h\times\bn\rjump\rangle_F
+&\le& \|\lavg\nabla_h\times\bu_h\ravg\|_F\|\ljump\bu_h\times\bn\rjump\|_F\\
+&\le& Ch_F^{-1/2}\|\nabla_h\times\bu_h\|\|\ljump\bu_h\times\bn\rjump\|_F\\
+&\le& C\|\nabla_h\times\bu_h\|^2+Ch_F^{-1}\|\ljump\bu_h\times\bn\rjump\|_F^2
+\end{eqnarray*}
+
+%--------------------
+% Coercivity
+%--------------------
+%\begin{eqnarray*}
+%A_h(u_h,u_h)&\le& \|\nabla_h\times\bu_h\|^2-k^2\|\bu_h\|^2+2\sum_{F\in\F_h}\|\lavg\nabla_h\times\bu_h\times\bn\ravg\|_{F}\|\ljump\bu_h\rjump\|_{F}\\
+%&\le& \|\nabla_h\times\bu_h\|^2-k^2\|\bu_h\|^2+C\sum_{F\in\F_h}h_F^{-1/2}\|\nabla_h\times\bu_h\|_{\Omega_F}\|\ljump\bu_h\rjump\|_{F}\\
+%&\le&\frac{3}{2}\|\nabla_h\times\bu_h\|^2-k^2\|\bu_h\|^2+C\sum_{F\in\F_h}h_F^{-1}\|\ljump\bu_h\rjump\|_{F}^2
+%\end{eqnarray*}
+Since $\bu_h\in V_h$ and $\nabla\times\bu_h\times\bn=0$, by integrating by parts, we obtain
+\begin{eqnarray*}
+\|\nabla\times\bu_h\|^2 &=& \sum_{T\in\T_h}(\nabla\times\bu_h,\nabla\times\bu_h)_T\\
+&=&\sum_{T\in\T_h}\bigg((\nabla\times\nabla\times \bu_h,\bu_h)_T-\langle\nabla\times\bu_h\times\bn,(\bu_h)_T\rangle_{\pT}\bigg)\\
+&=&-\sum_{F\in\F_h}\langle\ljump\nabla\times\bu_h\rjump,\lavg\bu_h\ravg\rangle_F+\langle\lavg\nabla\times\bu_h\ravg,\ljump\bu_h\rjump\rangle_F\\
+&\le& Ch_F^{-1/2}\|\bu_h\|\|\ljump\nabla\times\bu_h\rjump\|_F+Ch_F^{-1/2}\|\nabla\times\bu_h\|\|\ljump\bu_h\rjump\|_F\\
+&\le& \frac{1}{3}\|\nabla_h\times\bu_h\|^2+\frac{k^2}{6}\|\bu_h\|^2+Ch_F^{-1}\|\ljump\bu_h\rjump\|_F^2+\frac{C}{k^2h_F}\|\ljump\nabla_h\times\bu_h\rjump\|_F^2
+\end{eqnarray*}
+Hence
+\begin{eqnarray}
+2\|\nabla\times\bu_h\|^2\le \frac{k^2}{2}\|\bu_h\|^2+Ch^{-1}\|\ljump\bu_h\times\bn\rjump\|_F^2
++\frac{C}{k^2h_F}\|\ljump\nabla_h\times\bu_h\rjump\|_F^2
+\end{eqnarray}
+Thus, one can obtain that
+\begin{eqnarray*}
+A(\bu_h,\bu_h) \ge (1-C)\|\nabla\times\bu_h\|-Ch_F^{-1}\|\ljump\bu_h\times\bn\rjump\|_F^2
+\end{eqnarray*}
+
+%---------------------
+% theorem
+%---------------------
+\begin{theorem}
+Garding inequality
+\end{theorem}
 %---------------------
 % theorem
 %---------------------

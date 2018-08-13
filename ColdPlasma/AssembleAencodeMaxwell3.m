@@ -361,8 +361,8 @@ A{count}.A2=A2;
 A{count}.A3=A3;
 end
 
-A = [];
-count = 0;
+% A = [];
+% count = 0;
 % following code deals with h<[curl uxn],[curl vxn]>_F
 % A11
 A1 = alpha1*Mat.JuJv(row1,col1);
