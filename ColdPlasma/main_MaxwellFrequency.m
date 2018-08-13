@@ -15,7 +15,7 @@ close all
 format short e
 global A_encode
 
-Lev = 5;
+Lev = 4;
 Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
