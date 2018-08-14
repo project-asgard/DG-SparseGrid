@@ -28,12 +28,6 @@ function pde=Vlasov_RE
 %--------------------------------------------------
 Dim = 2;
 B = 10000;
-tauR=re_tauR(B);
-C1 = 1.6e-19 .* E(x,t,params);
-C2 = -1/tauR;
-ne = 1e19;
-Te = 10;
-Zeff = 1.4;
 global phys;
 phys.c = 2.99792458*10.^8; %speed of light(m/s)
 phys.me = 9.10938356*10.^(-31); %mass of electron (kg)
@@ -41,6 +35,12 @@ phys.me_keV = 511.000;
 phys.e = 1.60217662*10.^(-19); %charge of electron (C)
 phys.eo = 8.854187817*10.^(-12); %epsilon0 (C/Vm) or (F/m)
 phys.kb = 1.38064852e-23;
+tauR=re_tauR(B);
+C1 = 1.6e-19 .* E(x,t,params);
+C2 = -1/tauR;
+ne = 1e19;
+Te = 10;
+Zeff = 1.4;
 
 %Ecomp
 formT1.dim = 2;
