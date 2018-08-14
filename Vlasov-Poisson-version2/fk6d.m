@@ -34,7 +34,7 @@ addpath(genpath(pwd))
 
 if ~exist('pde','var') || isempty(pde)
     % Equation setup
-    pde = Vlasov4;
+    pde = Vlasov_RE;
 end
 if ~exist('TEND','var') || isempty(TEND)
     % End time
