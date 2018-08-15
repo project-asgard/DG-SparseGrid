@@ -44,10 +44,10 @@ sigma = 1;
 % if use iterative solver
 if isequal(TypeSolver,'cg') == 1
     MaxIter = 1000;
-    Tol = 1e-3;
+    Tol = 1e-5;
 elseif isequal(TypeSolver,'gmres') == 1
     MaxIter = 1000;
-    Tol = 1e-3;
+    Tol = 1e-5;
 elseif isequal(TypeSolver,'multigrid')==1
     % set parameters for multigrid
 end
@@ -177,7 +177,7 @@ semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o','linewidth',2,'markersize',8);
 hold on;
 [max(abs(sol_CG-uu)) norm(sol_CG-uu)]
 
-[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,10,Tol,MaxIter);
+[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,20,Tol,MaxIter);
 semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
 legend({'CG','GMRES'},'fontsize',20)
 xlabel('Iteration number');
