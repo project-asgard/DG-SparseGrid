@@ -9,6 +9,8 @@ A=0.04;
 Lmin=0;Lmax=20*pi/3;
 Vmin=-13;Vmax=+13;
 
+params.TEND = 1;
+
 params.k_0 = k_0;
 params.A = A;
 

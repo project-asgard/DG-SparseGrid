@@ -7,6 +7,7 @@ k_0=0.5;
 A=1;
 Lmin=0;Lmax=1;
 Vmin=-5;Vmax=+5;
+params.TEND = 0.05;
 
 params.k_0 = k_0;
 params.A = A;
@@ -50,6 +51,7 @@ pde.source3 = @source3;
 pde.ExactFx = @ExactFx;
 pde.ExactFv = @ExactFv;
 pde.ExactFt = @ExactFt;
+pde.ExactF = @ExactF;
 
 end
 
