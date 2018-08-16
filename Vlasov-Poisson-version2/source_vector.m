@@ -1,5 +1,10 @@
 function fval = source_vector(HASHInv,pde,time)
 
+nHash = numel(HASHInv);
+Dim = pde.params.Dim;
+Deg = pde.params.Deg;
+DOF = Deg^Dim*nHash;
+
 % Returns the wavelet transformed source
 
 LevX = pde.params.LevX;
@@ -13,15 +18,15 @@ Vmax = pde.params.Vmax;
 
 fx1 = forwardMWT(LevX,Deg,Lmin,Lmax,pde.source1x,pde.params);
 fv1 = forwardMWT(LevV,Deg,Vmin,Vmax,pde.source1v,pde.params);
-ft1 = pde.source1t(time);
+ft1 = zeros(DOF,1) + pde.source1t(time);
 
 fx2 = forwardMWT(LevX,Deg,Lmin,Lmax,pde.source2x,pde.params);
 fv2 = forwardMWT(LevV,Deg,Vmin,Vmax,pde.source2v,pde.params);
-ft2 = pde.source2t(time);
+ft2 = zeros(DOF,1) + pde.source2t(time);
 
 fx3 = forwardMWT(LevX,Deg,Lmin,Lmax,pde.source3x,pde.params);
 fv3 = forwardMWT(LevV,Deg,Vmin,Vmax,pde.source3v,pde.params);
-ft3 = pde.source3t(time);
+ft3 = zeros(DOF,1) + pde.source3t(time);
 
 fxList = {fx1,fx2,fx3};
 fvList = {fv1,fv2,fv3};

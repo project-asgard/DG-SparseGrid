@@ -18,14 +18,21 @@ N = numel(fxList);
 
 nHash = numel(HASHInv);
 
-fval = sparse(Deg^Dim * nHash,1);
+% fval = sparse(Deg^Dim * nHash,1);
+fval = zeros(Deg^Dim * nHash,1);
+fval2 = zeros(Deg^Dim * nHash,1);
 
-
+[m,n] = size(fvList{1});
+[p,q] = size(fxList{1});
+nX = Deg*Deg;
+nY = n*q;
+[m2,n2] = size(ftList{1});
+fval3 = zeros(nX,Deg);
 
 for j=1:N % loop over number of addative terms
     
-    fx = fxList{j};
-    fv = fvList{j};
+    fx = fxList{j}';
+    fv = fvList{j}';
     ft = ftList{j};
     
     for i=1:nHash
@@ -47,14 +54,31 @@ for j=1:N % loop over number of addative terms
                 
                 ii = Index0;
                 jj = 1;
-                vv = kron( fv(Index1), fx(Index2) ) * ft;
-                mm = Deg^Dim * nHash;
-                nn = 1;
+                vv = kron( fv(Index1), fx(Index2) ) * ft(Index0);
+                %mm = Deg^Dim * nHash;
+                %nn = 1;
                 
-                fval = fval + sparse(ii,jj,vv,mm,nn);
+                %fval = fval + sparse(ii,jj,vv,mm,nn);
+                fval(ii,jj) = fval(ii,jj) + vv;
+                ii
+                vv
                 
             end
         end
+        
+        index_I1=[(I1-1)*Deg+1 : I1*Deg];
+        index_I2=[(I2-1)*Deg+1 : I2*Deg];
+        
+        Index = Deg^2*(i-1)+1:Deg^2*i;
+        
+        A = kron( fv(:,index_I1), fx(:,index_I2) );
+        B = ft(Index);
+        
+        tmp = A * B;
+        
+        fval2(Index,1) = fval2(Index,1) + tmp;
+        %fval2 = fval2 + tmp;
+        
     end
     
 end

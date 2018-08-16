@@ -1,4 +1,4 @@
-function [fnew]=Multi_2D(A,B,f,HASHInv,Lev,Deg)
+function [fnew]=Multi_2D(A,B,f,HASHInv,Lev,Deg,pde)
 %====================================================================
 % This code is to compute the product of Kron(A,B)*f
 % Input: Matrix: A (size nA1*nA2)
@@ -20,25 +20,21 @@ fnew=sparse(dof_1D_FG^2,1);
 for ii=1:HASHDOF
     
     I1=HASHInv{ii}(5);
-%     n1=HashInv{ii}(1);
     I2=HASHInv{ii}(6);
-%     n2=HashInv{ii}(2);
     
     index_I1=[(I1-1)*Deg+1:I1*Deg];
     index_I2=[(I2-1)*Deg+1:I2*Deg];
     
     Index = Deg^2*(ii-1)+1:Deg^2*ii;
     
-    tmp=kron(...
-        A(:,index_I1),...
-        B(:,index_I2) ...
-        )*f(Index(:));
+    tmp=kron( A(:,index_I1),B(:,index_I2) ) * f(Index(:));
     fnew=fnew+tmp;
     
 end
 
+fxList = {A};
+fvList = {B};
+ftList = {f};
+fnew2 = combine_dimensions_2(fxList,fvList,ftList,HASHInv,pde);
 
 end
-
-
-

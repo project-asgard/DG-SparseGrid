@@ -78,6 +78,7 @@ pde.params.DimV = DimV;
 
 % Degree
 pde.params.Deg = Deg;
+pde.params.Dim = Dim;
 
 % Time step.
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
@@ -187,7 +188,7 @@ if ~quiet
     
     % Plot initial condition.
     [xx,vv]=meshgrid(x_node,v_node);
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg,pde);
     
     figure(1000)
     mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
@@ -205,7 +206,7 @@ count=1;
 plotFreq = 10;
 
 if ~quiet; disp('[7] Advancing time ...'); end
-for L = 1:floor(TEND/dt)
+for L = 1:10 %;floor(TEND/dt)
     
     time(count) = L*dt;
     timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
@@ -277,7 +278,7 @@ for L = 1:floor(TEND/dt)
     if pde.checkAnalytic
         % Check the solution with the analytic solution
         fval_analytic = exact_solution_vector(HASHInv,pde,time(count));
-        err = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2));
+        err = sqrt(mean((fval - fval_analytic).^2))
     end
     
     count=count+1;
