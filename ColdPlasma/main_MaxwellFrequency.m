@@ -17,8 +17,8 @@ global A_encode
 
 addpath(genpath(pwd))
 
-Lev = 3;
-Deg = 2;
+Lev = 2;
+Deg = 3;
 Lmax = 1;
 pde = Maxwell1;
 
@@ -169,8 +169,8 @@ ff = ff*(2*pi^2-pde.w2);
 x = zeros(Dofs3,1);
 uu = ff/(2*pi^2-pde.w2);
 
-% sol = cg(x,ff,MaxIter,Tol);
-% [max(abs(sol-uu)) norm(sol-uu)]
+sol = cg(x,ff,MaxIter,Tol);
+[max(abs(sol-uu)) norm(sol-uu)]
 
 [sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun,ff,Tol,MaxIter);
 semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o','linewidth',2,'markersize',8);

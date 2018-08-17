@@ -373,7 +373,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -386,7 +386,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -399,7 +399,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -412,7 +412,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -426,7 +426,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -439,7 +439,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -453,7 +453,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -466,7 +466,7 @@ count = count+1;
 A{count}.IndexI = IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -480,7 +480,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -493,7 +493,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -507,7 +507,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -520,7 +520,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -533,7 +533,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -546,7 +546,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -560,7 +560,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -573,7 +573,7 @@ count = count+1;
 A{count}.IndexI = dof+IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -587,7 +587,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -600,7 +600,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -614,7 +614,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -627,7 +627,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -641,7 +641,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -654,7 +654,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -667,7 +667,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
@@ -680,7 +680,7 @@ count = count+1;
 A{count}.IndexI = 2*dof+IndexI;
 A{count}.IndexJ = 2*dof+IndexJ;
 
-A{count}.A1=A1;
+A{count}.A1=i*A1;
 A{count}.A2=A2;
 A{count}.A3=A3;
 end
