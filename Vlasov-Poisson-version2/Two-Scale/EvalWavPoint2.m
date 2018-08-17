@@ -1,4 +1,4 @@
-function [f] = EvalWavPoint(Lstart,Lend,maxLev,Deg,fcoef,x)
+function [f] = EvalWavPoint2(Lstart,Lend,maxLev,Deg,fcoef,x)
 % This code evaluates the wavelet functions at given points
 %
 % Meval denotes the level and cel, where contains point x
@@ -20,7 +20,7 @@ xhat = (x-MidPoint)*2/hx;
 MIndex(1) = 1;
 for k = 1:Deg
     val = polyval(scale_co(k,:),xhat);
-    f(k) = val/sqrt(hx);%*sqrt(2*k-1);
+    f(k) = val/sqrt(hx)*sqrt(Lmax/2);
     
     MIndex_full(k) = k;
 end

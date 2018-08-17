@@ -2,11 +2,12 @@
 clear
 close all
 % clc
+format long e
 
 Deg = 2;
-Lstart = -1;
+Lstart = 0;
 Lend = 1;
-Lev = 5;
+Lev = 3;
 
 
 load(['two_scale_rel_',num2str(Deg),'.mat'])
@@ -47,8 +48,8 @@ for i = 0:nx-1
     f_coef_DG(Deg*i+1:Deg*(i+1)) = coef_DG;
     
     % if plotting, use following
-% %             Meval_x(2*i+1:2*i+2,Deg*i+1:Deg*(i+1))=sqrt(1/hx)*legendre([-1,1],Deg);
-% %             x_node(2*i+1:2*i+2)=[i*hx,(i+1)*hx];
+    % %             Meval_x(2*i+1:2*i+2,Deg*i+1:Deg*(i+1))=sqrt(1/hx)*legendre([-1,1],Deg);
+    % %             x_node(2*i+1:2*i+2)=[i*hx,(i+1)*hx];
     
 end
 % figure;
@@ -62,17 +63,18 @@ for loc_lev = Lev:-1:1
     
     tmp = [H0 H1]*reshape(f_tmp_DG,2*Deg,2^max(loc_lev-1,0));
     f_tmp_DG = tmp(:);
-
+    
 end
 f_coef_MWDG(1:Deg)=f_tmp_DG;
 
 
 
-xx = [-1:0.1:1]';
+xx = [Lstart:0.1:Lend]';
 f = zeros(length(xx),1);
 for i = 1:length(xx)
-fval = EvalWavPoint(Lstart,Lend,Lev,Deg,f_coef_MWDG,xx(i));
-f(i) = fval;
+    fval = EvalWavPoint(Lstart,Lend,Lev,Deg,f_coef_MWDG,xx(i));
+%     fval = EvalWavPoint2(Lstart,Lend,Lev,Deg,f_coef_MWDG,xx(i));
+    f(i) = fval;
 end
 plot(xx,f,'r-o',xx,func(xx),'b-<')
 figure;
