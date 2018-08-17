@@ -9,9 +9,12 @@ load(['two_scale_rel_',num2str(Deg),'.mat']);
 Lmax = Lend-Lstart;
 Meval = zeros(maxLev+1,2);
 MIndex = zeros(maxLev+1,1);
-MIndex_full = zeros (Deg*(maxLev+1),1);
 
-f = zeros(Deg*(maxLev+1),1);
+
+nz = length(x);
+
+MIndex_full = zeros (Deg*(maxLev+1),nz);
+f = zeros(Deg*(maxLev+1),nz);
 
 % Lev = 0
 hx = Lmax;
@@ -20,38 +23,40 @@ xhat = (x-MidPoint)*2/hx;
 MIndex(1) = 1;
 for k = 1:Deg
     val = polyval(scale_co(k,:),xhat);
-    f(k) = val/sqrt(hx);%*sqrt(2*k-1);
+    f(k,:) = val/sqrt(hx);%*sqrt(2*k-1);
     
-    MIndex_full(k) = k;
+    MIndex_full(k,:) = k;
 end
+
 Meval(1,1)=1;
 % Lev = 1 : maxLev
 for L = 1:maxLev
 %     hx = Lmax/2^L;
     hx = Lmax/2^(L-1);
-    if abs(x-Lstart)<1e-5
-        cel = 1;
-%     elseif abs(x-Lend)<1e-5
-%         cel = 2^(L-1);
-    else
-        cel = ceil((x-Lstart)/hx);
-    end
+    ix = find(abs(x-Lstart)<1e-5);
+    cel = ceil((x-Lstart)/hx);
+    cel(ix) = 1;
+
      MidPoint = ( (Lstart+cel*hx)+(Lstart+(cel-1)*hx) )/2;
      
-    Meval(L+1,1)= cel;
-    MIndex(L+1) = 2^(L-1)+cel;
-    MIndex_full(Deg*L+[1:Deg]) = (2^(L-1))*Deg+Deg*(cel-1)+[1:Deg];
+% %     Meval(L+1,1)= cel;
+% %     MIndex(L+1) = 2^(L-1)+cel;
+    for k=1:Deg
+    MIndex_full(Deg*L+k,1:nz) = (2^(L-1))*Deg+Deg*(cel'-1)+k;
+    end
     % This turned on cell is from [hx*cel,hx*(cel+1)]
     % the middle point is hx*cel+hx/2
     % mapping the point from physical domain to reference domain
     xhat = (x-MidPoint)*2/hx;
+    ip = find(xhat>0);
+    
     for k = 1:Deg
-        if xhat<=0
+%         if xhat<=0
             val = polyval(phi_co(k,:),xhat);
-        else
-            val = polyval(phi_co(k+Deg,:),xhat);
-        end
-        f(L*Deg+k) = val*1/sqrt(hx)*1/sqrt(Lmax);%*sqrt(2*k-1);
+%         else
+            val(ip) = polyval(phi_co(k+Deg,:),xhat(ip));
+%         end
+        f(L*Deg+k,:) = val*1/sqrt(hx)*1/sqrt(Lmax);%*sqrt(2*k-1);
     end
     
 end
@@ -60,7 +65,7 @@ end
 % 
 % MIndex_full
 
-f_loc = (sparse(MIndex_full,ones(Deg*(maxLev+1),1),f,Deg*2^(maxLev),1));
+f_loc = (sparse(MIndex_full,ones(Deg*(maxLev+1),1)*[1:nz],f,Deg*2^(maxLev),nz));
 
-f = fcoef'*f_loc;
+f = f_loc'*fcoef;
 end

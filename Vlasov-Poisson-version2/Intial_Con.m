@@ -59,7 +59,7 @@ end
 for i=0:nv-1
     
     % Map fron quad_v from [-1,1] to [-Vmax,+Vmax] domain.
-    xi_v=(( (quad_x+1)/2+i)*hv-Vmax);
+    xi_v=hv*(quad_x/2+1/2+i)-Vmax;
     
     % Get the f(v) initial condition at the quadrature points
     fvHere = pde.Fv_0(xi_v, params);

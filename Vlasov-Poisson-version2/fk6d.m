@@ -38,7 +38,7 @@ if ~exist('pde','var') || isempty(pde)
 end
 if ~exist('TEND','var') || isempty(TEND)
     % End time
-    TEND = 1;
+    TEND = pde.params.TEND;
 end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
@@ -58,8 +58,10 @@ if ~exist('compression','var') || isempty(compression)
 end
 
 % Get x and v domain ranges.
-Vmax = pde.params.Vmax;
+Lmin = pde.params.Lmin;
 Lmax = pde.params.Lmax;
+Vmin = pde.params.Vmin;
+Vmax = pde.params.Vmax;
 
 % Level information.
 LevX = Lev;
@@ -96,7 +98,9 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 %         rho--intial condition rho(x,t=0)
 
 if ~quiet; disp('[1.2] Setting up 1D initial conditions'); end
-[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
+%[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
+fx = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Fx_0,pde.params);
+fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 
 
 %% Step 2. Generate Sparse-Grid (as the Hash + Connectivity tables).
@@ -117,7 +121,7 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 %%% condition, multi-wavelet representation of the initial condition
 %%% specified in PDE.
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
-fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv);
+fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
 
 clear fv fx
 
@@ -176,22 +180,22 @@ end
 % At time = 0 plotting.
 if ~quiet; disp('[5.0] Plotting intial condition'); end
 
+
+% Construct data for reverse MWT in 2D
+[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
+    FMWT_COMP_x,FMWT_COMP_v);
+[xx,vv]=meshgrid(x_node,v_node);
+
+% Plot initial condition
 if ~quiet
-    % Prepare plotting data.
-    [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
-        FMWT_COMP_x,FMWT_COMP_v);
-    
-    % Plot initial condition.
-    [xx,vv]=meshgrid(x_node,v_node);
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
-    
+    % Transform from wavelet space to real space
+    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);  
     figure(1000)
     mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
     axis([0 Lmax -Vmax Vmax])
     view(0,90)
     colorbar
 end
-
 
 % Write the initial condition to file.
 write_fval = 0;
@@ -217,8 +221,7 @@ for L = 1:floor(TEND/dt)
     if pde.applySpecifiedE
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
-        % Does this take E(x) -> E(lev,pos,deg) ?
-        E = ProjCoef2Wav_v2(LevX,Deg,0,Lmax,pde.exactE);
+        E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.exactE,pde.params);
     end
     
     %%% Generate EMassX time dependent coefficient matrix.
@@ -262,7 +265,8 @@ for L = 1:floor(TEND/dt)
         figure(1000)
         
         tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
-        mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
+        f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+        mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','interp');
         axis([0 Lmax -Vmax Vmax])
         view(0,90)
         colorbar
@@ -271,14 +275,28 @@ for L = 1:floor(TEND/dt)
         pause (0.01)
     end
     
+    %%% Check against known solution
     if pde.checkAnalytic
-        % Check the solution with the analytic solution
-        fval_analytic = source_vector2(LevX,LevV,Deg,HASHInv,pde,time(count));
-        err = sqrt(mean(((fval - fval_analytic)/fval_analytic).^2));
+        
+        % Check the wavelet space solution with the analytic solution
+        fval_analytic = exact_solution_vector(HASHInv,pde,time(count));
+        err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
+        disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
+        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+        
+        % Check the real space solution with the analytic solution
+        fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+        f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
+        f2d_analytic = pde.ExactF(xx,vv,time(count));
+        err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
+        disp(['    real space absolute err : ', num2str(err_real)]);
+        disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
+       
+        err = err_wavelet;
     end
     
     count=count+1;
-  
+    
 end
 
 end
