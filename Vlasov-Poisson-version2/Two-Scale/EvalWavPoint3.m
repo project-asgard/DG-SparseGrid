@@ -1,4 +1,4 @@
-function [f_loc,f] = EvalWavPoint3(Lstart,Lend,maxLev,Deg,fcoef,x)
+function [f_loc,f,i,aij] = EvalWavPoint3(Lstart,Lend,maxLev,Deg,fcoef,x)
 % This code evaluates the wavelet functions at given points
 %
 % Meval denotes the level and cel, where contains point x
@@ -18,13 +18,16 @@ f = zeros(Deg*(maxLev+1),nz);
 
 % Lev = 0
 hx = Lmax;
-MidPoint = (Lend-Lstart)/2;
+% MidPoint = (Lend-Lstart)/2;
+MidPoint = (Lend+Lstart)/2;
 xhat = (x-MidPoint)*2/hx;
 MIndex(1) = 1;
 coef = 1/sqrt(hx);
+% plot(xhat)
+
 for k = 1:Deg
     val = polyval(scale_co(k,:),xhat);
-    f(k,:) = val*coef;%*1/sqrt(2*k-1);
+    f(k,:) = val*coef;
     
     MIndex_full(k,:) = k;
 end
@@ -56,17 +59,23 @@ for L = 1:maxLev
         val(ip) = polyval(phi_co(k+Deg,:),xhat(ip));
         
         coef = sqrt(1/hx);
+
         f(L*Deg+k,:) = val*coef;
     end
     
 end
 
-% [Deg*(MIndex-1)+1 Deg*MIndex]
-%
-% MIndex_full
-
 % f_loc evaluates DoF_1D basis at nz points xx
 f_loc = (sparse(MIndex_full,ones(Deg*(maxLev+1),1)*[1:nz],f,Deg*2^(maxLev),nz));
 
 f = f_loc'*fcoef;
+
+% convert to cell
+for k = 1:size(f_loc,1)
+   [i_loc,j_loc,val_loc]  = find(f_loc(k,:));
+    i{k} = j_loc;
+    aij{k} = val_loc;
+end
+
+
 end

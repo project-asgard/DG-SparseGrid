@@ -48,6 +48,7 @@ for j=1:N % loop over number of addative terms
                 ii = Index0;
                 jj = 1;
                 vv = kron( fv(Index1), fx(Index2) ) * ft;
+
                 mm = Deg^Dim * nHash;
                 nn = 1;
                 

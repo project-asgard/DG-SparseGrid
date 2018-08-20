@@ -7,71 +7,145 @@ format long e
 Deg = 2;
 Lstart = -1;
 Lend = 2;
-Lev = 6;
+Lev = 4;
 Lmax = 1;
+
+pde.params.Deg = Deg;
+params.A = 0;
 
 
 func_x = @(x,params)(sin(pi*x));
 func_y = @(y,params)(sin(pi*y));
 
-params.A = 0;
+
 [f_coef_x] = forwardMWT(Lev,Deg,Lstart,Lend,func_x,params);
 [f_coef_y] = forwardMWT(Lev,Deg,Lstart,Lend,func_y,params);
 
-xx = [Lstart:0.1:Lend]';
-yy = [Lstart:0.1:Lend]';
-[fx_loc,fx_val] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_x,xx);
-[fy_loc,fy_val] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_y,yy);
 
 Dim = 2;
 [HASH,HASHInv] = HashTable(Lev,Dim);
 nHash = numel(HASHInv);
 
-
-pde.params.Deg = Deg;
-
+% base on the HashTable to generate 2D coefficient vector fval
 fxList = {f_coef_x};
 fyList = {f_coef_y};
-t
+ftList = {1};
 [fval] = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
 
+% Evaluation starts from here
+% Method 1-- evaluate every basis at the given points (xx) and (vv)
+% fx_loc = phi_x (xx) with size DoF1DxNum_xx
+% fy_loc = phi_y (yy) with size DoF1DxNum_vv
+% Loop over every point with (xx_i,yy_j) and combine the value
+%   for fx_loc(:,i) and fy_loc(:,j)
+xx = [Lstart:0.1:Lend]';
+yy = [Lstart:0.1:Lend]';
+[fx_loc,fx_val,ix,aijx] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_x,xx);
+[fy_loc,fy_val,iy,aijy] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_y,yy);
+
+% loop over all the points on xx and yy
 for i = 1:length(xx)
     for j = 1:length(yy)
         
-        fxList = fx_loc(:,i)'*f_coef_x;%{fx_loc(:,i)'*f_coef_x};
-        fyList = fy_loc(:,j)'*f_coef_y;%{fy_loc(:,j)'*f_coef_y};
+        fxList = {fx_loc(:,i)};
+        fyList = {fy_loc(:,j)};
         ftList = {1};
         
-        %         [fval] = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
-        val = fxList*fyList;
-        f2D(i,j) = val;
+        val = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
+        
+        f2D(i,j) = val'*fval;
+        
     end
 end
+
+% Method 2
+n_points = length(xx)*length(yy);
+npx = length(xx);
+npy = length(yy);
+f2D2 = sparse(nHash,n_points);
+
+for i = 1 : nHash
+    ll=HASHInv{i};
+    
+    % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
+    I1=ll(5);
+    I2=ll(6);
+    
+    Index1 = Deg*(I1-1)+[1:Deg];
+    Index2 = Deg*(I2-1)+[1:Deg];
+    
+    tmp_ix = {ix{Index1}};
+    tmp_aijx = {aijx{Index1}};
+    
+    tmp_iy = {iy{Index2}};
+    tmp_aijy = {aijy{Index2}};
+    
+    for k1 = 1:Deg
+        for k2 = 1:Deg
+            tmp2D = tmp_aijx{k1}'*tmp_aijy{k2};
+            tmp2D = tmp2D(:);
+            
+            A_loc = sparse(tmp_ix{k1},ones(length(tmp_ix{k1}),1),tmp_aijx{k1},npx,1);
+            B_loc = sparse(tmp_iy{k2},ones(length(tmp_iy{k2}),1),tmp_aijy{k2},npy,1);
+            
+            tmp_loc = kron(A_loc,B_loc);
+            
+            Index0 = Deg^2*(i-1)+Deg*(k1-1)+k2;
+            
+            ii = Index0*ones(1,npx*npy);
+            jj = 1:length(xx)*length(yy);
+            
+            f2D2 = f2D2 + sparse(ii,jj,tmp_loc,Deg^2*nHash,n_points);
+            
+        end
+        
+    end
+    
+    
+    
+    
+%     111
+    
+    
+    
+%     for k1 = 1:Deg
+%         
+%         Index1 = Deg*(I1-1)+k1;
+%         
+%         for k2 = 1:Deg
+%             
+%             Index2 = Deg*(I2-1)+k2;
+%             Index0 = Deg^2*(i-1)+Deg*(k1-1)+k2;
+%             
+%             ii = Index0;
+%             jj = 1;
+%             vv = kron( fv(Index1), fx(Index2) ) * ft;
+%             mm = Deg^Dim * nHash;
+%             nn = 1;
+%             
+%             fval = fval + sparse(ii,jj,vv,mm,nn);
+%             
+%         end
+%     end
+end
+
 
 % loop over Hash
 [XX,YY] = meshgrid(xx,yy);
 nx = length(xx);ny = length(yy);
-
-f = sparse(nx*ny,1);
-for i=1:nHash
-    
-    ll = HASHInv{i};
-    
-    % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
-    I1 = ll(5);
-    I2 = ll(6);
-    
-    f = f + fval(i)*fx_loc(I1,:).*fy_loc(I2,:)
-end
-
-
-
 
 figure;
 subplot(1,2,1)
 surf(XX,YY,f2D);%reshape(fval,nx,ny))
 subplot(1,2,2)
 surf(XX,YY,sin(pi*XX).*sin(pi*YY));
+
+uu = sin(pi*XX).*sin(pi*YY);
+
+[norm(f2D(:)-uu(:)) max(abs(f2D(:)-uu(:)))]
+
+% another way to do inverse wavelet transform
+
 return
 figure;
 

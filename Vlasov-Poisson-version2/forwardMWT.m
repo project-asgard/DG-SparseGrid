@@ -46,10 +46,13 @@ for i=0:n-1
     
     % Method 2: Do the GEMM directly 
     f(i*Deg+1:i*Deg+Deg) = mtimes(p_val,this_quad); 
+    
         
 end
 
 f = f * h * sqrt(1/h)/2;
+
+
 
 % Transfer to multi-DG bases
 
