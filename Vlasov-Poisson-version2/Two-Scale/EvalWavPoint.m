@@ -20,7 +20,8 @@ xhat = (x-MidPoint)*2/hx;
 MIndex(1) = 1;
 for k = 1:Deg
     val = polyval(scale_co(k,:),xhat);
-    f(k) = val/sqrt(hx)*sqrt(2*k-1);
+%     f(k) = val/sqrt(hx/2);%*1/sqrt(Lmax);
+    f(k) = val/sqrt(hx)*1/sqrt(Lmax);
     
     MIndex_full(k) = k;
 end
@@ -51,7 +52,8 @@ for L = 1:maxLev
         else
             val = polyval(phi_co(k+Deg,:),xhat);
         end
-        f(L*Deg+k) = val*1/sqrt(hx)*sqrt(2*k-1);
+%         hx = Lmax/2^L;
+        f(L*Deg+k) = val/sqrt(hx)*1/sqrt(Lmax);
     end
     
 end

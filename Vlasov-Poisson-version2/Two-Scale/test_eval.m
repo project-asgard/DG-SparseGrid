@@ -3,15 +3,15 @@ clear
 close all
 % clc
 
-Deg = 2;
-Lstart = -1;
+Deg = 3;
+Lstart = 0;
 Lend = 1;
-Lev = 5;
+Lev = 6;
 
 
 load(['two_scale_rel_',num2str(Deg),'.mat'])
 
-func = @(x)(x);%(sin(pi*x));
+func = @(x)(sin(pi*x));
 
 for j_x = 1:Deg
     for j_y = 1:Deg
@@ -68,7 +68,7 @@ f_coef_MWDG(1:Deg)=f_tmp_DG;
 
 
 
-xx = [-1:0.1:1]';
+xx = [Lstart:0.1:Lend]';
 f = zeros(length(xx),1);
 for i = 1:length(xx)
 fval = EvalWavPoint(Lstart,Lend,Lev,Deg,f_coef_MWDG,xx(i));
