@@ -1,0 +1,84 @@
+% Test
+clear
+close all
+% clc
+format long e
+
+Deg = 2;
+Lstart = -1;
+Lend = 2;
+Lev = 6;
+Lmax = 1;
+
+
+func_x = @(x,params)(sin(pi*x));
+func_y = @(y,params)(sin(pi*y));
+
+params.A = 0;
+[f_coef_x] = forwardMWT(Lev,Deg,Lstart,Lend,func_x,params);
+[f_coef_y] = forwardMWT(Lev,Deg,Lstart,Lend,func_y,params);
+
+xx = [Lstart:0.1:Lend]';
+yy = [Lstart:0.1:Lend]';
+[fx_loc,fx_val] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_x,xx);
+[fy_loc,fy_val] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_y,yy);
+
+Dim = 2;
+[HASH,HASHInv] = HashTable(Lev,Dim);
+nHash = numel(HASHInv);
+
+
+pde.params.Deg = Deg;
+
+fxList = {f_coef_x};
+fyList = {f_coef_y};
+t
+[fval] = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
+
+for i = 1:length(xx)
+    for j = 1:length(yy)
+        
+        fxList = fx_loc(:,i)'*f_coef_x;%{fx_loc(:,i)'*f_coef_x};
+        fyList = fy_loc(:,j)'*f_coef_y;%{fy_loc(:,j)'*f_coef_y};
+        ftList = {1};
+        
+        %         [fval] = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
+        val = fxList*fyList;
+        f2D(i,j) = val;
+    end
+end
+
+% loop over Hash
+[XX,YY] = meshgrid(xx,yy);
+nx = length(xx);ny = length(yy);
+
+f = sparse(nx*ny,1);
+for i=1:nHash
+    
+    ll = HASHInv{i};
+    
+    % 1D indices for (Lev1,Cell1)-->Index1,(Lev2,Cell2)-->Index2
+    I1 = ll(5);
+    I2 = ll(6);
+    
+    f = f + fval(i)*fx_loc(I1,:).*fy_loc(I2,:)
+end
+
+
+
+
+figure;
+subplot(1,2,1)
+surf(XX,YY,f2D);%reshape(fval,nx,ny))
+subplot(1,2,2)
+surf(XX,YY,sin(pi*XX).*sin(pi*YY));
+return
+figure;
+
+plot(xx,fval,'r-o',xx,func(xx),'b-<')
+figure;
+plot(xx,fval-func(xx),'r-o')
+[norm(fval-func(xx)) max(abs(fval-func(xx)))]
+
+% for 2D sparse grids solution
+

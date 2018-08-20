@@ -33,12 +33,17 @@ pde.terms = terms;
 % Parameters
 k_0=0.3;
 A=0.04;
-Lmax=20*pi/3;
-Vmax=13;
+Lmin=0;Lmax=20*pi/3;
+Vmin=-13;Vmax=+13;
+
+params.TEND = 1;
 
 params.k_0 = k_0;
 params.A = A;
+
+params.Lmin = Lmin;
 params.Lmax = Lmax;
+params.Vmin = Vmin;
 params.Vmax = Vmax;
 
 pde.Fx_0 = @Fx_0;
@@ -165,13 +170,13 @@ Vmax = params.Vmax;
 f= -A*cos(k_0*x).*exp(-k_0*t);
 end
 
-function f = exactE(x)
+function f = exactE(x, params)
 % Exact solution for E
 f=x*0;
 end
 
 % Source term 1
-function f = source1x(x)
+function f = source1x(x, params)
 f = x*0;
 end
 
@@ -179,7 +184,7 @@ function f = source1t(t)
 f = t*0;
 end
 
-function f = source1v(v)
+function f = source1v(v, params)
 f = v*0;
 end
 
@@ -188,11 +193,11 @@ f = source1x(x).*source1v(v).*source1t(t);
 end
 
 % Source term 2
-function f = source2x(x)
+function f = source2x(x, params)
 f = x*0;
 end
 
-function f = source2v(v)
+function f = source2v(v, params)
 f = v*0;
 end
 
@@ -205,11 +210,11 @@ f = source2x(x).*source2v(v).*source2t(t);
 end
 
 % source term 3
-function f = source3x(x)
+function f = source3x(x, params)
 f = x*0;
 end
 
-function f = source3v(v)
+function f = source3v(v, params)
 f = v*0;
 end
 
@@ -222,11 +227,11 @@ f = source3x(x).*source3v(v).*source3t(t);
 end
 
 % Exact F
-function f=ExactFx(x)
+function f=ExactFx(x, params)
 f = x*0;
 end
 
-function f=ExactFv(v)
+function f=ExactFv(v, params)
 f = v*0;
 end
 
