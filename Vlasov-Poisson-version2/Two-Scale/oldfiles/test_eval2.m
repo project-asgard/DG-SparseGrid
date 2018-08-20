@@ -1,10 +1,10 @@
 % Test
 clear
-close all
+% close all
 % clc
 format long e
 
-Deg = 4;
+Deg = 3;
 Lstart = -1;
 Lend = 2;
 Lev = 2;
@@ -43,8 +43,8 @@ ftList = {1};
 % xx = [Lstart:hx:Lend]';
 % yy = [Lstart:hx:Lend]';
 
-xx = [Lstart:0.1:Lend]';
-yy = [Lstart:0.1:Lend]';
+xx = [Lstart:0.05:Lend]';
+yy = [Lstart:0.05:Lend]';
 
 [fx_loc,fx_val,ix,aijx] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_x,xx);
 [fy_loc,fy_val,iy,aijy] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_y,yy);
