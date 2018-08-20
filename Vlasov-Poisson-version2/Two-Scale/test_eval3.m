@@ -1,4 +1,5 @@
 % Test
+% Line 3-36 is to set up fval, which can be removed for the real code
 clear
 % close all
 % clc
@@ -41,12 +42,13 @@ ftList = {1};
 % Loop over every point with (xx_i,yy_j) and combine the value
 %   for fx_loc(:,i) and fy_loc(:,j)
 
-
+% if we have computed fval, we can just start with following
+% Input:: Lstart, Lend, Lev, Deg, xx, yy
 xx = [Lstart:0.1:Lend]';
 yy = [Lstart:0.1:Lend]';
 
-[fx_loc] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_x,xx);
-[fy_loc] = EvalWavPoint3(Lstart,Lend,Lev,Deg,f_coef_y,yy);
+[fx_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,xx);
+[fy_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,yy);
 
 
 % loop over all the points on xx and yy
