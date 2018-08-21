@@ -4,7 +4,10 @@ addpath(genpath(pwd))
 
 Lev = 4;
 Deg = 2;
-Lmax = 1;
+
+Lstart = 0;
+Lend = 1;
+Lmax = Lend-Lstart;
 
 func = @(x)(sin(x));
 
@@ -87,10 +90,12 @@ for Lx=0:nx-1
         [Iu(:,2*Deg+1:end)+dof_1D_x,Iu(:,1:2*Deg)],...
         -[val_u,val_s],2*dof_1D_x,2*dof_1D_x);
     
-    % get xhat
-    
-    val = func(xhat);
-    b_poisson = b_poisson+sparse(Iv(:,1:2*Deg)+dof_1D_x,ones(Deg,1),val,2*dof_1D_x,1);
+%     % get xhat
+%     MidPoint = ((Lstart+(Lx+1)*hx)+(Lstart+(Lx)*hx) )/2;
+%     xhat = (x-MidPoint)*2/hx;
+%     
+%     val = func(xhat);
+%     b_poisson = b_poisson+sparse(Iv(:,1:2*Deg)+dof_1D_x,ones(Deg,1),val,2*dof_1D_x,1);
     
 end
 
@@ -105,6 +110,8 @@ A11 = DeltaX(1:dof_1D_x,1:dof_1D_x);
 A12 = DeltaX(1:dof_1D_x,dof_1D_x+1:end);
 A21 = DeltaX(dof_1D_x+1:end,1:dof_1D_x);
 A22 = DeltaX(dof_1D_x+1:end,1+dof_1D_x:end);
+
+A12*A21
 
 % backward Euler
 
