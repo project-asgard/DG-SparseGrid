@@ -1,15 +1,35 @@
 % main code for LDG Poisson equation
+
+% df/dt = d/dx(1-x^2)df/dx+source
+% Method 1. LDG
+% [A11 A12]
+% [A21 A22]
+% Here A11 = I, A12 = -(d/dx sqrt(1-x^2)q,p)
+% A21 = -(sqrt(1-x^2)df/dx,w), A22 = (q,w) = I
+% A12 = (sqrt(1-x^2)q,dp/dx)-<sqrt(1-x^2)\hat{q},p>
+% A21 = (sqrt(1-x^2)f,dw/dx)-<sqrt(1-x^2)\hat{f},w>
+% try with central flux
+clear all
+close all
+clc
+
+exactf = @(x,t)(exp(t)*sin(pi*x));
+% source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+funcCoef = @(x)(sqrt(1-x.^2));
+
 format short e
 addpath(genpath(pwd))
 
 Lev = 4;
-Deg = 2;
+Deg = 3;
+
+
 
 Lstart = 0;
 Lend = 1;
 Lmax = Lend-Lstart;
 
-func = @(x)(sin(x));
 
 %--Quadrature
 quad_num=10;
@@ -27,93 +47,90 @@ Dp_val = dlegendre(quad_x,Deg);
 % Jacobi of variable x and v
 % Define Matrices
 %---------------------------
-nx=2^(Lev);hx=Lmax/nx;
-Jacobi_x=hx;
-dof_1D_x=Deg*nx;
-% GradX=sparse(dof_1D_x,dof_1D_x);
-DeltaX=sparse(2*dof_1D_x,2*dof_1D_x);
+n=2^(Lev);h=Lmax/n;
+Jacobi=h;
+dof_1D=Deg*n;
+A12 = sparse(dof_1D,dof_1D);
+f0 = sparse(dof_1D,1);
 
-b_poisson=sparse(2*dof_1D_x,1);
+b = sparse(dof_1D,1);
 
-%======================================
-% Matrices related to x variable
-% GradX and DeltaX
-%======================================
-% compute (u',v)+1/2*u^{-}[v^{+}-v^{-}]
+CFL = 0.01;
+dt = CFL*h;
+
+
 % generate 1D matrix for DG
-for Lx=0:nx-1
+for L=0:n-1
 
     %---------------------------------------------
-    % Matrix GradX and EMassX
+    % (funcCoef*q,d/dx p)
     %---------------------------------------------
-    val=1/hx*[Dp_val'*(quad_w.*p_val)];
+    x0 = Lstart+L*h;
+    x1 = x0+h;
+    xi = quad_x*(x1-x0)/2+(x1+x0)/2;
     
-    Iu=[meshgrid(Deg*Lx+1:Deg*(Lx+1))]';
-    Iv=[meshgrid(Deg*Lx+1:Deg*(Lx+1))];
-%     GradX=GradX+sparse(Iu,Iv,val,dof_1D_x,dof_1D_x);
+    val=1/h*[Dp_val'*(quad_w.*funcCoef(xi).*p_val)];
+    c = Deg*L+1:Deg*(L+1);
     
-    DeltaX=DeltaX+sparse([Iu,dof_1D_x+Iu,Iu],[dof_1D_x+Iv,Iv,Iv],...
-        [val,val,diag(ones(1,Deg))],2*dof_1D_x,2*dof_1D_x);
+    A12 = A12 + sparse(c'*ones(1,Deg),ones(Deg,1)*c,val,dof_1D,dof_1D);
     
-    c=Deg*Lx+1:Deg*(Lx+1);
-    p=Deg*(Lx-1)+1:Deg*Lx;
-    l=Deg*(Lx+1)+1:Deg*(Lx+2);
-    
-    val=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
-        p_2'*p_2/2   p_2'*p_1/2];     % for x2
-    
-    val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
-    val_s=1/hx*[-p_1'*p_2, p_2'*p_2];
-    
-    Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-    
-    if Lx<nx-1 && Lx>0
-        
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
-%         val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
-    
-    elseif Lx==0
-        
-        Iu=[meshgrid([Deg*(nx-1)+1:Deg*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
-%         val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
-   
-    elseif Lx==nx-1
-        
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:Deg])];
-%         val_u=1/hx*[-p_1'*p_1, p_2'*(p_1-p_1)];
-    
+    %----------------------------------------------
+    % -<funcCoef*{q},p>
+    %----------------------------------------------
+    val=[ p_1'*funcCoef(x0)*p_2  p_1'*funcCoef(x0)*p_1,...
+         -p_2'*funcCoef(x0)*p_2 -p_2'*funcCoef(x0)*p_1]/2;
+    A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+                   val(:,Deg+1:2*Deg)+val(:,2*Deg+1:3*Deg),...
+                   dof_1D,dof_1D);
+
+    if L>0
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+    end
+    if L<n-1
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
     end
     
-%     GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
-    DeltaX=DeltaX+sparse([Iv(:,1:2*Deg),Iv(:,1:2*Deg)+dof_1D_x],...
-        ...[Iu(:,1:2*k)+dof_1D_x,Iu(:,2*k+1:end)],...
-        [Iu(:,2*Deg+1:end)+dof_1D_x,Iu(:,1:2*Deg)],...
-        -[val_u,val_s],2*dof_1D_x,2*dof_1D_x);
+    val = sqrt(h)/2*[p_val'*(quad_w.*source(xi))]; 
+    b(c)=val;
     
-%     % get xhat
-%     MidPoint = ((Lstart+(Lx+1)*hx)+(Lstart+(Lx)*hx) )/2;
-%     xhat = (x-MidPoint)*2/hx;
-%     
-%     val = func(xhat);
-%     b_poisson = b_poisson+sparse(Iv(:,1:2*Deg)+dof_1D_x,ones(Deg,1),val,2*dof_1D_x,1);
+    val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))]; 
+    f0(c) = val;
+    
     
 end
 
-% Handle B.C. for Poisson solver
-DeltaX(dof_1D_x+1,:)=0;
-DeltaX(dof_1D_x+1,dof_1D_x+[1:Deg])=sqrt(1/hx)*legendre(-1,Deg);
+% x = [Lstart:0.01:Lend];
+% [f_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,x,2);
+% plot(f0)
+[quad_x,quad_w]=lgwt(Deg,-1,1);
+p_val = legendre(quad_x,Deg);
+for L=0:n-1
+    %---------------------------------------------
+    % Generate the coefficients for DG bases
+    %---------------------------------------------
+    Iu=[Deg*L+1:Deg*(L+1)];
+    xi=h*(quad_x/2+1/2+L);
+    
+    Meval(Iu,Iu)=sqrt(1/h)*p_val;
+    x_node(Deg*L+1:Deg*L+Deg)=xi;
 
-DeltaX(end,:)=0;
-DeltaX(end,end-Deg+[1:Deg])=sqrt(1/hx)*legendre(1,Deg);
+end
 
-A11 = DeltaX(1:dof_1D_x,1:dof_1D_x);
-A12 = DeltaX(1:dof_1D_x,dof_1D_x+1:end);
-A21 = DeltaX(dof_1D_x+1:end,1:dof_1D_x);
-A22 = DeltaX(dof_1D_x+1:end,1+dof_1D_x:end);
+plot(x_node,Meval*f0)
 
-A12*A21
+% figure;plot(x,f_loc'*f0,'r-o');hold on;
+% plot(x,exactf(x,time),'b--')
 
-% backward Euler
+for t = 1:100
+    time = t*dt;
+    fval = f0+dt*A12*A12*f0+dt*b*exp(time);
+    f0 = fval;
+    
+    plot(x_node,Meval*f0)
+    pause
+end
+% figure;plot(x,f_loc'*f0,'r-o');hold on;
+% plot(x,exactf(x,time),'b--')
 
 
 
