@@ -369,3 +369,22 @@ function[tauR]=re_tauR(B)
 global phys;
   tauR = 6*pi*phys.eo*(phys.me*phys.c).^3/phys.e.^4/B.^2;
 endfunction
+
+%other non-essential functions used in the normalized version of the kinetic equation. 
+function[Ec]=re_Ec(ne,coulombLog)
+  global phys
+  Ec = ne.*phys.e.^3 .*coulombLog/(4*pi*phys.eo.^2*phys.me.*phys.c.^2);
+endfunction
+function[Ehat]= re_Ehat(E,Ec)
+  global phys
+  Ehat = E/Ec;
+endfunction
+function[vee]=re_vee(ne,Te,ve,coulombLog)
+  global phys
+  #vee = 4*sqrt(2*pi)*phys.e^4*ne*coulombLog/(3*sqrt(phys.me*Te^3));
+  vee = ne*phys.e^4*coulombLog/(4*pi*phys.eo^2*phys.me^2*ve.^3);
+  #vee = 1/(3*pi^(1/2))*ne*(phys.e.^2 /(4*pi*phys.eo))^2*4*pi/sqrt(phys.me.*Te.^3)*coulombLog;
+endfunction
+
+
+
