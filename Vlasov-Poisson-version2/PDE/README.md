@@ -8,12 +8,12 @@ for the runaway-electron problem.
 
 ### Comparing Function Outputs
 
-Matlab: (from this folder)
+Matlab:
 ```
 run Print_Test.m
 ```
 
-C++:
+C++: (from FK6D branch 'feature/adams-thing')
 ```
 cd FK6D/include
 g++ -Wall -std=c++11 runaway-test.cpp
