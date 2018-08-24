@@ -3,6 +3,10 @@
 A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson 
 in the 2D setting (1x1v).
 
+### Changes in Runaway-electron problem
+
+The file /PDE/Vlasov_RE.m contains the specific functions (listed at the end) and weak-formulation components (listed in the beginning) for the runaway-electron problem. 
+
 ### Run after cloning
 
 > run main_Vlasov.m
