@@ -5,7 +5,7 @@ in the 2D setting (1x1v).
 
 ### Run after cloning
 
-> runtests('fk6d_test.m')
+> run main_Vlasov.m
 
 ### Run other tests and Modifying the parameters
 
@@ -25,12 +25,3 @@ in the 2D setting (1x1v).
  - The globa matrix is generated through looping over Hash Table
  - Insert the 1D index mapping to HashTable
  - Slow Version of GlobalMatrix_SG is updated in the slowversion foler
-
-
-# Reference matlab implementation of FK6D_PDE7
-
-This is a new test for Vlasov7, which has a true solution with fixed given E.
-
-### Run after cloning
-
-> runtests('fk6d_test_PDE7.m')

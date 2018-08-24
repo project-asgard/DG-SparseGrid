@@ -10,7 +10,6 @@ isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
     reporting_level = 'normal';
   
     [n,nmax,nxfail,nskip] = test( 'fk6d_vlasov4_check', reporting_level);
-
     disp(sprintf('%d tests were executed', nmax));
     disp(sprintf('%d tests passed ',n));
     disp(sprintf('%d tests failed ', nxfail));
@@ -128,6 +127,42 @@ load('tests/vlasov4/solution.mat');
 exp_f = fval;
 
 verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+
+end
+
+function fk6d_vlasov7_compression4_lev3_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing with vlasov7 (compression==4, Lev=3)');
+
+quiet = 1;
+lev = 3;
+deg = 2;
+TEND = 0.05;
+compression = 4;
+[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+
+tol = 1e-2;
+assert(err(1) < tol);
+
+end
+
+function fk6d_vlasov7_compression4_lev4_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing with vlasov7 (compression==4, Lev=4)');
+
+quiet = 1;
+lev = 4;
+deg = 2;
+TEND = 0.05;
+compression = 4;
+[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+
+tol = 1e-2;
+assert(err(1) < tol);
 
 end
 

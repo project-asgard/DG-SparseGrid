@@ -1,5 +1,6 @@
 function [H0,G0,scale_co,phi_co]=MultiwaveletGen(k)
 %%%% One Dimensional Multiwavelets (According to Alpert,et. al. 93)%%%%%
+% http://amath.colorado.edu/~beylkin/papers/A-B-C-R-1993.pdf
 % Generate the two-scale -relation
 % Input: k--Degree
 %--------------------------------------
