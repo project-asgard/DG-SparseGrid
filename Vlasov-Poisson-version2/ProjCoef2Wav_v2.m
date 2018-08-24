@@ -15,7 +15,7 @@ for j_x = 1:Deg
     end
 end
 
-quad_num = 20;
+quad_num = 10;
 [quad_x,quad_w] = lgwt(quad_num,-1,1);
 
 % Get the Legendre basis function evaluated at the Legendre-Gauss nodes up
@@ -25,7 +25,7 @@ p_val = transpose(legendre(quad_x,Deg));
 
 f_coef_MWDG = zeros(Deg*2^Lev,1);
 f_coef_DG = zeros(Deg*2^Lev,1);
-
+f = zeros(Deg*2^Lev,1);
 
 % convert DG coef to MWDG coef
 nx = 2^Lev;
@@ -37,9 +37,21 @@ for i = 0:nx-1
     hx = (Lend-Lstart)/nx;
     xi_x = hx*(quad_x/2+1/2+i)+Lstart;
     
-    
-    coef_DG = p_val*(quad_w.*func(xi_x))*hx*sqrt(1/hx)/2;
+    this_quad = quad_w.*func(xi_x);
+    coef_DG = (p_val * this_quad) * hx*sqrt(1/hx)/2;
     f_coef_DG(Deg*i+1:Deg*(i+1)) = coef_DG;
+    
+    fxHere = func(xi_x);
+    for thisk=1:Deg
+        
+        this_k_legendre = p_val(thisk,:);
+        %this_quad = (quad_w .* fxHere);
+        f(Deg*i+thisk) = mtimes(this_k_legendre,this_quad) * hx * sqrt(1/hx)/2;
+        %f(Deg*i+thisk) = this_k_legendre * this_quad;%* hx * sqrt(1/hx)/2;
+        %f(Deg*i+thisk) = sum(this_k_legendre .* this_quad');
+
+        
+    end
     
     % if plotting, use following
     % %         Meval_x(2*i+1:2*i+2,Deg*i+1:Deg*(i+1))=sqrt(1/hx)*legendre([-1,1],Deg);

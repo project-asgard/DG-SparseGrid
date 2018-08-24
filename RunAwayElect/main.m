@@ -15,21 +15,21 @@ clc
 
 exactf = @(x,t)(exp(t)*sin(pi*x));
 % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
-% source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
-% funcCoef = @(x)(sqrt(1-x.^2));
+source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+funcCoef = @(x)(sqrt(1-x.^2));
 
 % source = @(x)(sin(pi*x)+sin(pi*x)*pi^2);
 
-exactf = @(x,t)(sin(pi*x));
-source = @(x)(sin(pi*x)*pi^2);
-funcCoef = @(x)(1);
+% exactf = @(x,t)(sin(pi*x));
+% source = @(x)(sin(pi*x)*pi^2);
+% funcCoef = @(x)(1);
 
 
 format short e
 addpath(genpath(pwd))
 
-Lev = 7;
-Deg = 1;
+Lev = 5;
+Deg = 2;
 
 
 
@@ -62,8 +62,8 @@ f0 = sparse(dof_1D,1);
 
 b = sparse(dof_1D,1);
 
-CFL = 0.01;
-dt = CFL*h;
+CFL = 0.001;
+dt = CFL*h;%^(Deg/3)*3;
 
 
 % generate 1D matrix for DG
@@ -85,7 +85,7 @@ for L=0:n-1
     % -<funcCoef*{q},p>
     %----------------------------------------------
     val=[ p_1'*funcCoef(x0)*p_2    p_1'*funcCoef(x0)*p_1,...
-             -p_2'*funcCoef(x1)*p_2  -p_2'*funcCoef(x1)*p_1]/2;
+         -p_2'*funcCoef(x1)*p_2  -p_2'*funcCoef(x1)*p_1]/2/h;
     A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
                    val(:,Deg+1:2*Deg)+val(:,2*Deg+1:3*Deg),...
                    dof_1D,dof_1D);
@@ -93,7 +93,7 @@ for L=0:n-1
     if L>0
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
     elseif L == 0
-        %A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
+%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
         % periodic bc
         A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*(Deg*(n-1)+1:Deg*(n)),...
             val(:,1:Deg),dof_1D,dof_1D);
@@ -101,7 +101,7 @@ for L=0:n-1
     if L<n-1
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
     elseif L == n-1
-        %A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*funcCoef(x1)*p_2/2,dof_1D,dof_1D);
+%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*funcCoef(x1)*p_2/2,dof_1D,dof_1D);
         % periodic bc
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*[1:Deg],val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
     end
@@ -115,6 +115,7 @@ for L=0:n-1
     
 end
 
+ 
 % x = [Lstart:0.01:Lend];
 % [f_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,x,2);
 % plot(f0)
@@ -139,21 +140,26 @@ end
 % checked of projection
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
 % hold on
+% plot(x_node,Meval*(A12*f0),'r-o',x_node,-pi*cos(pi*x_node),'b--')
 figure
 plot(x_node,source(x_node),'r-o',x_node,Meval*b,'b--')
 % return
 Mat = A12*A12;
+
+ max(abs(Meval*f0))
+
+% return
 figure
 for t = 1:100
     time = t*dt;
 %     tmp = A12'*A12*f0;%dt*A12'*A12*f0+dt*b*exp(time);
 %     tmp2 = A12*A12*f0;
 
-    fval = f0+dt*Mat*f0+dt*b;%*exp(time);
-    
-%     f1 = f0 + dt*( Mat*f0+b*exp(time-dt) );
-%     f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b*exp(time));
-%     fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b*exp(time-dt/2));
+%     fval = f0+dt*Mat*f0+dt*b;%*exp(time);
+
+    f1 = f0 + dt*( Mat*f0+b*exp(time-dt) );
+    f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b*exp(time));
+    fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b*exp(time-dt/2));
 
 %     f1 = f0 + dt*( Mat*f0+b );
 %     f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b );
@@ -162,12 +168,11 @@ for t = 1:100
     f0 = fval;
     
     plot(x_node,Meval*f0)
-%    plot(x_node,Meval*(tmp),'r-o',x_node,Meval*(tmp2),'b-<')
     pause(0.1)
 end
 % figure;plot(x,f_loc'*f0,'r-o');hold on;
 % plot(x,exactf(x,time),'b--')
 hold on
 plot(x_node,exactf(x_node,time),'r-o')
-
+ max(abs(Meval*f0))
 

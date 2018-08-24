@@ -1,24 +1,39 @@
-function f = TimeAdvance(A,f,dt,compression,Deg)
+function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
 % Output: Vector:: f
 %-------------------------------------------------
 
-f = RungeKutta3(A,f,dt,compression,Deg);
+f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);
 
 end
 
-function fval = RungeKutta3(A,f,dt,compression,Deg)
+function fval = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv)
 %----------------------------------
-% 3-rd Order Runge Kutta Method
+% 3-rd Order Kutta Method
 %----------------------------------
-ftmp = ApplyA(A,f,compression,Deg);
-f_1 = f +dt *ftmp;
-ftmp = ApplyA(A,f_1,compression,Deg);
-f_2 = 3/4*f+1/4*f_1+1/4*dt*(ftmp);
-ftmp = ApplyA(A,f_2,compression,Deg);
-fval = 1/3*f+2/3*f_2+2/3*dt*(ftmp);
+
+c2 = 1/2; c3 = 1;
+source1 = source_vector(HASHInv,pde,t);
+source2 = source_vector(HASHInv,pde,t+c2*dt);
+source3 = source_vector(HASHInv,pde,t+c3*dt);
+
+
+a21 = 1/2;
+a31 = -1;
+a32 = 2;
+b1 = 1/6;
+b2 = 2/3;
+b3 = 1/6;
+
+k_1 = ApplyA(A,f,compression,Deg)   + source1;
+y_1 = f + dt*a21*k_1;
+k_2 = ApplyA(A,y_1,compression,Deg) + source2;
+y_2 = f+ dt*(a31*k_1+a32*k_2);
+k_3 = ApplyA(A,y_2,compression,Deg) + source3;
+
+fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
 end
 
@@ -217,7 +232,7 @@ elseif compression == 4
         
         element_idx1D_1 = A_Data.element_local_1_index(workCnt);
         element_idx1D_2 = A_Data.element_local_2_index(workCnt);
-                
+        
         % Expand out the local and global indicies for this compressed item
         
         Index_I1 = zeros(Deg,1);
@@ -272,7 +287,7 @@ elseif compression == 4
             tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
             ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
-                 
+            
             conCnt = conCnt+1;
             
         end
