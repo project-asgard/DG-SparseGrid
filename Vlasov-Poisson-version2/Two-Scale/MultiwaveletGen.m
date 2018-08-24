@@ -102,6 +102,12 @@ for j = 1:k
 end
 
 
+% figure
+% plot((x_cord+1)/2,phi_pic)
+% title(['Wavelets of order ', num2str(k)])
+% 
+% xnode = (x_cord+1)/2;
+% val = phi_pic;
 
 %% Determine the Two Scale Coeffecients %%%
 

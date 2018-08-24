@@ -17,8 +17,8 @@ global A_encode
 
 addpath(genpath(pwd))
 
-Lev = 2;
-Deg = 3;
+Lev = 3;
+Deg = 4;
 Lmax = 1;
 pde = Maxwell1;
 
@@ -138,9 +138,9 @@ else
         row1,row2,row3,col1,col2,col3,alpha,alpha1);
 end
 
-% Mat = Aencode2Matrix(A_encode,Dofs3);
+Mat = Aencode2Matrix(A_encode,Dofs3);
 
-% return
+
 % Assemble the RHS term for Sparse Grids
 ff = sparse(Dofs3,1);
 if isequal(TypeAssembleMatrix,'elementwise') == 1
@@ -165,6 +165,7 @@ end
 
 ff = ff*(2*pi^2-pde.w2);
 
+return
 % Tol = Tol*norm(ff);
 x = zeros(Dofs3,1);
 uu = ff/(2*pi^2-pde.w2);
