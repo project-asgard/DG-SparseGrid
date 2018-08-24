@@ -9,13 +9,13 @@ for the runaway-electron problem.
 ### Comparing Function Outputs
 
 Matlab: (from this folder)
-'''
+```
 run Print_Test.m
-'''
+```
 
 C++:
-'''
+```
 cd FK6D/include
 g++ -Wall -std=c++11 runaway-test.cpp
 ./a.out
-'''
+```
