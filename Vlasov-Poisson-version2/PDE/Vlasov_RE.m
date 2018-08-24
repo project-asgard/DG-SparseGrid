@@ -312,6 +312,9 @@ function f=ExactF(x,v,t)
 Vmax=5;Lmax=1;
 f = ExactFx(x).*ExactFv(v).*ExactFt(t);
 end
+
+
+%Here begin the functions for the runaway electron problem. 
 function[C_A] = re_C_A(Gamma,v,Psi)
 global phys;
   C_A = Gamma./v.*Psi;
