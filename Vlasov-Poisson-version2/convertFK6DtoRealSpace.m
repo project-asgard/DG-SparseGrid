@@ -1,4 +1,4 @@
-function [f2d] = converteFK6DtoRealSpace()
+function [f2d] = convertFK6DtoRealSpace()
 
 % Read in output from FK6D and convert it to real space
 
