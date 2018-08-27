@@ -13,9 +13,15 @@ clear all
 close all
 clc
 
-exactf = @(x,t)(exp(t)*sin(pi*x));
+% exactf = @(x,t)(exp(t)*sin(pi*x));
+% % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+% source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+% funcCoef = @(x)(sqrt(1-x.^2));
+
+
+exactf = @(x,t)(exp(t)*sin(x));
 % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
-source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+source = @(x)((sin(x)+2*x.*cos(x)+(1-x.^2).*sin(x)));
 funcCoef = @(x)(sqrt(1-x.^2));
 
 % source = @(x)(sin(pi*x)+sin(pi*x)*pi^2);
@@ -28,8 +34,8 @@ funcCoef = @(x)(sqrt(1-x.^2));
 format short e
 addpath(genpath(pwd))
 
-Lev = 5;
-Deg = 2;
+Lev = 4;
+Deg = 3;
 
 
 
@@ -93,17 +99,20 @@ for L=0:n-1
     if L>0
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
     elseif L == 0
-%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
         % periodic bc
-        A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*(Deg*(n-1)+1:Deg*(n)),...
-            val(:,1:Deg),dof_1D,dof_1D);
+%         A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*(Deg*(n-1)+1:Deg*(n)),...
+%             val(:,1:Deg),dof_1D,dof_1D);
+        
+%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
+        
     end
     if L<n-1
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
     elseif L == n-1
-%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*funcCoef(x1)*p_2/2,dof_1D,dof_1D);
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*funcCoef(x1)*p_2/2,dof_1D,dof_1D);
         % periodic bc
-        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*[1:Deg],val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
+%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*[1:Deg],val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
     end
     
     val = sqrt(h)/2*[p_val'*(quad_w.*source(xi))]; 
@@ -120,6 +129,7 @@ end
 % [f_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,x,2);
 % plot(f0)
 % return
+num_plot = 2;
 [quad_x,quad_w]=lgwt(Deg,-1,1);
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
@@ -127,18 +137,23 @@ for L=0:n-1
     % Generate the coefficients for DG bases
     %---------------------------------------------
     Iu=[Deg*L+1:Deg*(L+1)];
+    Iv = [num_plot*L+1:num_plot*(L+1)];
 %     xi=h*(quad_x/2+1/2+L);
     x0 = Lstart+L*h;
     x1 = x0+h;
-    xi = quad_x*(x1-x0)/2+(x1+x0)/2;
+    xi = quad_x*(x1-x0)/2+(x1+x0)/2;[L*h,L*h+h];%
     
     Meval(Iu,Iu)=sqrt(1/h)*p_val;
-    x_node(Deg*L+1:Deg*L+Deg,1)=xi;
+%     Meval(Iv,Iu)=sqrt(1/h)*p_val;
+%     x_node(num_plot*L+1:num_plot*L+num_plot,1)=xi;
+x_node(Iu,1)=xi;
 
 end
-
+plot(x_node,Meval*f0,'r-o')
+% return
 % checked of projection
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
+% return
 % hold on
 % plot(x_node,Meval*(A12*f0),'r-o',x_node,-pi*cos(pi*x_node),'b--')
 figure
