@@ -221,7 +221,8 @@ for L = 1:floor(TEND/dt)
     if pde.applySpecifiedE
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
-        E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.exactE,pde.params);
+        E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
+        E = E * pde.Et(time(count));
     end
     
     %%% Generate EMassX time dependent coefficient matrix.

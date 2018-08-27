@@ -31,7 +31,7 @@ pde.applySpecifiedE = 1;
 
 pde.checkAnalytic = 1;
 
-pde.exactE = @exactE;
+% pde.exactE = @exactE;
 
 pde.source1x = @source1x;
 pde.source1v = @source1v;
@@ -84,30 +84,18 @@ Vmax = params.Vmax;
 
 f=Fv_0(v).*Fx_0(x);
 end
-function f=Ex(x,  params)
-A = params.A;
-k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
-f=x-x+1;
+% Apply this specific E field
+function f=Ex(x, params)
+f=x*0+1;
 end
 function f=Et(t, params)
-A = params.A;
-k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
-
-f=t-t+1;
+f=t*0+1;
 end
 function f=E(x,t, params)
-A = params.A;
-k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
-
 f=Ex(x).*Et(t);
 end
+
 function f=F(x,v,t,  params)
 A = params.A;
 k_0 = params.k_0;
@@ -126,10 +114,10 @@ Vmax = params.Vmax;
 f=x-x+1;
 end
 
-function f = exactE(x, params)
-% Exact solution for E
-f=x-x+1;
-end
+% function f = exactE(x, params)
+% % Exact solution for E
+% f=x-x+1;
+% end
 % source term--fully seperable functions
 % source = source1+source2+source3
 % source term 1

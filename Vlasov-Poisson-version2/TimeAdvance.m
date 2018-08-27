@@ -94,6 +94,8 @@ if compression == 0
     
     % Do the matrix-vector multiply
     
+    
+    
     ftmp = sparse(A*f);
     
     
