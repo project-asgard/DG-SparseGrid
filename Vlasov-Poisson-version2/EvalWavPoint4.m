@@ -4,7 +4,7 @@ function [f_loc] = EvalWavPoint4(Lstart,Lend,maxLev,Deg,x)
 % Meval denotes the level and cel, where contains point x
 % f_loc denotes the value of func_wavelet(x)
 %----------------------------------------------------------------------
-load(['two_scale_rel_',num2str(Deg),'.mat']);
+load(['Two-Scale/two_scale_rel_',num2str(Deg),'.mat']);
 
 Lmax = Lend-Lstart;
 
