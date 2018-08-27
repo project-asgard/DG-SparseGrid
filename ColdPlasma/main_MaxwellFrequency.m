@@ -17,8 +17,8 @@ global A_encode
 
 addpath(genpath(pwd))
 
-Lev = 3;
-Deg = 4;
+Lev = 4;
+Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
 
@@ -137,8 +137,8 @@ else
     A_encode = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat1D,pde.w2,Dofs,...
         row1,row2,row3,col1,col2,col3,alpha,alpha1);
 end
-
-Mat = Aencode2Matrix(A_encode,Dofs3);
+'Done with A_encode'
+% % Mat = Aencode2Matrix(A_encode,Dofs3);
 
 
 % Assemble the RHS term for Sparse Grids
@@ -165,22 +165,31 @@ end
 
 ff = ff*(2*pi^2-pde.w2);
 
-return
+% return
 % Tol = Tol*norm(ff);
 x = zeros(Dofs3,1);
 uu = ff/(2*pi^2-pde.w2);
 
-sol = cg(x,ff,MaxIter,Tol);
-[max(abs(sol-uu)) norm(sol-uu)]
+% % sol = cg(x,ff,MaxIter,Tol);
+% % [max(abs(sol-uu)) norm(sol-uu)]
+
+[sol_bicg,flag_bicg,rr_bicg,iter_bicg,rv_bicg] = bicgstab(@afun,ff,Tol,MaxIter);
+semilogy(0:length(rv_bicg)-1,rv_bicg/norm(ff),'-o','linewidth',2,'markersize',8);
+hold on;
+[max(abs(sol_bicg-uu)) norm(sol_bicg-uu)]
+'done of bicg'
 
 [sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun,ff,Tol,MaxIter);
 semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o','linewidth',2,'markersize',8);
 hold on;
 [max(abs(sol_CG-uu)) norm(sol_CG-uu)]
+'done of cg'
 
-[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,20,Tol,MaxIter);
+
+
+[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,100,Tol,MaxIter);
 semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
-legend({'CG','GMRES'},'fontsize',20)
+legend({'CG','BICG','GMRES'},'fontsize',20)
 xlabel('Iteration number');
 ylabel('Relative residual');
 [max(abs(sol_GMRES-uu)) norm(sol_GMRES-uu)]
