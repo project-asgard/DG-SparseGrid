@@ -14,6 +14,7 @@ close all
 % clc
 
 % exactf = @(x,t)(exp(t)*sin(pi*x));
+<<<<<<< HEAD
 % exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
 % % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
 % source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
@@ -22,10 +23,20 @@ close all
 
 exactf = @(x,t)(exp(t)*cos(pi*x));
 exactq = @(x,t)(exp(t)*sin(pi*x).*(1-x.^2)*pi);
+=======
+% % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+% source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+% funcCoef = @(x)(sqrt(1-x.^2));
+
+
+exactf = @(x,t)(exp(t)*sin(pi*x));
+exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
 % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
 source = @(x)((cos(pi*x)-2*pi*x.*sin(pi*x)+(1-x.^2)*pi^2.*cos(pi*x)));
 funcCoef = @(x)( (1-x.^2) );
 funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
+
 
 % source = @(x)(sin(pi*x)+sin(pi*x)*pi^2);
 
@@ -39,11 +50,16 @@ funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 format short e
 addpath(genpath(pwd))
 
+<<<<<<< HEAD
 Lev = 2;
 Deg = 4;
 num_plot = 5;
 
 
+=======
+Lev = 4;
+Deg = 3;
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
 
 Lstart = -1;
 Lend = 1;
@@ -87,59 +103,6 @@ maxT = ceil(0.05/dt)
 % as the matrix
 % e.g. we assume neuman boundary:: q=0 on boundary
 % 
-
-
-% % generate 1D matrix for DG
-% for L=0:n-1
-% 
-%     %---------------------------------------------
-%     % (funcCoef*q,d/dx p)
-%     %---------------------------------------------
-%     x0 = Lstart+L*h;
-%     x1 = x0+h;
-%     xi = quad_x*(x1-x0)/2+(x1+x0)/2;
-%     
-%     val=1/h*[Dp_val'*(quad_w.*funcCoef(xi).*p_val)];
-%     c = Deg*L+1:Deg*(L+1);
-%     
-%     A12 = A12 + sparse(c'*ones(1,Deg),ones(Deg,1)*c,val,dof_1D,dof_1D);
-%     
-%     %----------------------------------------------
-%     % -<funcCoef*{q},p>
-%     %----------------------------------------------
-%     val=[ p_1'*funcCoef(x0)*p_2    p_1'*funcCoef(x0)*p_1,...
-%          -p_2'*funcCoef(x1)*p_2  -p_2'*funcCoef(x1)*p_1]/2/h;
-%     A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
-%                    val(:,Deg+1:2*Deg)+val(:,2*Deg+1:3*Deg),...
-%                    dof_1D,dof_1D);
-% 
-%     if L>0
-%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
-%     elseif L == 0
-% %         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
-%         % periodic bc
-%         A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*(Deg*(n-1)+1:Deg*(n)),...
-%             val(:,1:Deg),dof_1D,dof_1D);
-%         % A
-%     end
-%     if L<n-1
-%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
-%     elseif L == n-1
-% %         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*funcCoef(x1)*p_2/2,dof_1D,dof_1D);
-%         % periodic bc
-%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*[1:Deg],val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
-%     end
-%     
-%     val = sqrt(h)/2*[p_val'*(quad_w.*source(xi))]; 
-%     b(c)=val;
-%     
-%     val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))]; 
-%     f0(c) = val;
-%     
-%     
-% end
-% 
-% A21 = A12;
 
 A21 = sparse(dof_1D,dof_1D);
 % generate 1D matrix for DG
@@ -198,11 +161,13 @@ for L=0:n-1
         % new implementation
         A21 = A21 +sparse(c'*ones(1,Deg),ones(Deg,1)*c,-p_1'*p_1/h/2,dof_1D,dof_1D);
         b(c) =  b(c)+p_1'*exactq(Lstart,0)/sqrt(h);
+
     end
     if L<n-1
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
         A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val2(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
     elseif L == n-1
+
 %         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,-p_2'*funcCoef(x1)*p_2/2/h,dof_1D,dof_1D);
         % periodic bc
 %         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*[1:Deg],val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
@@ -210,6 +175,7 @@ for L=0:n-1
         A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*p_2/h/2,dof_1D,dof_1D);
         
         b(c) =  b(c)-p_2'*exactq(Lend,0)/sqrt(h);
+
     end
     
     
@@ -221,20 +187,35 @@ for L=0:n-1
 end
 
 
+<<<<<<< HEAD
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
+=======
+ 
+% x = [Lstart:0.01:Lend];
+% [f_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,x,2);
+% plot(f0)
+% return
+num_plot = 2;
+[quad_x,quad_w]=lgwt(Deg,-1,1);
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
     %---------------------------------------------
     % Generate the coefficients for DG bases
     %---------------------------------------------
+<<<<<<< HEAD
     Iu = [Deg*L+1:Deg*(L+1)];
+=======
+    Iu=[Deg*L+1:Deg*(L+1)];
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
     Iv = [num_plot*L+1:num_plot*(L+1)];
 %     xi=h*(quad_x/2+1/2+L);
 
     x0 = Lstart+L*h;
     x1 = x0+h;
-    xi = quad_x*(x1-x0)/2+(x1+x0)/2;
+    xi = quad_x*(x1-x0)/2+(x1+x0)/2;[L*h,L*h+h];%
     
+<<<<<<< HEAD
     Meval(Iv,Iu)=sqrt(1/h)*p_val;
     x_node(Iv,1)=xi;
 
@@ -258,12 +239,21 @@ end
 % 
 % end
 
+=======
+    Meval(Iu,Iu)=sqrt(1/h)*p_val;
+%     Meval(Iv,Iu)=sqrt(1/h)*p_val;
+%     x_node(num_plot*L+1:num_plot*L+num_plot,1)=xi;
+x_node(Iu,1)=xi;
+
+end
+plot(x_node,Meval*f0,'r-o')
+% return
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
 % checked of projection
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
 hold on
 plot(x_node,Meval*(A12*f0),'r-o',x_node,exactq(x_node,0),'b--')
-% % figure
-% % plot(x_node,source(x_node),'r-o',x_node,Meval*b,'b--')
+
 % return
 Mat = A21*A12;
 

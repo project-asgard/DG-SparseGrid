@@ -13,10 +13,11 @@ clear all
 close all
 % clc
 
+<<<<<<< HEAD
 % exactf = @(x,t)(exp(t)*sin(pi*x));
-% exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
 % % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
 % source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+<<<<<<< HEAD:RunAwayElect/main.m~
 % funcCoef = @(x)( (1-x.^2) );
 % funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 
@@ -26,6 +27,23 @@ exactq = @(x,t)(exp(t)*sin(pi*x).*(1-x.^2)*pi);
 source = @(x)((cos(pi*x)-2*pi*x.*sin(pi*x)+(1-x.^2)*pi^2.*cos(pi*x)));
 funcCoef = @(x)( (1-x.^2) );
 funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
+=======
+% funcCoef = @(x)(sqrt(1-x.^2));
+
+
+exactf = @(x,t)(exp(t)*sin(x));
+% source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+source = @(x)((sin(x)+2*x.*cos(x)+(1-x.^2).*sin(x)));
+funcCoef = @(x)(sqrt(1-x.^2));
+=======
+exactf = @(x,t)(exp(t)*sin(pi*x));
+exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
+% source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+funcCoef = @(x)( (1-x.^2) );
+funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
+>>>>>>> 4dec51742fb529c768c81bc5588b806e5b7c3167
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
 
 % source = @(x)(sin(pi*x)+sin(pi*x)*pi^2);
 
@@ -40,8 +58,15 @@ format short e
 addpath(genpath(pwd))
 
 Lev = 4;
+<<<<<<< HEAD
+Deg = 3;
+=======
 Deg = 2;
+<<<<<<< HEAD:RunAwayElect/main.m~
 num_plot = 5;
+=======
+>>>>>>> 4dec51742fb529c768c81bc5588b806e5b7c3167
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
 
 
 
@@ -77,8 +102,12 @@ fexact = sparse(dof_1D,1);
 qexact = sparse(dof_1D,1);
 
 CFL = 0.001;
+<<<<<<< HEAD:RunAwayElect/main.m~
 dt = CFL*h^((Deg-1)/3);
 % dt = CFL*h^((Deg)/3);
+=======
+dt = CFL*h;%^(Deg/3)*3;
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
 maxT = ceil(0.05/dt)
 
 % Assume 
@@ -191,6 +220,15 @@ for L=0:n-1
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
         A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val2(:,1:Deg),dof_1D,dof_1D);
     elseif L == 0
+<<<<<<< HEAD
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
+        % periodic bc
+%         A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*(Deg*(n-1)+1:Deg*(n)),...
+%             val(:,1:Deg),dof_1D,dof_1D);
+        
+%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2,dof_1D,dof_1D);
+        
+=======
 %         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_1'*funcCoef(x0)*p_1/2/h,dof_1D,dof_1D);
         % periodic bc
 %         A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*(Deg*(n-1)+1:Deg*(n)),...
@@ -198,11 +236,20 @@ for L=0:n-1
         % new implementation
         A21 = A21 +sparse(c'*ones(1,Deg),ones(Deg,1)*c,-p_1'*p_1/h/2,dof_1D,dof_1D);
         b(c) =  b(c)+p_1'*exactq(Lstart,0)/sqrt(h);
+>>>>>>> 4dec51742fb529c768c81bc5588b806e5b7c3167
     end
     if L<n-1
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
         A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val2(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
     elseif L == n-1
+<<<<<<< HEAD:RunAwayElect/main.m~
+=======
+<<<<<<< HEAD
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*funcCoef(x1)*p_2/2,dof_1D,dof_1D);
+        % periodic bc
+%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*[1:Deg],val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
+=======
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
 %         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,-p_2'*funcCoef(x1)*p_2/2/h,dof_1D,dof_1D);
         % periodic bc
 %         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*[1:Deg],val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
@@ -210,6 +257,7 @@ for L=0:n-1
         A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*p_2/h/2,dof_1D,dof_1D);
         
         b(c) =  b(c)-p_2'*exactq(Lend,0)/sqrt(h);
+>>>>>>> 4dec51742fb529c768c81bc5588b806e5b7c3167
     end
     
     
@@ -221,20 +269,35 @@ for L=0:n-1
 end
 
 
+<<<<<<< HEAD:RunAwayElect/main.m~
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
+=======
+ 
+% x = [Lstart:0.01:Lend];
+% [f_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,x,2);
+% plot(f0)
+% return
+num_plot = 2;
+[quad_x,quad_w]=lgwt(Deg,-1,1);
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
     %---------------------------------------------
     % Generate the coefficients for DG bases
     %---------------------------------------------
+<<<<<<< HEAD:RunAwayElect/main.m~
     Iu = [Deg*L+1:Deg*(L+1)];
+=======
+    Iu=[Deg*L+1:Deg*(L+1)];
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
     Iv = [num_plot*L+1:num_plot*(L+1)];
 %     xi=h*(quad_x/2+1/2+L);
 
     x0 = Lstart+L*h;
     x1 = x0+h;
-    xi = quad_x*(x1-x0)/2+(x1+x0)/2;
+    xi = quad_x*(x1-x0)/2+(x1+x0)/2;[L*h,L*h+h];%
     
+<<<<<<< HEAD:RunAwayElect/main.m~
     Meval(Iv,Iu)=sqrt(1/h)*p_val;
     x_node(Iv,1)=xi;
 
@@ -258,12 +321,30 @@ end
 % 
 % end
 
+=======
+    Meval(Iu,Iu)=sqrt(1/h)*p_val;
+%     Meval(Iv,Iu)=sqrt(1/h)*p_val;
+%     x_node(num_plot*L+1:num_plot*L+num_plot,1)=xi;
+x_node(Iu,1)=xi;
+
+end
+plot(x_node,Meval*f0,'r-o')
+% return
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
 % checked of projection
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
+<<<<<<< HEAD
+% return
+% hold on
+% plot(x_node,Meval*(A12*f0),'r-o',x_node,-pi*cos(pi*x_node),'b--')
+figure
+plot(x_node,source(x_node),'r-o',x_node,Meval*b,'b--')
+=======
 hold on
 plot(x_node,Meval*(A12*f0),'r-o',x_node,exactq(x_node,0),'b--')
 % % figure
 % % plot(x_node,source(x_node),'r-o',x_node,Meval*b,'b--')
+>>>>>>> 4dec51742fb529c768c81bc5588b806e5b7c3167
 % return
 Mat = A21*A12;
 
@@ -275,7 +356,10 @@ b = b+bb;
 % return
 figure
 for t = 1:maxT
+<<<<<<< HEAD:RunAwayElect/main.m~
     t
+=======
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
     time = t*dt;
 %     tmp = A12'*A12*f0;%dt*A12'*A12*f0+dt*b*exp(time);
 %     tmp2 = A12*A12*f0;
@@ -301,6 +385,7 @@ hold on
 plot(x_node,exactf(x_node,time),'r-o')
 %  max(abs(Meval*f0))
  val = Meval*f0-exactf(x_node,time);
+<<<<<<< HEAD:RunAwayElect/main.m~
 %  [norm(val) max(abs(val))]
  
  fL2 = 0; fLinf = max(abs(val));
@@ -309,10 +394,14 @@ plot(x_node,exactf(x_node,time),'r-o')
      
  end
  [sqrt(fL2) fLinf]
+=======
+ [norm(val) max(abs(val))]
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
  
  figure;
  plot(x_node,Meval*A12*f0,'r-o',x_node,exactq(x_node,time),'b--')
  val = Meval*A12*f0-exactq(x_node,time);
+<<<<<<< HEAD:RunAwayElect/main.m~
 %  [norm(val) max(abs(val))]
  
   qL2 = 0; qLinf = max(abs(val));
@@ -332,3 +421,7 @@ figure;
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--');
 hold on;
 plot(x_node,Meval*A12*f0,'b-o',x_node,exactq(x_node,time),'b--');
+=======
+ [norm(val) max(abs(val))]
+
+>>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc:RunAwayElect/oldfile/main.m
