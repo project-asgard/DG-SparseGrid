@@ -1,0 +1,376 @@
+
+\documentclass[final,leqno]{siamltex704}
+%\documentclass[leqno]{siamltex704}
+\usepackage{epsfig}
+\usepackage{amsmath,bm}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage[notcite,notref]{showkeys}
+\newtheorem{algorithm}{Weak Galerkin Algorithm}
+\newcommand{\bq}{{\bf q}}
+\newcommand{\bn}{{\bf n}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bv}{{\bf v}}
+\def\bbb{{\bf b}}
+\def\T{{\mathcal T}}
+\def\E{{\mathcal E}}
+\def\V{{\mathcal V}}
+\def\W{{\mathcal W}}
+\def\l{{\langle}}
+\def\r{{\rangle}}
+\def\jump#1{{[\![#1[\!]}}
+\def\bbF{{\bf F}}
+\def\bbf{{\bf f}}
+\def\bn{{\bf n}}
+\def\bq{{\bf q}}
+\def\bV{{\bf V}}
+\def\bu{{\bf u}}
+\def\bv{{\bf v}}
+\def\bw{{\bf w}}
+\def\br{{\bf r}}
+\def\bs{{\bf s}}
+\def\bbQ{\mathbb{Q}}
+\def\bfQ{\bf{Q}}
+\def\bcurl{ \textbf{curl }}
+\def\bE{{\bf E}}
+\def\bB{{\bf B}}
+\def\bx{{\bf x}}
+\def\bU{{\bf U}}
+\def\bV{{\bf V}}
+\def\bJ{{\bf J}}
+
+\def\ljump{{[\![}}
+\def\rjump{{]\!]}}
+
+\def\lavg{{\{\!\{}}
+\def\ravg{{\}\!\}}}
+
+\def\aa{\mathfrak{a}}
+\def\bbQ{\mathbb{Q}}
+\newcommand{\pT}{{\partial T}}
+\newtheorem{defi}{Definition}[section]
+\def\3bar{{|\hspace{-.02in}|\hspace{-.02in}|}}
+%\setlength{\textwidth}{6truein} \setlength{\textheight}{8truein}
+%\voffset=-0.55truein
+%\hoffset=-0.65truein
+\renewcommand{\ldots}{\dotsc}
+\setlength{\parskip}{1\parskip}
+
+\title{Discontinuous Galerkin Sparse Grids Methods for Run-Away Electron Model}
+
+
+\author{
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\begin{keywords}
+
+\end{keywords}
+
+\begin{AMS}
+Primary: 65N15, 65N30; Secondary: 35J50
+\end{AMS}
+\pagestyle{myheadings}
+
+\section{Introduction}\label{Section:Introduction}
+Let the domain $\Omega\times(0,T)$ with $\Omega=[-1,1]$, the following problem will be considered in this paper,
+\begin{eqnarray}
+&&\frac{\partial f}{\partial t} = \frac{\partial}{\partial x}(1-x^2)\frac{\partial f}{\partial x},\mbox{ in }\Omega\label{eq:pde}\\
+&&(1-x^2)\frac{\partial f}{\partial x}|_{x=\pm 1} = 0.\label{eq:bc}
+\end{eqnarray}
+
+% LDG
+\section{Local Discontinuous Galerkin Methods}
+We rewrite Eq. (\ref{eq:pde}) as the following system
+\begin{eqnarray}
+f_t-q_x=0,\ q-(1-x^2)f_x=0.
+\end{eqnarray}
+First, we divide $[-1,1]$ into $N$ cells
+\begin{eqnarray*}
+-1=x_{1/2}\le x_{3/2}\le \cdots\le x_{N+1/2}=1,
+\end{eqnarray*}
+and denote
+$$
+I_j=(x_{j-1/2},x_{j+1/2}),\ x_j=(x_{j-1/2},x_{j+1/2})/2,\ h_j=x_{j+1/2}-x_{j-1/2}
+$$
+as the cells, cell centers and cell lengths.
+
+Define the discontinuous Galerkin finite element space as
+\begin{eqnarray}
+V_h^k=\{v:v|_{I_j}\in P^k(I_j), j=1,\cdots,N\},
+\end{eqnarray}
+where $P^k(I_j)$ denotes the space of polynomials in $I_j$ of degree at most $k$.
+
+The numerical scheme is to find $f_h,q_h\in V_h^k$ such that, for all test functions $w,p\in V_h^k$, we have
+\begin{eqnarray}
+&&\int_{I_j}\frac{\partial f_h}{\partial t}wdx+\int_{I_j}q_h\frac{\partial w}{\partial x}dx-\hat{Q}_{j+1/2}(w)^-_{j+1/2}+\hat{Q}_{j-1/2}(w)^+_{j-1/2}=0,\label{eq:ldg-1}\\
+&&\int_{I_j}q_h p-2xf_h p+(1-x^2)f_h\frac{\partial p}{\partial x}dx-\hat{F}_{j+1/2}(p)^-_{j+1/2}+\hat{F}_{j-1/2}(p)^+_{j-1/2}=0.\label{eq:ldg-2}
+\end{eqnarray}
+Here we have to define the numerical fluxes $\hat{Q}_{j+1/2}$, $\hat{Q}_{j-1/2}$, $\hat{F}_{j+1/2}$, and $\hat{F}_{j-1/2}$. The first trial is the average flux (central flux)
+\begin{eqnarray}
+\hat{Q}_{j+1/2}&=&\frac{1}{2}\bigg((q_h)_{j+1/2}^++(q_h)_{j+1/2}^-\bigg),\\
+ \hat{Q}_{j-1/2}&=&\frac{1}{2}\bigg((q_h)_{j-1/2}^++(q_h)_{j-1/2}^-\bigg)\\
+\hat{F}_{j+1/2}&=&\frac{1-x_{j+1/2}^2}{2}\bigg((f_h)_{j+1/2}^++(f_h)_{j+1/2}^-\bigg),\\
+ \hat{F}_{j-1/2}&=&\frac{1-x_{j-1/2}^2}{2}\bigg((f_h)_{j-1/2}^++(f_h)_{j-1/2}^-\bigg).
+\end{eqnarray}
+On the boundary, we shall define $\hat{Q}_{1/2}=0$, $\hat{Q}_{N+1/2}=0$, $\hat{F}_{1/2}=0$, $\hat{F}_{N+1/2}=0$.
+
+
+Notice that, from Eq. (\ref{eq:ldg-2}), we can solve $q_h$ explicitly in terms of $f_h$, just by inverting the small matrix. It turns out that the LDG scheme (\ref{eq:ldg-1})-(\ref{eq:ldg-2}) with the central fluxes is stable and convergent, but it loses one order of accuracy, to only $\mathcal{O}(h^k)$ for the error measured in the $L^2$-norm, for odd $k$.
+
+%Replace $p=q_h$ and $w=f_h$, and thus (\ref{eq:ldg-1})-(\ref{eq:ldg-2}) imply
+%\begin{eqnarray}
+%\frac{1}{2}\frac{d}{dt}\int_{I_j}(f_h)^2dx+\frac{d}{dt}\int_{I_j}(q_h)^2dx
+%\end{eqnarray}
+
+%\section{Notations}
+%%-----------------------------
+%% Notations for DG
+%%-----------------------------
+%For piecewise functions, we further introduce the jumps and averages as follows. For any edge $e=K^+\cap K^-\in\mathcal{E}_h$, the jumps across $e$ are defined as
+%\begin{eqnarray*}
+%\ljump v\rjump=v^+-v^-,
+%\end{eqnarray*}
+%and the averages are
+%\begin{eqnarray*}
+%\lavg v\ravg=\frac{1}{2}\left(v^++v^-\right).
+%\end{eqnarray*}
+
+
+
+
+%% Error Estimate
+%
+%\section{Sparse Grids}
+%In this section, we introduce the grids and the associated finite element space. First, denote the one dimensional hierarchical decomposition of piecewise polynomial space on the interval $[0,1]$. The grids are defined as the nested grids, where the $n$-th level grid $\Omega_n$ consists of $2^n$ uniform cells $I_j^n=(2^{-n}j,2^{-n}(j+1)],j=0,\dots,2^n-1$, for any $n\ge 0.$ Let 
+%\begin{eqnarray*}
+%V_k^n:=\{v:v\in P^k(I^n_j),\forall j=0,\dots,2^n-1\}
+%\end{eqnarray*}
+%be the usual piecewise polynomials of degree at most $k$ on the $n$-th level grid $\Omega_n$. Then, we have
+%$$V^0_k\subset V^1_k\subset V^2_k\subset\cdots.$$
+%We can now define the multiwavelet subspace $W^n_k,n=1,2,\cdots$ as the orthogonal complement of $V_k^{n-1}$ in $V_k^n$ with respect to the $L^2$ inner product on $[0,1]$, i.e.,
+%$$V_k^{n-1}\bigoplus W_k^n=V_k^n,\ W_k^n\pm V_k^{n-1}.$$
+%Here, we let $W_k^0:=V_k^0$, which is standard piecewise polynomial space of degree $k$ on $[0,1]$. The dimension of $W_k^n$ is $2^{n-1}(k+1)$ when $n\ge 1$, and $k+1$ when $n=0$. In summary, we have found a hierarchical representation of the standard piecewise polynomial space $V_k^n$ on $\Omega_n$ as $V_k^n=\bigoplus_{0\le j\le n}W_k^j$.
+%
+%For a multi-index $\bm{\alpha}=(\alpha_1,\alpha_2,\alpha_3)\in\mathbb{N}_0^3$, where $\mathbb{N}_0^3$ denotes the set of nonnegative integers, the $l^1$ and $l^\infty$ norms are defined as
+%$$|\bm{\alpha}|_1:=\sum_{m=1}^3\alpha_m,\ |\bm{\alpha}|_{\infty}:=\max_{1\le m\le 3}\alpha_m.$$
+%We denote ${\bf l}=(l_1,l_2,l_3)\in\mathbb{N}_0^3$ the mesh level in a multivariate sense. We define the tensor-product mesh grid $\Omega_{\bf l}=\Omega_{l_1}\bigotimes\Omega_{l_2}\bigotimes\Omega_{l_3}$ and the corresponding mesh size $h_{\bf l}=(h_{l_1},h_{l_2},h_{l_3})$. Based on the grid $\Omega_{\bf l},$ we denote by $I_{\bf j}^{\bf l}=\{{\bf x}:x_m\in(h_mj_m,h_m(j_m+1)),m=1,2,3\}$ and elementary cell, and
+%$${\bf V}_k^{\bf l}:=\{\bv:\bv(\bx)\in [{P}^k(I_{\bf j}^{\bf l})]^3,0\le{\bf j}\le 2^{\bf l}-1\}=[V^{l_1}_{k,x_1}\times V^{l_2}_{k,x_2}\times V^{l_3}_{k,x_3}]^3$$
+%the tensor-product piecewise polynomial space, where $P^k(I_{\bf j}^{\bf l})$ denotes the collection of polynomials of degree up to $k$ in each dimension on cell $I_{\bf j}^{\bf l}$. If we use equal mesh refinement of size $h_N=2^{-N}$ in each coordinate direction, the grid and space will be denoted by $\Omega_N$ and $\bV_k^N,$ respectively.
+%
+%Based on a tensor-product construction, the multi-dimensional increment space can be defined as
+%$${\bf W}_k^{\bf l}=[W_{k,x_1}^{l_1}\times W_{k,x_2}^{l_2}\times W_{k,x_3}^{l_3}]^3.$$
+%Therefore, space ${\bf V}_k^{\bf l}$ can be represented by
+%$$\bV_k^{\bf l}=\bigoplus_{0\le j_1\le l_1,0\le j_2\le l_2,0\le j_3\le l_3}{\bf W}_k^{\bf j}.$$
+%The standard tensor-product polynomial space $\bV_k^N$ and sparse finite element approximation space $\hat{\bV}_k^N$ on $\Omega_N$ are defined by
+%\begin{eqnarray}
+%\bV_k^N&=&\bigoplus_{|{\bf l}|_\infty\le N,{\bf l}\in\mathbb{N}_0^3}{\bf W}_k^{\bf l},\\
+%\hat{\bV}_k^N&=&\bigoplus_{|{\bf l}|_1\le N,{\bf l}\in\mathbb{N}_0^3}{\bf W}_k^{\bf l}
+%\end{eqnarray}
+%The sparse finite element space $\hat{\bV}_k^N$ is a subset of $\bV_k^N$, and its number of degrees of freedom scales as $\mathcal{O}([3(k+1)^3(2N)N^{2}])$, which is significantly less than that of $\bV_k^N$ with exponential dependence on $[3(k+1)^32^{3N}]$. This is the key for computational savings in high dimensions.
+
+\subsection{Temporal Discretizations}
+We use total variation diminishing (TVD) high-order Runge-Kutta methods to solve the method of lines ODE resulting from the semi-discrete DG scheme, $\frac{d}{dt}G_h=R(G_h)$. Such time stepping methods are convex combinations of the Euler forward time discretization. The commonly used third-order TVD Runge-Kutta method is given by
+\begin{eqnarray}
+G_h^{(1)}&=&G_h^n+\Delta tR(G_h^n),\notag\\
+G_h^{(2)}&=&\frac{3}{4}G_h^n+\frac{1}{4}G_h^{(1)}+\frac{1}{4}\Delta tR(G_h^{(1)}),\notag\\
+G_h^{n+1}&=&\frac{1}{3}G_h^n+\frac{2}{3}G_h^{(2)}+\frac{2}{3}\Delta tR(G_h^{(2)}),
+\end{eqnarray}
+where $G_h^n$ represents a numerical approximation of the solution at discrete time $t_n$. A detailed description of the TVD Runge-Kutta method can be found in \cite{ShuOsher1988}.
+
+\section{Numerical Experiments}
+\subsection{Example 1} In this test, we choose a proper source term such that the exact solution is 
+$$f(x,t)=\sin(\pi x)\exp(t).$$
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{cc}
+  \includegraphics[width=.45\textwidth]{./L2error}&
+   \includegraphics[width=.45\textwidth]{./test1-Linftyerror} \\
+  \footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test 1: Convergence results of error measured in $L^2$-norm and $L_{\infty}$ norm.}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{cc}
+  \includegraphics[width=.45\textwidth]{./sol-f}&
+   \includegraphics[width=.45\textwidth]{./sol-q} \\
+  \footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test 1: Plot for solutions (a) $f$; (b) $q$.}
+\end{figure}
+
+%CFL = 0.001 Deg = 2
+%1.8296e-01   1.9889e-01 7.5308e-01   9.5192e-01
+%7.7859e-02   9.5594e-02 3.8083e-01   4.6121e-01
+%3.6593e-02   4.7238e-02 1.9399e-01   2.3431e-01
+%1.7996e-02   2.3564e-02 9.7497e-02   1.1663e-01
+%
+%Deg = 3
+%5.4127e-02   7.1077e-02 1.6754e-01   1.6957e-01
+%2.7788e-03   3.6478e-03 1.3864e-02   1.4808e-02
+%2.9264e-04   3.3966e-04 1.5324e-03   1.6930e-03
+%3.5655e-05   3.7078e-05 1.8583e-04   2.0433e-04
+%
+%Deg = 4
+%3.2418e-03   2.8363e-03 1.6971e-02   1.1397e-02
+%4.6308e-04   4.3523e-04 1.7831e-03   1.5391e-03
+%6.1735e-05   5.6997e-05 2.1482e-04   2.0341e-04
+%7.8808e-06   7.2173e-06 2.6608e-05   2.5684e-05
+
+\subsection{Example 2} In this test, we choose a proper source term such that the exact solution is 
+$$f(x,t)=\cos(\pi x)\exp(t).$$
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{cc}
+  \includegraphics[width=.45\textwidth]{./test2-L2error}&
+   \includegraphics[width=.45\textwidth]{./test2-Linftyerror} \\
+  \footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test 2: Convergence results of error measured in $L^2$-norm and $L_{\infty}$ norm.}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{cc}
+  \includegraphics[width=.45\textwidth]{./test2-sol-f}&
+   \includegraphics[width=.45\textwidth]{./test2-sol-q} \\
+  \footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test 2: Plot for solutions (a) $f$; (b) $q$.}
+\end{figure}
+
+%Deg = 2
+%   1.4887e-01   1.6477e-01 8.1850e-01   1.2631e+00
+%   6.2397e-02   6.8786e-02 4.0606e-01   6.2627e-01
+%   3.0414e-02   3.2788e-02 2.0076e-01   3.1026e-01
+%   1.5335e-02   1.6164e-02 9.9869e-02   1.5443e-01
+%Deg = 3   
+%   3.0115e-02   3.9567e-02 1.4831e-01   1.9290e-01
+%   2.5491e-03   3.2423e-03 1.4562e-02   1.3260e-02
+%   2.9283e-04   3.0353e-04 1.6325e-03   1.7234e-03
+%   3.5710e-05   3.4597e-05 1.9865e-04   1.9296e-04
+%Deg = 4
+%   2.1547e-03   1.6654e-03 1.9086e-02   2.0272e-02
+%   2.1478e-04   1.7957e-04 2.3586e-03   2.8417e-03
+%   2.5985e-05   2.3556e-05 2.8320e-04   3.5870e-04
+%   3.2912e-06   2.9420e-06 3.4739e-05   4.4667e-05
+
+\begin{thebibliography}{99}
+
+\bibitem{ShuOsher1988}
+C.W. Shu and S. Osher. Efficient implementation of essentially non-oscillatory shock-capturing schemes. J. Comput.
+Phys., 77 (1988):439-471.
+
+\end{thebibliography}
+
+\end{document}
+
+%\begin{itemize}
+
+\section{Numerical Experiments}
+In this section, we perform several numerical experiments to validate the proposed numerical scheme. 
+
+\subsection{Test 1}
+Let $\Omega=[0,1]^3$, and the exact solutions are described as follows:
+\begin{eqnarray}
+\bE(x,y,z,t)=\begin{pmatrix}
+-\cos(2\pi x)\sin(2\pi y)\sin(2\pi z)\cos(\omega t)\\
+0\\
+\sin(2\pi x)\sin(2\pi y)\cos(2\pi z)\cos(\omega t)
+\end{pmatrix},\\
+\bB(x,y,z,t)=\begin{pmatrix}
+{-2\pi\sin(2\pi x)\cos(2\pi y)\cos(2\pi z)\sin(\omega t)}/{\omega}\\
+{\quad 4\pi\cos(2\pi x)\sin(2\pi y)\cos(2\pi z)\sin(\omega t)}/{\omega}\\
+{-2\pi\cos(2\pi x)\cos(2\pi y)\sin(2\pi z)\sin(\omega t)}/{\omega}
+\end{pmatrix}
+\end{eqnarray}
+
+\subsection{Test 2}
+For a domain $[0,1]^2$, the analytic solutions are taken as
+\begin{eqnarray}
+\bE(x,y,t)&=&\begin{pmatrix}
+0\\
+0\\
+\cos(2\pi x)\cos(2\pi y)\cos(2\pi t)
+\end{pmatrix},\\
+\bB(x,y,t)&=&\begin{pmatrix}
+\cos(2\pi x)\sin(2\pi y)\sin(2\pi t)\\
+-\sin(2\pi x)\cos(2\pi y)\sin(2\pi t)\\
+0
+\end{pmatrix}.
+\end{eqnarray}
+
+
+2.0000e+00   2.0000e+00   5.2374e-03   9.0116e-03
+2.0000e+00   3.0000e+00   5.4354e-03   1.2929e-02
+2.0000e+00   4.0000e+00   2.5848e-03   9.0245e-03
+2.0000e+00   5.0000e+00   1.3511e-03   5.0283e-03
+2.0000e+00   6.0000e+00   5.2297e-04   2.6385e-03
+2.0000e+00   7.0000e+00   1.8907e-04   1.3453e-03
+2.0000e+00   8.0000e+00   6.7222e-05   6.7739e-04
+
+
+% Table generated by Excel2LaTeX from sheet 'Sheet1'
+\begin{table}[htbp]
+  \centering
+  \caption{Add caption}
+    \begin{tabular}{rrrrr}
+1/h & Max Error & Rate & L2 Error & Rate\\
+    4     & 5.2374E-03 &       & 9.0116E-03 &  \\
+    8     & 5.4354E-03 & - & 1.2929E-02 & - \\
+    16   & 2.5848E-03 & 1.07  & 9.0245E-03 & 0.52 \\
+    32   & 1.3511E-03 & 0.94  & 5.0283E-03 & 0.84 \\
+    64   & 5.2297E-04 & 1.37  & 2.6385E-03 & 0.93 \\
+    128 & 1.8907E-04 & 1.47  & 1.3453E-03 & 0.97 \\
+    256 & 6.7222E-05 & 1.49  & 6.7739E-04 & 0.99 \\
+    \end{tabular}%
+  \label{tab:addlabel}%
+\end{table}%
+
+
+\begin{table}[htbp]
+  \centering
+  \caption{High-order Maxwell2}
+    \begin{tabular}{rrrrr}
+1/h & Max Error & Rate & L2 Error & Rate\\
+\multicolumn{5} {c}{k=1}	\\
+4	&5.2374E-03	&		&9.0116E-03	&\\
+8	&5.4354E-03	&-0.05	&1.2929E-02	&-0.52\\
+16	&2.5848E-03	&1.07	&9.0245E-03	&0.52\\
+32	&1.3511E-03	&0.94	&5.0283E-03	&0.84\\
+64	&5.2297E-04	&1.37	&2.6385E-03	&0.93\\
+128	&1.8907E-04	&1.47	&1.3453E-03	&0.97\\
+256	&6.7222E-05	&1.49	&6.7739E-04	&0.99\\
+\multicolumn{5} {c}{k=2}	\\				
+4	&3.3860E-03	& 		&6.0936E-03	&\\
+8	&8.4866E-04	&2.00	&2.6162E-03	&1.22\\
+16	&7.3711E-05	&3.53	&3.8082E-04	&2.78\\
+32	&9.0947E-06	&3.02	&5.4754E-05	&2.80\\
+64	&1.2368E-06	&2.88	&6.8743E-06	&2.99\\
+128	&1.5210E-07	&3.02	&8.5553E-07	&3.01\\
+\multicolumn{5} {c}{k=3}	\\					
+4	&1.3336E-04	& 		&4.9267E-04	&\\
+8	&1.6770E-05	&2.99	&6.2584E-05	&2.98\\
+16	&2.1838E-06	&2.94	&7.7980E-06	&3.00\\
+32	&2.6047E-07	&3.07	&9.6225E-07	&3.02\\
+64	&3.2659E-08	&3.00	&1.2228E-07	&2.98\\
+    \end{tabular}%
+\end{table}%
+
+
+
+
+

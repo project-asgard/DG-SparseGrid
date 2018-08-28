@@ -13,10 +13,17 @@ clear all
 close all
 % clc
 
-exactf = @(x,t)(exp(t)*sin(pi*x));
-exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
+% exactf = @(x,t)(exp(t)*sin(pi*x));
+% exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
+% % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+% source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+% funcCoef = @(x)( (1-x.^2) );
+% funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
+
+exactf = @(x,t)(exp(t)*cos(pi*x));
+exactq = @(x,t)(exp(t)*sin(pi*x).*(1-x.^2)*pi);
 % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
-source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+source = @(x)((cos(pi*x)-2*pi*x.*sin(pi*x)+(1-x.^2)*pi^2.*cos(pi*x)));
 funcCoef = @(x)( (1-x.^2) );
 funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 
@@ -32,8 +39,9 @@ funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 format short e
 addpath(genpath(pwd))
 
-Lev = 4;
-Deg = 2;
+Lev = 2;
+Deg = 4;
+num_plot = 5;
 
 
 
@@ -65,9 +73,12 @@ A12 = sparse(dof_1D,dof_1D);
 f0 = sparse(dof_1D,1);
 
 b = sparse(dof_1D,1);bb = sparse(dof_1D,1);
+fexact = sparse(dof_1D,1);
+qexact = sparse(dof_1D,1);
 
 CFL = 0.001;
-dt = CFL*h;%^(Deg/3)*3;
+dt = CFL*h^((Deg-1)/3)/2;
+% dt = CFL*h^((Deg)/3);
 maxT = ceil(0.05/dt)
 
 % Assume 
@@ -155,6 +166,12 @@ for L=0:n-1
     val = sqrt(h)/2*[p_val'*(quad_w.*source(xi))]; 
     bb(c)=bb(c)+val;
     
+    val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))]; 
+    fexact(c)=fexact(c)+val;
+    
+    val = sqrt(h)/2*[p_val'*(quad_w.*exactq(xi,0))]; 
+    qexact(c)=qexact(c)+val;
+    
     %----------------------------------------------
     % -<funcCoef*{q},p>
     %----------------------------------------------
@@ -204,28 +221,42 @@ for L=0:n-1
 end
 
 
- 
-% x = [Lstart:0.01:Lend];
-% [f_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,x,2);
-% plot(f0)
-% return
-[quad_x,quad_w]=lgwt(Deg,-1,1);
+[quad_x,quad_w]=lgwt(num_plot,-1,1);
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
     %---------------------------------------------
     % Generate the coefficients for DG bases
     %---------------------------------------------
-    Iu=[Deg*L+1:Deg*(L+1)];
+    Iu = [Deg*L+1:Deg*(L+1)];
+    Iv = [num_plot*L+1:num_plot*(L+1)];
 %     xi=h*(quad_x/2+1/2+L);
 
     x0 = Lstart+L*h;
     x1 = x0+h;
     xi = quad_x*(x1-x0)/2+(x1+x0)/2;
     
-    Meval(Iu,Iu)=sqrt(1/h)*p_val;
-    x_node(Deg*L+1:Deg*L+Deg,1)=xi;
+    Meval(Iv,Iu)=sqrt(1/h)*p_val;
+    x_node(Iv,1)=xi;
 
 end
+
+% [quad_x,quad_w]=lgwt(Deg,-1,1);
+% p_val = legendre(quad_x,Deg);
+% for L=0:n-1
+%     %---------------------------------------------
+%     % Generate the coefficients for DG bases
+%     %---------------------------------------------
+%     Iu=[Deg*L+1:Deg*(L+1)];
+% %     xi=h*(quad_x/2+1/2+L);
+% 
+%     x0 = Lstart+L*h;
+%     x1 = x0+h;
+%     xi = quad_x*(x1-x0)/2+(x1+x0)/2;
+%     
+%     Meval(Iu,Iu)=sqrt(1/h)*p_val;
+%     x_node(Deg*L+1:Deg*L+Deg,1)=xi;
+% 
+% end
 
 % checked of projection
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
@@ -236,27 +267,28 @@ plot(x_node,Meval*(A12*f0),'r-o',x_node,exactq(x_node,0),'b--')
 % return
 Mat = A21*A12;
 
-max(abs(Meval*f0))
-val = Meval*A12*f0-exactq(x_node,0);
-[norm(val) max(abs(val))]
+% max(abs(Meval*f0))
+% val = Meval*A12*f0-exactq(x_node,0);
+% [norm(val) max(abs(val))]
 
 b = b+bb;
 % return
 figure
 for t = 1:maxT
+    t
     time = t*dt;
 %     tmp = A12'*A12*f0;%dt*A12'*A12*f0+dt*b*exp(time);
 %     tmp2 = A12*A12*f0;
 
 % %     fval = f0+dt*Mat*f0+dt*b;%*exp(time);
 
-%     f1 = f0 + dt*( Mat*f0+b*exp(time-dt) );
-%     f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b*exp(time));
-%     fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b*exp(time-dt/2));
+    f1 = f0 + dt*( Mat*f0+b*exp(time-dt) );
+    f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b*exp(time));
+    fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b*exp(time-dt/2));
 
-    f1 = f0 + dt*( Mat*f0+b );
-    f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b );
-    fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b );
+%     f1 = f0 + dt*( Mat*f0+b );
+%     f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b );
+%     fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b );
     
     f0 = fval;
     
@@ -269,10 +301,34 @@ hold on
 plot(x_node,exactf(x_node,time),'r-o')
 %  max(abs(Meval*f0))
  val = Meval*f0-exactf(x_node,time);
- [norm(val) max(abs(val))]
+%  [norm(val) max(abs(val))]
+ 
+ fL2 = 0; fLinf = max(abs(val));
+ for i = 1:num_plot
+     fL2 = fL2 + quad_w(i)*h*sum(val(i:num_plot:end).^2);
+     
+ end
+ [sqrt(fL2) fLinf]
  
  figure;
  plot(x_node,Meval*A12*f0,'r-o',x_node,exactq(x_node,time),'b--')
  val = Meval*A12*f0-exactq(x_node,time);
- [norm(val) max(abs(val))]
+%  [norm(val) max(abs(val))]
+ 
+  qL2 = 0; qLinf = max(abs(val));
+ for i = 1:num_plot
+     qL2 = qL2 + quad_w(i)*h*sum(val(i:num_plot:end).^2);
+     
+ end
+ [sqrt(qL2) qLinf]
+ 
+%  err = f0-fexact;
+%  full([norm(err) max(abs(err))])
+%  
+%  err = A12*f0-qexact;
+%  full([norm(err) max(abs(err))])
 
+figure;
+plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--');
+hold on;
+plot(x_node,Meval*A12*f0,'b-o',x_node,exactq(x_node,time),'b--');
