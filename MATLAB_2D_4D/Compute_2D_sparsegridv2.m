@@ -222,6 +222,9 @@ end
 % -----------------------
 A_s = (A_s + A_s')/2;
 
+Mat = A_s;
+bb = b_s*pi^2*2;
+return
 disp(sprintf('Np=%d,k=%d, n=%d, kron_flops=%g, kron_nnz=%g, nnz(A_s)=%g', ...
               Np, k, size(A_s,1), ...
               kron_flops,    kron_nnz, nnz(A_s)  ));
@@ -242,6 +245,9 @@ save(['./Data/A_2D_encode.mat'],'A_encode');
 % tic
 sol_s = A_s\b_s*pi^2*2;
 % toc
+
+Mat = A_s;
+bb = b_s*pi^2*2;
 
 % compare the solution with interpolation
 norm(sol_s-uu_s)

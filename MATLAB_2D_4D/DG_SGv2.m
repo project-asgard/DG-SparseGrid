@@ -11,8 +11,8 @@ format short e
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------
-Np = 5;
-k=4;
+Np = 10;
+k=5;
 
 mkdir('Data')
 addpath(genpath(pwd))
@@ -33,7 +33,7 @@ run Compute_2D_sparsegridv2.m
 toc
 ['Compute_2D_sparsegridv2.m is done']
 
-
+return
 tic
 run Compute_4D_sparsegridv2.m
 % run Compute_4D_sparsegrid.m
