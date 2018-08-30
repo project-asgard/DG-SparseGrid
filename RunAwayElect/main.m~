@@ -41,7 +41,7 @@ funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 % funcCoef2 = @(x)(x-x);
 
 % Test 3
-A = 10;
+A = 1;
 exactf = @(x,t)( (1/2)*exp(A*x)*A/sinh(A) );
 exactq = @(x,t)( -(1/2)*(-x.^2+1).*exp(A*x)*A^2/sinh(A) );
 % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
@@ -235,7 +235,7 @@ b = b+bb;
  end
  total_particle
  
-tp(1) = total_particle;
+tp(0) = total_particle;
 
 figure
 for t = 1:maxT
@@ -259,13 +259,7 @@ for t = 1:maxT
     plot(x_node,Meval*f0,'r-o',x_node,Meval*(A12*f0),'b-<')
     pause (0.1)
     
-    total_particle = 0;
-    ffval = Meval*f0;
-    for i = 1:num_plot
-     
-      total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
-    end
-    tp(t+1) = total_particle;
+    tp(t) = total_pa
 end
 % figure;plot(x,f_loc'*f0,'r-o');hold on;
 % plot(x,exactf(x,time),'b--')
@@ -276,14 +270,14 @@ plot(x_node,exactf(x_node,time),'r-o')
 %  [norm(val) max(abs(val))]
  
  fL2 = 0; fLinf = max(abs(val));
-%  total_particle = 0;
+ total_particle = 0;
  ffval = Meval*f0;
  for i = 1:num_plot
      fL2 = fL2 + quad_w(i)*h/2*sum(val(i:num_plot:end).^2);
-%       total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
+      total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
  end
  [sqrt(fL2) fLinf]
-%  total_particle
+ total_particle
 %  figure;
 %  plot(x_node,Meval*A12*f0,'r-o',x_node,exactq(x_node,time),'b--')
  val = Meval*A12*f0-exactq(x_node,time);
@@ -306,6 +300,3 @@ figure;
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--');
 hold on;
 plot(x_node,Meval*A12*f0,'b-o',x_node,exactq(x_node,time),'b--');
-
-figure;
-plot(tp,'r-o')
