@@ -402,9 +402,35 @@ with $\bv_0^c\in X_h$ and $r\in S_h$. Then the following equation holds
 %
 &=&(\bu-\bu_h,\bv-\bv^c)+(\bu-\bu_h,\bv^c_0)\\
 %
-&=&(\bu-\bu_h,\bv-\bv^c)+(\bu-\bu_h,\bv^c_0-H\bv_0^c)+(\bu-\bu_h,H\bv^c_0)
-:=T_1+T_2+T_3.
+&=&(\bu-\bu_h,\bv-\bv^c)+(\bu-\bu_h,\bv^c_0-H\bv_0^c)+(\bu-\bu_h,H\bv^c_0)\\
+%
+:&=&T_1+T_2+T_3.
 \end{eqnarray*}
+Cauchy-Schwarz inequality yields
+\begin{eqnarray}
+|T_1|\le \|\bu-\bu_h\|\|\bv-\bv^c\|\le Ch\|\bu-\bu_h\|\3bar\bv\3bar.
+\end{eqnarray}
+
+\end{proof}
+
+\begin{lemma}
+Let $\bu$ be the analytical solution and $\bu_h$ be the discontinuous Galerkin approximation. Then there holds
+$$(\bu-\bu_h,\nabla q)=0,\ \forall q\in S_h,$$
+where $S_h:=\{q\in H_0^1(\Omega):q|_K\in P^{\ell+1}(K),K\in\mathcal{T}_h\}$.
+\end{lemma}
+% proof
+\begin{proof}
+For $q\in S_h$, {\color{red}we have $\nabla q\in V_h\cap H_0(\text{curl};\Omega)$.}
+By error equation, we have %$\tilde{A}_h(\bu-\bu_h,\nabla\bv)=r_h(\bu_h;\nabla\bv)$. %For $\nabla\bv^c\in V_h\cap H_0(\text{curl};\Omega)$.
+\begin{eqnarray*}
+0=\tilde{A}_h(\bu-\bu_h,\nabla q).%=(\bu-\bu_h,\nabla q)
+\end{eqnarray*}
+Since $\nabla_h\times\nabla q=0$ and $\ljump\nabla q\rjump_{\tau}=0$, we have
+\begin{eqnarray*}
+\tilde{A}_h(\bu_h,\nabla q)=-k^2(\bu_h,\nabla q),\ 
+\tilde{A}_h(\bu,\nabla q)=A_h(\bu,\nabla q)=-k^2(\bu,\nabla q).
+\end{eqnarray*}
+Thus, the statement of this Lemma follows directly.
 \end{proof}
 
 %---------------------
