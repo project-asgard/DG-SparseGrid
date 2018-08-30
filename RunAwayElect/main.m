@@ -13,25 +13,19 @@ clear all
 close all
 % clc
 
+% Test 1
 % exactf = @(x,t)(exp(t)*sin(pi*x));
-<<<<<<< HEAD
 % exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
 % % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
 % source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
 % funcCoef = @(x)( (1-x.^2) );
 % funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 
+
+
+% Test 2
 exactf = @(x,t)(exp(t)*cos(pi*x));
 exactq = @(x,t)(exp(t)*sin(pi*x).*(1-x.^2)*pi);
-=======
-% % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
-% source = @(x)((sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
-% funcCoef = @(x)(sqrt(1-x.^2));
-
-
-exactf = @(x,t)(exp(t)*sin(pi*x));
-exactq = @(x,t)(-exp(t)*cos(pi*x).*(1-x.^2)*pi);
->>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
 % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
 source = @(x)((cos(pi*x)-2*pi*x.*sin(pi*x)+(1-x.^2)*pi^2.*cos(pi*x)));
 funcCoef = @(x)( (1-x.^2) );
@@ -46,20 +40,26 @@ funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 % funcCoef = @(x)(10);
 % funcCoef2 = @(x)(x-x);
 
+% Test 3
+A = 1;
+exactf = @(x,t)( (1/2)*exp(A*x)*A/sinh(A) );
+exactq = @(x,t)( -(1/2)*(-x.^2+1).*exp(A*x)*A^2/sinh(A) );
+% source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+source = @(x)(x-x);
+funcCoef = @(x)( (1-x.^2) );
+funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
+
 
 format short e
 addpath(genpath(pwd))
 
-<<<<<<< HEAD
-Lev = 2;
-Deg = 4;
+
+Lev = 4;
+Deg = 3;
 num_plot = 5;
 
 
-=======
-Lev = 4;
-Deg = 3;
->>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
+
 
 Lstart = -1;
 Lend = 1;
@@ -187,27 +187,17 @@ for L=0:n-1
 end
 
 
-<<<<<<< HEAD
+
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
-=======
- 
-% x = [Lstart:0.01:Lend];
-% [f_loc] = EvalWavPoint4(Lstart,Lend,Lev,Deg,x,2);
-% plot(f0)
-% return
-num_plot = 2;
-[quad_x,quad_w]=lgwt(Deg,-1,1);
->>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
+
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
     %---------------------------------------------
     % Generate the coefficients for DG bases
     %---------------------------------------------
-<<<<<<< HEAD
+
     Iu = [Deg*L+1:Deg*(L+1)];
-=======
-    Iu=[Deg*L+1:Deg*(L+1)];
->>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
+
     Iv = [num_plot*L+1:num_plot*(L+1)];
 %     xi=h*(quad_x/2+1/2+L);
 
@@ -215,40 +205,12 @@ for L=0:n-1
     x1 = x0+h;
     xi = quad_x*(x1-x0)/2+(x1+x0)/2;[L*h,L*h+h];%
     
-<<<<<<< HEAD
+
     Meval(Iv,Iu)=sqrt(1/h)*p_val;
     x_node(Iv,1)=xi;
 
 end
 
-% [quad_x,quad_w]=lgwt(Deg,-1,1);
-% p_val = legendre(quad_x,Deg);
-% for L=0:n-1
-%     %---------------------------------------------
-%     % Generate the coefficients for DG bases
-%     %---------------------------------------------
-%     Iu=[Deg*L+1:Deg*(L+1)];
-% %     xi=h*(quad_x/2+1/2+L);
-% 
-%     x0 = Lstart+L*h;
-%     x1 = x0+h;
-%     xi = quad_x*(x1-x0)/2+(x1+x0)/2;
-%     
-%     Meval(Iu,Iu)=sqrt(1/h)*p_val;
-%     x_node(Deg*L+1:Deg*L+Deg,1)=xi;
-% 
-% end
-
-=======
-    Meval(Iu,Iu)=sqrt(1/h)*p_val;
-%     Meval(Iv,Iu)=sqrt(1/h)*p_val;
-%     x_node(num_plot*L+1:num_plot*L+num_plot,1)=xi;
-x_node(Iu,1)=xi;
-
-end
-plot(x_node,Meval*f0,'r-o')
-% return
->>>>>>> c38cc506545f6c36bc79adb481f803b19880e7fc
 % checked of projection
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
 hold on
@@ -262,10 +224,17 @@ Mat = A21*A12;
 % [norm(val) max(abs(val))]
 
 b = b+bb;
-% return
+
+ total_particle = 0;
+ ffval = Meval*f0;
+ for i = 1:num_plot
+      total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
+ end
+ total_particle
+return
 figure
 for t = 1:maxT
-    t
+%     t
     time = t*dt;
 %     tmp = A12'*A12*f0;%dt*A12'*A12*f0+dt*b*exp(time);
 %     tmp2 = A12*A12*f0;
@@ -294,20 +263,22 @@ plot(x_node,exactf(x_node,time),'r-o')
 %  [norm(val) max(abs(val))]
  
  fL2 = 0; fLinf = max(abs(val));
+ total_particle = 0;
+ ffval = Meval*f0;
  for i = 1:num_plot
-     fL2 = fL2 + quad_w(i)*h*sum(val(i:num_plot:end).^2);
-     
+     fL2 = fL2 + quad_w(i)*h/2*sum(val(i:num_plot:end).^2);
+      total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
  end
  [sqrt(fL2) fLinf]
- 
- figure;
- plot(x_node,Meval*A12*f0,'r-o',x_node,exactq(x_node,time),'b--')
+ total_particle
+%  figure;
+%  plot(x_node,Meval*A12*f0,'r-o',x_node,exactq(x_node,time),'b--')
  val = Meval*A12*f0-exactq(x_node,time);
 %  [norm(val) max(abs(val))]
  
   qL2 = 0; qLinf = max(abs(val));
  for i = 1:num_plot
-     qL2 = qL2 + quad_w(i)*h*sum(val(i:num_plot:end).^2);
+     qL2 = qL2 + quad_w(i)*h/2*sum(val(i:num_plot:end).^2);
      
  end
  [sqrt(qL2) qLinf]
