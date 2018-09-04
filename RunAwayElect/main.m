@@ -41,7 +41,7 @@ funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 % funcCoef2 = @(x)(x-x);
 
 % Test 3
-A = 10;
+A = 1;
 exactf = @(x,t)( (1/2)*exp(A*x)*A/sinh(A) );
 exactq = @(x,t)( -(1/2)*(-x.^2+1).*exp(A*x)*A^2/sinh(A) );
 % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
@@ -55,8 +55,8 @@ addpath(genpath(pwd))
 
 
 Lev = 4;
-Deg = 3;
-num_plot = 5;
+Deg = 1;
+num_plot = 2;
 
 
 
@@ -188,7 +188,8 @@ end
 
 
 
-[quad_x,quad_w]=lgwt(num_plot,-1,1);
+% [quad_x,quad_w]=lgwt(num_plot,-1,1);
+quad_x = [-1,1]';
 
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
@@ -212,9 +213,9 @@ for L=0:n-1
 end
 
 % checked of projection
-plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
+plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--','LineWidth',2)
 hold on
-plot(x_node,Meval*(A12*f0),'r-o',x_node,exactq(x_node,0),'b--')
+plot(x_node,Meval*(A12*f0),'r-o',x_node,exactq(x_node,0),'b--','LineWidth',2)
 
 % return
 Mat = A21*A12;
@@ -226,7 +227,7 @@ Mat = A21*A12;
 b = b+bb;
 
 
-
+[quad_x,quad_w]=lgwt(num_plot,-1,1);
  total_particle = 0;
  ffval = Meval*f0;
 
@@ -303,9 +304,9 @@ plot(x_node,exactf(x_node,time),'r-o')
 %  full([norm(err) max(abs(err))])
 
 figure;
-plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--');
+plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--','LineWidth',2);
 hold on;
-plot(x_node,Meval*A12*f0,'b-o',x_node,exactq(x_node,time),'b--');
+plot(x_node,Meval*A12*f0,'b-o',x_node,exactq(x_node,time),'b--','LineWidth',2);
 
 figure;
 plot(tp,'r-o')
