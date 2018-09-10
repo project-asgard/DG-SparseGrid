@@ -1,4 +1,6 @@
 function [f2d] = convertFK6DtoRealSpace()
+isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
 
 % Read in output from FK6D and convert it to real space
 
@@ -122,7 +124,13 @@ for tt=1:nT
     maxE = max(abs(E_t(:)));
     axis([x1(1) x1(end) -maxE maxE]);
     
+    if (isOctave),
+      %  ---------------------------------
+      %  getframe not available in octave
+      %  ---------------------------------
+    else
     F(tt) = getframe(gcf);
+    end;
     
 end
 

@@ -61,13 +61,14 @@ for j=1:N % loop over number of addative terms
         Index = Deg^2*(i-1)+1:Deg^2*i;
         
         %A = kron( fv(:,index_I1), fx(:,index_I2) );
-        A = kron( fv(index_I1), fx(index_I2) );
+        %%A = kron( fv(index_I1), fx(index_I2) );
         %B = ft(Index);
-        B = ft;
+        %%B = ft;
         
-        tmp = A * B;
+        %%tmp = A * B;
+	tmp = fx(index_I2)*ft*transpose(fv(index_I1));
         
-        fval(Index,1) = fval(Index,1) + tmp;
+        fval(Index,1) = fval(Index,1) + tmp(:);
         
     end
     
