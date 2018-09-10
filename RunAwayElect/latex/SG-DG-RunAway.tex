@@ -268,6 +268,56 @@ $$f(x,t)=\cos(\pi x)\exp(t).$$
 %   2.5985e-05   2.3556e-05 2.8320e-04   3.5870e-04
 %   3.2912e-06   2.9420e-06 3.4739e-05   4.4667e-05
 
+\subsection{Example 3}
+In this example, we shall consider the initial condition as follows:
+\begin{eqnarray*}
+f_0=\frac{A}{2\sinh A}\exp(Ax).
+\end{eqnarray*}
+Here we shall take $A=0.1,1,10$ for testing.
+\begin{figure}[h!]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.9\textwidth]{./test3-Solution}\\
+   \includegraphics[width=.9\textwidth,height=.6\textwidth]{./test3-TotalPartical} 
+  %\footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test 3: (a) Plot for solutions; (b) Total particles.}
+\end{figure}
+
+\section{Hyperbolic equations}
+In this section, we shall consider the following hyperbolic equations.
+Let the domain $\Omega\times(0,T)$ with $\Omega=[-1,1]$, the following problem will be considered in this paper,
+\begin{eqnarray}
+&&\frac{\partial f}{\partial t} = \frac{\partial}{\partial x}(1-x^2)f,\mbox{ in }\Omega\label{eq:hyper-pde}%\\
+%&&(1-x^2)\frac{\partial f}{\partial x}|_{x=\pm 1} = 0.\label{eq:hyper-bc}
+\end{eqnarray}
+The DG method will be applied to approximate the above equation.
+
+\subsection{Test 1}
+Let 
+\begin{eqnarray*}
+f(x,t)&=&\frac{1-\phi^2}{1-x^2}f_0(\phi),\
+\phi(x,t)=\tanh(\tanh^{-1}x-t)
+\end{eqnarray*}
+with $f_0=\exp(-x^2/\sigma^2),\ \sigma=0.1.$
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth]{./hyperbolic-k2-compare}
+  \end{tabular}
+\caption{Test 1: Plot for solutions for Lev = 4, T = 0.5.}
+\end{figure}
+
+% Convection + Diffusion
+\section{Convection and Diffusion equations}
+Let
+\begin{eqnarray*}
+\frac{\partial f}{\partial t} =  \frac{\partial}{\partial x}(1-x^2)f + \frac{\partial}{\partial x}(1-x^2)\frac{\partial f}{\partial x}.
+\end{eqnarray*}
+First, we shall 
+
+
 \begin{thebibliography}{99}
 
 \bibitem{ShuOsher1988}
