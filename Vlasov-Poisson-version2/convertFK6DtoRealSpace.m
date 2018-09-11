@@ -2,19 +2,49 @@ function [f2d] = converteFK6DtoRealSpace()
 
 % Read in output from FK6D and convert it to real space
 
+% Make Octave Compatible
+addpath(genpath(pwd));
+
+
 filename = 'fval-MWT.h5';
 
-fval_t = h5read(filename, '/fval');
-E_t = h5read(filename, '/E');
+isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
-Deg = double(h5readatt(filename, '/fval/', 'deg'));
-Lev = double(h5readatt(filename, '/fval/', 'lev'));
-dt = h5readatt(filename, '/fval/', 'dt');
-Lmin = h5readatt(filename, '/fval/', 'Lmin');
-Lmax = h5readatt(filename, '/fval/', 'Lmax');
-Vmin = h5readatt(filename, '/fval/', 'Vmin');
-Vmax = h5readatt(filename, '/fval/', 'Vmax');
-x1 = h5readatt(filename, '/fval/', 'x1');
+  if (isOctave),
+    % -----------------------------
+    % perform octave test framework
+    % -----------------------------
+    data = load(filename, '-hdf5');
+    fval_t = data.fval;
+    E_t = data.E;
+    % ------------------------------------
+    % run Python script to grab attributes
+    % ------------------------------------
+    Deg = double(4);
+    Lev = double(5);
+    dt = 7.716*10**-11;
+    Lmin = 0.0;
+    Lmax = 1.0;
+    Vmin = -4500000.0;
+    Vmax = 4500000.0;
+    x1 = linspace(0,1,32);
+  else
+    fval_t = h5read(filename, '/fval');
+    E_t = h5read(filename, '/E');
+
+    Deg = double(h5readatt(filename, '/fval/', 'deg'));
+    Lev = double(h5readatt(filename, '/fval/', 'lev'));
+    dt = h5readatt(filename, '/fval/', 'dt');
+    Lmin = h5readatt(filename, '/fval/', 'Lmin');
+    Lmax = h5readatt(filename, '/fval/', 'Lmax');
+    Vmin = h5readatt(filename, '/fval/', 'Vmin');
+    Vmax = h5readatt(filename, '/fval/', 'Vmax');
+    x1 = h5readatt(filename, '/fval/', 'x1');
+  end;
+
+
+
+
 
 pde.params.Deg = Deg;
 
@@ -62,6 +92,7 @@ vv = linspace(Vmin,Vmax,nY)';
 [fx_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,xx);
 [fy_loc] = EvalWavPoint4(Vmin,Vmax,Lev,Deg,vv);
 
+
 preFileName = ['valPre-',num2str(Deg),'-',num2str(Lev),'.mat'];
 
 if exist(preFileName) == 2
@@ -98,6 +129,7 @@ doTransform = 1;
 startFromLast = 0;
 
 cnt = 1;
+
 if doTransform
     
     if startFromLast
@@ -177,6 +209,7 @@ for tt = 1:nS
     
     ax2 = subplot(2,2,2);
     mesh(xx,vv,f2d_t(:,:,tt)','FaceColor','flat','EdgeColor','none');
+
     axis([Lmin Lmax Vmin Vmax])
     colormap(ax2,c);
     colorbar
@@ -188,13 +221,18 @@ for tt = 1:nS
     minn = min(dn_t(:));
     axis([x1(1) x1(end) minn maxn]);
     
+    title('Density Perturbation');
+    
     subplot(2,2,4);
     plot(x1,E_t(:,tt));
     maxE = max(abs(E_t(:)))+1e-8;
     axis([x1(1) x1(end) -maxE maxE]);
     
+    title ('Electric Field');
+    
+    pause(0.01)
+    
     %F(tt) = getframe(gcf);
-    pause(0.02);
     
 end
 
