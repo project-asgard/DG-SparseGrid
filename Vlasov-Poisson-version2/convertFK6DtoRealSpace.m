@@ -16,8 +16,6 @@ Vmin = h5readatt(filename, '/fval/', 'Vmin');
 Vmax = h5readatt(filename, '/fval/', 'Vmax');
 x1 = h5readatt(filename, '/fval/', 'x1');
 
-pde = Vlasov7;
-
 pde.params.Deg = Deg;
 
 [nW,nT] = size(fval_t);
@@ -30,13 +28,21 @@ Dim = 2;
 
 [HASH,HASHInv] = HashTable(Lev,Dim);
 
-n = 2^Lev;
+n = 2^Lev*(Deg-1);
 
 nX = n;
 nY = n;
 
 x = linspace(Lmin,Lmax,nX);
-n_t = zeros(nX,nT);
+v = linspace(Vmin,Vmax,nY);
+
+dx = x(2)-x(1);
+dv = v(2)-v(1);
+
+steps = [0:1:(nT-1)/1]+1;
+nS = numel(steps);
+
+n_t = zeros(nX,nS);
 
 %% 2D Reverse MWT
 
@@ -56,40 +62,87 @@ vv = linspace(Vmin,Vmax,nY)';
 [fx_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,xx);
 [fy_loc] = EvalWavPoint4(Vmin,Vmax,Lev,Deg,vv);
 
+preFileName = ['valPre-',num2str(Deg),'-',num2str(Lev),'.mat'];
+
+if exist(preFileName) == 2
+     
+    load(preFileName);
+    
+else
+    % loop over all the points on xx and yy
+    disp('PreCalculate basis functions');
+    bbb=1;
+    for i = 1:length(xx)
+        disp([num2str(i),' of ', num2str(length(xx))]);
+        for j = 1:length(vv)
+            
+            fxList = {fx_loc(:,i)};
+            fyList = {fy_loc(:,j)};
+            ftList = {1};
+            
+            valPre(:,bbb) = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
+            
+            %f2d_t(i,j,cnt) = val'*fval;
+            
+            bbb = bbb + 1;
+            
+        end
+    end
+    
+    save(preFileName,'valPre');
+    
+end
+
+
 doTransform = 1;
+startFromLast = 0;
+
+cnt = 1;
 if doTransform
     
-    f2d_t = zeros(nX,nY,nT);
+    if startFromLast
+        load('f2d_t.mat');
+        disp(['Restarting from last : ', num2str(cnt)]);
+    end
     
-    for tt=1:nT
+    for tt = steps
         
         fval = fval_t(:,tt);
         
-        disp(tt);
+        disp(cnt);
         
         % loop over all the points on xx and yy
+        bbb = 1;
         for i = 1:length(xx)
             for j = 1:length(vv)
                 
-                fxList = {fx_loc(:,i)};
-                fyList = {fy_loc(:,j)};
-                ftList = {1};
+                %                 fxList = {fx_loc(:,i)};
+                %                 fyList = {fy_loc(:,j)};
+                %                 ftList = {1};
+                %
+                %                 val(:,bbb) = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
                 
-                val = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
+                val = valPre(:,bbb);
                 
-                f2d_t(i,j,tt) = val'*fval;
+                f2d_t(i,j,cnt) = val'*fval;
+                
+                bbb = bbb +1;
                 
             end
         end
         
         % Density moment (hack)
         
-        n_t(:,tt) = sum(f2d_t(:,:,tt),1);
+        n_t(:,cnt) = sum(f2d_t(:,:,cnt),2) * dx * dv;
+        
+        cnt = cnt + 1;
+        
+        %save('f2d_t.mat','f2d_t', 'n_t', 'x', 'x1', 'E_t', 't', 'cnt');
         
     end
     
-    save('f2d_t.mat','f2d_t', 'n_t', 'x', 'x1', 'E_t', 't');
-     
+    save('f2d_t.mat','f2d_t', 'n_t', 'x', 'x1', 'E_t', 't', 'cnt');
+    
 else
     
     load('f2d_t.mat');
@@ -103,30 +156,48 @@ F(nT) = struct('cdata',[],'colormap',[]);
 df2d_t = f2d_t-f2d_t(:,:,1);
 dn_t = n_t-n_t(:,1);
 
-for tt=1:nT
-    subplot(3,1,1);
-    mesh(xx,vv,df2d_t(:,:,tt),'FaceColor','flat','EdgeColor','none');
-    %mesh(xx,vv,f2d_t(:,:,tt),'FaceColor','interp','EdgeColor','none');
-    
+figure(1)
+contourf(dn_t,30,'EdgeColor','none');
+colormap(redblue);
+dRange = max(abs(dn_t(:)));
+caxis([-dRange,+dRange]);
+
+c = hot;
+c = flipud(c);
+
+figure(2)
+for tt = 1:nS
+    ax1 = subplot(2,2,1);
+    mesh(xx,vv,df2d_t(:,:,tt)','FaceColor','flat','EdgeColor','none');
     axis([Lmin Lmax Vmin Vmax])
+    colormap(ax1,redblue);
+    dRange = max(abs(df2d_t(:)));
+    caxis([-dRange,+dRange]);
+    colorbar;
     
-    subplot(3,1,2);
+    ax2 = subplot(2,2,2);
+    mesh(xx,vv,f2d_t(:,:,tt)','FaceColor','flat','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    colormap(ax2,c);
+    colorbar
+    
+    subplot(2,2,3);
     
     plot(x,dn_t(:,tt));
     maxn = max(dn_t(:));
     minn = min(dn_t(:));
     axis([x1(1) x1(end) minn maxn]);
     
-    subplot(3,1,3);
+    subplot(2,2,4);
     plot(x1,E_t(:,tt));
-    maxE = max(abs(E_t(:)));
+    maxE = max(abs(E_t(:)))+1e-8;
     axis([x1(1) x1(end) -maxE maxE]);
     
-    F(tt) = getframe(gcf);
+    %F(tt) = getframe(gcf);
+    pause(0.02);
     
 end
 
-view(0,90)
-colorbar
+
 
 end
