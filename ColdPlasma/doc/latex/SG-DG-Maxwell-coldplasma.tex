@@ -235,7 +235,7 @@ with a constant $\beta>0$ independent of the mesh size and the wave number.
 \end{theorem}
 
 % Error Eq
-We rewrite the method in a slightly perturbed form. We define for $\bv\in V(h)$, the lifting $\mL(\bv)\in V_h$ by
+We rewrite the method in a slightly perturbed form. We define for $\bv\in V(h)$, the lifting operator $\mL(\bv)\in V_h$ by
 \begin{eqnarray*}
 (\mL(\bv),\bw)=\int_{\mF_h}\ljump\bv\rjump_{\tau}\cdot\lavg\bw\ravg ds,\ \forall\bw\in V_h.
 \end{eqnarray*}
@@ -293,6 +293,16 @@ There exists a positive constant $C$, independent of the local mesh sizes $h_K$,
 \|\bv-\Pi_h\bv\|_{0,K}^2+h_K\|\bv-\Pi_h\bv\|_{0,\partial K}^2\le Ch_K^{2t}\|\bv\|_{t,K}^2.
 \end{eqnarray}
 \end{lemma}
+
+{\color{red}
+Next, denote $\hat{\Pi}_h$ as the $L^2$-projection onto $\hat{V}_h$, we have the following result.
+\begin{lemma}
+There exists a positive constant $C$, independent of the local mesh sizes $h_K$, such that, for any $\bv\in H^t(K)^3, K\in\mathcal{T}_h, t>1/2$,
+\begin{eqnarray}
+\|\bv-\hat{\Pi}_h\bv\|_{0,K}^2+h_K\|\bv-\hat{\Pi}_h\bv\|_{0,\partial K}^2\le Ch_K^{2t}\|\bv\|_{t,K}^2.
+\end{eqnarray}
+\end{lemma}
+}
 
 \begin{lemma}
 For any discretely divergence-free function $\bv\in X_h$, define $H\bv\in H_0(\text{curl};\Omega)\cap H(\text{div}^0;\Omega)$ by $\nabla\times H\bv=\nabla\bv$. Then, there exists a constant $C>0$ such that
