@@ -1,4 +1,5 @@
 % main code for LDG Poisson equation
+% by multiwavelet method
 
 % % df/dt = d/dx(1-x^2)df/dx+source
 % df/dt = -d/dx ((1-x^2)f)
@@ -28,10 +29,12 @@ format short e
 addpath(genpath(pwd))
 
 
-Lev = 4;
+Lev = 10;
 Deg = 2;
-num_plot = 3;
-
+num_plot = Deg;
+EndTime = 3;
+Lstart = -1;
+Lend = 1;
 
 
 
@@ -39,6 +42,7 @@ Lstart = -1;
 Lend = 1;
 Lmax = Lend-Lstart;
 
+FluxType = 'UF';
 
 %--Quadrature
 quad_num=10;
@@ -66,10 +70,11 @@ b = sparse(dof_1D,1);bb = sparse(dof_1D,1);
 fexact = sparse(dof_1D,1);
 qexact = sparse(dof_1D,1);
 
-CFL = 0.001;
-dt = CFL*h^((Deg-1)/3)/2;
-% dt = CFL*h^((Deg)/3);
-maxT = ceil(0.5/dt)
+CFL = 0.01;
+% dt = CFL*h^((Deg-1)/3)/2;
+dt = CFL*h^((Deg)/3);
+
+maxT = ceil(EndTime/dt)
 
 % Assume
 % [ I  A12]
@@ -104,32 +109,45 @@ for L=0:n-1
     %----------------------------------------------
     % -<funcCoef*{q},p>
     %----------------------------------------------
-%     val=[ p_1'*funcCoef(x0)*p_2   p_1'*funcCoef(x0)*p_1,...
-%         -p_2'*funcCoef(x1)*p_2  -p_2'*funcCoef(x1)*p_1]/2/h;
-%     A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
-%         val(:,Deg+1:2*Deg)+val(:,2*Deg+1:3*Deg),...
-%         dof_1D,dof_1D);
-%     
-%     
-%     if L>0
-%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);      
-%     end
-%     if L<n-1
-%         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);    
-%     end
-
-% up-wind
-    val=[p_1'*funcCoef(x0)*p_2   -p_2'*funcCoef(x1)*p_2]/h;
-    A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
-        val(:,Deg+1:2*Deg),...
-        dof_1D,dof_1D);
-    
-    
-    if L>0
-        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);      
+    if FluxType == 'CF'
+        val=[ p_1'*funcCoef(x0)*p_2   p_1'*funcCoef(x0)*p_1,...
+            -p_2'*funcCoef(x1)*p_2  -p_2'*funcCoef(x1)*p_1]/2/h;
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+            val(:,Deg+1:2*Deg)+val(:,2*Deg+1:3*Deg),...
+            dof_1D,dof_1D);
+        
+        
+        if L>0
+            A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+        end
+        if L<n-1
+            A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
+        end
     end
-    if L<n-1
-        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);    
+    
+    % up-winding flux
+    if FluxType == 'UF'
+        val=[p_1'*funcCoef(x0)*p_2   -p_2'*funcCoef(x1)*p_2]/h;
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+            val(:,Deg+1:2*Deg),...
+            dof_1D,dof_1D);
+        
+        
+        if L>0
+            A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+        end
+    end
+    
+   if FluxType == 'DF'
+        val=[p_1'*funcCoef(x0)*p_1   -p_2'*funcCoef(x1)*p_1]/h;
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+            val(:,1:Deg),...
+            dof_1D,dof_1D);
+        
+        
+        if L<n-1
+            A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,1+Deg:2*Deg),dof_1D,dof_1D);
+        end
     end
     
     
@@ -141,9 +159,10 @@ for L=0:n-1
 end
 
 
-
+num_plot = 2;
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
-% quad_x = [-1,1]';
+quad_x = [-1,1]';
+% quad_x = 0;
 
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
@@ -172,23 +191,70 @@ plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--','LineWidth',2)
 % return
 Mat = A12;
 
-% max(abs(Meval*f0))
-% val = Meval*A12*f0-exactq(x_node,0);
-% [norm(val) max(abs(val))]
+disp('DG')
+% convert Mat to the multiwavelet basis
+FMWT = OperatorTwoScale(Deg,2^Lev);
+Mat = FMWT*Mat*FMWT';
+disp('MWDG')
 
 b = b+bb;
+b = FMWT*b;
+Meval = Meval*FMWT';
 
+f0 = FMWT*f0;
+return
 
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
 total_particle = 0;
 ffval = Meval*f0;
-
+L2_stability = 0;
 for i = 1:num_plot
     total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
+    L2_stability = L2_stability+quad_w(i)*h/2*sum(ffval(i:num_plot:end).^2);
 end
-total_particle
+[total_particle L2_stability]
 
 tp(1) = total_particle;
+Lp(1) = L2_stability;
+
+figure
+plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--','LineWidth',2);
+hold on
+
+% check about the finest level of the mesh and then put more grids
+FineGrid = Deg*2^(Lev-1)+1:Deg*2^Lev;
+index = find(abs(f0(FineGrid))>2^(-Lev*Deg));
+index = unique(ceil((Deg*2^(Lev-1)+index)/Deg));
+
+[Hash,IHash] = HashTable1D(Lev);
+count = size(IHash,2);
+for i = 1:size(index,1)
+%     ll = IHash{ceil(index(i)/Deg)}
+    ll = IHash{index(i)};
+    lev_loc = ll(1);
+    cel_loc = ll(2);
+
+    
+    key = [lev_loc+1,2*cel_loc];
+    if isfield(Hash,sprintf('i%g_',key)) == 0
+        count = count+1;
+        Hash = setfield(Hash,sprintf('i%g_',key),count);
+        IHash{count} = [key,2^(lev_loc)+2*cel_loc+1];
+    end
+    
+
+    key = [lev_loc+1,2*cel_loc+1];
+    if isfield(Hash,sprintf('i%g_',key)) == 0
+        count = count+1;
+        Hash = setfield(Hash,sprintf('i%g_',key),count);
+        IHash{count} = [key,2^(lev_loc)+2*cel_loc+2];
+    end
+    
+end
+
+xgrid = plotgrid(IHash,Lstart,Lend,-0.1);
+
+
 
 figure
 for t = 1:maxT
@@ -214,18 +280,25 @@ for t = 1:maxT
     pause (0.1)
     
     total_particle = 0;
+    L2_stability = 0;
     ffval = Meval*f0;
     for i = 1:num_plot
         
         total_particle =  total_particle+...
-             quad_w(i)*h/2*sum(ffval(i:num_plot:end));
+            quad_w(i)*h/2*sum(ffval(i:num_plot:end));
+        L2_stability = L2_stability+quad_w(i)*h/2*sum(ffval(i:num_plot:end).^2);
     end
     tp(t+1) = total_particle;
+    Lp(t+1) = L2_stability;
+    
+    if abs(time-0.5)<=dt || abs(time-1)<=dt || abs(time-2)<=dt || abs(time-3)<=dt
+        save(['hyper_',FluxType,'_Deg',num2str(Deg),'_Lev',num2str(Lev),'_End',num2str(time),'.mat'])
+    end
 end
 % figure;plot(x,f_loc'*f0,'r-o');hold on;
 % plot(x,exactf(x,time),'b--')
-hold on
-plot(x_node,exactf(x_node,time),'r-o')
+% hold on
+% plot(x_node,exactf(x_node,time),'r-o')
 %  max(abs(Meval*f0))
 val = Meval*f0-exactf(x_node,time);
 %  [norm(val) max(abs(val))]
@@ -252,4 +325,4 @@ plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--','LineWidth',2);
 
 
 figure;
-plot(tp,'r-o')
+plot(tp,'r-o'); hold on; plot(Lp,'b-o')

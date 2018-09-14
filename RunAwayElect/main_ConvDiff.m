@@ -3,33 +3,43 @@
 % % df/dt = d/dx(1-x^2)df/dx+source
 % df/dt = -d/dx ((1-x^2)f)
 % Method 1. LDG
-% [A11 A12]
-% [A21 A22]
+% diffusion term
+% [D11 D12]*[F]
+% [D21 D22] [Q]
+
 % Here A11 = I, A12 = -(d/dx sqrt(1-x^2)q,p)
 % A21 = -(sqrt(1-x^2)df/dx,w), A22 = (q,w) = I
 % A12 = (sqrt(1-x^2)q,dp/dx)-<sqrt(1-x^2)\hat{q},p>
 % A21 = (sqrt(1-x^2)f,dw/dx)-<sqrt(1-x^2)\hat{f},w>
+% A22 =
+
+% convection term
+% [C11 C12]*[F]
+% [C21 C22] [Q]
 % try with central flux
 clear all
 close all
 % clc
 
 % Test
-sigma = 0.1;
-f0 = @(x)( exp(-x.^2/sigma^2) );
-% f0 = @(x)(x-x+1);
-phi = @(x,t)( tanh(atanh(x)-t) );
-exactf = @(x,t)(...
-    (1-phi(x,t).^2)./(1-x.^2).*f0(phi(x,t)) ...
-    );
+
+ff0 = @(x)(x-x+1/2);
+E = 4;
+C = 1;
+A = E/C;
+exactf = @(x,t)(A/(2*sinh(A))*exp(A*x));
 funcCoef = @(x)(1-x.^2);
+funcCoef2 = @(x)( (-2*x) );
+
+% E = -1;
+% E = 0;
 
 format short e
 addpath(genpath(pwd))
 
 
 Lev = 4;
-Deg = 3;
+Deg = 4;
 num_plot = 3;
 
 
@@ -39,7 +49,7 @@ Lstart = -1;
 Lend = 1;
 Lmax = Lend-Lstart;
 
-FluxType = 'CF';
+FluxType = 'UF';
 
 %--Quadrature
 quad_num=10;
@@ -68,9 +78,10 @@ fexact = sparse(dof_1D,1);
 qexact = sparse(dof_1D,1);
 
 CFL = 0.001;
-dt = CFL*h^((Deg-1)/3)/2;
-% dt = CFL*h^((Deg)/3);
-maxT = ceil(0.5/dt)
+% dt = CFL*h^((Deg-1)/3)/2;
+EndTime = 3;
+dt = CFL*h^((Deg)/3);
+maxT = ceil(EndTime/dt)
 
 % Assume
 % [ I  A12]
@@ -78,8 +89,9 @@ maxT = ceil(0.5/dt)
 % as the matrix
 % e.g. we assume neuman boundary:: q=0 on boundary
 %
-
+B12 = sparse(dof_1D,dof_1D);
 A21 = sparse(dof_1D,dof_1D);
+A12 = sparse(dof_1D,dof_1D);
 % generate 1D matrix for DG
 for L=0:n-1
     
@@ -95,7 +107,15 @@ for L=0:n-1
     
     c = Deg*L+1:Deg*(L+1);
     
+    B12 = B12 + sparse(c'*ones(1,Deg),ones(Deg,1)*c,val,dof_1D,dof_1D);
+    
+    % diffusion term
+    val=1/h*[Dp_val'*(quad_w.*funcCoef(xi ).*p_val)]+...
+              p_val'*(quad_w.*funcCoef2(xi).*p_val)/2;    
     A12 = A12 + sparse(c'*ones(1,Deg),ones(Deg,1)*c,val,dof_1D,dof_1D);
+    
+    val=1/h*[Dp_val'*(quad_w.*p_val)];
+    A21 = A21 + sparse(c'*ones(1,Deg),ones(Deg,1)*c,val,dof_1D,dof_1D);
     
     
     val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))];
@@ -106,37 +126,83 @@ for L=0:n-1
     % -<funcCoef*{q},p>
     %----------------------------------------------
     if FluxType == 'CF'
-        val=[ p_1'*funcCoef(x0)*p_2   p_1'*funcCoef(x0)*p_1,...
+%         val=[ p_1'*funcCoef(x0)*p_2   p_1'*funcCoef(x0)*p_1,...
+%             -p_2'*funcCoef(x1)*p_2  -p_2'*funcCoef(x1)*p_1]/2/h;
+%         B12=B12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+%             val(:,Deg+1:2*Deg)+val(:,2*Deg+1:3*Deg),...
+%             dof_1D,dof_1D);
+        
+        val=[p_1'*funcCoef(x0)*p_2   -p_2'*funcCoef(x1)*p_2]/h;
+        B12=B12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+            val(:,Deg+1:2*Deg),...
+            dof_1D,dof_1D);
+        
+        val2=[ p_1'*funcCoef(x0)*p_2   p_1'*funcCoef(x0)*p_1,...
             -p_2'*funcCoef(x1)*p_2  -p_2'*funcCoef(x1)*p_1]/2/h;
         A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
-            val(:,Deg+1:2*Deg)+val(:,2*Deg+1:3*Deg),...
+            val2(:,Deg+1:2*Deg)+val2(:,2*Deg+1:3*Deg),...
+            dof_1D,dof_1D);
+        
+        val3 = [ p_1'*p_2   p_1'*p_1,...
+            -p_2'*p_2  -p_2'*p_1]/2/h;
+        A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+            val3(:,Deg+1:2*Deg)+val3(:,2*Deg+1:3*Deg),...
             dof_1D,dof_1D);
         
         
         if L>0
-            A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+%             B12 = B12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+            B12=B12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+                        
+            A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val2(:,1:Deg),dof_1D,dof_1D);
+            A21 = A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val3(:,1:Deg),dof_1D,dof_1D);
+        elseif L == 0
+            % new implementation
+            A21 = A21 +sparse(c'*ones(1,Deg),ones(Deg,1)*c,-p_1'*p_1/h/2,dof_1D,dof_1D);
         end
         if L<n-1
-            A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
+%             B12 = B12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
+            
+            A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val2(:,3*Deg+1:4*Deg),dof_1D,dof_1D);
+            A21 = A21 +sparse(c'*ones(1,Deg),ones(Deg,1)*c,-p_1'*p_1/h/2,dof_1D,dof_1D);
+        elseif L == n-1
+            
+            
+            A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c,p_2'*p_2/h/2,dof_1D,dof_1D);
         end
     end
     
     % up-winding flux
     if FluxType == 'UF'
+
         val=[p_1'*funcCoef(x0)*p_2   -p_2'*funcCoef(x1)*p_2]/h;
-        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+        B12=B12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
             val(:,Deg+1:2*Deg),...
             dof_1D,dof_1D);
         
+        val2=[p_1'*funcCoef(x0)*p_1   -p_2'*funcCoef(x1)*p_1]/h;
+        A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+            val2(:,1:Deg),...
+            dof_1D,dof_1D);
+
+        val3 = [ p_1'*p_2 -p_2'*p_2]/h;
+        A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c,...
+            val3(:,Deg+1:2*Deg),...
+            dof_1D,dof_1D);
         
         if L>0
-            A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+            B12=B12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+            %A12=A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val(:,1:Deg),dof_1D,dof_1D);
+            A21=A21+sparse(c'*ones(1,Deg),ones(Deg,1)*c-Deg,val3(:,1:Deg),dof_1D,dof_1D);
+        end
+        if L<n-1
+            A12 = A12+sparse(c'*ones(1,Deg),ones(Deg,1)*c+Deg,val2(:,1+Deg:2*Deg),dof_1D,dof_1D);
         end
     end
     
     
     
-    val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))];
+    val = sqrt(h)/2*[p_val'*(quad_w.*ff0(xi))]; %exactf(xi,0))];
     f0(c) = val;
     
     
@@ -169,10 +235,10 @@ for L=0:n-1
 end
 
 % checked of projection
-plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--','LineWidth',2)
+plot(x_node,Meval*f0,'r-o',x_node,Meval*(A12*f0),'b-o',x_node,exactf(x_node,0),'b--','LineWidth',2);
 
 % return
-Mat = A12;
+Mat = E*B12+C*A21*A12;
 
 % max(abs(Meval*f0))
 % val = Meval*A12*f0-exactq(x_node,0);
@@ -211,7 +277,9 @@ for t = 1:maxT
     
     f0 = fval;
     
-    plot(x_node,Meval*f0,'r-o',x_node,Meval*(A12*f0),'b-<')
+    plot(x_node,Meval*f0,'r-o',x_node,Meval*(A12*f0),'b-<',x_node,exactf(x_node,time),'r--');
+%     hold on
+%     plot(x_node,exactf(x_node,time),'r--')
     title(['time at ',num2str(time)])
     pause (0.1)
     
@@ -223,6 +291,10 @@ for t = 1:maxT
             quad_w(i)*h/2*sum(ffval(i:num_plot:end));
     end
     tp(t+1) = total_particle;
+    
+    if abs(time-0.5)<=dt || abs(time-1)<=dt || abs(time-1.5)<=dt || abs(time-2)<=dt || abs(time-2.5)<=dt ||abs(time-3)<=dt
+        save(['hyper_',FluxType,'_Deg',num2str(Deg),'_Lev',num2str(Lev),'_End',num2str(time),'.mat'])
+    end
 end
 % figure;plot(x,f_loc'*f0,'r-o');hold on;
 % plot(x,exactf(x,time),'b--')
