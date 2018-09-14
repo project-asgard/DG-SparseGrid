@@ -294,6 +294,7 @@ There exists a positive constant $C$, independent of the local mesh sizes $h_K$,
 \end{eqnarray}
 \end{lemma}
 
+<<<<<<< HEAD
 {\color{red}
 Next, denote $\hat{\Pi}_h$ as the $L^2$-projection onto $\hat{V}_h$, we have the following result.
 \begin{lemma}
@@ -303,6 +304,18 @@ There exists a positive constant $C$, independent of the local mesh sizes $h_K$,
 \end{eqnarray}
 \end{lemma}
 }
+=======
+% SG projection
+\begin{lemma}
+There exists a positive constant $C$, independent of the local mesh sizes $h_K$, such that, for any $\bv\in H^t(K)^3, K\in\mathcal{T}_h, t>1/2$,
+\begin{eqnarray}
+\|\bv-\hat{\Pi}_h\bv\|_{0,\Omega}&\le& CN^d2^{-N(q+1)}|\bv|_{\mathcal{H}^{q+1}(\Omega)},\\
+\|\bv-\hat{\Pi}_h\bv\|_{1,\Omega}&\le& C2^{-Nq}|\bv|_{\mathcal{H}^{q+1}(\Omega)}
+\end{eqnarray}
+\end{lemma}
+
+Here $N^d2^{-N(q+1)}$ or $|\log h|^d h^{q+1}$.
+>>>>>>> 9e7d10ba3b725e84912fc3aa6d8ad53f504a719c
 
 \begin{lemma}
 For any discretely divergence-free function $\bv\in X_h$, define $H\bv\in H_0(\text{curl};\Omega)\cap H(\text{div}^0;\Omega)$ by $\nabla\times H\bv=\nabla\bv$. Then, there exists a constant $C>0$ such that
