@@ -10,6 +10,8 @@ NewFineIndex= [];
 
 count = size(IHash,2);
 delem = 0;
+DPoint = [];
+ix_fine = [];
 
 count_del = 1;
 for i = 1:size(index,1)
@@ -21,15 +23,17 @@ for i = 1:size(index,1)
     
     
     key = [lev_loc,cel_loc];
-    
+    po = NewHash.(sprintf('i%g_',key));
     NewHash = rmfield(NewHash,sprintf('i%g_',key));
     NewIHash(index(i)-delem) = [];
     DPoint(count_del) = Hash.(sprintf('i%g_',key));
     count_del = count_del +1;
     
 %     if lev_loc>1
-        ix = find(FineIndex == Hash.(sprintf('i%g_',key)));
+        ix = find(FineIndex == po);%NewHash.(sprintf('i%g_',key)));
         FineIndex(ix) = [];
+        FineIndex(ix:end) = FineIndex(ix:end)-1;
+        
         % check about children
         key1 = [lev_loc,2*ceil(cel_loc/2)];
         key2 = [lev_loc,2*ceil(cel_loc/2)+1];
@@ -55,6 +59,8 @@ end
 
 Hash = NewHash;
 IHash = NewIHash;
+
+
 FineIndex=sort([FineIndex,NewFineIndex]);
 
 

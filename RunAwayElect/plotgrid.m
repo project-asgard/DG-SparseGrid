@@ -1,4 +1,4 @@
-function xgrid = plotgrid(IHash,Lstart,Lend,yval)
+function xgrid = plotgrid(IHash,Lstart,Lend,yval,option)
 
 % plot grids
 count = 0;
@@ -14,4 +14,4 @@ for i = 1:size(IHash,2)
 %     [h_loc Lstart + h_loc*(ll(2))+h_loc/2]
     
 end
-plot(xgrid,yval*ones(1,count),'r-o')
+plot(xgrid,yval*ones(1,count),option)

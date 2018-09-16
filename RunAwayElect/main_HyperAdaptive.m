@@ -16,15 +16,15 @@ format short e
 addpath(genpath(pwd))
 
 % start with coarse mesh
-Lev = 6;
+Lev = 4;
 Deg = 2;
 num_plot = Deg;
-EndTime = 3;
+
 Lstart = -1;
 Lend = 1;
-EndTime = 1;
+EndTime = 3;
 
-CFL = 0.001;
+CFL = 0.01;
 % dt = CFL*h^((Deg-1)/3)/2;
 h = (Lend-Lstart)/2^Lev;
 dt = CFL*h^((Deg)/3);
@@ -72,6 +72,18 @@ FMWT = OperatorTwoScale(Deg,2^Lev);
 
 fval_MW = FMWT*fval;
 
+% construct x_node through Hash table
+% % x_node = zeros(size(IHash,2),1);
+% % for i = 1:size(IHash,2)
+% %         l1 = IHash{i};
+% %         key = [l1(1),l1(2)];
+% %         lr = Hash.(sprintf('i%g_',key));
+% %         
+% %         x_node
+% %         
+% %         Id(Deg*(i-1)+[1:Deg]) = Deg*(lr-1)+[1:Deg];
+% % end
+
 figure(1);
 % subplot(1,2,1)
 % plot(xx_node,MMeval*fval_MW,'r-o',xx_node,exactf(xx_node,0),'b--','LineWidth',2)
@@ -88,27 +100,30 @@ figure(1);
 % return
 
 LeafSolIndex = Deg*(2^(Lev-1))+1:Deg*2^Lev;
-epsilon = 1e-7;
-eta = 1e-8;
+epsilon = 1e-6;
+eta = 5e-7;
+
+xx = -1:0.01:1;
 % begin of time advance
-for t = 1:10%maxT
+for t = 1:maxT
     % solve equation
     time = t*dt;
     Id = [];
     for i = 1:size(IHash,2)
         l1 = IHash{i};
         key = [l1(1),l1(2)];
-        lr = Hash.(sprintf('i%g_',key));
+        lr = l1(3);%Hash.(sprintf('i%g_',key));
         
         Id(Deg*(i-1)+[1:Deg]) = Deg*(lr-1)+[1:Deg];
     end
     MMeval = Meval(plot_start:num_In:end,Id);
     subplot(2,2,1)
-    plot(xx_node,MMeval*fval_MW,'r-o',xx_node,exactf(xx_node,time-dt),'b--','LineWidth',2)
+%     plot(xx_node,MMeval*fval_MW,'r-o',xx_node,exactf(xx_node,time-dt),'b--','LineWidth',2)
+    plot(xx_node,MMeval*fval_MW,'r-o',xx,exactf(xx,time-dt),'b--','LineWidth',2)
     title(['solution at time ',num2str(time-dt)])
-    axis([-1 1 -0.1 1])
+%     axis([-1 1 -0.1 1])
     subplot(2,2,3)
-    plotgrid(IHash,Lstart,Lend,0);
+    plotgrid(IHash,Lstart,Lend,0,'r-x');
     axis([-1 1 -1 1])
     title(['old grids at t= ',num2str(t)])
     
@@ -125,7 +140,9 @@ for t = 1:10%maxT
     
     % refinement
     [Hash,IHash,FineIndex] = RefineMesh(Hash,IHash,Deg,MarkedRefine,FineIndex);
-
+%     [size(IHash,2),FineIndex(end)]
+%    FineIndex
+%    Hash
     
     % construct new mat on the updated mesh
     [Mat_tmp] = GlobalMatrix(Mat,IHash,Deg);
@@ -143,22 +160,23 @@ for t = 1:10%maxT
     for i = 1:size(IHash,2)
         l1 = IHash{i};
         key = [l1(1),l1(2)];
-        lr = Hash.(sprintf('i%g_',key));
+        lr = l1(3);%Hash.(sprintf('i%g_',key));
         
         Id(Deg*(i-1)+[1:Deg]) = Deg*(lr-1)+[1:Deg];
     end
     MMeval = Meval(plot_start:num_In:end,Id);
     
     subplot(2,2,2)
-    plot(xx_node,MMeval*fval_MW,'r-o',xx_node,exactf(xx_node,time),'b--','LineWidth',2);
+%     plot(xx_node,MMeval*fval_MW,'r-o',xx_node,exactf(xx_node,time),'b--','LineWidth',2);
+    plot(xx_node,MMeval*fval_MW,'r-o',xx,exactf(xx,time),'b--','LineWidth',2);
     title(['solution at time ',num2str(time)])
-    axis([-1 1 -0.1 1])
+%     axis([-1 1 -0.1 1])
     subplot(2,2,4)
-    plotgrid(IHash,Lstart,Lend,0);
+    plotgrid(IHash,Lstart,Lend,0,'b-o');
     axis([-1 1 -1 1])
-    title('new grids')
+    title('new grids with refinement')
     pause(0.1)
-    pause
+
 
     
     
@@ -167,12 +185,18 @@ for t = 1:10%maxT
     checkIndex = sort(checkIndex(:));
     MarkedCoarsen = mark(fval_MW,checkIndex,Deg,eta,'coarse');
     [Hash,IHash,FineIndex,count_del] = CoarseMesh(Hash,IHash,Deg,MarkedCoarsen,FineIndex);
-    
-    index_del = Deg*(count_del-1)'+[1:Deg];
+%      [size(IHash,2),FineIndex(end)]
+    size(count_del)
+%     FineIndex
+    if size(count_del,2)>0
+     index_del = Deg*(count_del-1)'+[1:Deg];
     index_del = index_del(:);
     fval_MW(index_del) = [];
+    end
     
-    
+    if mod(t,20)==0
+        save(['IHash_t',num2str(t),'.mat'],'IHash','Deg','fval_MW','Hash')
+    end
 
 end
 
