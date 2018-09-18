@@ -104,8 +104,8 @@ end
 DeltaX(dof_1D_x+1,:)=0;
 DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
 
-DeltaX(end,:)=0;
-DeltaX(end,end-k+[1:k])=sqrt(1/hx)*legendre(1,k);
+% DeltaX(end,:)=0;
+% DeltaX(end,end-k+[1:k])=sqrt(1/hx)*legendre(1,k);
 
 %======================================
 % Matrices related to v variable
