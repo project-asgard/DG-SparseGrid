@@ -215,7 +215,7 @@ for L = 1:floor(TEND/dt)
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
         if ~quiet; disp('    [a] Solve poisson to get E'); end
-        E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
     end
     
     if pde.applySpecifiedE
