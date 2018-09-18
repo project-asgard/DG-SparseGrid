@@ -2,7 +2,7 @@
 format short e
 addpath(genpath(pwd))
 
-Lev = 8;
+Lev = 4;
 Deg = 2;
 Lmax = 1;
 
@@ -81,7 +81,8 @@ NGradX = GradX+GradXFluxC-GradXFluxJ/2;
  
  
 
-A_Poisson = [speye(dof_1D_x) PGradX;NGradX sparse(dof_1D_x,dof_1D_x)];
+A_Poisson = [speye(dof_1D_x) PGradX;...
+    NGradX sparse(dof_1D_x,dof_1D_x)];
 
 
 Mat_S = NGradX*PGradX;
@@ -89,7 +90,8 @@ Mat_S(1,:)=0;
 Mat_S(1,1)=1;
 % Mat_S(end,:)=0;
 % Mat_S(end,end)=1;
-A_Poisson(dof_1D_x+1,:)=0;A_Poisson(dof_1D_x+1,dof_1D_x+1)=1;
+A_Poisson(dof_1D_x+1,:)=0;
+A_Poisson(dof_1D_x+1,dof_1D_x+1)=1;
 
 DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
                 A_Poisson*...
