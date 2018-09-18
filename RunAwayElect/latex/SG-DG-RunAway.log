@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.9.25)  14 SEP 2018 11:30
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.9.25)  17 SEP 2018 09:28
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -718,6 +718,28 @@ Package pdftex.def Info: Requested size: 333.33168pt x 222.2348pt on input line
  289.
  [4 <./test3-Solution-eps-converted-to.pdf> <./test3-TotalPartical-eps-converte
 d-to.pdf>]
+Package epstopdf Info: Source file: <./Diff-Deg5_Lev4.eps>
+(epstopdf)                    date: 2018-09-17 09:22:21
+(epstopdf)                    size: 22206 bytes
+(epstopdf)             Output file: <./Diff-Deg5_Lev4-eps-converted-to.pdf>
+(epstopdf)             Command: <repstopdf --outfile=./Diff-Deg5_Lev4-eps-conve
+rted-to.pdf ./Diff-Deg5_Lev4.eps>
+(epstopdf)             \includegraphics on input line 304.
+runsystem(repstopdf --outfile=./Diff-Deg5_Lev4-eps-converted-to.pdf ./Diff-Deg5
+_Lev4.eps)...executed safely (allowed).
+
+Package epstopdf Info: Result file: <./Diff-Deg5_Lev4-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-09-17 09:28:10
+(epstopdf)                    size: 7265 bytes.
+<./Diff-Deg5_Lev4-eps-converted-to.pdf, id=95, pagebox=cropbox, 996.72375pt x 7
+21.69624pt>
+File: ./Diff-Deg5_Lev4-eps-converted-to.pdf Graphic file (type pdf)
+<use ./Diff-Deg5_Lev4-eps-converted-to.pdf>
+Package pdftex.def Info: ./Diff-Deg5_Lev4-eps-converted-to.pdf  used on input l
+ine 304. on input line 304.
+Package pdftex.def Info: Requested size: 333.3431pt x 241.35403pt on input line
+ 304.
+ [5 <./Diff-Deg5_Lev4-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./hyper-cf-Test1_v2.eps>
 (epstopdf)                    date: 2018-09-13 15:34:50
 (epstopdf)                    size: 170425 bytes
@@ -726,16 +748,16 @@ Package epstopdf Info: Source file: <./hyper-cf-Test1_v2.eps>
 (epstopdf)                    size: 52051 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-cf-Test1_v2-eps-co
 nverted-to.pdf ./hyper-cf-Test1_v2.eps>
-(epstopdf)             \includegraphics on input line 330.
+(epstopdf)             \includegraphics on input line 346.
 Package epstopdf Info: Output file is already uptodate.
-<./hyper-cf-Test1_v2-eps-converted-to.pdf, id=95, pagebox=cropbox, 1012.78375pt
- x 747.79375pt>
+<./hyper-cf-Test1_v2-eps-converted-to.pdf, id=104, pagebox=cropbox, 1012.78375p
+t x 747.79375pt>
 File: ./hyper-cf-Test1_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./hyper-cf-Test1_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./hyper-cf-Test1_v2-eps-converted-to.pdf  used on inpu
-t line 330. on input line 330.
+t line 346. on input line 346.
 Package pdftex.def Info: Requested size: 351.86342pt x 259.79196pt on input lin
-e 330.
+e 346.
 Package epstopdf Info: Source file: <./hyper-uf-Test1_v2.eps>
 (epstopdf)                    date: 2018-09-13 15:40:03
 (epstopdf)                    size: 168068 bytes
@@ -744,17 +766,20 @@ Package epstopdf Info: Source file: <./hyper-uf-Test1_v2.eps>
 (epstopdf)                    size: 50451 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-uf-Test1_v2-eps-co
 nverted-to.pdf ./hyper-uf-Test1_v2.eps>
-(epstopdf)             \includegraphics on input line 347.
+(epstopdf)             \includegraphics on input line 363.
 Package epstopdf Info: Output file is already uptodate.
-<./hyper-uf-Test1_v2-eps-converted-to.pdf, id=96, pagebox=cropbox, 1007.765pt x
- 590.205pt>
+<./hyper-uf-Test1_v2-eps-converted-to.pdf, id=105, pagebox=cropbox, 1007.765pt 
+x 590.205pt>
 File: ./hyper-uf-Test1_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./hyper-uf-Test1_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./hyper-uf-Test1_v2-eps-converted-to.pdf  used on inpu
-t line 347. on input line 347.
+t line 363. on input line 363.
 Package pdftex.def Info: Requested size: 351.86191pt x 240.74281pt on input lin
-e 347.
- [5 <./hyper-cf-Test1_v2-eps-converted-to.pdf>]
+e 363.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [6 <./hyper-cf-Test1_v2-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./hyper-CF-Test2_v2.eps>
 (epstopdf)                    date: 2018-09-13 15:43:34
 (epstopdf)                    size: 169056 bytes
@@ -763,16 +788,16 @@ Package epstopdf Info: Source file: <./hyper-CF-Test2_v2.eps>
 (epstopdf)                    size: 16452 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-CF-Test2_v2-eps-co
 nverted-to.pdf ./hyper-CF-Test2_v2.eps>
-(epstopdf)             \includegraphics on input line 409.
+(epstopdf)             \includegraphics on input line 425.
 Package epstopdf Info: Output file is already uptodate.
-<./hyper-CF-Test2_v2-eps-converted-to.pdf, id=105, pagebox=cropbox, 1012.78375p
+<./hyper-CF-Test2_v2-eps-converted-to.pdf, id=114, pagebox=cropbox, 1012.78375p
 t x 596.2275pt>
 File: ./hyper-CF-Test2_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./hyper-CF-Test2_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./hyper-CF-Test2_v2-eps-converted-to.pdf  used on inpu
-t line 409. on input line 409.
+t line 425. on input line 425.
 Package pdftex.def Info: Requested size: 351.85248pt x 240.743pt on input line 
-409.
+425.
 Package epstopdf Info: Source file: <./hyper-UF-Test2_v2.eps>
 (epstopdf)                    date: 2018-09-13 15:46:56
 (epstopdf)                    size: 169894 bytes
@@ -781,18 +806,42 @@ Package epstopdf Info: Source file: <./hyper-UF-Test2_v2.eps>
 (epstopdf)                    size: 14251 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-UF-Test2_v2-eps-co
 nverted-to.pdf ./hyper-UF-Test2_v2.eps>
-(epstopdf)             \includegraphics on input line 426.
+(epstopdf)             \includegraphics on input line 442.
 Package epstopdf Info: Output file is already uptodate.
-<./hyper-UF-Test2_v2-eps-converted-to.pdf, id=106, pagebox=cropbox, 1012.78375p
+<./hyper-UF-Test2_v2-eps-converted-to.pdf, id=115, pagebox=cropbox, 1012.78375p
 t x 747.79375pt>
 File: ./hyper-UF-Test2_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./hyper-UF-Test2_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./hyper-UF-Test2_v2-eps-converted-to.pdf  used on inpu
-t line 426. on input line 426.
+t line 442. on input line 442.
 Package pdftex.def Info: Requested size: 351.86342pt x 259.79196pt on input lin
-e 426.
- [6 <./hyper-uf-Test1_v2-eps-converted-to.pdf> <./hyper-CF-Test2_v2-eps-convert
-ed-to.pdf>] [7 <./hyper-UF-Test2_v2-eps-converted-to.pdf>]
+e 442.
+ [7 <./hyper-uf-Test1_v2-eps-converted-to.pdf> <./hyper-CF-Test2_v2-eps-convert
+ed-to.pdf>]
+Package epstopdf Info: Source file: <./HyperAdap_Lev4_Deg2.eps>
+(epstopdf)                    date: 2018-09-17 09:06:10
+(epstopdf)                    size: 328383 bytes
+(epstopdf)             Output file: <./HyperAdap_Lev4_Deg2-eps-converted-to.pdf
+>
+(epstopdf)                    date: 2018-09-17 09:07:44
+(epstopdf)                    size: 55523 bytes
+(epstopdf)             Command: <repstopdf --outfile=./HyperAdap_Lev4_Deg2-eps-
+converted-to.pdf ./HyperAdap_Lev4_Deg2.eps>
+(epstopdf)             \includegraphics on input line 464.
+Package epstopdf Info: Output file is already uptodate.
+<./HyperAdap_Lev4_Deg2-eps-converted-to.pdf, id=130, pagebox=cropbox, 1007.765p
+t x 721.69624pt>
+File: ./HyperAdap_Lev4_Deg2-eps-converted-to.pdf Graphic file (type pdf)
+<use ./HyperAdap_Lev4_Deg2-eps-converted-to.pdf>
+Package pdftex.def Info: ./HyperAdap_Lev4_Deg2-eps-converted-to.pdf  used on in
+put line 464. on input line 464.
+Package pdftex.def Info: Requested size: 351.86191pt x 222.22586pt on input lin
+e 464.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [8 <./hyper-UF-Test2_v2-eps-converted-to.pdf>] [9 <./HyperAdap_Lev4_Deg2-eps-c
+onverted-to.pdf>]
 Package epstopdf Info: Source file: <./condiff-cf-E1.eps>
 (epstopdf)                    date: 2018-09-12 15:09:37
 (epstopdf)                    size: 62080 bytes
@@ -801,16 +850,16 @@ Package epstopdf Info: Source file: <./condiff-cf-E1.eps>
 (epstopdf)                    size: 20058 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-cf-E1-eps-conver
 ted-to.pdf ./condiff-cf-E1.eps>
-(epstopdf)             \includegraphics on input line 489.
+(epstopdf)             \includegraphics on input line 528.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-cf-E1-eps-converted-to.pdf, id=129, pagebox=cropbox, 1012.78375pt x 
+<./condiff-cf-E1-eps-converted-to.pdf, id=147, pagebox=cropbox, 1012.78375pt x 
 721.69624pt>
 File: ./condiff-cf-E1-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-cf-E1-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-cf-E1-eps-converted-to.pdf  used on input li
-ne 489. on input line 489.
+ne 528. on input line 528.
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
- 489.
+ 528.
 Package epstopdf Info: Source file: <./condiff-uf-E1_v2.eps>
 (epstopdf)                    date: 2018-09-13 15:50:57
 (epstopdf)                    size: 107351 bytes
@@ -819,20 +868,20 @@ Package epstopdf Info: Source file: <./condiff-uf-E1_v2.eps>
 (epstopdf)                    size: 38570 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-uf-E1_v2-eps-con
 verted-to.pdf ./condiff-uf-E1_v2.eps>
-(epstopdf)             \includegraphics on input line 497.
+(epstopdf)             \includegraphics on input line 536.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-uf-E1_v2-eps-converted-to.pdf, id=130, pagebox=cropbox, 1012.78375pt
+<./condiff-uf-E1_v2-eps-converted-to.pdf, id=148, pagebox=cropbox, 1012.78375pt
  x 572.1375pt>
 File: ./condiff-uf-E1_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-uf-E1_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-uf-E1_v2-eps-converted-to.pdf  used on input
- line 497. on input line 497.
+ line 536. on input line 536.
 Package pdftex.def Info: Requested size: 351.86342pt x 198.767pt on input line 
-497.
+536.
 
-Underfull \vbox (badness 5189) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [8 <./condiff-cf-E1-eps-converted-to.pdf>]
+ [10 <./condiff-cf-E1-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./condiff-uf-E2_v2.eps>
 (epstopdf)                    date: 2018-09-13 15:53:06
 (epstopdf)                    size: 107490 bytes
@@ -841,16 +890,16 @@ Package epstopdf Info: Source file: <./condiff-uf-E2_v2.eps>
 (epstopdf)                    size: 38490 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-uf-E2_v2-eps-con
 verted-to.pdf ./condiff-uf-E2_v2.eps>
-(epstopdf)             \includegraphics on input line 505.
+(epstopdf)             \includegraphics on input line 544.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-uf-E2_v2-eps-converted-to.pdf, id=139, pagebox=cropbox, 1012.78375pt
+<./condiff-uf-E2_v2-eps-converted-to.pdf, id=157, pagebox=cropbox, 1012.78375pt
  x 721.69624pt>
 File: ./condiff-uf-E2_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-uf-E2_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-uf-E2_v2-eps-converted-to.pdf  used on input
- line 505. on input line 505.
+ line 544. on input line 544.
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
- 505.
+ 544.
 Package epstopdf Info: Source file: <./condiff-uf-E4_v2.eps>
 (epstopdf)                    date: 2018-09-13 15:55:14
 (epstopdf)                    size: 108593 bytes
@@ -859,55 +908,52 @@ Package epstopdf Info: Source file: <./condiff-uf-E4_v2.eps>
 (epstopdf)                    size: 36858 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-uf-E4_v2-eps-con
 verted-to.pdf ./condiff-uf-E4_v2.eps>
-(epstopdf)             \includegraphics on input line 513.
+(epstopdf)             \includegraphics on input line 552.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-uf-E4_v2-eps-converted-to.pdf, id=140, pagebox=cropbox, 1012.78375pt
+<./condiff-uf-E4_v2-eps-converted-to.pdf, id=158, pagebox=cropbox, 1012.78375pt
  x 721.69624pt>
 File: ./condiff-uf-E4_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-uf-E4_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-uf-E4_v2-eps-converted-to.pdf  used on input
- line 513. on input line 513.
+ line 552. on input line 552.
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
- 513.
+ 552.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [9 <./condiff-uf-E1_v2-eps-converted-to.pdf> <./condiff-uf-E2_v2-eps-converted
--to.pdf>]
-[10 <./condiff-uf-E4_v2-eps-converted-to.pdf>] (./SG-DG-RunAway.aux)
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
- ) 
+ [11 <./condiff-uf-E1_v2-eps-converted-to.pdf> <./condiff-uf-E2_v2-eps-converte
+d-to.pdf>]
+[12 <./condiff-uf-E4_v2-eps-converted-to.pdf>] (./SG-DG-RunAway.aux) ) 
 Here is how much of TeX's memory you used:
- 12622 strings out of 492990
- 249475 string characters out of 6132636
- 284369 words of memory out of 5000000
- 15883 multiletter control sequences out of 15000+600000
+ 12633 strings out of 492990
+ 249940 string characters out of 6132636
+ 284381 words of memory out of 5000000
+ 15892 multiletter control sequences out of 15000+600000
  13698 words of font info for 51 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,14n,54p,435b,321s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
-></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb><
-/usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><
-/usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></
-usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></u
-sr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr
-/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/l
-ocal/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/loc
-al/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local
-/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/te
-xlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texli
-ve/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/
-2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2
-017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/201
-7/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2017/
-texmf-dist/fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2017/te
-xmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on SG-DG-RunAway.pdf (10 pages, 587450 bytes).
+</usr/loc
+al/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/loca
+l/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></usr/local/
+texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/local/
+texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/t
+exlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/te
+xlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texl
+ive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texliv
+e/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/
+2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/20
+17/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2017/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2017/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2017/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2017/texmf-d
+ist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2017/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2017/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2017/texmf-dist/fo
+nts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on SG-DG-RunAway.pdf (12 pages, 651310 bytes).
 PDF statistics:
- 217 PDF objects out of 1000 (max. 8388607)
- 150 compressed objects within 2 object streams
+ 235 PDF objects out of 1000 (max. 8388607)
+ 162 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
- 103 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 113 words of extra memory for PDF output out of 10000 (max. 10000000)
 

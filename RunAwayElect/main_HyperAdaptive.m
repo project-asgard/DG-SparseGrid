@@ -84,6 +84,7 @@ fval_MW = FMWT*fval;
 % %         Id(Deg*(i-1)+[1:Deg]) = Deg*(lr-1)+[1:Deg];
 % % end
 
+% return
 figure(1);
 % subplot(1,2,1)
 % plot(xx_node,MMeval*fval_MW,'r-o',xx_node,exactf(xx_node,0),'b--','LineWidth',2)
@@ -101,7 +102,7 @@ figure(1);
 
 LeafSolIndex = Deg*(2^(Lev-1))+1:Deg*2^Lev;
 epsilon = 1e-6;
-eta = 5e-7;
+eta = 1e-7;
 
 xx = -1:0.01:1;
 % begin of time advance
@@ -140,6 +141,7 @@ for t = 1:maxT
     
     % refinement
     [Hash,IHash,FineIndex] = RefineMesh(Hash,IHash,Deg,MarkedRefine,FineIndex);
+%     size(IHash)
 %     [size(IHash,2),FineIndex(end)]
 %    FineIndex
 %    Hash
@@ -171,11 +173,11 @@ for t = 1:maxT
     plot(xx_node,MMeval*fval_MW,'r-o',xx,exactf(xx,time),'b--','LineWidth',2);
     title(['solution at time ',num2str(time)])
 %     axis([-1 1 -0.1 1])
-    subplot(2,2,4)
-    plotgrid(IHash,Lstart,Lend,0,'b-o');
-    axis([-1 1 -1 1])
-    title('new grids with refinement')
-    pause(0.1)
+% %     subplot(2,2,4)
+% %     plotgrid(IHash,Lstart,Lend,0,'b-o');
+% %     axis([-1 1 -1 1])
+% %     title('new grids with refinement')
+% %     pause(0.1)
 
 
     
@@ -186,6 +188,8 @@ for t = 1:maxT
     MarkedCoarsen = mark(fval_MW,checkIndex,Deg,eta,'coarse');
     [Hash,IHash,FineIndex,count_del] = CoarseMesh(Hash,IHash,Deg,MarkedCoarsen,FineIndex);
 %      [size(IHash,2),FineIndex(end)]
+% size(IHash)
+% '=========='
     size(count_del)
 %     FineIndex
     if size(count_del,2)>0
@@ -194,9 +198,15 @@ for t = 1:maxT
     fval_MW(index_del) = [];
     end
     
-    if mod(t,20)==0
-        save(['IHash_t',num2str(t),'.mat'],'IHash','Deg','fval_MW','Hash')
-    end
+    subplot(2,2,4)
+    plotgrid(IHash,Lstart,Lend,0,'b-o');
+    axis([-1 1 -1 1])
+    title('new grids with refinement and coarsen')
+    pause(0.1)
+    
+%     if mod(t,20)==0
+%         save(['IHash_t',num2str(t),'.mat'],'IHash','Deg','fval_MW','Hash')
+%     end
 
 end
 

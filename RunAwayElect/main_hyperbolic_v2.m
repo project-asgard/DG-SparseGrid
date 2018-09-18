@@ -30,7 +30,7 @@ addpath(genpath(pwd))
 
 
 Lev = 10;
-Deg = 2;
+Deg = 4;
 num_plot = Deg;
 EndTime = 3;
 Lstart = -1;

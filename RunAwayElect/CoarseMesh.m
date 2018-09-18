@@ -21,7 +21,6 @@ for i = 1:size(index,1)
     cel_loc = ll(2);
     id_loc = ll(3);
     
-    
     key = [lev_loc,cel_loc];
     po = NewHash.(sprintf('i%g_',key));
     NewHash = rmfield(NewHash,sprintf('i%g_',key));

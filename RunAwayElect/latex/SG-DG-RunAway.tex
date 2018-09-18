@@ -292,6 +292,22 @@ Here we shall take $A=0.1,1,10$ for testing.
 \caption{Test 3: (a) Plot for solutions; (b) Total particles.}
 \end{figure}
 
+\subsubsection{Example 4}\label{Test:Diffusion-Test4}
+In this test, we shall assume the initial condition as
+\begin{eqnarray*}
+f_0(x)=\sum_{L=0}^\infty h_LP_L(x),
+\end{eqnarray*}
+where $P_L$ is the Legendre polynomial of degree $L$ and the coefficients are $h_0=3,\ h_1=0.5,\ h_2=1,\ h_3=0.7,\ h_4=3,\ h_6=3,$ and all other $h_L$ are set as zero.
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.9\textwidth]{./Diff-Deg5_Lev4}
+  %\footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test \ref{Test:Diffusion-Test4}: Numerical solution with Lev = 4 and Deg = 5.}
+\end{figure}
+
+
 \section{Convection Equation}
 In this section, we shall consider the following hyperbolic equations.
 Let the domain $\Omega\times(0,T)$ with $\Omega=[-1,1]$, the following problem will be considered in this paper,
@@ -427,6 +443,29 @@ In this test, we shall use $f_0=\exp(-x^2/\sigma^2),\ \sigma=0.1$ as initial con
   \end{tabular}
 \caption{Test \ref{Num-3}: Plot for solutions for Lev = 5, Deg = 5 of upwind flux at time = 0.5, 1, 2, 3.}
 \end{figure}
+
+
+Next, we test the adaptive method for this test. In this test, we have use the Hash table and leaf hash table. Hash table contains all the grids $\Omega^{n}_\ell$, and the leaf hash only consist of the grids without children. 
+
+The adaptive algorithm is as follows: for chosen value of $\epsilon>0$ and $\eta>0$
+\begin{itemize}
+\item[Step 1.] We start with previous (initial) mesh and solution ${\bf F}^{n}$
+\item[Step 2.] Pre-predict the solution by Euler time stepping method
+$${\bf F}^{(p)} = {\bf F}^{n}+\Delta t \mathbb{B}{\bf F}^{n}$$
+\item[Step 3.] Refinement: if the coefficient $|{\bf F}^{(p)}_j|>\epsilon$, we add additional resolution to the grid. The checking up procedure is for the global grids. But we only add the non-exist grid. Then the global grid and leaf grid will be modified accordingly.
+\item[Step 4.] Use 3-rd Runge-Kutta method to compute ${\bf F}^{n+1}$
+\item[Step 5.] Coarsening: if the coefficient of $|{\bf F}^{n+1}_j|>\eta$, we coarsen the grid. The checking up procedure is only carried out for the leaf grids. Then the global grid and leaf grid will be modified accordingly.
+\item[Step 6.] Go to Step 2 until end of time stepping
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth,height=.6\textwidth]{./HyperAdap_Lev4_Deg2}
+  \end{tabular}
+\caption{Test \ref{Num-3}: Plot for solutions for Lev = 4, Deg = 2 for adaptive method.}
+\end{figure}
+
 
 %\begin{figure}[H]
 %\centering
