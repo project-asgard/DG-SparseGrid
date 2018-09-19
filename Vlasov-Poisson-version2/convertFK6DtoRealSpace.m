@@ -31,6 +31,8 @@ LevV = Lev;
 Dim = 2;
 
 [HASH,HASHInv] = HashTable(Lev,Dim);
+disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
+              numel(HASH),    numel(HASHInv) ));
 
 n = 2^Lev;
 
