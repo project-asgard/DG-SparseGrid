@@ -167,7 +167,7 @@ for L = 1:floor(TEND/dt)
     % Note: E is solved by Poisson or Maxwell's equation
     %=============================================================
     % Poisson Solver: Solve E from 1-rho=1-int f dv
-    E = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+    [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
 
     % Generate EMassX matrix
     EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);

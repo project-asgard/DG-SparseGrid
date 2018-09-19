@@ -1,4 +1,4 @@
-function EE=PoissonSolve(Lev_x,k,Lmax,f,DeltaX,FMWT_COMP_x,Vmax)
+function [EE,u]=PoissonSolve(Lev_x,k,Lmax,f,DeltaX,FMWT_COMP_x,Vmax)
 %===============================================================
 % Compute EE from Poisson solver
 % Input : Lev_x,k,Lmax,rho_0,DeltaX
@@ -30,4 +30,6 @@ b_poisson(dof_1D_x+1:end)=(FMWT_COMP_x(:,2:end-1)*FMWT_COMP_x(:,2:end-1)')*tmp_b
 x_poisson=DeltaX\b_poisson;
 
 EE=x_poisson(1:dof_1D_x);
+
+u = x_poisson(1+dof_1D_x:end);
 

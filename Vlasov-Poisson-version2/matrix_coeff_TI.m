@@ -362,16 +362,16 @@ end
 DeltaX(dof_1D_x+1,:)=0;
 DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
 
-iend = size_DeltaX;
-DeltaX(iend,1:size_DeltaX)=0;
-% ---------------------------------------------------
-% DeltaX(iend,iend-k+[1:k])=sqrt(1/hx)*legendre(1,k);
-% ---------------------------------------------------
-leg_1_k = zeros(1,k);
-leg_1_k(1:k) = legendre(1,k);
-k1 = (iend-k+1);
-k2 = iend-k+k;
-DeltaX(iend,k1:k2) = sqrt(1/hx)*leg_1_k(1:k);
+% % iend = size_DeltaX;
+% % DeltaX(iend,1:size_DeltaX)=0;
+% % % ---------------------------------------------------
+% % % DeltaX(iend,iend-k+[1:k])=sqrt(1/hx)*legendre(1,k);
+% % % ---------------------------------------------------
+% % leg_1_k = zeros(1,k);
+% % leg_1_k(1:k) = legendre(1,k);
+% % k1 = (iend-k+1);
+% % k2 = iend-k+k;
+% % DeltaX(iend,k1:k2) = sqrt(1/hx)*leg_1_k(1:k);
 
 %======================================
 % Matrices related to v variable
