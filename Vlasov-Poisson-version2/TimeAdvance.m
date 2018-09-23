@@ -5,7 +5,11 @@ function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv)
 % Output: Vector:: f
 %-------------------------------------------------
 
-f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);
+%fI = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
+%fC = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);
+fE = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);
+
+f = fE;
 
 end
 
@@ -36,7 +40,44 @@ fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
 end
 
-function ftmp = ApplyA(A_Data,f,compression,Deg)
+function f1 = backward_euler(A,f0,t,dt,compression,Deg,pde,HASHInv)
+%----------------------------------
+% Backward Euler (First Order Implicit Time Advance)
+%----------------------------------
+
+s1 = source_vector(HASHInv,pde,t+dt);
+
+[~,AMat] = ApplyA(A,f0,1,Deg);
+
+I = eye(numel(diag(AMat)));
+AA = I - dt*AMat;
+
+b = f0 + dt*s1;
+
+f1 = AA\b; % Solve at each timestep
+
+end
+
+function f1 = crank_nicolson(A,f0,t,dt,compression,Deg,pde,HASHInv)
+%----------------------------------
+% Crank Nicolson (Second Order Implicit Time Advance)
+%----------------------------------
+
+s0 = source_vector(HASHInv,pde,t);
+s1 = source_vector(HASHInv,pde,t+dt);
+
+[~,AMat] = ApplyA(A,f0,1,Deg);
+
+I = eye(numel(diag(AMat)));
+AA = 2*I - dt*AMat;
+
+b = 2*f0 + dt*AMat*f0 + dt*(s0+s1);
+
+f1 = AA\b; % Solve at each timestep
+
+end
+
+function [ftmp,A] = ApplyA(A_Data,f,compression,Deg)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
