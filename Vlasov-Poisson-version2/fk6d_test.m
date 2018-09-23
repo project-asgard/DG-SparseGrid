@@ -166,6 +166,25 @@ assert(err(1) < tol);
 
 end
 
+function fk6d_vlasov7_implicit_BE_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing with vlasov7 (compression==1, Lev=3, implicit==1)');
+
+quiet = 1;
+lev = 3;
+deg = 2;
+TEND = 0.05;
+compression = 4;
+implicit = 1;
+[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression,implicit);
+
+tol = 1e-2;
+assert(err(1) < tol);
+
+end
+
 %!test fk6d_vlasov4_compression0_test(1)
 %!test fk6d_vlasov4_compression1_test(2)
 %!test fk6d_vlasov4_compression2_test(3)

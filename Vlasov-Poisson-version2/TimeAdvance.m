@@ -5,11 +5,13 @@ function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv)
 % Output: Vector:: f
 %-------------------------------------------------
 
-%fI = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
-%fC = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);
-fE = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);
-
-f = fE;
+if pde.implicit   
+    compression = 1;  
+    %f = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
+    f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);    
+else   
+    f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);   
+end
 
 end
 
