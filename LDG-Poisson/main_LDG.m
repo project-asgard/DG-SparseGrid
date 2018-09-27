@@ -2,7 +2,7 @@
 format short e
 addpath(genpath(pwd))
 
-Lev = 8;
+Lev = 4;
 Deg = 2;
 Lmax = 1;
 

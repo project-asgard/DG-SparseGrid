@@ -36,11 +36,11 @@ Lmax = 1;%pde.Lmax;
 TEND = 10;
 
 % Level information
-Lev = 2;
+Lev = 6;
 LevX = Lev;LevV = Lev;
 
 % Polynomial Degree
-Deg = 2;% Deg = 2 Means Linear Element
+Deg = 4;% Deg = 2 Means Linear Element
 
 % Dimensionality
 Dim = 2;
