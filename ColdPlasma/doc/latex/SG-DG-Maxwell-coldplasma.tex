@@ -235,7 +235,7 @@ with a constant $\beta>0$ independent of the mesh size and the wave number.
 \end{theorem}
 
 % Error Eq
-We rewrite the method in a slightly perturbed form. We define for $\bv\in V(h)$, the lifting $\mL(\bv)\in V_h$ by
+We rewrite the method in a slightly perturbed form. We define for $\bv\in V(h)$, the lifting operator $\mL(\bv)\in V_h$ by
 \begin{eqnarray*}
 (\mL(\bv),\bw)=\int_{\mF_h}\ljump\bv\rjump_{\tau}\cdot\lavg\bw\ravg ds,\ \forall\bw\in V_h.
 \end{eqnarray*}
@@ -293,6 +293,29 @@ There exists a positive constant $C$, independent of the local mesh sizes $h_K$,
 \|\bv-\Pi_h\bv\|_{0,K}^2+h_K\|\bv-\Pi_h\bv\|_{0,\partial K}^2\le Ch_K^{2t}\|\bv\|_{t,K}^2.
 \end{eqnarray}
 \end{lemma}
+
+<<<<<<< HEAD
+{\color{red}
+Next, denote $\hat{\Pi}_h$ as the $L^2$-projection onto $\hat{V}_h$, we have the following result.
+\begin{lemma}
+There exists a positive constant $C$, independent of the local mesh sizes $h_K$, such that, for any $\bv\in H^t(K)^3, K\in\mathcal{T}_h, t>1/2$,
+\begin{eqnarray}
+\|\bv-\hat{\Pi}_h\bv\|_{0,K}^2+h_K\|\bv-\hat{\Pi}_h\bv\|_{0,\partial K}^2\le Ch_K^{2t}\|\bv\|_{t,K}^2.
+\end{eqnarray}
+\end{lemma}
+}
+=======
+% SG projection
+\begin{lemma}
+There exists a positive constant $C$, independent of the local mesh sizes $h_K$, such that, for any $\bv\in H^t(K)^3, K\in\mathcal{T}_h, t>1/2$,
+\begin{eqnarray}
+\|\bv-\hat{\Pi}_h\bv\|_{0,\Omega}&\le& CN^d2^{-N(q+1)}|\bv|_{\mathcal{H}^{q+1}(\Omega)},\\
+\|\bv-\hat{\Pi}_h\bv\|_{1,\Omega}&\le& C2^{-Nq}|\bv|_{\mathcal{H}^{q+1}(\Omega)}
+\end{eqnarray}
+\end{lemma}
+
+Here $N^d2^{-N(q+1)}$ or $|\log h|^d h^{q+1}$.
+>>>>>>> 9e7d10ba3b725e84912fc3aa6d8ad53f504a719c
 
 \begin{lemma}
 For any discretely divergence-free function $\bv\in X_h$, define $H\bv\in H_0(\text{curl};\Omega)\cap H(\text{div}^0;\Omega)$ by $\nabla\times H\bv=\nabla\bv$. Then, there exists a constant $C>0$ such that
@@ -402,9 +425,35 @@ with $\bv_0^c\in X_h$ and $r\in S_h$. Then the following equation holds
 %
 &=&(\bu-\bu_h,\bv-\bv^c)+(\bu-\bu_h,\bv^c_0)\\
 %
-&=&(\bu-\bu_h,\bv-\bv^c)+(\bu-\bu_h,\bv^c_0-H\bv_0^c)+(\bu-\bu_h,H\bv^c_0)
-:=T_1+T_2+T_3.
+&=&(\bu-\bu_h,\bv-\bv^c)+(\bu-\bu_h,\bv^c_0-H\bv_0^c)+(\bu-\bu_h,H\bv^c_0)\\
+%
+:&=&T_1+T_2+T_3.
 \end{eqnarray*}
+Cauchy-Schwarz inequality yields
+\begin{eqnarray}
+|T_1|\le \|\bu-\bu_h\|\|\bv-\bv^c\|\le Ch\|\bu-\bu_h\|\3bar\bv\3bar.
+\end{eqnarray}
+
+\end{proof}
+
+\begin{lemma}
+Let $\bu$ be the analytical solution and $\bu_h$ be the discontinuous Galerkin approximation. Then there holds
+$$(\bu-\bu_h,\nabla q)=0,\ \forall q\in S_h,$$
+where $S_h:=\{q\in H_0^1(\Omega):q|_K\in P^{\ell+1}(K),K\in\mathcal{T}_h\}$.
+\end{lemma}
+% proof
+\begin{proof}
+For $q\in S_h$, {\color{red}we have $\nabla q\in V_h\cap H_0(\text{curl};\Omega)$.}
+By error equation, we have %$\tilde{A}_h(\bu-\bu_h,\nabla\bv)=r_h(\bu_h;\nabla\bv)$. %For $\nabla\bv^c\in V_h\cap H_0(\text{curl};\Omega)$.
+\begin{eqnarray*}
+0=\tilde{A}_h(\bu-\bu_h,\nabla q).%=(\bu-\bu_h,\nabla q)
+\end{eqnarray*}
+Since $\nabla_h\times\nabla q=0$ and $\ljump\nabla q\rjump_{\tau}=0$, we have
+\begin{eqnarray*}
+\tilde{A}_h(\bu_h,\nabla q)=-k^2(\bu_h,\nabla q),\ 
+\tilde{A}_h(\bu,\nabla q)=A_h(\bu,\nabla q)=-k^2(\bu,\nabla q).
+\end{eqnarray*}
+Thus, the statement of this Lemma follows directly.
 \end{proof}
 
 %---------------------

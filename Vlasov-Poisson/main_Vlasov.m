@@ -100,7 +100,7 @@ clear fv fx
 
 % Generate A_encode for Time-independent Matrix
 A_encode = GlobalMatrixSG(vMassV,GradX,HASH);
-
+return
 %====================================================================
 %% Step 4. Generate time-independent global Matrix
 % Compute the global matrix for spacial variables "x" by

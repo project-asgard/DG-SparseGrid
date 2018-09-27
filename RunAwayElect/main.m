@@ -31,6 +31,21 @@ source = @(x)((cos(pi*x)-2*pi*x.*sin(pi*x)+(1-x.^2)*pi^2.*cos(pi*x)));
 funcCoef = @(x)( (1-x.^2) );
 funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 
+% Test 3
+h0 = 3; h1 = 0.5; h2 = 1; h3 = 0.7; h4 = 3; h6 = 3;
+l0 = @(x,t)(x-x+1);
+l1 = @(x,t)(x);
+l2 = @(x,t)(3*x.^2-1)/2;
+l3 = @(x,t)(5*x.^3-3*x)/2;
+l4 = @(x,t)(35*x.^4-30*x.^2+3)/8;
+l6 = @(x,t)(231*x.^6-315*x.^4+105*x.^2-5)/16;
+% exactf = @(x,t)(h0*l0+h1*l1+h2*l2+h3*l3+h4*l4+h6*l6);
+exactf = @(x,t)(h0+h1*x+h2*(3*x.^2-1)/2+h3*(5*x.^3-3*x)/2+...
+    h4*(35*x.^4-30*x.^2+3)/8+h6*(231*x.^6-315*x.^4+105*x.^2-5)/16);
+source = @(x)(x-x);
+funcCoef = @(x)( (1-x.^2) );
+funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
+
 
 % source = @(x)(sin(pi*x)+sin(pi*x)*pi^2);
 
@@ -41,22 +56,23 @@ funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
 % funcCoef2 = @(x)(x-x);
 
 % Test 3
-A = 1;
-exactf = @(x,t)( (1/2)*exp(A*x)*A/sinh(A) );
-exactq = @(x,t)( -(1/2)*(-x.^2+1).*exp(A*x)*A^2/sinh(A) );
-% source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
-source = @(x)(x-x);
-funcCoef = @(x)( (1-x.^2) );
-funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
-
+% % A = 1;
+% % exactf = @(x,t)( (1/2)*exp(A*x)*A/sinh(A) );
+% % exactq = @(x,t)( -(1/2)*(-x.^2+1).*exp(A*x)*A^2/sinh(A) );
+% % % source = @(x,t)(exp(t)*(sin(pi*x)+2*pi*x.*cos(pi*x)+(1-x.^2)*pi^2.*sin(pi*x)));
+% % source = @(x)(x-x);
+% % funcCoef = @(x)( (1-x.^2) );
+% % funcCoef2 = @(x)( (-2*x) ); % diff(funcCoef,x)
+% % 
+% % exactf = @(x,t)( x-x+1/2 );
 
 format short e
 addpath(genpath(pwd))
 
 
-Lev = 4;
-Deg = 3;
-num_plot = 5;
+Lev = 5;
+Deg = 4;
+num_plot = 2;
 
 
 
@@ -95,7 +111,8 @@ qexact = sparse(dof_1D,1);
 CFL = 0.001;
 dt = CFL*h^((Deg-1)/3)/2;
 % dt = CFL*h^((Deg)/3);
-maxT = ceil(0.05/dt)
+EndTime = 0.5;
+maxT = ceil(EndTime/dt)
 
 % Assume 
 % [ I  A12]
@@ -189,6 +206,7 @@ end
 
 
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
+% quad_x = [-1,1]';
 
 p_val = legendre(quad_x,Deg);
 for L=0:n-1
@@ -212,11 +230,11 @@ for L=0:n-1
 end
 
 % checked of projection
-plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--')
+plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--','LineWidth',2)
 hold on
-plot(x_node,Meval*(A12*f0),'r-o',x_node,exactq(x_node,0),'b--')
+plot(x_node,Meval*(A12*f0),'r-o',x_node,exactq(x_node,0),'b--','LineWidth',2)
 
-% return
+
 Mat = A21*A12;
 
 % max(abs(Meval*f0))
@@ -225,13 +243,18 @@ Mat = A21*A12;
 
 b = b+bb;
 
+
+[quad_x,quad_w]=lgwt(num_plot,-1,1);
  total_particle = 0;
  ffval = Meval*f0;
+
  for i = 1:num_plot
       total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
  end
  total_particle
-return
+ 
+tp(1) = total_particle;
+
 figure
 for t = 1:maxT
 %     t
@@ -252,7 +275,20 @@ for t = 1:maxT
     f0 = fval;
     
     plot(x_node,Meval*f0,'r-o',x_node,Meval*(A12*f0),'b-<')
+    title(['time at ',num2str(time)])
     pause (0.1)
+    
+    total_particle = 0;
+    ffval = Meval*f0;
+    for i = 1:num_plot
+     
+      total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
+    end
+    tp(t+1) = total_particle;
+    
+    if abs(time-0.01)<=dt || abs(time-0.03)<=dt || abs(time-0.05)<=dt || abs(time-0.07)<=dt || abs(time-0.5)<=dt 
+        save(['Diff_Deg',num2str(Deg),'_Lev',num2str(Lev),'_End',num2str(time),'.mat'])
+    end
 end
 % figure;plot(x,f_loc'*f0,'r-o');hold on;
 % plot(x,exactf(x,time),'b--')
@@ -263,14 +299,14 @@ plot(x_node,exactf(x_node,time),'r-o')
 %  [norm(val) max(abs(val))]
  
  fL2 = 0; fLinf = max(abs(val));
- total_particle = 0;
+%  total_particle = 0;
  ffval = Meval*f0;
  for i = 1:num_plot
      fL2 = fL2 + quad_w(i)*h/2*sum(val(i:num_plot:end).^2);
-      total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
+%       total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
  end
  [sqrt(fL2) fLinf]
- total_particle
+%  total_particle
 %  figure;
 %  plot(x_node,Meval*A12*f0,'r-o',x_node,exactq(x_node,time),'b--')
  val = Meval*A12*f0-exactq(x_node,time);
@@ -290,6 +326,9 @@ plot(x_node,exactf(x_node,time),'r-o')
 %  full([norm(err) max(abs(err))])
 
 figure;
-plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--');
+plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--','LineWidth',2);
 hold on;
-plot(x_node,Meval*A12*f0,'b-o',x_node,exactq(x_node,time),'b--');
+plot(x_node,Meval*A12*f0,'b-o',x_node,exactq(x_node,time),'b--','LineWidth',2);
+
+figure;
+plot(tp,'r-o')

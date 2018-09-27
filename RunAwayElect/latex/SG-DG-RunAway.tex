@@ -127,6 +127,14 @@ On the boundary, we shall define $\hat{Q}_{1/2}=0$, $\hat{Q}_{N+1/2}=0$, $\hat{F
 
 Notice that, from Eq. (\ref{eq:ldg-2}), we can solve $q_h$ explicitly in terms of $f_h$, just by inverting the small matrix. It turns out that the LDG scheme (\ref{eq:ldg-1})-(\ref{eq:ldg-2}) with the central fluxes is stable and convergent, but it loses one order of accuracy, to only $\mathcal{O}(h^k)$ for the error measured in the $L^2$-norm, for odd $k$.
 
+Thus, the matrix form reads
+\begin{eqnarray*}
+\begin{cases}
+\dfrac{{\bf dF}_h}{dt} =& \mathbb{A}_{2}{\bf Q}_h \\
+{\bf Q}_h &= \mathbb{A}_{1} {\bf F}_h.
+\end{cases}
+\end{eqnarray*}
+
 %Replace $p=q_h$ and $w=f_h$, and thus (\ref{eq:ldg-1})-(\ref{eq:ldg-2}) imply
 %\begin{eqnarray}
 %\frac{1}{2}\frac{d}{dt}\int_{I_j}(f_h)^2dx+\frac{d}{dt}\int_{I_j}(q_h)^2dx
@@ -187,8 +195,8 @@ G_h^{n+1}&=&\frac{1}{3}G_h^n+\frac{2}{3}G_h^{(2)}+\frac{2}{3}\Delta tR(G_h^{(2)}
 \end{eqnarray}
 where $G_h^n$ represents a numerical approximation of the solution at discrete time $t_n$. A detailed description of the TVD Runge-Kutta method can be found in \cite{ShuOsher1988}.
 
-\section{Numerical Experiments}
-\subsection{Example 1} In this test, we choose a proper source term such that the exact solution is 
+\subsection{Numerical Experiments}
+\subsubsection{Example 1} In this test, we choose a proper source term such that the exact solution is 
 $$f(x,t)=\sin(\pi x)\exp(t).$$
 
 \begin{figure}[h!]
@@ -229,7 +237,7 @@ $$f(x,t)=\sin(\pi x)\exp(t).$$
 %6.1735e-05   5.6997e-05 2.1482e-04   2.0341e-04
 %7.8808e-06   7.2173e-06 2.6608e-05   2.5684e-05
 
-\subsection{Example 2} In this test, we choose a proper source term such that the exact solution is 
+\subsubsection{Example 2} In this test, we choose a proper source term such that the exact solution is 
 $$f(x,t)=\cos(\pi x)\exp(t).$$
 
 \begin{figure}[h!]
@@ -267,6 +275,309 @@ $$f(x,t)=\cos(\pi x)\exp(t).$$
 %   2.1478e-04   1.7957e-04 2.3586e-03   2.8417e-03
 %   2.5985e-05   2.3556e-05 2.8320e-04   3.5870e-04
 %   3.2912e-06   2.9420e-06 3.4739e-05   4.4667e-05
+
+\subsubsection{Example 3}
+In this example, we shall consider the initial condition as follows:
+\begin{eqnarray*}
+f_0=\frac{A}{2\sinh A}\exp(Ax).
+\end{eqnarray*}
+Here we shall take $A=0.1,1,10$ for testing.
+\begin{figure}[h!]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.9\textwidth]{./test3-Solution}\\
+   \includegraphics[width=.9\textwidth,height=.6\textwidth]{./test3-TotalPartical} 
+  %\footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test 3: (a) Plot for solutions; (b) Total particles.}
+\end{figure}
+
+\subsubsection{Example 4}\label{Test:Diffusion-Test4}
+In this test, we shall assume the initial condition as
+\begin{eqnarray*}
+f_0(x)=\sum_{L=0}^\infty h_LP_L(x),
+\end{eqnarray*}
+where $P_L$ is the Legendre polynomial of degree $L$ and the coefficients are $h_0=3,\ h_1=0.5,\ h_2=1,\ h_3=0.7,\ h_4=3,\ h_6=3,$ and all other $h_L$ are set as zero.
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.9\textwidth]{./Diff-Deg5_Lev4}
+  %\footnotesize (a) & \footnotesize(b) 
+\end{tabular}
+\caption{Test \ref{Test:Diffusion-Test4}: Numerical solution with Lev = 4 and Deg = 5.}
+\end{figure}
+
+
+\section{Convection Equation}
+In this section, we shall consider the following hyperbolic equations.
+Let the domain $\Omega\times(0,T)$ with $\Omega=[-1,1]$, the following problem will be considered in this paper,
+\begin{eqnarray}
+&&\frac{\partial f}{\partial t} = -\frac{\partial}{\partial x}(1-x^2)f,\mbox{ in }\Omega\label{eq:hyper-pde}%\\
+%&&(1-x^2)\frac{\partial f}{\partial x}|_{x=\pm 1} = 0.\label{eq:hyper-bc}
+\end{eqnarray}
+The DG method will be applied to approximate the above equation. The scheme will be described as follows:
+\begin{eqnarray*}
+\int_{I_j}\bigg(\frac{\partial f_h}{\partial t} w-(1-x^2)f_h\frac{\partial w}{\partial x}\bigg) dx + (\tilde{F}_{j+1/2})(w)_{j+1/2}^- -(\tilde{F}_{j-1/2})(w)_{j-1/2}^+ = 0.
+\end{eqnarray*}
+The upwind flux has been chosen as
+$\tilde{F}_{j+1/2}=(1-x_{j+1/2})f_{j+1/2}^-$ and $\tilde{F}_{j-1/2}=(1-x_{j-1/2})f_{j-1/2}^-$.
+
+Thus, the matrix form reads
+\begin{eqnarray*}
+\dfrac{{\bf dF}_h}{dt} =& \mathbb{B}{\bf F}_h.
+\end{eqnarray*}
+
+%---------------------------
+% Numerical Example
+%---------------------------
+\subsection{Numerical Test}
+Let 
+\begin{eqnarray*}
+f(x,t)&=&\frac{1-\phi^2}{1-x^2}f_0(\phi),\
+\phi(x,t)=\tanh(\tanh^{-1}x-t).
+\end{eqnarray*}
+
+\subsubsection{Test 1}\label{Num-2}
+In this test, we shall use $f_0=1$ as initial condition.
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth]{./hyper-cf-Test1_v2}
+  \end{tabular}
+\caption{Test \ref{Num-2}: Plot for solutions for Lev = 5, Deg = 5 of Central flux at time = 0.5, 1, 2, 3.}
+\end{figure}
+
+
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./hyper-cf-Test1}
+%  \end{tabular}
+%\caption{Test \ref{Num-2}: Plot for solutions for Lev = 5, Deg = 5 of Central flux at time = 0.5, 1, 2, 3.}
+%\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth,height=.65\textwidth]{./hyper-uf-Test1_v2}
+  \end{tabular}
+\caption{Test \ref{Num-2}: Plot for solutions for Lev = 5, Deg = 5 of upwind flux at time = 0.5, 1, 2, 3.}
+\end{figure}
+
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./hyper-uf-Test1}
+%  \end{tabular}
+%\caption{Test \ref{Num-2}: Plot for solutions for Lev = 5, Deg = 5 of upwind flux at time = 0.5, 1, 2, 3.}
+%\end{figure}
+
+
+\subsubsection{Test 2}\label{Num-3}
+In this test, we shall use $f_0=\exp(-x^2/\sigma^2),\ \sigma=0.1$ as initial condition. 
+%k=2 T=0.5
+%2 2.7454e-01   6.2949e-01
+
+%\begin{verbatim}
+%CF
+%2 3.5893e-01   9.2580e-01
+%3 1.5262e-01   4.4423e-01
+%4 1.2866e-02   2.5458e-02
+%5 2.8658e-04   8.9971e-04
+%UF
+%k=3, T=0.5
+%2 1.8697e-01   5.2381e-01
+%3 5.0580e-02   1.2419e-01
+%4 6.5368e-03   1.6838e-02
+%5 4.4662e-04   1.7248e-03
+%\end{verbatim}
+
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./hyperbolic-k2-compare}
+%  \end{tabular}
+%\caption{Test \ref{Num-3}: Plot for solutions for Lev = 4, T = 0.5.}
+%\end{figure}
+%
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./hyperbolic-k4}\\
+%  \includegraphics[width=.95\textwidth]{./hyperbolic-k4-zoom}
+%  \end{tabular}
+%\caption{Test \ref{Num-3}: Plot for solutions for Deg = 4, T = 0.5 for upwind flux.}
+%\end{figure}
+%
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./hyperbolic-k4-CF}\\
+%  \includegraphics[width=.95\textwidth]{./hyperbolic-k4-CF-Zoom}
+%  \end{tabular}
+%\caption{Test \ref{Num-3}: Plot for solutions for Deg = 4, T = 0.5 for central flux.}
+%\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth,height=0.65\textwidth]{./hyper-CF-Test2_v2}
+  \end{tabular}
+\caption{Test \ref{Num-3}: Plot for solutions for Lev = 5, Deg = 5 of Central flux at time = 0.5, 1, 2, 3.}
+\end{figure}
+
+
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./hyper-cf-Test2}
+%  \end{tabular}
+%\caption{Test \ref{Num-3}: Plot for solutions for Lev = 5, Deg = 5 of Central flux at time = 0.5, 1, 2, 3.}
+%\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth]{./hyper-UF-Test2_v2}
+  \end{tabular}
+\caption{Test \ref{Num-3}: Plot for solutions for Lev = 5, Deg = 5 of upwind flux at time = 0.5, 1, 2, 3.}
+\end{figure}
+
+
+Next, we test the adaptive method for this test. In this test, we have use the Hash table and leaf hash table. Hash table contains all the grids $\Omega^{n}_\ell$, and the leaf hash only consist of the grids without children. 
+
+The adaptive algorithm is as follows: for chosen value of $\epsilon>0$ and $\eta>0$
+\begin{itemize}
+\item[Step 1.] We start with previous (initial) mesh and solution ${\bf F}^{n}$
+\item[Step 2.] Pre-predict the solution by Euler time stepping method
+$${\bf F}^{(p)} = {\bf F}^{n}+\Delta t \mathbb{B}{\bf F}^{n}$$
+\item[Step 3.] Refinement: if the coefficient $|{\bf F}^{(p)}_j|>\epsilon$, we add additional resolution to the grid. The checking up procedure is for the global grids. But we only add the non-exist grid. Then the global grid and leaf grid will be modified accordingly.
+\item[Step 4.] Use 3-rd Runge-Kutta method to compute ${\bf F}^{n+1}$
+\item[Step 5.] Coarsening: if the coefficient of $|{\bf F}^{n+1}_j|>\eta$, we coarsen the grid. The checking up procedure is only carried out for the leaf grids. Then the global grid and leaf grid will be modified accordingly.
+\item[Step 6.] Go to Step 2 until end of time stepping
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth,height=.6\textwidth]{./HyperAdap_Lev4_Deg2}
+  \end{tabular}
+\caption{Test \ref{Num-3}: Plot for solutions for Lev = 4, Deg = 2 for adaptive method.}
+\end{figure}
+
+
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./hyper-uf-Test2}
+%  \end{tabular}
+%\caption{Test \ref{Num-3}: Plot for solutions for Lev = 5, Deg = 5 of upwind flux at time = 0.5, 1, 2, 3.}
+%\end{figure}
+
+% Convection + Diffusion
+\section{Convection and Diffusion equations}
+Let
+\begin{eqnarray*}
+\frac{\partial f}{\partial t} =   C\frac{\partial}{\partial x}(1-x^2)\frac{\partial f}{\partial x}-E\frac{\partial}{\partial x}(1-x^2)f .
+\end{eqnarray*}
+First, we shall rewrite the equation as follows,
+\begin{eqnarray*}
+\frac{\partial f}{\partial t}+E\frac{\partial }{\partial x} (1-x^2)f &=& C\frac{\partial }{\partial x}q,\\
+q - (1-x^2)\frac{\partial f}{\partial x}&=&0.
+\end{eqnarray*}
+Then the scheme becomes, to find $f_h,q_h\in V_h^k$, such that
+\begin{eqnarray*}
+&&\int_{I_j}\bigg(\frac{\partial f_h}{\partial t} - E (1-x^2) f_h \frac{\partial w}{\partial x}\bigg) dx +E\bigg( (\tilde{F}_{j+1/2})(w)^-_{j+1/2}-(\tilde{F}_{j-1/2})(w)^+_{j-1/2}\bigg)
+\\
+&&\quad\quad\quad\quad=-C\int_{I_j}q_h\frac{\partial w}{\partial x}dx + C\bigg( (\hat{Q}_{j+1/2})(w)^-_{j+1/2} -(\hat{Q}_{j-1/2})(w)^+_{j-1/2}\bigg),
+\\
+&&\int_{I_j}\bigg(q_h p-2xf_h p+(1-x^2)f_h\frac{\partial p}{\partial x}\bigg)dx-(\hat{F}_{j+1/2})(p)^-_{j+1/2}+(\hat{F}_{j-1/2})(p)^+_{j-1/2}=0,
+\end{eqnarray*}
+holds for $w,p\in V_h^k$, where $\tilde{F}_j$ is the upwind flux depending on the sign of $E$.
+Here we shall assume $E\ge 0$ and take $\tilde{F}_{j+1/2}=(1-x_{j+1/2}^2)(f_h)_{j+1/2}^-$, $\tilde{F}_{j-1/2}=(1-x_{j-1/2}^2)(f_h)_{j-1/2}^-$, and alternating diffusion flux as follows,
+\begin{eqnarray*}
+\hat{Q}_{j+1/2}&=&(q_h)_{j+1/2}^+,\
+ \hat{Q}_{j-1/2}=(q_h)_{j-1/2}^+
+ \\
+\hat{F}_{j+1/2}&=&{(1-x_{j+1/2}^2)}(f_h)_{j+1/2}^-,\
+ \hat{F}_{j-1/2}={(1-x_{j-1/2}^2)}(f_h)_{j-1/2}^-.
+\end{eqnarray*}
+
+Thus, the matrix form reads
+\begin{eqnarray*}
+\begin{cases}
+\dfrac{{\bf dF}_h}{dt} =& \mathbb{B}{\bf F}_h+\mathbb{A}_{2}{\bf Q}_h \\
+{\bf Q}_h &= \mathbb{A}_{1} {\bf F}_h.
+\end{cases}
+\end{eqnarray*}
+Thus, we can solve ${\bf F}^{n+1}$ explicitly by 3-rd Runge-Kutta methods for the following system:
+\begin{eqnarray}
+\frac{d{\bf F}_h}{dt} = R({\bf F}_h):= \mathbb{B}{\bf F}_h+\mathbb{A}_{2}\mathbb{A}_{1}{\bf F}_h.
+\end{eqnarray}
+
+%---------------------------
+% Numerical Example
+%---------------------------
+\subsection{Numerical Test}
+\subsubsection{Test 1}\label{Num-4}
+In this test, we shall take domain as $\Omega=[-1,1]$, initial condition as $f_0(x)=1/2$  for testing.
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth]{./condiff-cf-E1}
+  \end{tabular}
+\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of Central flux at time = 0.5, 1, 2, 2.5, 3.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth]{./condiff-uf-E1_v2}
+  \end{tabular}
+\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of upwind flux at time = 0.5, 1, 1.5, 2, 2.5, 3.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth]{./condiff-uf-E2_v2}
+  \end{tabular}
+\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of upwind flux at time = 0.5, 1, 1.5, 2, 2.5, 3.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+  \includegraphics[width=.95\textwidth]{./condiff-uf-E4_v2}
+  \end{tabular}
+\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of upwind flux at time = 0.5, 1, 1.5, 2, 2.5, 3.}
+\end{figure}
+
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./condiff-uf-E1}
+%  \end{tabular}
+%\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of upwind flux at time = 0.5, 1, 1.5, 2, 2.5, 3.}
+%\end{figure}
+%
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./condiff-uf-E2}
+%  \end{tabular}
+%\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of upwind flux at time = 0.5, 1, 1.5, 2, 2.5, 3.}
+%\end{figure}
+%
+%\begin{figure}[H]
+%\centering
+%\begin{tabular}{c}
+%  \includegraphics[width=.95\textwidth]{./condiff-uf-E4}
+%  \end{tabular}
+%\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of upwind flux at time = 0.5, 1, 1.5, 2, 2.5, 3.}
+%\end{figure}
+
 
 \begin{thebibliography}{99}
 
