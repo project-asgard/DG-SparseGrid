@@ -1,5 +1,6 @@
-function [f2d] = convertFK6DtoRealSpace()
+%function [f2d] = convertFK6DtoRealSpace()
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+idebug = 1;
 
 
 % Read in output from FK6D and convert it to real space
@@ -59,8 +60,10 @@ LevV = Lev;
 Dim = 2;
 
 [HASH,HASHInv] = HashTable(Lev,Dim);
-disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
+if (idebug >= 1),
+  disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
               numel(HASH),    numel(HASHInv) ));
+end;
 
 n = 2^Lev*(Deg-1);
 
@@ -73,7 +76,11 @@ v = linspace(Vmin,Vmax,nY);
 dx = x(2)-x(1);
 dv = v(2)-v(1);
 
-steps = [0:1:(nT-1)/1]+1;
+if (idebug >= 1),
+  steps = [0:1:5]+1;
+else
+  steps = [0:1:(nT-1)/1]+1;
+end;
 nS = numel(steps);
 
 n_t = zeros(nX,nS);
@@ -135,10 +142,13 @@ startFromLast = 0;
 cnt = 1;
 
 if doTransform
+    more off;
     
     if startFromLast
         load('f2d_t.mat');
         disp(['Restarting from last : ', num2str(cnt)]);
+    else
+        f2d_t = zeros(numel(xx),numel(vv), numel(steps));
     end
     
     for tt = steps
@@ -177,7 +187,7 @@ if doTransform
         
     end
     
-    save('f2d_t.mat','f2d_t', 'n_t', 'x', 'x1', 'E_t', 't', 'cnt');
+    %% save('f2d_t.mat','f2d_t', 'n_t', 'x', 'x1', 'E_t', 't', 'cnt');
     
 else
     
@@ -193,8 +203,13 @@ df2d_t = f2d_t-f2d_t(:,:,1);
 dn_t = n_t-n_t(:,1);
 
 figure(1)
-contourf(dn_t,30,'EdgeColor','none');
-colormap(redblue);
+if (isOctave),
+  contourf(dn_t,30);
+  colormap(hot);
+else
+  colormap(redblue);
+end;
+
 dRange = max(abs(dn_t(:)));
 caxis([-dRange,+dRange]);
 
@@ -202,11 +217,21 @@ c = hot;
 c = flipud(c);
 
 figure(2)
-for tt = 1:nS
+if (isOctave),
+  max_tt = 1;
+else
+  max_tt = nS;
+end;
+
+for tt = 1:max_tt,
     ax1 = subplot(2,2,1);
     mesh(xx,vv,df2d_t(:,:,tt)','FaceColor','flat','EdgeColor','none');
     axis([Lmin Lmax Vmin Vmax])
-    colormap(ax1,redblue);
+    if (isOctave),
+      colormap(ax1,c);
+    else
+      colormap(ax1,redblue);
+    end;
     dRange = max(abs(df2d_t(:)));
     caxis([-dRange,+dRange]);
     colorbar;
@@ -249,4 +274,4 @@ end
 
 
 
-end
+%end
