@@ -1,4 +1,4 @@
-function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression)
+function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -55,6 +55,10 @@ end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
     compression = 4;
+end
+if ~exist('implicit','var') || isempty(implicit)
+    % Use or not the compression reference version
+    pde.implicit = 0;
 end
 
 % Get x and v domain ranges.
@@ -282,16 +286,16 @@ for L = 1:floor(TEND/dt)
         % Check the wavelet space solution with the analytic solution
         fval_analytic = exact_solution_vector(HASHInv,pde,time(count));
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
-        disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
-        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+        %disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
+        %disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
         % Check the real space solution with the analytic solution
         fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
         f2d_analytic = pde.ExactF(xx,vv,time(count));
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
-        disp(['    real space absolute err : ', num2str(err_real)]);
-        disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
+        %disp(['    real space absolute err : ', num2str(err_real)]);
+        %disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
        
         err = err_wavelet;
     end

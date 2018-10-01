@@ -28,7 +28,7 @@ pde.params = params;
 
 pde.solvePoisson = 0;
 pde.applySpecifiedE = 1;
-
+pde.implicit = 0;
 pde.checkAnalytic = 1;
 
 % pde.exactE = @exactE;

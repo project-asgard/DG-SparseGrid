@@ -30,6 +30,7 @@ pde.params = params;
 
 pde.solvePoisson = 1;
 pde.applySpecifiedE = 0;
+pde.implicit = 0;
 
 pde.checkAnalytic = 0;
 
