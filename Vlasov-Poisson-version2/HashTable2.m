@@ -10,6 +10,8 @@ function [forwardHash,inverseHash] = HashTable2(Lev,Dim)
 %   (Lev_1D,Cell_1D)->Index_1D
 % so the inv = (Lev_1,Lev_2,Cell_1,Cell_2,Index_1,Index_2)
 %        key = [Lev_1,Lev_2,Cell_1,Cell_2]
+% Note:: 10/02--the structure of Hash table and Inverse Hash have been
+% modified
 %-------------------------------------------------
 
 global hash_format
