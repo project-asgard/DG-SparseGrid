@@ -1,16 +1,18 @@
-function pde=Vlasov4
+function pde=Poisson1D
 % Numerical Example for Vlasov Equation
 % Bump-on-tail instability
 
 % Parameters
-pde.Dim = 2;
-pde.Lev = [3 3];
+pde.Dim = 1;
+pde.Lev = [3];
 pde.domain = [0 20*pi/3; -13 13];
 
 k_0=0.3;
 A=0.04;
 Lmin=0;Lmax=20*pi/3;
 Vmin=-13;Vmax=+13;
+
+
 
 params.TEND = 1;
 
