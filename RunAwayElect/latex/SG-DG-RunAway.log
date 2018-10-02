@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.9.25)  17 SEP 2018 09:28
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.9.25)  1 OCT 2018 17:59
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -539,10 +539,10 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 Package epstopdf Info: Source file: <./L2error.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 36120 bytes
 (epstopdf)             Output file: <./L2error-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 7870 bytes
 (epstopdf)             Command: <repstopdf --outfile=./L2error-eps-converted-to
 .pdf ./L2error.eps>
@@ -557,10 +557,10 @@ Package pdftex.def Info: ./L2error-eps-converted-to.pdf  used on input line 205
 Package pdftex.def Info: Requested size: 166.67154pt x 154.75839pt on input lin
 e 205.
 Package epstopdf Info: Source file: <./test1-Linftyerror.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 40528 bytes
 (epstopdf)             Output file: <./test1-Linftyerror-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 12656 bytes
 (epstopdf)             Command: <repstopdf --outfile=./test1-Linftyerror-eps-co
 nverted-to.pdf ./test1-Linftyerror.eps>
@@ -575,10 +575,10 @@ t line 206. on input line 206.
 Package pdftex.def Info: Requested size: 166.67154pt x 155.68231pt on input lin
 e 206.
 Package epstopdf Info: Source file: <./sol-f.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 66415 bytes
 (epstopdf)             Output file: <./sol-f-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 23724 bytes
 (epstopdf)             Command: <repstopdf --outfile=./sol-f-eps-converted-to.p
 df ./sol-f.eps>
@@ -604,10 +604,10 @@ e 216.
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 Package epstopdf Info: Source file: <./test2-L2error.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 37322 bytes
 (epstopdf)             Output file: <./test2-L2error-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 7927 bytes
 (epstopdf)             Command: <repstopdf --outfile=./test2-L2error-eps-conver
 ted-to.pdf ./test2-L2error.eps>
@@ -622,10 +622,10 @@ ne 246. on input line 246.
 Package pdftex.def Info: Requested size: 166.67154pt x 155.09534pt on input lin
 e 246.
 Package epstopdf Info: Source file: <./test2-Linftyerror.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 40919 bytes
 (epstopdf)             Output file: <./test2-Linftyerror-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 12755 bytes
 (epstopdf)             Command: <repstopdf --outfile=./test2-Linftyerror-eps-co
 nverted-to.pdf ./test2-Linftyerror.eps>
@@ -641,10 +641,10 @@ Package pdftex.def Info: Requested size: 166.67154pt x 155.68231pt on input lin
 e 247.
 [2 <./L2error-eps-converted-to.pdf> <./test1-Linftyerror-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./test2-sol-f.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 66203 bytes
 (epstopdf)             Output file: <./test2-sol-f-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 23726 bytes
 (epstopdf)             Command: <repstopdf --outfile=./test2-sol-f-eps-converte
 d-to.pdf ./test2-sol-f.eps>
@@ -659,10 +659,10 @@ Package pdftex.def Info: ./test2-sol-f-eps-converted-to.pdf  used on input line
 Package pdftex.def Info: Requested size: 166.67154pt x 101.36852pt on input lin
 e 256.
 Package epstopdf Info: Source file: <./test2-sol-q.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 66209 bytes
 (epstopdf)             Output file: <./test2-sol-q-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 24783 bytes
 (epstopdf)             Command: <repstopdf --outfile=./test2-sol-q-eps-converte
 d-to.pdf ./test2-sol-q.eps>
@@ -680,10 +680,10 @@ e 257.
 to.pdf> <./test2-Linftyerror-eps-converted-to.pdf> <./test2-sol-f-eps-converted
 -to.pdf> <./test2-sol-q-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./test3-Solution.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 98044 bytes
 (epstopdf)             Output file: <./test3-Solution-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 28744 bytes
 (epstopdf)             Command: <repstopdf --outfile=./test3-Solution-eps-conve
 rted-to.pdf ./test3-Solution.eps>
@@ -698,11 +698,11 @@ ine 288. on input line 288.
 Package pdftex.def Info: Requested size: 333.3431pt x 239.4269pt on input line 
 288.
 Package epstopdf Info: Source file: <./test3-TotalPartical.eps>
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 36400 bytes
 (epstopdf)             Output file: <./test3-TotalPartical-eps-converted-to.pdf
 >
-(epstopdf)                    date: 2018-09-10 15:52:48
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 9765 bytes
 (epstopdf)             Command: <repstopdf --outfile=./test3-TotalPartical-eps-
 converted-to.pdf ./test3-TotalPartical.eps>
@@ -719,18 +719,15 @@ Package pdftex.def Info: Requested size: 333.33168pt x 222.2348pt on input line
  [4 <./test3-Solution-eps-converted-to.pdf> <./test3-TotalPartical-eps-converte
 d-to.pdf>]
 Package epstopdf Info: Source file: <./Diff-Deg5_Lev4.eps>
-(epstopdf)                    date: 2018-09-17 09:22:21
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 22206 bytes
 (epstopdf)             Output file: <./Diff-Deg5_Lev4-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-09-19 09:12:57
+(epstopdf)                    size: 7265 bytes
 (epstopdf)             Command: <repstopdf --outfile=./Diff-Deg5_Lev4-eps-conve
 rted-to.pdf ./Diff-Deg5_Lev4.eps>
 (epstopdf)             \includegraphics on input line 304.
-runsystem(repstopdf --outfile=./Diff-Deg5_Lev4-eps-converted-to.pdf ./Diff-Deg5
-_Lev4.eps)...executed safely (allowed).
-
-Package epstopdf Info: Result file: <./Diff-Deg5_Lev4-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-17 09:28:10
-(epstopdf)                    size: 7265 bytes.
+Package epstopdf Info: Output file is already uptodate.
 <./Diff-Deg5_Lev4-eps-converted-to.pdf, id=95, pagebox=cropbox, 996.72375pt x 7
 21.69624pt>
 File: ./Diff-Deg5_Lev4-eps-converted-to.pdf Graphic file (type pdf)
@@ -741,10 +738,10 @@ Package pdftex.def Info: Requested size: 333.3431pt x 241.35403pt on input line
  304.
  [5 <./Diff-Deg5_Lev4-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./hyper-cf-Test1_v2.eps>
-(epstopdf)                    date: 2018-09-13 15:34:50
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 170425 bytes
 (epstopdf)             Output file: <./hyper-cf-Test1_v2-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-13 15:56:14
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 52051 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-cf-Test1_v2-eps-co
 nverted-to.pdf ./hyper-cf-Test1_v2.eps>
@@ -759,10 +756,10 @@ t line 346. on input line 346.
 Package pdftex.def Info: Requested size: 351.86342pt x 259.79196pt on input lin
 e 346.
 Package epstopdf Info: Source file: <./hyper-uf-Test1_v2.eps>
-(epstopdf)                    date: 2018-09-13 15:40:03
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 168068 bytes
 (epstopdf)             Output file: <./hyper-uf-Test1_v2-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-13 15:57:11
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 50451 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-uf-Test1_v2-eps-co
 nverted-to.pdf ./hyper-uf-Test1_v2.eps>
@@ -781,10 +778,10 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [6 <./hyper-cf-Test1_v2-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./hyper-CF-Test2_v2.eps>
-(epstopdf)                    date: 2018-09-13 15:43:34
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 169056 bytes
 (epstopdf)             Output file: <./hyper-CF-Test2_v2-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-13 15:59:21
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 16452 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-CF-Test2_v2-eps-co
 nverted-to.pdf ./hyper-CF-Test2_v2.eps>
@@ -799,10 +796,10 @@ t line 425. on input line 425.
 Package pdftex.def Info: Requested size: 351.85248pt x 240.743pt on input line 
 425.
 Package epstopdf Info: Source file: <./hyper-UF-Test2_v2.eps>
-(epstopdf)                    date: 2018-09-13 15:46:56
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 169894 bytes
 (epstopdf)             Output file: <./hyper-UF-Test2_v2-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-13 15:59:22
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 14251 bytes
 (epstopdf)             Command: <repstopdf --outfile=./hyper-UF-Test2_v2-eps-co
 nverted-to.pdf ./hyper-UF-Test2_v2.eps>
@@ -819,11 +816,11 @@ e 442.
  [7 <./hyper-uf-Test1_v2-eps-converted-to.pdf> <./hyper-CF-Test2_v2-eps-convert
 ed-to.pdf>]
 Package epstopdf Info: Source file: <./HyperAdap_Lev4_Deg2.eps>
-(epstopdf)                    date: 2018-09-17 09:06:10
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 328383 bytes
 (epstopdf)             Output file: <./HyperAdap_Lev4_Deg2-eps-converted-to.pdf
 >
-(epstopdf)                    date: 2018-09-17 09:07:44
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 55523 bytes
 (epstopdf)             Command: <repstopdf --outfile=./HyperAdap_Lev4_Deg2-eps-
 converted-to.pdf ./HyperAdap_Lev4_Deg2.eps>
@@ -843,10 +840,10 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
  [8 <./hyper-UF-Test2_v2-eps-converted-to.pdf>] [9 <./HyperAdap_Lev4_Deg2-eps-c
 onverted-to.pdf>]
 Package epstopdf Info: Source file: <./condiff-cf-E1.eps>
-(epstopdf)                    date: 2018-09-12 15:09:37
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 62080 bytes
 (epstopdf)             Output file: <./condiff-cf-E1-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-12 15:23:42
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 20058 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-cf-E1-eps-conver
 ted-to.pdf ./condiff-cf-E1.eps>
@@ -861,10 +858,10 @@ ne 528. on input line 528.
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
  528.
 Package epstopdf Info: Source file: <./condiff-uf-E1_v2.eps>
-(epstopdf)                    date: 2018-09-13 15:50:57
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 107351 bytes
 (epstopdf)             Output file: <./condiff-uf-E1_v2-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-13 16:01:54
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 38570 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-uf-E1_v2-eps-con
 verted-to.pdf ./condiff-uf-E1_v2.eps>
@@ -883,10 +880,10 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [10 <./condiff-cf-E1-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./condiff-uf-E2_v2.eps>
-(epstopdf)                    date: 2018-09-13 15:53:06
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 107490 bytes
 (epstopdf)             Output file: <./condiff-uf-E2_v2-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-13 16:01:55
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 38490 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-uf-E2_v2-eps-con
 verted-to.pdf ./condiff-uf-E2_v2.eps>
@@ -901,10 +898,10 @@ Package pdftex.def Info: ./condiff-uf-E2_v2-eps-converted-to.pdf  used on input
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
  544.
 Package epstopdf Info: Source file: <./condiff-uf-E4_v2.eps>
-(epstopdf)                    date: 2018-09-13 15:55:14
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 108593 bytes
 (epstopdf)             Output file: <./condiff-uf-E4_v2-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-09-13 16:01:55
+(epstopdf)                    date: 2018-09-19 09:12:57
 (epstopdf)                    size: 36858 bytes
 (epstopdf)             Command: <repstopdf --outfile=./condiff-uf-E4_v2-eps-con
 verted-to.pdf ./condiff-uf-E4_v2.eps>
@@ -950,7 +947,7 @@ ist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2017/texmf-dis
 t/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2017/texmf-dist/
 fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2017/texmf-dist/fo
 nts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on SG-DG-RunAway.pdf (12 pages, 651310 bytes).
+Output written on SG-DG-RunAway.pdf (12 pages, 652068 bytes).
 PDF statistics:
  235 PDF objects out of 1000 (max. 8388607)
  162 compressed objects within 2 object streams

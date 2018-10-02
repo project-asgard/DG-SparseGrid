@@ -1,15 +1,18 @@
-% main code for LDG Poisson equation
-
-% % df/dt = d/dx(1-x^2)df/dx+source
-% df/dt = -d/dx ((1-x^2)f)
-% Method 1. LDG
-% [A11 A12]
-% [A21 A22]
-% Here A11 = I, A12 = -(d/dx sqrt(1-x^2)q,p)
-% A21 = -(sqrt(1-x^2)df/dx,w), A22 = (q,w) = I
-% A12 = (sqrt(1-x^2)q,dp/dx)-<sqrt(1-x^2)\hat{q},p>
-% A21 = (sqrt(1-x^2)f,dw/dx)-<sqrt(1-x^2)\hat{f},w>
-% try with central flux
+% main code for LDG equation
+%==================================================
+%  df/dt + d/dx(x(1-x^2)f) = source
+% A = (x(1-x^2)f,dw/dx) - <x(1-x^2)\hat{f},w>
+% F{n+1}=F{n}+dt*A*F{n}+dt*S
+% Flux is:: {funcCoef*u}+abs(funcCoef)*(1-alpha)[u]
+% Note: 
+%   alpha = 0:: upwind  flux
+%   alpha = 1:: central flux
+% Parameters:
+%   alpha:: flux choice as aobve
+%   PlotType:	1--discontinous plot
+%               2--continuous plot
+%   Deg, Lev, CFL
+%==================================================
 clear all
 close all
 % clc
@@ -18,10 +21,10 @@ close all
 sigma = 0.1;
 % f0 = @(x)( exp(-(x-0.36).^2/sigma^2) );
 f0 = @(x)( exp(-(x-0.36).^2/sigma^2)+exp(-(x+0.36).^2/sigma^2) );
-% f0 = @(x)(x-x+1);
-phi = @(x,t)( tanh(atanh(x)-t) );
+
+phi = @(x,t)( x.*exp(-t)./sqrt(1+(exp(-2*t)-1).*x.^2) );
 exactf = @(x,t)(...
-    (1-phi(x,t).^2)./(1-x.^2).*f0(phi(x,t)) ...
+    (phi(x,t).*(1-phi(x,t).^2))./(x.*(1-x.^2)).*f0(phi(x,t)) ...
     );
 funcCoef = @(x)(x.*(1-x.^2));
 
@@ -31,18 +34,19 @@ addpath(genpath(pwd))
 
 Lev = 5;
 Deg = 2;
-num_plot = 2;%Deg;
+num_plot = 3;
 EndTime = 6;
+PlotType = 1;
+AdapTest = 1;
 
 alpha = 0;
 
-
-
+% Define domain = [Lstart,Lend] and Lmax = Lend-Lstart
 Lstart = -1;
 Lend = 1;
 Lmax = Lend-Lstart;
 
-FluxType = 'UF';
+
 
 %--Quadrature
 quad_num=10;
@@ -60,32 +64,33 @@ Dp_val = dlegendre(quad_x,Deg);
 % Jacobi of variable x and v
 % Define Matrices
 %---------------------------
-n=2^(Lev);h=Lmax/n;
-Jacobi=h;
-dof_1D=Deg*n;
-A12 = sparse(dof_1D,dof_1D);
-f0 = sparse(dof_1D,1);
-
-b = sparse(dof_1D,1);bb = sparse(dof_1D,1);
-fexact = sparse(dof_1D,1);
-qexact = sparse(dof_1D,1);
+if AdapTest == 0
+tol_cel_num=2^(Lev);h=Lmax/tol_cel_num;
+dof_1D=Deg*tol_cel_num;
 
 CFL = 0.01;
-% dt = CFL*h^((Deg-1)/3)/2;
-dt = CFL*h^((Deg)/3);
+
+
+
+if Deg < 4
+    dt = CFL*h^((Deg-1)/3)/2;
+else
+    dt = CFL*h^((Deg)/3);
+end
+
+
 
 maxT = ceil(EndTime/dt)
 
-% Assume
-% [ I  A12]
-% [A21  0 ]
-% as the matrix
-% e.g. we assume neuman boundary:: q=0 on boundary
-%
+M_Adv = sparse(dof_1D,dof_1D);
+S = sparse(dof_1D,1);
+f0 = sparse(dof_1D,1);
 
-A21 = sparse(dof_1D,dof_1D);
+b = sparse(dof_1D,1);
+fexact = sparse(dof_1D,1);
+
 % generate 1D matrix for DG
-for L=0:n-1
+for L=0:tol_cel_num-1
     
     %---------------------------------------------
     % (funcCoef*q,d/dx p)
@@ -99,7 +104,7 @@ for L=0:n-1
     
     c = Deg*L+1:Deg*(L+1);
     
-    A12 = A12 + sparse(c'*ones(1,Deg),ones(Deg,1)*c,val,dof_1D,dof_1D);
+    M_Adv = M_Adv + sparse(c'*ones(1,Deg),ones(Deg,1)*c,val,dof_1D,dof_1D);
     
     
     val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))];
@@ -109,7 +114,7 @@ for L=0:n-1
     %----------------------------------------------
     % -<funcCoef*{q},p>
     %----------------------------------------------
-    if (L >= 1) && (L < n-1)
+    if (L >= 1) && (L < tol_cel_num-1)
     val_flux = [...
         p_1'*(funcCoef(x0)+abs(funcCoef(x0))*(1-alpha))*p_2;...
         p_1'*(funcCoef(x0)-abs(funcCoef(x0))*(1-alpha))*p_1;...
@@ -129,8 +134,8 @@ for L=0:n-1
         IndexU = [ones(Deg,1)*(c);...
             ones(Deg,1)*(c);...
             ones(Deg,1)*(c+Deg) ];
-        val_L = -p_1'*(funcCoef(x0)+abs(funcCoef(x0))*(1-alpha))*0;%exactf(-1)*0.5/sqrt(h);
-    elseif L == n-1
+        val_L = -p_1'*(funcCoef(x0)+abs(funcCoef(x0))*(1-alpha))*0;
+    elseif L == tol_cel_num-1
       val_flux = [...
         p_1'*(funcCoef(x0)+abs(funcCoef(x0))*(1-alpha))*p_2;...
         p_1'*(funcCoef(x0)-abs(funcCoef(x0))*(1-alpha))*p_1;...
@@ -141,13 +146,10 @@ for L=0:n-1
         IndexU = [ones(Deg,1)*(c-Deg); ...
             ones(Deg,1)*(c);...
             ones(Deg,1)*(c)];
-        val_R = p_2'*(funcCoef(x1)-abs(funcCoef(x1))*(1-alpha))*0;%exactf(1)*0.5/sqrt(hx);
+        val_R = p_2'*(funcCoef(x1)-abs(funcCoef(x1))*(1-alpha))*0;
     end
-    A12 = A12 + sparse(IndexV,IndexU,val_flux,dof_1D,dof_1D);
-    
-        
-    
-    
+    M_Adv = M_Adv + sparse(IndexV,IndexU,val_flux,dof_1D,dof_1D);
+ 
     val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))];
     f0(c) = val;
     
@@ -156,11 +158,11 @@ end
 
 
 
+
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
-% quad_x = [-1,1]';
 
 p_val = legendre(quad_x,Deg);
-for L=0:n-1
+for L=0:tol_cel_num-1
     %---------------------------------------------
     % Generate the coefficients for DG bases
     %---------------------------------------------
@@ -168,11 +170,15 @@ for L=0:n-1
     Iu = [Deg*L+1:Deg*(L+1)];
     
     Iv = [num_plot*L+1:num_plot*(L+1)];
-    %     xi=h*(quad_x/2+1/2+L);
     
     x0 = Lstart+L*h;
     x1 = x0+h;
-    xi = [x0,x1];%quad_x*(x1-x0)/2+(x1+x0)/2;%[L*h,L*h+h];%
+    
+    if PlotType == 1
+        xi = [x0,quad_x(2:end-1)'*(x1-x0)/2+(x1+x0)/2,x1];
+    elseif PlotType == 0
+        xi = quad_x*(x1-x0)/2+(x1+x0)/2;
+    end    
     
     
     Meval(Iv,Iu)=sqrt(1/h)*p_val;
@@ -180,17 +186,33 @@ for L=0:n-1
     
 end
 
+Mat = M_Adv;
+
+b = S;
+
+
+
 % checked of projection
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,0),'b--','LineWidth',2)
+legend({'solution f','flux x(1-x^2)f'})
+title(['time at ',num2str(0)])
 
-% return
-Mat = A12;
-% return
-% max(abs(Meval*f0))
-% val = Meval*A12*f0-exactq(x_node,0);
-% [norm(val) max(abs(val))]
+for i = 1:size(IHash,2)
+    l1 = IHash{i};
+    Id(Deg*(i-1)+[1:Deg]) = Deg*(l1(3)-1)+[1:Deg];
+end
 
-b = b+bb;
+num_In = 2^5;%2^(10-Lev);
+plot_start = 2^(10-Lev)/2;
+MMeval = Meval(plot_start:num_In:end,Id);
+xx_node = x_node(plot_start:num_In:end);
+
+figure;
+plot(xx_node,MMeval*f0(Id),'r-o',xx_node,exactf(xx_node,0),'b--','LineWidth',2)
+legend({'solution f','flux x(1-x^2)f'})
+title(['time at ',num2str(0)])
+
+
 
 
 [quad_x,quad_w]=lgwt(num_plot,-1,1);
@@ -210,23 +232,20 @@ figure
 for t = 1:maxT
     %     t
     time = t*dt;
-    %     tmp = A12'*A12*f0;%dt*A12'*A12*f0+dt*b*exp(time);
-    %     tmp2 = A12*A12*f0;
     
-    % %     fval = f0+dt*Mat*f0+dt*b;%*exp(time);
-    
-    f1 = f0 + dt*( Mat*f0+b*exp(time-dt) );
-    f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b*exp(time));
-    fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b*exp(time-dt/2));
-    
-    %     f1 = f0 + dt*( Mat*f0+b );
-    %     f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b );
-    %     fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b );
+    % if source is time-independent
+    f1 = f0 + dt*( Mat*f0+b );
+    f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b);
+    fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b);
+    % if source is time-dependent
+%     f1 = f0 + dt*( Mat*f0+b*exp(time-dt) );
+%     f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+b*exp(time));
+%     fval = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+b*exp(time-dt/2));
     
     f0 = fval;
     
-%     plot(x_node,Meval*f0,'r-o',x_node,Meval*(A12*f0),'b-<')
     plot(x_node,Meval*f0,'r-o',x_node,x_node.*(1-x_node.^2).*Meval*(f0),'b-<')
+    legend({'solution f','flux x(1-x^2)f'})
     title(['time at ',num2str(time)])
     pause (0.1)
     
@@ -242,38 +261,69 @@ for t = 1:maxT
     tp(t+1) = total_particle;
     Lp(t+1) = L2_stability;
     
-%     if abs(time-0.5)<=dt || abs(time-1)<=dt || abs(time-2)<=dt || abs(time-3)<=dt
-%         save(['hyper_',FluxType,'_Deg',num2str(Deg),'_Lev',num2str(Lev),'_End',num2str(time),'.mat'])
-%     end
+    % saving data
+    if abs(time-0.5)<=dt || abs(time-1)<=dt || abs(time-1.5)<=dt ...
+       || abs(time-2)<=dt || abs(time-2.5)<=dt || abs(time-3)<=dt ...
+       || abs(time-3.5)<=dt || abs(time-4)<=dt || abs(time-4.5)<=dt ...
+       || abs(time-5)<=dt || abs(time-5.5)<=dt || abs(time-6)<=dt 
+       
+        save(['Damp_ALPHA',num2str(alpha),'_Deg',num2str(Deg),'_Lev',num2str(Lev),'_End',num2str(time),'.mat'])
+    end
 end
+
+
+
+
+
+elseif AdapTest == 1
+    Lev_old = Lev;
+    Lev = 10; 
+
+    if Deg < 4
+    dt = CFL*(Lmax/2^Lev_old)^((Deg-1)/3)/2;
+    else
+    dt = CFL*(Lmax/2^Lev_old)^((Deg)/3);
+    end
+    
+    if AdapTest == 1
+    % convect matrix to MWDG
+    FMWT = OperatorTwoScale(Deg,2^Lev);
+    Mat = FMWT*Mat*FMWT';
+    b = FMWT*b;
+    Meval = Meval*FMWT';
+
+    f0 = FMWT*f0;
+    
+    save(['Mat_Lev',num2str(Lev),'_Deg',num2str(Deg),'.mat']);
+    
+    Lev = Lev_old;
+    [Hash,IHash,FineIndex] = HashTable1D(Lev);
+    DoFs = Deg*2^Lev;
+
+    Mat_tmp = Mat(1:DoFs,1:DoFs);
+
+end
+    
+end
+
 % figure;plot(x,f_loc'*f0,'r-o');hold on;
 % plot(x,exactf(x,time),'b--')
 % hold on
 % plot(x_node,exactf(x_node,time),'r-o')
 %  max(abs(Meval*f0))
 val = Meval*f0-exactf(x_node,time);
-%  [norm(val) max(abs(val))]
+
 
 fL2 = 0; fLinf = max(abs(val));
-%  total_particle = 0;
+
 ffval = Meval*f0;
 for i = 1:num_plot
     fL2 = fL2 + quad_w(i)*h/2*sum(val(i:num_plot:end).^2);
-    %       total_particle =  total_particle+quad_w(i)*h/2*sum(ffval(i:num_plot:end));
 end
 [sqrt(fL2) fLinf]
-%  total_particle
-
-
-%  err = f0-fexact;
-%  full([norm(err) max(abs(err))])
-%
-%  err = A12*f0-qexact;
-%  full([norm(err) max(abs(err))])
 
 figure;
 plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--','LineWidth',2);
-
 
 figure;
 plot(tp,'r-o'); hold on; plot(Lp,'b-o')

@@ -10,7 +10,7 @@ for i = 1:size(index,1)
     ll = IHash{index(i)};
     lev_loc = ll(1);
     cel_loc = ll(2);
-    if lev_loc < 8
+    if lev_loc < 8%10
         
         if lev_loc>0
             key = [lev_loc+1,2*cel_loc];

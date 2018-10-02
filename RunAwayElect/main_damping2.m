@@ -15,24 +15,29 @@ close all
 % clc
 
 % Test
-sigma = 0.1;
-% f0 = @(x)( exp(-(x-0.36).^2/sigma^2) );
-f0 = @(x)( exp(-(x-0.36).^2/sigma^2)+exp(-(x+0.36).^2/sigma^2) );
-% f0 = @(x)(x-x+1);
-phi = @(x,t)( tanh(atanh(x)-t) );
-exactf = @(x,t)(...
-    (1-phi(x,t).^2)./(1-x.^2).*f0(phi(x,t)) ...
-    );
+% % sigma = 0.1;
+% % f0 = @(x)( exp(-x.^2/sigma^2) );
+% % % f0 = @(x)(x-x+1);
+% % phi = @(x,t)( tanh(atanh(x)-t) );
+% % exactf = @(x,t)(...
+% %     (1-phi(x,t).^2)./(1-x.^2).*f0(phi(x,t)) ...
+% %     );
+% % funcCoef = @(x)(x.*(1-x.^2));
+
+% check about convergence
+f0 = @(x)(sin(pi*x));
+exactf = @(x,t)(exp(t)*sin(pi*x));
 funcCoef = @(x)(x.*(1-x.^2));
+source = @(x,t)(-exp(t).*(cos(pi*x)*pi.*x.^3+3*x.^2.*sin(pi*x)-x.*cos(pi*x)*pi-2*sin(pi*x)));
 
 format short e
 addpath(genpath(pwd))
 
 
-Lev = 5;
-Deg = 2;
+Lev = 6;
+Deg = 3;
 num_plot = 2;%Deg;
-EndTime = 6;
+EndTime = 0.5;
 
 alpha = 0;
 
@@ -141,12 +146,15 @@ for L=0:n-1
         IndexU = [ones(Deg,1)*(c-Deg); ...
             ones(Deg,1)*(c);...
             ones(Deg,1)*(c)];
-        val_R = p_2'*(funcCoef(x1)-abs(funcCoef(x1))*(1-alpha))*0;%exactf(1)*0.5/sqrt(hx);
+        val_R = p_2'*(funcCoef(x1)-abs(funcCoef(x1))*(1-alpha))*0;
     end
     A12 = A12 + sparse(IndexV,IndexU,val_flux,dof_1D,dof_1D);
     
         
-    
+    % source term
+    val = sqrt(h)/2*[p_val'*(quad_w.*source(xi,0))];
+    b(c) = b(c)+val;
+   
     
     val = sqrt(h)/2*[p_val'*(quad_w.*exactf(xi,0))];
     f0(c) = val;
@@ -172,7 +180,7 @@ for L=0:n-1
     
     x0 = Lstart+L*h;
     x1 = x0+h;
-    xi = [x0,x1];%quad_x*(x1-x0)/2+(x1+x0)/2;%[L*h,L*h+h];%
+    xi = quad_x*(x1-x0)/2+(x1+x0)/2;%[L*h,L*h+h];%
     
     
     Meval(Iv,Iu)=sqrt(1/h)*p_val;
@@ -226,7 +234,8 @@ for t = 1:maxT
     f0 = fval;
     
 %     plot(x_node,Meval*f0,'r-o',x_node,Meval*(A12*f0),'b-<')
-    plot(x_node,Meval*f0,'r-o',x_node,x_node.*(1-x_node.^2).*Meval*(f0),'b-<')
+    plot(x_node,Meval*f0,'r-o',x_node,x_node.*(1-x_node.^2).*Meval*(f0),'b-<',...
+        x_node,exactf(x_node,time),'r--',x_node,x_node.*(1-x_node.^2).*exactf(x_node,time),'b--')
     title(['time at ',num2str(time)])
     pause (0.1)
     
@@ -277,3 +286,4 @@ plot(x_node,Meval*f0,'r-o',x_node,exactf(x_node,time),'r--','LineWidth',2);
 
 figure;
 plot(tp,'r-o'); hold on; plot(Lp,'b-o')
+legend({'total particle','L2 stability'})

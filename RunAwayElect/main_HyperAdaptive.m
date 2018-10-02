@@ -101,8 +101,8 @@ figure(1);
 % return
 
 LeafSolIndex = Deg*(2^(Lev-1))+1:Deg*2^Lev;
-epsilon = 1e-6;
-eta = 1e-7;
+epsilon = 1e-5;
+eta = 5e-5;
 
 xx = -1:0.01:1;
 % begin of time advance

@@ -14,4 +14,5 @@ for i = 1:size(IHash,2)
 %     [h_loc Lstart + h_loc*(ll(2))+h_loc/2]
     
 end
+% plot(xgrid,yval*ones(1,count),option.l,'MarkerFaceColor',option.c,'Markersize',4)
 plot(xgrid,yval*ones(1,count),option)
