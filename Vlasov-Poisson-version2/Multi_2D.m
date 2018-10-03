@@ -19,10 +19,13 @@ fnew=sparse(dof_1D_FG^2,1);
 
 for ii=1:HASHDOF
     
-    I1=HASHInv{ii}(5);
-%     n1=HashInv{ii}(1);
-    I2=HASHInv{ii}(6);
-%     n2=HashInv{ii}(2);
+%     I1=HASHInv{ii}(5);
+% %     n1=HashInv{ii}(1);
+%     I2=HASHInv{ii}(6);
+% %     n2=HashInv{ii}(2);
+    I1=HASHInv{ii}(3,1);
+    I2=HASHInv{ii}(3,2);
+
     
     index_I1=[(I1-1)*Deg+1:I1*Deg];
     index_I2=[(I2-1)*Deg+1:I2*Deg];

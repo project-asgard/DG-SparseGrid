@@ -51,7 +51,8 @@ for ii=1:nHash
     %     n2=ll(2);p2=ll(4);
     
     % 1D indices by the HashInv
-    I1=ll(5);I2=ll(6);
+%     I1=ll(5);I2=ll(6);
+    I1=ll(3,1);I2=ll(3,2);
     
     % find the connected information
     J1=Con1D(I1,:);
@@ -74,7 +75,8 @@ for ii=1:nHash
             
             if LevCell1(i1,1)+LevCell2(i2,1)<=Lev % check whether m1+m2<=Lev
                 
-                key=[LevCell1(i1,1) LevCell2(i2,1) LevCell1(i1,2) LevCell2(i2,2)];
+%                 key=[LevCell1(i1,1) LevCell2(i2,1) LevCell1(i1,2) LevCell2(i2,2)];
+                key=[LevCell1(i1,1) LevCell1(i1,2) LevCell2(i2,1)  LevCell2(i2,2)];
                 index_J = [index_J, HASH.(sprintf(hash_format,key))];
                 
             end

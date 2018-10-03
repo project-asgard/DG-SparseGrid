@@ -2,10 +2,9 @@ function fval = source_vector(HASHInv,pde,time)
 
 % Returns the wavelet transformed source
 
-LevX = pde.Lev(1);%params.LevX;
-LevV = pde.Lev(2);%params.LevV;
+LevX = pde.lev(1)params.LevX;
+LevV = pde.params.LevV;
 Deg = pde.params.Deg;
-
 
 Lmin = pde.params.Lmin;
 Lmax = pde.params.Lmax;

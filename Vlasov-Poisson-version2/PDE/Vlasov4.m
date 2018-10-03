@@ -5,7 +5,7 @@ function pde=Vlasov4
 % Parameters
 pde.Dim = 2;
 pde.Lev = [3 3];
-pde.domain = [0 20*pi/3; -13 13];
+pde.domain = [0 20*pi/3; -13 13]';
 
 k_0=0.3;
 A=0.04;

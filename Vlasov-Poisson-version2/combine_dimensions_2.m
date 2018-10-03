@@ -30,8 +30,10 @@ for j=1:N % loop over number of addative terms
         
         ll=HASHInv{i};
         
-        I1=ll(5);
-        I2=ll(6);
+%         I1=ll(5);
+%         I2=ll(6);
+        I1=ll(3,1);
+        I2=ll(3,2);
         
 %         for k1 = 1:Deg
 %             

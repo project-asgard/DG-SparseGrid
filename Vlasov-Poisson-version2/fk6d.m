@@ -88,7 +88,7 @@ Lev = pde.Lev;
 pde.params.Deg = Deg;
 
 % Time step.
-dt = Lmax/2^Lev(1)/domain(2,2)/(2*Deg+1);
+dt = (domain(2,1)-domain(1,1))/2^Lev(1)/domain(2,2)/(2*Deg+1);
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
 %
@@ -96,8 +96,8 @@ dt = Lmax/2^Lev(1)/domain(2,2)/(2*Deg+1);
 %
 % Output: Convert Matrix FMWT_COMP
 for d = 1:Dim
-FMWT_COMP(:,:,d) = OperatorTwoScale(Deg,2^Lev(d));
-% FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
+    FMWT_COMP(:,:,d) = OperatorTwoScale(Deg,2^Lev(d));
+    % FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 end
 
 
@@ -109,9 +109,9 @@ end
 if ~quiet; disp('[1.2] Setting up 1D initial conditions'); end
 %[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
 for d = 1:Dim
-    f(:,d) = forwardMWT(Lev(d),Deg,domain(d,1),domain(d,2),pde.f_0{d},pde.params);
-% fx = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Fx_0,pde.params);
-% fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
+    f(:,d) = forwardMWT(Lev(d),Deg,domain(1,d),domain(2,d),pde.f_0{d},pde.params);
+    % fx = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Fx_0,pde.params);
+    % fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 end
 
 
@@ -125,16 +125,16 @@ nHash = numel(HASHInv);
 
 %%% Construct the connectivity.
 if ~quiet; disp('[2.2] Constructing connectivity table'); end
-    if Dim == 1
-        Con = Connect1D(Lev(1));
-    elseif Dim == 2
-        if Lev(1)~=Lev(2)
-            exit;% we need to fix the 2D connectivity
-        else
-            Con = Connect2D(Lev(1),HASH,HASHInv);
-        end
-        
+if Dim == 1
+    Con = Connect1D(Lev(1));
+elseif Dim == 2
+    if Lev(1)~=Lev(2)
+        exit;% we need to fix the 2D connectivity
+    else
+        Con = Connect2D(Lev(1),HASH,HASHInv);
     end
+    
+end
 
 %%% Get the multi-wavelet coefficient representation on the sparse-grid,
 %%% i.e., above we transformed each of the initial condition 1D
@@ -143,11 +143,11 @@ if ~quiet; disp('[2.2] Constructing connectivity table'); end
 %%% condition, multi-wavelet representation of the initial condition
 %%% specified in PDE.
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
-    if Dim == 1
-        fval = f(:,1);
-    elseif Dim == 2
-        fval = initial_condition_vector(f(:,1),f(:,2),Deg,Dim,HASHInv,pde);
-    end
+if Dim == 1
+    fval = f(:,1);
+elseif Dim == 2
+    fval = initial_condition_vector(f(:,1),f(:,2),Deg,Dim,HASHInv,pde);
+end
 
 clear fv fx
 
@@ -165,23 +165,23 @@ clear fv fx
 
 %%% Build the time independent coefficient matricies.
 if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
-    for d = 1:Dim
-        [gMass(:,:,d),Grad(:,:,d),Delta(:,:,d)]=matrix_coeff_TI2(Lev(d),Deg,domain(d,1),domain(d,2),FMWT_COMP(:,:,d));
-    end
+for d = 1:Dim
+    [gMass(:,:,d),Grad(:,:,d),Delta(:,:,d)]=matrix_coeff_TI2(Lev(d),Deg,domain(1,d),domain(2,d),FMWT_COMP(:,:,d));
+end
 % [vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
 %     FMWT_COMP_x,FMWT_COMP_v);
 
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
 if Dim >= 2
-if compression == 3
-    A_encode=GlobalMatrixSG(gMass(:,:,2),Grad(:,:,1),HASHInv,Con,Deg);
-%     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
-else
-    % A_data is constructed only once per grid refinement, so can be done
-    % on the host side.
-    A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con,Deg,compression);
-end
+    if compression == 3
+        A_encode=GlobalMatrixSG(gMass(:,:,2),Grad(:,:,1),HASHInv,Con,Deg);
+        %     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
+    else
+        % A_data is constructed only once per grid refinement, so can be done
+        % on the host side.
+        A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con,Deg,compression,Dim);
+    end
 end
 
 %% Step 4. Generate time-independent global matrix
@@ -193,11 +193,11 @@ end
 % Another Idea is to solve Poisson Equation on the finest full grid
 
 if ~quiet; disp('[4] Construct matrix for Poisson solve'); end
-if DimX>1
-    % Construct DeltaX for DimX
-else
-    A_Poisson = DeltaX;
-end
+% if DimX>1
+%     % Construct DeltaX for DimX
+% else
+A_Poisson = Delta(:,:,1);
+% end
 
 
 %% Step 5. Time Loop
@@ -214,24 +214,33 @@ if ~quiet; disp('[5.0] Plotting intial condition'); end
 
 
 % Construct data for reverse MWT in 2D
-[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
-    FMWT_COMP_x,FMWT_COMP_v);
-[xx,vv]=meshgrid(x_node,v_node);
-
-% Plot initial condition
-if ~quiet
-    % Transform from wavelet space to real space
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);  
-    figure(1000)
-    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
-    axis([0 Lmax -Vmax Vmax])
-    view(0,90)
-    colorbar
+% [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
+%     FMWT_COMP_x,FMWT_COMP_v);
+for d = 1:Dim
+    [Meval(:,:,d),node(:,d)]=matrix_plot_1D(Lev(d),Deg,domain(1,d),domain(2,d),...
+        FMWT_COMP(:,:,d));
 end
+
+if Dim == 2
+    [xx,vv]=meshgrid(node(:,1),node(:,2));
+    
+    if ~quiet
+        % Transform from wavelet space to real space
+        %     tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+        tmp=Multi_2D(Meval(:,:,1),Meval(:,:,2),fval,HASHInv,Lev(1),Deg);
+        figure(1000)
+        mesh(xx,vv,reshape(tmp,Deg*2^Lev(1),Deg*2^Lev(1))','FaceColor','interp','EdgeColor','interp');
+        %     axis([0 Lmax -Vmax Vmax])
+        axis([domain(1,1) domain(2,1) domain(1,2) domain(2,2)])
+        view(0,90)
+        colorbar
+    end
+end% Plot initial condition
+
 
 % Write the initial condition to file.
 write_fval = 0;
-if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
+if write_fval; write_fval_to_file(fval,Lev(1),Deg,0); end
 
 count=1;
 plotFreq = 10;
@@ -247,23 +256,24 @@ for L = 1:floor(TEND/dt)
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
         if ~quiet; disp('    [a] Solve poisson to get E'); end
-        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+        [E,u] = PoissonSolve(Lev(1),Deg,domain(1,1),domain(2,1),fval,A_Poisson,FMWT_COMP(:,:,1),domain(1,2),domain(2,2));
     end
     
     if pde.applySpecifiedE
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
-        E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
+        E = forwardMWT(Lev(1),Deg,domain(1,1),domain(2,1),pde.Ex,pde.params);
         E = E * pde.Et(time(count));
     end
     
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
-    EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
+    EMassX = matrix_coeff_TD(Lev(1),Deg,domain(1,1),domain(2,1),E,FMWT_COMP(:,:,1));
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
     if compression == 3
+        % broken and need to change GradV
         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
         C_encode=[A_encode B_encode];
     else
@@ -275,14 +285,18 @@ for L = 1:floor(TEND/dt)
     if compression == 3
         fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
     else
-        A_data.vMassV    = vMassV;
-        A_data.GradX     = GradX;
-        A_data.GradV     = GradV;
+%         A_data.vMassV    = vMassV;
+%         A_data.GradX     = GradX;
+%         A_data.GradV     = GradV;
+%         A_data.EMassX    = EMassX;
+        A_data.vMassV    = gMass(:,:,2);
+        A_data.GradX     = Grad(:,:,1);
+        A_data.GradV     = Grad(:,:,2);
         A_data.EMassX    = EMassX;
         
         % Write the A_data structure components for use in HPC version.
         write_A_data = 0;
-        if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
+        if write_A_data && L==1; write_A_data_to_file(A_data,Lev(1),Deg); end
         
         fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv);
         
@@ -294,18 +308,22 @@ for L = 1:floor(TEND/dt)
     
     %%% Plot results
     if mod(L,plotFreq)==0 && ~quiet
-        
+        if Dim == 2
+            % need fixing
         figure(1000)
         
-        tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
-        f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+%         tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+        tmp=Multi_2D(Meval(:,:,1),Meval(:,:,2),fval,HASHInv,Lev(1),Deg);
+        f2d = reshape(tmp,Deg*2^Lev(1),Deg*2^Lev(2))';
         mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','interp');
-        axis([0 Lmax -Vmax Vmax])
+%         axis([0 Lmax -Vmax Vmax])
+        axis([domain(1,1) domain(2,1) domain(1,2) domain(2,2)])
         view(0,90)
         colorbar
         
         title(['Time at ', timeStr])
         pause (0.01)
+        end
     end
     
     %%% Check against known solution
@@ -324,7 +342,7 @@ for L = 1:floor(TEND/dt)
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
         %disp(['    real space absolute err : ', num2str(err_real)]);
         %disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
-       
+        
         err = err_wavelet;
     end
     

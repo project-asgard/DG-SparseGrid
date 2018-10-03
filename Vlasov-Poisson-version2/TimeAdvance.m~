@@ -32,11 +32,11 @@ b1 = 1/6;
 b2 = 2/3;
 b3 = 1/6;
 
-k_1 = ApplyA(A,f,compression,Deg,pde)   + source1;
+k_1 = ApplyA(A,f,compression,Deg)   + source1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(A,y_1,compression,Deg,pde) + source2;
+k_2 = ApplyA(A,y_1,compression,Deg) + source2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(A,y_2,compression,Deg,pde) + source3;
+k_3 = ApplyA(A,y_2,compression,Deg) + source3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
@@ -49,7 +49,7 @@ function f1 = backward_euler(A,f0,t,dt,compression,Deg,pde,HASHInv)
 
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(A,f0,1,Deg,pde);
+[~,AMat] = ApplyA(A,f0,1,Deg);
 
 I = eye(numel(diag(AMat)));
 AA = I - dt*AMat;
@@ -68,7 +68,7 @@ function f1 = crank_nicolson(A,f0,t,dt,compression,Deg,pde,HASHInv)
 s0 = source_vector(HASHInv,pde,t);
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(A,f0,1,Deg,pde);
+[~,AMat] = ApplyA(A,f0,1,Deg);
 
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
@@ -79,14 +79,14 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function [ftmp,A] = ApplyA(A_Data,f,compression,Deg,pde)
+function [ftmp,A] = ApplyA(A_Data,f,compression,Deg)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
 %-----------------------------------
 dof = size(f,1);
 ftmp=sparse(dof,1);
-Dim = pde.Dim;
+
 
 if compression == 0
     
@@ -302,7 +302,7 @@ elseif compression == 4
             
 %             connected_idx1D_1 = A_Data.connected_local_1_index(conCnt);
 %             connected_idx1D_2 = A_Data.connected_local_2_index(conCnt);
-            connected_idx1D = A_Data.connected_local_index(conCnt,:);
+            connected_idx1D = A_Data.connected_local_index(conCnt);
             connectedCol = A_Data.connected_global_col_index(conCnt);
             
             % Expand out the global col indicies for this compressed
@@ -336,12 +336,9 @@ elseif compression == 4
             ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
             
             % Apply term 2 E.d_dv (EMassX . GradV)
-            if Dim == 2 
-%             tmpA = A_Data.GradV(Index_I1,Index_J1);
-%             tmpB = A_Data.EMassX(Index_I2,Index_J2);
-            tmpA = A_Data.GradV(Index_I(:,1),Index_J(:,1));
-            tmpB = A_Data.EMassX(Index_I(:,2),Index_J(:,2));
-            end
+            
+            tmpA = A_Data.GradV(Index_I1,Index_J1);
+            tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
             ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
             

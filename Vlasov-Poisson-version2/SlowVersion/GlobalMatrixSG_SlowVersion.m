@@ -1,12 +1,14 @@
 %function [A_encode,A_Data] = GlobalMatrixSG_SlowVersion(coeffMat1,coeffMat2,HASHInv,connectivity,Deg)
 
-function [A_Data] = GlobalMatrixSG_SlowVersion(HASHInv,connectivity,Deg,compression)
+function [A_Data] = GlobalMatrixSG_SlowVersion(HASHInv,connectivity,Deg,compression,Dim)
 
 % Global Matrix construction from the coefficient matricies coeffMat1 and
 % coeffMat2 by looping over each grid point (i.e., elements of the hash).
 % Each grid point is represented by a row in the global system matrix A,
 % with the non-zero elements of that row being the other grid points to
 % which the point is connected.
+
+% compression = 4 is modified, 10/03
 
 N = size(HASHInv,2);
 
@@ -43,8 +45,13 @@ if compression < 3
         
         % Get the 1D indexes into the [lev,pos] space for this element (row)
         
-        element_idx1D_1 = thisRowBasisCoords(5);
-        element_idx1D_2 = thisRowBasisCoords(6);
+%         element_idx1D_1 = thisRowBasisCoords(5);
+%         element_idx1D_2 = thisRowBasisCoords(6);
+        for d = 1:Dim
+            element_idx1D(d) = thisRowBasisCoords(3,d);
+%             element_idx1D_1 = thisRowBasisCoords(3,d);
+%             element_idx1D_2 = thisRowBasisCoords(6);
+        end
         
         % Get the global index of non-zero (connected) columns for this row
         
@@ -60,8 +67,11 @@ if compression < 3
         % Get the 1D indices into the [lev,pos] space for the connected
         % elements (cols)
         
-        connected_idx1D_1 = connectedColsBasisCoords(5:6:end);
-        connected_idx1D_2 = connectedColsBasisCoords(6:6:end);
+%         connected_idx1D_1 = connectedColsBasisCoords(5:6:end);
+%         connected_idx1D_2 = connectedColsBasisCoords(6:6:end);
+        for d = 1:Dim
+            connected_idx1D_1 = connectedColsBasisCoords(5:6:end);
+        end
         
         % Loop over dim1 Deg for this element
         for k1 = 1:Deg
@@ -188,8 +198,11 @@ elseif compression == 4
         
         % Get the 1D indexes into the [lev,pos] space for this element (row)
         
-        element_idx1D_1 = thisRowBasisCoords(5);
-        element_idx1D_2 = thisRowBasisCoords(6);
+%         element_idx1D_1 = thisRowBasisCoords(5);
+%         element_idx1D_2 = thisRowBasisCoords(6);
+        for d = 1:Dim
+            element_idx1D = thisRowBasisCoords(3,d);
+        end
         
         % Get the global index of non-zero (connected) columns for this row
         
@@ -205,22 +218,31 @@ elseif compression == 4
         % Get the 1D indices into the [lev,pos] space for the connected
         % elements (cols)
         
-        connected_idx1D_1 = connectedColsBasisCoords(5:6:end);
-        connected_idx1D_2 = connectedColsBasisCoords(6:6:end);
+%         connected_idx1D_1 = connectedColsBasisCoords(5:6:end);
+%         connected_idx1D_2 = connectedColsBasisCoords(6:6:end);
+        clear connected_idx1D
+        for d = 1:Dim
+            connected_idx1D(:,d) = connectedColsBasisCoords(3,d:Dim:end);
+        end
         
         % Store the element data in arrays
         element_global_row_index(dofCnt) = workItem;
-        element_local_1_index(dofCnt) = element_idx1D_1;
-        element_local_2_index(dofCnt) = element_idx1D_2;
+%         element_local_1_index(dofCnt) = element_idx1D_1;
+%         element_local_2_index(dofCnt) = element_idx1D_2;
+
+        element_local_index(dofCnt,1:Dim) = element_idx1D;
         
         nConnections = 0;
         % Loop over connected elements
-        for jjj = 1:size(connected_idx1D_1,2)
+%         for jjj = 1:size(connected_idx1D_1,2)
+        for jjj = 1:size(connected_idx1D,1)
             
             % Store the connected data in arrays
             connected_global_col_index(conCnt) = connectedCols(jjj);
-            connected_local_1_index(conCnt) = connected_idx1D_1(jjj);
-            connected_local_2_index(conCnt) = connected_idx1D_2(jjj);
+%             connected_local_1_index(conCnt) = connected_idx1D_1(jjj);
+%             connected_local_2_index(conCnt) = connected_idx1D_2(jjj);
+            connected_local_index(conCnt,:) = connected_idx1D(jjj,:);
+
             
             conCnt = conCnt+1;
             nConnections = nConnections + 1;
@@ -236,16 +258,18 @@ elseif compression == 4
     % Wrap the arrays up into a struct just for ease of passing around.
     
     A_Data.element_global_row_index = element_global_row_index;
-    A_Data.element_local_1_index = element_local_1_index;
-    A_Data.element_local_2_index = element_local_2_index;
+%     A_Data.element_local_1_index = element_local_1_index;
+%     A_Data.element_local_2_index = element_local_2_index;
+    A_Data.element_local_index = element_local_index;
     A_Data.element_n_connected = element_n_connected;
     
     % Allocate connected element arraysn (these won't be filled, and we remove
     % the extra zeros after their construction).
     
     A_Data.connected_global_col_index = connected_global_col_index(1:sum(element_n_connected));
-    A_Data.connected_local_1_index = connected_local_1_index(1:sum(element_n_connected));
-    A_Data.connected_local_2_index = connected_local_2_index(1:sum(element_n_connected));
+%     A_Data.connected_local_1_index = connected_local_1_index(1:sum(element_n_connected));
+%     A_Data.connected_local_2_index = connected_local_2_index(1:sum(element_n_connected));
+    A_Data.connected_local_index = connected_local_index(1:sum(element_n_connected),:);
     
 end
 
