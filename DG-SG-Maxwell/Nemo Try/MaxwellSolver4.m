@@ -175,10 +175,8 @@ MaxMat=[ComMat/(eps*mu),zero,zero,zero,ComMat1E/(eps*mu),-ComMat2E/(eps*mu);
         zero,-ComMat1E,ComMat2E,ComMat/(eps*mu),zero,zero;
         ComMat1E,zero,-ComMat3E,zero,ComMat/(eps*mu),zero;
         -ComMat2E,ComMat3E,zero,zero,zero,ComMat/(eps*mu);];
- opts.maxit=500;
- opts.tol=1e-2;
- e=eigs(MaxMat,1,'lm',opts)
- norm(MaxMat,'fro')
+ 
+d=eigs(MaxMat,Dofs3*2);
 %% Time advance for solving Maxwell equation
 MaxRhs = -[Rhs/(eps);zeros(Dofs3,1)];
 MaxSol = [E0;B0];

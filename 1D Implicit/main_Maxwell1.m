@@ -12,18 +12,20 @@ addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
 
-Lev = 9;
+Lev = 4;
 Deg = 2;
 
 
 Lmax = 1;
 pde = Maxwell1;
-cfl=1/2;
-dt = 8*10^(-2);
-% % %dt=1/80;
-MaxT =ceil(1.5/dt);
-% dt=1/10/2;
-% MaxT=ceil(1.5/dt);
+dt=1/1000;
+MaxT=100;
+% cfl=1/2;
+% dt = 8*10^(-2);
+% % % %dt=1/80;
+% MaxT =ceil(1.5/dt);
+% % dt=1/10/2;
+% % MaxT=ceil(1.5/dt);
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
@@ -52,7 +54,7 @@ Con1D=Connect1D(Lev);
 %*************************************************
 %% Step 3. Coefficient Matrix for Time-independent Matrix
 %*************************************************
-GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
+[GradX] = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 
 %*************************************************
 %% Step 4.3D Maxwell Solver
@@ -62,7 +64,7 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % E_s and B_s are used for error estimate
 
 %% Maxwell Solver
-[Bh,E1h,E2h] = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
+[Bh,E1h,E2h] = MaxwellSolver4(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
     F_1D,E_1D.E1*cos(0),E_1D.E2*cos(0),B_1D.B*0);
 sol_n=[Bh;E1h;E2h];
 
@@ -71,7 +73,7 @@ time=dt*MaxT;
 u_s=[B_1D.B*sin(pde.w*time);E_1D.E1*cos(pde.w*time);E_1D.E2*cos(pde.w*time)];
 Bs=[B_1D.B*sin(pde.w*time)];E1s=[E_1D.E1*cos(pde.w*time)];E2s=[E_1D.E2*cos(pde.w*time)];
 full([Deg Lev dt max(abs(sol_n-u_s)) norm(sol_n-u_s)])
-%full([sol_n,u_s])
+
 % subplot(1,2,1)
 % plot(sol_n)
 % subplot(1,2,2)

@@ -55,7 +55,7 @@ Con1D=Connect1D(Lev);
 %% Step 3. Coefficient Matrix for Time-independent Matrix
 %*************************************************
 GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
-
+%[V,D]=eigs(GradX,1)
 %*************************************************
 %% Step 4.3D Maxwell Solver
 %*************************************************

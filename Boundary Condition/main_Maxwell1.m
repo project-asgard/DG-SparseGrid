@@ -11,19 +11,21 @@ format short e
 addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
-Lev = 3;
+
+Lev = 5;
 Deg = 2;
-Dim = 3;
 
 
 Lmax = 1;
-
-% cfl=0.001;
-pde = Maxwell1;
-% dt = 2^((-Lev)/3)*cfl;
-MaxT= round(0.5/dt);
-
-
+pde = Maxwell13;
+dt=1/1000;
+MaxT=100;
+% cfl=1/2;
+% dt = 8*10^(-2);
+% % % %dt=1/80;
+% MaxT =ceil(1.5/dt);
+% % dt=1/10/2;
+% % MaxT=ceil(1.5/dt);
 
 %*************************************************
 %% Step 1.1. Set Up Matrices for Multi-wavelet
@@ -45,14 +47,14 @@ FMWT_COMP_x = OperatorTwoScale(Deg,2^Lev);
 %*************************************************
 %% Step 2. Hash Table and 1D Connectivity
 %*************************************************
-[Hash,InvHash]=HashTable2(Lev,Dim);
+[Hash,InvHash]=HashTable(Lev);
 %1D connectivity
 Con1D=Connect1D(Lev);
 
 %*************************************************
 %% Step 3. Coefficient Matrix for Time-independent Matrix
 %*************************************************
-GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
+[GradX,GradY] = Matrix_TI2(Lev,Deg,Lmax,FMWT_COMP_x);
 
 %*************************************************
 %% Step 4.3D Maxwell Solver
@@ -60,15 +62,39 @@ GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x);
 % global rhs, E0, and B0 vectors
 % b_s is the RHS vector
 % E_s and B_s are used for error estimate
-[b_s,E_s,B_s]=GlobalRHS(Deg,F_1D,E_1D,B_1D,InvHash);
 
 %% Maxwell Solver
-[Eh,Bh] = MaxwellSolver2(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.eps,pde.mu,pde.w,dt,MaxT,b_s,E_s*cos(0),B_s*0);
-sol_n=[Eh;Bh];
+[Bh,E1h,E2h] = MaxwellSolver4(Lev,Deg,Hash,InvHash,Con1D,GradX,GradY,pde.w,dt,MaxT,...
+    F_1D,E_1D.E1*cos(0),E_1D.E2*cos(0),B_1D.B*0);
+sol_n=[Bh;E1h;E2h];
 
 %% Error Estimate
 time=dt*MaxT;
-u_s=[E_s*cos(pde.w*time);B_s*sin(pde.w*time)];
-Es=[E_s*cos(pde.w*time)];Bs=[B_s*sin(pde.w*time)];
-full([Deg Lev  max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+u_s=[B_1D.B*sin(pde.w*time);E_1D.E1*cos(pde.w*time);E_1D.E2*cos(pde.w*time)];
+Bs=[B_1D.B*sin(pde.w*time)];E1s=[E_1D.E1*cos(pde.w*time)];E2s=[E_1D.E2*cos(pde.w*time)];
+full([Deg Lev dt max(abs(sol_n-u_s)) norm(sol_n-u_s)])
+% full([E1h,E1s])
+% full([Bh,Bs])
+% full([E2h,E2s])
+
+% subplot(1,2,1)
+% plot(sol_n)
+% subplot(1,2,2)
+% plot(u_s)
+
+% [M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
+% figure;
+% subplot(1,3,1)
+% plot(N,M*E1h,'r--',N,M*E1s,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('E1')
+% subplot(1,3,2)
+% plot(N,M*E2h,'r--',N,M*E2s,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('E2')
+% subplot(1,3,3)
+% plot(N,M*Bh,'r--',N,M*Bs,'b--')
+% legend('Numerical Sol','Real Solution')
+% title('B')
+
 

@@ -1,6 +1,6 @@
-function [Bh,E1h,E2h] = MaxwellSolver4(Lev,Deg,Hash,InvHash,Con1D,GradX,...
+function Eh = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,GradY,...
                                  omega,dt,MaxT,...
-                                 F_1D,E1,E2,B)%Explicit
+                                 F_1D,E)%Explicit
 %=====================================================
 % Maxwell Solver on [0,1]^3
 % We use operator (du/dx,v) to construct (curl u,v)
@@ -71,25 +71,10 @@ for i = 1:Dof_Hash
     
     
 end
-zero=sparse(Dofs,Dofs);
-MaxMat=-[zero,Mat,zero;
-        Mat,zero,zero;
-        zero,zero,zero];
 % opts.tol=1e-5;
 % e=eigs(MaxMat,1,'lm',opts)
+Mat=full(Mat);
 %% Time advance for solving Maxwell equation
-MaxRhs = -[zeros(Dofs,1);F_1D.b1;F_1D.b2];
-MaxSol = [B;E1;E2];
-time=0;
-for T=1:MaxT
-    time=time+dt;
-
-    bbb=MaxRhs*sin(omega*time);
-
-    MaxSol = ExplicitTime(MaxMat,MaxSol,dt,bbb);
-    
-end
-
-Bh = MaxSol(1:Dofs);
-E1h = MaxSol(Dofs+1:Dofs*2);
-E2h = MaxSol(Dofs*2+1:end);
+MaxRhs = [GradY+F_1D.b];
+MaxSol = E;
+Eh = pinv(-Mat)*MaxRhs;
