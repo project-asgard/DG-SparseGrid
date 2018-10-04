@@ -46,12 +46,7 @@ for ii=1:nHash
     
     ll=HASHInv{ii};
     
-    % for the ii-th row, (Lev,Cell) is not needed
-    %     n1=ll(1);p1=ll(3);
-    %     n2=ll(2);p2=ll(4);
-    
-    % 1D indices by the HashInv
-%     I1=ll(5);I2=ll(6);
+    % 1D indices from the HashInv
     I1=ll(3,1);I2=ll(3,2);
     
     % find the connected information
@@ -70,14 +65,24 @@ for ii=1:nHash
     LevCell2=Key1dMesh(j,:);
     
     index_J=[];
+    key=[];
     for i1=1:size(LevCell1,1)
+        
+        lev1 = LevCell1(i1,1);
+        cell1 = LevCell1(i1,2);
+        
         for i2=1:size(LevCell2,1)
             
-            if LevCell1(i1,1)+LevCell2(i2,1)<=Lev % check whether m1+m2<=Lev
+            lev2 = LevCell2(i2,1);
+            cell2 = LevCell2(i2,2);
+            
+            if lev1+lev2 <= Lev % check whether m1+m2<=Lev
                 
-%                 key=[LevCell1(i1,1) LevCell2(i2,1) LevCell1(i1,2) LevCell2(i2,2)];
-                key=[LevCell1(i1,1) LevCell1(i1,2) LevCell2(i2,1)  LevCell2(i2,2)];
-                index_J = [index_J, HASH.(sprintf(hash_format,key))];
+                key(:,1) = [lev1,cell1]; % dim1 (lev,cell)
+                key(:,2) = [lev2,cell2]; % dim2 (lev,cell)
+                keystr = getHashKeyStr(key);
+                
+                index_J = [index_J, HASH.(keystr)];
                 
             end
             

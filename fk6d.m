@@ -1,4 +1,4 @@
-function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
+function [fval,err] = fk6d(pde,Deg,TEND,quiet,compression,implicit)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -305,12 +305,12 @@ for L = 1:floor(TEND/dt)
     %%% Write the present fval to file.
     if write_fval; write_fval_to_file(fval,Lev,Deg,L); end
     
-    %%% Write data for FK6D test
-    
-    fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
-    fd = fopen(fname,'w'); % where file.dat is the name you want to save to
-    fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
-    fclose(fd);
+%     %%% Write data for FK6D test
+%     
+%     fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
+%     fd = fopen(fname,'w'); % where file.dat is the name you want to save to
+%     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
+%     fclose(fd);
     
     %%% Plot results
     if mod(L,plotFreq)==0 && ~quiet

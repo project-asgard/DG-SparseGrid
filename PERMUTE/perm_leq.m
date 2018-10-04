@@ -3,6 +3,7 @@ function [result] = perm_leq( idim, n )
 % return tuples where sum of indices is less than or
 % equal to n
 %
+
 icount = perm_leq_count( idim, n );
 result = zeros( icount, idim );
 
