@@ -25,7 +25,7 @@ isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
     % ------------------------------------
     Deg = double(4);
     Lev = double(5);
-    dt = 7.716*10**-11;
+    dt = 7.716*10^2-11;
     Lmin = 0.0;
     Lmax = 1.0;
     Vmin = -4500000.0;
