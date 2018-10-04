@@ -28,7 +28,7 @@ count = 1;
 for i = 1:size(combs,1)
     
     nLev = combs(i,:);
-    nCell = AllCell(nLev);
+    nCell = allcomb(nLev)';
     nz = size(nCell,1);
     
     for ii = 1:nz

@@ -1,5 +1,9 @@
 function A = allcomb(varargin)
 
+%This function is to list all the possible cell index for given Lev. For example, Lev = [0 0], means Lev1 = 0, Lev2 = 0, and the all possible cell should be [0 0];
+%Lev = [1 1], AllCell([1 1])=[0 0];
+%Lev = [2 0], AllCell([2,0])=[0 0;1 0]:: for the first component, the possible cell could be 0 and 1, but for the second component, the possible cell is only 1. 
+
 % ALLCOMB - All combinations
 %    B = ALLCOMB(A1,A2,A3,...,AN) returns all combinations of the elements
 %    in the arrays A1, A2, ..., and AN. B is P-by-N matrix where P is the product

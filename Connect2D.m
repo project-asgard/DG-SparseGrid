@@ -47,7 +47,8 @@ for ii=1:nHash
     ll=HASHInv{ii};
     
     % 1D indices from the HashInv
-    I1=ll(3,1);I2=ll(3,2);
+    I1=ll(3,1);
+    I2=ll(3,2);
     
     % find the connected information
     J1=Con1D(I1,:);
@@ -78,8 +79,8 @@ for ii=1:nHash
             
             if lev1+lev2 <= Lev % check whether m1+m2<=Lev
                 
-                key(:,1) = [lev1,cell1]; % dim1 (lev,cell)
-                key(:,2) = [lev2,cell2]; % dim2 (lev,cell)
+                key(1:2,1) = [lev1,cell1]; % dim1 (lev,cell)
+                key(1:2,2) = [lev2,cell2]; % dim2 (lev,cell)
                 keystr = getHashKeyStr(key);
                 
                 index_J = [index_J, HASH.(keystr)];
