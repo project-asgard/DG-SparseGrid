@@ -54,18 +54,19 @@ for Lx=0:nx-1
     c=Deg*Lx+1:Deg*(Lx+1);
     p=Deg*(Lx-1)+1:Deg*Lx;
     l=Deg*(Lx+1)+1:Deg*(Lx+2);
+    p_0=zeros(1,Deg);
     
     val=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
                p_2'*p_2/2   p_2'*p_1/2];     % for x2
     
-    val1=1/hx*[-p_1'*p_1/2  -p_1'*p_1/2,...   % for x1
+    val1=1/hx*[-p_1'*p_0/2  -p_1'*p_1/2,...   % for x1
                 p_2'*p_2/2   p_2'*p_1/2];     % for x2
     
     val2=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
-                p_2'*p_2/2   p_2'*p_2/2];     % for x2
+                p_2'*p_2/2   p_2'*p_0/2];     % for x2
     
-    val3=-1*p_3;  %computing righthand side
-    val4=-1*p_2;
+    val3=-1*p_1;  %computing righthand side & E = cos(pi*x) E(0)=1,E(1)=-1;
+    val4=-1*p_2;  
     Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
     
     if Lx<nx-1 && Lx>0
