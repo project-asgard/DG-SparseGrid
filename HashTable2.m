@@ -38,7 +38,7 @@ for i = 1:size(combs,1)
     end
     nCell = allcomb(value{:});
     % the above is changed by Lin
-%     nCell = allcomb(nLev)';
+    %     nCell = allcomb(nLev)';
     nz = size(nCell,1);
     
     for ii = 1:nz

@@ -1,4 +1,4 @@
-function [fval,err] = fk6d(pde,Deg,TEND,quiet,compression,implicit)
+function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -40,10 +40,9 @@ if ~exist('TEND','var') || isempty(TEND)
     % End time
     TEND = pde.params.TEND;
 end
-% if ~exist('Lev','var') || isempty(Lev)
-%     % Number of levels
-%     Lev = 3;
-% end
+if exist('Lev','var')
+    pde.Lev = [Lev Lev];
+end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
     Deg = 2; % Deg = 2 Means Linear Element
@@ -243,7 +242,7 @@ write_fval = 0;
 if write_fval; write_fval_to_file(fval,Lev(1),Deg,0); end
 
 count=1;
-plotFreq = 10;
+plotFreq = 1;
 
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
