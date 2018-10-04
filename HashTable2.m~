@@ -31,14 +31,11 @@ for i = 1:size(combs,1)
     for d = 1:Dim
         nMax = max(0,2^max(0,nLev(d)-1)-1);
         if nMax ==0
-            value{d} = [0];
+            val{d} = [0];
         else
-            value{d} = [0:nMax];
+            val{d} = [0:nMax];
         end
-    end
-    nCell = allcomb(value{:});
-    % the above is changed by Lin
-%     nCell = allcomb(nLev)';
+    nCell = allcomb(nLev)';
     nz = size(nCell,1);
     
     for ii = 1:nz
