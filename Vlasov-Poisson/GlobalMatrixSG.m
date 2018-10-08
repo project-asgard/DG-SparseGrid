@@ -1,0 +1,255 @@
+function A_encode=GlobalMatrixSG(A,B,Hash)
+
+% save the submatrix and apply A_encode to vector f
+count=0;
+%=====================================================
+% The Index is grouped by the sum of Levels in V and X
+% {Iv,Jv} together with Cell and Deg information will
+%         determine the position of matrix A
+% {Ix,Jx} together with Cell and Deg information will
+%         determine the position of matrix B
+% Note: SG needs Iv+Ix<=Lev and Jv+Jx<=Lev
+%=====================================================
+Deg = Hash.Deg;
+Lev = Hash.Lev;
+tic
+for sum = 0:Lev % Loop for Total Sum
+%     Count=((sum+1)^2*(sum+2)+sum*(sum+1)^2)2
+    %---------------
+    % Fix Ix+Iv=sum
+    %---------------
+    for Ix = 0:sum
+        Iv = sum-Ix;
+        
+        for Jx = 0:sum
+            for Jv = 0:sum-Jx
+                
+                [index_I,index_J,tmpA,tmpB]=ComputeGlobalIndex(Ix,Jx,Iv,Jv,Hash,A,B);    
+%                 [Ix,Iv,Jx,Jv]
+                % save matrices to files
+                count=count+1;
+                A_encode{count}.A1=tmpA;
+                A_encode{count}.A2=tmpB;
+                
+                
+                A_encode{count}.IndexI = index_I;
+                A_encode{count}.IndexJ = index_J;
+                
+            end
+        end
+    end
+%     disp('=====')
+    %---------------
+    % Fix Jx+Jv=sum
+    %---------------
+    for Jx=0:sum
+        Jv=sum-Jx;
+        
+        % Avoid Duplicate Index
+        for Ix=0:sum%-1
+            for Iv=0:sum-Ix-1
+%                 [Ix,Iv,Jx,Jv]
+                [index_I,index_J,tmpA,tmpB]=ComputeGlobalIndex(Ix,Jx,Iv,Jv,Hash,A,B);
+                
+                % save matrices to files
+                count=count+1;
+                A_encode{count}.A1=tmpA;
+                A_encode{count}.A2=tmpB;
+                
+                
+                A_encode{count}.IndexI = index_I;
+                A_encode{count}.IndexJ = index_J;
+            end
+        end
+    end
+end
+% toc
+
+% count
+end
+
+function [index_I,index_J,tmpA,tmpB]=ComputeGlobalIndex(Ix,Jx,Iv,Jv,Hash,A,B)
+
+global hash_format
+
+k = Hash.Deg;
+lev = Hash.Lev;
+
+index_I_x = IndexMapping(Ix,k);
+index_J_x = IndexMapping(Jx,k);
+index_I_v = IndexMapping(Iv,k);
+index_J_v = IndexMapping(Jv,k);
+
+tmpA = A(index_I_v,index_J_v);
+tmpB = B(index_I_x,index_J_x);
+
+
+Key_I = GenerateKey2D(index_I_v,index_I_x,k,lev);
+Key_J = GenerateKey2D(index_J_v,index_J_x,k,lev);
+
+% Original keygen
+%
+% index_I0=zeros(size(Key_I,1),1);
+% for i=1:size(Key_I,1)
+%     index_I0(i) = Hash.(sprintf(hash_format,Key_I(i,:)));
+% end
+% 
+% index_J=zeros(size(Key_J,1),1);
+% for i=1:size(Key_J,1)
+%     index_J(i) = Hash.(sprintf(hash_format,Key_J(i,:)));
+% end
+
+
+% Faster keygen
+% The "sprintf" line is slow. Instead of calling it
+% multiple times, this calls it once and chops up 
+% the single string.
+
+hash_str_len = numel(sprintf(hash_format,1));
+
+index_I=zeros(size(Key_I,1),1);
+keysI = sprintf(hash_format,Key_I');
+keyLenI = size(Key_I,2)*hash_str_len;
+use_original = 0;
+if (use_original),
+  for i=1:size(Key_I,1)
+    index_I(i) = Hash.(keysI((i-1)*keyLenI+1:i*keyLenI));
+  end
+else
+  keysImat = reshape( keysI, keyLenI, numel(keysI)/keyLenI );
+  for i=1:size(Key_I,1),
+    index_I(i) = Hash.( keysImat(:,i) );
+  end;
+end;
+
+index_J=zeros(size(Key_J,1),1);
+keysJ = sprintf(hash_format,Key_J');
+keyLenJ = size(Key_J,2)*hash_str_len;
+if (use_original),
+  for i=1:size(Key_J,1)
+    index_J(i) = Hash.(keysJ((i-1)*keyLenJ+1:i*keyLenJ));
+  end
+else
+  keysJmat = reshape( keysJ, keyLenJ, numel(keysJ)/keyLenJ );
+  for i=1:size(Key_J,1),
+     index_J(i) = Hash.( keysJmat(:,i) );
+  end;
+end;
+
+end
+
+function index=IndexMapping(I,Deg)
+% This function is to find all the index from Lev (I-1) to Lev (I)
+if I==0
+    index=[1:Deg];
+else
+    index=Deg*2^(I-1)+1:Deg*2^(I);
+end
+end
+
+function key=GenerateKey2D(Ix,Iy,Deg,Lev)
+
+% First generate Key1dMesh
+
+% % Original 
+% % 
+% nx=[];px=[];kx=[];
+% for Lx=0:Lev
+%     for Px=0:2^max(0,Lx-1)-1
+%         for Kx=1:Deg
+%             nx=[nx;Lx];
+%             px=[px;Px];
+%             kx=[kx;Kx];         
+%         end
+%     end
+% end
+
+% Faster
+% Simply pre allocate for speed, but
+% then extract out that part of the array 
+% we did not use.
+
+N1 = Lev+1;
+N2 = (2^(Lev-1))-1;
+N3 = Deg;
+
+% ------------------------------
+% Using
+% MAXN = N1*N2*N3;
+% may be too large 
+% consider computing MAXN in a short loop
+% ------------------------------
+MAXN = 0;
+for Lx=0:Lev,
+  istart = 0;
+  iend = 2^max(0,Lx-1)-1;
+  MAXN = MAXN + (iend-istart+1);
+end;
+MAXN = MAXN * Deg;
+
+  
+
+% nx0=zeros(MAXN);px0=zeros(MAXN);kx0=zeros(MAXN);
+nx0(MAXN) = 0; px0(MAXN) = 0; kx0(MAXN) = 0;
+use_loop = 0;
+cnt=1;
+Kx = 1:Deg;
+for Lx=0:Lev
+    for Px=0:2^max(0,Lx-1)-1
+        if (use_loop),
+         for Kx=1:Deg
+            
+            nx0(cnt) = Lx;
+            px0(cnt) = Px;
+            kx0(cnt) = Kx;
+            
+            cnt = cnt + 1;
+            
+         end
+        else
+            ip = cnt-1+Kx;
+            nx0(ip) = Lx;
+            px0(ip) = Px;
+            kx0(ip) = Kx;
+            cnt = cnt + Deg;
+        end
+    end
+end
+
+nz = cnt -1;
+nx = reshape( nx0(1:nz), nz,1);
+px = reshape( px0(1:nz), nz,1);
+kx = reshape( kx0(1:nz), nz,1);
+
+% nx = nx0(1:cnt-1)';
+% px = px0(1:cnt-1)';
+% kx = kx0(1:cnt-1)';
+
+% all possible combinations for 1D mesh
+% can be moved outside and only needed to be computed once and then
+% kept all along the computation
+Key1dMesh=[nx,px,kx];
+
+% Second generate the 2D Key
+tmp_x=Key1dMesh(Ix,:);
+tmp_y=Key1dMesh(Iy,:);
+tmp_ix=reshape(repmat(tmp_x,1,size(tmp_y,1))',3,size(tmp_x,1)*size(tmp_y,1) )';
+tmp_iy=repmat(tmp_y,size(tmp_x,1),1);
+key=[tmp_ix(:,1),tmp_iy(:,1),tmp_ix(:,2),tmp_iy(:,2),tmp_ix(:,3)-1,tmp_iy(:,3)-1];
+%**********************************************
+% The above code is acting as follows:
+% for 1 variable keys in v and
+%     1 variable keys in x
+% generate all the keys in the 2D Hash
+%==============================================
+% count=1;
+% for i=1:size(tmp_x,1)
+%   for j=1:size(tmp_y,1)
+%      key(count)=[tmp_x(i,1),tmp_y(j,1),...
+%                  tmp_x(i,2),tmp_y(j,2),...
+%                  tmp_x(i,3)-1,tmp_y(j,3)-1];
+%       count=count+1;
+%   end
+% end
+%**********************************************
+end

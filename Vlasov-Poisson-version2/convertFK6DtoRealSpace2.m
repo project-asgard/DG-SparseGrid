@@ -33,7 +33,7 @@ if (isOctave),
     Vmax = 4500000.0;
     x1 = linspace(0,1,32);
 else
-    timeStride = 1;
+    timeStride = 100;
     info = h5info(filename);
     f_size = info.Datasets(2).Dataspace.Size;
     fval_t = h5read(filename, '/fval',[1 1],[f_size(1) f_size(2)/timeStride],[1 timeStride]);
@@ -104,6 +104,41 @@ vv = linspace(Vmin,Vmax,nY)';
 
 [fx_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,xx);
 [fv_loc] = EvalWavPoint4(Vmin,Vmax,Lev,Deg,vv);
+
+
+preFileName = ['valPre-',num2str(Deg),'-',num2str(Lev),'.mat'];
+
+if exist(preFileName) == 2
+    
+    load(preFileName);
+    
+else
+    % loop over all the points on xx and yy
+    disp('PreCalculate basis functions');
+    bbb=1;
+    for i = 1:length(xx)
+        disp([num2str(i),' of ', num2str(length(xx))]);
+        t0 = tic;
+        for j = 1:length(vv)
+            
+            fxList = {fx_loc(:,i)};
+            fyList = {fv_loc(:,j)};
+            ftList = {1};
+            
+            valPre(:,bbb) = combine_dimensions_2(fxList,fyList,ftList,HASHInv,pde);
+            
+            %f2d_t(i,j,cnt) = val'*fval;
+            
+            bbb = bbb + 1;
+            
+        end
+        t1 = toc(t0);
+        disp(t1-t0);
+    end
+    
+    save(preFileName,'valPre');
+    
+end
 
 
 doTransform = 1;

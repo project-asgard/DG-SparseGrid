@@ -1,4 +1,4 @@
-function [f_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,x)
+function [f_loc] = EvalWavPoint4(Lstart,Lend,maxLev,Deg,x)
 % This code evaluates the wavelet functions at given points
 %
 % Meval denotes the level and cel, where contains point x
@@ -6,16 +6,16 @@ function [f_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,x)
 %----------------------------------------------------------------------
 load(['Two-Scale/two_scale_rel_',num2str(Deg),'.mat']);
 
-range = Lmax-Lmin;
+Lmax = Lend-Lstart;
 
 nz = length(x);
 
-MIndex_full = zeros (Deg*(Lev+1),nz);
-f = zeros(Deg*(Lev+1),nz);
+MIndex_full = zeros (Deg*(maxLev+1),nz);
+f = zeros(Deg*(maxLev+1),nz);
 
 % Lev = 0
-hx = range;
-MidPoint = (Lmax+Lmin)/2;
+hx = Lmax;
+MidPoint = (Lend+Lstart)/2;
 xhat = (x-MidPoint)*2/hx;
 coef = 1/sqrt(hx);
 
@@ -26,15 +26,15 @@ for k = 1:Deg
     MIndex_full(k,:) = k;
 end
 
-% Lev = 1 : Lev
-for L = 1:Lev
+% Lev = 1 : maxLev
+for L = 1:maxLev
     
-    hx = range/2^(L-1);
-    ix = find(abs(x-Lmin)<1e-5);
-    cel = ceil((x-Lmin)/hx);
+    hx = Lmax/2^(L-1);
+    ix = find(abs(x-Lstart)<1e-5);
+    cel = ceil((x-Lstart)/hx);
     cel(ix) = 1;
     
-    MidPoint = ( (Lmin+cel*hx)+(Lmin+(cel-1)*hx) )/2;
+    MidPoint = ( (Lstart+cel*hx)+(Lstart+(cel-1)*hx) )/2;
     
     for k=1:Deg
         MIndex_full(Deg*L+k,1:nz) = (2^(L-1))*Deg+Deg*(cel'-1)+k;
@@ -59,6 +59,6 @@ for L = 1:Lev
 end
 
 % f_loc evaluates DoF_1D basis at nz points xx
-f_loc = (sparse(MIndex_full,ones(Deg*(Lev+1),1)*[1:nz],f,Deg*2^(Lev),nz));
+f_loc = (sparse(MIndex_full,ones(Deg*(maxLev+1),1)*[1:nz],f,Deg*2^(maxLev),nz));
 
 end
