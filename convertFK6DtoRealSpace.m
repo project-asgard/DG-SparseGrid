@@ -146,9 +146,10 @@ if doTransform
         if (idebug >= 1),
           K1_find = find( sum(fv_loc(index_I1,:) ~= 0, 1 ));
           K2_find = find( sum(fx_loc(index_I2,:) ~= 0, 1 ));
-          isok_K1 = all( K1_find == K1 );
-          isok_K2 = all( K2_find == K2 );
+          isok_K1 = (numel(K1) == numel(K1_find)) && all( K1_find == K1 );
+          isok_K2 = (numel(K2) == numel(K2_find)) && all( K2_find == K2 );
           if (~isok_K1),
+            disp(sprintf('n1=%d, i1=%d', n1,i1));
             for i=1:numel(K1),
               disp(sprintf('K1(%d) = %g', i,K1(i)));
             end;
@@ -157,6 +158,7 @@ if doTransform
             end;
           end;
           if (~isok_K2),
+            disp(sprintf('n2=%d,i2=%d', n2,i2));
             for i=1:numel(K2),
               disp(sprintf('K2(%d) = %g', i,K2(i)));
             end;
