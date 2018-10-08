@@ -2,7 +2,7 @@
 
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
-idebug = 0;
+idebug = 1;
 
 % Read in output from FK6D and convert it to real space
 
@@ -102,6 +102,11 @@ n_t = zeros(nX,nS);
 xx = linspace(Lmin,Lmax,nX)';
 vv = linspace(Vmin,Vmax,nY)';
 
+% ----------------------------------------------
+% Note that fx_loc and fv_loc are small matrices
+% may consider fully dense storage
+% sparsity ratio about 18.75 percent
+% ----------------------------------------------
 [fx_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,xx);
 [fv_loc] = EvalWavPoint4(Vmin,Vmax,Lev,Deg,vv);
 
@@ -140,8 +145,16 @@ if doTransform
                 i,   I1,   I2,    n1,   i1,    n2,   i2));
         end;
         
+        % --------------------------------------------------
+        % Note K1 and K2 should have contiguous index values
+        % --------------------------------------------------
         K1 = find( sum(fv_loc(index_I1,:) ~= 0, 1 ));
         K2 = find( sum(fx_loc(index_I2,:) ~= 0, 1 ));
+
+        % --------------------------------------------
+        % note convert to full storage to use efficient
+        % DGEMM operations
+        % --------------------------------------------
         Amat = transpose(full(fv_loc(index_I1,K1)));
         Bmat = transpose(full(fx_loc(index_I2,K2)));
         Xmat = fval_t(  Index, 1:nsteps);
@@ -153,13 +166,32 @@ if doTransform
         %                    ( fv_loc(index_I1,K1) )
         % -----------------------------------------------
         
-        Ymat = kron_mult2(Amat,Bmat, Xmat );
+        Ymat = kronmult2(Amat,Bmat, Xmat );
         
         f2d_t(K2, K1, 1:nsteps) = f2d_t(K2, K1, 1:nsteps) + ...
             reshape( Ymat, [numel(K2), numel(K1), nsteps]);
         
         if (idebug >= 1),
-            disp(sprintf('i=%d,n1=%d,n2=%d, time=%g', i,n1,n2,toc(time_main)));
+            disp(sprintf('i=%d,n1=%d,n2=%d, size(K1)=%g, size(K2)=%g, time=%g', ...
+                          i,n1,n2,  numel(K1), numel(K2), toc(time_main)));
+
+            % --------------------------------------------------
+            % Note K1 and K2 should have contiguous index values
+            % --------------------------------------------------
+            max_K1 = max(K1(:)); min_K1 = min(K1(:));
+            is_contiguous_K1 = numel(K1) == (max_K1-min_K1+1);
+            max_K2 = max(K2(:)); min_K2 = min(K2(:));
+            is_contiguous_K2 = numel(K2) == (max_K2-min_K2+1);
+
+            if (~is_contiguous_K1),
+              disp(sprintf('numel(K1)=%g  ** K1 is not contiguous ** ',
+                            numel(K1) ));   
+            end;
+
+            if (~is_contiguous_K2),
+              disp(sprintf('numel(K2)=%g  ** K2 is not contiguous ** ',
+                            numel(K2) ));   
+            end;
         end;
     end;
     
@@ -172,11 +204,20 @@ if doTransform
         f2d_t_cal = f2d_t;
         clear f2d_t;
         load('f2d_t.mat', 'f2d_t');
-        abserr = abs( f2d_t_cal(:,:,1:nsteps) -  f2d_t(:,:,1:nsteps) ) ;
-        relerr = abserr ./ max( abs(f2d_t_cal(:,:,1:nsteps)), abs(f2d_t(:,:,1:nsteps) ));
-        max_abserr = max( abserr(:) );
-        max_relerr = max( relerr(:) );
-        disp(sprintf('f2d_t: max_abserr =%g, max_relerr=%g', ...
+        abserr = zeros(size(f2d_t,1),size(f2d_t,2));
+        relerr = zeros(size(f2d_t,1),size(f2d_t,2));
+        max_abserr = 0;
+        max_relerr = 0;
+        for istep=1:nsteps,
+          abserr = abs( f2d_t_cal(:,:,istep) -  f2d_t(:,:,istep) ) ;
+          dnorm = max( abs(f2d_t_cal(:,:,istep)), abs(f2d_t(:,:,istep)) );
+          dnorm = max( 1e-6*ones(size(dnorm)), dnorm );
+          relerr = abserr ./ dnorm;
+
+          max_abserr = max( max_abserr, max( abserr(:)) );
+          max_relerr = max( max_relerr, max( relerr(:)) );
+         end;
+         disp(sprintf('f2d_t: max_abserr =%g, max_relerr=%g', ...
             max_abserr,     max_relerr ));
     end;
 end;
