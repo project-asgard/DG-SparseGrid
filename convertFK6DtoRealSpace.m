@@ -2,7 +2,7 @@
 
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
-idebug = 0;
+idebug = 1;
 
 % Read in output from FK6D and convert it to real space
 
@@ -140,8 +140,34 @@ if doTransform
                 i,   I1,   I2,    n1,   i1,    n2,   i2));
         end;
         
-        K1 = find( sum(fv_loc(index_I1,:) ~= 0, 1 ));
-        K2 = find( sum(fx_loc(index_I2,:) ~= 0, 1 ));
+        K1 = calc_overlap_index( i1, n1, LevV );
+        K2 = calc_overlap_index( i2, n2, LevX );
+
+        if (idebug >= 1),
+          K1_find = find( sum(fv_loc(index_I1,:) ~= 0, 1 ));
+          K2_find = find( sum(fx_loc(index_I2,:) ~= 0, 1 ));
+          isok_K1 = all( K1_find == K1 );
+          isok_K2 = all( K2_find == K2 );
+          if (~isok_K1),
+            for i=1:numel(K1),
+              disp(sprintf('K1(%d) = %g', i,K1(i)));
+            end;
+            for i=1:numel(K1_find),
+              disp(sprintf('K1_find(%d) = %g ',i,K1_find(i)));
+            end;
+          end;
+          if (~isok_K2),
+            for i=1:numel(K2),
+              disp(sprintf('K2(%d) = %g', i,K2(i)));
+            end;
+            for i=1:numel(K2_find),
+              disp(sprintf('K2_find(%d) = %g ',i,K2_find(i)));
+            end;
+          end;
+         end;
+
+
+        
         Amat = transpose(full(fv_loc(index_I1,K1)));
         Bmat = transpose(full(fx_loc(index_I2,K2)));
         Xmat = fval_t(  Index, 1:nsteps);
