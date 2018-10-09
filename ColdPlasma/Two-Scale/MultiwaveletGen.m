@@ -6,7 +6,7 @@ clear all
 clc
 
 N = 2^12;
-k = 9;
+k = 10;
 x_cord = (-1:2/N:1)';
 
 p_legendre = zeros(3*k+2);
@@ -19,8 +19,12 @@ for l = 1:3*k
     xp_k(end) = 0;
     p_legendre(l+2,:) = (2*l+1)*xp_k/(l+1)-l*p_legendre(l,:)/(l+1);
 end
-p_legendre_roots = sort(roots(p_legendre(3*k+1,:)));
-p_legendre_weights =(1-p_legendre_roots.^2)./((3*k+1)^2*polyval(p_legendre(3*k+2,:),p_legendre_roots).^2);
+% p_legendre_roots = sort(roots(p_legendre(3*k+1,:)));
+% p_legendre_weights =(1-p_legendre_roots.^2)./((3*k+1)^2*polyval(p_legendre(3*k+2,:),p_legendre_roots).^2);
+
+% define Gaussian quadrature
+[p_legendre_roots,p_legendre_weights]=lgwt(N,-1,1);
+p_legendre_weights = p_legendre_weights/2;
 
 for l = 1:size(p_legendre,1)
     p_legendre(l,:) = sqrt(2*(l-1)+1)*p_legendre(l,:);
@@ -140,5 +144,5 @@ end
 
 H0_2=H0;G0_2=G0;
 load(['two_scale_rel_',num2str(k),'.mat']);
-max(max(abs(H0-H0_2)))
-max(max(abs(G0-G0_2)))
+max(max(abs(H0-H0_2)))/max(max(H0))
+max(max(abs(G0-G0_2)))/max(max(G0))
