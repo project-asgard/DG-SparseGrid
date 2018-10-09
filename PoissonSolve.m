@@ -25,6 +25,7 @@ Index= [];
 for i = 1:size(index1D,1)
    Index = [Index;(index1D(i)-1)*k^2+[1:k]'];
 end
+
 tmp_b=[sqrt(Lmax); zeros(dof_1D_x-1,1)]...
       -sqrt(2*Vmax)*f(Index(:));%f(1:dof_1D_x);
 
