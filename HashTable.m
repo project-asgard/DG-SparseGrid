@@ -57,7 +57,7 @@ for i = 1:size(combs,1)
 
         end
 
-
+        % Remap the new hash layout to the old one
         key = [key(1,1) key(1,2) key(2,1) key(2,2)];
         coord = [coord(1,1) coord(1,2) coord(2,1) coord(2,2) coord(3,1) coord(3,2)];
 

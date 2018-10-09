@@ -1,4 +1,4 @@
-function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
+function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -205,6 +205,7 @@ if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
 
 count=1;
 plotFreq = 1;
+err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
@@ -284,6 +285,9 @@ for L = 1:floor(TEND/dt)
         pause (0.01)
     end
     
+    %%% Get the real space solution
+    fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+    
     %%% Check against known solution
     if pde.checkAnalytic
         
@@ -294,7 +298,6 @@ for L = 1:floor(TEND/dt)
         %disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
         % Check the real space solution with the analytic solution
-        fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
         f2d_analytic = pde.ExactF(xx,vv,time(count));
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
