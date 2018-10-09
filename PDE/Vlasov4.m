@@ -4,25 +4,27 @@ function pde=Vlasov4
 
 % Parameters
 pde.Dim = 2;
-pde.Lev = [4 4];
-pde.domain = [0 20*pi/3; -13 13]';
+pde.Lev = [3 3];
+% pde.domain = [0 20*pi/3; -13 13]';\
+pde.domain = [-13 13;0 20*pi/3]';
 
 k_0=0.3;
 A=0.04;
-Lmin=0;Lmax=20*pi/3;
-Vmin=-13;Vmax=+13;
+% Lmin=0;Lmax=20*pi/3;
+% Vmin=-13;Vmax=+13;
 
 params.TEND = 1;
 
 params.k_0 = k_0;
 params.A = A;
 
-params.Lmin = Lmin;
-params.Lmax = Lmax;
-params.Vmin = Vmin;
-params.Vmax = Vmax;
+% params.Lmin = Lmin;
+% params.Lmax = Lmax;
+% params.Vmin = Vmin;
+% params.Vmax = Vmax;
 
-pde.f_0 = {@Fx_0,@Fv_0};
+% pde.f_0 = {@Fx_0,@Fv_0};
+pde.f_0 = {@Fv_0,@Fx_0};
 
 pde.Fx_0 = @Fx_0;
 pde.Fv_0 = @Fv_0;
@@ -66,8 +68,6 @@ end
 function f=Fx_0(x,  params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 f=(1+A*cos(k_0*x));
 end
@@ -76,8 +76,6 @@ end
 function f=Fv_0(v,  params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 np=9/(10*sqrt(2*pi));
 nb=2/(10*sqrt(2*pi));
@@ -91,8 +89,6 @@ end
 function f=Fxv_0(x,v, params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 f=Fv_0(v).*Fx_0(x);
 
@@ -102,8 +98,6 @@ end
 function f=Ex(x, params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 f=x-x;
 
@@ -113,8 +107,6 @@ end
 function f=Et(x, params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 f=x-x;
 
@@ -124,8 +116,6 @@ end
 function f=E(x,t,  params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 f=x-x;
 end
@@ -133,8 +123,6 @@ end
 function f=F(x,v,t, params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 
 f=Fv_0(v).*(A*cos(k_0*(x-v*t)));
@@ -143,8 +131,6 @@ end
 function f=rho(x,t,  params)
 A = params.A;
 k_0 = params.k_0;
-Lmax = params.Lmax;
-Vmax = params.Vmax;
 
 f= -A*cos(k_0*x).*exp(-k_0*t);
 end

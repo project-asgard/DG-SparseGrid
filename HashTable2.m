@@ -19,9 +19,7 @@ forwardHash = struct(); % Empty struct array
 inverseHash = {}; % Empty cell array
 
 combs = perm_leq(Dim,Lev);
-
 nLev = zeros(1,Dim);
-
 key = zeros(1,2*Dim);
 count = 1;
 

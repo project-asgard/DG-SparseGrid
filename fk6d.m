@@ -61,10 +61,10 @@ if ~exist('implicit','var') || isempty(implicit)
 end
 
 % Get x and v domain ranges.
-Lmin = pde.params.Lmin;
-Lmax = pde.params.Lmax;
-Vmin = pde.params.Vmin;
-Vmax = pde.params.Vmax;
+% Lmin = pde.params.Lmin;
+% Lmax = pde.params.Lmax;
+% Vmin = pde.params.Vmin;
+% Vmax = pde.params.Vmax;
 
 
 % Level information.
@@ -118,7 +118,7 @@ end
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-% [HASH,HASHInv] = HashTable(Lev,Dim);
+%[HASH,HASHInv] = HashTable(Lev(1),Dim);
 [HASH,HASHInv] = HashTable2(Lev(1),Dim);
 nHash = numel(HASHInv);
 
@@ -145,10 +145,8 @@ if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 if Dim == 1
     fval = f(:,1);
 elseif Dim == 2
-    fval = initial_condition_vector(f(:,1),f(:,2),Deg,Dim,HASHInv,pde);
+    fval = initial_condition_vector(f(:,2),f(:,1),Deg,Dim,HASHInv,pde);
 end
-
-clear fv fx
 
 %% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
