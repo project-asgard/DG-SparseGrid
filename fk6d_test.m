@@ -35,13 +35,15 @@ lev = 3;
 deg = 2;
 TEND = 1;
 compression = 0;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+[err,act_f,act_frs] = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
 
 load('tests/vlasov4/solution.mat');
 
 exp_f = fval;
+exp_frs = fval_realspace;
 
-verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+%verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+verifyEqual(testCase,act_frs,exp_frs,'RelTol',1e-4);
 
 end
 
@@ -57,13 +59,15 @@ lev = 3;
 deg = 2;
 TEND = 1;
 compression = 1;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+[err,act_f,act_frs] = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
 
 load('tests/vlasov4/solution.mat');
 
 exp_f = fval;
+exp_frs = fval_realspace;
 
-verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+%verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+verifyEqual(testCase,act_frs,exp_frs,'RelTol',1e-4);
 
 end
 
@@ -78,13 +82,15 @@ lev = 3;
 deg = 2;
 TEND = 1;
 compression = 2;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+[err,act_f,act_frs] = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
 
 load('tests/vlasov4/solution.mat');
 
 exp_f = fval;
+exp_frs = fval_realspace;
 
-verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+%verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+verifyEqual(testCase,act_frs,exp_frs,'RelTol',1e-4);
 
 end
 
@@ -99,13 +105,15 @@ lev = 3;
 deg = 2;
 TEND = 1;
 compression = 3;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+[err,act_f,act_frs] = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
 
 load('tests/vlasov4/solution.mat');
 
 exp_f = fval;
+exp_frs = fval_realspace;
 
-verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+%verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+verifyEqual(testCase,act_frs,exp_frs,'RelTol',1e-4);
 
 end
 
@@ -120,13 +128,15 @@ lev = 3;
 deg = 2;
 TEND = 1;
 compression = 4;
-act_f = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
+[err,act_f,act_frs] = fk6d(Vlasov4,lev,deg,TEND,quiet,compression);
 
 load('tests/vlasov4/solution.mat');
 
 exp_f = fval;
+exp_frs = fval_realspace;
 
-verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+%verifyEqual(testCase,act_f,exp_f,'RelTol',1e-4);
+verifyEqual(testCase,act_frs,exp_frs,'RelTol',1e-4);
 
 end
 
@@ -141,7 +151,7 @@ lev = 3;
 deg = 2;
 TEND = 0.05;
 compression = 4;
-[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+[err,act_f,act_frs] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
 
 tol = 1e-2;
 assert(err(1) < tol);
@@ -159,7 +169,7 @@ lev = 4;
 deg = 2;
 TEND = 0.05;
 compression = 4;
-[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
+[err,act_f,act_frs] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression);
 
 tol = 1e-2;
 assert(err(1) < tol);
@@ -178,7 +188,7 @@ deg = 2;
 TEND = 0.05;
 compression = 4;
 implicit = 1;
-[act_f,err] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression,implicit);
+[err,act_f,act_frs] = fk6d(Vlasov7,lev,deg,TEND,quiet,compression,implicit);
 
 tol = 1e-2;
 assert(err(1) < tol);

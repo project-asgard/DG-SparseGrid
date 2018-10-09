@@ -1,4 +1,4 @@
-function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
+function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -118,7 +118,7 @@ end
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-% [HASH,HASHInv] = HashTable(Lev,Dim);
+% [HASH,HASHInv,index1D] = HashTable(Lev(1),Dim);
 [HASH,HASHInv] = HashTable2(Lev(1),Dim);
 nHash = numel(HASHInv);
 
@@ -147,8 +147,6 @@ if Dim == 1
 elseif Dim == 2
     fval = initial_condition_vector(f(:,1),f(:,2),Deg,Dim,HASHInv,pde);
 end
-
-clear fv fx
 
 %% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -243,6 +241,7 @@ if write_fval; write_fval_to_file(fval,Lev(1),Deg,0); end
 
 count=1;
 plotFreq = 1;
+err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
@@ -255,7 +254,7 @@ for L = 1:floor(TEND/dt)
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
         if ~quiet; disp('    [a] Solve poisson to get E'); end
-        [E,u] = PoissonSolve(Lev(1),Deg,domain(1,1),domain(2,1),fval,A_Poisson,FMWT_COMP(:,:,1),domain(1,2),domain(2,2));
+        [E,u] = PoissonSolve(Lev(1),Deg,domain(1,1),domain(2,1),fval,A_Poisson,FMWT_COMP(:,:,1),domain(1,2),domain(2,2),index1D);
     end
     
     if pde.applySpecifiedE
@@ -331,6 +330,9 @@ for L = 1:floor(TEND/dt)
         end
     end
     
+    %%% Get the real space solution
+    fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+    
     %%% Check against known solution
     if pde.checkAnalytic
         
@@ -341,7 +343,6 @@ for L = 1:floor(TEND/dt)
         %disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
         % Check the real space solution with the analytic solution
-        fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
         f2d_analytic = pde.ExactF(xx,vv,time(count));
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));

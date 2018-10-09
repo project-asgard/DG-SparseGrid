@@ -18,8 +18,14 @@ for l = 1:3*k
     xp_k(end) = 0;
     p_legendre(l+2,:) = (2*l+1)*xp_k/(l+1)-l*p_legendre(l,:)/(l+1);
 end
-p_legendre_roots = sort(roots(p_legendre(3*k+1,:)));
-p_legendre_weights =(1-p_legendre_roots.^2)./((3*k+1)^2*polyval(p_legendre(3*k+2,:),p_legendre_roots).^2);
+% The following two lines are the place to generate complex numbers
+% replace them with line 27-28
+%p_legendre_roots = sort(roots(p_legendre(3*k+1,:)));
+%p_legendre_weights =(1-p_legendre_roots.^2)./((3*k+1)^2*polyval(p_legendre(3*k+2,:),p_legendre_roots).^2);
+
+% define Gaussian quadrature
+[p_legendre_roots,p_legendre_weights]=lgwt(N,-1,1);
+p_legendre_weights = p_legendre_weights/2;
 
 for l = 1:size(p_legendre,1)
     p_legendre(l,:) = sqrt(2*(l-1)+1)*p_legendre(l,:);
