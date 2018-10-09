@@ -111,7 +111,7 @@ fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-[HASH,HASHInv] = HashTable(Lev,Dim);
+[HASH,HASHInv,index1D] = HashTable(Lev,Dim);
 nHash = numel(HASHInv);
 
 %%% Construct the connectivity.
@@ -126,8 +126,6 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 %%% specified in PDE.
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
-
-clear fv fx
 
 %% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -206,7 +204,7 @@ write_fval = 0;
 if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
 
 count=1;
-plotFreq = 10;
+plotFreq = 1;
 
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
@@ -219,7 +217,7 @@ for L = 1:floor(TEND/dt)
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
         if ~quiet; disp('    [a] Solve poisson to get E'); end
-        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
     end
     
     if pde.applySpecifiedE
@@ -265,10 +263,10 @@ for L = 1:floor(TEND/dt)
     
     %%% Write data for FK6D test
     
-    fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
-    fd = fopen(fname,'w'); % where file.dat is the name you want to save to
-    fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
-    fclose(fd);
+%     fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
+%     fd = fopen(fname,'w'); % where file.dat is the name you want to save to
+%     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
+%     fclose(fd);
     
     %%% Plot results
     if mod(L,plotFreq)==0 && ~quiet
