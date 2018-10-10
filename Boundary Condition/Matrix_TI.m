@@ -1,4 +1,4 @@
-function GradX = Matrix_TI2(Lev,Deg,Lmax,FMWT_COMP_x)
+function GradX = Matrix_TI(Lev,Deg,Lmax,FMWT_COMP_x)
 %========================================================
 % Construct the matrix for curl operator on [0,Lmax]
 % Input: 
@@ -21,6 +21,7 @@ p_2 = legendre(1,Deg);
 [quad_x,quad_w]=lgwt(quad_num,-1,1);
 p_val = legendre(quad_x,Deg);
 Dp_val = dlegendre(quad_x,Deg);
+
 %---------------------------
 % Define Matrices
 %---------------------------
@@ -52,42 +53,34 @@ for Lx=0:nx-1
     c=Deg*Lx+1:Deg*(Lx+1);
     p=Deg*(Lx-1)+1:Deg*Lx;
     l=Deg*(Lx+1)+1:Deg*(Lx+2);
-    p_0=zeros(1,Deg);
     
     val=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
                p_2'*p_2/2   p_2'*p_1/2];     % for x2
+
     
-    val1=1/hx*[-p_1'*p_0/2  -p_1'*p_1/2,...   % for x1
-                p_2'*p_2/2   p_2'*p_1/2];     % for x2
-    
-    val2=1/hx*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
-                p_2'*p_2/2   p_2'*p_0/2];     % for x2
-    
-      %computing righthand side & E = cos(pi*x) E(0)=1,E(1)=-1;
     Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
     
     if Lx<nx-1 && Lx>0
         
         Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
-        GradX=GradX+sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
-        
+    
     elseif Lx==0
         
-        Iu=[meshgrid(c),meshgrid(c),meshgrid(c),meshgrid(l)];
-        GradX=GradX+sparse(Iv,Iu,val1,dof_1D_x,dof_1D_x);
-        
+        Iu=[meshgrid([Deg*(nx-1)+1:Deg*(nx)]),meshgrid(c),meshgrid(c),meshgrid(l)];
+   
     elseif Lx==nx-1
         
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(c)];
-        GradX=GradX+sparse(Iv,Iu,val2,dof_1D_x,dof_1D_x);
+        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:Deg])];
+    
     end
     
 %     GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
-    
+    GradX=GradX+sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
     
     
 end
 
-GradX=FMWT_COMP_x*GradX*FMWT_COMP_x';
+
+
 
 end

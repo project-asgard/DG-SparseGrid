@@ -1,4 +1,4 @@
-function Eh = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,GradY,...
+function Eh = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,...
                                  omega,dt,MaxT,...
                                  F_1D,E)%Explicit
 %=====================================================
@@ -75,6 +75,5 @@ end
 % e=eigs(MaxMat,1,'lm',opts)
 Mat=full(Mat);
 %% Time advance for solving Maxwell equation
-MaxRhs = [GradY+F_1D.b];
-MaxSol = E;
+MaxRhs = [F_1D.b];
 Eh = pinv(-Mat)*MaxRhs;

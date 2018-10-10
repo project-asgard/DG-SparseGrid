@@ -1,4 +1,4 @@
-function [b,EE]=Intial_Con1(Lev,Deg,Lmax,pde,FMWT_COMP)
+function [b,EE]=Intial_Con1(Lev,Deg,Lmax,pde,FMWT_COMP_x)
 %========================================================
 % Generate the Initial Condition for Maxwells' Eq 
 % Input: 
@@ -17,10 +17,13 @@ quad_num=10;
 [quad_x,quad_w]=lgwt(quad_num,-1,1);
 p_val = legendre(quad_x,Deg);
 
-
 nx=2^(Lev);hx=Lmax/nx;
 Jacobi_x=hx;
 
+p_1 = legendre(-1,Deg);
+p_2 = legendre(1,Deg);
+s_1 = pde.E(0)*p_1/2*sqrt(1/hx);
+s_2 = -pde.E(1)*p_2/2*sqrt(1/hx);
 
 % compute (u',v)+1/2*u^{-}[v^{+}-v^{-}]
 dof_1D = Deg*nx;
@@ -53,10 +56,12 @@ for LL=0:nx-1
 
 end
 
-b=FMWT_COMP*b;
+b(1:Deg,1)=b(1:Deg,1)+s_1';
+b(Deg*(nx-1)+1:Deg*nx,1)=b(Deg*(nx-1)+1:Deg*nx,1)+s_2';
 
-E=FMWT_COMP*E;
 
+b=FMWT_COMP_x*b;
+E=FMWT_COMP_x*E;
 % structure of b
 b = struct('b',b);
 

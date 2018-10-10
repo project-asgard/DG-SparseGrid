@@ -42,7 +42,7 @@ for Lx=0:Lev
                 Py=[max(2^(nL-1)*Px-1,0):min(2^(nL-1)*Px+2^(nL-1),2^(Ly-1)-1)];
             end
             
-            % periodic boundary is connected
+%             periodic boundary is connected
             Py=[0,Py,2^max(0,Ly-1)-1];
             
             J=LevCell2index(Ly,Py);

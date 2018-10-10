@@ -12,7 +12,7 @@ addpath(genpath(pwd))
 
 %% Step 1. Setting Parameters
 
-Lev = 5;
+Lev = 7;
 Deg = 2;
 
 
@@ -54,7 +54,7 @@ Con1D=Connect1D(Lev);
 %*************************************************
 %% Step 3. Coefficient Matrix for Time-independent Matrix
 %*************************************************
-[GradX,GradY] = Matrix_TI2(Lev,Deg,Lmax,FMWT_COMP_x);
+GradX = Matrix_TI2(Lev,Deg,Lmax,FMWT_COMP_x);
 
 %*************************************************
 %% Step 4.3D Maxwell Solver
@@ -62,23 +62,25 @@ Con1D=Connect1D(Lev);
 % global rhs, E0, and B0 vectors
 % b_s is the RHS vector
 % E_s and B_s are used for error estimate
-
 %% Maxwell Solver
-Eh = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,GradY,pde.w,dt,MaxT,...
+Eh = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
     F_1D,0);
 sol_n=Eh;
 
 %% Error Estimate
 u_s=E_1D.E;
 full([Deg Lev dt max(abs(sol_n-u_s)) norm(sol_n-u_s)])
-full([sol_n,u_s])
+% full([sol_n,u_s])
 
 % subplot(1,2,1)
 % plot(sol_n)
 % subplot(1,2,2)
 % plot(u_s)
 
-% [M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
+[M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
+plot(N,M*Eh)
+hold on
+plot(N,M*E_1D.E)
 % figure;
 % subplot(1,3,1)
 % plot(N,M*E1h,'r--',N,M*E1s,'b--')
