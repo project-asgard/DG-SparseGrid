@@ -4,7 +4,7 @@ function stat = rewrite_operatorTwoScale_files()
 
 % Generate all the original two_scale_rel_deg.mat files up to this deg ...
 
-deg = 100;
+deg = 30;
 
 options = '-ascii';
 
