@@ -5,23 +5,20 @@ function pde=Vlasov4
 % Parameters
 pde.Dim = 2;
 pde.Lev = [3 3];
+pde.Deg = 2;
 % pde.domain = [0 20*pi/3; -13 13]';\
 pde.domain = [-13 13;0 20*pi/3]';
 
+pde.xDim = 2;
+pde.vDim = 1;
+
 k_0=0.3;
 A=0.04;
-% Lmin=0;Lmax=20*pi/3;
-% Vmin=-13;Vmax=+13;
 
 params.TEND = 1;
 
 params.k_0 = k_0;
 params.A = A;
-
-% params.Lmin = Lmin;
-% params.Lmax = Lmax;
-% params.Vmin = Vmin;
-% params.Vmax = Vmax;
 
 % pde.f_0 = {@Fx_0,@Fv_0};
 pde.f_0 = {@Fv_0,@Fx_0};
@@ -43,20 +40,15 @@ pde.checkAnalytic = 0;
 
 pde.exactE = @exactE;
 
-pde.source1x = @source1x;
-pde.source1v = @source1v;
+pde.source1 = {@source1v,@source1x};
 pde.source1t = @source1t;
-pde.source1 = @source1;
 
-pde.source2x = @source2x;
-pde.source2v = @source2v;
+pde.source2 = {@source2v,@source2x};
 pde.source2t = @source2t;
-pde.source2 = @source2;
 
-pde.source3x = @source3x;
-pde.source3v = @source3v;
+
+pde.source3 = {@source3v,@source3x};
 pde.source3t = @source3t;
-pde.source3 = @source3;
 
 pde.ExactFx = @ExactFx;
 pde.ExactFv = @ExactFv;
@@ -136,7 +128,6 @@ f= -A*cos(k_0*x).*exp(-k_0*t);
 end
 
 function f = exactE(x, params)
-% Exact solution for E
 f=x*0;
 end
 

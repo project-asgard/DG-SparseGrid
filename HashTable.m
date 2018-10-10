@@ -1,4 +1,4 @@
-function [forwardHash,inverseHash,index1D] = HashTable(Lev,Dim)
+function [forwardHash,inverseHash,hashIndex1,hashIndex2] = HashTable(Lev,Dim)
 %-------------------------------------------------
 % Generate 2D Hash Table s.t n1+n2<=Lev
 % Input: Lev:: Level information
@@ -12,23 +12,18 @@ function [forwardHash,inverseHash,index1D] = HashTable(Lev,Dim)
 %        key = [Lev_1,Lev_2,Cell_1,Cell_2]
 %-------------------------------------------------
 
-global hash_format
-
-% Specifies the number of allowable integers in the elements of the hash key
-% If more are needed, i.e., > 99, then change to 'i%3.3i_'.
-
-hash_format =  'i%04.4d_';
-
-count=1;
+count1=1;
 forwardHash = struct(); % Empty struct array
 inverseHash = {}; % Empty cell array
 
 combs = perm_leq(Dim,Lev);
 nLev = zeros(1,Dim);
 key = zeros(1,2*Dim);
-count = 1;
 
-index1D = [];
+count1 = 1;
+count2 = 1;
+hashIndex1 = [];
+hashIndex2 = [];
 
 for i = 1:size(combs,1)
     nLev = combs(i,:);
@@ -46,64 +41,39 @@ for i = 1:size(combs,1)
         key = [];
         coord = [];
         for d = 1:Dim
-
+            
             lev = nLev(d);
             cell = nCell(ii,d);
             indx = LevCell2index(lev,cell);
-
+            
             key(1:2,d) =[lev,cell];
-
+            
             coord(1:3,d) = [lev,cell,indx];
-
+            
         end
-
-        % Remap the new hash layout to the old one
-        key = [key(1,1) key(1,2) key(2,1) key(2,2)];
-        coord = [coord(1,1) coord(1,2) coord(2,1) coord(2,2) coord(3,1) coord(3,2)];
-
+        
+%         % Remap the new hash layout to the old one
+%         key = [key(1,1) key(1,2) key(2,1) key(2,2)];
+%         coord = [coord(1,1) coord(1,2) coord(2,1) coord(2,2) coord(3,1) coord(3,2)];
+        
         keystr = getHashKeyStr(key);
-        inverseHash{count} = coord;
-        forwardHash.(keystr)=count;
-
-                if key(1,1) == 0
-            index1D = [index1D;count];
-                end
-
-        count=count+1;
-
+        inverseHash{count1} = coord;
+        forwardHash.(keystr)=count1;
+        
+        % Construct hash indices for each dimension
+        if key(1,1) == 0
+            hashIndex1 = [hashIndex1;count1];
+        end
+        if key(1,2) == 0
+            hashIndex2 = [hashIndex2;count2];
+        end
+        
+        count1=count1+1;
+        count2=count2+1;
+        
     end
 end
 
-
-% %%%%%%%%%%%%%%%%
-% % Method2 works
-% %%%%%%%%%%%%%%%%
-% count = 1;
-% index1D = [];
-% for n1=0:Lev
-%     for i1=0:max(0,2^max(0,n1-1)-1)
-%         
-%         for n2=0:Lev-n1
-%             for i2=0:max(0,2^max(0,n2-1)-1)
-%                 
-%                 key=[n1,n2,i1,i2];
-%                 forwardHash.(sprintf(hash_format,key)) = count;
-%                 if n1 == 0
-%                     index1D = [index1D;count];
-%                 end
-%                 % Linearize the heirarchial multi-index for each dimension.
-%                 
-%                 index_1 = LevCell2index(n1,i1);
-%                 index_2 = LevCell2index(n2,i2);
-%                 
-%                 inverseHash{count} = [key,index_1,index_2];
-%                 
-%                 count = count+1;
-%             end
-%         end
-%         
-%     end
-% end
 
 % Add some other useful information to the forwardHash struct
 

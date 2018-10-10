@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-function [EE,u]=PoissonSolve(Lev_x,k,Lmin,Lmax,f,DeltaX,FMWT_COMP_x,Vmin,Vmax)
-=======
-function [EE,u]=PoissonSolve(Lev_x,k,Lmax,f,DeltaX,FMWT_COMP_x,Vmax,index1D)
->>>>>>> reference
+function [EE,u]=PoissonSolve(Lev_x,k,Lmin,Lmax,f,DeltaX,FMWT_COMP_x,Vmin,Vmax,index1D)
+
 %===============================================================
 % Compute EE from Poisson solver
 % Input : Lev_x,k,Lmax,rho_0,DeltaX
@@ -17,28 +14,17 @@ dof_1D_x=k*nx;
 
 b_poisson=sparse(2*dof_1D_x,1);
 
-
 %-----------------------------------------------------
 % Handling B.C. for enforcing phi(0)=phi(Lmax)=0
 %-----------------------------------------------------
 % Phi_v(0,0) corresponding to the
-
-<<<<<<< HEAD
-Index=[1:k]'+[0:k^2:(2^(Lev_x)-1)*k^2];
-tmp_b=[sqrt(Lmax-Lmin); zeros(dof_1D_x-1,1)]...
-      -sqrt(Vmax-Vmin)*f(Index(:));%f(1:dof_1D_x);
-=======
-% Index=[1:k]'+[0:k^2:(2^(Lev_x)-1)*k^2];
 
 Index= [];
 for i = 1:size(index1D,1)
    Index = [Index;(index1D(i)-1)*k^2+[1:k]'];
 end
 
-tmp_b=[sqrt(Lmax); zeros(dof_1D_x-1,1)]...
-      -sqrt(2*Vmax)*f(Index(:));%f(1:dof_1D_x);
->>>>>>> reference
-
+tmp_b=[sqrt(Lmax); zeros(dof_1D_x-1,1)] - sqrt(2*Vmax)*f(Index(:));
 
 b_poisson(dof_1D_x+1:end)=(FMWT_COMP_x(:,2:end-1)*FMWT_COMP_x(:,2:end-1)')*tmp_b;
 

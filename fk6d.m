@@ -43,9 +43,9 @@ end
 if exist('Lev','var')
     pde.Lev = [Lev Lev];
 end
-if ~exist('Deg','var') || isempty(Deg)
+if exist('Deg','var')
     % Polynomial degree
-    Deg = 2; % Deg = 2 Means Linear Element
+    pde.Deg = Deg; % Deg = 2 Means Linear Element
 end
 if ~exist('quiet','var') || isempty(quiet)
     % Enable / disable print statements
@@ -75,8 +75,11 @@ end
 
 % Dimensionality.
 Dim = pde.Dim;
+Deg = pde.Deg;
 domain = pde.domain;
 Lev = pde.Lev;
+xDim = pde.xDim;
+vDim = pde.vDim;
 
 % DimX = 1;
 % DimV = 1;
@@ -87,7 +90,7 @@ Lev = pde.Lev;
 pde.params.Deg = Deg;
 
 % Time step.
-dt = (domain(2,1)-domain(1,1))/2^Lev(1)/domain(2,2)/(2*Deg+1);
+dt = (domain(2,2)-domain(1,2))/2^Lev(1)/domain(2,1)/(2*Deg+1);
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
 %
@@ -119,7 +122,7 @@ end
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
 % [HASH,HASHInv,index1D] = HashTable(Lev(1),Dim);
-[HASH,HASHInv] = HashTable2(Lev(1),Dim);
+[HASH,HASHInv,hashIndex1,hashIndex2] = HashTable(Lev(1),Dim);
 nHash = numel(HASHInv);
 
 %%% Construct the connectivity.
@@ -145,7 +148,8 @@ if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 if Dim == 1
     fval = f(:,1);
 elseif Dim == 2
-    fval = initial_condition_vector(f(:,2),f(:,1),Deg,Dim,HASHInv,pde);
+%     fval = initial_condition_vector(f(:,2),f(:,1),HASHInv,pde);
+    fval = initial_condition_vector(f,HASHInv,pde);
 end
 
 %% Step 3. Generate time-independent coefficient matrices
@@ -254,19 +258,21 @@ for L = 1:floor(TEND/dt)
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
         if ~quiet; disp('    [a] Solve poisson to get E'); end
-        [E,u] = PoissonSolve(Lev(1),Deg,domain(1,1),domain(2,1),fval,A_Poisson,FMWT_COMP(:,:,1),domain(1,2),domain(2,2),index1D);
+        
+        [E,u] = PoissonSolve(Lev(1),Deg,domain(1,xDim),domain(2,xDim),...
+            fval,A_Poisson,FMWT_COMP(:,:,xDim),domain(1,vDim),domain(2,vDim),hashIndex1);
     end
     
     if pde.applySpecifiedE
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
-        E = forwardMWT(Lev(1),Deg,domain(1,1),domain(2,1),pde.Ex,pde.params);
+        E = forwardMWT(Lev(1),Deg,domain(1,xDim),domain(2,xDim),pde.Ex,pde.params);
         E = E * pde.Et(time(count));
     end
     
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
-    EMassX = matrix_coeff_TD(Lev(1),Deg,domain(1,1),domain(2,1),E,FMWT_COMP(:,:,1));
+    EMassX = matrix_coeff_TD(Lev(1),Deg,domain(1,xDim),domain(2,xDim),E,FMWT_COMP(:,:,xDim));
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
@@ -283,13 +289,9 @@ for L = 1:floor(TEND/dt)
     if compression == 3
         fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
     else
-%         A_data.vMassV    = vMassV;
-%         A_data.GradX     = GradX;
-%         A_data.GradV     = GradV;
-%         A_data.EMassX    = EMassX;
-        A_data.vMassV    = gMass(:,:,2);
-        A_data.GradX     = Grad(:,:,1);
-        A_data.GradV     = Grad(:,:,2);
+        A_data.vMassV    = gMass(:,:,vDim);
+        A_data.GradX     = Grad(:,:,xDim);
+        A_data.GradV     = Grad(:,:,vDim);
         A_data.EMassX    = EMassX;
         
         % Write the A_data structure components for use in HPC version.
@@ -331,7 +333,7 @@ for L = 1:floor(TEND/dt)
     end
     
     %%% Get the real space solution
-    fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+    fval_realspace = Multi_2D(Meval(:,:,1),Meval(:,:,2),fval,HASHInv,Lev(1),Deg);
     
     %%% Check against known solution
     if pde.checkAnalytic
