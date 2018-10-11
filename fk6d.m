@@ -111,7 +111,7 @@ fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-[HASH,HASHInv,index1D] = HashTable(Lev,Dim);
+[HASH,HASHInv,index1D] = HashTable2(Lev,Dim);
 nHash = numel(HASHInv);
 
 %%% Construct the connectivity.

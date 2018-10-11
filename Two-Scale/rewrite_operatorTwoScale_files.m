@@ -6,7 +6,8 @@ function stat = rewrite_operatorTwoScale_files()
 
 deg = 30;
 
-options = '-ascii';
+%options = '-ascii';
+options = '';
 
 for k=1:deg
     

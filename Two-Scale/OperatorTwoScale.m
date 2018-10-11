@@ -10,8 +10,7 @@ function FMWT_COMP = OperatorTwoScale(maxDeg,maxLev)
 % % Load G0 and H0 from file
 % 
 % load(['two_scale_rel_',num2str(maxDeg),'.mat'])
-
-[H0,G0] = MultiwaveletGen(maxDeg);
+[H0,G0,scale_co,phi_co]=MultiwaveletGen(maxDeg);
 
 H0(find(abs(H0)<1e-5))=0; % Why are we doing this?
 G0(find(abs(G0)<1e-5))=0;
