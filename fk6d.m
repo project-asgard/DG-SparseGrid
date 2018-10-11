@@ -83,6 +83,8 @@ pde.params.DimV = DimV;
 % Degree
 pde.params.Deg = Deg;
 
+params = pde.params;
+
 % Time step.
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
 
@@ -184,7 +186,7 @@ if ~quiet; disp('[5.0] Plotting intial condition'); end
 
 
 % Construct data for reverse MWT in 2D
-[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
+[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 [xx,vv]=meshgrid(x_node,v_node);
 
@@ -225,7 +227,7 @@ for L = 1:floor(TEND/dt)
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
-        E = E * pde.Et(time(count));
+        E = E * pde.Et(time(count),params);
     end
     
     %%% Generate EMassX time dependent coefficient matrix.
@@ -277,7 +279,7 @@ for L = 1:floor(TEND/dt)
         tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
         f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
         mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','interp');
-        axis([0 Lmax -Vmax Vmax])
+        axis([Lmin Lmax -Vmax Vmax])
         view(0,90)
         colorbar
         
@@ -292,17 +294,17 @@ for L = 1:floor(TEND/dt)
     if pde.checkAnalytic
         
         % Check the wavelet space solution with the analytic solution
-        fval_analytic = exact_solution_vector(HASHInv,pde,time(count));
+        fval_analytic = exact_solution_vector(HASHInv,pde,(L)*dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
-        %disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
-        %disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+        disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
+        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
         % Check the real space solution with the analytic solution
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
-        f2d_analytic = pde.ExactF(xx,vv,time(count));
+        f2d_analytic = pde.ExactF(xx,vv,(L)*dt);
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
-        %disp(['    real space absolute err : ', num2str(err_real)]);
-        %disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
+        disp(['    real space absolute err : ', num2str(err_real)]);
+        disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
        
         err = err_wavelet;
     end
