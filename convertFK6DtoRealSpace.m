@@ -2,11 +2,14 @@
 
 function [f2d] = convertFK6DtoRealSpace(filename)
 
+addpath(genpath('./'));
+
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 idebug = 0;
 
 if ~exist('filename','var') || isempty(filename)
-    filename = 'convert-test-fval-MWT.h5';
+    filename = 'tests/convertFK6DtoRealSpace/convert-test-fval-MWT.h5';
+    filename2 = 'tests/convertFK6DtoRealSpace/convert-test-f2d_t.mat';
     idebug = 1;
 end
     
@@ -198,7 +201,7 @@ end
             % double check
             f2d_t_cal = f2d_t;
             clear f2d_t;
-            load('convert-test-f2d_t.mat', 'f2d_t');
+            load(filename2, 'f2d_t');
             abserr = zeros(size(f2d_t,1),size(f2d_t,2));
             relerr = zeros(size(f2d_t,1),size(f2d_t,2));
             max_abserr = 0;
