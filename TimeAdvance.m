@@ -5,12 +5,11 @@ function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv)
 % Output: Vector:: f
 %-------------------------------------------------
 
-if pde.implicit   
-    compression = 1;  
+if pde.implicit
     %f = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
-    f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);    
-else   
-    f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);   
+    f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);
+else
+    f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);
 end
 
 end
@@ -137,10 +136,7 @@ if compression == 0
     
     % Do the matrix-vector multiply
     
-    
-    
     ftmp = sparse(A*f);
-    
     
 elseif compression == 1
     
@@ -192,7 +188,6 @@ elseif compression == 1
     % Do the matrix-vector multiply
     
     ftmp = A*f;
-    
     
 elseif compression == 2
     
@@ -330,7 +325,14 @@ elseif compression == 4
             tmpA = A_Data.GradV(Index_I1,Index_J1);
             tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
-            ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
+            fast = 1;
+            if fast
+                ftmp(globalRow)=ftmp(globalRow)+kron(tmpA,tmpB)*f(globalCol);
+                
+            else
+                ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
+                
+            end
             
             conCnt = conCnt+1;
             
