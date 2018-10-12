@@ -13,7 +13,9 @@ function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,imp
 % where $\rho\left(x,t\right)=\int_v f(x,v,t) dv$.
 
 format short e
-addpath(genpath(pwd))
+
+folder = fileparts(which(mfilename));
+addpath(genpath(folder));
 
 %% Step 1. Set input parameters
 % pde :  A structure containing the initial condition and domain
@@ -57,8 +59,13 @@ if ~exist('compression','var') || isempty(compression)
     compression = 4;
 end
 if ~exist('implicit','var') || isempty(implicit)
-    % Use or not the compression reference version
     pde.implicit = 0;
+else
+    pde.implicit = implicit;
+end
+
+if pde.implicit
+    compression = 1;
 end
 
 % Get x and v domain ranges.
@@ -212,7 +219,7 @@ err = 0;
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
     
-    time(count) = L*dt;
+    time(count) = (L-1)*dt;
     timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
     
     if ~quiet; disp(timeStr); end
@@ -227,7 +234,7 @@ for L = 1:floor(TEND/dt)
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
-        E = E * pde.Et((L-1)*dt,params);
+        E = E * pde.Et(time(count),params);
     end
     
     %%% Generate EMassX time dependent coefficient matrix.
@@ -294,14 +301,14 @@ for L = 1:floor(TEND/dt)
     if pde.checkAnalytic
         
         % Check the wavelet space solution with the analytic solution
-        fval_analytic = exact_solution_vector(HASHInv,pde,(L)*dt);
+        fval_analytic = exact_solution_vector(HASHInv,pde,L*dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
         disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
         % Check the real space solution with the analytic solution
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
-        f2d_analytic = pde.ExactF(xx,vv,(L)*dt);
+        f2d_analytic = pde.ExactF(xx,vv,L*dt);
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
         disp(['    real space absolute err : ', num2str(err_real)]);
         disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);

@@ -27,8 +27,6 @@ pde.applySpecifiedE = 1;
 pde.implicit = 0;
 pde.checkAnalytic = 1;
 
-% pde.exactE = @exactE;
-
 pde.source1x = @source1x;
 pde.source1v = @source1v;
 pde.source1t = @source1t;
@@ -74,10 +72,6 @@ function f=E(x,t,p)
 f=Ex(x).*Et(t);
 end
 
-% function f = exactE(x, params)
-% % Exact solution for E
-% f=x-x+1;
-% end
 % source term--fully seperable functions
 % source = source1+source2+source3
 
