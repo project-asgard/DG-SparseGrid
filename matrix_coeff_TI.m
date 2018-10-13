@@ -1,4 +1,4 @@
-function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmax,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=============================================================
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -40,7 +40,7 @@ Dp_val = dlegendre(quad_x,k);
 % Define Matrices
 %---------------------------
 nx=2^(Lev_x);
-hx=Lmax/nx;
+hx=(Lmax-Lmin)/nx;
 Jacobi_x=hx;
 dof_1D_x=k*nx;
 
@@ -58,7 +58,7 @@ end;
 
 
 nv=2^(Lev_v);
-hv=2*Vmax/nv;
+hv=(Vmax-Vmin)/nv;
 Jacobi_v=hv;
 dof_1D_v=k*nv;
 
@@ -379,7 +379,7 @@ DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
 %======================================
 % (vf(v),w(v))_Kv
 for Lv=0:nv-1
-    xi_v=(( (quad_x+1)/2+Lv)*hv-Vmax); % mapping from [-1,1] to physical domain
+    xi_v=(( (quad_x+1)/2+Lv)*hv+Vmin); % mapping from [-1,1] to physical domain
     %---------------------------------------------
     % Matrix
     %---------------------------------------------

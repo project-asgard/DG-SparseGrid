@@ -150,7 +150,7 @@ fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
 
 %%% Build the time independent coefficient matricies.
 if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
-[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
+[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
 %%% Generate A_encode / A_data time independent data structures.
