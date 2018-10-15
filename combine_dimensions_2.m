@@ -33,42 +33,43 @@ for j=1:N % loop over number of addative terms
         I1=ll(5);
         I2=ll(6);
         
-%         for k1 = 1:Deg
-%             
-%             Index1 = Deg*(I1-1)+k1;
-%             
-%             for k2 = 1:Deg
-%                 
-%                 Index2 = Deg*(I2-1)+k2;
-%                 Index0 = Deg^2*(i-1)+Deg*(k1-1)+k2;
-%                 
-%                 ii = Index0;
-%                 jj = 1;
-%                 %vv = kron( fv(Index1), fx(Index2) ) * ft;
-%                 vv = fv(Index1) * fx(Index2) * ft;
-%                 mm = Deg^Dim * nHash;
-%                 nn = 1;
-%                 
-%                 fval = fval + sparse(ii,jj,vv,mm,nn);
-%                 
-%             end
-%         end
+        for k1 = 1:Deg
+            
+            Index1 = Deg*(I1-1)+k1;
+            
+            for k2 = 1:Deg
+                
+                Index2 = Deg*(I2-1)+k2;
+                Index0 = Deg^2*(i-1)+Deg*(k1-1)+k2;
+                
+                ii = Index0;
+                jj = 1;
+                %vv = kron( fv(Index1), fx(Index2) ) * ft;
+                vv = fv(Index1) * fx(Index2) * ft;
+                mm = Deg^Dim * nHash;
+                nn = 1;
+                
+                %disp([Index0 Index1 Index2 vv]);
+                fval(Index0) = fval(Index0) + vv;%sparse(ii,jj,vv,mm,nn);
+                
+            end
+        end
+        
+        
+%         index_I1=[(I1-1)*Deg+1 : I1*Deg];
+%         index_I2=[(I2-1)*Deg+1 : I2*Deg];
 %         
-        
-        index_I1=[(I1-1)*Deg+1 : I1*Deg];
-        index_I2=[(I2-1)*Deg+1 : I2*Deg];
-        
-        Index = Deg^2*(i-1)+1:Deg^2*i;
-        
-        %A = kron( fv(:,index_I1), fx(:,index_I2) );
-        %%A = kron( fv(index_I1), fx(index_I2) );
-        %B = ft(Index);
-        %%B = ft;
-        
-        %%tmp = A * B;
-	tmp = fx(index_I2)*ft*transpose(fv(index_I1));
-        
-        fval(Index,1) = fval(Index,1) + tmp(:);
+%         Index = Deg^2*(i-1)+1:Deg^2*i;
+%         
+%         %A = kron( fv(:,index_I1), fx(:,index_I2) );
+%         %%A = kron( fv(index_I1), fx(index_I2) );
+%         %B = ft(Index);
+%         %%B = ft;
+%         
+%         %%tmp = A * B;
+% 	tmp = fx(index_I2)*ft*transpose(fv(index_I1));
+%         
+%         fval(Index,1) = fval(Index,1) + tmp(:);
         
     end
     
