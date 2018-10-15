@@ -1,4 +1,4 @@
-function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
+function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -13,7 +13,9 @@ function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
 % where $\rho\left(x,t\right)=\int_v f(x,v,t) dv$.
 
 format short e
-addpath(genpath(pwd))
+
+folder = fileparts(which(mfilename));
+addpath(genpath(folder));
 
 %% Step 1. Set input parameters
 % pde :  A structure containing the initial condition and domain
@@ -57,8 +59,13 @@ if ~exist('compression','var') || isempty(compression)
     compression = 4;
 end
 if ~exist('implicit','var') || isempty(implicit)
-    % Use or not the compression reference version
     pde.implicit = 0;
+else
+    pde.implicit = implicit;
+end
+
+if pde.implicit
+    compression = 1;
 end
 
 % Get x and v domain ranges.
@@ -82,6 +89,8 @@ pde.params.DimV = DimV;
 
 % Degree
 pde.params.Deg = Deg;
+
+params = pde.params;
 
 % Time step.
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
@@ -111,7 +120,7 @@ fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-[HASH,HASHInv] = HashTable(Lev,Dim);
+[HASH,HASHInv,index1D] = HashTable2(Lev,Dim);
 nHash = numel(HASHInv);
 
 %%% Construct the connectivity.
@@ -127,8 +136,6 @@ Con2D = Connect2D(Lev,HASH,HASHInv);
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
 
-clear fv fx
-
 %% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
 %   Operators:
@@ -143,7 +150,7 @@ clear fv fx
 
 %%% Build the time independent coefficient matricies.
 if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
-[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmax,Vmax,...
+[vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
 %%% Generate A_encode / A_data time independent data structures.
@@ -186,19 +193,29 @@ if ~quiet; disp('[5.0] Plotting intial condition'); end
 
 
 % Construct data for reverse MWT in 2D
-[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmax,Vmax,...
+[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 [xx,vv]=meshgrid(x_node,v_node);
 
 % Plot initial condition
 if ~quiet
     % Transform from wavelet space to real space
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);  
+    tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
     figure(1000)
-    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
-    axis([0 Lmax -Vmax Vmax])
-    view(0,90)
-    colorbar
+    
+    f2d0 = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+    
+    ax1 = subplot(1,2,1);
+    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    %caxis([-range1 +range1]);
+    title('df');
+    
+    ax2 = subplot(1,2,2);
+    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    %caxis([range2n +range2]);
+    title('f');
 end
 
 % Write the initial condition to file.
@@ -206,12 +223,13 @@ write_fval = 0;
 if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
 
 count=1;
-plotFreq = 10;
+plotFreq = 1;
+err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:floor(TEND/dt)
     
-    time(count) = L*dt;
+    time(count) = (L-1)*dt;
     timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
     
     if ~quiet; disp(timeStr); end
@@ -219,14 +237,14 @@ for L = 1:floor(TEND/dt)
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
         if ~quiet; disp('    [a] Solve poisson to get E'); end
-        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
     end
     
     if pde.applySpecifiedE
         %%% Apply specified E
         if ~quiet; disp('    [a] Apply specified E'); end
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
-        E = E * pde.Et(time(count));
+        E = E * pde.Et(time(count),params);
     end
     
     %%% Generate EMassX time dependent coefficient matrix.
@@ -265,10 +283,10 @@ for L = 1:floor(TEND/dt)
     
     %%% Write data for FK6D test
     
-    fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
-    fd = fopen(fname,'w'); % where file.dat is the name you want to save to
-    fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
-    fclose(fd);
+    %     fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
+    %     fd = fopen(fname,'w'); % where file.dat is the name you want to save to
+    %     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
+    %     fclose(fd);
     
     %%% Plot results
     if mod(L,plotFreq)==0 && ~quiet
@@ -276,33 +294,44 @@ for L = 1:floor(TEND/dt)
         figure(1000)
         
         tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
-        f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
-        mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','interp');
-        axis([0 Lmax -Vmax Vmax])
-        view(0,90)
-        colorbar
         
-        title(['Time at ', timeStr])
+        f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+        
+        ax1 = subplot(1,2,1);
+        mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([-range1 +range1]);
+        title('df');
+        
+        ax2 = subplot(1,2,2);
+        mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([range2n +range2]);
+        title('f');
+        
+        title(['f @ ', timeStr])
         pause (0.01)
     end
+    
+    %%% Get the real space solution
+    fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
     
     %%% Check against known solution
     if pde.checkAnalytic
         
         % Check the wavelet space solution with the analytic solution
-        fval_analytic = exact_solution_vector(HASHInv,pde,time(count));
+        fval_analytic = exact_solution_vector(HASHInv,pde,L*dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
-        %disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
-        %disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+        disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
+        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
         % Check the real space solution with the analytic solution
-        fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
-        f2d_analytic = pde.ExactF(xx,vv,time(count));
+        f2d_analytic = pde.ExactF(xx,vv,L*dt);
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
-        %disp(['    real space absolute err : ', num2str(err_real)]);
-        %disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
-       
+        disp(['    real space absolute err : ', num2str(err_real)]);
+        disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
+        
         err = err_wavelet;
     end
     

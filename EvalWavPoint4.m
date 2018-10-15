@@ -4,7 +4,9 @@ function [f_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,x)
 % Meval denotes the level and cel, where contains point x
 % f_loc denotes the value of func_wavelet(x)
 %----------------------------------------------------------------------
+
 load(['Two-Scale/two_scale_rel_',num2str(Deg),'.mat']);
+%[H0,G0,scale_co,phi_co]=MultiwaveletGen(k)
 
 range = Lmax-Lmin;
 
