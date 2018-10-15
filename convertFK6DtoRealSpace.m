@@ -232,19 +232,25 @@ end
         max_tt = nS;
     end;
     
+    range1 = max(abs(df2d_t(:)));
+    range2 = max(abs(f2d_t(:)));
+    
     for tt = 1:max_tt,
         
         ax1 = subplot(1,2,1);
         mesh(xx,vv,df2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])
+        caxis([-range1 +range1]);
         title('df');
         
         ax2 = subplot(1,2,2);
         mesh(xx,vv,f2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])
+        caxis([-range2 +range2]);
         title('f');
         
-        pause(0.01)
+        
+        pause(0.5)
         
     end
     
