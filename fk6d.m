@@ -200,12 +200,22 @@ if ~quiet; disp('[5.0] Plotting intial condition'); end
 % Plot initial condition
 if ~quiet
     % Transform from wavelet space to real space
-    tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);  
+    tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
     figure(1000)
-    mesh(xx,vv,reshape(tmp,Deg*2^LevX,Deg*2^LevV)','FaceColor','interp','EdgeColor','interp');
-    axis([0 Lmax -Vmax Vmax])
-    view(0,90)
-    colorbar
+    
+    f2d0 = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+    
+    ax1 = subplot(1,2,1);
+    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    %caxis([-range1 +range1]);
+    title('df');
+    
+    ax2 = subplot(1,2,2);
+    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    %caxis([range2n +range2]);
+    title('f');
 end
 
 % Write the initial condition to file.
@@ -273,10 +283,10 @@ for L = 1:floor(TEND/dt)
     
     %%% Write data for FK6D test
     
-%     fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
-%     fd = fopen(fname,'w'); % where file.dat is the name you want to save to
-%     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
-%     fclose(fd);
+    %     fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
+    %     fd = fopen(fname,'w'); % where file.dat is the name you want to save to
+    %     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
+    %     fclose(fd);
     
     %%% Plot results
     if mod(L,plotFreq)==0 && ~quiet
@@ -284,13 +294,22 @@ for L = 1:floor(TEND/dt)
         figure(1000)
         
         tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
-        f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
-        mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','interp');
-        axis([Lmin Lmax -Vmax Vmax])
-        view(0,90)
-        colorbar
         
-        title(['Time at ', timeStr])
+        f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+        
+        ax1 = subplot(1,2,1);
+        mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([-range1 +range1]);
+        title('df');
+        
+        ax2 = subplot(1,2,2);
+        mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([range2n +range2]);
+        title('f');
+        
+        title(['f @ ', timeStr])
         pause (0.01)
     end
     
@@ -312,7 +331,7 @@ for L = 1:floor(TEND/dt)
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
         disp(['    real space absolute err : ', num2str(err_real)]);
         disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
-       
+        
         err = err_wavelet;
     end
     

@@ -74,16 +74,6 @@ end
 function f=E(x,t,p)
 f=x.*0;
 end
-function f=F(x,v,t,p)
-A = p.A;
-k_0 = p.k_0;
-f=Fv_0(v).*(A*cos(k_0*(x-v*t)));
-end
-function f=rho(x,t,p)
-A = p.A;
-k_0 = p.k_0;
-f = -A*cos(k_0*x).*exp(-k_0*t);
-end
 
 % source term--fully seperable functions
 % source = source1+source2+source3
