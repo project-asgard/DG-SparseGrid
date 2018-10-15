@@ -6,11 +6,12 @@ addpath(genpath('./'));
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 idebug = 0;
+use_find = 0;
 
 if ~exist('filename','var') || isempty(filename)
     filename = 'tests/convertFK6DtoRealSpace/convert-test-fval-MWT.h5';
     filename2 = 'tests/convertFK6DtoRealSpace/convert-test-f2d_t.mat';
-    idebug = 1;
+    idebug = 0;
 end
     
     isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
@@ -147,8 +148,15 @@ end
             % --------------------------------------------------
             % Note K1 and K2 should have contiguous index values
             % --------------------------------------------------
-            K1 = find( sum(fv_loc(index_I1,:) ~= 0, 1 ));
-            K2 = find( sum(fx_loc(index_I2,:) ~= 0, 1 ));
+            if (use_find),
+              K1 = find( sum(fv_loc(index_I1,:) ~= 0, 1 ));
+              K2 = find( sum(fx_loc(index_I2,:) ~= 0, 1 ));
+            else
+                [K1_start,K1_end] = calc_overlap_index(n1,i1, Lev, Deg);
+                [K2_start,K2_end] = calc_overlap_index(n2,i2, Lev, Deg);
+                K1 = K1_start:K1_end;
+                K2 = K2_start:K2_end;
+           end;
             
             % --------------------------------------------
             % note convert to full storage to use efficient
