@@ -12,6 +12,7 @@ FMWT = OperatorTwoScale(Deg,2^Lev);
 quad_num = 10;
 [quad_x,quad_w] = lgwt(quad_num,-1,1);
 
+
 % Get the Legendre basis function evaluated at the Legendre-Gauss nodes up
 % to order k.
 

@@ -120,7 +120,9 @@ fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-[HASH,HASHInv,index1D] = HashTable2(Lev,Dim);
+%[HASH,HASHInv,index1D] = HashTable2(Lev,Dim);
+[HASH,HASHInv] = HashTable(Lev,Dim);
+
 nHash = numel(HASHInv);
 
 %%% Construct the connectivity.
@@ -227,7 +229,7 @@ plotFreq = 1;
 err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
-for L = 1:floor(TEND/dt)
+for L = 1:50%floor(TEND/dt)
     
     time(count) = (L-1)*dt;
     timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
@@ -237,7 +239,8 @@ for L = 1:floor(TEND/dt)
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
         if ~quiet; disp('    [a] Solve poisson to get E'); end
-        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
+        %[E,u] = PoissonSolve2(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
+        [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
     end
     
     if pde.applySpecifiedE
