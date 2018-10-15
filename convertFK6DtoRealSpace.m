@@ -1,6 +1,6 @@
 % Run with no arguments to test.
 
-function [f2d] = convertFK6DtoRealSpace(filename)
+%function [f2d] = convertFK6DtoRealSpace(filename)
 
 addpath(genpath('./'));
 
@@ -26,13 +26,14 @@ end
         % run Python script to grab attributes
         % ------------------------------------
         Deg = double(4);
-        Lev = double(5);
-        dt = 7.716*10^-11;
+        Lev = double(6);
+        %dt = 7.716*10^-11;
+        dt = 0.002797;
         Lmin = 0.0;
-        Lmax = 1.0;
-        Vmin = -4500000.0;
-        Vmax = 4500000.0;
-        x1 = linspace(0,1,32);
+        Lmax = 20.944;
+        Vmin = -13.0;
+        Vmax = 13.0;
+        x1 = linspace(0,1,2^Lev);
     else
         timeStride = 1;
         info = h5info(filename);
@@ -180,6 +181,22 @@ end
                 is_contiguous_K1 = numel(K1) == (max_K1-min_K1+1);
                 max_K2 = max(K2(:)); min_K2 = min(K2(:));
                 is_contiguous_K2 = numel(K2) == (max_K2-min_K2+1);
+
+                [K1_start,K1_end] = calc_overlap_index(n1,i1, Lev, Deg);
+                [K2_start,K2_end] = calc_overlap_index(n2,i2, Lev, Deg);
+
+                isok = (K1_start == min_K1) && (K1_end == max_K1) && ...
+                       (K2_start == min_K2) && (K2_end == max_K2);
+
+
+
+                if (~isok),
+                  disp(sprintf('** error ** n1=%d,i1=%d,K1=%d:%d,  K1_start:K1_end=%d:%d ', ...
+                                n1,   i1,   min_K1,max_K1, K1_start,K1_end));
+                  disp(sprintf('** error ** n2=%d,i2=%d,K2=%d:%d,  K2_start:K2_end=%d:%d ', ...
+                                n2,   i2,   min_K2,max_K2, K2_start,K2_end));
+                end;
+
                 
                 if (~is_contiguous_K1),
                     disp(sprintf('numel(K1)=%g  ** K1 is not contiguous ** ',...
@@ -258,5 +275,5 @@ end
         
     end
     
-end
+%end
 
