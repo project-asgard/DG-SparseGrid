@@ -1,4 +1,4 @@
-function [forwardHash,inverseHash] = HashTable(Lev,Dim)
+function [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType)
 %-------------------------------------------------
 % Generate 2D Hash Table s.t n1+n2<=Lev
 % Input: Lev:: Level information
@@ -25,8 +25,12 @@ inverseHash = {}; % Empty cell array
 
 for n1=0:Lev
     for i1=0:max(0,2^max(0,n1-1)-1)
-        
-        for n2=0:Lev-n1
+        if gridType == 'FG'
+            Lev_tmp = Lev;
+        else
+            Lev_tmp = Lev-n1;
+        end
+        for n2=0:Lev_tmp
             for i2=0:max(0,2^max(0,n2-1)-1)
                 
                 key=[n1,n2,i1,i2];

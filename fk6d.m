@@ -1,4 +1,4 @@
-function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
+function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
 
 %% MATLAB (reference) version of the DG-SG solver
 % The default execution solves the Vlasov-Poisson system of equations
@@ -57,6 +57,9 @@ end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
     compression = 4;
+end
+if ~exist('gridType','var') || isempty(gridType)
+    gridType = 'SG'%'FG';
 end
 if ~exist('implicit','var') || isempty(implicit)
     pde.implicit = 0;
@@ -121,7 +124,7 @@ fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
 %[HASH,HASHInv,index1D] = HashTable2(Lev,Dim);
-[HASH,HASHInv] = HashTable(Lev,Dim);
+[HASH,HASHInv] = HashTable(Lev,Dim,gridType);
 
 nHash = numel(HASHInv);
 
