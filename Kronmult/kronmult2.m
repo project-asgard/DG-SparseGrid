@@ -129,6 +129,6 @@ end;
 
 Y = reshape(  Y, (nrow2*nrow1), nvec );
 
-end;
+end
 
 

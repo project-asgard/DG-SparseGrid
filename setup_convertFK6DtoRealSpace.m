@@ -1,0 +1,2 @@
+addpath('Kronmult');
+addpath('PDE');
