@@ -235,12 +235,12 @@ plotFreq = 1;
 err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
-nsteps = floor( TEND/dt);
+nsteps = max(1,floor( TEND/dt));
 for L = 1:nsteps,
     
     tic;
     time(count) = (L-1)*dt;
-    timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
+    timeStr = sprintf('Step %i of %i',L,nsteps);
     
     if ~quiet; disp(timeStr); end
     
