@@ -3,8 +3,13 @@ function Y = kronmult2(A1,A2, X )
 
 idebug = 0;
 
-[nrow1,ncol1] = size(A1);
-[nrow2,ncol2] = size(A2);
+% [nrow1,ncol1] = size(A1);
+nrow1 = size(A1,1);
+ncol1 = size(A1,2);
+
+% [nrow2,ncol2] = size(A2);
+nrow2 = size(A2,1);
+ncol2 = size(A2,2);
 
 
 nrowX = ncol1*ncol2;
