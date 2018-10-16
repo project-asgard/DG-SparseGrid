@@ -1,4 +1,4 @@
-function [forwardHash,inverseHash] = HashTable(Lev,Dim)
+function [forwardHash,inverseHash] = HashTable(Lev,Dim,TypeGrid)
 %-------------------------------------------------
 % Generate 2D Hash Table s.t n1+n2<=Lev
 % Input: Lev:: Level information
@@ -12,7 +12,7 @@ function [forwardHash,inverseHash] = HashTable(Lev,Dim)
 %        key = [Lev_1,Lev_2,Cell_1,Cell_2]
 %-------------------------------------------------
 
-global hash_format
+global hash_format 
 
 % Specifies the number of allowable integers in the elements of the hash key
 % If more are needed, i.e., > 99, then change to 'i%3.3i_'.
@@ -25,8 +25,13 @@ inverseHash = {}; % Empty cell array
 
 for n1=0:Lev
     for i1=0:max(0,2^max(0,n1-1)-1)
-        
-        for n2=0:Lev-n1
+        if TypeGrid == 'FG'
+            Lev_tmp = Lev;
+        else
+            Lev_tmp = Lev-n1;
+        end
+        for n2 = 0 : Lev_tmp %0:Lev-n1
+            
             for i2=0:max(0,2^max(0,n2-1)-1)
                 
                 key=[n1,n2,i1,i2];

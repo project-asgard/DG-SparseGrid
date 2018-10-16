@@ -7,8 +7,9 @@ function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv)
 
 if pde.implicit   
     compression = 1;  
-    %f = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
-    f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);    
+    
+    f = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
+%     f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);    
 else   
     f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);   
 end

@@ -15,6 +15,9 @@ function [fval,err] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit)
 format short e
 addpath(genpath(pwd))
 
+TypeGrid = 'SG'%'FG'; % 
+
+
 %% Step 1. Set input parameters
 % pde :  A structure containing the initial condition and domain
 % information. See PDE/vlasov4.m for and example. Note that this does not
@@ -54,7 +57,7 @@ if ~exist('quiet','var') || isempty(quiet)
 end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
-    compression = 4;
+    compression = 1; % 
 end
 if ~exist('implicit','var') || isempty(implicit)
     % Use or not the compression reference version
@@ -111,7 +114,7 @@ fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-[HASH,HASHInv] = HashTable(Lev,Dim);
+[HASH,HASHInv] = HashTable(Lev,Dim,TypeGrid);
 nHash = numel(HASHInv);
 
 %%% Construct the connectivity.
