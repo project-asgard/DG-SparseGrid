@@ -234,6 +234,7 @@ err = 0;
 if ~quiet; disp('[7] Advancing time ...'); end
 for L = 1:50%floor(TEND/dt)
     
+    tic;
     time(count) = (L-1)*dt;
     timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
     
@@ -342,6 +343,8 @@ for L = 1:50%floor(TEND/dt)
     end
     
     count=count+1;
+    t1 = toc;
+    disp(['Took ' num2str(t1) ' [s]']);
     
 end
 
