@@ -1,7 +1,6 @@
 function Y = kronmult1(A1, X )
 % Y = kronmult1(A1, X )
-nrow1 = size(A1,1);
-ncol1 = size(A1,2);
+[nrow1,ncol1] = size(A1);
 
 % -----------
 % extra check
