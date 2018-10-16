@@ -318,13 +318,13 @@ elseif compression == 4
             tmpA = A_Data.vMassV(Index_I1,Index_J1);
             tmpB = A_Data.GradX(Index_I2,Index_J2);
             
-            fast = 1;
+            use_kronmult2 = 0;
             
-            if fast
-                ftmp(globalRow)=ftmp(globalRow)+kron(tmpA,tmpB)*f(globalCol);
-                
+            if use_kronmult2
+                ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
             else
-                ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
+                ftmp(globalRow)=ftmp(globalRow)+ ...
+		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
                 
             end          
                          
@@ -333,11 +333,12 @@ elseif compression == 4
             tmpA = A_Data.GradV(Index_I1,Index_J1);
             tmpB = A_Data.EMassX(Index_I2,Index_J2);
             
-            if fast
-                ftmp(globalRow)=ftmp(globalRow)+kron(tmpA,tmpB)*f(globalCol);
+            if use_kronmult2
+                ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
                 
             else
-                ftmp(globalRow)=ftmp(globalRow)+kron_mult2(tmpA,tmpB,f(globalCol));
+                ftmp(globalRow)=ftmp(globalRow)+ ...
+		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
                 
             end
             
