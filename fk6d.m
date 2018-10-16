@@ -1,6 +1,8 @@
 function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
 
 %% MATLAB (reference) version of the DG-SG solver
+% [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
+%
 % The default execution solves the Vlasov-Poisson system of equations
 %
 % $$f_t + v\frac{\partial f}{\partial x} + E\left(x,t\right)\frac{\partial
@@ -97,6 +99,7 @@ params = pde.params;
 
 % Time step.
 dt = Lmax/2^LevX/Vmax/(2*Deg+1);
+if ~quiet; disp(sprintf('dt = %g', dt ));
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
 %
@@ -232,7 +235,8 @@ plotFreq = 1;
 err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
-for L = 1:50%floor(TEND/dt)
+nsteps = floor( TEND/dt);
+for L = 1:nsteps,
     
     tic;
     time(count) = (L-1)*dt;
