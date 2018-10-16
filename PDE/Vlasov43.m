@@ -1,16 +1,18 @@
-function pde=Vlasov5
-% Numerical Example for Vlasov Equation
+function pde=Vlasov43
+% Example 4.3for Vlasov Equation
 % Two-stream instability
 
 % parameters
 
-p.k_0 = 0.5;
+p.k_0 = 2.0/13.0;
 p.A = 0.05;
+p.v_t = 0.3;
+p.u = 0.99;
 
 p.Lmin = 0;
-p.Lmax = 4*pi;
-p.Vmin = -2*pi;
-p.Vmax = +2*pi;
+p.Lmax = 13*pi;
+p.Vmin = -5;
+p.Vmax = +5;
 
 p.TEND = 1;
 
@@ -20,7 +22,6 @@ pde.Fxv_0 = @Fxv_0;
 pde.Ex = @Ex;
 pde.Et = @Et;
 pde.E = @E;
-pde.rho = @rho;
 pde.p = p;
 
 pde.params = p;
@@ -59,7 +60,9 @@ f=(1+A*cos(k_0*x));
 end
 function f=Fv_0(v,p)
 % Initial condition for v variable
-f=v.^2.*exp(-v.^2/2)/sqrt(2*pi);
+u = p.u;
+v_t = p.v_t;
+f=1/(2*v_t*sqrt(2*pi)) * ( exp(-abs(u+v).^2/(2*v_t^2)) + exp(-abs(u-v).^2/(2*v_t^2)) );
 end
 function f=Fxv_0(x,v,p)
 f=Fv_0(v).*Fx_0(x);
