@@ -85,6 +85,7 @@ function [ftmp,A] = ApplyA(A_Data,f,compression,Deg)
 %-----------------------------------
 dof = size(f,1);
 ftmp=sparse(dof,1);
+use_kronmult2 = 0;
 
 
 if compression == 0
@@ -251,7 +252,20 @@ elseif compression == 3
         IndexI=A_Data{i}.IndexI;
         IndexJ=A_Data{i}.IndexJ;
         
-        ftmp(IndexI)=ftmp(IndexI)+kron_mult2(tmpA,tmpB,f(IndexJ));
+	if (use_kronmult2),
+          ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
+        else
+          % [nrA,ncA] = size(tmpA);
+	  % [nrB,ncB] = size(tmpB);
+
+	  nrA = size(tmpA,1);
+	  ncA = size(tmpA,2);
+	  nrB = size(tmpB,1);
+	  ncB = size(tmpB,2);
+
+          ftmp(IndexI)=ftmp(IndexI) + ...
+	       reshape(tmpB * reshape(f(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+	end;
         
     end
     
@@ -318,7 +332,6 @@ elseif compression == 4
             tmpA = A_Data.vMassV(Index_I1,Index_J1);
             tmpB = A_Data.GradX(Index_I2,Index_J2);
             
-            use_kronmult2 = 0;
             
             if use_kronmult2
                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
