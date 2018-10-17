@@ -1,6 +1,8 @@
 function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
 
 %% MATLAB (reference) version of the DG-SG solver
+% [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
+%
 % The default execution solves the Vlasov-Poisson system of equations
 %
 % $$f_t + v\frac{\partial f}{\partial x} + E\left(x,t\right)\frac{\partial
@@ -96,7 +98,10 @@ pde.params.Deg = Deg;
 params = pde.params;
 
 % Time step.
-dt = Lmax/2^LevX/Vmax/(2*Deg+1);
+CFL = 0.1;
+dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL
+
+if ~quiet; disp(sprintf('dt = %g', dt ));
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
 %
@@ -124,6 +129,7 @@ fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
 %%% Construct forward and inverse hash tables.
 if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
 %[HASH,HASHInv,index1D] = HashTable2(Lev,Dim);
+
 [HASH,HASHInv] = HashTable(Lev,Dim,gridType);
 
 nHash = numel(HASHInv);
@@ -232,11 +238,12 @@ plotFreq = 1;
 err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
-for L = 1:floor(TEND/dt)
+nsteps = max(1,floor( TEND/dt));
+for L = 1:nsteps,
     
     tic;
     time(count) = (L-1)*dt;
-    timeStr = sprintf('Step %i of %i',L,floor(TEND/dt));
+    timeStr = sprintf('Step %i of %i',L,nsteps);
     
     if ~quiet; disp(timeStr); end
     
@@ -253,7 +260,12 @@ for L = 1:floor(TEND/dt)
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
         E = E * pde.Et(time(count),params);
     end
-    
+            ax3 = subplot(2,2,3);
+            plot(x_node,Meval_x*u,'r-o')
+            title(['time = ',num2str(dt*L)])
+            ax4 = subplot(2,2,4);
+            plot(x_node,Meval_x*E,'r-o')
+            
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
     EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
@@ -304,13 +316,15 @@ for L = 1:floor(TEND/dt)
         
         f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
         
-        ax1 = subplot(1,2,1);
+%         ax1 = subplot(1,2,1);
+        ax1 = subplot(2,2,1);
         mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])
         %caxis([-range1 +range1]);
         title('df');
         
-        ax2 = subplot(1,2,2);
+%         ax2 = subplot(1,2,2);
+        ax2 = subplot(2,2,2);
         mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])
         %caxis([range2n +range2]);
