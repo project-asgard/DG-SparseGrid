@@ -232,7 +232,7 @@ plotFreq = 1;
 err = 0;
 
 if ~quiet; disp('[7] Advancing time ...'); end
-for L = 1:50%floor(TEND/dt)
+for L = 1:floor(TEND/dt)
     
     tic;
     time(count) = (L-1)*dt;
@@ -345,6 +345,15 @@ for L = 1:50%floor(TEND/dt)
     count=count+1;
     t1 = toc;
     disp(['Took ' num2str(t1) ' [s]']);
+    
+    %%% Save output
+    saveOutput = 1;
+    if saveOutput
+        stat = mkdir('output');
+        fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
+        f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
+        save(fName,'f2d','fval');
+    end
     
 end
 
