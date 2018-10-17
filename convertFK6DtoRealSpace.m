@@ -1,6 +1,6 @@
 % Run with no arguments to test.
 
-%function [f2d] = convertFK6DtoRealSpace(filename)
+function [f2d] = convertFK6DtoRealSpace(filename)
 
 addpath(genpath('./'));
 

@@ -12,6 +12,10 @@ function [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType)
 %        key = [Lev_1,Lev_2,Cell_1,Cell_2]
 %-------------------------------------------------
 
+if ~exist('gridType','var') || isempty(gridType)
+    gridType = 'SG'; % Set default gridType to SG
+end
+
 global hash_format
 
 % Specifies the number of allowable integers in the elements of the hash key
