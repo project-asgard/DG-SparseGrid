@@ -62,6 +62,11 @@ if ~exist('compression','var') || isempty(compression)
 end
 if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG'%'FG';
+else
+    if strcmp(gridType,'SG') || strcmp(gridType,'FG')
+    else
+        error("gridType must be set to 'SG' or 'FG'"); 
+    end
 end
 if ~exist('implicit','var') || isempty(implicit)
     pde.implicit = 0;

@@ -29,7 +29,7 @@ inverseHash = {}; % Empty cell array
 
 for n1=0:Lev
     for i1=0:max(0,2^max(0,n1-1)-1)
-        if gridType == 'FG'
+        if strcmp(gridType,'FG')
             Lev_tmp = Lev;
         else
             Lev_tmp = Lev-n1;
