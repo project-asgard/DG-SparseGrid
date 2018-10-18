@@ -1,4 +1,4 @@
-function Con2D=Connect2D(Lev,HASH,HASHInv)
+function Con2D=Connect2D(Lev,HASH,HASHInv,gridType)
 %================================================================
 % This code is to generate the 2D connectivity based on Lev,HASH
 % Here, we consider the maximum connectivity
@@ -72,7 +72,13 @@ for ii=1:nHash
     for i1=1:size(LevCell1,1)
         for i2=1:size(LevCell2,1)
             
-            if LevCell1(i1,1)+LevCell2(i2,1)<=Lev % check whether m1+m2<=Lev
+            if gridType == 'FG'
+                Lev_tmp = Lev + Lev;
+            elseif gridType == 'SG'
+                Lev_tmp = Lev;
+            end
+                    
+            if LevCell1(i1,1)+LevCell2(i2,1)<=Lev_tmp%Lev % check whether m1+m2<=Lev % modified by Lin
                 
                 key=[LevCell1(i1,1) LevCell2(i2,1) LevCell1(i1,2) LevCell2(i2,2)];
                 index_J = [index_J, HASH.(sprintf(hash_format,key))];
@@ -90,11 +96,11 @@ end
 %----------------------------
 % matrix for 2D connectivity
 %----------------------------
-% Con2D_full=sparse(HASH.dof);
+% Con2D_full=sparse(size(HASHInv,2));
 % for i=1:size(Con2D,2)
 %     Con2D_full(i,Con2D{i})=1;
 % end
-%
+
 % figure;spy(Con2D_full)
 % return
 end

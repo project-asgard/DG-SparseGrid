@@ -141,7 +141,7 @@ nHash = numel(HASHInv);
 
 %%% Construct the connectivity.
 if ~quiet; disp('[2.2] Constructing connectivity table'); end
-Con2D = Connect2D(Lev,HASH,HASHInv);
+Con2D = Connect2D(Lev,HASH,HASHInv,gridType);
 
 %%% Get the multi-wavelet coefficient representation on the sparse-grid,
 %%% i.e., above we transformed each of the initial condition 1D
