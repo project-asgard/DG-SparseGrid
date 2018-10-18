@@ -17,11 +17,14 @@ Dp_2 = dlegendre( 1,Deg);
 p_1 = legendre(-1,Deg);
 p_2 = legendre(1,Deg);
 
-[quad_x,quad_w]=lgwt(quad_num,-1,1);
+[quad_x,quad_w] = lgwt(quad_num,-1,1);
 
 p_val = legendre(quad_x,Deg);
 Dp_val = dlegendre(quad_x,Deg);
 
+% rhs = @(x,k)((pi^2-k^2)*cos(pi*x));
+% exactu = @(x,k)(cos(pi*x));
+% bc_g = @(x,k,n)(-pi*sin(pi*x)*n+1i*k*cos(pi*x));
 
 rhs = @(x,k)((pi^2-k^2)*sin(pi*x));
 exactu = @(x,k)(sin(pi*x));
@@ -72,18 +75,36 @@ for LL=0:2^n-1
     if LL==0 % Initial Cell
         Iu=[meshgrid(Deg*LL+1:Deg*(LL+1)),meshgrid(Deg*(LL+1)+1:Deg*(LL+2))];
         Iv=[meshgrid(Deg*LL+1:Deg*(LL+1))',meshgrid(Deg*LL+1:Deg*(LL+1))'];
-        val = tmp_val (:,Deg+1:end);
+%         val = tmp_val (:,Deg+1:end);
         
-        val_bc = 1i*k*(-p_1)'*(p_1)/2*2^(2*n+1);
+        val=2^(2*n+1)*[...
+            Dp_val'*(quad_w.*Dp_val)+...
+            -k^2*eye(Deg)/(2^(2*n+1))+...
+            -(... %-p_1'*Dp_1....
+            +p_2'*Dp_2/2 )+...
+            -(Dp_2'*p_2/2)+sigma/2*(p_2'*p_2),...
+           ... 
+            -(p_2'*Dp_1/2)-(-Dp_2'*p_1/2)+sigma/2*(-p_2'*p_1); % later cell
+            ]; 
+        
+        val_bc = 1i*k*(-p_1)'*(p_1)/2*2^(2*n+1)*2;
         
         val(:,1:Deg) = val(:,1:Deg) + val_bc;
         
         val_bc = -p_1' * bc_g(0,k,-1)*2^(-n)/2*2^(n/2);
+% val_bc = p_1' * bc_g(0,k,-1)*2^(-n)/2*2^(n/2);
     elseif LL==2^n-1 % End Cell
         Iu=[meshgrid(Deg*(LL-1)+1:Deg*(LL)),meshgrid(Deg*LL+1:Deg*(LL+1))];
         Iv=[meshgrid(Deg*LL+1:Deg*(LL+1))',meshgrid(Deg*LL+1:Deg*(LL+1))'];
-        val = tmp_val(:,1:2*Deg);
-        val_bc = 1i*k*(-p_1)'*(p_1)/2*2^(2*n+1);
+        val = 2^(2*n+1)*[...
+           -(-p_1'*Dp_2/2)-(Dp_1'*p_2/2)+sigma/2*(-p_1'*p_2),... % previous
+           ...
+            Dp_val'*(quad_w.*Dp_val)+...
+            -k^2*eye(Deg)/(2^(2*n+1))+...
+            -(-p_1'*Dp_1/2)+...+p_2'*Dp_2)...
+            -(-Dp_1'*p_1/2)+sigma/2*(p_1'*p_1)];
+            
+        val_bc = 1i*k*(-p_1)'*(p_1)/2*2^(2*n+1)*2;
         
         val(:,Deg+1:2*Deg) = val(:,Deg+1:2*Deg) + val_bc;
         val_bc = p_2' * bc_g(1,k,1)*2^(-n)/2*2^(n/2);
@@ -103,7 +124,7 @@ for LL=0:2^n-1
     b(Iu)=p_val'*(quad_w.*ff)*2^(-n)/2*2^(n/2)+val_bc;
      
      
-     
+     x_node(2*LL+1:2*LL+2,1) = [2^(-n)*LL,2^(-n)*(LL+1)];
      Meval(2*LL+1:2*LL+2,Iu)=2^(n/2)*legendre([-1,1],Deg);
      uu=exactu( xi,k );
      coef_DG(Iu)=p_val'*(quad_w.*uu)*2^(-n)/2*2^(n/2);
@@ -128,7 +149,8 @@ for LL=0:2^n-1
         
         val(:,1:Deg) = val(:,1:Deg) + val_bc;
         
-%         val_bc = -p_1' * bc_g2(0,k,-1)*2^(-n)/2*2^(n/2);
+        val_bc = -p_1' * bc_g(0,k,-1)*2^(-n)/2*2^(n/2);
+%         val_bc = p_1' * bc_g(0,k,-1)*2^(-n)/2*2^(n/2);
     elseif LL==2^n-1 % End Cell
         Iu=[meshgrid(Deg*(LL-1)+1:Deg*(LL)),meshgrid(Deg*LL+1:Deg*(LL+1))];
         Iv=[meshgrid(Deg*LL+1:Deg*(LL+1))',meshgrid(Deg*LL+1:Deg*(LL+1))'];
@@ -136,7 +158,7 @@ for LL=0:2^n-1
         val_bc = 1i*eta2*(-p_1)'*(p_1)/2*2^(2*n+1);
         
         val(:,Deg+1:2*Deg) = val(:,Deg+1:2*Deg) + val_bc;
-%         val_bc = p_2' * bc_g(1,k,1)*2^(-n)/2*2^(n/2);
+        val_bc = p_2' * bc_g(1,k,1)*2^(-n)/2*2^(n/2);
     else
         Iu=[meshgrid(Deg*(LL-1)+1:Deg*(LL)),meshgrid(Deg*LL+1:Deg*(LL+1)),meshgrid(Deg*(LL+1)+1:Deg*(LL+2))];
         Iv=[meshgrid(Deg*LL+1:Deg*(LL+1))', meshgrid(Deg*LL+1:Deg*(LL+1))',meshgrid(Deg*LL+1:Deg*(LL+1))']; 
@@ -168,14 +190,25 @@ ylabel('Relative residual');
 [max(abs(sol_GMRES-coef_DG)) norm(sol_GMRES-coef_DG)]
 it0(2)
 
-sol_1D=M_stiff\b;%*pi^2;
+% M_stiff(1,:)=0; M_stiff(1,1)= 1; b(1) = coef_DG(1);
+% M_stiff(2,:)=0; M_stiff(2,2)= 1; b(2) = coef_DG(2);
+% M_stiff(3,:)=0; M_stiff(3,3)= 1; b(3) = coef_DG(3);
 
+% M_stiff(end-1,:)=0; M_stiff(end-1,end-1)= 1; b(end-1) = coef_DG(end-1);
+% M_stiff(end-2,:)=0; M_stiff(end-2,end-2)= 1; b(end-2) = coef_DG(end-2);
+% M_stiff(end,:)=0; M_stiff(end,end)= 1; b(end) = coef_DG(end);
+
+sol_1D=M_stiff\b;%*pi^2;
+[max(abs(sol_1D-coef_DG)) norm(sol_1D-coef_DG)]
 max(sol_1D-coef_DG)
 subplot(1,2,1)
-plot(Meval*real(sol_1D),'b+')
+plot(x_node,Meval*real(sol_1D),'b+')
 hold on
 % plot(Meval*imag(sol_1D),'r+')
-plot(Meval*coef_DG,'ro')
+% plot(x_node,Meval*coef_DG,'ro')
+plot(x_node,exactu(x_node,k),'r--')
+
+% plot(x_node,exactu(x_node,k)-Meval*real(sol_1D),'r-')
 
 [condest(M_stiff),condest(Aeps\M_stiff)]
 

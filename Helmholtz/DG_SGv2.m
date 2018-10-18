@@ -10,7 +10,7 @@ format short e
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------
-Np = 7;
+Np = 4;
 k=3;
 
 mkdir('Data')
@@ -22,7 +22,7 @@ addpath(genpath(pwd))
 
 n = Np;h = 2^(-n-1);
 %% Compute 1D solution
-[Stiff_1D,b,Meval,coef_MW] = LaplacianMatrix2(n,k,5);
+[Stiff_1D,b,Meval,coef_MW] = LaplacianMatrix2(n,k,1);
 M_mass=speye(size(Stiff_1D,1),size(Stiff_1D,1));
 
 %% 2D sparse-grid
