@@ -5,6 +5,7 @@ function [f2d] = convertFK6DtoRealSpace(filename)
 addpath(genpath('./'));
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
 idebug = 0;
 use_find = 0;
 
@@ -13,8 +14,6 @@ if ~exist('filename','var') || isempty(filename)
     filename2 = 'tests/convertFK6DtoRealSpace/convert-test-f2d_t.mat';
     idebug = 0;
 end
-
-isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
 if (isOctave),
     % -----------------------------
@@ -34,8 +33,9 @@ if (isOctave),
     Lmax = 20.944;
     Vmin = -13.0;
     Vmax = 13.0;
-    x1 = linspace(0,1,2^Lev);
+    x1 = linTpace(0,1,2^Lev);
 else
+    disp('Reading h5 file ...');
     timeStride = 1;
     info = h5info(filename);
     f_size = info.Datasets(2).Dataspace.Size;
@@ -50,12 +50,11 @@ else
     Vmin = h5readatt(filename, '/fval/', 'Vmin');
     Vmax = h5readatt(filename, '/fval/', 'Vmax');
     x1 = h5readatt(filename, '/fval/', 'x1');
+    disp('DONE');
+    disp(['Lev: ' num2str(Lev)]);
+    disp(['Deg: ' num2str(Deg)]);
+    disp(['nT: ', num2str(numel(E_t(1,:)))]);
 end;
-
-pde.params.Deg = Deg;
-
-[nW,nT] = size(fval_t);
-t = (0:nT-1)*dt;
 
 LevX = Lev;
 LevV = Lev;
@@ -63,30 +62,15 @@ LevV = Lev;
 Dim = 2;
 
 [HASH,HASHInv] = HashTable(Lev,Dim);
+nHash = numel(HASHInv);
 if (idebug >= 1),
     disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
         numel(HASH),    numel(HASHInv) ));
 end;
 
 n = 2^Lev*(Deg-1);
-
 nX = n;
-nY = n;
-
-x = linspace(Lmin,Lmax,nX);
-v = linspace(Vmin,Vmax,nY);
-
-dx = x(2)-x(1);
-dv = v(2)-v(1);
-
-
-steps = [0:1:(nT-1)/1]+1;
-
-
-nS = numel(steps);
-nsteps = numel(steps);
-
-n_t = zeros(nX,nS);
+nV = n;
 
 %% 2D Reverse MWT
 
@@ -101,7 +85,7 @@ n_t = zeros(nX,nS);
 % Input:: Lstart, Lend, Lev, Deg, xx, yy
 
 xx = linspace(Lmin,Lmax,nX)';
-vv = linspace(Vmin,Vmax,nY)';
+vv = linspace(Vmin,Vmax,nV)';
 
 % ----------------------------------------------
 % Note that fx_loc and fv_loc are small matrices
@@ -111,20 +95,30 @@ vv = linspace(Vmin,Vmax,nY)';
 [fx_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,xx);
 [fv_loc] = EvalWavPoint4(Vmin,Vmax,Lev,Deg,vv);
 
-doTransform = 1;
-startFromLast = 0;
+fval_t_all = fval_t(:,1:500);
+[nW,nT_all] = size(fval_t_all);
 
-cnt = 1;
-
-if doTransform
+f2d_t_all = zeros(nX,nV,nT_all);
+chunk = 10;
+for tt=1:nT_all/chunk
+    
+    disp([num2str(tt) ' of ' num2str(nT_all/chunk)]);
+    
+    fval_t = fval_t_all(:,(tt-1)*chunk+1:tt*chunk);
+    
+    [nW,nT] = size(fval_t);
+    t = (0:nT-1)*dt;
+    
     more off;
     
     time_main = tic();
     
-    f2d_t = zeros(numel(xx), numel(vv), numel(steps));
+    f2d_t = zeros(nX, nV, nT);
     
-    nHash = numel(HASHInv);
+%     disp('Looping over inverse hash ...');
+    
     for i=1:nHash,
+%         disp([num2str(i) ' of ' num2str(nHash)]);
         ll = HASHInv{i};
         n1 = ll(1);
         n2 = ll(2);
@@ -160,23 +154,28 @@ if doTransform
         
         % --------------------------------------------
         % note convert to full storage to use efficient
-        % DGEMM operations
+        % DGEMM operationT
         % --------------------------------------------
         Amat = transpose(full(fv_loc(index_I1,K1)));
         Bmat = transpose(full(fx_loc(index_I2,K2)));
-        Xmat = fval_t(  Index, 1:nsteps);
+        Xmat = fval_t(  Index, 1:nT);
         
         % -----------------------------------------------
-        % Ymat = Bmat * Xmat * transpose(Amat)
-        % Ymat(K2,K1) = transpose(fx_loc(index_I2, K2)) *
+        % Ymat = Bmat * Xmat * tranTpose(Amat)
+        % Ymat(K2,K1) = tranTpose(fx_loc(index_I2, K2)) *
         %                  Xmat(Index_I2,Index_I1) *
         %                    ( fv_loc(index_I1,K1) )
         % -----------------------------------------------
         
-        Ymat = kronmult2(Amat,Bmat, Xmat );
+        fast = 1;
+        if fast
+            Ymat = kron(Amat,Bmat)*Xmat;
+        else
+            Ymat = kronmult2(Amat,Bmat, Xmat );
+        end
         
-        f2d_t(K2, K1, 1:nsteps) = f2d_t(K2, K1, 1:nsteps) + ...
-            reshape( Ymat, [numel(K2), numel(K1), nsteps]);
+        f2d_t(K2, K1, 1:nT) = f2d_t(K2, K1, 1:nT) + ...
+            reshape( Ymat, [numel(K2), numel(K1), nT]);
         
         if (idebug >= 1),
             disp(sprintf('i=%d,n1=%d,n2=%d, size(K1)=%g, size(K2)=%g, time=%g', ...
@@ -195,9 +194,7 @@ if doTransform
             
             isok = (K1_start == min_K1) && (K1_end == max_K1) && ...
                 (K2_start == min_K2) && (K2_end == max_K2);
-            
-            
-            
+                       
             if (~isok),
                 disp(sprintf('** error ** n1=%d,i1=%d,K1=%d:%d,  K1_start:K1_end=%d:%d ', ...
                     n1,   i1,   min_K1,max_K1, K1_start,K1_end));
@@ -218,87 +215,106 @@ if doTransform
         end;
     end;
     
-    elapsed_time = toc( time_main );
-    disp(sprintf('elapsed time for %d time steps is %g sec', ...
-        nsteps,   elapsed_time ));
+%     disp('DONE');
     
-    if (idebug >= 1),
-        % double check
-        f2d_t_cal = f2d_t;
-        clear f2d_t;
-        load(filename2, 'f2d_t');
-        abserr = zeros(size(f2d_t,1),size(f2d_t,2));
-        relerr = zeros(size(f2d_t,1),size(f2d_t,2));
-        max_abserr = 0;
-        max_relerr = 0;
-        for istep=1:nsteps,
-            abserr = abs( f2d_t_cal(:,:,istep) -  f2d_t(:,:,istep) ) ;
-            dnorm = max( abs(f2d_t_cal(:,:,istep)), abs(f2d_t(:,:,istep)) );
-            dnorm = max( 1e-6*ones(size(dnorm)), dnorm );
-            relerr = abserr ./ dnorm;
-            
-            max_abserr = max( max_abserr, max( abserr(:)) );
-            max_relerr = max( max_relerr, max( relerr(:)) );
-        end;
-        disp(sprintf('f2d_t: max_abserr =%g, max_relerr=%g', ...
-            max_abserr,     max_relerr ));
+    f2d_t_all(:,:,(tt-1)*chunk+1:tt*chunk) = f2d_t;
+    
+end
+
+f2d_t = f2d_t_all;
+
+save('f2d_t.mat','f2d_t');
+
+elapsed_time = toc( time_main );
+disp(sprintf('elapsed time for %d time steps is %g sec', ...
+    nT,   elapsed_time ));
+
+if (idebug >= 1),
+    % double check
+    f2d_t_cal = f2d_t;
+    clear f2d_t;
+    load(filename2, 'f2d_t');
+    abserr = zeros(size(f2d_t,1),size(f2d_t,2));
+    relerr = zeros(size(f2d_t,1),size(f2d_t,2));
+    max_abserr = 0;
+    max_relerr = 0;
+    for istep=1:nT,
+        abserr = abs( f2d_t_cal(:,:,istep) -  f2d_t(:,:,istep) ) ;
+        dnorm = max( abs(f2d_t_cal(:,:,istep)), abs(f2d_t(:,:,istep)) );
+        dnorm = max( 1e-6*ones(size(dnorm)), dnorm );
+        relerr = abserr ./ dnorm;
+        
+        max_abserr = max( max_abserr, max( abserr(:)) );
+        max_relerr = max( max_relerr, max( relerr(:)) );
     end;
+    disp(sprintf('f2d_t: max_abserr =%g, max_relerr=%g', ...
+        max_abserr,     max_relerr ));
 end;
+
 
 
 %% Begin plotting
 
-df2d_t = f2d_t-f2d_t(:,:,1);
-
-figure(2)
-if (isOctave),
-    max_tt = 1;
-else
-    max_tt = nS;
-end;
-
-range1 = max(abs(df2d_t(:)));
-range2 = max(abs(f2d_t(:)));
-
-range2n = -range2;
-if abs(min(f2d_t(:)))<0.5*range2
-    range2n = 0;
-end
-
-rangeFac1 = 0.3;
-rangeFac2 = 0.5;
-
-writeVid = 0;
-if writeVid
-    vid = VideoWriter('fk6d','MPEG-4');
-    open(vid);
-end
-
-for tt = 1:max_tt,
+doPlot = 1;
+if doPlot
     
-    ax1 = subplot(1,2,1);
-    mesh(xx,vv,df2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
-    axis([Lmin Lmax Vmin Vmax])
-    caxis([-range1 +range1]*rangeFac1);
-    title('df');
+    df2d_t = f2d_t-f2d_t(:,:,1);
     
-    ax2 = subplot(1,2,2);
-    mesh(xx,vv,f2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
-    axis([Lmin Lmax Vmin Vmax])
-    caxis([range2n +range2]*rangeFac2);
-    title('f');
-    
-    if writeVid
-        frame = getframe(gcf);
-        writeVideo(vid,frame);
+    figure(2)
+    if (isOctave),
+        max_tt = 1;
     else
-        pause(0.5);
+        max_tt = nT_all;
+    end;
+    
+    range1 = max(abs(df2d_t(:)));
+    range2 = max(abs(f2d_t(:)));
+    
+    range2n = -range2;
+    if abs(min(f2d_t(:)))<0.5*range2
+        range2n = 0;
     end
     
-end
-
-if writeVid
-    close(vid);
+    range1 = 0.2296;
+    range2 = 0.6983;
+    range2n = 0;
+    
+    rangeFac1 = 0.3;
+    rangeFac2 = 0.5;
+    
+    writeVid = 1;
+    if writeVid
+        vid = VideoWriter('fk6d','MPEG-4');
+        open(vid);
+    end
+    
+    for tt = 1:max_tt,
+        
+        ax1 = subplot(1,2,1);
+        mesh(xx,vv,df2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        caxis([-range1 +range1]*rangeFac1);
+        title('df');
+        
+        ax2 = subplot(1,2,2);
+        mesh(xx,vv,f2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        caxis([range2n +range2]*rangeFac2);
+        title('f');
+        
+        if writeVid
+            frame = getframe(gcf);
+            writeVideo(vid,frame);
+        else
+            pause(0.5);
+        end
+        
+    end
+    
+    if writeVid
+        close(vid);
+    end
+    
 end
 
 end
