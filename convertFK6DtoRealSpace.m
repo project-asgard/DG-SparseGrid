@@ -294,16 +294,17 @@ if doPlot
         range2n = 0;
     end
     
-%     range1 = 0.2296;
-%     range2 = 0.6983;
-%     range2n = 0;
+    range1 = 0.2296;
+    range2 = 0.6983;
+    range2n = 0;
     
-    rangeFac1 = 0.3;
-    rangeFac2 = 0.5;
+    rangeFac1 = 0.8;
+    rangeFac2 = 0.6;
     
     writeVid = 1;
     if writeVid
         vid = VideoWriter('fk6d','MPEG-4');
+        vid.FrameRate = 5;
         open(vid);
     end
     
