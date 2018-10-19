@@ -369,7 +369,7 @@ for L = 1:nsteps,
     disp(['Took ' num2str(t1) ' [s]']);
     
     %%% Save output
-    saveOutput = 1;
+    saveOutput = 0;
     if saveOutput
         stat = mkdir('output');
         fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
