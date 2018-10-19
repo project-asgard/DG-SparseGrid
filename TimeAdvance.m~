@@ -1,4 +1,4 @@
-function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax)
+function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
@@ -9,12 +9,12 @@ if pde.implicit
     f = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
     %f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);
 else
-    f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax);
+    f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv);
 end
 
 end
 
-function fval = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax)
+function fval = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv)
 %----------------------------------
 % 3-rd Order Kutta Method
 %----------------------------------
@@ -31,11 +31,11 @@ b1 = 1/6;
 b2 = 2/3;
 b3 = 1/6;
 
-k_1 = ApplyA(A,f,compression,Deg,Vmax,Emax)   + source1;
+k_1 = ApplyA(A,f,compression,Deg)   + source1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(A,y_1,compression,Deg,Vmax,Emax) + source2;
+k_2 = ApplyA(A,y_1,compression,Deg) + source2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(A,y_2,compression,Deg,Vmax,Emax) + source3;
+k_3 = ApplyA(A,y_2,compression,Deg) + source3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
@@ -78,7 +78,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function [ftmp,A] = ApplyA(A_Data,f,compression,Deg,Vmax,Emax)
+function [ftmp,A] = ApplyA(A_Data,f,compression,Deg)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
@@ -87,7 +87,6 @@ dof = size(f,1);
 ftmp=sparse(dof,1);
 use_kronmult2 = 0;
 
-Identity = speye(dof,dof);
 
 if compression == 0
     
@@ -356,33 +355,33 @@ elseif compression == 4
                 
             end
             
-%            % Apply term3 vMax*Mass x FluxX
-%             
-%             tmpA = Identity(Index_I1,Index_J1);
-%             tmpB = Vmax*A_Data.FluxX(Index_I2,Index_J2);
-%             
-%             
-%             if use_kronmult2
-%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
-%             else
-%                 ftmp(globalRow)=ftmp(globalRow)+ ...
-% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
-%                 
-%             end 
-%             
-%           % Apply term4 Emax*FluxV x Mass
-%             
-%             tmpA = -Emax*A_Data.FluxV(Index_I1,Index_J1);
-%             tmpB = Identity(Index_I2,Index_J2);
-%             
-%             
-%             if use_kronmult2
-%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
-%             else
-%                 ftmp(globalRow)=ftmp(globalRow)+ ...
-% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
-%                 
-%             end 
+           % Apply term3 v.d_dx (vMassV . GradX)
+            
+            tmpA = A_Data.vMassV(Index_I1,Index_J1);
+            tmpB = A_Data.GradX(Index_I2,Index_J2);
+            
+            
+            if use_kronmult2
+                ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
+            else
+                ftmp(globalRow)=ftmp(globalRow)+ ...
+		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
+                
+            end 
+            
+                        % Apply term1 v.d_dx (vMassV . GradX)
+            
+            tmpA = A_Data.vMassV(Index_I1,Index_J1);
+            tmpB = A_Data.GradX(Index_I2,Index_J2);
+            
+            
+            if use_kronmult2
+                ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
+            else
+                ftmp(globalRow)=ftmp(globalRow)+ ...
+		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
+                
+            end 
             
             conCnt = conCnt+1;
             

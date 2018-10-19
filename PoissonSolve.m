@@ -31,4 +31,6 @@ x_poisson=DeltaX\b_poisson;
 
 EE=x_poisson(1:dof_1D_x);
 
+
+
 u = x_poisson(1+dof_1D_x:end);

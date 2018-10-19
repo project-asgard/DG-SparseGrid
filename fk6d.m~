@@ -173,6 +173,7 @@ if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
 if compression == 3
     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
+    A_2e
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
@@ -294,14 +295,12 @@ for L = 1:nsteps,
         A_data.GradX     = GradX;
         A_data.GradV     = GradV;
         A_data.EMassX    = EMassX;
-        A_data.FluxX = FluxX;
-        A_data.FluxV = FluxV;
         
         % Write the A_data structure components for use in HPC version.
         write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
         
-        fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv,Vmax,Emax);
+        fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv);
         
     end
     

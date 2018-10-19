@@ -1,4 +1,4 @@
-function [vMassV,GradV,GradX,DeltaX]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=============================================================
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -51,10 +51,13 @@ if (use_dense),
   GradX=zeros(dof_1D_x,dof_1D_x);
   size_DeltaX = 2*dof_1D_x;
   DeltaX=zeros(size_DeltaX,size_DeltaX);
+   FluxX=zeros(dof_1D_x,dof_1D_x);%%
 else
   GradX=sparse(dof_1D_x,dof_1D_x);
   DeltaX=sparse(2*dof_1D_x,2*dof_1D_x);
+  FluxX=sparse(dof_1D_x,dof_1D_x);%%
 end;
+
 
 
 nv=2^(Lev_v);
@@ -65,9 +68,11 @@ dof_1D_v=k*nv;
 if (use_dense),
   vMassV=zeros(dof_1D_v,dof_1D_v);
   GradV=zeros(dof_1D_v,dof_1D_v);
+  FluxV=zeros(dof_1D_v,dof_1D_v);%%
 else
   vMassV=sparse(dof_1D_v,dof_1D_v);
   GradV=sparse(dof_1D_v,dof_1D_v);
+  FluxV=sparse(dof_1D_v,dof_1D_v);%%
 end;
 
 %======================================
@@ -165,6 +170,9 @@ for Lx=0:nx-1
     val_u=1/hx*[-p_1'*p_1, p_2'*p_1];
     val_s=1/hx*[-p_1'*p_2, p_2'*p_2];
     
+    val_f=1/hx*[p_1'*p_2 -p_1'*p_1,... % for x1
+        -p_2'*p_2 p_2'*p_1]/2; %%
+    
     
     if (use_dense),
     % -----------------------------------------------
@@ -249,6 +257,8 @@ for Lx=0:nx-1
 
       GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, 1:k);
+      FluxX(ia1:ia2, ja1:ja2) = FluxX(ia1:ia2, ja1:ja2)+...
+          val_f(1:k, 1:k);%%
 
       ia1 = istart(2); 
       ia2 = iend(2);
@@ -257,7 +267,8 @@ for Lx=0:nx-1
 
       GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, k+(1:k));
-
+    FluxX(ia1:ia2, ja1:ja2) = FluxX(ia1:ia2, ja1:ja2)+...
+          val_f(1:k, k+(1:k));%%
 
       ia1 = istart(3); 
       ia2 = iend(3);
@@ -266,6 +277,8 @@ for Lx=0:nx-1
       
       GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, 2*k+(1:k));
+        FluxX(ia1:ia2, ja1:ja2) = FluxX(ia1:ia2, ja1:ja2)+...
+          val_f(1:k, 2*k+(1:k));%%
 
       ia1 = istart(4); 
       ia2 = iend(4);
@@ -274,9 +287,12 @@ for Lx=0:nx-1
 
       GradX(ia1:ia2, ja1:ja2) = GradX(ia1:ia2, ja1:ja2) - ...
              val( 1:k, 3*k+(1:k));
+      FluxX(ia1:ia2, ja1:ja2) = FluxX(ia1:ia2, ja1:ja2)+...
+          val_f(1:k, 3*k+(1:k));%%
 
     else
       GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
+      FluxX=FluxX+sparse(Iv,Iu,val_f,dof_1D_x,dof_1D_x);%%
     end;
 
     if (use_dense),
@@ -353,8 +369,11 @@ for Lx=0:nx-1
         ...[Iu(:,1:2*k)+dof_1D_x,Iu(:,2*k+1:end)],...
         [Iu(:,2*k+1:end)+dof_1D_x,Iu(:,1:2*k)],...
         -[val_u,val_s],2*dof_1D_x,2*dof_1D_x);
+    
+    
     end;
     
+   
     
 end
 
@@ -378,6 +397,7 @@ DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
 % vMassV and GradV
 %======================================
 % (vf(v),w(v))_Kv
+vMax=0;
 for Lv=0:nv-1
     xi_v=(( (quad_x+1)/2+Lv)*hv+Vmin); % mapping from [-1,1] to physical domain
     %---------------------------------------------
@@ -386,6 +406,8 @@ for Lv=0:nv-1
     % value of local matrix
     val_loc=p_val'*(p_val.*xi_v.*quad_w)*Jacobi_v/2/hv;
 
+    vMax=max(vMax,abs(sum(xi_v.*quad_w)*Jacobi_v/2/hv));
+    
     if (use_dense),
       i1 = k*Lv+1;
       i2 = k*(Lv+1);
@@ -400,6 +422,8 @@ for Lv=0:nv-1
     end;
     
     val=1/hv*[Dp_val'*(quad_w.*p_val)];
+    
+
     if (use_dense),
       i1 = k*Lv+1;
       i2 = k*(Lv+1);
@@ -408,6 +432,7 @@ for Lv=0:nv-1
       % -------------------
       GradV(i1:i2, i1:i2) = GradV(i1:i2, i1:i2) +  ...
            val(1:k,1:k);
+
     else
       Iu=[meshgrid(k*Lv+1:k*(Lv+1))]';
       Iv=[meshgrid(k*Lv+1:k*(Lv+1))];
@@ -438,6 +463,9 @@ for Lv=0:nv-1
     
     val=(1/hv)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
         p_2'*p_2/2   p_2'*p_1/2];     % for x2
+    
+       val_f=1/hv*[p_1'*p_2 -p_1'*p_1,... % for x1
+               -p_2'*p_2  p_2'*p_1]/2; % for x2 %%
     
     istart = zeros(4,1);
     iend = zeros(4,1);
@@ -524,23 +552,32 @@ for Lv=0:nv-1
 
        GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
             val(1:k, 1:k);
+        FluxV(ia1:ia2, ja1:ja2) = FluxV(ia1:ia2,ja1:ja2) - ...
+            val_f(1:k, 1:k);
 
        ia1 = istart(2); ia2 = iend(2);
        ja1 = jstart(2); ja2 = jend(2);
        GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
             val(1:k, k + (1:k));
+        FluxV(ia1:ia2, ja1:ja2) = FluxV(ia1:ia2,ja1:ja2) - ...
+            val_f(1:k, k + (1:k));
 
        ia1 = istart(3); ia2 = iend(3);
        ja1 = jstart(3); ja2 = jend(3);
        GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
             val(1:k, 2*k + (1:k));
+        FluxV(ia1:ia2, ja1:ja2) = FluxV(ia1:ia2,ja1:ja2) - ...
+            val_f(1:k, 2*k + (1:k));
 
        ia1 = istart(4); ia2 = iend(4);
        ja1 = jstart(4); ja2 = jend(4);
        GradV(ia1:ia2, ja1:ja2) = GradV(ia1:ia2,ja1:ja2) - ...
             val(1:k, 3*k + (1:k));
+       FluxV(ia1:ia2, ja1:ja2) = FluxV(ia1:ia2,ja1:ja2) - ...
+            val_f(1:k, 3*k + (1:k));
     else
        GradV=GradV-sparse(Iv,Iu,val,dof_1D_v,dof_1D_v);
+       FluxV=FluxV+sparse(Iv,Iu,val_f,dof_1D_v,dof_1D_v);
     end;
 end
 
@@ -552,6 +589,9 @@ end
 vMassV = FMWT_COMP_v*vMassV*FMWT_COMP_v';
 GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
 GradV = FMWT_COMP_v*GradV*FMWT_COMP_v';
+
+FluxV = FMWT_COMP_v*FluxV*FMWT_COMP_v';
+FluxX = FMWT_COMP_x*FluxX*FMWT_COMP_x';
 
 use_blkdiag = 0;
 if (use_blkdiag),
@@ -601,3 +641,5 @@ else
  DeltaX(1:(2*m), 1:m) = DeltaX(1:(2*m),1:m) * F';
  DeltaX(1:(2*m), (m+1):(2*m)) = DeltaX(1:(2*m),(m+1):(2*m)) * F';
 end;
+
+% vMax
