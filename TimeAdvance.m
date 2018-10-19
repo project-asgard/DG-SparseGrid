@@ -356,6 +356,7 @@ elseif compression == 4
                 
             end
             
+            % if CF, comment Line 360-386, if LF, uncomment them
 %            % Apply term3 vMax*Mass x FluxX
 %             
 %             tmpA = Identity(Index_I1,Index_J1);
