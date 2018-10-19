@@ -50,10 +50,14 @@ else
     Vmin = h5readatt(filename, '/fval/', 'Vmin');
     Vmax = h5readatt(filename, '/fval/', 'Vmax');
     x1 = h5readatt(filename, '/fval/', 'x1');
+    full_grid = h5readatt(filename, '/fval/', 'full_grid');
+    write = cast(h5readatt(filename, '/fval/', 'write'),'double');
     disp('DONE');
     disp(['Lev: ' num2str(Lev)]);
     disp(['Deg: ' num2str(Deg)]);
     disp(['nT: ', num2str(numel(E_t(1,:)))]);
+    disp(['full_grid: ', num2str(full_grid)]);
+    disp(['write: ', num2str(write)]);
 end;
 
 LevX = Lev;
@@ -61,7 +65,11 @@ LevV = Lev;
 
 Dim = 2;
 
-[HASH,HASHInv] = HashTable(Lev,Dim);
+gridType = 'SG';
+if full_grid
+    gridType = 'FG';
+end
+[HASH,HASHInv] = HashTable(Lev,Dim,gridType);
 nHash = numel(HASHInv);
 if (idebug >= 1),
     disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
@@ -95,19 +103,28 @@ vv = linspace(Vmin,Vmax,nV)';
 [fx_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,xx);
 [fv_loc] = EvalWavPoint4(Vmin,Vmax,Lev,Deg,vv);
 
-fval_t_all = fval_t(:,1:500);
+fval_t_all = fval_t;%(:,1:500);
 [nW,nT_all] = size(fval_t_all);
+t_all = (0:nT_all-1)*dt*write;
 
 f2d_t_all = zeros(nX,nV,nT_all);
 chunk = 10;
-for tt=1:nT_all/chunk
+nchunks = nT_all/chunk;
+if mod(nT_all,chunk) > 0 
+    nchunks = nchunks+1;
+end
+for tt=1:nchunks
     
     disp([num2str(tt) ' of ' num2str(nT_all/chunk)]);
     
-    fval_t = fval_t_all(:,(tt-1)*chunk+1:tt*chunk);
+    last = tt*chunk;
+    if last > numel(nT_all)
+        last = nT_all;
+    end
+    fval_t = fval_t_all(:,(tt-1)*chunk+1:last);
     
     [nW,nT] = size(fval_t);
-    t = (0:nT-1)*dt;
+    t = (0:nT-1)*dt*write;
     
     more off;
     
@@ -217,7 +234,7 @@ for tt=1:nT_all/chunk
     
 %     disp('DONE');
     
-    f2d_t_all(:,:,(tt-1)*chunk+1:tt*chunk) = f2d_t;
+    f2d_t_all(:,:,(tt-1)*chunk+1:last) = f2d_t;
     
 end
 
@@ -267,6 +284,8 @@ if doPlot
         max_tt = nT_all;
     end;
     
+    % Set plot color ranges
+    
     range1 = max(abs(df2d_t(:)));
     range2 = max(abs(f2d_t(:)));
     
@@ -275,9 +294,9 @@ if doPlot
         range2n = 0;
     end
     
-    range1 = 0.2296;
-    range2 = 0.6983;
-    range2n = 0;
+%     range1 = 0.2296;
+%     range2 = 0.6983;
+%     range2n = 0;
     
     rangeFac1 = 0.3;
     rangeFac2 = 0.5;
@@ -290,16 +309,18 @@ if doPlot
     
     for tt = 1:max_tt,
         
+        disp(['Frame ' num2str(tt) ' of ' num2str(max_tt) ' at ' num2str(t_all(tt))]);
+        
         ax1 = subplot(1,2,1);
         mesh(xx,vv,df2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])
-        caxis([-range1 +range1]*rangeFac1);
+        %caxis([-range1 +range1]*rangeFac1);
         title('df');
         
         ax2 = subplot(1,2,2);
         mesh(xx,vv,f2d_t(:,:,tt)','FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])
-        caxis([range2n +range2]*rangeFac2);
+        %caxis([range2n +range2]*rangeFac2);
         title('f');
         
         if writeVid

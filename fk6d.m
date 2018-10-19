@@ -265,11 +265,11 @@ for L = 1:nsteps,
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
         E = E * pde.Et(time(count),params);
     end
-            ax3 = subplot(2,2,3);
-            plot(x_node,Meval_x*u,'r-o')
-            title(['time = ',num2str(dt*L)])
-            ax4 = subplot(2,2,4);
-            plot(x_node,Meval_x*E,'r-o')
+%             ax3 = subplot(2,2,3);
+%             plot(x_node,Meval_x*u,'r-o')
+%             title(['time = ',num2str(dt*L)])
+%             ax4 = subplot(2,2,4);
+%             plot(x_node,Meval_x*E,'r-o')
             
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
