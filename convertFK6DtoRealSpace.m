@@ -1,7 +1,14 @@
 % Run with no arguments to test.
 
-function [f2d] = convertFK6DtoRealSpace(filename)
-
+function [f2d] = convertFK6DtoRealSpace(filename, gridType)
+if ~exist('gridType','var') || isempty(gridType)
+    gridType = 'SG'%'FG';
+else
+    if strcmp(gridType,'SG') || strcmp(gridType,'FG')
+    else
+        error("gridType must be set to 'SG' or 'FG'"); 
+    end
+end
 addpath(genpath('./'));
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
@@ -62,7 +69,7 @@ LevV = Lev;
 
 Dim = 2;
 
-[HASH,HASHInv] = HashTable(Lev,Dim);
+[HASH,HASHInv] = HashTable(Lev,Dim,gridType);
 if (idebug >= 1),
     disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
         numel(HASH),    numel(HASHInv) ));
