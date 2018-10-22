@@ -46,16 +46,8 @@ for ii=1:nHash
     
     ll=HASHInv{ii};
     
-    % for the ii-th row, (Lev,Cell) is not needed
-    %     n1=ll(1);p1=ll(3);
-    %     n2=ll(2);p2=ll(4);
-    
     % 1D indices by the HashInv
     I1=ll(5);I2=ll(6);
-    
-    % find the connected information
-    J1=Con1D(I1,:);
-    J2=Con1D(I2,:);
     
     % find the connectivity from 1D connected mesh
     [i,j,val]=find(Con1D(I1,:));
