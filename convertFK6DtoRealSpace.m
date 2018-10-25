@@ -1,6 +1,6 @@
 % Run with no arguments to test.
 
-function [f2d] = convertFK6DtoRealSpace(filename, gridType)
+function [f2d_t] = convertFK6DtoRealSpace(filename, gridType)
 if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG'%'FG';
 else
@@ -12,13 +12,12 @@ end
 addpath(genpath('./'));
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
-idebug = 0;
+idebug = 1;
 use_find = 0;
 
 if ~exist('filename','var') || isempty(filename)
     filename = 'tests/convertFK6DtoRealSpace/convert-test-fval-MWT.h5';
     filename2 = 'tests/convertFK6DtoRealSpace/convert-test-f2d_t.mat';
-    idebug = 0;
 end
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
@@ -59,6 +58,15 @@ else
     x1 = h5readatt(filename, '/fval/', 'x1');
 end;
 
+Lev_solution = Lev;
+Lev_viz = Lev + 2;
+Lev = Lev_viz;
+
+if (idebug >= 1),
+    disp(sprintf('Lev_solution=%d, Lev_viz=%d', ...
+		  Lev_solution, Lev_viz));
+end;
+
 pde.params.Deg = Deg;
 
 [nW,nT] = size(fval_t);
@@ -69,7 +77,7 @@ LevV = Lev;
 
 Dim = 2;
 
-[HASH,HASHInv] = HashTable(Lev,Dim,gridType);
+[HASH,HASHInv] = HashTable(Lev_solution,Dim,gridType);
 if (idebug >= 1),
     disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
         numel(HASH),    numel(HASHInv) ));
@@ -185,7 +193,7 @@ if doTransform
         f2d_t(K2, K1, 1:nsteps) = f2d_t(K2, K1, 1:nsteps) + ...
             reshape( Ymat, [numel(K2), numel(K1), nsteps]);
         
-        if (idebug >= 1),
+        if (idebug >= 2),
             disp(sprintf('i=%d,n1=%d,n2=%d, size(K1)=%g, size(K2)=%g, time=%g', ...
                 i,n1,n2,  numel(K1), numel(K2), toc(time_main)));
             
@@ -230,6 +238,7 @@ if doTransform
         nsteps,   elapsed_time ));
     
     if (idebug >= 1),
+      if (Lev_viz == Lev_solution),
         % double check
         f2d_t_cal = f2d_t;
         clear f2d_t;
@@ -249,11 +258,13 @@ if doTransform
         end;
         disp(sprintf('f2d_t: max_abserr =%g, max_relerr=%g', ...
             max_abserr,     max_relerr ));
+     end;
     end;
 end;
 
 
 %% Begin plotting
+
 
 df2d_t = f2d_t-f2d_t(:,:,1);
 
