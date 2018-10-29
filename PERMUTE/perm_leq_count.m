@@ -1,5 +1,7 @@
 function [icount] = perm_leq_count( idim, n )
 %
+% [icount] = perm_leq_count( idim, n )
+%
 % compute number of tuples where
 % dimensioin is idim and sum of indices is <= n
 %

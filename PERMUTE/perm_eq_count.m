@@ -1,5 +1,7 @@
 function [icount] = perm_eq_count( idim, n )
 %
+% [icount] = perm_eq_count( idim, n )
+%
 % number of tuples for dimension = idim
 % and sum of indices equal to n
 %
