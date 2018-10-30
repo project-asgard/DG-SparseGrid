@@ -6,9 +6,19 @@ Lev = 4;
 Dim = 2;
 for icase=1:ncase,
   gridType = gridType_table{icase}; 
+  time_2D = tic();
   [forwardHash2D,inverseHash2D] = HashTable2D(Lev,Dim,gridType);
+  elapsed_time_2D = toc( time_2D );
+
+  time_nD = tic();
   [forwardHash, inverseHash] = HashTable(Lev,Dim,gridType);
+  elapsed_time_nD = toc( time_nD );
+
+  disp(sprintf('Lev=%d,Dim=%d, time for HashTable2D=%g, time for HashTable=%g',...
+                Lev,   Dim,    elapsed_time_2D, elapsed_time_nD ));
   
+  disp(sprintf('numel(inverseHash)=%g', numel(inverseHash)));
+
   isok = numfields( forwardHash2D) == numfields(forwardHash) && ...
          numel( inverseHash2D) == numel(inverseHash);
   if (~isok),
