@@ -1,4 +1,4 @@
-function [Bh,E1h,E2h] = MaxwellSolver4(Lev,Deg,Hash,InvHash,Con1D,GradX,GradY,...
+function [Bh,E1h,E2h] = MaxwellSolver4(Lev,Deg,Hash,InvHash,Con1D,GradX,...
                                  omega,dt,MaxT,...
                                  F_1D,E1,E2,B)%Explicit
 %=====================================================
@@ -75,16 +75,17 @@ zero=sparse(Dofs,Dofs);
 MaxMat=-[zero,Mat,zero;
         Mat,zero,zero;
         zero,zero,zero];
-% opts.tol=1e-5;
-% e=eigs(MaxMat,1,'lm',opts)
+opts.tol=1e-5;
+e=eigs(MaxMat,1,'lm',opts)
 %% Time advance for solving Maxwell equation
-MaxRhs = -[GradY;F_1D.b1;F_1D.b2];
+MaxRhs = -[F_1D.b3;F_1D.b1;F_1D.b2];
+Extra  = -[F_1D.bb3;zeros(Dofs*2,1)];
 MaxSol = [B;E1;E2];
 time=0;
 for T=1:MaxT
     time=time+dt;
 
-    bbb=MaxRhs*sin(omega*time);
+    bbb=MaxRhs*sin(omega*time)+Extra*cos(omega*time);
 
     MaxSol = ExplicitTime(MaxMat,MaxSol,dt,bbb);
     

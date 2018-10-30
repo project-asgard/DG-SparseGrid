@@ -17,7 +17,7 @@ Deg = 2;
 
 
 Lmax = 1;
-pde = Maxwell1;
+pde = Maxwell14;  %1D-time-dependent
 dt=1/1000;
 MaxT=100;
 % cfl=1/2;
@@ -42,7 +42,7 @@ FMWT_COMP_x = OperatorTwoScale(Deg,2^Lev);
 % Input:  Deg, Lev,Lmax, pde,FMWT_COMP_x
 % Output: F_1D,E_1D,B_1D
 %*************************************************
-[F_1D,E_1D] = Intial_Con1(Lev,Deg,Lmax,pde,FMWT_COMP_x);
+[F_1D,E_1D,B_1D] = Intial_Con(Lev,Deg,Lmax,pde,FMWT_COMP_x);
 
 %*************************************************
 %% Step 2. Hash Table and 1D Connectivity
@@ -54,7 +54,7 @@ Con1D=Connect1D(Lev);
 %*************************************************
 %% Step 3. Coefficient Matrix for Time-independent Matrix
 %*************************************************
-GradX = Matrix_TI2(Lev,Deg,Lmax,FMWT_COMP_x);
+[GradX] = Matrix_TI2(Lev,Deg,Lmax,FMWT_COMP_x);
 
 %*************************************************
 %% Step 4.3D Maxwell Solver
@@ -62,37 +62,36 @@ GradX = Matrix_TI2(Lev,Deg,Lmax,FMWT_COMP_x);
 % global rhs, E0, and B0 vectors
 % b_s is the RHS vector
 % E_s and B_s are used for error estimate
+
 %% Maxwell Solver
-Eh = MaxwellSolver1(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
-    F_1D,0);
-sol_n=Eh;
+[Bh,E1h,E2h] = MaxwellSolver4(Lev,Deg,Hash,InvHash,Con1D,GradX,pde.w,dt,MaxT,...
+    F_1D,E_1D.E1*cos(0),E_1D.E2*cos(0),B_1D.B*0);
+sol_n=[Bh;E1h;E2h];
 
 %% Error Estimate
-u_s=E_1D.E;
+time=dt*MaxT;
+u_s=[B_1D.B*sin(pde.w*time);E_1D.E1*cos(pde.w*time);E_1D.E2*cos(pde.w*time)];
+Bs=[B_1D.B*sin(pde.w*time)];E1s=[E_1D.E1*cos(pde.w*time)];E2s=[E_1D.E2*cos(pde.w*time)];
 full([Deg Lev dt max(abs(sol_n-u_s)) norm(sol_n-u_s)])
-% full([sol_n,u_s])
-
+% full([Bs,Bh])
 % subplot(1,2,1)
 % plot(sol_n)
 % subplot(1,2,2)
 % plot(u_s)
 
 [M,N]=matrix_plot(Lev,Deg,Lmax,FMWT_COMP_x);
-plot(N,M*Eh)
-hold on
-plot(N,M*E_1D.E)
-% figure;
-% subplot(1,3,1)
-% plot(N,M*E1h,'r--',N,M*E1s,'b--')
-% legend('Numerical Sol','Real Solution')
-% title('E1')
-% subplot(1,3,2)
-% plot(N,M*E2h,'r--',N,M*E2s,'b--')
-% legend('Numerical Sol','Real Solution')
-% title('E2')
-% subplot(1,3,3)
-% plot(N,M*Bh,'r--',N,M*Bs,'b--')
-% legend('Numerical Sol','Real Solution')
-% title('B')
+figure;
+subplot(1,3,1)
+plot(N,M*E1h,'r--',N,M*E1s,'b--')
+legend('Numerical Sol','Real Solution')
+title('E1')
+subplot(1,3,2)
+plot(N,M*E2h,'r--',N,M*E2s,'b--')
+legend('Numerical Sol','Real Solution')
+title('E2')
+subplot(1,3,3)
+plot(N,M*Bh,'r--',N,M*Bs,'b--')
+legend('Numerical Sol','Real Solution')
+title('B')
 
 

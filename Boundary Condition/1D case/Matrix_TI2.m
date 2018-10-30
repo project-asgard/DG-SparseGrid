@@ -83,7 +83,7 @@ for Lx=0:nx-1
     end
     
 %     GradX=GradX-sparse(Iv,Iu,val,dof_1D_x,dof_1D_x);
-    
+      
     
     
 end

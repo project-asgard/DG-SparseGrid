@@ -50,11 +50,11 @@ w=pi/2;%2*pi*sqrt(3)/2*c0;
     end
 
     function f=exact_f3(x,t)
-        f= 0;
+        f= x-x;
     end
 
     function f=f3(x)
-        f= 0;
+        f= x-x;
     end
 
 pde = struct('w',w,'E1',@exact_E1,'E2',@exact_E2,'B',@exact_B,'F1',@exact_f1,'F2',@exact_f2,...

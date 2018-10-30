@@ -81,6 +81,6 @@ for Lx=0:nx-1
 end
 
 
-
+GradX=FMWT_COMP_x*GradX*FMWT_COMP_x';
 
 end
