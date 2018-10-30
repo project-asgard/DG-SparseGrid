@@ -11,15 +11,24 @@ function [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType)
 % so in 2D the inv = (Lev_1,Lev_2,Cell_1,Cell_2,Index_1,Index_2)
 %              key = [Lev_1,Lev_2,Cell_1,Cell_2]
 %-------------------------------------------------
+idebug = 1;
 
 if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG'; % Set default gridType to SG
 end
 is_sparse_grid = strcmp( gridType, 'SG');
+
+time_perm = tic();
 if (is_sparse_grid),
    ptable = perm_leq( Dim, Lev );
 else
    ptable = perm_max( Dim,  Lev );
+end;
+elapsed_time_perm = toc( time_perm);
+if (idebug >= 1),
+  disp(sprintf('HashTable:Dim=%d,Lev=%d,gridType=%s,time %g, size=%g',...
+        Dim,Lev,gridType, ...
+        elapsed_time_perm,  size(ptable,1) ));
 end;
 
 
@@ -54,6 +63,10 @@ for icase=1:ncase,
    isize(icase) = prod( max(1,ipow) );
 end;
 total_isize = sum(isize);
+if (idebug >= 1),
+   disp(sprintf('HashTable:total_isize=%g', ...
+                 total_isize ));
+end;
 
 % ---------------------------
 % prefix sum or cumulate sum
