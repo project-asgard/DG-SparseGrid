@@ -15,8 +15,12 @@ total_isize = prod(isize(1:Dim));
 index_set = zeros(total_isize, Dim);
 
 if (Dim == 1),
-        index_set = 0:(total_isize-1);
+        index_set(1:total_isize,1) = ...
+                   reshape(0:(total_isize-1),total_isize,1);
 else
+  % -------------------------------------
+  % recursively generate the index values
+  % -------------------------------------
   m = total_isize/isize(Dim);
   for i=1:isize(Dim),
      i1 = (i-1)*m + 1;

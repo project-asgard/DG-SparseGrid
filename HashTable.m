@@ -62,7 +62,9 @@ for icase=1:ncase,
    ipow(1:Dim) = 2.^max(0,levels(1:Dim)-1);
    isize(icase) = prod( max(1,ipow) );
 end;
-total_isize = sum(isize);
+total_isize = sum( isize(1:ncase) );
+max_isize = max( isize(1:ncase) );
+
 if (idebug >= 1),
    disp(sprintf('HashTable:total_isize=%g', ...
                  total_isize ));
@@ -90,22 +92,35 @@ istartv(2:(ncase+1)) = istartv(2:(ncase+1)) + 1;
 % the "key" has sufficient information to recompute this information
 % ------------------------------------------------------------------
 append_index_k = 1;
+index_k = zeros(1,Dim);
 
+% ------------------------------
+% pre-allocate temporary storage
+% ------------------------------
+index_set = zeros(1, max_isize );
+
+
+time_hash = tic();
 % pragma omp parallel
 for icase=1:ncase,
   istart = istartv(icase);
   iend   = istartv(icase+1)-1;
 
 
-  levels = ptable(icase,:);
-  index_set = LevCell2index_set( levels );
+  levels(1:Dim) = ptable(icase,1:Dim);
+  index_set = LevCell2index_set( levels(1:Dim) );
   for i=istart:iend,
      icells = index_set(i-istart+1,:);
      key = [levels,icells];
+
+     % ----------------------------------------------------
+     % TODO: check whether insertion into hash table is thread-safe
+     % ----------------------------------------------------
      forwardHash.(sprintf(hash_format,key)) = i;
 
+
+
      if (append_index_k),
-       index_k = zeros(1,Dim);
        for kdim=1:Dim,
          index_k(kdim) = LevCell2index( levels(kdim), icells(kdim));
        end;
@@ -115,6 +130,11 @@ for icase=1:ncase,
      end;
 
   end;
+end;
+elapsed_hash = toc( time_hash );
+if (idebug >= 1),
+        disp(sprintf('HashTable: elapsed time for hashing is %g sec', ...
+                      elapsed_hash ));
 end;
 
 % -----------------------------------------------------------
