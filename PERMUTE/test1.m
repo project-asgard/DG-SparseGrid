@@ -19,8 +19,7 @@ for last_index_decreasing=0:1,
 
   isok = (size(result,1) == icount);
   if (~isok),
-          disp(sprintf('size(result,1)=%d, icount=%d',
-                 size(result,1), icount ));
+          disp(sprintf('size(result,1)=%d, icount=%d',size(result,1), icount ));
           nerrors = nerrors + 1;
   end;
 
