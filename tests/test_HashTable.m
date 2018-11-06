@@ -2,6 +2,7 @@ gridType_table{1} = 'SG';
 gridType_table{2} = 'FG';
 ncase = numel(gridType_table);
 
+nerrors = 0;
 Lev = 4;
 Dim = 2;
 for icase=1:ncase,
@@ -28,6 +29,7 @@ for icase=1:ncase,
     
      disp(sprintf('numel(inverseHash2D) = %d numel(inverseHash) = %d', ...
                    numel(inverseHash2D),     numel(inverseHash) ));
+     nerrors = nerrors + 1;
   end;
   
   if (~exist('hash_format')),
@@ -49,6 +51,7 @@ for icase=1:ncase,
           if (~isok),
                   disp(sprintf('icell=%d,key_string=%s', ...
                                 icell,   key_string));
+                  nerrors = nerrors + 1;
           end;
           icount = getfield(forwardHash,key_string);
           is_seen(icount) = is_seen(icount) + 1;
@@ -60,6 +63,8 @@ for icase=1:ncase,
           idx
           disp('is_seen(idx)')
           is_seen(idx)
+
+          nerrors  = nerrors + 1;
   end;
   
   
@@ -76,6 +81,8 @@ for icase=1:ncase,
           if (~isok),
                   disp(sprintf('icell=%d,key_string=%s', ...
                                 icell,   key_string));
+
+                  nerrors = nerrors + 1;
           end;
           icount = getfield(forwardHash2D,key_string);
           is_seen(icount) = is_seen(icount) + 1;
@@ -87,6 +94,62 @@ for icase=1:ncase,
           idx
           disp('is_seen(idx)')
           is_seen(idx)
+
+          nerrors = nerrors + 1;
   end;
   
 end;  
+
+if (nerrors == 0),
+        disp('ALL OK ');
+end;
+
+% -----------------------------
+% test performance of HashTable, Dim=4
+% -----------------------------
+gridType = 'SG';
+Dim = 4;
+maxLev = 8;
+elapsed_time = zeros(maxLev,1);
+sizes = zeros(maxLev,1);
+for Lev=1:maxLev,
+   t1 = tic();
+   [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
+   elapsed_time(Lev) = toc( t1 );
+
+   sizes(Lev) = numel(inverseHash);
+end;
+
+clf;
+figure(1);
+subplot(2,1,1); plot( 1:maxLev, elapsed_time(1:maxLev) ); 
+title(sprintf('elapsed time, Dim=%d',Dim));
+subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
+title(sprintf('size of inverseHash, Dim=%d',Dim));
+
+
+
+
+% -----------------------------
+% test performance of HashTable, Dim=6
+% -----------------------------
+gridType = 'SG';
+Dim = 6;
+maxLev = 8;
+elapsed_time = zeros(maxLev,1);
+sizes = zeros(maxLev,1);
+for Lev=1:maxLev,
+   t1 = tic();
+   [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
+   elapsed_time(Lev) = toc( t1 );
+
+   sizes(Lev) = numel(inverseHash);
+end;
+
+figure(2);
+subplot(2,1,1); plot( 1:maxLev, elapsed_time(1:maxLev) ); 
+title(sprintf('elapsed time, Dim=%d',Dim));
+subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
+title(sprintf('size of inverseHash, Dim=%d',Dim));
+
+
