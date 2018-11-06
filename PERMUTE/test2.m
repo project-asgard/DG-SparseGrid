@@ -8,6 +8,9 @@ disp(sprintf('sum of indices of dimension %d <=  %d', ...
      idim,  n ));
 
 for order_by_n=0:1,
+   disp(sprintf('order_by_n = %d', order_by_n ));
+
+
    icount = perm_leq_count(idim,n);
    result = perm_leq(idim,n, order_by_n)
    

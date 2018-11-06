@@ -8,6 +8,8 @@ disp(sprintf('max of indices of dimension %d is  %d', ...
      idim,  n ));
 
 for last_index_decreasing=0:1,
+   disp(sprintf('last_index_decreasing=%d', last_index_decreasing));
+
    icount = perm_max_count(idim,n);
    result = perm_max(idim,n, last_index_decreasing)
   

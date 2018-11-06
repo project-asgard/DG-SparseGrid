@@ -9,8 +9,8 @@ for last_index_decreasing=0:1,
   disp(sprintf('last_index_decreasing=%d', ...
                 last_index_decreasing ));
 
-  result = perm_eq(idim,n, last_index_decreasing)
   icount = perm_eq_count(idim,n);
+  result = perm_eq(idim,n, last_index_decreasing)
   
   disp(sprintf('perm_eq_count(idim=%d,n=%d) returns icount=%d', ...
                       idim, n, icount ));
