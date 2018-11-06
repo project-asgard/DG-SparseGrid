@@ -128,7 +128,7 @@ title(sprintf('elapsed time, Dim=%d',Dim));
 subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
 title(sprintf('size of inverseHash, Dim=%d',Dim));
 % print -djpg test_HashTable_Dim=4.jpg
-filename = sprintf('test_HastTable_Dim=%d.jpg', Dim);
+filename = sprintf('test_HashTable_Dim=%d.jpg', Dim);
 print(filename,'-djpg');
 
 
@@ -156,7 +156,7 @@ title(sprintf('elapsed time, Dim=%d',Dim));
 subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
 title(sprintf('size of inverseHash, Dim=%d',Dim));
 % print -djpg test_HashTable_Dim=6.jpg
-filename = sprintf('test_HastTable_Dim=%d.jpg', Dim);
+filename = sprintf('test_HashTable_Dim=%d.jpg', Dim);
 print(filename,'-djpg');
 
 
