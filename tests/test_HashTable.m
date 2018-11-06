@@ -1,3 +1,4 @@
+more off;
 gridType_table{1} = 'SG';
 gridType_table{2} = 'FG';
 ncase = numel(gridType_table);
@@ -126,6 +127,9 @@ subplot(2,1,1); plot( 1:maxLev, elapsed_time(1:maxLev) );
 title(sprintf('elapsed time, Dim=%d',Dim));
 subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
 title(sprintf('size of inverseHash, Dim=%d',Dim));
+% print -djpg test_HashTable_Dim=4.jpg
+filename = sprintf('test_HastTable_Dim=%d.jpg', Dim);
+print(filename,'-djpg');
 
 
 
@@ -151,5 +155,9 @@ subplot(2,1,1); plot( 1:maxLev, elapsed_time(1:maxLev) );
 title(sprintf('elapsed time, Dim=%d',Dim));
 subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
 title(sprintf('size of inverseHash, Dim=%d',Dim));
+% print -djpg test_HashTable_Dim=6.jpg
+filename = sprintf('test_HastTable_Dim=%d.jpg', Dim);
+print(filename,'-djpg');
 
 
+more on;
