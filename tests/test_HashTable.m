@@ -150,6 +150,7 @@ for Lev=1:maxLev,
    sizes(Lev) = numel(inverseHash);
 end;
 
+clf;
 figure(2);
 subplot(2,1,1); plot( 1:maxLev, elapsed_time(1:maxLev) ); 
 title(sprintf('elapsed time, Dim=%d',Dim));
