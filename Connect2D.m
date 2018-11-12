@@ -42,6 +42,14 @@ Key1dMesh=[nx,px];
 
 Con2D = {}; % Empty cell array.
 
+
+Lev_tmp = Lev;
+if gridType == 'FG'
+        Lev_tmp = Lev + Lev;
+elseif gridType == 'SG'
+        Lev_tmp = Lev;
+end
+
 for ii=1:nHash
     
     ll=HASHInv{ii};
@@ -59,16 +67,12 @@ for ii=1:nHash
     
     % Get (m2,cell2) from Key1DMesh
     LevCell2=Key1dMesh(j,:);
+
     
     index_J=[];
     for i1=1:size(LevCell1,1)
         for i2=1:size(LevCell2,1)
             
-            if gridType == 'FG'
-                Lev_tmp = Lev + Lev;
-            elseif gridType == 'SG'
-                Lev_tmp = Lev;
-            end
                     
             if LevCell1(i1,1)+LevCell2(i2,1)<=Lev_tmp%Lev % check whether m1+m2<=Lev % modified by Lin
                 
