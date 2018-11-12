@@ -1,4 +1,4 @@
-% simple test for index_leq
+% simple test for index_eq
 
 Nmat{1} = 2:3;
 Nmat{2} = 0:4;
@@ -20,7 +20,7 @@ imin = min( minval(1:ndim) );
 imax = sum( maxval(1:ndim) );
 for Levsum=imin:imax,
 
-  result = index_leq( ndim, Nmat, Levsum );
+  result = index_eq( ndim, Nmat, Levsum );
 
 
   m = size(result,1);
@@ -32,7 +32,7 @@ for Levsum=imin:imax,
      end;
 
 
-     isok = (isum <= Levsum);
+     isok = (isum == Levsum);
      if (~isok),
         % -------------------
         % print debug message
@@ -50,14 +50,14 @@ for Levsum=imin:imax,
    m = 0;
    if (ndim == 1),
      for i1=1:numel( Nmat{1} ),
-             if (Nmat{1}(i1) <= Levsum),
+             if (Nmat{1}(i1) == Levsum),
                      m = m +1;
              end;
      end;
    elseif (ndim == 2),
      for i1=1:numel( Nmat{1} ),
      for i2=1:numel( Nmat{2} ),
-           if (Nmat{1}(i1) + Nmat{2}(i2) <= Levsum),
+           if (Nmat{1}(i1) + Nmat{2}(i2) == Levsum),
                    m = m + 1;
            end;
      end;
@@ -67,7 +67,7 @@ for Levsum=imin:imax,
      for i2=1:numel( Nmat{2} ),
      for i3=1:numel( Nmat{3} ),
            if (Nmat{1}(i1) + Nmat{2}(i2) + ...
-               Nmat{3}(i3) <= Levsum),
+               Nmat{3}(i3) == Levsum),
                    m = m + 1;
            end;
      end;
@@ -79,7 +79,7 @@ for Levsum=imin:imax,
      for i3=1:numel( Nmat{3} ),
      for i4=1:numel( Nmat{4} ),
            if (Nmat{1}(i1) + Nmat{2}(i2) + ...
-               Nmat{3}(i3) + Nmat{4}(i4) <= Levsum),
+               Nmat{3}(i3) + Nmat{4}(i4) == Levsum),
                    m = m + 1;
            end;
      end;

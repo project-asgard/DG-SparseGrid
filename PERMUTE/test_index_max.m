@@ -1,4 +1,4 @@
-% simple test for index_leq
+% simple test for index_max
 
 Nmat{1} = 2:3;
 Nmat{2} = 0:4;
@@ -18,28 +18,30 @@ nerrors = 0;
 for ndim = 1:4,
 imin = min( minval(1:ndim) );
 imax = sum( maxval(1:ndim) );
-for Levsum=imin:imax,
+for Levmax=imin:imax,
 
-  result = index_leq( ndim, Nmat, Levsum );
+  result = index_max( ndim, Nmat, Levmax );
 
 
   m = size(result,1);
   for i=1:m,
-     isum = 0;
+
+     lmax = Nmat{1}( result(i,1));
      for idim=1:ndim,
              iv(idim) = result(i,idim);
-             isum = isum + Nmat{idim}( iv(idim) );
+             lmax = max(lmax , Nmat{idim}( iv(idim) ));
      end;
 
 
-     isok = (isum <= Levsum);
+     isok = (lmax <= Levmax);
      if (~isok),
         % -------------------
         % print debug message
         % -------------------
-        msg = sprintf('ndim=%d,i=%d,',ndim,i);
+        msg = sprintf('Levmax=%d, ndim=%d,i=%d, ',...
+                       Levmax,ndim,i);
         for idim=1:ndim,
-          msg = strcat(msg,sprintf('Nmat{%d}(%d)=%d,', ...
+          msg = strcat(msg,sprintf('Nmat{%d}(%d)=%d, ', ...
                         idim, iv(idim), Nmat{idim}(iv(idim)) ));
         end;
         disp( msg );
@@ -50,14 +52,14 @@ for Levsum=imin:imax,
    m = 0;
    if (ndim == 1),
      for i1=1:numel( Nmat{1} ),
-             if (Nmat{1}(i1) <= Levsum),
+             if (Nmat{1}(i1) <= Levmax),
                      m = m +1;
              end;
      end;
    elseif (ndim == 2),
      for i1=1:numel( Nmat{1} ),
      for i2=1:numel( Nmat{2} ),
-           if (Nmat{1}(i1) + Nmat{2}(i2) <= Levsum),
+           if (max(Nmat{1}(i1) , Nmat{2}(i2)) <= Levmax),
                    m = m + 1;
            end;
      end;
@@ -66,8 +68,7 @@ for Levsum=imin:imax,
      for i1=1:numel( Nmat{1} ),
      for i2=1:numel( Nmat{2} ),
      for i3=1:numel( Nmat{3} ),
-           if (Nmat{1}(i1) + Nmat{2}(i2) + ...
-               Nmat{3}(i3) <= Levsum),
+           if (max(Nmat{1}(i1) , max(Nmat{2}(i2) , Nmat{3}(i3))) <= Levmax),
                    m = m + 1;
            end;
      end;
@@ -78,8 +79,8 @@ for Levsum=imin:imax,
      for i2=1:numel( Nmat{2} ),
      for i3=1:numel( Nmat{3} ),
      for i4=1:numel( Nmat{4} ),
-           if (Nmat{1}(i1) + Nmat{2}(i2) + ...
-               Nmat{3}(i3) + Nmat{4}(i4) <= Levsum),
+           if (max( max(Nmat{1}(i1) , Nmat{2}(i2)) , ...
+                    max(Nmat{3}(i3) , Nmat{4}(i4)) ) <= Levmax),
                    m = m + 1;
            end;
      end;
@@ -97,10 +98,10 @@ for Levsum=imin:imax,
    end;
 
    if (nerrors == 0),
-      disp(sprintf('ndim=%d, Levsum=%d is OK', ndim,Levsum));
+      disp(sprintf('ndim=%d, Levmax=%d is OK', ndim,Levmax));
    else
-      error(sprintf('ndim=%d, Levsum=%d has %d errors', ...
-                    ndim,    Levsum, nerrors));
+      error(sprintf('ndim=%d, Levmax=%d has %d errors', ...
+                    ndim,    Levmax, nerrors));
       break;
    end;      
 
