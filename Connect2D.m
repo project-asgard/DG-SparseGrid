@@ -16,6 +16,11 @@ function Con2D=Connect2D(Lev,HASH,HASHInv,gridType)
 %=============================================================
 global hash_format
 
+% ----------------------
+% option to sort index_J
+% ----------------------
+do_sort = 1;
+
 Con1D = Connect1D(Lev);
 nHash = numel(HASHInv);
 
@@ -83,6 +88,10 @@ for ii=1:nHash
             
         end
     end
+
+    if (do_sort),
+            index_J = sort(index_J);
+    end;
     
     Con2D{ii} = index_J;
     
