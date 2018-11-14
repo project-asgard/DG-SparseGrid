@@ -85,31 +85,31 @@ for i = 1:size(ComLev,1)
     
     for d = 1:Dim
        Cell_loc{d}=[0:2^max(Lev_loc(d)-1,0)-1]; 
-       index = LevCell2index(Lev_loc(d),Cell_loc{d});
+       index = LevCell2index(Lev,Cell_loc{d});
        ComLevIndex{i}.lid{d} = index;
     end
     
     [Cel1,Cel2] = meshgrid(Cell_loc{:}); % need more work to generalize d
 
-    key = zeros(numel(Cel1),2*Dim);
-    key(1:end,1:Dim) = repmat(Lev_loc,numel(Cel1),1);
-    key(:,Dim+1:2*Dim) = [Cel1(:),Cel2(:)];
+    key = zeros(size(Cel1,1),2*Dim);
+    key(:,1:Dim) = Lev_loc;
+    key(:,Dim+1:2*Dim) = [Cel1(:),Cel2()];
     
     index = zeros(size(key,1),1);
     % find the index from HashTable
     for j =1:size(key,1)
-        index(j) = HASH.(sprintf(hash_format,key(j,:)));
+        index(j) = HASH.(sprintf(hash_format,key));
     end
     
     ComLevIndex{i}.gid = index;
-    clear key Cel1 Cel2 index
+    
 end
-count = 1;
+count = 0;
 
 for i = 1:size(ComLev,1)
     for j = 1:size(ComLev,1)
-        IndexI = ComLevIndex{i}.gid;
-        IndexJ = ComLevIndex{j}.gid;
+        IndexI = ComLevIndex{i};
+        IndexJ = ComLevIndex{j};
         
         for d = 1:Dim
             index_I{d} = ComLevIndex{i}.lid{d};
@@ -121,25 +121,15 @@ for i = 1:size(ComLev,1)
         tmpB=B( Deg*(index_I{2}(1)-1)+1:Deg*(index_I{2}(end)),...
                 Deg*(index_J{2}(1)-1)+1:Deg*(index_J{2}(end)) ); 
         
-        
+        A_encode{count}.IndexI = Deg^2*(IndexI(1)-1)+1:Deg^2*IndexI(end);
     
         A_encode{count}.A1=tmpA;
         A_encode{count}.A2=tmpB;
 
-        IndexI = Deg^2*(IndexI(1)-1)+1:Deg^2*IndexI(end);
-        IndexJ = Deg^2*(IndexJ(1)-1)+1:Deg^2*IndexJ(end);
-        
-        IndexI = reshape(IndexI,numel(IndexI)/Deg,Deg);
-%         IndexI = reshape(IndexI,Deg,numel(IndexI)/Deg);
-        IndexI = IndexI';
-%         IndexJ = reshape(IndexJ,Deg,numel(IndexJ)/Deg);
-        IndexJ = reshape(IndexJ,numel(IndexJ)/Deg,Deg);
-        IndexJ = IndexJ';
-        
-        A_encode{count}.IndexI = IndexI(:);
-        A_encode{count}.IndexJ = IndexJ(:);
+        IndexJ=Deg^2*(IndexJ(1)-1)+1:Deg^2*IndexJ(end);
+        A_encode{count}.IndexJ = IndexJ;
         
         count = count+1;
     end    
 end
-
+11

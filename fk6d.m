@@ -46,7 +46,7 @@ if ~exist('TEND','var') || isempty(TEND)
 end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
-    Lev = 3;
+    Lev = 2;
 end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
@@ -58,7 +58,7 @@ if ~exist('quiet','var') || isempty(quiet)
 end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
-    compression = 4;
+    compression = 3;
 end
 if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG'%'FG';
@@ -172,7 +172,11 @@ if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
 if compression == 3
-    A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
+%     A_encode=GlobalMatrixSG_old(vMassV,GradX,HASHInv,Con2D,Deg);
+%     A_encode=GlobalMatrixSG(vMassV,GradX,HASH,Lev,Deg);
+
+    A_old=GlobalMatrixSG_old(vMassV,GradX,HASHInv,Con2D,Deg);
+    A_new=GlobalMatrixSG(vMassV,GradX,HASH,Lev,Deg);
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
@@ -279,7 +283,8 @@ for L = 1:nsteps,
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
     if compression == 3
-        B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
+        B_encode = GlobalMatrixSG_old(GradV,EMassX,HASHInv,Con2D,Deg);
+%         B_encode = GlobalMatrixSG(GradV,EMassX,HASH,Lev,Deg);
         C_encode=[A_encode B_encode];
     else
         
