@@ -112,7 +112,24 @@ iperm = reshape(transpose(reshape(1:(6*n^3), n^3, 6)), 6*n^3,1);
 % P*Adiag*P * P'*yans = P*brhs_hat
 % --------------------------------
 yans = zeros(6*n^3,1);
-yans(iperm) = Adiag( iperm, iperm) \ brhs_hat(iperm);
+use_kxk = 1;
+if (use_kxk),
+  k = 6;
+  for iblock=1:(size(Adiag,1)/k);
+      i1 = 1 + (iblock-1)*k;
+      i2 = i1 + k-1;
+      Ai = Adiag(iperm(i1:i2), iperm(i1:i2));
+      bi = brhs_hat(iperm(i1:i2));
+      yi = Ai\bi;
+      yans(iperm(i1:i2)) = yi;
+  end;
+else
+  yans(iperm) = Adiag( iperm, iperm) \ brhs_hat(iperm);
+end;
+if (idebug >= 1),
+        spy( Adiag(iperm,iperm) ); 
+        title('Adiag(iperm,iperm)');
+end;
 
 % ---------------------------
 % recover xans as Vmat * yans
@@ -132,107 +149,38 @@ end;
 % --------------
 if (idebug >= 1),
 
-itop = 1:(3*n^3);
-ibot = (3*n^3) + itop;
-xtop = xans(itop);
-xbot = xans(ibot);
 
-% ---------------------------
-% A = [eye ,  -dt*M] * [xtop;
-%     [dt*M,   eye ]    xbot]
-% ---------------------------
-Ax = zeros(size(brhs));
-
-Ax(itop) = xans(itop);
-Ax(ibot) = xans(ibot);
-
-
-w = [xtop, xbot];
-% compute M * w
-% M =  
-% [ 0,    M12,  M13;
-%  -M12,  0,    M23;
-%  -M13,  -M23,  0]
-%
-% M12 = kron(eye,eye,B)
-% M13 = -kron(eye,B,eye)
-% M23 = kron(B,eye,eye)
-
-w1 = w( 1:(n^3),: );
-w2 = w( (n^3) + (1:(n^3)),: );
-w3 = w( 2*n^3 + (1:(n^3)),: );
-% -----------------------------------
-% M12w2 = M12 * w2 = kron(eye,eye,B)*w2
-% M13w3 = M13 * w3 = -kron(eye,B,eye)*w3
-% -----------------------------------
-M12w2 =  kron_mult3( E,E,B, w1);
-M13w3 = -kron_mult3( E,B,E, w3);
-Mw1 = M12w2 + M13w3;
-clear M12w2
-clear M13w3
-
-% -----------------------------------
-% M12w1 = M12*w1 = kron(eye,eye,B)*w1
-% M23w3 = M23*w3 = kron(B,eye,eye)*w3
-% -----------------------------------
-M12w1 = kron_mult3( E,E,B, w1 );
-M23w3 = kron_mult3( B,E,E, w3 );
-Mw2 = -M12w1 + M23w3;
-clear M12w1;
-clear M13w3;
-
-% -----------------------------------
-% M13w1 = M13*w1 = -kron(eye,B,eye)*w1
-% M23w2 = M23*w2 =  kron(B,eye,eye)*w2
-% -----------------------------------
-M13w1 = -kron_mult3(E,B,E, w1);
-M23w2 =  kron_mult3(B,E,E, w2);
-Mw3 = -M13w1 - M23w2;
-clear M13w1;
-clear M23w2;
-Mw = [Mw1; ...
-      Mw2; ...
-      Mw3];
-
-clear Mw1
-clear Mw3
-clear Mw3
-
-Mxtop = Mw(1:(3*n^3),1);
-Mxbot = Mw(1:(3*n^3),2);
-
-
-Ax(itop) = Ax(itop) - dt*Mxbot;
-Ax(ibot) = Ax(ibot) + dt*Mxtop;
-
-resid = brhs - Ax;
-disp(sprintf('norm(resid,1)=%g, norm(brsh,1)=%g, norm(xans,1)=%g', ...
-              norm(resid,1),    norm(brhs,1),    norm(xans,1) ));
-
-
-
-% -------------
-% form A and M
-% -------------
-Z = sparse(n^3,n^3);
-% ---------------------
-% M12 = kron(eye,eye,B)
-% M13 = -kron(eye,B,eye)
-% M23 = kron(B,eye,eye)
-% ---------------------
-M12 = kron(E,kron(E,B));
-M13 = -kron(E,kron(B,E));
-M23 = kron(B,kron(E,E));
-
-M = [Z,     M12, M13; ...
-     -M12,  Z,   M23; ...
-     -M13, -M23, Z ];
-A = [speye(3*n^3,3*n^3),  -dt*M; ...
-    dt*M,                 speye(3*n^3,3*n^3)];
-
-Ax = A * xans;
-resid = brhs - Ax;
-disp(sprintf('norm(resid,1)=%g, norm(brsh,1)=%g, norm(xans,1)=%g', ...
-              norm(resid,1),    norm(brhs,1),    norm(xans,1) ));
-
+  % ------------
+  % evaluate A*xans
+  % ------------
+  x1 = xans( 1:(3*n^3) );
+  x2 = xans( (3*n^3) + (1:(3*n^3)) );
+  Ax1 =  x1              + (-dt)*multM( B,x2);
+  Ax2 =  dt*multM(B, x1) + x2;
+  Ax = [Ax1; ...
+        Ax2];
+  resid = brhs - Ax;
+  disp(sprintf('norm(resid,1)=%g, norm(brhs,1)=%g, norm(xans,1)=%g', ...
+                norm(resid,1),    norm(brhs,1),    norm(xans,1) ));
+  
+  
+  if (idebug >= 2),
+    % -------------
+    % form A and M
+    % -------------
+    Z = sparse(n^3,n^3);
+    M = formM( B );
+    
+    eye3 = speye(3*n^3,3*n^3);
+    A = [eye3,  -dt*M; ...
+        dt*M,   eye3 ];              
+    
+    Ax = A * xans;
+    resid = brhs - Ax;
+    disp(sprintf('norm(resid,1)=%g, norm(brhs,1)=%g, norm(xans,1)=%g', ...
+                  norm(resid,1),    norm(brhs,1),    norm(xans,1) ));
+  end;
+  
 end;
+
+end
