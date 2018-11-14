@@ -17,7 +17,7 @@ global A_encode
 
 addpath(genpath(pwd))
 
-Lev = 4;
+Lev = 3;
 Deg = 2;
 Lmax = 1;
 pde = Maxwell1;
@@ -115,7 +115,9 @@ if isequal(TypeAssembleMatrix,'elementwise') == 1
             
             IndexJ = [Deg^3*(combs_index(l2,1)-1)+1:Deg^3*combs_index(l2,2)];
             
-            A_loc = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat1D,pde.w2,Dofs,...
+%             A_loc = AssembleAencodeMaxwell3(IndexI,IndexJ,Mat1D,pde.w2,Dofs,...
+%                 row1,row2,row3,col1,col2,col3,alpha,alpha1);
+            A_loc = AssembleAencodeMaxwell4(IndexI,IndexJ,Mat1D,pde.w2,Dofs,...
                 row1,row2,row3,col1,col2,col3,alpha,alpha1);
             
             A_encode = [A_encode,A_loc];
@@ -173,13 +175,13 @@ uu = ff/(2*pi^2-pde.w2);
 % % sol = cg(x,ff,MaxIter,Tol);
 % % [max(abs(sol-uu)) norm(sol-uu)]
 
-[sol_bicg,flag_bicg,rr_bicg,iter_bicg,rv_bicg] = bicgstab(@afun,ff,Tol,MaxIter);
-semilogy(0:length(rv_bicg)-1,rv_bicg/norm(ff),'-o','linewidth',2,'markersize',8);
-hold on;
-[max(abs(sol_bicg-uu)) norm(sol_bicg-uu)]
-'done of bicg'
+% % [sol_bicg,flag_bicg,rr_bicg,iter_bicg,rv_bicg] = bicgstab(@afun,ff,Tol,MaxIter);
+% % semilogy(0:length(rv_bicg)-1,rv_bicg/norm(ff),'-o','linewidth',2,'markersize',8);
+% % hold on;
+% % [max(abs(sol_bicg-uu)) norm(sol_bicg-uu)]
+% % 'done of bicg'
 
-[sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun,ff,Tol,MaxIter);
+[sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun2,ff,Tol,MaxIter);
 semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o','linewidth',2,'markersize',8);
 hold on;
 [max(abs(sol_CG-uu)) norm(sol_CG-uu)]
@@ -187,12 +189,12 @@ hold on;
 
 
 
-[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,100,Tol,MaxIter);
-semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
-legend({'CG','BICG','GMRES'},'fontsize',20)
-xlabel('Iteration number');
-ylabel('Relative residual');
-[max(abs(sol_GMRES-uu)) norm(sol_GMRES-uu)]
+% % [sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,100,Tol,MaxIter);
+% % semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
+% % legend({'CG','BICG','GMRES'},'fontsize',20)
+% % xlabel('Iteration number');
+% % ylabel('Relative residual');
+% % [max(abs(sol_GMRES-uu)) norm(sol_GMRES-uu)]
 
 
 
