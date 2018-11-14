@@ -15,6 +15,7 @@ function [xans] = solveImplicit( B, dt, brhs )
 % M23 = kron(B,eye,eye)
 %
 idebug = 1;
+estimate_spectrum = 1;
 n = size(B,1);
 isok = (size(B,2) == n);
 if (~isok),
@@ -113,9 +114,9 @@ iperm = reshape(transpose(reshape(1:(6*n^3), n^3, 6)), 6*n^3,1);
 % --------------------------------
 yans = zeros(6*n^3,1);
 use_kxk = 1;
+k = 6;
 if (use_kxk),
-  k = 6;
-  for iblock=1:(size(Adiag,1)/k);
+  for iblock=1:(size(Adiag,1)/k),
       i1 = 1 + (iblock-1)*k;
       i2 = i1 + k-1;
       Ai = Adiag(iperm(i1:i2), iperm(i1:i2));
@@ -123,10 +124,48 @@ if (use_kxk),
       yi = Ai\bi;
       yans(iperm(i1:i2)) = yi;
   end;
+
+
+
+if (estimate_spectrum),
+  nblocks = size(Adiag,1)/k;
+  disp(sprintf('nblocks = %d', nblocks));
+
+  lamb = zeros(6,nblocks);
+  for iblock=1:(size(Adiag,1)/k),
+      i1 = 1 + (iblock-1)*k;
+      i2 = i1 + k-1;
+      Ai = Adiag(iperm(i1:i2), iperm(i1:i2));
+      lamb(1:6,iblock) = eig( full(Ai) );
+  end;
+
+  lamb = reshape( lamb, prod(size(lamb)),1);
+
+  figure;
+  plot( real( lamb(:)), imag(lamb(:)),'.');
+  title('spectrum of A');
+
+  min_re = min( real(lamb));
+  max_re = max( real(lamb));
+  min_im = min( imag(lamb));
+  max_im = max( imag(lamb));
+  min_abs = min( abs(lamb));
+  max_abs = max( abs(lamb));
+  disp(sprintf(...
+      'min_re=%g,max_re=%g,min_im=%g,max_im=%g,min_abs=%g,max_abs=%g',...
+       min_re,   max_re,   min_im,   max_im,   min_abs,   max_abs));
+
+end;
+
+
+
+
+
 else
   yans(iperm) = Adiag( iperm, iperm) \ brhs_hat(iperm);
 end;
-if (idebug >= 1),
+if (idebug >= 2),
+        figure;
         spy( Adiag(iperm,iperm) ); 
         title('Adiag(iperm,iperm)');
 end;
@@ -179,6 +218,8 @@ if (idebug >= 1),
     resid = brhs - Ax;
     disp(sprintf('norm(resid,1)=%g, norm(brhs,1)=%g, norm(xans,1)=%g', ...
                   norm(resid,1),    norm(brhs,1),    norm(xans,1) ));
+
+
   end;
   
 end;
