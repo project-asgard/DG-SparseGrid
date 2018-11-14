@@ -5,7 +5,7 @@ in the 2D setting (1x1v).
 
 ### Run after cloning
 
-> run main_Vlasov.m
+> run fk6D.m
 
 ### Run other tests and Modifying the parameters
 
@@ -25,3 +25,10 @@ in the 2D setting (1x1v).
  - The globa matrix is generated through looping over Hash Table
  - Insert the 1D index mapping to HashTable
  - Slow Version of GlobalMatrix_SG is updated in the slowversion foler
+
+### Construction of matrix_coeff_TI
+* [vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI
+- vMassV 
+- GradV
+- GradX
+- DeltaX
