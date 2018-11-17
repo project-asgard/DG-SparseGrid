@@ -46,7 +46,7 @@ if ~exist('TEND','var') || isempty(TEND)
 end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
-    Lev = 2;
+    Lev = 4;
 end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
@@ -174,9 +174,10 @@ if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coe
 if compression == 3
 %     A_encode=GlobalMatrixSG_old(vMassV,GradX,HASHInv,Con2D,Deg);
 %     A_encode=GlobalMatrixSG(vMassV,GradX,HASH,Lev,Deg);
-
-    A_old=GlobalMatrixSG_old(vMassV,GradX,HASHInv,Con2D,Deg);
-    A_new=GlobalMatrixSG(vMassV,GradX,HASH,Lev,Deg);
+%     II = rand(8,8);JJ = rand(8,8);
+    II = vMassV;JJ = GradX;
+    A_old=GlobalMatrixSG_old(II,JJ,HASHInv,Con2D,Deg);
+    A_new=GlobalMatrixSG(II,JJ,HASH,Lev,Deg);
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
