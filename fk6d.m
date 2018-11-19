@@ -50,7 +50,7 @@ if ~exist('Lev','var') || isempty(Lev)
 end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
-    Deg = 2; % Deg = 2 Means Linear Element
+    Deg = 1; % Deg = 2 Means Linear Element
 end
 if ~exist('quiet','var') || isempty(quiet)
     % Enable / disable print statements
