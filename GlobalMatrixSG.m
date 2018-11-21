@@ -24,17 +24,18 @@ for i = 1:size(ComLev,1)
         ComLevIndex{i}.lid{d} = index;
     end
     
-%     [Cel1,Cel2] = meshgrid(Cell_loc{:}); % need more work to generalize d
-    nz1=size(Cell_loc{1},2);
-    nz2=size(Cell_loc{2},2);
-    Cel1 = zeros(nz1*nz2,1);
-    Cel2 = zeros(nz1*nz2,1);
-    for k = 1:nz1
-    Cel1(k:nz2:end)=Cell_loc{1}(k);
-    end
-    for k = 1:nz2
-    Cel2((k-1)*nz1+1:k*nz1) = Cell_loc{2}(k);
-    end
+    [Cel1,Cel2] = meshgrid(Cell_loc{:}); % need more work to generalize d
+    
+%     nz1=size(Cell_loc{1},2);
+%     nz2=size(Cell_loc{2},2);
+%     Cel1 = zeros(nz1*nz2,1);
+%     Cel2 = zeros(nz1*nz2,1);
+%     for k = 1:nz1
+%     Cel1(k:nz2:end)=Cell_loc{1}(k);
+%     end
+%     for k = 1:nz2
+%     Cel2((k-1)*nz1+1:k*nz1) = Cell_loc{2}(k);
+%     end
     
     key = zeros(numel(Cel1),2*Dim);
     key(1:end,1:Dim) = repmat(Lev_loc,numel(Cel1),1);
@@ -54,9 +55,9 @@ count = 1;
 
 for i = 1:size(ComLev,1)
     for j = 1:size(ComLev,1)
-        IndexI = ComLevIndex{i}.gid
+        IndexI = ComLevIndex{i}.gid;
         sizeI = size(IndexI,2);
-        IndexJ = ComLevIndex{j}.gid
+        IndexJ = ComLevIndex{j}.gid;
         sizeJ = size(IndexJ,2);
         
         for d = 1:Dim
@@ -65,9 +66,9 @@ for i = 1:size(ComLev,1)
         end
         
 
-        if i == 12 || j == 12
-            111111
-        end
+%         if i == 12 || j == 12
+%             111111
+%         end
         
         tmpA=A( Deg*(index_I{1}(1)-1)+1:Deg*(index_I{1}(end)),...
             Deg*(index_J{1}(1)-1)+1:Deg*(index_J{1}(end)) );
@@ -77,6 +78,7 @@ for i = 1:size(ComLev,1)
             Deg*(index_J{2}(1)-1)+1:Deg*(index_J{2}(end)) );
         Bn1 = size(tmpB,1)/Deg;
         Bn2 = size(tmpB,2)/Deg;
+
 %         if norm(tmpA)>1e-10 && norm(tmpB)>1e-10
             
             A_encode{count}.A1=tmpA;
@@ -110,11 +112,51 @@ for i = 1:size(ComLev,1)
                 tmp_IndexJ = [tmp_IndexJ;t(:)];
             end
             IndexJ = tmp_IndexJ;
+
+% %         tmpB=A( Deg*(index_I{1}(1)-1)+1:Deg*(index_I{1}(end)),...
+% %             Deg*(index_J{1}(1)-1)+1:Deg*(index_J{1}(end)) );
+% %         An1 = size(tmpB,1)/Deg;
+% %         An2 = size(tmpB,2)/Deg;
+% %         tmpA=B( Deg*(index_I{2}(1)-1)+1:Deg*(index_I{2}(end)),...
+% %                 Deg*(index_J{2}(1)-1)+1:Deg*(index_J{2}(end)) );
+% %         Bn1 = size(tmpA,1)/Deg;
+% %         Bn2 = size(tmpA,2)/Deg;
+% % 
+% % 
+% %         
+% % %         if norm(tmpA)>1e-10 && norm(tmpB)>1e-10
+% %             
+% %             A_encode{count}.A1=tmpA;
+% %             A_encode{count}.A2=tmpB;
+% %             
+% %             IndexI = Deg^2*(IndexI(1)-1)+1:Deg^2*IndexI(end);
+% %             IndexI = reshape(IndexI,An1*Deg,Bn1*Deg);
+% % %             t = mat2cell(IndexI,repmat(Deg,An2,1),repmat(Deg,Bn2,1));
+% %             
+% %             tmp_IndexI = [];
+% %             
+% %             for k = 1:Deg
+% %                 t = IndexI(:,k:Deg:end);
+% %                 tmp_IndexI = [tmp_IndexI;t(:)];
+% %             end
+% % 
+% %             IndexI = tmp_IndexI;
+% %             
+% %             IndexJ = Deg^2*(IndexJ(1)-1)+1:Deg^2*IndexJ(end);
+% %             IndexJ = reshape(IndexJ,An2*Deg,Bn2*Deg);
+% % 
+% %            tmp_IndexJ = [];
+% %             
+% %             for k = 1:Deg
+% %                 t = IndexJ(:,k:Deg:end);
+% %                 tmp_IndexJ = [tmp_IndexJ;t(:)];
+% %             end
+% %             IndexJ = tmp_IndexJ;
             
             A_encode{count}.IndexI = IndexI;
             A_encode{count}.IndexJ = IndexJ;
-%             IndexI
-%             IndexJ
+            IndexI
+            IndexJ
             
             count = count+1;
 %         end
