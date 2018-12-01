@@ -1,12 +1,51 @@
-function coeff_matrix(term,domain)
+%% Construct 1D coefficient matrix
+% This routine returns a 2D array representing an operator coefficient
+% matrix for a single-D. Each term in a PDE requires D many coefficient
+% matricies. These operators can only use the supported types below.
+%
+function coeff_matrix(t,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 
-%function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+%% Inputs
+% lev  : number of levels in hierachical basis
+% deg  : order of legendre basis
+% type : object of type term (see below)
+% xMin : minimum of this D domain range
+% xMax : maximum of this D domain range
+% BCL  : Boundary Condition (Left),  select from list of BCs below
+% BCR  : Boundary Condition (Right), select from list of BCs below
+% LF   : =0 for CF flux, or =C for LF flux with global C value
+% FMWT : Forward Multi-Wavelet Transform matrix
+
+%% "type" object
+% This object contains the information to specify the type of the operator.
+% It defines the following ...
+%  coeff_type : int from coeff_type list below
+%  TD         : 0 or 1 (is this term time dependent)
+%  g1(x,t)    : function handle to g1 function
+%  g2(x,t)    : function handle to g2 function
+%  g3(x,t)    : function handle to g3 function
+
+%% Boundary condition types (BCL and BCR)
+% 0 == periodic
+% 1 == dirichlet (set value of solution)
+% 2 == neumann   (set first derivative of solution)
+
+%% Available coefficient types (coeff_type)
+% 1 == FuncGrad
+% 2 == FuncMass
+% 3 == ???
+
+%% Note on global vs local Lax-Friedrichs (LF) flux
+% We do not (cannot) use local upwinding or LF because selecting
+% either the sign of the flow field or the value of the coefficient C could
+% be multivalued within the multi-D solution for a single-D coeff_matrix.
+
+%function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,lev,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
 %=============================================================
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
-%   Operators:  vMassV: int_v v*l_i(v)*l_j(v)dv
-%               GradV: int_v (l_i(v))'*l_j(v)dv
-%               GradX: int_x (m_i(x))'*m_j(x)dx
+%   Operators:  vMassV:  int_v v * l_i(v)  * l_j(v) dv
+%               GradV :  int_v 1 * l_i(v)' * l_j(v) dv
 % Poisson Solver:
 %   Operators: DeltaX: int_x (m_i(x))''*m_j(x)dx
 %   This equation is solved by LDG methods
@@ -16,237 +55,160 @@ function coeff_matrix(term,domain)
 % P.S. This is the full-grid version
 %=============================================================
 
-% Things to add ...
+%% TODO ...
+% * Choice of flux (may require input C)
+% * Other BCs
+% * Picking which term type
 
-% 1. Choice of flux (may require input C)
-% 2. Other BCs
-% 3. Picking which term type
+%%
+% Set number of quatrature points (should this be order dependant?)
+quad_num = 10;
 
+%%
+%  Get quadrature points and weights.
+%  quad_x(:) is quad_num by 1
+%  quad_w(:) is quad_num by 1
+[quad_x,quad_w] = lgwt(quad_num,-1,1);
 
-%--Quadrature
-quad_num=10;
-%---------------
+%%
+%  Compute the trace values (values at the left and right of each element for all k)
+%  p_1(:) is 1 by deg
+%  p_2(:) is 1 by deg
+p_1 = legendre(-1,deg);
+p_2 = legendre(+1,deg);
 
-% ------------------------------------
-% compute the trace values
-% note vector p_1[] is 1 by k,
-%      vector p_2[] is 1 by k
-% ------------------------------------
-p_1 = legendre(-1,k);
-p_2 = legendre(1,k);
+%%
+%  Get the basis functions and derivatives for all k
+%  p_val(:,:) is quad_num by deg
+%  Dp_val(:,:) is quad_num by deg
+p_val  = legendre(quad_x,deg);
+Dp_val = dlegendre(quad_x,deg);
 
-% ----------------------------------
-% note quad_x(:) is quad_num by 1
-%      quad_w(:) is quad_num by 1
-%      p_val(:,:) is quad_num by k
-%      Dp_val(:,:) is quad_num by k
-% ----------------------------------
-[quad_x,quad_w]=lgwt(quad_num,-1,1);
-p_val = legendre(quad_x,k);
-Dp_val = dlegendre(quad_x,k);
+%%
+% Setup jacobi of variable x and define coeff_mat
+N = 2^(lev);
+h = (Vmax-Vmin) / N;
+jacobi = h;
+dof_1D = deg * N;
 
-%---------------------------
-% Jacobi of variable x and v
-% Define Matrices
-%---------------------------
+vMassV = sparse(dof_1D,dof_1D);
+GradV  = sparse(dof_1D,dof_1D);
+FluxV  = sparse(dof_1D,dof_1D);
 
-nv=2^(Lev_v);
-hv=(Vmax-Vmin)/nv;
-Jacobi_v=hv;
-dof_1D_v=k*nv;
-
-if (use_dense),
-    vMassV=zeros(dof_1D_v,dof_1D_v);
-    GradV=zeros(dof_1D_v,dof_1D_v);
-    FluxV=zeros(dof_1D_v,dof_1D_v);%%
-else
-    vMassV=sparse(dof_1D_v,dof_1D_v);
-    GradV=sparse(dof_1D_v,dof_1D_v);
-    FluxV=sparse(dof_1D_v,dof_1D_v);%%
-end;
-
-
-
-%======================================
-% Matrices related to v variable
-% vMassV, GradV
-%======================================
-% (vf(v),w(v))_Kv
-vMax=0;
-for Lv=0:nv-1
+%% Loop over all elements in this D
+for i=0:N-1
     
+    %%
     % Get index ranges for ...
     
-    % Current element
-    % -----------------
-    % c=k*Lv+1:k*(Lv+1);
-    % -----------------
-    c1 = k*Lv+1;
-    c2 = k*(Lv+1);
+    %%
+    %  Current element
+    c1 = deg*i+1;
+    c2 = deg*(i+1);
     c = c1:c2;
     
+    %%
     % Previous element
-    % ------------------
-    % p=k*(Lv-1)+1:k*Lv;
-    % ------------------
-    p1 = k*(Lv-1)+1;
-    p2 = k*Lv;
+    p1 = deg*(i-1)+1;
+    p2 = deg*i;
     p = p1:p2;
     
+    %%
     % Later element
-    % ----------------------
-    % l=k*(Lv+1)+1:k*(Lv+2);
-    % ----------------------
-    l1 = k*(Lv+1)+1;
-    l2 = k*(Lv+2);
+    l1 = deg*(i+1)+1;
+    l2 = deg*(i+2);
     l = l1:l2;
     
+    %%
     % Map from [-1,1] to physical domain
-    % ----------------------------------
     
-    xi_v=(( (quad_x+1)/2+Lv)*hv+Vmin);
+    x = (((quad_x+1)/2+i)*h+Vmin);
     
+    %%
     % Build Average (AVG) and Jump (JMP) operators
-    % --------------------------------------------
     
-    val_AVG=(1/hv)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
+    val_AVG=(1/h)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
         p_2'*p_2/2   p_2'*p_1/2];     % for x2
     
-    val_JMP=1/hv*[p_1'*p_2 -p_1'*p_1,... % for x1
+    val_JMP=1/h*[p_1'*p_2 -p_1'*p_1,... % for x1
         -p_2'*p_2  p_2'*p_1]/2; % for x2 %%
     
     
-    % 1. Perform volume integral
-    % -----------------------
-    val_vMassV=p_val'*(p_val.*xi_v.*quad_w)*Jacobi_v/2/hv;
-    val_AVG=1/hv*[Dp_val'*(quad_w.*p_val)];
+    %%
+    % Perform volume integral
+    val_vMassV = p_val'*(p_val.*x.*quad_w)*jacobi/2/h;
+    val_gradV  = 1/h*[Dp_val'*(quad_w.*p_val)];
     
-    Iu=meshgrid(k*Lv+1:k*(Lv+1));
+    Iu=meshgrid(k*i+1:k*(i+1));
     
-    vMassV=vMassV+sparse(Iu',Iu,val_vMassV,dof_1D_v,dof_1D_v);
-    GradV =GradV +sparse(Iu',Iu,val_AVG,dof_1D_v,dof_1D_v);
+    vMassV=vMassV+sparse(Iu',Iu,val_vMassV,dof_1D,dof_1D);
+    GradV =GradV +sparse(Iu',Iu,val_AVG,dof_1D,dof_1D);
     
     
-    % 2. Setup numerical flux choice (interior elements only)
-    % ---------------------------
+    %%
+    % Setup numerical flux choice (interior elements only)
     
-    if Lv<nv-1 && Lv>0
+    if i<N-1 && i>0
         
         Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
         Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
         
     end
     
-    % 3. Setup boundary conditions
-    % -------------------------
-    
-    BC = 'periodic';
-    
-    % Periodic BCs
-    % ------------
-    
+    %%
+    % Setup boundary conditions
+        
     if strcmp(BC,'periodic')
         
-        % Element left side
-        if Lv==0
-            
-            Iu=[meshgrid([k*(nv-1)+1:k*(nv)]),meshgrid(c),meshgrid(c),meshgrid(l)];
+        %%
+        % Left boundary
+        if i==0
+            Iu=[meshgrid([k*(N-1)+1:k*(N)]),meshgrid(c),meshgrid(c),meshgrid(l)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-            
-            % Element right side
-        elseif Lv==nv-1
-            
+        end
+        
+        %%
+        % Right boundary
+        if i==N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
         end
         
     end
     
-    % Dirichelt BCs
-    % -------------
-    
     if strcmp(BC,'dirichlet')
+        
+        %%
+        % TODO
+        
     end
-    
-    % Neumann BCs
-    % -----------
     
     if strcmp(BC,'neumann')
+        
+        %%
+        % TODO
+        
     end
     
+    %%
     % Apply flux choice / BCs
-    % -----------------------
     
-    GradV=GradV-sparse(Iv,Iu,val_AVG,dof_1D_v,dof_1D_v);
-    FluxV=FluxV+sparse(Iv,Iu,val_JMP,dof_1D_v,dof_1D_v);
+    GradV = GradV - sparse(Iv,Iu,val_AVG,dof_1D,dof_1D);
+    FluxV = FluxV + sparse(Iv,Iu,val_JMP,dof_1D,dof_1D);
     
 end
 
 
+%% Transform coeff_mat to wavelet space
+vMassV = FMWT_COMP_v * vMassV * FMWT_COMP_v';
+GradV  = FMWT_COMP_v * GradV  * FMWT_COMP_v';
+FluxV  = FMWT_COMP_v * FluxV  * FMWT_COMP_v';
 
 
+%% Construct block diagonal for LDG ?
+DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
+    DeltaX*...
+    blkdiag(FMWT_COMP_x',FMWT_COMP_x');
 
-%***************************************
-% Following is for Multiwavelet DG Basis
-% Simple way to convert??
-%***************************************
-% Transfer to multi-DG bases
-vMassV = FMWT_COMP_v*vMassV*FMWT_COMP_v';
-GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
-GradV = FMWT_COMP_v*GradV*FMWT_COMP_v';
-
-FluxV = FMWT_COMP_v*FluxV*FMWT_COMP_v';
-FluxX = FMWT_COMP_x*FluxX*FMWT_COMP_x';
-
-use_blkdiag = 0;
-if (use_blkdiag),
-    DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
-        DeltaX*...
-        blkdiag(FMWT_COMP_x',FMWT_COMP_x');
-else
-    % ----------------------------------------
-    % note blkdiag(A,B) creates a block diagonal matrix
-    % [A, 0;
-    % [0, B]
-    %
-    % let F = FMWT_COMP_x
-    %
-    % DeltaX = [F, 0;   [D11,  D12;   [F', 0;
-    %           0, F] * [D21,  D22] *  0 , F']
-    % DeltaX = [ F*D11*F',    F*D12*F';
-    %            F*D21*F',    F*D22*F']
-    % computed as
-    % step 1:  DeltaX = blkdiag(F,F) * DeltaX
-    % to form  [F * D11, F * D12;
-    %           F * D21, F * D22 ]
-    %
-    % step 2:  DeltaX = DeltaX * blkdiag(F',F')
-    % to form [ (F*D11)*F',   (F*D12)*F';
-    %           (F*D21)*F',   (F*D22)*F']
-    % ----------------------------------------
-    
-    % ---------------------------------
-    % note shape of DeltaX matrix
-    % is  (2*dof_1D_x)  by (2*dof_1D_x)
-    % ---------------------------------
-    m = dof_1D_x;
-    F = FMWT_COMP_x;
-    
-    % --------------------------------
-    % step 1: multiply by blkdiag(F,F) on left
-    % --------------------------------
-    
-    DeltaX(1:m, 1:(2*m)) = F * DeltaX(1:m,1:(2*m));
-    DeltaX((m+1):(2*m), 1:(2*m)) = F * DeltaX( (m+1):(2*m), 1:(2*m) );
-    
-    % -----------------------------------
-    % multiply by blkdiag(F',F') on right
-    % -----------------------------------
-    
-    DeltaX(1:(2*m), 1:m) = DeltaX(1:(2*m),1:m) * F';
-    DeltaX(1:(2*m), (m+1):(2*m)) = DeltaX(1:(2*m),(m+1):(2*m)) * F';
-end;
-
-% vMax
 
 end
