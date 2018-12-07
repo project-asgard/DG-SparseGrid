@@ -61,6 +61,13 @@ function [mat] = coeff_matrix(t,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 % * Picking which term type
 
 %%
+% Setup jacobi of variable x and define coeff_mat
+N = 2^(lev);
+h = (xMax-xMin) / N;
+jacobi = h;
+dof_1D = deg * N;
+
+%%
 % Set number of quatrature points (should this be order dependant?)
 quad_num = 10;
 
@@ -77,19 +84,14 @@ quad_num = 10;
 p_L = legendre(-1,deg);
 p_R = legendre(+1,deg);
 
+
 %%
 %  Get the basis functions and derivatives for all k
 %  p_val(:,:) is quad_num by deg
 %  Dp_val(:,:) is quad_num by deg
-p_val  = legendre(quad_x,deg);
-Dp_val = dlegendre(quad_x,deg);
+p_val  = legendre(quad_x,deg)  * 1/sqrt(h);
+Dp_val = dlegendre(quad_x,deg) * 1/sqrt(h) * 2/h;
 
-%%
-% Setup jacobi of variable x and define coeff_mat
-N = 2^(lev);
-h = (xMax-xMin) / N;
-jacobi = h;
-dof_1D = deg * N;
 
 Mass = sparse(dof_1D,dof_1D);
 Grad = sparse(dof_1D,dof_1D);
@@ -149,38 +151,33 @@ for i=0:N-1
     % M // mass matrix u . v
     myG1 = @(x,t) x; % gives the "v" in vMassV
     G1 = myG1(quad_xi,t);
-    val_mass = p_val' * (G1 .* p_val .* quad_w) * jacobi/2/h;
+    val_mass = p_val' * (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % G // grad matrix u . v'
     myG1 = @(x,t) 1;
     G1 = myG1(quad_xi,t);
-    val_grad  = Dp_val'* (G1 .* p_val .* quad_w) / h; % WHY IS THIS NORMALIZATION DIFFERENT THAN MASS?
+    val_grad  = Dp_val'* (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % S // stiffness matrix u' . v'
     myG1 = @(x,t) 1;
     G1 = myG1(quad_xi,t);
-    val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) / h;
+    val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) * h/2;
     
     Iu = meshgrid( deg*i+1 : deg*(i+1) );
     
-    %     vMassV=vMassV + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
-    %     GradV =GradV  + sparse(Iu',Iu,val_AVG,dof_1D,dof_1D);
-    
-    lin_index = sub2ind(size(Mass),Iu',Iu);
-    
-    Mass(lin_index) = Mass(lin_index) + val_mass;
-    Grad(lin_index) = Grad(lin_index) + val_grad;
-    Stif(lin_index) = Stif(lin_index) + val_stif;
+    Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
+    Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
+    Stif = Stif + sparse(Iu',Iu,val_stif,dof_1D,dof_1D);
     
     
     %%
     % Setup numerical flux choice (interior elements only)
     
-    if i<N-1 && i>0      
+    if i<N-1 && i>0
         Iu = [ meshgrid(p), meshgrid(c), meshgrid(c), meshgrid(l) ];
-        Iv = [ meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];      
+        Iv = [ meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
     end
     
     %%
@@ -247,13 +244,8 @@ for i=0:N-1
     % terms at this point, rather than leaving them as seperator operator
     % matrices?
     
-    lin_index = sub2ind(size(Mass),Iv,Iu);
-    
-%     Grad = Grad - sparse(Iv,Iu,val_AVG,dof_1D,dof_1D);
-%     Flux = Flux + sparse(Iv,Iu,val_JMP,dof_1D,dof_1D);
-    
-    Grad(lin_index) = Grad(lin_index) - val_AVG; % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
-    Flux(lin_index) = Flux(lin_index) + val_AVG;
+    Grad = Grad - sparse(Iv,Iu,val_AVG,dof_1D,dof_1D); % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
+    Flux = Flux + sparse(Iv,Iu,val_JMP,dof_1D,dof_1D);
     
 end
 
@@ -271,13 +263,13 @@ Flux = FMWT * Flux * FMWT';
 
 
 if type == 1
-    mat = Grad;  
+    mat = Grad;
 end
-if type == 2   
-    mat = Mass;    
+if type == 2
+    mat = Mass;
 end
-if type == 3   
-    mat = Stif;    
+if type == 3
+    mat = Stif;
 end
 
 end

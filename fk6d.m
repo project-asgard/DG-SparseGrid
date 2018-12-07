@@ -181,7 +181,7 @@ type = 1; % grad
 BCL = 0; 
 BCR = 0;
 LF = 0;
-GradV2 = coeff_matrix(0,LevV,Deg,1,Vmin,Vmax,0,0,0,FMWT_COMP_v);
+GradV2 = coeff_matrix(time,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
 
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
