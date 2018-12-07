@@ -116,7 +116,7 @@ for i = 1:size(ComLev,1)
             end
             IndexJ = tmp_IndexJ;
             
-        else
+        elseif ichoice == 3
             tmpA=A( Deg*(index_I{1}(1)-1)+1:Deg*(index_I{1}(end)),...
                 Deg*(index_J{1}(1)-1)+1:Deg*(index_J{1}(end)) );
             An1 = size(tmpA,1)/Deg;
