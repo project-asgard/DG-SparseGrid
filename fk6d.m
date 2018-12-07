@@ -15,7 +15,7 @@ function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,imp
 % where $\rho\left(x,t\right)=\int_v f(x,v,t) dv$.
 
 format short e
-
+111
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 
