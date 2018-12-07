@@ -3,7 +3,7 @@
 % matrix for a single-D. Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 %
-function coeff_matrix(t,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
+function [mat] = coeff_matrix(t,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 
 %% Inputs
 % lev  : number of levels in hierachical basis
@@ -31,16 +31,16 @@ function coeff_matrix(t,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 % 2 == neumann   (set first derivative of solution)
 
 %% Available coefficient types (coeff_type)
-% 1 == FuncGrad
-% 2 == FuncMass
-% 3 == ???
+% 1 == G (v .u')   Grad
+% 2 == M (v .u )   Mass
+% 3 == S (v'.u')   Stiffness
 
 %% Note on global vs local Lax-Friedrichs (LF) flux
 % We do not (cannot) use local upwinding or LF because selecting
 % either the sign of the flow field or the value of the coefficient C could
 % be multivalued within the multi-D solution for a single-D coeff_matrix.
 
-%function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,lev,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+%function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,lev,k,Lmin,Lmax,Vmin,Vmax,FMWT_x,FMWT_v)
 %=============================================================
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -72,10 +72,10 @@ quad_num = 10;
 
 %%
 %  Compute the trace values (values at the left and right of each element for all k)
-%  p_1(:) is 1 by deg
-%  p_2(:) is 1 by deg
-p_1 = legendre(-1,deg);
-p_2 = legendre(+1,deg);
+%  p_L(:) is 1 by deg
+%  p_R(:) is 1 by deg
+p_L = legendre(-1,deg);
+p_R = legendre(+1,deg);
 
 %%
 %  Get the basis functions and derivatives for all k
@@ -87,15 +87,18 @@ Dp_val = dlegendre(quad_x,deg);
 %%
 % Setup jacobi of variable x and define coeff_mat
 N = 2^(lev);
-h = (Vmax-Vmin) / N;
+h = (xMax-xMin) / N;
 jacobi = h;
 dof_1D = deg * N;
 
-vMassV = sparse(dof_1D,dof_1D);
-GradV  = sparse(dof_1D,dof_1D);
-FluxV  = sparse(dof_1D,dof_1D);
+Mass = sparse(dof_1D,dof_1D);
+Grad = sparse(dof_1D,dof_1D);
+Stif = sparse(dof_1D,dof_1D);
+Flux = sparse(dof_1D,dof_1D);
 
 %% Loop over all elements in this D
+%  Here we construct the 1D coeff_mat in realspace, then transform to
+%  wavelet space afterwards.
 for i=0:N-1
     
     %%
@@ -120,70 +123,118 @@ for i=0:N-1
     l = l1:l2;
     
     %%
-    % Map from [-1,1] to physical domain
+    % Map quadrature points from [-1,1] to physical domain of this i element
     
-    x = (((quad_x+1)/2+i)*h+Vmin);
+    quad_xi = (((quad_x+1)/2+i)*h+xMin);
     
     %%
     % Build Average (AVG) and Jump (JMP) operators
     
-    val_AVG=(1/h)*[-p_1'*p_2/2  -p_1'*p_1/2,...   % for x1
-        p_2'*p_2/2   p_2'*p_1/2];     % for x2
+    val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
+        p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
     
-    val_JMP=1/h*[p_1'*p_2 -p_1'*p_1,... % for x1
-        -p_2'*p_2  p_2'*p_1]/2; % for x2 %%
+    val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
+        -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+    
+    %%
+    % Combine AVG and JMP to give choice of flux for this operator type
+    
+    % TODO
     
     
     %%
-    % Perform volume integral
-    val_vMassV = p_val'*(p_val.*x.*quad_w)*jacobi/2/h;
-    val_gradV  = 1/h*[Dp_val'*(quad_w.*p_val)];
+    % Perform volume integral to give deg x deg matrix block
     
-    Iu=meshgrid(k*i+1:k*(i+1));
+    %%
+    % M // mass matrix u . v
+    myG1 = @(x,t) x; % gives the "v" in vMassV
+    G1 = myG1(quad_xi,t);
+    val_mass = p_val' * (G1 .* p_val .* quad_w) * jacobi/2/h;
     
-    vMassV=vMassV+sparse(Iu',Iu,val_vMassV,dof_1D,dof_1D);
-    GradV =GradV +sparse(Iu',Iu,val_AVG,dof_1D,dof_1D);
+    %%
+    % G // grad matrix u . v'
+    myG1 = @(x,t) 1;
+    G1 = myG1(quad_xi,t);
+    val_grad  = Dp_val'* (G1 .* p_val .* quad_w) / h; % WHY IS THIS NORMALIZATION DIFFERENT THAN MASS?
+    
+    %%
+    % S // stiffness matrix u' . v'
+    myG1 = @(x,t) 1;
+    G1 = myG1(quad_xi,t);
+    val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) / h;
+    
+    Iu = meshgrid( deg*i+1 : deg*(i+1) );
+    
+    %     vMassV=vMassV + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
+    %     GradV =GradV  + sparse(Iu',Iu,val_AVG,dof_1D,dof_1D);
+    
+    lin_index = sub2ind(size(Mass),Iu',Iu);
+    
+    Mass(lin_index) = Mass(lin_index) + val_mass;
+    Grad(lin_index) = Grad(lin_index) + val_grad;
+    Stif(lin_index) = Stif(lin_index) + val_stif;
     
     
     %%
     % Setup numerical flux choice (interior elements only)
     
-    if i<N-1 && i>0
-        
-        Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid(l)];
-        Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-        
+    if i<N-1 && i>0      
+        Iu = [ meshgrid(p), meshgrid(c), meshgrid(c), meshgrid(l) ];
+        Iv = [ meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];      
     end
     
     %%
     % Setup boundary conditions
-        
-    if strcmp(BC,'periodic')
+    
+    %%
+    % If periodic
+    
+    if BCL == 0 || BCR == 0 %% periodic'
         
         %%
         % Left boundary
         if i==0
-            Iu=[meshgrid([k*(N-1)+1:k*(N)]),meshgrid(c),meshgrid(c),meshgrid(l)];
+            Iu=[meshgrid([deg*(N-1)+1:deg*(N)]),meshgrid(c),meshgrid(c),meshgrid(l)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
         end
         
         %%
         % Right boundary
         if i==N-1
-            Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:k])];
+            Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:deg])];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
         end
         
     end
     
-    if strcmp(BC,'dirichlet')
+    %%
+    % If dirichelt
+    
+    if BCL == 1 %% left dirichlet
         
         %%
         % TODO
         
     end
     
-    if strcmp(BC,'neumann')
+    if BCR == 1 %% right dirichlet
+        
+        %%
+        % TODO
+        
+    end
+    
+    %%
+    % If neumann
+    
+    if BCL == 2 %% left neumann
+        
+        %%
+        % TODO
+        
+    end
+    
+    if BCR == 2 %% right neumann
         
         %%
         % TODO
@@ -192,23 +243,41 @@ for i=0:N-1
     
     %%
     % Apply flux choice / BCs
+    % Surely we can combine the AVG and JMP into the appropriate operator
+    % terms at this point, rather than leaving them as seperator operator
+    % matrices?
     
-    GradV = GradV - sparse(Iv,Iu,val_AVG,dof_1D,dof_1D);
-    FluxV = FluxV + sparse(Iv,Iu,val_JMP,dof_1D,dof_1D);
+    lin_index = sub2ind(size(Mass),Iv,Iu);
+    
+%     Grad = Grad - sparse(Iv,Iu,val_AVG,dof_1D,dof_1D);
+%     Flux = Flux + sparse(Iv,Iu,val_JMP,dof_1D,dof_1D);
+    
+    Grad(lin_index) = Grad(lin_index) - val_AVG; % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
+    Flux(lin_index) = Flux(lin_index) + val_AVG;
     
 end
 
 
 %% Transform coeff_mat to wavelet space
-vMassV = FMWT_COMP_v * vMassV * FMWT_COMP_v';
-GradV  = FMWT_COMP_v * GradV  * FMWT_COMP_v';
-FluxV  = FMWT_COMP_v * FluxV  * FMWT_COMP_v';
+Mass = FMWT * Mass * FMWT';
+Grad = FMWT * Grad * FMWT';
+Flux = FMWT * Flux * FMWT';
 
 
 %% Construct block diagonal for LDG ?
-DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
-    DeltaX*...
-    blkdiag(FMWT_COMP_x',FMWT_COMP_x');
+% DeltaX = blkdiag( FMWT,FMWT) * ...
+%          DeltaX * ...
+%          blkdiag( FMWT',FMWT');
 
+
+if type == 1
+    mat = Grad;  
+end
+if type == 2   
+    mat = Mass;    
+end
+if type == 3   
+    mat = Stif;    
+end
 
 end
