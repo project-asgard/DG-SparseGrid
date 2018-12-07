@@ -21,8 +21,8 @@ for i = 1:size(A_old,2)
 end
     
 figure;
-subplot(1,3,1); spy(AA_new);
-subplot(1,3,2); spy(AA_old);
+subplot(1,3,1); spy(AA_new);title('New')
+subplot(1,3,2); spy(AA_old);title('Old')
 B = AA_old-AA_new;
 B = abs(B)>1e-10;
 subplot(1,3,3); spy(B);
