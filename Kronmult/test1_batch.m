@@ -6,6 +6,7 @@ A2 = rand(3,4);
 A3 = rand(4,5);
 A4 = rand(5,6);
 A5 = rand(6,7);
+A6 = rand(3,2);
 
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
@@ -22,6 +23,8 @@ ncol4 = size(A4,2);
 nrow5 = size(A5,1);
 ncol5 = size(A5,2);
 
+nrow6 = size(A6,1);
+ncol6 = size(A6,2);
 
 nvec = 2;
 tol = 1e-7;
@@ -32,6 +35,7 @@ batch_list2 = clear_batch_list();
 batch_list3 = clear_batch_list();
 batch_list4 = clear_batch_list();
 batch_list5 = clear_batch_list();
+batch_list6 = clear_batch_list();
 
 % --------------
 % check Y1 = A1*X1
@@ -182,6 +186,83 @@ disp(sprintf('total work = %e ', ...
 [flops1,flops2,imethod,imem1,imem2] = flops_kron5( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3, ...
                                                    nrow4,ncol4, nrow5,ncol5);
 disp(sprintf('flops_kron5 return: flops1=%e flops2=%e imethod=%d imem1=%e, imem2=%e', ...
+                                  flops1,   flops2,   imethod,   imem1,    imem2 ));
+
+disp(sprintf('total estimated work is min(flops1,flops2)*nvec=%e ', min(flops1,flops2)*nvec ));
+
+
+
+
+
+batch_list1 = clear_batch_list();
+batch_list2 = clear_batch_list();
+batch_list3 = clear_batch_list();
+batch_list4 = clear_batch_list();
+batch_list5 = clear_batch_list();
+batch_list6 = clear_batch_list();
+% --------------------------
+% check Y = kron(A1,A2,A3,A4,A5,A6)*X
+% --------------------------
+disp('========================');
+X6  = rand( ncol1*ncol2*ncol3*ncol4*ncol5*ncol6, nvec);
+Y6ok = kron(A1,kron(A2,kron(A3,kron(A4,kron(A5,A6)))))*X6;
+[batch_list1, batch_list2, batch_list3, batch_list4, batch_list5, batch_list6, Y6]  = ...
+    kronmult6_batch(A1,A2,A3,A4,A5,A6,  X6, ...
+    batch_list1, batch_list2, batch_list3, batch_list4, batch_list5,batch_list6);
+diff = max(abs(Y6ok(:)-Y6(:)));
+isok = (diff < tol * numel(Y6ok) );
+if (~isok),
+  disp(sprintf('kronmult6_batch failed, diff=%g',diff));
+  nerr = nerr + 1;
+end;
+
+if (nerr == 0),
+ disp('All OK');
+end;
+
+[total_flops1, max_flops1, min_flops1]  = flops_batch_list( batch_list1 );
+[total_flops2, max_flops2, min_flops2]  = flops_batch_list( batch_list2 );
+[total_flops3, max_flops3, min_flops3]  = flops_batch_list( batch_list3 );
+[total_flops4, max_flops4, min_flops4]  = flops_batch_list( batch_list4 );
+[total_flops5, max_flops5, min_flops5]  = flops_batch_list( batch_list5 );
+[total_flops6, max_flops6, min_flops6]  = flops_batch_list( batch_list6 );
+
+nbatch1 = batch_list1.nbatch;
+nbatch2 = batch_list2.nbatch;
+nbatch3 = batch_list3.nbatch;
+nbatch4 = batch_list4.nbatch;
+nbatch5 = batch_list5.nbatch;
+nbatch6 = batch_list6.nbatch;
+
+disp(sprintf('nbatch1=%d, total_flops1=%e, max_flops1=%e, min_flops=%e', ...
+              nbatch1,    total_flops1,    max_flops1,    min_flops1 ));
+
+disp(sprintf('nbatch2=%d, total_flops2=%e, max_flops2=%e, min_flops=%e', ...
+              nbatch2,    total_flops2,    max_flops2,    min_flops2 ));
+
+disp(sprintf('nbatch3=%d, total_flops3=%e, max_flops3=%e, min_flops=%e', ...
+              nbatch3,    total_flops3,    max_flops3,    min_flops3 ));
+
+disp(sprintf('nbatch4=%d, total_flops4=%e, max_flops4=%e, min_flops=%e', ...
+              nbatch4,    total_flops4,    max_flops4,    min_flops4 ));
+
+
+disp(sprintf('nbatch5=%d, total_flops5=%e, max_flops5=%e, min_flops=%e', ...
+              nbatch5,    total_flops5,    max_flops5,    min_flops5 ));
+
+disp(sprintf('nbatch6=%d, total_flops6=%e, max_flops6=%e, min_flops=%e', ...
+              nbatch6,    total_flops6,    max_flops6,    min_flops6 ));
+
+disp(sprintf('total work = %e ', ...
+    total_flops1 + total_flops2 + ...
+    total_flops3 + total_flops4 + ...
+    total_flops5 + total_flops6));
+
+% ------------
+
+[flops1,flops2,imethod,imem1,imem2] = flops_kron6( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3, ...
+                                                   nrow4,ncol4, nrow5,ncol5, nrow6,ncol6);
+disp(sprintf('flops_kron6 return: flops1=%e flops2=%e imethod=%d imem1=%e, imem2=%e', ...
                                   flops1,   flops2,   imethod,   imem1,    imem2 ));
 
 disp(sprintf('total estimated work is min(flops1,flops2)*nvec=%e ', min(flops1,flops2)*nvec ));

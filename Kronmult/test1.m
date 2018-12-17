@@ -6,6 +6,7 @@ A2 = rand(3,4);
 A3 = rand(4,5);
 A4 = rand(5,6);
 A5 = rand(6,7);
+A5 = rand(3,2);
 
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
@@ -21,6 +22,9 @@ ncol4 = size(A4,2);
 
 nrow5 = size(A5,1);
 ncol5 = size(A5,2);
+
+nrow6 = size(A6,1);
+ncol6 = size(A6,2);
 
 nvec = 2;
 tol = 1e-7;
@@ -75,6 +79,21 @@ diff = max(abs(Y5ok(:)-Y5(:)));
 isok = (diff < tol * numel(Y5ok) );
 if (~isok),
   disp(sprintf('kronmult5 failed, diff=%g',diff));
+  nerr = nerr + 1;
+end;
+
+
+
+% --------------------------
+% check Y = kron(A1,A2,A3,A4,A5,A6)*X
+% --------------------------
+X6  = rand( ncol1*ncol2*ncol3*ncol4*ncol5*ncol6, nvec);
+Y6ok = kron(A1,kron(A2,kron(A3,kron(A4,kron(A5,A6)))))*X6;
+Y6 = kronmult6(A1,A2,A3,A4,A5,A6,  X6);
+diff = max(abs(Y6ok(:)-Y6(:)));
+isok = (diff < tol * numel(Y6ok) );
+if (~isok),
+  disp(sprintf('kronmult6 failed, diff=%g',diff));
   nerr = nerr + 1;
 end;
 

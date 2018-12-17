@@ -17,7 +17,7 @@ idebug = 1;
 %
 %  X is (nc5 by nc4 by nc3 by nc2 by nc1) * nvec
 %  computed as
-%  step 1: Ytmp = kron3( A2,A3, A4, X )
+%  step 1: Ytmp = kron4( A2,A3, A4, A5, X )
 %  step 2: Y = Ytmp * transpose(A1)
 %
 %  note Ytmp is  (nr5 * nr4 * nr3 * nr2) * nvec4
