@@ -46,7 +46,7 @@ if ~exist('TEND','var') || isempty(TEND)
 end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
-    Lev = 4;
+    Lev = 3;
 end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
