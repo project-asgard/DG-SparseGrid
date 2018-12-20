@@ -3,7 +3,13 @@
 % matrix for a single-D. Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 %
+
 function [mat] = coeff_matrix(t,dat,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
+
+% Grad
+%   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
+% Here we shall choose \hat{u} = AVG(u)+JUMP(u)/2*cval (cval is given)
+% need some test
 
 %% Inputs
 % lev  : number of levels in hierachical basis
@@ -139,8 +145,7 @@ for i=0:N-1
     %%
     % Combine AVG and JMP to give choice of flux for this operator type
     
-    % TODO
-    
+    val_FLUX = val_AVG + val_JMP / 2 * LF;
     
     %%
     % Perform volume integral to give deg x deg matrix block
@@ -203,11 +208,17 @@ for i=0:N-1
     
     %%
     % If dirichelt
-    
+    % u^-_LEFT = g(LEFT)
+    % u^+_RIGHT = g(RIGHT)
     if BCL == 1 %% left dirichlet
         
         %%
         % TODO
+        % Still need to modify some bc terms
+        if i==0
+            Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
+            Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
+        end
         
     end
     
@@ -215,7 +226,11 @@ for i=0:N-1
         
         %%
         % TODO
-        
+        % Still need to modify some bc terms
+        if i==N-1
+            Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
+            Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+        end        
     end
     
     %%
@@ -241,7 +256,7 @@ for i=0:N-1
     % terms at this point, rather than leaving them as seperator operator
     % matrices?
     
-    Grad = Grad - sparse(Iv,Iu,val_AVG,dof_1D,dof_1D); % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
+    Grad = Grad + sparse(Iv,Iu,val_FLUX,dof_1D,dof_1D); % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
     
 end
 
