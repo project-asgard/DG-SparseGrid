@@ -15,7 +15,6 @@ function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,imp
 % where $\rho\left(x,t\right)=\int_v f(x,v,t) dv$.
 
 format short e
-111
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 
@@ -47,7 +46,9 @@ end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
     Lev = 3;
+    pde.lev(:) = Lev;
 end
+
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
     Deg = 2; % Deg = 2 Means Linear Element
@@ -65,7 +66,7 @@ if ~exist('gridType','var') || isempty(gridType)
 else
     if strcmp(gridType,'SG') || strcmp(gridType,'FG')
     else
-        error("gridType must be set to 'SG' or 'FG'"); 
+        error("gridType must be set to 'SG' or 'FG'");
     end
 end
 if ~exist('implicit','var') || isempty(implicit)
@@ -87,8 +88,8 @@ Vmax = pde.params.Vmax;
 % Level information.
 LevX = Lev;
 LevV = Lev;
-pde.params.LevX = LevX;
-pde.params.LevV = LevV;
+% pde.params.LevX = LevX;
+% pde.params.LevV = LevV;
 
 % Dimensionality.
 Dim = 2;
@@ -106,7 +107,7 @@ params = pde.params;
 CFL = 0.1;
 dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL
 
-if ~quiet; disp(sprintf('dt = %g', dt ));
+if ~quiet; disp(sprintf('dt = %g', dt )); end
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
 %
@@ -116,6 +117,8 @@ if ~quiet; disp(sprintf('dt = %g', dt ));
 
 FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
 FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
+
+FMWT = {FMWT_COMP_x, FMWT_COMP_v};
 
 
 %% Step 1.2. Apply the mulit-wavelet transform to the initial conditions in each dimension.
@@ -127,6 +130,7 @@ if ~quiet; disp('[1.2] Setting up 1D initial conditions'); end
 %[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
 fx = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Fx_0,pde.params);
 fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
+
 
 
 %% Step 2. Generate Sparse-Grid (as the Hash + Connectivity tables).
@@ -169,19 +173,65 @@ if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
-time = 0;
-type = 2; % mass
-BCL = 0; 
-BCR = 0;
-LF = 0;
-vMassV2 = coeff_matrix(time,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
+nTerms = numel(pde.terms);
+nDims = numel(pde.dims);
 
-time = 0;
-type = 1; % grad
-BCL = 0; 
+
+t0 = 0;
+type = 2; % mass
+BCL = 0;
 BCR = 0;
 LF = 0;
-GradV2 = coeff_matrix(time,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
+dat = [];
+vMassV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
+
+for term = 1:nTerms
+    
+    thisTerm = pde.terms{term};
+    
+    %%
+    % Add dim many operator matrices to each term.
+    for d = 1:nDims
+        
+        if not(thisTerm.TD(d))
+            
+            t0 = 0;
+            dat = thisTerm.dat{d};
+            LF = 0;
+            coeff_mat = coeff_matrix(t0,dat,pde.lev(d),Deg,thisTerm.type(d), ...
+                pde.domainMin(d),pde.domainMax(d), ...
+                pde.BCL(d),pde.BCR(d), ...
+                LF, FMWT{d});
+            
+            pde.terms{term}.coeff_mat{d} = coeff_mat;
+            
+        end
+    end
+end
+
+%     t0 = 0;
+%     type = 2; % mass
+%     BCL = 0;
+%     BCR = 0;
+%     LF = 0;
+%     dat = [];
+%     vMassV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
+%
+%     t0 = 0;
+%     type = 1; % grad
+%     BCL = 0;
+%     BCR = 0;
+%     LF = 0;
+%     dat = [];
+%     GradV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
+%
+%     t0 = 0;
+%     type = 1; % grad
+%     BCL = 0;
+%     BCR = 0;
+%     LF = 0;
+%     dat = [];
+%     GradX2 = coeff_matrix(t0,dat,LevX,Deg,type,Lmin,Lmax,BCL,BCR,LF,FMWT_COMP_x);
 
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
@@ -280,15 +330,55 @@ for L = 1:nsteps,
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
         E = E * pde.Et(time(count),params);
     end
-            ax3 = subplot(2,2,3);
-            plot(x_node,Meval_x*u,'r-o')
-            title(['time = ',num2str(dt*L)])
-            ax4 = subplot(2,2,4);
-            plot(x_node,Meval_x*E,'r-o')
-            
+    
+%     ax3 = subplot(2,2,3);
+%     plot(x_node,Meval_x*u,'r-o')
+%     title(['time = ',num2str(dt*L)])
+%     ax4 = subplot(2,2,4);
+%     plot(x_node,Meval_x*E,'r-o')
+    
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
     EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
+    
+    %%
+    % Set the dat portion of the EMassX part of E.d_dv term.
+    
+    pde.terms{2}.dat{1} = E;
+    
+    %%
+    % Now construct the TD coeff_mats.
+    
+    for term = 1:nTerms
+        
+        thisTerm = pde.terms{term};
+        
+        %%
+        % Add dim many operator matrices to each term.
+        for d = 1:nDims
+            
+            if thisTerm.TD(d)
+                
+                t0 = time(count);
+                dat = thisTerm.dat{d};
+                LF = 0;
+                coeff_mat = coeff_matrix(t0,dat,pde.lev(d),Deg,thisTerm.type(d), ...
+                    pde.domainMin(d),pde.domainMax(d), ...
+                    pde.BCL(d),pde.BCR(d), ...
+                    LF, FMWT{d});
+                
+                pde.terms{term}.coeff_mat{d} = coeff_mat;
+                
+            end
+        end
+    end
+    
+    %% Test new PDE spec based generation of the coeff_matrices
+    
+    disp( [ 'GradX error : '  num2str(sum(pde.terms{1}.coeff_mat{1} - GradX, 'all')) ])
+    disp( [ 'vMassV error : ' num2str(sum(pde.terms{1}.coeff_mat{2} - vMassV,'all')) ])
+    disp( [ 'EMassX error : ' num2str(sum(pde.terms{2}.coeff_mat{1} - EMassX,'all')) ])
+    disp( [ 'GradV error : '  num2str(sum(pde.terms{2}.coeff_mat{2} - GradV, 'all')) ])
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
@@ -338,14 +428,14 @@ for L = 1:nsteps,
         
         f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
         
-%         ax1 = subplot(1,2,1);
+        %         ax1 = subplot(1,2,1);
         ax1 = subplot(2,2,1);
         mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])
         %caxis([-range1 +range1]);
         title('df');
         
-%         ax2 = subplot(1,2,2);
+        %         ax2 = subplot(1,2,2);
         ax2 = subplot(2,2,2);
         mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
         axis([Lmin Lmax Vmin Vmax])

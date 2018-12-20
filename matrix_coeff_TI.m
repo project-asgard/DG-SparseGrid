@@ -46,6 +46,7 @@ dof_1D_x=k*nx;
 
 nmax = 2*1024;
 use_dense = (dof_1D_x <= nmax);
+use_dense = 0;
 
 if (use_dense),
   GradX=zeros(dof_1D_x,dof_1D_x);

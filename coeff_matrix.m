@@ -3,7 +3,7 @@
 % matrix for a single-D. Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 %
-function [mat] = coeff_matrix(t,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
+function [mat] = coeff_matrix(t,dat,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 
 %% Inputs
 % lev  : number of levels in hierachical basis
@@ -22,8 +22,6 @@ function [mat] = coeff_matrix(t,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 %  coeff_type : int from coeff_type list below
 %  TD         : 0 or 1 (is this term time dependent)
 %  g1(x,t)    : function handle to g1 function
-%  g2(x,t)    : function handle to g2 function
-%  g3(x,t)    : function handle to g3 function
 
 %% Boundary condition types (BCL and BCR)
 % 0 == periodic
@@ -149,28 +147,27 @@ for i=0:N-1
     
     %%
     % M // mass matrix u . v
-    myG1 = @(x,t) x; % gives the "v" in vMassV
-    G1 = myG1(quad_xi,t);
+    myG1 = @(x,t,dat) x; % gives the "v" in vMassV, or the "E" in EMassX
+    G1 = myG1(quad_xi,t,dat);
     val_mass = p_val' * (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % G // grad matrix u . v'
-    myG1 = @(x,t) 1;
-    G1 = myG1(quad_xi,t);
+    myG1 = @(x,t,dat) 1;
+    G1 = myG1(quad_xi,t,dat);
     val_grad  = Dp_val'* (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % S // stiffness matrix u' . v'
-    myG1 = @(x,t) 1;
-    G1 = myG1(quad_xi,t);
+    myG1 = @(x,t,dat) 1;
+    G1 = myG1(quad_xi,t,dat);
     val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) * h/2;
     
     Iu = meshgrid( deg*i+1 : deg*(i+1) );
     
     Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
     Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
-    Stif = Stif + sparse(Iu',Iu,val_stif,dof_1D,dof_1D);
-    
+    Stif = Stif + sparse(Iu',Iu,val_stif,dof_1D,dof_1D);    
     
     %%
     % Setup numerical flux choice (interior elements only)
@@ -245,7 +242,6 @@ for i=0:N-1
     % matrices?
     
     Grad = Grad - sparse(Iv,Iu,val_AVG,dof_1D,dof_1D); % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
-    Flux = Flux + sparse(Iv,Iu,val_JMP,dof_1D,dof_1D);
     
 end
 
@@ -253,8 +249,15 @@ end
 %% Transform coeff_mat to wavelet space
 Mass = FMWT * Mass * FMWT';
 Grad = FMWT * Grad * FMWT';
-Flux = FMWT * Flux * FMWT';
 
+%% 
+% After the transformation to wavelet space there may be very tiny coefficient values. 
+% Here we zero them out. 
+
+tol = 1e-8;
+
+Mass = Mass .* (abs(Mass) > tol );
+Grad = Grad .* (abs(Grad) > tol );
 
 %% Construct block diagonal for LDG ?
 % DeltaX = blkdiag( FMWT,FMWT) * ...

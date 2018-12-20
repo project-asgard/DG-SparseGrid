@@ -4,6 +4,35 @@ function pde=Vlasov8
 
 % parameters
 
+pde.dims = ['x','v'];
+pde.BCL = [0,0];
+pde.BCR = [0,0];
+pde.domainMin = [-1,-10];
+pde.domainMax = [+1,+10];
+pde.lev = [2,2];
+
+%% 
+% Setup the v.d_dx (vMassV . GradX)
+% We construct in the order specified by p.dims, i.e., 
+% [GradX, vMassV]
+term2.name = 'v.d_dx';
+term2.type = [1,2]; % [grad,mass]
+term2.g = {@(x,t,dat) 1;, @(v,t,dat) v;};
+term2.TD = [0,0];
+term2.dat = {[],[]} % These are to be filled within the workflow for now
+
+%% 
+% Setup the E.d_dv (EMassX . GradV)
+% We construct in the order specified by p.dims.
+term3.name = 'E.d_dv';
+term3.type = [2,1]; % [grad,mass]
+term3.g = {@(x,t,dat) dat;, @(v,t,dat) 1;};
+term3.TD = [1,0];
+term3.dat = {[],[]}; % These are to be filled within the workflow for now
+
+
+pde.terms = {term2, term3};
+
 p.Lmin=-1;
 p.Lmax=+1;
 p.Vmin=-10;

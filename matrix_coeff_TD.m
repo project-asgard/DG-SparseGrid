@@ -67,12 +67,7 @@ for LL=0:nx-1
     %       i1,i1+1, ...,i2]
     % --------------------------
     
-    tmp = EE(i1:i2);
     ff=p_val*EE(i1:i2);
-    
-    tmpA = quad_w.*p_val.*ff;
-    tmpB = p_val';
-    tmpC = tmpB * tmpA;
     
     val=(1/hx)*[p_val'*(quad_w.*p_val.*ff)]*(Jacobi_x/2);
     
@@ -97,8 +92,6 @@ end
 % Note   operation is equivalent to
 % EMassX = kron( FMWT_COMP_x, FMWT_COMP_x) * EMassX
 % ------------------------------------------------
-
-FCT = FMWT_COMP_x';
 
 EMassX=FMWT_COMP_x*EMassX*FMWT_COMP_x';
 
