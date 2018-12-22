@@ -4,7 +4,7 @@
 % matricies. These operators can only use the supported types below.
 %
 
-function [mat] = coeff_matrix(t,dat,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
+function [mat] = coeff_matrix(t,dat_W,G,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -68,7 +68,7 @@ function [mat] = coeff_matrix(t,dat,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 % Setup jacobi of variable x and define coeff_mat
 N = 2^(lev);
 h = (xMax-xMin) / N;
-jacobi = h;
+% jacobi = h;
 dof_1D = deg * N;
 
 %%
@@ -88,7 +88,6 @@ quad_num = 10;
 p_L = legendre(-1,deg);
 p_R = legendre(+1,deg);
 
-
 %%
 %  Get the basis functions and derivatives for all k
 %  p_val(:,:) is quad_num by deg
@@ -101,6 +100,14 @@ Mass = sparse(dof_1D,dof_1D);
 Grad = sparse(dof_1D,dof_1D);
 Stif = sparse(dof_1D,dof_1D);
 Flux = sparse(dof_1D,dof_1D);
+
+%% 
+% Convert input dat from wavelet (_W) space to realspace (_R)
+
+if isempty(dat_W)
+    dat_W = ones(dof_1D,1);
+end
+dat_R = FMWT' * dat_W;
 
 %% Loop over all elements in this D
 %  Here we construct the 1D coeff_mat in realspace, then transform to
@@ -150,22 +157,27 @@ for i=0:N-1
     %%
     % Perform volume integral to give deg x deg matrix block
     
+    %% 
+    % Get dat_R at the quadrature points
+    
+    dat_R_quad = p_val * dat_R(c1:c2);
+    
     %%
     % M // mass matrix u . v
-    myG1 = @(x,t,dat) x; % gives the "v" in vMassV, or the "E" in EMassX
-    G1 = myG1(quad_xi,t,dat);
+%     G = @(x,t,dat) x; % gives the "v" in vMassV, or the "E" in EMassX
+    G1 = G(quad_xi,t,dat_R_quad);
     val_mass = p_val' * (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % G // grad matrix u . v'
-    myG1 = @(x,t,dat) 1;
-    G1 = myG1(quad_xi,t,dat);
+%     G = @(x,t,dat) 1;
+    G1 = G(quad_xi,t,dat_R_quad);
     val_grad  = Dp_val'* (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % S // stiffness matrix u' . v'
-    myG1 = @(x,t,dat) 1;
-    G1 = myG1(quad_xi,t,dat);
+%     G = @(x,t,dat) 1;
+    G1 = G(quad_xi,t,dat_R_quad);
     val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) * h/2;
     
     Iu = meshgrid( deg*i+1 : deg*(i+1) );
@@ -256,7 +268,7 @@ for i=0:N-1
     % terms at this point, rather than leaving them as seperator operator
     % matrices?
     
-    Grad = Grad + sparse(Iv,Iu,val_FLUX,dof_1D,dof_1D); % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
+    Grad = Grad - sparse(Iv,Iu,val_FLUX,dof_1D,dof_1D); % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
     
 end
 

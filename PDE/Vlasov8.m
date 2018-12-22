@@ -12,23 +12,25 @@ pde.domainMax = [+1,+10];
 pde.lev = [2,2];
 
 %% 
-% Setup the v.d_dx (vMassV . GradX)
+% Setup the v.d_dx (v.MassV . GradX)
 % We construct in the order specified by p.dims, i.e., 
-% [GradX, vMassV]
+% [GradX, v.MassV]
 term2.name = 'v.d_dx';
 term2.type = [1,2]; % [grad,mass]
-term2.g = {@(x,t,dat) 1;, @(v,t,dat) v;};
+term2.g = {@(x,t,dat) 1, @(v,t,dat) v};
 term2.TD = [0,0];
 term2.dat = {[],[]} % These are to be filled within the workflow for now
+term2.LF = 0;
 
 %% 
-% Setup the E.d_dv (EMassX . GradV)
+% Setup the E.d_dv (E.MassX . GradV)
 % We construct in the order specified by p.dims.
 term3.name = 'E.d_dv';
 term3.type = [2,1]; % [grad,mass]
-term3.g = {@(x,t,dat) dat;, @(v,t,dat) 1;};
+term3.g = {@(x,t,dat) dat, @(v,t,dat) 1};
 term3.TD = [1,0];
 term3.dat = {[],[]}; % These are to be filled within the workflow for now
+term3.LF = 0;
 
 
 pde.terms = {term2, term3};

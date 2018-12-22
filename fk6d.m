@@ -176,14 +176,13 @@ if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 nTerms = numel(pde.terms);
 nDims = numel(pde.dims);
 
-
-t0 = 0;
-type = 2; % mass
-BCL = 0;
-BCR = 0;
-LF = 0;
-dat = [];
-vMassV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
+% t0 = 0;
+% type = 2; % mass
+% BCL = 0;
+% BCR = 0;
+% LF = 0;
+% dat = [];
+% vMassV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
 
 for term = 1:nTerms
     
@@ -195,10 +194,13 @@ for term = 1:nTerms
         
         if not(thisTerm.TD(d))
             
-            t0 = 0;
+            disp(['TI - term : ' num2str(term) '  d : ' num2str(d) ]);
+            
+            t = 0;
             dat = thisTerm.dat{d};
-            LF = 0;
-            coeff_mat = coeff_matrix(t0,dat,pde.lev(d),Deg,thisTerm.type(d), ...
+            LF = thisTerm.LF;
+            G = thisTerm.g{d};
+            coeff_mat = coeff_matrix(t,dat,G,pde.lev(d),Deg,thisTerm.type(d), ...
                 pde.domainMin(d),pde.domainMax(d), ...
                 pde.BCL(d),pde.BCR(d), ...
                 LF, FMWT{d});
@@ -359,10 +361,13 @@ for L = 1:nsteps,
             
             if thisTerm.TD(d)
                 
-                t0 = time(count);
+                disp(['TD - term : ' num2str(term) '  d : ' num2str(d) ]);
+                
+                t = time(count);
                 dat = thisTerm.dat{d};
-                LF = 0;
-                coeff_mat = coeff_matrix(t0,dat,pde.lev(d),Deg,thisTerm.type(d), ...
+                LF = thisTerm.LF;
+                G = thisTerm.g{d};
+                coeff_mat = coeff_matrix(t,dat,G,pde.lev(d),Deg,thisTerm.type(d), ...
                     pde.domainMin(d),pde.domainMax(d), ...
                     pde.BCL(d),pde.BCR(d), ...
                     LF, FMWT{d});
@@ -377,7 +382,7 @@ for L = 1:nsteps,
     
     disp( [ 'GradX error : '  num2str(sum(pde.terms{1}.coeff_mat{1} - GradX, 'all')) ])
     disp( [ 'vMassV error : ' num2str(sum(pde.terms{1}.coeff_mat{2} - vMassV,'all')) ])
-    disp( [ 'EMassX error : ' num2str(sum(pde.terms{2}.coeff_mat{1} - EMassX,'all')) ])
+    disp( [ 'EMassX error : ' num2str(sum(pde.terms{2}.coeff_mat{1} - EMassX*2,'all')) ]) % WHY ARE WE OUT BY A FACTOR OF 2 HERE?
     disp( [ 'GradV error : '  num2str(sum(pde.terms{2}.coeff_mat{2} - GradV, 'all')) ])
     
     %%% Update A_encode for time-dependent coefficient matricies.

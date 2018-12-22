@@ -44,7 +44,7 @@ end;
 % Convert E to the DG scaling basis
 % So EE has local support
 %===================================
-EEold = EE;
+%EEold = EE;
 
 
 if (use_dense),
