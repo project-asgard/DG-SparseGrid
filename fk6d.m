@@ -39,6 +39,10 @@ if ~exist('pde','var') || isempty(pde)
     % Equation setup
     pde = Vlasov4;
 end
+
+nTerms = numel(pde.terms);
+nDims = numel(pde.dimensions);
+
 if ~exist('TEND','var') || isempty(TEND)
     % End time
     TEND = pde.params.TEND;
@@ -46,12 +50,17 @@ end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
     Lev = 3;
-    pde.lev(:) = Lev;
+    for d=1:nDims
+        pde.dimensions{d}.lev = Lev;
+    end
 end
 
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
     Deg = 2; % Deg = 2 Means Linear Element
+    for d=1:nDims
+        pde.dimensions{d}.deg = Deg;
+    end
 end
 if ~exist('quiet','var') || isempty(quiet)
     % Enable / disable print statements
@@ -120,6 +129,8 @@ FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
 
 FMWT = {FMWT_COMP_x, FMWT_COMP_v};
 
+pde.dimensions{1}.FMWT = FMWT_COMP_x;
+pde.dimensions{2}.FMWT = FMWT_COMP_v;
 
 %% Step 1.2. Apply the mulit-wavelet transform to the initial conditions in each dimension.
 % Generate the 1D initial conditions. Input: LevX,LevV,Deg,Lmax,Vmax,pde
@@ -173,9 +184,6 @@ if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
-nTerms = numel(pde.terms);
-nDims = numel(pde.dims);
-
 % t0 = 0;
 % type = 2; % mass
 % BCL = 0;
@@ -192,20 +200,18 @@ for term = 1:nTerms
     % Add dim many operator matrices to each term.
     for d = 1:nDims
         
-        if not(thisTerm.TD(d))
+        if not(thisTerm{d}.TD)
             
             disp(['TI - term : ' num2str(term) '  d : ' num2str(d) ]);
             
             t = 0;
-            dat = thisTerm.dat{d};
-            LF = thisTerm.LF;
-            G = thisTerm.g{d};
-            coeff_mat = coeff_matrix(t,dat,G,pde.lev(d),Deg,thisTerm.type(d), ...
-                pde.domainMin(d),pde.domainMax(d), ...
-                pde.BCL(d),pde.BCR(d), ...
-                LF, FMWT{d});
+            coeff_mat = coeff_matrix(t,pde.dimensions{d},pde.terms{term}{d});
+            %             coeff_mat = coeff_matrix(t,dat,G,pde.lev(d),Deg,thisTerm.type(d), ...
+            %                 pde.domainMin(d),pde.domainMax(d), ...
+            %                 pde.BCL(d),pde.BCR(d), ...
+            %                 LF, FMWT{d});
             
-            pde.terms{term}.coeff_mat{d} = coeff_mat;
+            pde.terms{term}{d}.coeff_mat = coeff_mat;
             
         end
     end
@@ -323,7 +329,6 @@ for L = 1:nsteps,
         if ~quiet; disp('    [a] Solve poisson to get E'); end
         %[E,u] = PoissonSolve2(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
         [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
-        Emax = max(abs(Meval_x*E)) % max value on each point for E
     end
     
     if pde.applySpecifiedE
@@ -333,11 +338,13 @@ for L = 1:nsteps,
         E = E * pde.Et(time(count),params);
     end
     
-%     ax3 = subplot(2,2,3);
-%     plot(x_node,Meval_x*u,'r-o')
-%     title(['time = ',num2str(dt*L)])
-%     ax4 = subplot(2,2,4);
-%     plot(x_node,Meval_x*E,'r-o')
+    Emax = max(abs(Meval_x*E)); % max value on each point for E    
+    
+    %     ax3 = subplot(2,2,3);
+    %     plot(x_node,Meval_x*u,'r-o')
+    %     title(['time = ',num2str(dt*L)])
+    %     ax4 = subplot(2,2,4);
+    %     plot(x_node,Meval_x*E,'r-o')
     
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
@@ -346,7 +353,7 @@ for L = 1:nsteps,
     %%
     % Set the dat portion of the EMassX part of E.d_dv term.
     
-    pde.terms{2}.dat{1} = E;
+    pde.terms{2}{1}.dat = E;
     
     %%
     % Now construct the TD coeff_mats.
@@ -359,20 +366,13 @@ for L = 1:nsteps,
         % Add dim many operator matrices to each term.
         for d = 1:nDims
             
-            if thisTerm.TD(d)
+            if thisTerm{d}.TD
                 
                 disp(['TD - term : ' num2str(term) '  d : ' num2str(d) ]);
                 
-                t = time(count);
-                dat = thisTerm.dat{d};
-                LF = thisTerm.LF;
-                G = thisTerm.g{d};
-                coeff_mat = coeff_matrix(t,dat,G,pde.lev(d),Deg,thisTerm.type(d), ...
-                    pde.domainMin(d),pde.domainMax(d), ...
-                    pde.BCL(d),pde.BCR(d), ...
-                    LF, FMWT{d});
-                
-                pde.terms{term}.coeff_mat{d} = coeff_mat;
+                t = 0;
+                coeff_mat = coeff_matrix(t,pde.dimensions{d},pde.terms{term}{d});             
+                pde.terms{term}{d}.coeff_mat = coeff_mat;
                 
             end
         end
@@ -380,10 +380,10 @@ for L = 1:nsteps,
     
     %% Test new PDE spec based generation of the coeff_matrices
     
-    disp( [ 'GradX error : '  num2str(sum(pde.terms{1}.coeff_mat{1} - GradX, 'all')) ])
-    disp( [ 'vMassV error : ' num2str(sum(pde.terms{1}.coeff_mat{2} - vMassV,'all')) ])
-    disp( [ 'EMassX error : ' num2str(sum(pde.terms{2}.coeff_mat{1} - EMassX*2,'all')) ]) % WHY ARE WE OUT BY A FACTOR OF 2 HERE?
-    disp( [ 'GradV error : '  num2str(sum(pde.terms{2}.coeff_mat{2} - GradV, 'all')) ])
+    disp( [ 'GradX error : '  num2str(sum(pde.terms{1}{1}.coeff_mat - GradX, 'all')) ])
+    disp( [ 'vMassV error : ' num2str(sum(pde.terms{1}{2}.coeff_mat - vMassV,'all')) ])
+    disp( [ 'EMassX error : ' num2str(sum(pde.terms{2}{1}.coeff_mat - EMassX*2,'all')) ]) % WHY ARE WE OUT BY A FACTOR OF 2 HERE?
+    disp( [ 'GradV error : '  num2str(sum(pde.terms{2}{2}.coeff_mat - GradV, 'all')) ])
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end

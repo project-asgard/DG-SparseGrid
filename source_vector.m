@@ -2,14 +2,14 @@ function fval = source_vector(HASHInv,pde,time)
 
 % Returns the wavelet transformed source
 
-LevX = pde.params.LevX;
-LevV = pde.params.LevV;
-Deg = pde.params.Deg;
+LevX = pde.dimensions{1}.lev;
+LevV = pde.dimensions{2}.lev;
+Deg = pde.dimensions{1}.deg;
 
-Lmin = pde.params.Lmin;
-Lmax = pde.params.Lmax;
-Vmin = pde.params.Vmin;
-Vmax = pde.params.Vmax;
+Lmin = pde.dimensions{1}.domainMin;
+Lmax = pde.dimensions{1}.domainMax;
+Vmin = pde.dimensions{2}.domainMin;
+Vmax = pde.dimensions{2}.domainMax;
 
 fx1 = forwardMWT(LevX,Deg,Lmin,Lmax,pde.source1x,pde.params);
 fv1 = forwardMWT(LevV,Deg,Vmin,Vmax,pde.source1v,pde.params);

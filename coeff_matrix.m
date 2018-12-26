@@ -4,7 +4,8 @@
 % matricies. These operators can only use the supported types below.
 %
 
-function [mat] = coeff_matrix(t,dat_W,G,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
+% function [mat] = coeff_matrix(t,dat_W,G,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
+function [mat] = coeff_matrix(t,dimension,term_1D)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -63,6 +64,23 @@ function [mat] = coeff_matrix(t,dat_W,G,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 % * Choice of flux (may require input C)
 % * Other BCs
 % * Picking which term type
+
+%%
+% Shortcuts to dimension quantities
+lev = dimension.lev;
+deg = dimension.deg;
+xMin = dimension.domainMin;
+xMax = dimension.domainMax;
+FMWT = dimension.FMWT;
+BCL = dimension.BCL;
+BCR = dimension.BCR;
+
+%%
+% Shortcuts to term_1d quantities
+dat_W = term_1D.dat;
+LF = term_1D.LF;
+G = term_1D.G;
+type = term_1D.type;
 
 %%
 % Setup jacobi of variable x and define coeff_mat

@@ -2,36 +2,67 @@ function pde=Vlasov8
 % Numerical Example for Vlasov Equation
 % This test has given E and non-zero source term
 
-% parameters
+% PDE parameters
 
-pde.dims = ['x','v'];
-pde.BCL = [0,0];
-pde.BCR = [0,0];
-pde.domainMin = [-1,-10];
-pde.domainMax = [+1,+10];
-pde.lev = [2,2];
+dim_x.name = 'x';
+dim_x.BCL = 0;
+dim_x.BCR = 0;
+dim_x.domainMin = -1;
+dim_x.domainMax = +1;
+dim_x.lev = 2;
+dim_x.deg = 2;
+dim_x.FMWT = [];
+
+dim_v.name = 'v';
+dim_v.BCL = 0;
+dim_v.BCR = 0;
+dim_v.domainMin = -10;
+dim_v.domainMax = +10;
+dim_v.lev = 2;
+dim_v.deg = 2;
+dim_v.FMWT = [];
+
+pde.dimensions = {dim_x, dim_v};
 
 %% 
-% Setup the v.d_dx (v.MassV . GradX)
-% We construct in the order specified by p.dims, i.e., 
-% [GradX, v.MassV]
+% Setup the v.d_dx (v.MassV . GradX) term
+
+term2_x.type = 1; % grad
+term2_x.G = @(x,t,dat) 1;
+term2_x.TD = 0;
+term2_x.dat = []; % These are to be filled within the workflow for now
+term2_x.LF = 0;
+
+term2_v.type = 2; % mass
+term2_v.G = @(v,t,dat) v;
+term2_v.TD = 0;
+term2_v.dat = []; % These are to be filled within the workflow for now
+term2_v.LF = 0;
+
 term2.name = 'v.d_dx';
-term2.type = [1,2]; % [grad,mass]
-term2.g = {@(x,t,dat) 1, @(v,t,dat) v};
-term2.TD = [0,0];
-term2.dat = {[],[]} % These are to be filled within the workflow for now
-term2.LF = 0;
+term2 = {term2_x, term2_v};
 
 %% 
-% Setup the E.d_dv (E.MassX . GradV)
-% We construct in the order specified by p.dims.
-term3.name = 'E.d_dv';
-term3.type = [2,1]; % [grad,mass]
-term3.g = {@(x,t,dat) dat, @(v,t,dat) 1};
-term3.TD = [1,0];
-term3.dat = {[],[]}; % These are to be filled within the workflow for now
-term3.LF = 0;
+% Setup the E.d_dv (E.MassX . GradV) term
 
+term3_x.type = 2; % mass
+term3_x.G = @(x,t,dat) dat;
+term3_x.TD = 1;
+term3_x.dat = []; % These are to be filled within the workflow for now
+term3_x.LF = 0;
+
+term3_v.type = 1; % mass
+term3_v.G = @(v,t,dat) 1;
+term3_v.TD = 0;
+term3_v.dat = []; % These are to be filled within the workflow for now
+term3_v.LF = 0;
+
+term3.name = 'E.d_dv';
+term3 = {term3_x, term3_v};
+
+
+%%
+% Add terms to PDE
 
 pde.terms = {term2, term3};
 
