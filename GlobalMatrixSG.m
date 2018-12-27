@@ -24,23 +24,18 @@ for i = 1:size(ComLev,1)
         index = LevCell2index(Lev_loc(d),Cell_loc{d});
         ComLevIndex{i}.lid{d} = sort(index);
     end
+
+    % Method 1
+%     [Cel1,Cel2] = meshgrid(Cell_loc{:}); % need more work to generalize d
+%     Cel1 = Cel1';
+%     Cel2 = Cel2';
     
-    if ichoice == 1
-        [Cel1,Cel2] = meshgrid(Cell_loc{:}); % need more work to generalize d
-        %         Cel1 = Cel1';
-        %         Cel2 = Cel2';
-    else
-        nz1=size(Cell_loc{1},2);
-        nz2=size(Cell_loc{2},2);
-        Cel1 = zeros(nz1*nz2,1);
-        Cel2 = zeros(nz1*nz2,1);
-        for k = 1:nz1
-            Cel1(k:nz2:end)=Cell_loc{1}(k);
-        end
-        for k = 1:nz2
-            Cel2((k-1)*nz1+1:k*nz1) = Cell_loc{2}(k);
-        end
-    end
+    % Method 2 :: use recursive way to generate 
+    Cel1 = repmat(Cell_loc{1}(:),1,numel(Cell_loc{2}));
+    Cel2 = repmat(Cell_loc{2}(:),numel(Cell_loc{1}),1);
+    Cel1 = Cel1';
+    Cel2 = Cel2';
+    
     
     key = zeros(numel(Cel1),2*Dim);
     key(1:end,1:Dim) = repmat(Lev_loc,numel(Cel1),1);
@@ -48,6 +43,7 @@ for i = 1:size(ComLev,1)
     
     %     i
     index = zeros(size(key,1),1);
+    
     % find the index from HashTable
     for j =1:size(key,1)
         index(j) = HASH.(sprintf(hash_format,key(j,:)));
@@ -78,32 +74,26 @@ for i = 1:size(ComLev,1)
         tmpB=B( Deg*(index_I{2}(1)-1)+1:Deg*(index_I{2}(end)),...
             Deg*(index_J{2}(1)-1)+1:Deg*(index_J{2}(end)) );
         rB = size(tmpB,1);
-        cB = size(tmpB,2);        
+        cB = size(tmpB,2);
         
         A_encode{count}.A1=tmpA;
-        A_encode{count}.A2=tmpB;
-        
-%         if size(tmpB,1)/Deg>1 || size(tmpB,2)/Deg>1 ||
-            if i == 10 || j==10
-            1111
-        end
-        
+        A_encode{count}.A2=tmpB;        
         
         tmp = Deg^2*(IndexI(:)-1)+[1:Deg^2];
         tmp = tmp';
-        rIndex = kron_split( Deg,  Deg*ones(rB/Deg,1) );
-        rIndex = rIndex + Deg^2*[0:rA/Deg-1];
+        rIndex = kron_split( rA,  Deg*ones(rB/Deg,1) );
+
         
         IndexI = tmp(:);
-        IndexI = IndexI(rIndex);
+        IndexI(rIndex(:)) = IndexI;
         
         
         tmp = Deg^2*(IndexJ(:)-1)+[1:Deg^2];
         tmp = tmp';
-        cIndex = kron_split( Deg,  Deg*ones(cB/Deg,1) );
-        cIndex = cIndex + Deg^2*[0:cA/Deg-1];
+        cIndex = kron_split( cA,  Deg*ones(cB/Deg,1) );
+
         IndexJ = tmp(:);
-        IndexJ = IndexJ(cIndex(:));
+        IndexJ(cIndex(:)) = IndexJ;
         
         A_encode{count}.IndexI = IndexI;
         A_encode{count}.IndexJ = IndexJ;
