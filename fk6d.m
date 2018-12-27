@@ -178,31 +178,16 @@ fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
 % Output:
 %               2D Matrices--vMassV,GradV,GradX,DeltaX
 
-%%% Build the time independent coefficient matricies.
+%% Build the time independent coefficient matricies.
+% The original way
 if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
-
-for term = 1:nTerms
-    
-    thisTerm = pde.terms{term};
-    
-    %%
-    % Add dim many operator matrices to each term.
-    for d = 1:nDims
-        
-        if not(thisTerm{d}.TD)
-            
-            disp(['TI - term : ' num2str(term) '  d : ' num2str(d) ]);
-            
-            t = 0;
-            coeff_mat = coeff_matrix(t,pde.dimensions{d},pde.terms{term}{d});
-            
-            pde.terms{term}{d}.coeff_mat = coeff_mat;
-            
-        end
-    end
-end
+%%
+% The generalized PDE spec way
+t = 0;
+TD = 0;
+pde = getCoeffMats(pde,t,TD);
 
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
@@ -301,7 +286,7 @@ for L = 1:nsteps,
         E = E * pde.Et(time(count),params);
     end
     
-    Emax = max(abs(Meval_x*E)); % max value on each point for E    
+    Emax = max(abs(Meval_x*E)); % max value on each point for E
     
     %     ax3 = subplot(2,2,3);
     %     plot(x_node,Meval_x*u,'r-o')
@@ -321,25 +306,9 @@ for L = 1:nsteps,
     %%
     % Now construct the TD coeff_mats.
     
-    for term = 1:nTerms
-        
-        thisTerm = pde.terms{term};
-        
-        %%
-        % Add dim many operator matrices to each term.
-        for d = 1:nDims
-            
-            if thisTerm{d}.TD
-                
-                disp(['TD - term : ' num2str(term) '  d : ' num2str(d) ]);
-                
-                t = time(count);
-                coeff_mat = coeff_matrix(t,pde.dimensions{d},pde.terms{term}{d});             
-                pde.terms{term}{d}.coeff_mat = coeff_mat;
-                
-            end
-        end
-    end
+    t = time(count);
+    TD = 1;
+    pde = getCoeffMats(pde,t,TD);
     
     %% Test new PDE spec based generation of the coeff_matrices
     
@@ -367,11 +336,11 @@ for L = 1:nsteps,
         A_data.vMassV    = pde.terms{1}{2}.coeff_mat;
         A_data.EMassX    = pde.terms{2}{1}.coeff_mat;
         A_data.GradV     = pde.terms{2}{2}.coeff_mat;
-    
-%         A_data.vMassV    = vMassV;
-%         A_data.GradX     = GradX;
-%         A_data.GradV     = GradV;
-%         A_data.EMassX    = EMassX;
+        
+        %         A_data.vMassV    = vMassV;
+        %         A_data.GradX     = GradX;
+        %         A_data.GradV     = GradV;
+        %         A_data.EMassX    = EMassX;
         
         A_data.FluxX = FluxX;
         A_data.FluxV = FluxV;
