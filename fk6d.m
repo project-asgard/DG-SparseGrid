@@ -47,21 +47,21 @@ if ~exist('TEND','var') || isempty(TEND)
     % End time
     TEND = pde.params.TEND;
 end
-if ~exist('Lev','var') || isempty(Lev)
+if exist('Lev','var')
     % Number of levels
-    Lev = 3;
     for d=1:nDims
         pde.dimensions{d}.lev = Lev;
     end
 end
 
-if ~exist('Deg','var') || isempty(Deg)
+if exist('Deg','var')
     % Polynomial degree
-    Deg = 2; % Deg = 2 Means Linear Element
+    % Deg = 2 Means Linear Element
     for d=1:nDims
         pde.dimensions{d}.deg = Deg;
     end
 end
+
 if ~exist('quiet','var') || isempty(quiet)
     % Enable / disable print statements
     quiet = 0;
@@ -88,33 +88,32 @@ if pde.implicit
     compression = 1;
 end
 
-% Get x and v domain ranges.
-Lmin = pde.params.Lmin;
-Lmax = pde.params.Lmax;
-Vmin = pde.params.Vmin;
-Vmax = pde.params.Vmax;
+% Shortcuts to x and v domain ranges (this will go away soon)
+Lmin = pde.dimensions{1}.domainMin;
+Lmax = pde.dimensions{1}.domainMax;
+Vmin = pde.dimensions{2}.domainMin;
+Vmax = pde.dimensions{2}.domainMax;
 
 % Level information.
-LevX = Lev;
-LevV = Lev;
-% pde.params.LevX = LevX;
-% pde.params.LevV = LevV;
+LevX = pde.dimensions{1}.lev;
+LevV = pde.dimensions{2}.lev;
+
+% Things to be removed
+Deg = pde.dimensions{1}.deg;
+Lev = LevX;
+DimX = 1;
 
 % Dimensionality.
-Dim = 2;
-DimX = 1;
-DimV = 1;
-pde.params.DimX = DimX;
-pde.params.DimV = DimV;
+Dim = nDims;
 
 % Degree
-pde.params.Deg = Deg;
+% pde.params.Deg = Deg;
 
 params = pde.params;
 
 % Time step.
 CFL = 0.1;
-dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL
+dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
 
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
@@ -184,14 +183,6 @@ if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     FMWT_COMP_x,FMWT_COMP_v);
 
-% t0 = 0;
-% type = 2; % mass
-% BCL = 0;
-% BCR = 0;
-% LF = 0;
-% dat = [];
-% vMassV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
-
 for term = 1:nTerms
     
     thisTerm = pde.terms{term};
@@ -206,40 +197,12 @@ for term = 1:nTerms
             
             t = 0;
             coeff_mat = coeff_matrix(t,pde.dimensions{d},pde.terms{term}{d});
-            %             coeff_mat = coeff_matrix(t,dat,G,pde.lev(d),Deg,thisTerm.type(d), ...
-            %                 pde.domainMin(d),pde.domainMax(d), ...
-            %                 pde.BCL(d),pde.BCR(d), ...
-            %                 LF, FMWT{d});
             
             pde.terms{term}{d}.coeff_mat = coeff_mat;
             
         end
     end
 end
-
-%     t0 = 0;
-%     type = 2; % mass
-%     BCL = 0;
-%     BCR = 0;
-%     LF = 0;
-%     dat = [];
-%     vMassV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
-%
-%     t0 = 0;
-%     type = 1; % grad
-%     BCL = 0;
-%     BCR = 0;
-%     LF = 0;
-%     dat = [];
-%     GradV2 = coeff_matrix(t0,dat,LevV,Deg,type,Vmin,Vmax,BCL,BCR,LF,FMWT_COMP_v);
-%
-%     t0 = 0;
-%     type = 1; % grad
-%     BCL = 0;
-%     BCR = 0;
-%     LF = 0;
-%     dat = [];
-%     GradX2 = coeff_matrix(t0,dat,LevX,Deg,type,Lmin,Lmax,BCL,BCR,LF,FMWT_COMP_x);
 
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
@@ -370,7 +333,7 @@ for L = 1:nsteps,
                 
                 disp(['TD - term : ' num2str(term) '  d : ' num2str(d) ]);
                 
-                t = 0;
+                t = time(count);
                 coeff_mat = coeff_matrix(t,pde.dimensions{d},pde.terms{term}{d});             
                 pde.terms{term}{d}.coeff_mat = coeff_mat;
                 
@@ -380,10 +343,10 @@ for L = 1:nsteps,
     
     %% Test new PDE spec based generation of the coeff_matrices
     
-    disp( [ 'GradX error : '  num2str(sum(pde.terms{1}{1}.coeff_mat - GradX, 'all')) ])
-    disp( [ 'vMassV error : ' num2str(sum(pde.terms{1}{2}.coeff_mat - vMassV,'all')) ])
-    disp( [ 'EMassX error : ' num2str(sum(pde.terms{2}{1}.coeff_mat - EMassX*2,'all')) ]) % WHY ARE WE OUT BY A FACTOR OF 2 HERE?
-    disp( [ 'GradV error : '  num2str(sum(pde.terms{2}{2}.coeff_mat - GradV, 'all')) ])
+    disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{1}.coeff_mat - GradX)/norm(GradX)) ])
+    disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{2}.coeff_mat - vMassV)/norm(vMassV)) ])
+    disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{1}.coeff_mat - EMassX)/norm(EMassX)) ]) % WHY ARE WE OUT BY A FACTOR OF 2 HERE?
+    disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{2}.coeff_mat - GradV)/norm(GradV)) ])
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
@@ -399,10 +362,17 @@ for L = 1:nsteps,
     if compression == 3
         fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
     else
-        A_data.vMassV    = vMassV;
-        A_data.GradX     = GradX;
-        A_data.GradV     = GradV;
-        A_data.EMassX    = EMassX;
+        
+        A_data.GradX     = pde.terms{1}{1}.coeff_mat;
+        A_data.vMassV    = pde.terms{1}{2}.coeff_mat;
+        A_data.EMassX    = pde.terms{2}{1}.coeff_mat;
+        A_data.GradV     = pde.terms{2}{2}.coeff_mat;
+    
+%         A_data.vMassV    = vMassV;
+%         A_data.GradX     = GradX;
+%         A_data.GradV     = GradV;
+%         A_data.EMassX    = EMassX;
+        
         A_data.FluxX = FluxX;
         A_data.FluxV = FluxV;
         

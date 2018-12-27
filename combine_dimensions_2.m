@@ -12,7 +12,7 @@ function [fval] = combine_dimensions_2(fxList,fvList,ftList,HASHInv,pde)
 
 Dim = 2;
 
-Deg = pde.params.Deg;
+Deg = pde.dimensions{1}.deg;
 
 N = numel(fxList);
 

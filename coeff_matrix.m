@@ -86,7 +86,6 @@ type = term_1D.type;
 % Setup jacobi of variable x and define coeff_mat
 N = 2^(lev);
 h = (xMax-xMin) / N;
-% jacobi = h;
 dof_1D = deg * N;
 
 %%

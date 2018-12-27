@@ -2,7 +2,9 @@ function pde=Vlasov8
 % Numerical Example for Vlasov Equation
 % This test has given E and non-zero source term
 
-% PDE parameters
+%% Setup the dimensions
+% 
+% Here we setup a 2D problem (x,v)
 
 dim_x.name = 'x';
 dim_x.BCL = 0;
@@ -11,7 +13,7 @@ dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.lev = 2;
 dim_x.deg = 2;
-dim_x.FMWT = [];
+dim_x.FMWT = []; % Gets filled in later
 
 dim_v.name = 'v';
 dim_v.BCL = 0;
@@ -20,9 +22,16 @@ dim_v.domainMin = -10;
 dim_v.domainMax = +10;
 dim_v.lev = 2;
 dim_v.deg = 2;
-dim_v.FMWT = [];
+dim_v.FMWT = []; % Gets filled in later
+
+%%
+% Add dimensions to the pde object
 
 pde.dimensions = {dim_x, dim_v};
+
+%% Setup the terms of the PDE
+%
+% Here we have 2 terms, with each term having x and v operators.
 
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
@@ -60,11 +69,12 @@ term3_v.LF = 0;
 term3.name = 'E.d_dv';
 term3 = {term3_x, term3_v};
 
-
 %%
-% Add terms to PDE
+% Add terms to the pde object
 
 pde.terms = {term2, term3};
+
+
 
 p.Lmin=-1;
 p.Lmax=+1;
