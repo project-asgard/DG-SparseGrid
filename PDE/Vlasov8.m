@@ -1,6 +1,8 @@
-function pde=Vlasov8
-% Numerical Example for Vlasov Equation
-% This test has given E and non-zero source term
+function pde = Vlasov8
+% Example PDE using the 2D (1x-1v) Vlasov Equation. This example PDE is
+% time dependent (although not all the terms are time dependent). This
+% implies the need for an initial condition. This test has a given E and 3
+% non-zero source terms.
 
 %% Setup the dimensions
 % 
@@ -14,6 +16,7 @@ dim_x.domainMax = +1;
 dim_x.lev = 2;
 dim_x.deg = 2;
 dim_x.FMWT = []; % Gets filled in later
+dim_x.init_cond_fn = @Fx_0;
 
 dim_v.name = 'v';
 dim_v.BCL = 0;
@@ -23,6 +26,7 @@ dim_v.domainMax = +10;
 dim_v.lev = 2;
 dim_v.deg = 2;
 dim_v.FMWT = []; % Gets filled in later
+dim_v.init_cond_fn = @Fv_0;
 
 %%
 % Add dimensions to the pde object
@@ -31,22 +35,22 @@ pde.dimensions = {dim_x, dim_v};
 
 %% Setup the terms of the PDE
 %
-% Here we have 2 terms, with each term having x and v operators.
+% Here we have 2 terms, with each term having nDims (x and v) operators.
 
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_x.type = 1; % grad
-term2_x.G = @(x,t,dat) 1;
-term2_x.TD = 0;
+term2_x.type = 1; % grad (see coeff_matrix.m for available types)
+term2_x.G = @(x,t,dat) 1; % G function for use in coeff_matrix construction.
+term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
-term2_x.LF = 0;
+term2_x.LF = 0; % Use Lax-Friedrichs flux or not.
 
-term2_v.type = 2; % mass
-term2_v.G = @(v,t,dat) v;
-term2_v.TD = 0;
+term2_v.type = 2; % mass (see coeff_matrix.m for available types)
+term2_v.G = @(v,t,dat) v; % G function for use in coeff_matrix construction.
+term2_v.TD = 0; % Time dependent term or not.
 term2_v.dat = []; % These are to be filled within the workflow for now
-term2_v.LF = 0;
+term2_v.LF = 0; % Use Lax-Friedrichs flux or not.
 
 term2.name = 'v.d_dx';
 term2 = {term2_x, term2_v};
@@ -54,16 +58,16 @@ term2 = {term2_x, term2_v};
 %% 
 % Setup the E.d_dv (E.MassX . GradV) term
 
-term3_x.type = 2; % mass
+term3_x.type = 2;
 term3_x.G = @(x,t,dat) dat;
 term3_x.TD = 1;
-term3_x.dat = []; % These are to be filled within the workflow for now
+term3_x.dat = [];
 term3_x.LF = 0;
 
-term3_v.type = 1; % mass
+term3_v.type = 1;
 term3_v.G = @(v,t,dat) 1;
 term3_v.TD = 0;
-term3_v.dat = []; % These are to be filled within the workflow for now
+term3_v.dat = [];
 term3_v.LF = 0;
 
 term3.name = 'E.d_dv';
@@ -74,52 +78,66 @@ term3 = {term3_x, term3_v};
 
 pde.terms = {term2, term3};
 
+%% Construct some parameters and add to pde object.
+%  These might be used within the various functions below.
 
+params.parameter1 = 0;
+params.parameter2 = 1;
 
-p.Lmin=-1;
-p.Lmax=+1;
-p.Vmin=-10;
-p.Vmax=+10;
-
-p.TEND = 4;
-
-params = p;
-
-pde.Fx_0 = @Fx_0;
-pde.Fv_0 = @Fv_0;
-pde.Fxv_0 = @Fxv_0;
-pde.Ex = @Ex;
-pde.Et = @Et;
-pde.E = @E;
-pde.rho = @rho;
 pde.params = params;
 
-pde.solvePoisson = 0;
-pde.applySpecifiedE = 1;
-pde.implicit = 0;
-pde.checkAnalytic = 1;
+%% Add an arbitrary number of sources to the RHS of the PDE
+% Each source term must have nDims + 1 (which here is 2+1 / (x,v) + time) functions describing the
+% variation of each source term with each dimension and time.
+% Here we define 3 source terms.
 
-pde.source1x = @source1x;
-pde.source1v = @source1v;
-pde.source1t = @source1t;
-pde.source1 = @source1;
+%%
+% Source 1
+s1x = @source1x;
+s1v = @source1v;
+s1t = @source1t;
+source1 = {s1x,s1v,s1t};
 
-pde.source2x = @source2x;
-pde.source2v = @source2v;
-pde.source2t = @source2t;
-pde.source2 = @source2;
+%%
+% Source 2
+s2x = @source2x;
+s2v = @source2v;
+s2t = @source2t;
+source2 = {s2x,s2v,s2t};
 
-pde.source3x = @source3x;
-pde.source3v = @source3v;
-pde.source3t = @source3t;
-pde.source3 = @source3;
+%%
+% Source 3
+s3x = @source3x;
+s3v = @source3v;
+s3t = @source3t;
+source3 = {s3x,s3v,s3t};
 
-pde.ExactFx = @ExactFx;
-pde.ExactFv = @ExactFv;
-pde.ExactFt = @ExactFt;
-pde.ExactF = @ExactF;
+%%
+% Add sources to the pde data structure
+pde.sources = {source1,source2,source3};
+
+%% Define the analytic solution (optional).
+% This requires nDims+time function handles.
+
+analytic_x = @ExactFx;
+analytic_v = @ExactFv;
+analytic_t = @ExactFt;
+
+pde.analytic_solutions_1D = {analytic_x,analytic_v,analytic_t};
+pde.analytic_solution = @ExactF;
+
+%% Other workflow options that should perhpas not be in the PDE?
+
+pde.Ex = @Ex; % These can actually get absorbed into the G functions above.
+pde.Et = @Et; % but I've not done it yet. 
+pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
+pde.applySpecifiedE = 1; % Controls the "workflow" ... something we still don't know how to do generally. 
+pde.implicit = 0; % Can likely be removed and be a runtime argument. 
+pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
 
 end
+
+%% Define the various input functions specified above. 
 
 function f=Fx_0(x,p)
 % Initial condition for x variable
@@ -144,10 +162,12 @@ function f=E(x,t,p)
 f=Ex(x).*Et(t);
 end
 
-% source term--fully seperable functions
-% source = source1+source2+source3
+%%
+% Source terms are composed of fully seperable functions
+% Source = source1 + source2 + source3
 
-% source term 1
+%%
+% Source term 1
 function f = source1t(t)
 f = cos(t);
 end
@@ -161,7 +181,8 @@ function f = source1(x,v,t)
 f = source1x(x).*source1v(v).*source1t(t);
 end
 
-% source term 2
+%%
+% Source term 2
 function f = source2t(t)
 f = sin(t);
 end
@@ -175,7 +196,8 @@ function f = source2(x,v,t)
 f = source2x(x).*source2v(v).*source2t(t);
 end
 
-% source term 3
+%%
+% Source term 3
 function f = source3t(t)
 f = cos(t).*sin(t);
 end
@@ -189,8 +211,9 @@ function f = source3(x,v,t)
 f = source3x(x).*source3v(v).*source3t(t);
 end
 
+%%
+% Analytic Solution functions
 
-% Exact F
 function f=ExactFt(t)
 f=sin(t);
 end

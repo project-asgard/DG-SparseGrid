@@ -1,10 +1,8 @@
 %% Construct 1D coefficient matrix
 % This routine returns a 2D array representing an operator coefficient
-% matrix for a single-D. Each term in a PDE requires D many coefficient
+% matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
-%
 
-% function [mat] = coeff_matrix(t,dat_W,G,lev,deg,type,xMin,xMax,BCL,BCR,LF,FMWT)
 function [mat] = coeff_matrix(t,dimension,term_1D)
 
 % Grad
@@ -13,24 +11,13 @@ function [mat] = coeff_matrix(t,dimension,term_1D)
 % need some test
 
 %% Inputs
-% lev  : number of levels in hierachical basis
-% deg  : order of legendre basis
-% type : object of type term (see below)
-% xMin : minimum of this D domain range
-% xMax : maximum of this D domain range
-% BCL  : Boundary Condition (Left),  select from list of BCs below
-% BCR  : Boundary Condition (Right), select from list of BCs below
-% LF   : =0 for CF flux, or =C for LF flux with global C value
-% FMWT : Forward Multi-Wavelet Transform matrix
+% t : time
+% dimension : an entry in the pde.dimensions array.
+% term_1D : one of the dimension entries in an entry in the pde.terms
+% array.
 
-%% "type" object
-% This object contains the information to specify the type of the operator.
-% It defines the following ...
-%  coeff_type : int from coeff_type list below
-%  TD         : 0 or 1 (is this term time dependent)
-%  g1(x,t)    : function handle to g1 function
-
-%% Boundary condition types (BCL and BCR)
+%% Supported boundary condition types (BCL and BCR)
+% These are chosen in the pde.dimensions options.
 % 0 == periodic
 % 1 == dirichlet (set value of solution)
 % 2 == neumann   (set first derivative of solution)
@@ -44,21 +31,6 @@ function [mat] = coeff_matrix(t,dimension,term_1D)
 % We do not (cannot) use local upwinding or LF because selecting
 % either the sign of the flow field or the value of the coefficient C could
 % be multivalued within the multi-D solution for a single-D coeff_matrix.
-
-%function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,lev,k,Lmin,Lmax,Vmin,Vmax,FMWT_x,FMWT_v)
-%=============================================================
-% Generate time-independent coefficient matrices
-% Vlasolv Solver:
-%   Operators:  vMassV:  int_v v * l_i(v)  * l_j(v) dv
-%               GradV :  int_v 1 * l_i(v)' * l_j(v) dv
-% Poisson Solver:
-%   Operators: DeltaX: int_x (m_i(x))''*m_j(x)dx
-%   This equation is solved by LDG methods
-% Maxwell Solver: (Missing)
-%   Operators: CurlX: int_x curl(m_i(x))*m_j(x)dx
-% Input: Lev, k, dim, Lmax, Vmax
-% P.S. This is the full-grid version
-%=============================================================
 
 %% TODO ...
 % * Choice of flux (may require input C)
@@ -118,7 +90,7 @@ Grad = sparse(dof_1D,dof_1D);
 Stif = sparse(dof_1D,dof_1D);
 Flux = sparse(dof_1D,dof_1D);
 
-%% 
+%%
 % Convert input dat from wavelet (_W) space to realspace (_R)
 
 if isempty(dat_W)
@@ -174,26 +146,23 @@ for i=0:N-1
     %%
     % Perform volume integral to give deg x deg matrix block
     
-    %% 
+    %%
     % Get dat_R at the quadrature points
     
     dat_R_quad = p_val * dat_R(c1:c2);
     
     %%
     % M // mass matrix u . v
-%     G = @(x,t,dat) x; % gives the "v" in vMassV, or the "E" in EMassX
     G1 = G(quad_xi,t,dat_R_quad);
     val_mass = p_val' * (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % G // grad matrix u . v'
-%     G = @(x,t,dat) 1;
     G1 = G(quad_xi,t,dat_R_quad);
     val_grad  = Dp_val'* (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % S // stiffness matrix u' . v'
-%     G = @(x,t,dat) 1;
     G1 = G(quad_xi,t,dat_R_quad);
     val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) * h/2;
     
@@ -201,7 +170,7 @@ for i=0:N-1
     
     Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
     Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
-    Stif = Stif + sparse(Iu',Iu,val_stif,dof_1D,dof_1D);    
+    Stif = Stif + sparse(Iu',Iu,val_stif,dof_1D,dof_1D);
     
     %%
     % Setup numerical flux choice (interior elements only)
@@ -259,7 +228,7 @@ for i=0:N-1
         if i==N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-        end        
+        end
     end
     
     %%
@@ -294,9 +263,9 @@ end
 Mass = FMWT * Mass * FMWT';
 Grad = FMWT * Grad * FMWT';
 
-%% 
-% After the transformation to wavelet space there may be very tiny coefficient values. 
-% Here we zero them out. 
+%%
+% After the transformation to wavelet space there may be very tiny coefficient values.
+% Here we zero them out.
 
 tol = 1e-8;
 
@@ -304,10 +273,10 @@ Mass = Mass .* (abs(Mass) > tol );
 Grad = Grad .* (abs(Grad) > tol );
 
 %% Construct block diagonal for LDG ?
+% This is TODO
 % DeltaX = blkdiag( FMWT,FMWT) * ...
 %          DeltaX * ...
 %          blkdiag( FMWT',FMWT');
-
 
 if type == 1
     mat = Grad;

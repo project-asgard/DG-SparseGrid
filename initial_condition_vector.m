@@ -1,4 +1,4 @@
-function fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde)
+function fval = initial_condition_vector(fx,fv,HASHInv,pde)
 
 fxList = {fx};
 fvList = {fv};

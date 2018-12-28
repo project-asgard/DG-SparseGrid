@@ -6,9 +6,25 @@ LevX = pde.dimensions{1}.lev;
 LevV = pde.dimensions{2}.lev;
 Deg  = pde.dimensions{1}.deg;
 
-fx1 = forwardMWT(LevX,Deg,pde.params.Lmin,pde.params.Lmax,pde.ExactFx,pde.params);
-fv1 = forwardMWT(LevV,Deg,pde.params.Vmin,pde.params.Vmax,pde.ExactFv,pde.params);
-ft1 = pde.ExactFt(time);
+nDims = numel(pde.dimensions);
+
+%%
+% Loop over the number of dimensions (+time) to construct the analytic solution.
+
+for d=1:nDims
+    AS_d{d} = forwardMWT(pde.dimensions{d}.lev,pde.dimensions{d}.deg,...
+        pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,...
+        pde.analytic_solutions_1D{d},pde.params);
+end
+AS_d{nDims+1} = pde.analytic_solutions_1D{nDims+1}(time);
+
+fx1 = AS_d{1};
+fv1 = AS_d{2};
+ft1 = AS_d{3};
+
+% fx1 = forwardMWT(LevX,Deg,pde.dimensions{1}.domainMin,pde.dimensions{1}.domainMax,pde.ExactFx,pde.params);
+% fv1 = forwardMWT(LevV,Deg,pde.dimensions{2}.domainMin,pde.dimensions{2}.domainMax,pde.ExactFv,pde.params);
+% ft1 = pde.ExactFt(time);
 
 fxList = {fx1};
 fvList = {fv1};

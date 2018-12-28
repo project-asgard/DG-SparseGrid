@@ -37,7 +37,7 @@ addpath(genpath(folder));
 
 if ~exist('pde','var') || isempty(pde)
     % Equation setup
-    pde = Vlasov4;
+    pde = Vlasov8;
 end
 
 nTerms = numel(pde.terms);
@@ -45,7 +45,7 @@ nDims = numel(pde.dimensions);
 
 if ~exist('TEND','var') || isempty(TEND)
     % End time
-    TEND = pde.params.TEND;
+    TEND = 0.001;
 end
 if exist('Lev','var')
     % Number of levels
@@ -71,7 +71,7 @@ if ~exist('compression','var') || isempty(compression)
     compression = 4;
 end
 if ~exist('gridType','var') || isempty(gridType)
-    gridType = 'SG'%'FG';
+    gridType = 'SG';%'FG'
 else
     if strcmp(gridType,'SG') || strcmp(gridType,'FG')
     else
@@ -100,7 +100,7 @@ LevV = pde.dimensions{2}.lev;
 
 % Things to be removed
 Deg = pde.dimensions{1}.deg;
-Lev = LevX;
+Lev = pde.dimensions{1}.lev;
 DimX = 1;
 
 % Dimensionality.
@@ -111,25 +111,20 @@ Dim = nDims;
 
 params = pde.params;
 
-% Time step.
+%$
+% Set time step.
+
 CFL = 0.1;
+
 dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
 
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
 %% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
-%
-% Input:  Deg and Lev
-%
-% Output: Convert Matrix FMWT_COMP
 
-FMWT_COMP_x = OperatorTwoScale(Deg,2^LevX);
-FMWT_COMP_v = OperatorTwoScale(Deg,2^LevV);
-
-FMWT = {FMWT_COMP_x, FMWT_COMP_v};
-
-pde.dimensions{1}.FMWT = FMWT_COMP_x;
-pde.dimensions{2}.FMWT = FMWT_COMP_v;
+for d=1:nDims
+    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.dimensions{d}.deg,2^pde.dimensions{d}.lev);
+end
 
 %% Step 1.2. Apply the mulit-wavelet transform to the initial conditions in each dimension.
 % Generate the 1D initial conditions. Input: LevX,LevV,Deg,Lmax,Vmax,pde
@@ -138,10 +133,12 @@ pde.dimensions{2}.FMWT = FMWT_COMP_v;
 
 if ~quiet; disp('[1.2] Setting up 1D initial conditions'); end
 %[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
-fx = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Fx_0,pde.params);
-fv = forwardMWT(LevV,Deg,Vmin,Vmax,pde.Fv_0,pde.params);
-
-
+fx = forwardMWT(pde.dimensions{1}.lev,pde.dimensions{1}.deg,...
+    pde.dimensions{1}.domainMin,pde.dimensions{1}.domainMax,...
+    pde.dimensions{1}.init_cond_fn,pde.params);
+fv = forwardMWT(pde.dimensions{2}.lev,pde.dimensions{2}.deg,...
+    pde.dimensions{2}.domainMin,pde.dimensions{2}.domainMax,...
+    pde.dimensions{2}.init_cond_fn,pde.params);
 
 %% Step 2. Generate Sparse-Grid (as the Hash + Connectivity tables).
 
@@ -164,7 +161,7 @@ Con2D = Connect2D(Lev,HASH,HASHInv,gridType);
 %%% condition, multi-wavelet representation of the initial condition
 %%% specified in PDE.
 if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
-fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
+fval = initial_condition_vector(fx,fv,HASHInv,pde);
 
 %% Step 3. Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -182,7 +179,7 @@ fval = initial_condition_vector(fx,fv,Deg,Dim,HASHInv,pde);
 % The original way
 if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
-    FMWT_COMP_x,FMWT_COMP_v);
+     pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 %%
 % The generalized PDE spec way
 t = 0;
@@ -211,7 +208,7 @@ if ~quiet; disp('[4] Construct matrix for Poisson solve'); end
 if DimX>1
     % Construct DeltaX for DimX
 else
-    A_Poisson = DeltaX;
+    A_Poisson = DeltaX; 
 end
 
 
@@ -230,7 +227,7 @@ if ~quiet; disp('[5.0] Plotting intial condition'); end
 
 % Construct data for reverse MWT in 2D
 [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
-    FMWT_COMP_x,FMWT_COMP_v);
+    pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 [xx,vv]=meshgrid(x_node,v_node);
 
 % Plot initial condition
@@ -296,7 +293,7 @@ for L = 1:nsteps,
     
     %%% Generate EMassX time dependent coefficient matrix.
     if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
-    EMassX = matrix_coeff_TD(LevX,Deg,Lmax,E,FMWT_COMP_x);
+    EMassX = matrix_coeff_TD(LevX,Deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
     
     %%
     % Set the dat portion of the EMassX part of E.d_dv term.
@@ -312,10 +309,10 @@ for L = 1:nsteps,
     
     %% Test new PDE spec based generation of the coeff_matrices
     
-    disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{1}.coeff_mat - GradX)/norm(GradX)) ])
-    disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{2}.coeff_mat - vMassV)/norm(vMassV)) ])
-    disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{1}.coeff_mat - EMassX)/norm(EMassX)) ]) % WHY ARE WE OUT BY A FACTOR OF 2 HERE?
-    disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{2}.coeff_mat - GradV)/norm(GradV)) ])
+    disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{1}.coeff_mat - GradX)/norm(GradX)) ]);
+    disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{2}.coeff_mat - vMassV)/norm(vMassV)) ]);
+    disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{1}.coeff_mat - EMassX)/norm(EMassX)) ]);
+    disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{2}.coeff_mat - GradV)/norm(GradV)) ]);
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
@@ -404,7 +401,7 @@ for L = 1:nsteps,
         
         % Check the real space solution with the analytic solution
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
-        f2d_analytic = pde.ExactF(xx,vv,L*dt);
+        f2d_analytic = pde.analytic_solution(xx,vv,L*dt);
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
         disp(['    real space absolute err : ', num2str(err_real)]);
         disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);

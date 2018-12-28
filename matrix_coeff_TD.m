@@ -1,4 +1,4 @@
-function EMassX=matrix_coeff_TD(Lev_x,k,Lmax,EE,FMWT_COMP_x)
+function EMassX=matrix_coeff_TD(Lev_x,k,Lmin,Lmax,EE,FMWT_COMP_x)
 %=============================================================
 % Generate time-dependent coefficient matrix
 % Vlasolv Solver:
@@ -27,7 +27,7 @@ p_val = legendre(quad_x,k);
 % Define Matrices
 %---------------------------
 nx=2^(Lev_x);
-hx=Lmax/nx;
+hx=(Lmax-Lmin)/nx;
 Jacobi_x=hx;
 dof_1D_x=k*nx;
 
@@ -67,7 +67,7 @@ for LL=0:nx-1
     %       i1,i1+1, ...,i2]
     % --------------------------
     
-    ff=p_val*EE(i1:i2);
+    ff=p_val*EE(i1:i2)*sqrt(1/hx);
     
     val=(1/hx)*[p_val'*(quad_w.*p_val.*ff)]*(Jacobi_x/2);
     
