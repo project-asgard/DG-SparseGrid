@@ -46,7 +46,7 @@ if ~exist('TEND','var') || isempty(TEND)
 end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
-    Lev = 4;
+    Lev = 3;
 end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
@@ -58,7 +58,7 @@ if ~exist('quiet','var') || isempty(quiet)
 end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
-    compression = 3;
+    compression = 4;
 end
 if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG'%'FG';
@@ -172,20 +172,21 @@ if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
 if compression == 3
-%     A_encode=GlobalMatrixSG_old(vMassV,GradX,HASHInv,Con2D,Deg);
-%     A_encode=GlobalMatrixSG(vMassV,GradX,HASH,Lev,Deg);
-%     II = rand(8,8);JJ = rand(8,8);
-    II = vMassV;JJ = GradX;
-    tic
-    A_old=GlobalMatrixSG_old(II,JJ,HASHInv,Con2D,Deg);
-    toc
-    tic
-    A_new=GlobalMatrixSG_newCon(II,JJ,HASH,Lev,Deg);
-    toc
+% %     A_encode=GlobalMatrixSG_old(vMassV,GradX,HASHInv,Con2D,Deg);
+% %     A_encode=GlobalMatrixSG(vMassV,GradX,HASH,Lev,Deg);
+% %     II = rand(8,8);JJ = rand(8,8);
+%     II = vMassV;JJ = GradX;
+%     tic
+%     A_old=GlobalMatrixSG_old(II,JJ,HASHInv,Con2D,Deg);
+%     toc
+%     tic
+    A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,Lev,Deg);
+%     toc
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
     A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con2D,Deg,compression);
+%     [A_Data] = GlobalMatrixSG_SlowVersion_newCon(HASH,Lev,Deg,compression);
 end
 
 %% Step 4. Generate time-independent global matrix
@@ -288,8 +289,9 @@ for L = 1:nsteps,
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
     if compression == 3
-        B_encode = GlobalMatrixSG_old(GradV,EMassX,HASHInv,Con2D,Deg);
-%         B_encode = GlobalMatrixSG(GradV,EMassX,HASH,Lev,Deg);
+%         B_encode = GlobalMatrixSG_old(GradV,EMassX,HASHInv,Con2D,Deg);
+
+        B_encode = GlobalMatrixSG_newCon(GradV,EMassX,HASH,Lev,Deg);
         C_encode=[A_encode B_encode];
     else
         
@@ -298,7 +300,7 @@ for L = 1:nsteps,
     %%% Advance Vlasov in time with RK3 time stepping method.
     if ~quiet; disp('    [d] RK3 time step'); end
     if compression == 3
-        fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
+        fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv,Vmax,Emax);
     else
         A_data.vMassV    = vMassV;
         A_data.GradX     = GradX;

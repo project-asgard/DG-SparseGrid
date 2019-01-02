@@ -68,7 +68,7 @@ for LL=0:nx-1
     % --------------------------
     
     tmp = EE(i1:i2);
-    ff=p_val*EE(i1:i2);
+    ff=p_val*EE(i1:i2)*1/hx;
     
     tmpA = quad_w.*p_val.*ff;
     tmpB = p_val';

@@ -1,9 +1,11 @@
 close all
 Dof = Deg^2*size(HASHInv,2);
+Dim = 2;
 AA_new = sparse(Dof,Dof);
 for i = 1:size(A_new,2)
-    A = A_new{i}.A1;
-    B = A_new{i}.A2;
+
+    A = A_new{i}.A{1};
+    B = A_new{i}.A{2};
     II =  A_new{i}.IndexI;
     JJ =  A_new{i}.IndexJ;
     

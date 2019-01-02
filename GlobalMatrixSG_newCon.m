@@ -3,12 +3,15 @@ function A_encode=GlobalMatrixSG_newCon(A,B,HASH,Lev,Deg)
 % This code is to generate global matrix
 % only works for
 % compression = 3
-% By Lin, 01/02/2019
-%------------------------------------------------------------
+% Difference with Previous Version: Avoid the connectivity
+% Needs more work for Line 76 and 84
+%--------------------------------------------------------------------------
 
 global hash_format
 
 Dim = 2;
+Matrix{1} = A;
+Matrix{2} = B;
 
 % All the possible combination of Lev for variables (x1,...xDim)
 ComLev = perm_leq( Dim, Lev);
@@ -25,17 +28,15 @@ for i = 1:size(ComLev,1)
     end
     
     % compute all the Cel corresponding to Lev
-    % General Dim Method :: use recursive way to generate 
-    % needs further work
-    Cel1 = repmat(Cell_loc{1}(:),1,numel(Cell_loc{2}));
-    Cel2 = repmat(Cell_loc{2}(:),numel(Cell_loc{1}),1);
-    Cel1 = Cel1';
-    Cel2 = Cel2';
+    % General Dim Method 
+    CelMat = CelRepeatGen(Cell_loc);
+    
     
     % Compute their index in Hash table
-    key = zeros(numel(Cel1),2*Dim);
-    key(1:end,1:Dim) = repmat(Lev_loc,numel(Cel1),1);
-    key(:,Dim+1:2*Dim) = [Cel1(:),Cel2(:)];
+    % for general dim
+    key = zeros(size(CelMat,1),2*Dim);
+    key(1:end,1:Dim) = repmat(Lev_loc,size(CelMat,1),1);
+    key(:,Dim+1:2*Dim) = CelMat;
     
     index = zeros(size(key,1),1);
     
@@ -58,43 +59,55 @@ for i = 1:size(ComLev,1)
         for d = 1:Dim
             index_I{d} = ComLevIndex{i}.lid{d};
             index_J{d} = ComLevIndex{j}.lid{d};
+            
+            tmpA{d}=Matrix{d}( Deg*(index_I{d}(1)-1)+1:Deg*(index_I{d}(end)),...
+                Deg*(index_J{d}(1)-1)+1:Deg*(index_J{d}(end)) );
+            rSize{d} = size(tmpA{d},1)/Deg;
+            cSize{d} = size(tmpA{d},2)/Deg;
+            
+            % save sub-matries
+            A_encode{count}.A{d} = tmpA{d};
         end
         
-        tmpA=A( Deg*(index_I{1}(1)-1)+1:Deg*(index_I{1}(end)),...
-            Deg*(index_J{1}(1)-1)+1:Deg*(index_J{1}(end)) );
-        rA = size(tmpA,1);
-        cA = size(tmpA,2);
+        if Dim == 2
+            A_encode{count}.A1=A_encode{count}.A{1};
+            A_encode{count}.A2=A_encode{count}.A{2};
+        end
         
-        tmpB=B( Deg*(index_I{2}(1)-1)+1:Deg*(index_I{2}(end)),...
-            Deg*(index_J{2}(1)-1)+1:Deg*(index_J{2}(end)) );
-        rB = size(tmpB,1);
-        cB = size(tmpB,2);
-        
-        % save sub-matries for A and B
-        A_encode{count}.A1=tmpA;
-        A_encode{count}.A2=tmpB;        
-        
-        % compute the row index
-        tmp = Deg^2*(IndexI(:)-1)+[1:Deg^2];
+        % !!
+        % compute the row index - needs more work for Dim > 2
+        tmp = Deg^Dim*(IndexI(:)-1)+[1:Deg^Dim];
         tmp = tmp';
-        rIndex = kron_split( rA,  Deg*ones(rB/Deg,1) );
-
+        rIndex = kron_split( Deg*rSize{1},  Deg*ones(rSize{2},1) );
+        
         IndexI = tmp(:);
         IndexI(rIndex(:)) = IndexI;
         
         % compute the column index
-        tmp = Deg^2*(IndexJ(:)-1)+[1:Deg^2];
+        tmp = Deg^Dim*(IndexJ(:)-1)+[1:Deg^Dim];
         tmp = tmp';
-        cIndex = kron_split( cA,  Deg*ones(cB/Deg,1) );
-
+        cIndex = kron_split( Deg*cSize{1},  Deg*ones(cSize{2},1) );
+        
         IndexJ = tmp(:);
         IndexJ(cIndex(:)) = IndexJ;
         
         A_encode{count}.IndexI = IndexI;
         A_encode{count}.IndexJ = IndexJ;
         
-        
         count = count+1;
+    end
+end
+end
+
+function CelMat = CelRepeatGen(CelLoc)
+    Dim = numel(CelLoc);
+    CelMat = CelLoc{1}(:);
+    for d = 1:Dim-1
+        tmpCel1 = repmat(CelMat,numel(CelLoc{d+1}),1);
+        tmpCel2 = repmat(CelLoc{d+1}(:),1,size(CelMat,1));
+        tmpCel2 = tmpCel2';
+
+        CelMat = [tmpCel1,tmpCel2(:)];
     end
 end
 
