@@ -4,7 +4,7 @@ function A_encode=GlobalMatrixSG(A,B,HASH,Lev,Deg)
 % This code is to use the new approach for generating global matrix
 % only works for
 % compression = 3
-% By Lin, 11/14/2018
+% By Lin, 01/02/2019
 
 global hash_format
 

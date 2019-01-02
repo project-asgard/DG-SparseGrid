@@ -46,11 +46,11 @@ if ~exist('TEND','var') || isempty(TEND)
 end
 if ~exist('Lev','var') || isempty(Lev)
     % Number of levels
-    Lev = 3;
+    Lev = 4;
 end
 if ~exist('Deg','var') || isempty(Deg)
     % Polynomial degree
-    Deg = 2; % Deg = 2 Means Linear Element
+    Deg = 3; % Deg = 2 Means Linear Element
 end
 if ~exist('quiet','var') || isempty(quiet)
     % Enable / disable print statements
@@ -180,7 +180,7 @@ if compression == 3
     A_old=GlobalMatrixSG_old(II,JJ,HASHInv,Con2D,Deg);
     toc
     tic
-    A_new=GlobalMatrixSG(II,JJ,HASH,Lev,Deg);
+    A_new=GlobalMatrixSG_newCon(II,JJ,HASH,Lev,Deg);
     toc
 else
     % A_data is constructed only once per grid refinement, so can be done
