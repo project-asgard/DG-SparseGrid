@@ -208,6 +208,7 @@ for i=0:N-1
     % If dirichelt
     % u^-_LEFT = g(LEFT)
     % u^+_RIGHT = g(RIGHT)
+    % still need to work on the RHS terms
     if BCL == 1 %% left dirichlet
         
         %%
@@ -216,6 +217,17 @@ for i=0:N-1
         if i==0
             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
+            
+            val_AVG = (1/h) * [-p_L'*p_L/2, ...   % for x1 (left side)
+                p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
+    
+            val_JMP = (1/h) * [-p_L'*p_L, ...     % for x1 (left side)
+                -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+    
+            %%
+            % Combine AVG and JMP to give choice of flux for this operator type
+    
+            val_FLUX = val_AVG + val_JMP / 2 * LF;
         end
         
     end
@@ -228,24 +240,67 @@ for i=0:N-1
         if i==N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+            
+            val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
+                    p_R'*p_R/2];      % for x2 (right side)
+    
+            val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
+                    -p_R'*p_R]/2;    % for x2 (right side)
+    
+            %%
+            % Combine AVG and JMP to give choice of flux for this operator type
+    
+            val_FLUX = val_AVG + val_JMP / 2 * LF;
         end
     end
     
     %%
     % If neumann
+    % (gradient u)*n = g
+    % by splitting grad u = q by LDG methods, the B.C is changed to
+    % q*n = g (=> q = g for 1D variable)
+    % only work for derivatives greater than 1
     
     if BCL == 2 %% left neumann
         
         %%
         % TODO
-        
+        if i==0
+            Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
+            Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
+            
+            val_AVG = (1/h) * [-p_L'*p_L/2, ...   % for x1 (left side)
+                p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
+    
+            val_JMP = (1/h) * [-p_L'*p_L, ...     % for x1 (left side)
+                -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+    
+            %%
+            % Combine AVG and JMP to give choice of flux for this operator type
+    
+            val_FLUX = val_AVG + val_JMP / 2 * LF;
+        end
     end
     
     if BCR == 2 %% right neumann
         
         %%
         % TODO
-        
+        if i==N-1
+            Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
+            Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
+            
+            val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
+                    p_R'*p_R/2];      % for x2 (right side)
+    
+            val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
+                    -p_R'*p_R]/2;    % for x2 (right side)
+    
+            %%
+            % Combine AVG and JMP to give choice of flux for this operator type
+    
+            val_FLUX = val_AVG + val_JMP / 2 * LF;
+        end
     end
     
     %%
