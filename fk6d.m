@@ -68,7 +68,7 @@ if ~exist('quiet','var') || isempty(quiet)
 end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
-    compression = 4;
+    compression = 3;
 end
 if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG';%'FG'
@@ -189,7 +189,10 @@ pde = getCoeffMats(pde,t,TD);
 %%% Generate A_encode / A_data time independent data structures.
 if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
 if compression == 3
-    A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
+    % the new matrix construction is as _newCon, only works for 
+    % compression= 3
+%     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
+    A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,Lev,Deg);
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
@@ -317,7 +320,10 @@ for L = 1:nsteps,
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
     if compression == 3
-        B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
+    % the new matrix construction is as _newCon, only works for 
+    % compression= 3
+%         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
+        B_encode=GlobalMatrixSG_newCon(GradV,EMassX,HASH,Lev,Deg);
         C_encode=[A_encode B_encode];
     else
         
