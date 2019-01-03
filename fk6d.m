@@ -68,7 +68,7 @@ if ~exist('quiet','var') || isempty(quiet)
 end
 if ~exist('compression','var') || isempty(compression)
     % Use or not the compression reference version
-    compression = 3;
+    compression = 4;
 end
 if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG';%'FG'
