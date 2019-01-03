@@ -99,7 +99,7 @@ figure(1);
 % plotgrid(IHash,Lstart,Lend,-0.1);
 % pause(0.1)
 % return
-
+return
 LeafSolIndex = Deg*(2^(Lev-1))+1:Deg*2^Lev;
 epsilon = 1e-5;
 eta = 5e-5;
