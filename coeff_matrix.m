@@ -34,7 +34,7 @@ function [mat] = coeff_matrix(t,dimension,term_1D)
 
 %% TODO ...
 % * Choice of flux (may require input C)
-% * Other BCs
+% * Other BCs are done, but the RHS (with source) needs more work
 % * Picking which term type
 
 %%
@@ -208,12 +208,8 @@ for i=0:N-1
     % If dirichelt
     % u^-_LEFT = g(LEFT)
     % u^+_RIGHT = g(RIGHT)
-    % still need to work on the RHS terms
     if BCL == 1 %% left dirichlet
         
-        %%
-        % TODO
-        % Still need to modify some bc terms
         if i==0
             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
@@ -234,9 +230,6 @@ for i=0:N-1
     
     if BCR == 1 %% right dirichlet
         
-        %%
-        % TODO
-        % Still need to modify some bc terms
         if i==N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
@@ -263,8 +256,6 @@ for i=0:N-1
     
     if BCL == 2 %% left neumann
         
-        %%
-        % TODO
         if i==0
             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
@@ -284,8 +275,6 @@ for i=0:N-1
     
     if BCR == 2 %% right neumann
         
-        %%
-        % TODO
         if i==N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
