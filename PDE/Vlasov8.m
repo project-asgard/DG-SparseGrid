@@ -41,7 +41,7 @@ pde.dimensions = {dim_x, dim_v};
 % Setup the v.d_dx (v.MassV . GradX) term
 
 term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,t,dat) 1; % G function for use in coeff_matrix construction.
+term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
 term2_x.LF = 0; % Use Lax-Friedrichs flux or not.
@@ -65,7 +65,7 @@ term3_x.dat = [];
 term3_x.LF = 0;
 
 term3_v.type = 1;
-term3_v.G = @(v,t,dat) 1;
+term3_v.G = @(v,t,dat) v*0+1;
 term3_v.TD = 0;
 term3_v.dat = [];
 term3_v.LF = 0;
