@@ -29,8 +29,8 @@ format short e
 addpath(genpath(pwd))
 
 
-Lev = 10;
-Deg = 4;
+Lev = 2;
+Deg = 2;
 num_plot = Deg;
 EndTime = 3;
 Lstart = -1;
