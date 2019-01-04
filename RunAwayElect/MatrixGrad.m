@@ -68,6 +68,6 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     
 end
 
-figure;spy(Mat)
+% figure;spy(Mat)
 
 end
