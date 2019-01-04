@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.9.25)  3 JAN 2019 17:13
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.9.25)  4 JAN 2019 15:55
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -872,7 +872,6 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [9 <./test3-Solution-eps-converted-to.pdf> <./test3-TotalPartical-eps-converte
 d-to.pdf>]
-[10]
 Package epstopdf Info: Source file: <./condiff-cf-E1.eps>
 (epstopdf)                    date: 2019-01-03 13:20:47
 (epstopdf)                    size: 62080 bytes
@@ -881,20 +880,18 @@ Package epstopdf Info: Source file: <./condiff-cf-E1.eps>
 (epstopdf)                    size: 20058 bytes
 (epstopdf)             Command: <epstopdf --outfile=./condiff-cf-E1-eps-convert
 ed-to.pdf ./condiff-cf-E1.eps>
-(epstopdf)             \includegraphics on input line 567.
+(epstopdf)             \includegraphics on input line 550.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-cf-E1-eps-converted-to.pdf, id=150, pagebox=cropbox, 1012.78375pt x 
+<./condiff-cf-E1-eps-converted-to.pdf, id=147, pagebox=cropbox, 1012.78375pt x 
 721.69624pt>
 File: ./condiff-cf-E1-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-cf-E1-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-cf-E1-eps-converted-to.pdf  used on input li
-ne 567. on input line 567.
+ne 550. on input line 550.
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
- 567.
+ 550.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [11]
+[10]
 Package epstopdf Info: Source file: <./condiff-uf-E1_v2.eps>
 (epstopdf)                    date: 2019-01-03 13:20:47
 (epstopdf)                    size: 107351 bytes
@@ -903,16 +900,20 @@ Package epstopdf Info: Source file: <./condiff-uf-E1_v2.eps>
 (epstopdf)                    size: 38570 bytes
 (epstopdf)             Command: <epstopdf --outfile=./condiff-uf-E1_v2-eps-conv
 erted-to.pdf ./condiff-uf-E1_v2.eps>
-(epstopdf)             \includegraphics on input line 575.
+(epstopdf)             \includegraphics on input line 558.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-uf-E1_v2-eps-converted-to.pdf, id=154, pagebox=cropbox, 1012.78375pt
+<./condiff-uf-E1_v2-eps-converted-to.pdf, id=151, pagebox=cropbox, 1012.78375pt
  x 572.1375pt>
 File: ./condiff-uf-E1_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-uf-E1_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-uf-E1_v2-eps-converted-to.pdf  used on input
- line 575. on input line 575.
+ line 558. on input line 558.
 Package pdftex.def Info: Requested size: 351.86342pt x 198.767pt on input line 
-575.
+558.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [11 <./condiff-cf-E1-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <./condiff-uf-E2_v2.eps>
 (epstopdf)                    date: 2019-01-03 13:20:47
 (epstopdf)                    size: 107490 bytes
@@ -921,21 +922,16 @@ Package epstopdf Info: Source file: <./condiff-uf-E2_v2.eps>
 (epstopdf)                    size: 38490 bytes
 (epstopdf)             Command: <epstopdf --outfile=./condiff-uf-E2_v2-eps-conv
 erted-to.pdf ./condiff-uf-E2_v2.eps>
-(epstopdf)             \includegraphics on input line 583.
+(epstopdf)             \includegraphics on input line 566.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-uf-E2_v2-eps-converted-to.pdf, id=155, pagebox=cropbox, 1012.78375pt
+<./condiff-uf-E2_v2-eps-converted-to.pdf, id=160, pagebox=cropbox, 1012.78375pt
  x 721.69624pt>
 File: ./condiff-uf-E2_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-uf-E2_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-uf-E2_v2-eps-converted-to.pdf  used on input
- line 583. on input line 583.
+ line 566. on input line 566.
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
- 583.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [12 <./condiff-cf-E1-eps-converted-to.pdf> <./condiff-uf-E1_v2-eps-converted-t
-o.pdf>]
+ 566.
 Package epstopdf Info: Source file: <./condiff-uf-E4_v2.eps>
 (epstopdf)                    date: 2019-01-03 13:20:47
 (epstopdf)                    size: 108593 bytes
@@ -944,49 +940,55 @@ Package epstopdf Info: Source file: <./condiff-uf-E4_v2.eps>
 (epstopdf)                    size: 36858 bytes
 (epstopdf)             Command: <epstopdf --outfile=./condiff-uf-E4_v2-eps-conv
 erted-to.pdf ./condiff-uf-E4_v2.eps>
-(epstopdf)             \includegraphics on input line 591.
+(epstopdf)             \includegraphics on input line 574.
 Package epstopdf Info: Output file is already uptodate.
-<./condiff-uf-E4_v2-eps-converted-to.pdf, id=169, pagebox=cropbox, 1012.78375pt
+<./condiff-uf-E4_v2-eps-converted-to.pdf, id=161, pagebox=cropbox, 1012.78375pt
  x 721.69624pt>
 File: ./condiff-uf-E4_v2-eps-converted-to.pdf Graphic file (type pdf)
 <use ./condiff-uf-E4_v2-eps-converted-to.pdf>
 Package pdftex.def Info: ./condiff-uf-E4_v2-eps-converted-to.pdf  used on input
- line 591. on input line 591.
+ line 574. on input line 574.
 Package pdftex.def Info: Requested size: 351.86342pt x 250.7254pt on input line
- 591.
+ 574.
 
-[13 <./condiff-uf-E2_v2-eps-converted-to.pdf> <./condiff-uf-E4_v2-eps-converted
--to.pdf>] [14] (./SG-DG-RunAwayV2.aux) ) 
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [12 <./condiff-uf-E1_v2-eps-converted-to.pdf> <./condiff-uf-E2_v2-eps-converte
+d-to.pdf>]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [13 <./condiff-uf-E4_v2-eps-converted-to.pdf>] [14] (./SG-DG-RunAwayV2.aux) ) 
 Here is how much of TeX's memory you used:
  12921 strings out of 492990
  253652 string characters out of 6132636
- 292379 words of memory out of 5000000
+ 290381 words of memory out of 5000000
  16176 multiletter control sequences out of 15000+600000
  13698 words of font info for 51 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,14n,54p,417b,321s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2017/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2017/texmf-dist/font
-s/type1/public/amsfonts/cm/cmbx8.pfb></usr/local/texlive/2017/texmf-dist/fonts/
-type1/public/amsfonts/cm/cmcsc10.pfb></usr/local/texlive/2017/texmf-dist/fonts/
-type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2017/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2017/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2017/texmf-dist/fonts/type
-1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmr10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/publ
-ic/amsfonts/cm/cmr6.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmr7.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr8.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfon
-ts/cm/cmsy10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfont
-s/cm/cmsy6.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmsy7.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmti8.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/symb
-ols/msbm10.pfb>
-Output written on SG-DG-RunAwayV2.pdf (14 pages, 659902 bytes).
+<
+/usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></
+usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></us
+r/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></us
+r/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr
+/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/
+local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/lo
+cal/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/loca
+l/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/
+texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/te
+xlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texli
+ve/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/
+2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/201
+7/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2017/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2017/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2017/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2017/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2017/texmf-di
+st/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on SG-DG-RunAwayV2.pdf (14 pages, 670493 bytes).
 PDF statistics:
- 242 PDF objects out of 1000 (max. 8388607)
- 167 compressed objects within 2 object streams
+ 246 PDF objects out of 1000 (max. 8388607)
+ 170 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  113 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -479,43 +479,26 @@ where
 \phi=\frac{\xi e^{-t}}{\sqrt{1-(e^{-2t}-1)\xi^2}}.
 \end{eqnarray*}
 
+alpha = 0
+
+4 2 1.1562e-02   1.2294e-02
+5 2 2.9780e-03   3.0811e-03
+6 2 7.5420e-04   7.6794e-04
+
+alpha = 1
+4 2 6.4948e-02   7.7383e-02
+5 2 3.2825e-02   3.9181e-02
+6 2 1.6423e-02   1.9561e-02
+
+alpha = 0
+4 3 3.3562e-04   3.7930e-04
+5 3 4.1533e-05   4.8142e-05
+6 3 5.1423e-06   6.1385e-06
+
+
+
 \subsection{Electric field and collisions}
-The evolution of the pitch angle dependence of $f$ in the presence of electric field acceleration, collisions, and radiation damping is governed by the equation
-\begin{eqnarray}
-\frac{\partial f}{\partial t}=-E\frac{\partial}{\partial\xi}[(1-\xi^2)f]+C\frac{\partial}{\partial\xi}[(1-\xi^2)\frac{\partial f}{\partial\xi}]-R\frac{\partial}{\partial\xi}[\xi(1-\xi^2)f],
-\end{eqnarray}
-where $E$, $C$, and $R$ are constants, and the initial and boundary conditions are given. In this case, the steady state solution is given by
-\begin{eqnarray}
-f(\xi)=Q\exp[A\xi+(B/2)\xi^2],\ A=\frac{E}{C},\ B=\frac{R}{C}.
-\end{eqnarray}
-	\subsubsection{Numerical Scheme}
-	Let $q=(1-\xi^2)\frac{\partial f}{\partial\xi}$, we rewrite the above equation as follows,
-	\begin{eqnarray*}
-	\frac{\partial f}{\partial t} &=& -E\frac{\partial}{\partial\xi}[(1-\xi^2)f]+C\frac{\partial}{\partial\xi}q-R\frac{\partial}{\partial\xi}[\xi(1-\xi^2)f],\\
-	q &=& (1-\xi^2)\frac{\partial f}{\partial\xi}. 
-	\end{eqnarray*}
-	Then the corresponding variational forms are:
-	\begin{eqnarray*}
-	\int_{I_j}\frac{\partial f}{\partial t}v dx&=& E\int_{I_j}(1-\xi^2)f v dx+E\big(\tilde{F}_{j-1/2}v_{j-1/2}-\tilde{F}_{j+1/2}v_{j+1/2}\big)\\
-	&& - C\int_{I_j} q v dx + C\big(-\tilde{Q}_{j-1/2}v_{j-1/2}+\tilde{Q}_{j+1/2}v_{j+1/2}\big)\\
-	&& + R\int_{I_j}\xi(1-\xi^2)f v dx + R\big(\tilde{P}_{j-1/2}v_{j-1/2}-\tilde{P}_{j+1/2}v_{j+1/2}\big)\\
-	\int_{I_j} qw dx &=& -\int_{I_j}f\frac{\partial }{\partial\xi}[(1-\xi^2)w] dx + \big(\tilde{P}_{j-1/2}v_{j-1/2}-\tilde{P}_{j+1/2}v_{j+1/2}\big)
-	\end{eqnarray*}
-	
 
-
-\subsection{Full Pitch Angle Dynamics}
-
-\section{Momentum Dynamics}
-%\section{Introduction}\label{Section:Introduction}
-
-
-
-\section{Convection Equation}
-
-
-% Convection + Diffusion
-\section{Convection and Diffusion equations}
 Let
 \begin{eqnarray*}
 \frac{\partial f}{\partial t} =   C\frac{\partial}{\partial x}(1-x^2)\frac{\partial f}{\partial x}-E\frac{\partial}{\partial x}(1-x^2)f .
@@ -558,8 +541,8 @@ Thus, we can solve ${\bf F}^{n+1}$ explicitly by 3-rd Runge-Kutta methods for th
 %---------------------------
 % Numerical Example
 %---------------------------
-\subsection{Numerical Test}
-\subsubsection{Example 1}\label{Sect1-Ex1}
+\subsubsection{Numerical Test}
+\paragraph{Example 1}\label{Sect1-Ex1}
 In this test, we shall take domain as $\Omega=[-1,1]$, initial condition as $f_0(x)=1/2$  for testing.
 \begin{figure}[H]
 \centering
@@ -617,23 +600,49 @@ In this test, we shall take domain as $\Omega=[-1,1]$, initial condition as $f_0
 %\caption{Test \ref{Num-4}: Plot for solutions for Lev = 4, Deg = 5 of upwind flux at time = 0.5, 1, 1.5, 2, 2.5, 3.}
 %\end{figure}
 
-\section{Damping}
 
-alpha = 0
 
-4 2 1.1562e-02   1.2294e-02
-5 2 2.9780e-03   3.0811e-03
-6 2 7.5420e-04   7.6794e-04
+	
 
-alpha = 1
-4 2 6.4948e-02   7.7383e-02
-5 2 3.2825e-02   3.9181e-02
-6 2 1.6423e-02   1.9561e-02
 
-alpha = 0
-4 3 3.3562e-04   3.7930e-04
-5 3 4.1533e-05   4.8142e-05
-6 3 5.1423e-06   6.1385e-06
+\subsection{Full Pitch Angle Dynamics}
+The evolution of the pitch angle dependence of $f$ in the presence of electric field acceleration, collisions, and radiation damping is governed by the equation:
+\begin{eqnarray}
+\frac{\partial f}{\partial t}=-E\frac{\partial}{\partial\xi}[(1-\xi^2)f]+C\frac{\partial}{\partial\xi}[(1-\xi^2)\frac{\partial f}{\partial\xi}]-R\frac{\partial}{\partial\xi}[\xi(1-\xi^2)f],
+\end{eqnarray}
+where $E,C,$ and $R$ are constants. In this case, the steady state solution is given by
+\begin{eqnarray}
+f(\xi)=Q\exp[A\xi+(B/2)\xi^2],\ A=\frac{E}{C},\ B=\frac{R}{C},
+\end{eqnarray}
+with $Q$ as a normalization constant.
+
+	\subsubsection{Numerical Scheme}
+	Let $q=(1-\xi^2)\frac{\partial f}{\partial\xi}$, we rewrite the above equation as follows,
+	\begin{eqnarray*}
+	\frac{\partial f}{\partial t} &=& -E\frac{\partial}{\partial\xi}[(1-\xi^2)f]+C\frac{\partial}{\partial\xi}q-R\frac{\partial}{\partial\xi}[\xi(1-\xi^2)f],\\
+	q &=& (1-\xi^2)\frac{\partial f}{\partial\xi}. 
+	\end{eqnarray*}
+	Then the corresponding variational forms are:
+	\begin{eqnarray*}
+	\int_{I_j}\frac{\partial f}{\partial t}v dx&=& E\int_{I_j}(1-\xi^2)f v dx+E\big(\tilde{F}_{j-1/2}v_{j-1/2}-\tilde{F}_{j+1/2}v_{j+1/2}\big)\\
+	&& - C\int_{I_j} q v dx + C\big(-\tilde{Q}_{j-1/2}v_{j-1/2}+\tilde{Q}_{j+1/2}v_{j+1/2}\big)\\
+	&& + R\int_{I_j}\xi(1-\xi^2)f v dx + R\big(\tilde{P}_{j-1/2}v_{j-1/2}-\tilde{P}_{j+1/2}v_{j+1/2}\big)\\
+	\int_{I_j} qw dx &=& -\int_{I_j}f\frac{\partial }{\partial\xi}[(1-\xi^2)w] dx + \big(\tilde{P}_{j-1/2}v_{j-1/2}-\tilde{P}_{j+1/2}v_{j+1/2}\big)
+	\end{eqnarray*}
+
+
+\section{Momentum Dynamics}
+The full 1-D momentum dynamics is governed by the equation:
+\begin{eqnarray}
+\frac{\partial f}{\partial t}=\frac{1}{p^2}\frac{\partial}{\partial p}p^2\left[C_A\frac{\partial f}{\partial p}+C_Ff\right]-\frac{E}{p^2}\frac{\partial}{\partial p}\left[p^2f\right]+R\frac{1}{p^2}\frac{\partial}{\partial p}\left[p^3\gamma f\right]
+\end{eqnarray}
+
+First, we shall consider the non-relativistic limit with $E=R=0$. That is, reduce the problem to the solution of 
+\begin{eqnarray}
+\frac{\partial f}{\partial x}&=&\frac{1}{x^2}\frac{\partial}{\partial x}x^2\left[\frac{\psi(x)}{x}\frac{\partial f}{\partial x}+2\psi(x)f\right]\notag\\
+&=&\frac{1}{x^2}\frac{\partial}{\partial x}\left[ x\psi(x)\frac{\partial f}{\partial x}\right] + \frac{1}{x^2}\frac{\partial}{\partial x}\left[2x^2\psi(x)f \right].
+\end{eqnarray}
+Here $\psi = \frac{1}{2x^2}\left[\frac{2}{\sqrt{\pi}}\int_0^{x}e^{-s^2}ds-\frac{2x}{\sqrt{\pi}}e^{-x^2}\right].$
 
 
 
