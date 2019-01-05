@@ -1,183 +1,61 @@
-function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
+%% MATLAB (reference) version of the ASGarD solver
 
-%% MATLAB (reference) version of the DG-SG solver
-% [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
-%
-% The default execution solves the Vlasov-Poisson system of equations
-%
-% $$f_t + v\frac{\partial f}{\partial x} + E\left(x,t\right)\frac{\partial
-% f}{\partial v} f=0$$
-%
-% $$-\frac{\partial^2\phi}{\partial x^2} = \rho - 1$$
-%
-% $$E\left(x,t\right)= \frac{\partial\phi}{\partial x}$$
-%
-% where $\rho\left(x,t\right)=\int_v f(x,v,t) dv$.
+function [err,fval,fval_realspace] = fk6d(pde,Lev,Deg,TEND,quiet,compression,implicit,gridType)
 
 format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 
-%% Step 1. Set input parameters
-% pde :  A structure containing the initial condition and domain
-% information. See PDE/vlasov4.m for and example. Note that this does not
-% actually describe the PDE (that's done by the coefficient matricies), so
-% we should probably rename this.
-%
-% Lev: Maximum level of the mesh in all dimensions.
-%
-% Deg: Degree of basis functions.
-%
-% TEND : End time of the simulation, i.e., run from t=0 to t=TEND in steps
-% of dt.
-%
-% quiet : Print debugging statements or not.
-%
-% Compression : Choice of approach to constructing the A system matrix.
+%% Load PDE and runtime defaults
+runtimeDefaults
 
-if ~exist('pde','var') || isempty(pde)
-    % Equation setup
-    pde = Vlasov8;
-end
+%% Shortcuts (some of this will go away soon)
+% Named domain ranges
+Lmin = pde.dimensions{2}.domainMin;
+Lmax = pde.dimensions{2}.domainMax;
+Vmin = pde.dimensions{1}.domainMin;
+Vmax = pde.dimensions{1}.domainMax;
 
-nTerms = numel(pde.terms);
-nDims = numel(pde.dimensions);
-
-if ~exist('TEND','var') || isempty(TEND)
-    % End time
-    TEND = 0.001;
-end
-if exist('Lev','var')
-    % Number of levels
-    for d=1:nDims
-        pde.dimensions{d}.lev = Lev;
-    end
-end
-
-if exist('Deg','var')
-    % Polynomial degree
-    % Deg = 2 Means Linear Element
-    for d=1:nDims
-        pde.dimensions{d}.deg = Deg;
-    end
-end
-
-if ~exist('quiet','var') || isempty(quiet)
-    % Enable / disable print statements
-    quiet = 0;
-end
-if ~exist('compression','var') || isempty(compression)
-    % Use or not the compression reference version
-    compression = 4;
-end
-if ~exist('gridType','var') || isempty(gridType)
-    gridType = 'SG';%'FG'
-else
-    if strcmp(gridType,'SG') || strcmp(gridType,'FG')
-    else
-        error("gridType must be set to 'SG' or 'FG'");
-    end
-end
-if ~exist('implicit','var') || isempty(implicit)
-    pde.implicit = 0;
-else
-    pde.implicit = implicit;
-end
-
-if pde.implicit
-    compression = 1;
-end
-
-% Shortcuts to x and v domain ranges (this will go away soon)
-Lmin = pde.dimensions{1}.domainMin;
-Lmax = pde.dimensions{1}.domainMax;
-Vmin = pde.dimensions{2}.domainMin;
-Vmax = pde.dimensions{2}.domainMax;
-
+%%
 % Level information.
-LevX = pde.dimensions{1}.lev;
-LevV = pde.dimensions{2}.lev;
+LevX = pde.dimensions{2}.lev;
+LevV = pde.dimensions{1}.lev;
 
+%%
 % Things to be removed
 Deg = pde.dimensions{1}.deg;
 Lev = pde.dimensions{1}.lev;
 DimX = 1;
-
-% Dimensionality.
-Dim = nDims;
-
-% Degree
-% pde.params.Deg = Deg;
-
 params = pde.params;
 
-%$
-% Set time step.
-
+%% Set time step.
 CFL = 0.1;
-
 dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
-
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
-%% Step 1.1. Setup the multi-wavelet transform in 1D (for each dimension).
-
+%% Construct the 1D multi-wavelet transform for each dimension.
 for d=1:nDims
     pde.dimensions{d}.FMWT = OperatorTwoScale(pde.dimensions{d}.deg,2^pde.dimensions{d}.lev);
 end
 
-%% Step 1.2. Apply the mulit-wavelet transform to the initial conditions in each dimension.
-% Generate the 1D initial conditions. Input: LevX,LevV,Deg,Lmax,Vmax,pde
-% Output: fval (fv and fx)--intial condition f(x,v,t=0)
-%         rho--intial condition rho(x,t=0)
-
-if ~quiet; disp('[1.2] Setting up 1D initial conditions'); end
-%[fv,fx] = Intial_Con(LevX,LevV,Deg,Lmax,Vmax,pde,FMWT_COMP_x,FMWT_COMP_v);
-fx = forwardMWT(pde.dimensions{1}.lev,pde.dimensions{1}.deg,...
-    pde.dimensions{1}.domainMin,pde.dimensions{1}.domainMax,...
-    pde.dimensions{1}.init_cond_fn,pde.params);
-fv = forwardMWT(pde.dimensions{2}.lev,pde.dimensions{2}.deg,...
-    pde.dimensions{2}.domainMin,pde.dimensions{2}.domainMax,...
-    pde.dimensions{2}.init_cond_fn,pde.params);
-
-%% Step 2. Generate Sparse-Grid (as the Hash + Connectivity tables).
-
-%%% Construct forward and inverse hash tables.
-if ~quiet; disp('[2.1] Constructing hash and inverse hash tables'); end
-%[HASH,HASHInv,index1D] = HashTable2(Lev,Dim);
-
-[HASH,HASHInv] = HashTable(Lev,Dim,gridType);
-
+%% Construct the Element (Hash) tables.
+if ~quiet; disp('Constructing hash and inverse hash tables'); end
+%[HASH,HASHInv,index1D] = HashTable2(Lev,Dim); % I dont recall what the index1D information was added here for?
+[HASH,HASHInv] = HashTable(Lev,nDims,gridType);
 nHash = numel(HASHInv);
 
-%%% Construct the connectivity.
-if ~quiet; disp('[2.2] Constructing connectivity table'); end
-Con2D = Connect2D(Lev,HASH,HASHInv,gridType);
+%% Construct the connectivity.
+if ~quiet; disp('Constructing connectivity table'); end
+Con2D = ConnectnD(nDims,HASH,HASHInv,Lev,Lev);
 
-%%% Get the multi-wavelet coefficient representation on the sparse-grid,
-%%% i.e., above we transformed each of the initial condition 1D
-%%% dependencies into the multi-wavelet basis. Here we combine those N 1D
-%%% basis representations into the multi-D (here N=2, so 2D) initial
-%%% condition, multi-wavelet representation of the initial condition
-%%% specified in PDE.
-if ~quiet; disp('[2.3] Calculate 2D initial condition on the sparse-grid'); end
-fval = initial_condition_vector(fx,fv,HASHInv,pde);
+%% Generate initial conditions (both 1D and multi-D).
+if ~quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
+% fval = initial_condition_vector(fx,fv,HASHInv,pde);
+fval = initial_condition_vector(HASHInv,pde,0);
 
-%% Step 3. Generate time-independent coefficient matrices
-% Vlasolv Solver:
-%   Operators:
-%               vMassV: int_v v*l_i(v)*l_j(v)dv GradV: int_v
-%               (l_i(v))'*l_j(v)dv GradX: int_x (m_i(x))'*m_j(x)dx
-% Poisson Solver:
-%               Operators: DelaX: int_x (m_i(x))''*m_j(x)dx
-% Input:
-%               LevX, LevV, k, dim, Lmax, Vmax
-% Output:
-%               2D Matrices--vMassV,GradV,GradX,DeltaX
-
-%% Build the time independent coefficient matricies.
+%% Construct the time-independent coefficient matrices
 % The original way
-if ~quiet; disp('[3.1] Calculate time independent matrix coefficients'); end
+if ~quiet; disp('Calculate time independent matrix coefficients'); end
 [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
      pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 %%
@@ -186,8 +64,8 @@ t = 0;
 TD = 0;
 pde = getCoeffMats(pde,t,TD);
 
-%%% Generate A_encode / A_data time independent data structures.
-if ~quiet; disp('[3.2] Generate A_encode data structure for time independent coefficients'); end
+%% Construct A_encode / A_data time independent data structures.
+if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
 if compression == 3
     % the new matrix construction is as _newCon, only works for 
     % compression= 3
@@ -199,7 +77,7 @@ else
     A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con2D,Deg,compression);
 end
 
-%% Step 4. Generate time-independent global matrix
+%% Construct Poisson matrix
 % Compute the global matrix for spatial variables "x" by
 %
 % Poisson Solver: A_Poisson (Hash, Dim_x,k,LevX,DeltaX)
@@ -207,34 +85,23 @@ end
 % Input: Hash, Dim_x,k,LevX,DeltaX,or nu, eps, CurlCurlX Output: A_Poisson
 % Another Idea is to solve Poisson Equation on the finest full grid
 
-if ~quiet; disp('[4] Construct matrix for Poisson solve'); end
+if ~quiet; disp('Construct matrix for Poisson solve'); end
 if DimX>1
     % Construct DeltaX for DimX
 else
     A_Poisson = DeltaX; 
 end
 
-
-%% Step 5. Time Loop
-%	Step 5.1 Vlasov Equation
-%       Generate time dependent coefficient matrix Generate global matrix
-%       A_Vlasov(Hash,coef_mat,Dim) Apply A_Vlasov->f by RK
-%	Step 5.2 Poisson Equation
-%       Solve Poisson Equation sol_Poisson by A_Poisson(f) Compute
-%       E=(sol_Poisson)'
-
-
-% At time = 0 plotting.
-if ~quiet; disp('[5.0] Plotting intial condition'); end
-
-
-% Construct data for reverse MWT in 2D
+%% Construct RMWT (Reverse Multi Wavelet Transform) in 2D
+% Needs to be generalized to multi-D
+if ~quiet; disp('Plotting intial condition'); end
 [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
     pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 [xx,vv]=meshgrid(x_node,v_node);
 
-% Plot initial condition
+%% Plot initial condition
 if ~quiet
+    %%
     % Transform from wavelet space to real space
     tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
     figure(1000)
@@ -254,7 +121,7 @@ if ~quiet
     title('f');
 end
 
-% Write the initial condition to file.
+%% Write the initial condition to file.
 write_fval = 0;
 if write_fval; write_fval_to_file(fval,Lev,Deg,0); end
 
@@ -262,7 +129,8 @@ count=1;
 plotFreq = 1;
 err = 0;
 
-if ~quiet; disp('[7] Advancing time ...'); end
+%% Time Loop
+if ~quiet; disp('Advancing time ...'); end
 nsteps = max(1,floor( TEND/dt));
 for L = 1:nsteps,
     
@@ -274,14 +142,14 @@ for L = 1:nsteps,
     
     if pde.solvePoisson
         %%% Solve Poisson to get E (from 1-rho=1-int f dv)
-        if ~quiet; disp('    [a] Solve poisson to get E'); end
+        if ~quiet; disp('    Solve poisson to get E'); end
         %[E,u] = PoissonSolve2(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
         [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
     end
     
     if pde.applySpecifiedE
         %%% Apply specified E
-        if ~quiet; disp('    [a] Apply specified E'); end
+        if ~quiet; disp('    Apply specified E'); end
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
         E = E * pde.Et(time(count),params);
     end
@@ -295,13 +163,13 @@ for L = 1:nsteps,
     %     plot(x_node,Meval_x*E,'r-o')
     
     %%% Generate EMassX time dependent coefficient matrix.
-    if ~quiet; disp('    [b] Calculate time dependent matrix coeffs'); end
+    if ~quiet; disp('    Calculate time dependent matrix coeffs'); end
     EMassX = matrix_coeff_TD(LevX,Deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
     
     %%
     % Set the dat portion of the EMassX part of E.d_dv term.
     
-    pde.terms{2}{1}.dat = E;
+    pde.terms{2}{2}.dat = E;
     
     %%
     % Now construct the TD coeff_mats.
@@ -312,13 +180,13 @@ for L = 1:nsteps,
     
     %% Test new PDE spec based generation of the coeff_matrices
     
-    disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{1}.coeff_mat - GradX)/norm(GradX)) ]);
-    disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{2}.coeff_mat - vMassV)/norm(vMassV)) ]);
-    disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{1}.coeff_mat - EMassX)/norm(EMassX)) ]);
-    disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{2}.coeff_mat - GradV)/norm(GradV)) ]);
+    disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{2}.coeff_mat - GradX)/norm(GradX)) ]);
+    disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{1}.coeff_mat - vMassV)/norm(vMassV)) ]);
+    disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{2}.coeff_mat - EMassX)/norm(EMassX)) ]);
+    disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{1}.coeff_mat - GradV)/norm(GradV)) ]);
     
     %%% Update A_encode for time-dependent coefficient matricies.
-    if ~quiet; disp('    [c] Generate A_encode for time-dependent coeffs'); end
+    if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
     if compression == 3
     % the new matrix construction is as _newCon, only works for 
     % compression= 3
@@ -330,7 +198,7 @@ for L = 1:nsteps,
     end
     
     %%% Advance Vlasov in time with RK3 time stepping method.
-    if ~quiet; disp('    [d] RK3 time step'); end
+    if ~quiet; disp('    RK3 time step'); end
     if compression == 3
         fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
     else

@@ -8,16 +8,6 @@ function pde = Vlasov8
 % 
 % Here we setup a 2D problem (x,v)
 
-dim_x.name = 'x';
-dim_x.BCL = 0;
-dim_x.BCR = 0;
-dim_x.domainMin = -1;
-dim_x.domainMax = +1;
-dim_x.lev = 2;
-dim_x.deg = 2;
-dim_x.FMWT = []; % Gets filled in later
-dim_x.init_cond_fn = @Fx_0;
-
 dim_v.name = 'v';
 dim_v.BCL = 0;
 dim_v.BCR = 0;
@@ -28,10 +18,22 @@ dim_v.deg = 2;
 dim_v.FMWT = []; % Gets filled in later
 dim_v.init_cond_fn = @Fv_0;
 
+dim_x.name = 'x';
+dim_x.BCL = 0;
+dim_x.BCR = 0;
+dim_x.domainMin = -1;
+dim_x.domainMax = +1;
+dim_x.lev = 2;
+dim_x.deg = 2;
+dim_x.FMWT = []; % Gets filled in later
+dim_x.init_cond_fn = @Fx_0;
+
 %%
 % Add dimensions to the pde object
+% Note that the order of the dimensions must be consistent with this across
+% the remainder of this PDE.
 
-pde.dimensions = {dim_x, dim_v};
+pde.dimensions = {dim_v, dim_x}; % Order chosen here to match the old hard wired version
 
 %% Setup the terms of the PDE
 %
@@ -44,7 +46,7 @@ term2_x.type = 1; % grad (see coeff_matrix.m for available types)
 term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
-term2_x.LF = 0; % Use Lax-Friedrichs flux or not.
+term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 
 term2_v.type = 2; % mass (see coeff_matrix.m for available types)
 term2_v.G = @(v,t,dat) v; % G function for use in coeff_matrix construction.
@@ -53,7 +55,7 @@ term2_v.dat = []; % These are to be filled within the workflow for now
 term2_v.LF = 0; % Use Lax-Friedrichs flux or not.
 
 term2.name = 'v.d_dx';
-term2 = {term2_x, term2_v};
+term2 = {term2_v, term2_x};
 
 %% 
 % Setup the E.d_dv (E.MassX . GradV) term
@@ -71,7 +73,7 @@ term3_v.dat = [];
 term3_v.LF = 0;
 
 term3.name = 'E.d_dv';
-term3 = {term3_x, term3_v};
+term3 = {term3_v, term3_x};
 
 %%
 % Add terms to the pde object
@@ -96,21 +98,21 @@ pde.params = params;
 s1x = @source1x;
 s1v = @source1v;
 s1t = @source1t;
-source1 = {s1x,s1v,s1t};
+source1 = {s1v,s1x,s1t};
 
 %%
 % Source 2
 s2x = @source2x;
 s2v = @source2v;
 s2t = @source2t;
-source2 = {s2x,s2v,s2t};
+source2 = {s2v,s2x,s2t};
 
 %%
 % Source 3
 s3x = @source3x;
 s3v = @source3v;
 s3t = @source3t;
-source3 = {s3x,s3v,s3t};
+source3 = {s3v,s3x,s3t};
 
 %%
 % Add sources to the pde data structure
@@ -123,7 +125,7 @@ analytic_x = @ExactFx;
 analytic_v = @ExactFv;
 analytic_t = @ExactFt;
 
-pde.analytic_solutions_1D = {analytic_x,analytic_v,analytic_t};
+pde.analytic_solutions_1D = {analytic_v,analytic_x,analytic_t};
 pde.analytic_solution = @ExactF;
 
 %% Other workflow options that should perhpas not be in the PDE?

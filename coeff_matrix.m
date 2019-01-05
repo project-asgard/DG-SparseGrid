@@ -208,6 +208,7 @@ for i=0:N-1
     % If dirichelt
     % u^-_LEFT = g(LEFT)
     % u^+_RIGHT = g(RIGHT)
+    
     if BCL == 1 %% left dirichlet
         
         if i==0

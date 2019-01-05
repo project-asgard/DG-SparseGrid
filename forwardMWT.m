@@ -56,4 +56,12 @@ f = f * h * sqrt(1/h)/2;
 
 f = mtimes( FMWT, f );
 
+%%
+% After the transformation to wavelet space there may be very tiny coefficient values.
+% Here we zero them out.
+
+tol = 1e-8;
+
+f = f .* (abs(f) > tol );
+
 end
