@@ -31,11 +31,11 @@ b1 = 1/6;
 b2 = 2/3;
 b3 = 1/6;
 
-k_1 = ApplyA(A,f,compression,Deg,Vmax,Emax)   + source1;
+k_1 = ApplyA(A,f,compression,Deg,Vmax,Emax,pde)   + source1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(A,y_1,compression,Deg,Vmax,Emax) + source2;
+k_2 = ApplyA(A,y_1,compression,Deg,Vmax,Emax,pde) + source2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(A,y_2,compression,Deg,Vmax,Emax) + source3;
+k_3 = ApplyA(A,y_2,compression,Deg,Vmax,Emax,pde) + source3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
@@ -78,14 +78,14 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function [ftmp,A] = ApplyA(A_Data,f,compression,Deg,Vmax,Emax)
+function [ftmp,A] = ApplyA(A_Data,f,compression,Deg,Vmax,Emax,pde)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
 %-----------------------------------
 dof = size(f,1);
 ftmp=sparse(dof,1);
-use_kronmult2 = 0;
+use_kronmult2 = 1;
 
 Identity = speye(dof,dof);
 
@@ -253,20 +253,20 @@ elseif compression == 3
         IndexI=A_Data{i}.IndexI;
         IndexJ=A_Data{i}.IndexJ;
         
-	if (use_kronmult2),
-          ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
+        if (use_kronmult2)
+            ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
         else
-          % [nrA,ncA] = size(tmpA);
-	  % [nrB,ncB] = size(tmpB);
-
-	  nrA = size(tmpA,1);
-	  ncA = size(tmpA,2);
-	  nrB = size(tmpB,1);
-	  ncB = size(tmpB,2);
-
-          ftmp(IndexI)=ftmp(IndexI) + ...
-	       reshape(tmpB * reshape(f(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
-	end;
+            % [nrA,ncA] = size(tmpA);
+            % [nrB,ncB] = size(tmpB);
+            
+            nrA = size(tmpA,1);
+            ncA = size(tmpA,2);
+            nrB = size(tmpB,1);
+            ncB = size(tmpB,2);
+            
+            ftmp(IndexI)=ftmp(IndexI) + ...
+                reshape(tmpB * reshape(f(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+        end
         
     end
     
@@ -279,7 +279,9 @@ elseif compression == 4
     
     workCnt = 1;
     conCnt = 1;
-        
+    
+    ftmpA = ftmp;
+   
     for workItem=1:nWork
         
         nConnected = A_Data.element_n_connected(workItem);
@@ -327,35 +329,82 @@ elseif compression == 4
                 end
                 degCnt1 = degCnt1 + 1;
             end
+           
+            nTerms = numel(pde.terms);
+            nDims = numel(pde.dimensions);
             
-            % Apply term1 v.d_dx (vMassV . GradX)
+            %%
+            % TODO : this needs to be generalized to dim.
             
-            tmpA = A_Data.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data.GradX(Index_I2,Index_J2);
+            Index_I{1} = Index_I1;
+            Index_I{2} = Index_I2;
             
+            Index_J{1} = Index_J1;
+            Index_J{2} = Index_J2;
             
-            if use_kronmult2
-                ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
-            else
-                ftmp(globalRow)=ftmp(globalRow)+ ...
-		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
+            %%
+            % Apply operator matrices to present state using the pde spec
+            % Y = A * X
+            % where A is tensor product encoded.
+            
+            for t=1:nTerms
+            
+                %%
+                % Construct the list of matrices for the kron_mult for this
+                % operator (which has dimension many entries).
+                A = {}; 
+                for d=1:nDims                    
+                    idx_i = Index_I{d}; 
+                    idx_j = Index_J{d};
+                    coeff_mat = pde.terms{t}{d};
+                    tmp = pde.terms{t}{d}.coeff_mat;
+                    A{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
+                end
                 
-            end          
-                         
-            % Apply term 2 E.d_dv (EMassX . GradV)
-            
-            tmpA = A_Data.GradV(Index_I1,Index_J1);
-            tmpB = A_Data.EMassX(Index_I2,Index_J2);
-            
-            if use_kronmult2
-                ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
-                
-            else
-                ftmp(globalRow)=ftmp(globalRow)+ ...
-		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
-                
+                %%
+                % Apply kron_mult
+                X = f(globalCol);
+                if use_kronmult2
+                    Y = kron_multd(nDims,A,X);
+                else
+                    Y = kron_multd_full(nDims,A,X);
+                end
+                ftmpA(globalRow) = ftmpA(globalRow) + Y;
             end
             
+%             %%
+%             % Apply operator matrices using original Vlasov hardwired
+%             % approach
+%             
+%             % Apply term1 v.d_dx (vMassV . GradX)
+%             
+%             tmpA = A_Data.vMassV(Index_I1,Index_J1);
+%             tmpB = A_Data.GradX(Index_I2,Index_J2);            
+%             
+%             if use_kronmult2
+%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
+%             else
+%                 ftmp(globalRow)=ftmp(globalRow)+ ...
+% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);              
+%             end          
+%                          
+%             % Apply term 2 E.d_dv (EMassX . GradV)
+%             
+%             tmpA = A_Data.GradV(Index_I1,Index_J1);
+%             tmpB = A_Data.EMassX(Index_I2,Index_J2);
+%             
+%             if use_kronmult2
+%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));              
+%             else
+%                 ftmp(globalRow)=ftmp(globalRow)+ ...
+% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);               
+%             end
+            
+            %%
+            % Overwrite previous approach with PDE spec approch
+            ftmp = ftmpA; 
+
+                        
             % if CF, comment Line 360-386, if LF, uncomment them
 %            % Apply term3 vMax*Mass x FluxX
 %             

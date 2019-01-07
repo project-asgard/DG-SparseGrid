@@ -203,10 +203,10 @@ for L = 1:nsteps,
         fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
     else
         
-        A_data.GradX     = pde.terms{1}{1}.coeff_mat;
-        A_data.vMassV    = pde.terms{1}{2}.coeff_mat;
-        A_data.EMassX    = pde.terms{2}{1}.coeff_mat;
-        A_data.GradV     = pde.terms{2}{2}.coeff_mat;
+        A_data.GradX     = pde.terms{1}{2}.coeff_mat;
+        A_data.vMassV    = pde.terms{1}{1}.coeff_mat;
+        A_data.EMassX    = pde.terms{2}{2}.coeff_mat;
+        A_data.GradV     = pde.terms{2}{1}.coeff_mat;
         
         %         A_data.vMassV    = vMassV;
         %         A_data.GradX     = GradX;
