@@ -31,6 +31,11 @@ function [mat] = coeff_matrix(t,dimension,term_1D)
 % We do not (cannot) use local upwinding or LF because selecting
 % either the sign of the flow field or the value of the coefficient C could
 % be multivalued within the multi-D solution for a single-D coeff_matrix.
+% Examples of value LF:: \hat{f} = \hat{A*u} = {{A*u}}+|A|*(1-C)/2*[[u]]
+% Denote LF = (1-C)
+%   LF = 0 --> Central Flux
+%   LF = 1 -->Upwind Flux
+%   LF = Max(df/du) -->Lax-Friedrich Flux
 
 %% TODO ...
 % * Choice of flux (may require input C)
