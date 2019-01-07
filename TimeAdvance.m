@@ -6,15 +6,15 @@ function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 
 if pde.implicit
-    f = backward_euler(A,f,t,dt,compression,Deg,pde,HASHInv);
+    f = backward_euler(pde,A,f,t,dt,compression,Deg,HASHInv,Vmax,Emax);
     %f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);
 else
-    f = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax);
+    f = RungeKutta3(pde,A,f,t,dt,compression,Deg,HASHInv,Vmax,Emax);
 end
 
 end
 
-function fval = RungeKutta3(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax)
+function fval = RungeKutta3(pde,A,f,t,dt,compression,Deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % 3-rd Order Kutta Method
 %----------------------------------
@@ -31,24 +31,24 @@ b1 = 1/6;
 b2 = 2/3;
 b3 = 1/6;
 
-k_1 = ApplyA(A,f,compression,Deg,Vmax,Emax,pde)   + source1;
+k_1 = ApplyA(pde,A,f,compression,Deg,Vmax,Emax)   + source1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(A,y_1,compression,Deg,Vmax,Emax,pde) + source2;
+k_2 = ApplyA(pde,A,y_1,compression,Deg,Vmax,Emax) + source2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(A,y_2,compression,Deg,Vmax,Emax,pde) + source3;
+k_3 = ApplyA(pde,A,y_2,compression,Deg,Vmax,Emax) + source3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
 end
 
-function f1 = backward_euler(A,f0,t,dt,compression,Deg,pde,HASHInv)
+function f1 = backward_euler(pde,A,f0,t,dt,compression,Deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Backward Euler (First Order Implicit Time Advance)
 %----------------------------------
 
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(A,f0,1,Deg);
+[~,AMat] = ApplyA(pde,A,f0,1,Deg);
 
 I = eye(numel(diag(AMat)));
 AA = I - dt*AMat;
@@ -59,7 +59,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function f1 = crank_nicolson(A,f0,t,dt,compression,Deg,pde,HASHInv)
+function f1 = crank_nicolson(pde,A,f0,t,dt,compression,Deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Crank Nicolson (Second Order Implicit Time Advance)
 %----------------------------------
@@ -67,7 +67,7 @@ function f1 = crank_nicolson(A,f0,t,dt,compression,Deg,pde,HASHInv)
 s0 = source_vector(HASHInv,pde,t);
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(A,f0,1,Deg);
+[~,AMat] = ApplyA(pde,A,f0,1,Deg);
 
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
@@ -78,7 +78,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function [ftmp,A] = ApplyA(A_Data,f,compression,Deg,Vmax,Emax,pde)
+function [ftmp,A] = ApplyA(pde,A_Data,f,compression,Deg,Vmax,Emax)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
@@ -87,58 +87,16 @@ dof = size(f,1);
 ftmp=sparse(dof,1);
 use_kronmult2 = 1;
 
+nTerms = numel(pde.terms);
+nDims = numel(pde.dimensions);
+
 Identity = speye(dof,dof);
 
 if compression == 0
     
     % Explicitly construct the full A matrix (largest memory)
     
-    dof = numel(A_Data.element_global_row_index);
-    
-    dofCnt = 1;
-    conCnt = 1;
-    
-    A = zeros(dof,dof);
-    
-    for i=1:dof
-        
-        nConnected = A_Data.element_n_connected(i);
-        
-        for j=1:nConnected
-            
-            Index_I1 = A_Data.element_local_1_index(dofCnt);
-            Index_I2 = A_Data.element_local_2_index(dofCnt);
-            Index_J1 = A_Data.connected_local_1_index(conCnt);
-            Index_J2 = A_Data.connected_local_2_index(conCnt);
-            
-            IndexI = A_Data.element_global_row_index(dofCnt);
-            IndexJ = A_Data.connected_global_col_index(conCnt);
-            
-            % Apply term1 v.d_dx (vMassV . GradX)
-            
-            tmpA = A_Data.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data.GradX(Index_I2,Index_J2);
-            
-            A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
-            
-            % Apply term 2 E.d_dv (EMassX . GradV)
-            
-            tmpA = A_Data.GradV(Index_I1,Index_J1);
-            tmpB = A_Data.EMassX(Index_I2,Index_J2);
-            
-            A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
-            
-            conCnt = conCnt+1;
-            
-        end
-        
-        dofCnt = dofCnt + 1;
-        
-    end
-    
-    % Do the matrix-vector multiply
-    
-    ftmp = sparse(A*f);
+    % Don't need this so removed. Compression == 1 is fine. 
     
 elseif compression == 1
     
@@ -165,19 +123,55 @@ elseif compression == 1
             IndexI = A_Data.element_global_row_index(dofCnt);
             IndexJ = A_Data.connected_global_col_index(conCnt);
             
-            % Apply term1 v.d_dx (vMassV . GradX)
+            %%
+            % TODO : this needs to be generalized to dim.
             
-            tmpA = A_Data.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data.GradX(Index_I2,Index_J2);
+            Index_I{1} = Index_I1;
+            Index_I{2} = Index_I2;
             
-            A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
+            Index_J{1} = Index_J1;
+            Index_J{2} = Index_J2;
             
-            % Apply term 2 E.d_dv (EMassX . GradV)
+            %%
+            % Apply operator matrices to present state using the pde spec
+            % Y = A * X
             
-            tmpA = A_Data.GradV(Index_I1,Index_J1);
-            tmpB = A_Data.EMassX(Index_I2,Index_J2);
+            for t=1:nTerms
             
-            A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
+                %%
+                % Construct the list of matrices for the kron_mult for this
+                % operator (which has dimension many entries).
+                Atmp = 1;
+                for d=1:nDims                    
+                    idx_i = Index_I{d}; 
+                    idx_j = Index_J{d};
+                    tmp = pde.terms{t}{d}.coeff_mat;
+                    Atmp = Atmp * tmp(idx_i,idx_j);
+                end
+                
+                %%
+                % Construct global A matrix
+                
+                A(IndexI,IndexJ) = A(IndexI,IndexJ) + Atmp;
+
+            end
+            
+%             %% 
+%             % Apply each of the 2 terms in the equation 
+%             
+%             % Apply term1 v.d_dx (vMassV . GradX)
+%             
+%             tmpA = A_Data.vMassV(Index_I1,Index_J1);
+%             tmpB = A_Data.GradX(Index_I2,Index_J2);
+%             
+%             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
+%             
+%             % Apply term 2 E.d_dv (EMassX . GradV)
+%             
+%             tmpA = A_Data.GradV(Index_I1,Index_J1);
+%             tmpB = A_Data.EMassX(Index_I2,Index_J2);
+%             
+%             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
             
             conCnt = conCnt+1;
             
@@ -356,7 +350,6 @@ elseif compression == 4
                 for d=1:nDims                    
                     idx_i = Index_I{d}; 
                     idx_j = Index_J{d};
-                    coeff_mat = pde.terms{t}{d};
                     tmp = pde.terms{t}{d}.coeff_mat;
                     A{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
                 end
