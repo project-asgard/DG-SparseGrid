@@ -617,18 +617,32 @@ f(\xi)=Q\exp[A\xi+(B/2)\xi^2],\ A=\frac{E}{C},\ B=\frac{R}{C},
 with $Q$ as a normalization constant.
 
 	\subsubsection{Numerical Scheme}
-	Let $q=(1-\xi^2)\frac{\partial f}{\partial\xi}$, we rewrite the above equation as follows,
+	Let $q=(1-\xi^2)\dfrac{\partial f}{\partial\xi}$, we re-write the above equation as follows,
 	\begin{eqnarray*}
-	\frac{\partial f}{\partial t} &=& -E\frac{\partial}{\partial\xi}[(1-\xi^2)f]+C\frac{\partial}{\partial\xi}q-R\frac{\partial}{\partial\xi}[\xi(1-\xi^2)f],\\
-	q &=& (1-\xi^2)\frac{\partial f}{\partial\xi}. 
+		\begin{cases}
+	\dfrac{\partial f}{\partial t} &= -E\dfrac{\partial}{\partial\xi}[(1-\xi^2)f]+C\dfrac{\partial}{\partial\xi}q-R\dfrac{\partial}{\partial\xi}[\xi(1-\xi^2)f],\\
+	q &= (1-\xi^2)\dfrac{\partial f}{\partial\xi}. 
+		\end{cases}
 	\end{eqnarray*}
 	Then the corresponding variational forms are:
 	\begin{eqnarray*}
-	\int_{I_j}\frac{\partial f}{\partial t}v dx&=& E\int_{I_j}(1-\xi^2)f v dx+E\big(\tilde{F}_{j-1/2}v_{j-1/2}-\tilde{F}_{j+1/2}v_{j+1/2}\big)\\
-	&& - C\int_{I_j} q v dx + C\big(-\tilde{Q}_{j-1/2}v_{j-1/2}+\tilde{Q}_{j+1/2}v_{j+1/2}\big)\\
-	&& + R\int_{I_j}\xi(1-\xi^2)f v dx + R\big(\tilde{P}_{j-1/2}v_{j-1/2}-\tilde{P}_{j+1/2}v_{j+1/2}\big)\\
-	\int_{I_j} qw dx &=& -\int_{I_j}f\frac{\partial }{\partial\xi}[(1-\xi^2)w] dx + \big(\tilde{P}_{j-1/2}v_{j-1/2}-\tilde{P}_{j+1/2}v_{j+1/2}\big)
+	\int_{I_j}\frac{\partial f}{\partial t}v dx&=& E\int_{I_j}(1-\xi^2)f \frac{\partial v}{\partial \xi} dx - E\big(\tilde{F}_{j+1/2}v_{j+1/2}-\tilde{F}_{j-1/2}v_{j-1/2}\big)\\
+	&& - C\int_{I_j} q \frac{\partial v}{\partial\xi} dx + C\big(\tilde{Q}_{j+1/2}v_{j+1/2}-\tilde{Q}_{j-1/2}v_{j-1/2}\big)\\
+	&& + R\int_{I_j}\xi(1-\xi^2)f \frac{\partial v}{\partial \xi} dx - R\big(\tilde{P}_{j+1/2}v_{j+1/2}-\tilde{P}_{j-1/2}v_{j-1/2}\big)\\
+	\int_{I_j} qw dx &=& -\int_{I_j}f\frac{\partial }{\partial\xi}[(1-\xi^2)w] dx + \big(\tilde{P}_{j+1/2}v_{j+1/2}-\tilde{P}_{j-1/2}v_{j-1/2}\big)
 	\end{eqnarray*}
+
+The boundary condition is assumed as follows:
+\begin{eqnarray}
+\frac{\partial f}{\partial\xi}|_{\xi = \pm 1,t} = 0.
+\end{eqnarray}
+
+\paragraph{Numerical Test}
+The steady state solution is given by
+\begin{eqnarray*}
+f(\xi) = Q\exp\left[A\xi+(B/2)\xi^2\right],\ A = \frac{E}{C},\ B=\frac{R}{C}.
+\end{eqnarray*}
+Let $(A,B) = \{(0,4),(2,0),(2,2),(1,3)\}$ for testing.
 
 
 \section{Momentum Dynamics}
