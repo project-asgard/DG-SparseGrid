@@ -28,7 +28,7 @@ format short e
 addpath(genpath(pwd))
 
 
-Lev = 6;
+Lev = 2;
 Deg = 2;
 num_plot = Deg;
 EndTime = 3;
@@ -39,7 +39,7 @@ Lstart = -1;
 Lend = 1;
 Lmax = Lend-Lstart;
 
-FluxType = 'UF';
+FluxType = 'CF';
 
 %--Quadrature
 quad_num=10;

@@ -1,5 +1,8 @@
 function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FunCoef)
 %function Mat to compute the Grad operator
+% d/dx[FunCoef*f]
+% Trace = FunCoef*f|_R - FunCoef*f|_L+
+% Volum = - (FunCoef*f,d/dx v) 
 %-----------------------------------------------------
 L = LEnd-LInt;
 Tol_Cel_Num = 2^(Lev);
@@ -9,7 +12,12 @@ DoF = Deg * Tol_Cel_Num;
 Mat = sparse(DoF,DoF);
 
 quad_num = 10;
+
+% FluxVal :: 
+% FluxVal = 0 --> Central Flux
+% FluxVal = 1 --> Upwind Flux
 FluxVal = 1;
+
 % compute the trace values
 p_L = legendre(-1,Deg) * 1/sqrt(h);
 p_R = legendre(+1,Deg) * 1/sqrt(h);
@@ -22,6 +30,8 @@ p_R = legendre(+1,Deg) * 1/sqrt(h);
 p_val  = legendre(quad_x,Deg)  * 1/sqrt(h);
 Dp_val = dlegendre(quad_x,Deg) * 1/sqrt(h) * 2/h;
 
+Jacobi = h/2;
+
 for WorkCel = 0 : Tol_Cel_Num - 1
     %---------------------------------------------
     % (funcCoef*q,d/dx p)
@@ -32,16 +42,20 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     xR = xL + h;
     PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
     
-    IntVal=[Dp_val'*(quad_w.*FunCoef(PhyQuad).*p_val)];
+    IntVal = - [Dp_val'*(quad_w.*FunCoef(PhyQuad).*p_val)] * Jacobi;
     Mat = Mat + sparse(c'*ones(1,Deg),ones(Deg,1)*c,IntVal,DoF,DoF);
     %----------------------------------------------
     % -<funcCoef*{q},p>
     %----------------------------------------------
+% Numerical Flux is defined as
+% Flux = {{f}} + C/2*[[u]]
+%      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
+% [[v]] = v_R - v_L
     TraVal = [...
-              -p_L' * FunCoef(xL) * ( p_R/2 - FluxVal/2*p_R),...
-              -p_L' * FunCoef(xL) * ( p_L/2 + FluxVal/2*p_L),... % xL
-               p_R' * FunCoef(xR) * ( p_R/2 - FluxVal/2*p_R),...
-               p_R' * FunCoef(xR) * ( p_L/2 + FluxVal/2*p_L),... % xR
+              (-p_L)' * FunCoef(xL) * p_R/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *   p_R,...
+              (-p_L)' * FunCoef(xL) * p_L/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' * (-p_L),...% xL
+              ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
+              ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
             ];
 
     % Adding trace value to matrix

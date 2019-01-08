@@ -25,6 +25,6 @@ II = speye(DoF);
 % Mat = [II Mat1;Mat2 sparse(DoF,DoF)];
 
 Mat = Mat2*Mat1;
-% figure;spy(Mat)
+figure;spy(Mat)
 
 end

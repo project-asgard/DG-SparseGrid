@@ -34,8 +34,8 @@ format short e
 addpath(genpath(pwd))
 
 
-Lev = 6;
-Deg = 3;
+Lev = 2;
+Deg = 2;
 num_plot = 2;%Deg;
 EndTime = 0.5;
 

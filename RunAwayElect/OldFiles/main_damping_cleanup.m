@@ -34,12 +34,12 @@ format short e
 addpath(genpath(pwd))
 
 
-Lev = 3;
-Deg = 1;
+Lev = 2;
+Deg = 2;
 num_plot = 3;
 EndTime = 4;
 PlotType = 1;
-AdapTest = 1;
+AdapTest = 0;
 
 alpha = 0;
 

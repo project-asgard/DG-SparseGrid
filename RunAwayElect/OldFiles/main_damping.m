@@ -29,7 +29,7 @@ format short e
 addpath(genpath(pwd))
 
 
-Lev = 5;
+Lev = 2;
 Deg = 2;
 num_plot = 2;%Deg;
 EndTime = 6;
@@ -42,7 +42,7 @@ Lstart = -1;
 Lend = 1;
 Lmax = Lend-Lstart;
 
-FluxType = 'UF';
+FluxType = 'CF';
 
 %--Quadrature
 quad_num=10;
@@ -143,7 +143,7 @@ for L=0:n-1
             ones(Deg,1)*(c)];
         val_R = p_2'*(funcCoef(x1)-abs(funcCoef(x1))*(1-alpha))*0;%exactf(1)*0.5/sqrt(hx);
     end
-    A12 = A12 + sparse(IndexV,IndexU,val_flux,dof_1D,dof_1D);
+%     A12 = A12 + sparse(IndexV,IndexU,val_flux,dof_1D,dof_1D);
     
         
     
