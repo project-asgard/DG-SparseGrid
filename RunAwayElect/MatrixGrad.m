@@ -1,9 +1,22 @@
-function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FunCoef)
+function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2)
 %function Mat to compute the Grad operator
 % d/dx[FunCoef*f]
 % Trace = FunCoef*f|_R - FunCoef*f|_L+
 % Volum = - (FunCoef*f,d/dx v) 
 %-----------------------------------------------------
+if ~exist('FluxVal','var') || isempty(FluxVal)
+    FluxVal = 0;
+end
+
+if ~exist('FunCoef','var') || isempty(FunCoef)
+    FunCoef = @(x)1;
+end
+
+if ~exist('FunCoef2','var') || isempty(FunCoef2)
+    FunCoef2 = @(x)0;
+end
+
+
 L = LEnd-LInt;
 Tol_Cel_Num = 2^(Lev);
 h = L  / Tol_Cel_Num;
@@ -16,7 +29,7 @@ quad_num = 10;
 % FluxVal :: 
 % FluxVal = 0 --> Central Flux
 % FluxVal = 1 --> Upwind Flux
-FluxVal = 1;
+% FluxVal = 1;
 
 % compute the trace values
 p_L = legendre(-1,Deg) * 1/sqrt(h);
@@ -42,7 +55,8 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     xR = xL + h;
     PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
     
-    IntVal = - [Dp_val'*(quad_w.*FunCoef(PhyQuad).*p_val)] * Jacobi;
+    IntVal = - [Dp_val'*(quad_w.*FunCoef(PhyQuad).*p_val)] * Jacobi+...
+       + [p_val'*(quad_w.*FunCoef2(PhyQuad).*p_val)] * Jacobi ;
     Mat = Mat + sparse(c'*ones(1,Deg),ones(Deg,1)*c,IntVal,DoF,DoF);
     %----------------------------------------------
     % -<funcCoef*{q},p>

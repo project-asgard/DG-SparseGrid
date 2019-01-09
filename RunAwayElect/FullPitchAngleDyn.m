@@ -38,7 +38,7 @@ ExactF = @(x,t)(sin(pi*x)*t);
 source = @(x,t)( sin(pi*x)+...
     +E*t*(-2*x.*sin(pi*x)+(-x.^2+1).*cos(pi*x)*pi)+...
     -C*t*(-2*x.*cos(pi*x)*pi-(-x.^2+1).*sin(pi*x)*pi^2)+...
-    +R*t*((-x.^2+1).*sin(pi*x)-2*x.^2.*sin(pi*x)+x.*(-x.^2+1).*cos(pi*x)*pi));
+    +R*t*( (-x.^2+1).*sin(pi*x)-2*x.^2.*sin(pi*x)+x.*(-x.^2+1).*cos(pi*x)*pi) );
 
 Lev = 5;
 Deg = 2;
@@ -50,13 +50,13 @@ Lmax = LEnd-LInt;
 
 %% Matrix
 % Term 1
-Mat_Term1 = MatrixGrad(Lev,Deg,LInt,LEnd,PDE.term1.FunCoef);
+Mat_Term1 = MatrixGrad(Lev,Deg,LInt,LEnd,1,PDE.term1.FunCoef);
 
 % Term 2
-Mat_Term2 = MatrixDiff(Lev,Deg,LInt,LEnd,PDE.term2.FunCoef,1);
+Mat_Term2 = MatrixDiff(Lev,Deg,LInt,LEnd,PDE.term2.FunCoef);
 
 % Term 3
-Mat_Term3 = MatrixGrad(Lev,Deg,LInt,LEnd,PDE.term3.FunCoef);
+Mat_Term3 = MatrixGrad(Lev,Deg,LInt,LEnd,1,PDE.term3.FunCoef);
 
 % Assemble all terms
 Mat = ... 
@@ -77,8 +77,8 @@ rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
 %% Solve
 DoFs = size(Mat,1);
 f0 = zeros(DoFs,1);
-dt = 0.001;
-for Iter = 1 : 100
+dt = ((LEnd - LInt)/2^Lev)^Deg*0.01;
+for Iter = 1 : 1000
     
     time = dt*Iter;
     rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
@@ -96,3 +96,7 @@ end
 figure;
 % checked of projection
 plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--','LineWidth',2)
+
+val = Meval*fn - ExactF(x_node,time);
+
+max(abs(val))
