@@ -171,6 +171,9 @@ elseif compression == 4
     element_global_row_index  = zeros(N,1);
     element_local_1_index     = zeros(N,1);
     element_local_2_index     = zeros(N,1);
+    for d=1:nDims
+        element_local_index_D{d} = zeros(N,1);
+    end
     element_n_connected       = zeros(N,1);
     
     % Allocate connected element arraysn (these won't be filled, and we remove
@@ -179,6 +182,9 @@ elseif compression == 4
     connected_global_col_index  = zeros(N*N,1);
     connected_local_1_index     = zeros(N*N,1);
     connected_local_2_index     = zeros(N*N,1);
+    for d=1:nDims
+        connected_local_index_D{d} = zeros(N*N,1);
+    end
     
     for workItem = 1:N
         
@@ -190,11 +196,10 @@ elseif compression == 4
         
         % Get the 1D indexes into the [lev,pos] space for this element (row)
         
-        %nDims*2+d
         element_idx1D_1 = thisRowBasisCoords(5);
         element_idx1D_2 = thisRowBasisCoords(6);
         for d=1:nDims
-            element_idx1D{d} = thisRowBasisCoords(nDims*2+d);
+            element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
         end
         
         % Get the global index of non-zero (connected) columns for this row
@@ -203,8 +208,8 @@ elseif compression == 4
         
         % Get the local (basis) coords the connected elements
         %
-        % Hash :    local coords  -> global index HashInv:  global index  ->
-        % local coords
+        % Hash : local coords  -> global index 
+        % HashInv:  global index -> local coords
         
         connectedColsBasisCoords = [HASHInv{connectedCols}];
         
@@ -220,7 +225,7 @@ elseif compression == 4
             % 3D : (lev1,lev2,lev3,cell1,cell2,cell3,idx1D1,idx1D2,idx1D3)
             % such that we have the following indexing generalized to
             % dimension ...
-            connected_idx1D{d} = connectedColsBasisCoords(2*nDims+d:3*nDims:end);
+            connected_idx1D_D{d} = connectedColsBasisCoords(2*nDims+d:3*nDims:end);
         end
         
         % Store the element data in arrays
@@ -229,12 +234,12 @@ elseif compression == 4
         element_local_1_index(dofCnt) = element_idx1D_1;
         element_local_2_index(dofCnt) = element_idx1D_2;
         for d=1:nDims       
-            element_local_index{d}(dofCnt) = element_idx1D{d};
+            element_local_index_D{d}(dofCnt) = element_idx1D_D{d};
         end
         
         nConnections = 0;
         % Loop over connected elements
-        assert(size(connected_idx1D{1},2) == numel(connectedCols));
+        assert(size(connected_idx1D_D{1},2) == numel(connectedCols));
 %         for jjj = 1:size(connected_idx1D_1,2)
         for jjj = 1:numel(connectedCols)
             
@@ -244,7 +249,7 @@ elseif compression == 4
             connected_local_1_index(conCnt) = connected_idx1D_1(jjj);
             connected_local_2_index(conCnt) = connected_idx1D_2(jjj);
             for d=1:nDims
-                connected_local_index{d}(dofCnt) = connected_idx1D{d}(jjj);
+                connected_local_index_D{d}(conCnt) = connected_idx1D_D{d}(jjj);
             end
             
             conCnt = conCnt+1;
@@ -263,6 +268,7 @@ elseif compression == 4
     A_Data.element_global_row_index = element_global_row_index;
     A_Data.element_local_1_index = element_local_1_index;
     A_Data.element_local_2_index = element_local_2_index;
+    A_Data.element_local_index_D = element_local_index_D;
     A_Data.element_n_connected = element_n_connected;
     
     % Allocate connected element arraysn (these won't be filled, and we remove
@@ -271,6 +277,9 @@ elseif compression == 4
     A_Data.connected_global_col_index = connected_global_col_index(1:sum(element_n_connected));
     A_Data.connected_local_1_index = connected_local_1_index(1:sum(element_n_connected));
     A_Data.connected_local_2_index = connected_local_2_index(1:sum(element_n_connected));
+    for d=1:nDims
+        A_Data.connected_local_index_D{d} = connected_local_index_D{d}(1:sum(element_n_connected));
+    end
     
 end
 
