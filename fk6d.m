@@ -11,6 +11,7 @@ runtimeDefaults
 
 %% Shortcuts (some of this will go away soon)
 % Named domain ranges
+if nDims==2
 Lmin = pde.dimensions{2}.domainMin;
 Lmax = pde.dimensions{2}.domainMax;
 Vmin = pde.dimensions{1}.domainMin;
@@ -20,6 +21,7 @@ Vmax = pde.dimensions{1}.domainMax;
 % Level information.
 LevX = pde.dimensions{2}.lev;
 LevV = pde.dimensions{1}.lev;
+end
 
 %%
 % Things to be removed
@@ -29,8 +31,9 @@ DimX = 1;
 params = pde.params;
 
 %% Set time step.
-CFL = 0.1;
-dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
+pde.CFL = 0.1;
+%dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
+dt = pde.set_dt(pde);
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
 %% Construct the 1D multi-wavelet transform for each dimension.
@@ -56,8 +59,10 @@ fval = initial_condition_vector(HASHInv,pde,0);
 %% Construct the time-independent coefficient matrices
 % The original way
 if ~quiet; disp('Calculate time independent matrix coefficients'); end
+if nDims==2
 [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
      pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
+end
 %%
 % The generalized PDE spec way
 t = 0;
@@ -74,7 +79,7 @@ if compression == 3
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
-    A_data = GlobalMatrixSG_SlowVersion(HASHInv,Con2D,Deg,compression);
+    A_data = GlobalMatrixSG_SlowVersion(pde,HASHInv,Con2D,Deg,compression);
 end
 
 %% Construct Poisson matrix
@@ -86,20 +91,33 @@ end
 % Another Idea is to solve Poisson Equation on the finest full grid
 
 if ~quiet; disp('Construct matrix for Poisson solve'); end
+if pde.solvePoisson
 if DimX>1
     % Construct DeltaX for DimX
 else
     A_Poisson = DeltaX; 
 end
+end
 
 %% Construct RMWT (Reverse Multi Wavelet Transform) in 2D
-% Needs to be generalized to multi-D
-if ~quiet; disp('Plotting intial condition'); end
-[Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
-    pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
-[xx,vv]=meshgrid(x_node,v_node);
+% Get the wavelet -> realspace transform matrices and realspace node
+% locations for each dimension.
+for d=1:nDims
+    [Meval{d},nodes{d}] = matrix_plot_D(pde.dimensions{d});
+end
+if nDims==2
+    if ~quiet; disp('Plotting intial condition'); end
+    [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,Deg,Lmin,Lmax,Vmin,Vmax,...
+        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
+    tol = 1e-15;
+    assert(norm(Meval{1}-Meval_v)<tol);
+    assert(norm(nodes{1}-v_node)<tol);
+    assert(norm(Meval{2}-Meval_x)<tol);
+    assert(norm(nodes{2}-x_node)<tol);
+end
 
 %% Plot initial condition
+if nDims==2
 if ~quiet
     %%
     % Transform from wavelet space to real space
@@ -107,6 +125,8 @@ if ~quiet
     figure(1000)
     
     f2d0 = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+    
+    [xx,vv]=meshgrid(x_node,v_node);
     
     ax1 = subplot(1,2,1);
     mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
@@ -119,6 +139,7 @@ if ~quiet
     axis([Lmin Lmax Vmin Vmax])
     %caxis([range2n +range2]);
     title('f');
+end
 end
 
 %% Write the initial condition to file.
@@ -145,6 +166,7 @@ for L = 1:nsteps,
         if ~quiet; disp('    Solve poisson to get E'); end
         %[E,u] = PoissonSolve2(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
         [E,u] = PoissonSolve(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+        Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
     end
     
     if pde.applySpecifiedE
@@ -152,9 +174,9 @@ for L = 1:nsteps,
         if ~quiet; disp('    Apply specified E'); end
         E = forwardMWT(LevX,Deg,Lmin,Lmax,pde.Ex,pde.params);
         E = E * pde.Et(time(count),params);
+        Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
     end
     
-    Emax = max(abs(Meval_x*E)); % max value on each point for E
     
     %     ax3 = subplot(2,2,3);
     %     plot(x_node,Meval_x*u,'r-o')

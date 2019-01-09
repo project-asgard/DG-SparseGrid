@@ -323,9 +323,6 @@ elseif compression == 4
                 end
                 degCnt1 = degCnt1 + 1;
             end
-           
-            nTerms = numel(pde.terms);
-            nDims = numel(pde.dimensions);
             
             %%
             % TODO : this needs to be generalized to dim.
@@ -346,7 +343,7 @@ elseif compression == 4
                 %%
                 % Construct the list of matrices for the kron_mult for this
                 % operator (which has dimension many entries).
-                A = {}; 
+                clear A;
                 for d=1:nDims                    
                     idx_i = Index_I{d}; 
                     idx_j = Index_J{d};
