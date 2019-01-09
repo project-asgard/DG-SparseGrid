@@ -7,7 +7,7 @@ source = @(x,t)(x-x);
 psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
 
 Ca = 1;
-Cf = 0;
+Cf = 1;
 
 PDE.term1.Opt = 'Grad';
 PDE.term1.FunCoef = @(x)FunCoef1(x);
@@ -16,6 +16,9 @@ PDE.term1.Coef =  Cf;
 PDE.term2.Opt = 'Diff';
 PDE.term2.FunCoef = @(x)FunCoef3(x);
 PDE.term2.Coef = Ca;
+
+PDE.BC.q_L = 0; PDE.BC.q_R = 1;
+PDE.BC.f_L = 1;  PDE.BC.f_R = 0;
 
 function y = FunCoef1(x)
 psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));

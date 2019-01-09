@@ -10,20 +10,20 @@ close all
 format short e
 addpath(genpath(pwd))
 
-E = 1; C = 1; R = 3;
-
-% Test 1
-PDE.term1.Opt = 'Grad';
-PDE.term1.FunCoef = @(x)( (1-x.^2) );
-PDE.term1.Coef =  -E;
-
-PDE.term2.Opt = 'Diff';
-PDE.term2.FunCoef = @(x)( (1-x.^2) );
-PDE.term2.Coef = C;
-
-PDE.term3.Opt = 'Grad';
-PDE.term3.FunCoef = @(x)( -(x.*(1-x.^2)) );
-PDE.term3.Coef =  R;
+% E = 1; C = 1; R = 3;
+% 
+% % Test 1
+% PDE.term1.Opt = 'Grad';
+% PDE.term1.FunCoef = @(x)( (1-x.^2) );
+% PDE.term1.Coef =  -E;
+% 
+% PDE.term2.Opt = 'Diff';
+% PDE.term2.FunCoef = @(x)( (1-x.^2) );
+% PDE.term2.Coef = C;
+% 
+% PDE.term3.Opt = 'Grad';
+% PDE.term3.FunCoef = @(x)( -(x.*(1-x.^2)) );
+% PDE.term3.Coef =  R;
 
 
 
@@ -31,11 +31,11 @@ PDE.term3.Coef =  R;
 % PDE_ElectricFieldAcceleration;
 % PDE_Collisions;
 % PDE_RadiationDamping;
-% PDE_ElectricFieldCollisions;
-PDE_FullPitchAngle;
+PDE_ElectricFieldCollisions;
+% PDE_FullPitchAngle;
 
-Lev = 5;
-Deg = 3;
+Lev = 4;
+Deg = 2;
 num_plot = 3;
 
 LInt = -1;
@@ -47,7 +47,7 @@ Lmax = LEnd-LInt;
 Mat_Term1 = MatrixGrad(Lev,Deg,LInt,LEnd,1,PDE.term1.FunCoef);
 
 % Term 2
-Mat_Term2 = MatrixDiff(Lev,Deg,LInt,LEnd,PDE.term2.FunCoef);
+Mat_Term2 = MatrixDiff_Momentum(Lev,Deg,LInt,LEnd,PDE.term2.FunCoef,PDE.BC.q_L ,PDE.BC.q_R ,PDE.BC.f_L ,PDE.BC.f_R);
 
 % Term 3
 Mat_Term3 = MatrixGrad(Lev,Deg,LInt,LEnd,1,PDE.term3.FunCoef);
@@ -72,7 +72,8 @@ rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
 DoFs = size(Mat,1);
 f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);%zeros(DoFs,1);
 dt = ((LEnd - LInt)/2^Lev)^Deg*0.01;
-for Iter = 1 : 1000
+MaxIter = ceil(1/dt);
+for Iter = 1 : MaxIter
     
     time = dt*Iter;
     rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
