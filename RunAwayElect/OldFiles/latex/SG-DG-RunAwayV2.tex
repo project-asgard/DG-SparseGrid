@@ -651,13 +651,32 @@ The full 1-D momentum dynamics is governed by the equation:
 \frac{\partial f}{\partial t}=\frac{1}{p^2}\frac{\partial}{\partial p}p^2\left[C_A\frac{\partial f}{\partial p}+C_Ff\right]-\frac{E}{p^2}\frac{\partial}{\partial p}\left[p^2f\right]+R\frac{1}{p^2}\frac{\partial}{\partial p}\left[p^3\gamma f\right]
 \end{eqnarray}
 
+\subsection{}
 First, we shall consider the non-relativistic limit with $E=R=0$. That is, reduce the problem to the solution of 
 \begin{eqnarray}
-\frac{\partial f}{\partial x}&=&\frac{1}{x^2}\frac{\partial}{\partial x}x^2\left[\frac{\psi(x)}{x}\frac{\partial f}{\partial x}+2\psi(x)f\right]\notag\\
+\frac{\partial f}{\partial t}&=&\frac{1}{x^2}\frac{\partial}{\partial x}x^2\left[\frac{\psi(x)}{x}\frac{\partial f}{\partial x}+2\psi(x)f\right]\notag\\
 &=&\frac{1}{x^2}\frac{\partial}{\partial x}\left[ x\psi(x)\frac{\partial f}{\partial x}\right] + \frac{1}{x^2}\frac{\partial}{\partial x}\left[2x^2\psi(x)f \right].
 \end{eqnarray}
-Here $\psi = \frac{1}{2x^2}\left[\frac{2}{\sqrt{\pi}}\int_0^{x}e^{-s^2}ds-\frac{2x}{\sqrt{\pi}}e^{-x^2}\right].$
+Here $\psi(x) = \dfrac{1}{2x^2}\left[\dfrac{2}{\sqrt{\pi}}\int_0^{x}e^{-s^2}ds-\dfrac{2x}{\sqrt{\pi}}e^{-x^2}\right]=\dfrac{1}{2x^2}\left[\text{erf}(x)-\dfrac{2x}{\sqrt{\pi}}e^{-x^2}\right].$
 
+\vskip.1in
+Denote $q = \dfrac{\partial f}{\partial x}$ and rewrite the equation as follows:
+\begin{eqnarray}
+\begin{cases}
+(q,v) &= \left(\dfrac{\partial f}{\partial x},v\right),\\
+\left(x^2\dfrac{\partial f}{\partial t},w\right) &= \left(\dfrac{\partial}{\partial x}\left[x\psi(x)q\right],w\right)+\left(\dfrac{\partial}{\partial x}\left[2x^2\psi(x)f\right],w\right)\\
+& = -\left(x\psi(x)q,\dfrac{\partial w}{\partial x}\right)+\langle \widehat{x\psi(x)q},w\rangle\\
+&\quad -\left(2x^2\psi(x)f,\dfrac{\partial w}{\partial x}\right)+\langle \widehat{2x^2\psi(x)f},w\rangle
+\end{cases}
+\end{eqnarray}
+Thus
+\begin{eqnarray}
+{\bf Q}^{n} &=& \textbf{Mat}_1*{\bf F}^{n}\\
+\frac{{\bf F}^{n+1}-{\bf F}^n}{dt} &=& \textbf{Mat}_2*{\bf Q}^n + \textbf{Mat}*{\bf F}^n\notag\\
+& = & \textbf{Mat}_2*\textbf{Mat}_1*{\bf F}^{n} + \textbf{Mat}*{\bf F}^n
+\end{eqnarray}
+
+Here $\textbf{Mat}_1$ is the Grad operator with FunCoef = 1. The matrix $\textbf{Mat}_2$ is the Grad operator with FunCoef = $x\psi(x)$.
 
 
 
