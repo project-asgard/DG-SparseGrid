@@ -3,6 +3,11 @@ function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2)
 % d/dx[FunCoef*f]
 % Trace = FunCoef*f|_R - FunCoef*f|_L+
 % Volum = - (FunCoef*f,d/dx v) 
+% FluxVal :: 
+% FluxVal = 0 --> Central Flux
+% FluxVal = 1 --> Upwind Flux
+% FluxVal = 1;
+% To Do: B.C.
 %-----------------------------------------------------
 if ~exist('FluxVal','var') || isempty(FluxVal)
     FluxVal = 0;
@@ -16,7 +21,6 @@ if ~exist('FunCoef2','var') || isempty(FunCoef2)
     FunCoef2 = @(x)0;
 end
 
-
 L = LEnd-LInt;
 Tol_Cel_Num = 2^(Lev);
 h = L  / Tol_Cel_Num;
@@ -25,11 +29,6 @@ DoF = Deg * Tol_Cel_Num;
 Mat = sparse(DoF,DoF);
 
 quad_num = 10;
-
-% FluxVal :: 
-% FluxVal = 0 --> Central Flux
-% FluxVal = 1 --> Upwind Flux
-% FluxVal = 1;
 
 % compute the trace values
 p_L = legendre(-1,Deg) * 1/sqrt(h);
