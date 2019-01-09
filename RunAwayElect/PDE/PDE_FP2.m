@@ -1,4 +1,5 @@
 %This code presents the analytical solution of the FP
+% df/dt = 1/x^2 d/dx (Ca*FunCoef1*df/dx+Cf*FunCoef3*f) 
 Q = 1;
 ExactF = @(x,t)(Q*exp(-x.^2));
 source = @(x,t)(x-x);
@@ -6,14 +7,14 @@ source = @(x,t)(x-x);
 psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
 
 Ca = 1;
-Cf = 1;
+Cf = 0;
 
 PDE.term1.Opt = 'Grad';
-PDE.term1.FunCoef = @(x)FunCoef1(x);%@(x)(x == 0).*(0)+(x>0).*( x.*(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2))) );
+PDE.term1.FunCoef = @(x)FunCoef1(x);
 PDE.term1.Coef =  Cf;
 
 PDE.term2.Opt = 'Diff';
-PDE.term2.FunCoef = @(x)FunCoef3(x);%@(x)(x == 0).*(0)+(x>0).*( (2*x.^2.*(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)))) );
+PDE.term2.FunCoef = @(x)FunCoef3(x);
 PDE.term2.Coef = Ca;
 
 function y = FunCoef1(x)

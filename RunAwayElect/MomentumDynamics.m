@@ -20,14 +20,7 @@ R = 0;
 
 Cf = 1; Ca = 1;
 
-% % Test
-% PDE.term1.Opt = 'Grad';
-% PDE.term1.FunCoef = @(x)( (x.^2) );
-% PDE.term1.Coef =  Cf;
-% 
-% PDE.term2.Opt = 'Diff';
-% PDE.term2.FunCoef = @(x)( (x.^2) );
-% PDE.term2.Coef = Ca;
+
 
 PDE_FP2;
 
@@ -47,9 +40,9 @@ Lmax = LEnd-LInt;
 Mat_Term1 = MatrixGrad(Lev,Deg,LInt,LEnd,0,PDE.term1.FunCoef,@(x)0,2,0);
 
 % Term 2
-[Mat_Term2,Mat1] = MatrixDiff(Lev,Deg,LInt,LEnd,PDE.term2.FunCoef);
+[Mat_Term2,Mat1,Mat2] = MatrixDiff(Lev,Deg,LInt,LEnd,PDE.term2.FunCoef);
 
-MatMass = MatrixMass(Lev,Deg,LInt,LEnd,@(x)(x.^2));
+MatMass = MatrixMass(Lev,Deg,LInt,LEnd,@(x)(1));%x.^2));
 MatMass = inv(MatMass);
 
 % Assemble all terms
@@ -71,6 +64,7 @@ qq = @(x)(-2*x.*exp(-x.^2));
 %% Solve
 DoFs = size(Mat,1);
 f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
+q0 = ComputRHS(Lev,Deg,LInt,LEnd,@(x,t)(-2*x.*exp(-x.^2)),0);
 fn = f0;
 dt = ((LEnd - LInt)/2^Lev)^Deg*0.01;
 for Iter = 1 : 1000
@@ -83,7 +77,8 @@ for Iter = 1 : 1000
     qn = Mat1*fn;
     
     plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',...
-         x_node,Meval*qn,'g-<',x_node,qq(x_node),'g--','LineWidth',2)
+         x_node,Meval*qn,'g-<',x_node,qq(x_node),'g--',x_node,Meval*(Mat2*fn),'b-<',...
+         'LineWidth',2)
     title(num2str(time))
     pause(0.01)
     

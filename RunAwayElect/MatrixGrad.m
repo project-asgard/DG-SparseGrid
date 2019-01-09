@@ -67,7 +67,7 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     
     IntVal = ...
         - [Dp_val'*(quad_w.*FunCoef(PhyQuad).*p_val)] * Jacobi+...
-        + [p_val'*(quad_w.*FunCoef2(PhyQuad).*p_val)] * Jacobi ;
+        + [ p_val'*(quad_w.*FunCoef2(PhyQuad).*p_val)] * Jacobi ;
     
     Mat = Mat + sparse(c'*ones(1,Deg),ones(Deg,1)*c,IntVal,DoF,DoF);
     %----------------------------------------------
