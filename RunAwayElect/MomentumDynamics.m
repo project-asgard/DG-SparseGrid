@@ -19,9 +19,9 @@ PDE_FP2;
 format short e
 addpath(genpath(pwd))
 
-Lev = 4;
-Deg = 3;
-num_plot = 3;
+Lev = 6;
+Deg = 2;
+num_plot = 2;
 
 LInt = 0;
 LEnd = 4;
@@ -49,7 +49,7 @@ rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
 
 %% B.C
 
-[x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd);
+[x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
 
 qq = @(x)(-2*x.*exp(-x.^2));
 
@@ -59,7 +59,8 @@ f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 q0 = ComputRHS(Lev,Deg,LInt,LEnd,@(x,t)(-2*x.*exp(-x.^2)),0);
 fn = f0;
 dt = ((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
-for Iter = 1 : 1000
+MaxIter = ceil(0.5/dt);
+for Iter = 1 : MaxIter
     
     time = dt*Iter;
     rhs0 = ComputRHS(Lev,Deg,LInt,LEnd,source,time-dt);
@@ -79,7 +80,7 @@ for Iter = 1 : 1000
     qn = Mat1*fn;
     
     plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',...
-         x_node,Meval*qn,'g-<',x_node,qq(x_node),'b--',x_node,Meval*(Mat2*fn),'b-<',...
+         x_node,Meval*qn,'g-<',x_node,qq(x_node),'b--',...
          'LineWidth',2)
     title(num2str(time))
     pause(0.01)
@@ -93,4 +94,4 @@ legend('Numerical Solution','Exact Solution')
 
 val = Meval*fn - ExactF(x_node,time);
 
-max(abs(val))
+[max(abs(val)) norm(val)]
