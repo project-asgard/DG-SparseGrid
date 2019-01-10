@@ -16,11 +16,11 @@ format short e
 addpath(genpath(pwd))
 % clc
 
-% PDE_FP2;
-Test_Momentum;
+PDE_FP2;
+% Test_Momentum;
 
 
-Lev = 4;
+Lev = 5;
 Deg = 2;
 num_plot = 2;
 
@@ -48,8 +48,8 @@ MatMass = inv(MatMass);
 Mat = ... 
     PDE.term1.Coef * Mat_Term1 + ...
     PDE.term2.Coef * Mat_Term2 + ...
-    PDE.term3.Coef * Mat_Term3 + ...
-    PDE.term4.Coef * Mat_Term4 ;
+     PDE.term3.Coef * Mat_Term3 + ...
+     PDE.term4.Coef * Mat_Term4 ;
 
 %% RHS
 time = 0;
@@ -68,7 +68,7 @@ f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 q0 = ComputRHS(Lev,Deg,LInt,LEnd,@(x,t)(-2*x.*exp(-x.^2)),0);
 fn = f0;
 dt = ((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
-MaxIter = ceil(15/dt);
+MaxIter = ceil(0.05/dt);
 for Iter = 1 : MaxIter
     
     time = dt*Iter;

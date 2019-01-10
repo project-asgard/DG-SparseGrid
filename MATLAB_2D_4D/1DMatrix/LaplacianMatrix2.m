@@ -33,8 +33,14 @@ dof_1D=k*2^n;
 M_stiff=sparse(dof_1D,dof_1D);
 b=sparse(dof_1D,1);
 coef_DG=sparse(dof_1D,1);
+
+CoeFun = @(x)(1./x.^2);
+
 % generate 1D stiffness matrix for DG 
 for LL=0:2^n-1
+    
+    xi = quad_x*2^(-n-1)+2^(-n)*(LL+0.5);
+    Coef = CoeFun(xi);
     
     if LL==0
         Iu=[meshgrid(k*LL+1:k*(LL+1)),meshgrid(k*(LL+1)+1:k*(LL+2))];
