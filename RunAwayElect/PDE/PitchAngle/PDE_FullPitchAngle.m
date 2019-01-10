@@ -1,6 +1,6 @@
 %This code presents the solution for Full Pitch Angle
 
-E = 1; C = 1; R = 3;
+E = 0; C = 1; R = 4;
 
 PDE.term1.Opt = 'Grad';
 PDE.term1.FunCoef = @(x)( (1-x.^2) );

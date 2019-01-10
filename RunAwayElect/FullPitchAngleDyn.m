@@ -14,8 +14,8 @@ addpath(genpath(pwd))
 % PDE_ElectricFieldAcceleration;
 % PDE_Collisions;
 % PDE_RadiationDamping;
-PDE_ElectricFieldCollisions;
-% PDE_FullPitchAngle;
+% PDE_ElectricFieldCollisions;
+PDE_FullPitchAngle;
 
 Lev = 4;
 Deg = 3;
@@ -56,7 +56,7 @@ DoFs = size(Mat,1);
 f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 
 dt = ((LEnd - LInt)/2^Lev)^Deg*0.01;
-MaxIter = ceil(0.05/dt);
+MaxIter = ceil(0.005/dt);
 for Iter = 1 : MaxIter
     
     time = dt*Iter;
