@@ -16,11 +16,11 @@ format short e
 addpath(genpath(pwd))
 % clc
 
-PDE_FP2;
+% PDE_FP2;
+Test_Momentum;
 
 
-
-Lev = 6;
+Lev = 4;
 Deg = 2;
 num_plot = 2;
 
@@ -35,13 +35,21 @@ Mat_Term1 = MatrixGrad(Lev,Deg,LInt,LEnd,0,PDE.term1.FunCoef, @(x)0, PDE.BC.f_L,
 % Term 2: d/dx[FunCoef*df/dx]
 [Mat_Term2,Mat1,Mat2] = MatrixDiff_Momentum(Lev,Deg,LInt,LEnd,PDE.term2.FunCoef,PDE.BC.q_L ,PDE.BC.q_R ,PDE.BC.f_L ,PDE.BC.f_R);
 
+% Term 3
+Mat_Term3 = MatrixGrad(Lev,Deg,LInt,LEnd,0,PDE.term3.FunCoef, @(x)0, PDE.BC.f_L,PDE.BC.f_R);
+
+% Term 4
+Mat_Term4 = MatrixGrad(Lev,Deg,LInt,LEnd,0,PDE.term4.FunCoef, @(x)0, PDE.BC.f_L,PDE.BC.f_R);
+
 MatMass = MatrixMass(Lev,Deg,LInt,LEnd,@(x)(x.^2));
 MatMass = inv(MatMass);
 
 % Assemble all terms
 Mat = ... 
     PDE.term1.Coef * Mat_Term1 + ...
-    PDE.term2.Coef * Mat_Term2 ;
+    PDE.term2.Coef * Mat_Term2 + ...
+    PDE.term3.Coef * Mat_Term3 + ...
+    PDE.term4.Coef * Mat_Term4 ;
 
 %% RHS
 time = 0;
@@ -52,7 +60,7 @@ rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
 
 [x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
 
-qq = @(x)(-2*x.*exp(-x.^2));
+
 
 %% Solve
 DoFs = size(Mat,1);
@@ -60,7 +68,7 @@ f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 q0 = ComputRHS(Lev,Deg,LInt,LEnd,@(x,t)(-2*x.*exp(-x.^2)),0);
 fn = f0;
 dt = ((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
-MaxIter = ceil(0.5/dt);
+MaxIter = ceil(15/dt);
 for Iter = 1 : MaxIter
     
     time = dt*Iter;
@@ -81,7 +89,7 @@ for Iter = 1 : MaxIter
     qn = Mat1*fn;
     
     plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',...
-         x_node,Meval*qn,'g-<',x_node,qq(x_node),'b--',...
+         x_node,Meval*qn,'g-<',x_node,ExactQ(x_node,time),'b--',...
          'LineWidth',2)
     title(num2str(time))
     pause(0.01)
