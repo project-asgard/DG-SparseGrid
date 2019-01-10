@@ -45,7 +45,7 @@ FunCoef2 = @(x)-dFunCoef(x);
 % % 
 % % Mat = Mat1*Mat2;
 
-q_bcL = 0;q_bcR = 1;f_bcL = 1;f_bcR = 0;
+q_bcL = 0;q_bcR = 0;f_bcL = 1;f_bcR = 1;
 Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,1,@(x)1,   @(x)0,f_bcL,f_bcR);% equation for q
 
 Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,FunCoef,@(x)0,q_bcL,q_bcR); % equation for f

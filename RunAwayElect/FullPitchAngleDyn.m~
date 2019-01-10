@@ -14,11 +14,11 @@ addpath(genpath(pwd))
 % PDE_ElectricFieldAcceleration;
 % PDE_Collisions;
 % PDE_RadiationDamping;
-PDE_ElectricFieldCollisions;
+% PDE_ElectricFieldCollisions;
 % PDE_FullPitchAngle;
 
 Lev = 4;
-Deg = 3;
+Deg = 2;
 num_plot = 3;
 
 LInt = -1;
@@ -48,13 +48,12 @@ rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
 
 %% B.C
 
-[x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
+[x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd);
 
 
 %% Solve
 DoFs = size(Mat,1);
-f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
-
+f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);%zeros(DoFs,1);
 dt = ((LEnd - LInt)/2^Lev)^Deg*0.01;
 MaxIter = ceil(0.05/dt);
 for Iter = 1 : MaxIter
@@ -66,9 +65,7 @@ for Iter = 1 : MaxIter
     
     qn = Mat1*fn;
     
-    plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',...
-        ...,x_node,Meval*qn,'g-o',...
-        'LineWidth',2)
+    plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',x_node,Meval*qn,'g-o','LineWidth',2)
     title(num2str(time))
     pause(0.01)
     
