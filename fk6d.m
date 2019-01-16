@@ -184,14 +184,24 @@ for L = 1:nsteps,
     %     ax4 = subplot(2,2,4);
     %     plot(x_node,Meval_x*E,'r-o')
     
-    %%% Generate EMassX time dependent coefficient matrix.
+
     if ~quiet; disp('    Calculate time dependent matrix coeffs'); end
-    EMassX = matrix_coeff_TD(LevX,Deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
+    if nDims==2
+        if (pde.applySpecifiedE | pde.solvePoisson)
+            
+            %% 
+            % Generate EMassX time dependent coefficient matrix.
+            
+            EMassX = matrix_coeff_TD(LevX,Deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
+            
+            %%
+            % Set the dat portion of the EMassX part of E.d_dv term.
+            
+            pde.terms{2}{2}.dat = E;
+        end
+    end
     
-    %%
-    % Set the dat portion of the EMassX part of E.d_dv term.
-    
-    pde.terms{2}{2}.dat = E;
+
     
     %%
     % Now construct the TD coeff_mats.
@@ -201,11 +211,13 @@ for L = 1:nsteps,
     pde = getCoeffMats(pde,t,TD);
     
     %% Test new PDE spec based generation of the coeff_matrices
-    
-    disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{2}.coeff_mat - GradX)/norm(GradX)) ]);
-    disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{1}.coeff_mat - vMassV)/norm(vMassV)) ]);
-    disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{2}.coeff_mat - EMassX)/norm(EMassX)) ]);
-    disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{1}.coeff_mat - GradV)/norm(GradV)) ]);
+   
+    if nDims==2
+        disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{2}.coeff_mat - GradX)/norm(GradX)) ]);
+        disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{1}.coeff_mat - vMassV)/norm(vMassV)) ]);
+        disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{2}.coeff_mat - EMassX)/norm(EMassX)) ]);
+        disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{1}.coeff_mat - GradV)/norm(GradV)) ]);
+    end
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
@@ -225,24 +237,32 @@ for L = 1:nsteps,
         fval = TimeAdvance(C_encode,fval,time(count),dt,compression,Deg,pde,HASHInv);
     else
         
-        A_data.GradX     = pde.terms{1}{2}.coeff_mat;
-        A_data.vMassV    = pde.terms{1}{1}.coeff_mat;
-        A_data.EMassX    = pde.terms{2}{2}.coeff_mat;
-        A_data.GradV     = pde.terms{2}{1}.coeff_mat;
-        
-        %         A_data.vMassV    = vMassV;
-        %         A_data.GradX     = GradX;
-        %         A_data.GradV     = GradV;
-        %         A_data.EMassX    = EMassX;
-        
-        A_data.FluxX = FluxX;
-        A_data.FluxV = FluxV;
+        if nDims==2
+            A_data.GradX     = pde.terms{1}{2}.coeff_mat;
+            A_data.vMassV    = pde.terms{1}{1}.coeff_mat;
+            A_data.EMassX    = pde.terms{2}{2}.coeff_mat;
+            A_data.GradV     = pde.terms{2}{1}.coeff_mat;
+                   
+            %         A_data.vMassV    = vMassV;
+            %         A_data.GradX     = GradX;
+            %         A_data.GradV     = GradV;
+            %         A_data.EMassX    = EMassX;
+            
+            A_data.FluxX = FluxX;
+            A_data.FluxV = FluxV;
+        end
         
         % Write the A_data structure components for use in HPC version.
         write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,Lev,Deg); end
         
-        fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv,Vmax,Emax);
+        if nDims==2
+            fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv,Vmax,Emax);
+        else
+            Vmax = 0;
+            Emax = 0; % These are only used in the global LF flux
+            fval = TimeAdvance(A_data,fval,time(count),dt,compression,Deg,pde,HASHInv,Vmax,Emax);
+        end
         
     end
     
@@ -256,37 +276,73 @@ for L = 1:nsteps,
     %     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
     %     fclose(fd);
     
-    %%% Plot results
+    %%
+    % Plot results
+    
     if mod(L,plotFreq)==0 && ~quiet
         
         figure(1000)
         
-        tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+        tmpA=Multi_2D_D(Meval,fval,HASHInv,pde);
         
-        f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+        if nDims==2
+            tmp=Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);  
+            tol = 1e-15;
+            assert(norm(tmp-tmpA)<tol);
+        end
         
-        %         ax1 = subplot(1,2,1);
-        ax1 = subplot(2,2,1);
-        mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
-        axis([Lmin Lmax Vmin Vmax])
-        %caxis([-range1 +range1]);
-        title('df');
+        tmp = tmpA;
         
-        %         ax2 = subplot(1,2,2);
-        ax2 = subplot(2,2,2);
-        mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
-        axis([Lmin Lmax Vmin Vmax])
-        %caxis([range2n +range2]);
-        title('f');
+        if nDims==1
+            
+            %%
+            % Plot solution
+            
+            f1d = tmp;
+            x = nodes{1};
+            plot(x,f1d,'-o');
+            
+            %%
+            % Overplot analytic solution
+            
+            if pde.checkAnalytic
+                hold on;
+                coord = {x};
+                f1d_analytic = getAnalyticSolution_D(coord,L*dt,pde)
+                plot(x,f1d_analytic,'-');
+                hold off;
+            end
+            
+            pause(0.01);
+            
+        end
         
-        title(['f @ ', timeStr])
-        pause (0.01)
+        if nDims==2
+            f2d = reshape(tmp,Deg*2^LevX,Deg*2^LevV)';
+            
+            ax1 = subplot(2,2,1);
+            mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
+            axis([Lmin Lmax Vmin Vmax])
+            title('df');
+            
+            ax2 = subplot(2,2,2);
+            mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
+            axis([Lmin Lmax Vmin Vmax])
+            title('f');
+            
+            title(['f @ ', timeStr])
+            pause (0.01)
+        end
     end
     
-    %%% Get the real space solution
+    %%
+    % Get the real space solution
+    if nDims==2
     fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,Lev,Deg);
+    end
     
-    %%% Check against known solution
+    %%
+    % Check against known solution
     if pde.checkAnalytic
         
         % Check the wavelet space solution with the analytic solution
@@ -295,12 +351,14 @@ for L = 1:nsteps,
         disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
         disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
+        if nDims==2
         % Check the real space solution with the analytic solution
         f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
         f2d_analytic = pde.analytic_solution(xx,vv,L*dt);
         err_real = sqrt(mean((f2d(:) - f2d_analytic(:)).^2));
         disp(['    real space absolute err : ', num2str(err_real)]);
         disp(['    real space relative err : ', num2str(err_real/max(abs(f2d_analytic(:)))*100), ' %']);
+        end
         
         err = err_wavelet;
     end

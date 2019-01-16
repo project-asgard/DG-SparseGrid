@@ -9,7 +9,6 @@ function [A_Data] = GlobalMatrixSG_SlowVersion(pde,HASHInv,connectivity,Deg,comp
 % which the point is connected.
 
 N = size(HASHInv,2);
-
 nDims = numel(pde.dimensions);
 
 if compression < 3
@@ -196,8 +195,10 @@ elseif compression == 4
         
         % Get the 1D indexes into the [lev,pos] space for this element (row)
         
-        element_idx1D_1 = thisRowBasisCoords(5);
-        element_idx1D_2 = thisRowBasisCoords(6);
+        if nDims==2
+            element_idx1D_1 = thisRowBasisCoords(5);
+            element_idx1D_2 = thisRowBasisCoords(6);
+        end
         for d=1:nDims
             element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
         end
@@ -208,7 +209,7 @@ elseif compression == 4
         
         % Get the local (basis) coords the connected elements
         %
-        % Hash : local coords  -> global index 
+        % Hash : local coords  -> global index
         % HashInv:  global index -> local coords
         
         connectedColsBasisCoords = [HASHInv{connectedCols}];
@@ -218,7 +219,7 @@ elseif compression == 4
         
         connected_idx1D_1 = connectedColsBasisCoords(5:6:end);
         connected_idx1D_2 = connectedColsBasisCoords(6:6:end);
-        for d=1:nDims    
+        for d=1:nDims
             % Recall ...
             % 1D : (lev1,cell1,idx1D1)
             % 2D : (lev1,lev2,cell1,cell2,idx1D1,idx1D2)
@@ -231,36 +232,40 @@ elseif compression == 4
         % Store the element data in arrays
         element_global_row_index(dofCnt) = workItem;
         
-        element_local_1_index(dofCnt) = element_idx1D_1;
-        element_local_2_index(dofCnt) = element_idx1D_2;
-        for d=1:nDims       
+        if nDims==2
+            element_local_1_index(dofCnt) = element_idx1D_1;
+            element_local_2_index(dofCnt) = element_idx1D_2;
+        end
+        for d=1:nDims
             element_local_index_D{d}(dofCnt) = element_idx1D_D{d};
         end
         
         nConnections = 0;
         % Loop over connected elements
         assert(size(connected_idx1D_D{1},2) == numel(connectedCols));
-%         for jjj = 1:size(connected_idx1D_1,2)
+        %         for jjj = 1:size(connected_idx1D_1,2)
         for jjj = 1:numel(connectedCols)
             
             % Store the connected data in arrays
             connected_global_col_index(conCnt) = connectedCols(jjj);
             
-            connected_local_1_index(conCnt) = connected_idx1D_1(jjj);
-            connected_local_2_index(conCnt) = connected_idx1D_2(jjj);
+            if nDims==2
+                connected_local_1_index(conCnt) = connected_idx1D_1(jjj);
+                connected_local_2_index(conCnt) = connected_idx1D_2(jjj);
+            end
             for d=1:nDims
                 connected_local_index_D{d}(conCnt) = connected_idx1D_D{d}(jjj);
             end
             
             conCnt = conCnt+1;
             nConnections = nConnections + 1;
-
+            
         end
         
         element_n_connected(dofCnt) = nConnections;
         
         dofCnt = dofCnt + 1;
-   
+        
     end
     
     % Wrap the arrays up into a struct just for ease of passing around.

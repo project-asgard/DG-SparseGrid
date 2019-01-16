@@ -318,16 +318,18 @@ elseif compression == 4
         % end
         
         globalRowA = elementDOF*(workItem-1) + [1:elementDOF]';
-        
-        assert(norm(globalRowA - globalRow)==0);
+        if nDims==2
+            assert(norm(globalRowA - globalRow)==0);
+        end
+        globalRow = globalRowA;
         
         for d=1:nDims
             myDeg = dimensions{d}.deg;
             Index_I{d} = (element_idx1D_D{d}-1)*myDeg + [1:myDeg]';
         end
-        assert(norm(Index_I{1}-Index_I1)==0);
-        if nDims==2 
-        assert(norm(Index_I{2}-Index_I2)==0);
+        if nDims==2
+            assert(norm(Index_I{1}-Index_I1)==0);
+            assert(norm(Index_I{2}-Index_I2)==0);
         end
         
         for j=1:nConnected
@@ -362,15 +364,17 @@ elseif compression == 4
             % a connected element DOF (connElementDOF) or the like.
             
             globalColA = elementDOF*(connectedCol-1) + [1:elementDOF]';
-            
-            assert(norm(globalColA-globalCol)==0);
+            if nDims==2
+                assert(norm(globalColA-globalCol)==0);
+            end
+            globalCol = globalColA;
             
             for d=1:nDims
                 myDeg = dimensions{d}.deg;
                 Index_J{d} = (connected_idx1D_D{d}-1)*myDeg + [1:myDeg]';
             end
-            assert(norm(Index_J{1}-Index_J1)==0);
             if nDims==2
+                assert(norm(Index_J{1}-Index_J1)==0);
                 assert(norm(Index_J{2}-Index_J2)==0);
             end
             
