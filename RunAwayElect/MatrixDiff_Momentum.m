@@ -13,10 +13,15 @@ if ~exist('FluxVal','var') || isempty(FluxVal)
     FluxVal = 1;
 end
 
-% q_bcL = 0;q_bcR = 1;f_bcL = 1;f_bcR = 0;
 Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,   @(x)0,f_bcL,f_bcR);% equation for q
 
 Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,FunCoef,@(x)0,q_bcL,q_bcR); % equation for f
 Mat = Mat2*Mat1;
+
+% FunCoef2 = @(x)( 2*x);
+% % % use alternating flux
+% Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,f_bcL,f_bcR);% equation for q
+% Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,FunCoef,FunCoef2,q_bcL,q_bcR); % equation for f
+% Mat = Mat2*Mat1;
 
 end

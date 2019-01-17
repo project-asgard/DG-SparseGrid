@@ -26,15 +26,15 @@ exactf = @(x,t)(...
     (phi(x,t).*(1-phi(x,t).^2))./(x.*(1-x.^2)).*f0(phi(x,t)) ...
     );
 
-f0 = @(x)(x.^5);
-exactf = @(x,t)(f0(x));
+% f0 = @(x)(x.^5);
+% exactf = @(x,t)(f0(x));
 funcCoef = @(x)(x.*(1-x.^2));
 
 format short e
 addpath(genpath(pwd))
 
 
-Lev = 2;
+Lev = 4;
 Deg = 2;
 num_plot = 3;
 EndTime = 4;
@@ -217,7 +217,7 @@ if AdapTest == 0
     legend({'solution f','flux x(1-x^2)f'})
     title(['time at ',num2str(0)])
     
-    return
+%     return
     
     
     

@@ -11,8 +11,8 @@ PDE.term2.FunCoef = @(x)( (1-x.^2) );
 PDE.term2.Coef = C;
 
 PDE.term3.Opt = 'Grad';
-PDE.term3.FunCoef = @(x)( -(x.*(1-x.^2)) );
-PDE.term3.Coef =  R;
+PDE.term3.FunCoef = @(x)( (x.*(1-x.^2)) );
+PDE.term3.Coef =  -R;
 
 PDE.BC.q_L = 0; PDE.BC.q_R = 0;
 PDE.BC.f_L = 1;  PDE.BC.f_R = 1;

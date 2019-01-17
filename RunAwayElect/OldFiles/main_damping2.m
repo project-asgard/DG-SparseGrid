@@ -15,27 +15,28 @@ close all
 % clc
 
 % Test
-% % sigma = 0.1;
-% % f0 = @(x)( exp(-x.^2/sigma^2) );
-% % % f0 = @(x)(x-x+1);
-% % phi = @(x,t)( tanh(atanh(x)-t) );
-% % exactf = @(x,t)(...
-% %     (1-phi(x,t).^2)./(1-x.^2).*f0(phi(x,t)) ...
-% %     );
-% % funcCoef = @(x)(x.*(1-x.^2));
-
-% check about convergence
-f0 = @(x)(sin(pi*x));
-exactf = @(x,t)(exp(t)*sin(pi*x));
+sigma = 0.1;
+f0 = @(x)( exp(-x.^2/sigma^2) );
+% f0 = @(x)(x-x+1);
+phi = @(x,t)( tanh(atanh(x)-t) );
+exactf = @(x,t)(...
+    (1-phi(x,t).^2)./(1-x.^2).*f0(phi(x,t)) ...
+    );
 funcCoef = @(x)(x.*(1-x.^2));
-source = @(x,t)(-exp(t).*(cos(pi*x)*pi.*x.^3+3*x.^2.*sin(pi*x)-x.*cos(pi*x)*pi-2*sin(pi*x)));
+source = @(x,t)(x-x);
+
+% % check about convergence
+% f0 = @(x)(sin(pi*x));
+% exactf = @(x,t)(exp(t)*sin(pi*x));
+% funcCoef = @(x)(x.*(1-x.^2));
+% source = @(x,t)(-exp(t).*(cos(pi*x)*pi.*x.^3+3*x.^2.*sin(pi*x)-x.*cos(pi*x)*pi-2*sin(pi*x)));
 
 format short e
 addpath(genpath(pwd))
 
 
-Lev = 2;
-Deg = 2;
+Lev = 4;
+Deg = 3;
 num_plot = 2;%Deg;
 EndTime = 0.5;
 

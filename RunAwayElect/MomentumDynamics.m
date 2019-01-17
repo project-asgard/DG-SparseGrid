@@ -16,8 +16,8 @@ format short e
 addpath(genpath(pwd))
 % clc
 
-PDE_FP2;
-% Test_Momentum;
+% PDE_FP2;
+Test_Momentum;
 
 
 Lev = 5;

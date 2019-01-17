@@ -18,7 +18,7 @@ addpath(genpath(pwd))
 PDE_FullPitchAngle;
 
 Lev = 4;
-Deg = 3;
+Deg = 2;
 num_plot = 3;
 
 LInt = -1;
@@ -55,19 +55,29 @@ rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
 DoFs = size(Mat,1);
 f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 
-dt = ((LEnd - LInt)/2^Lev)^Deg*0.01;
-MaxIter = ceil(0.005/dt);
+dt = ((LEnd - LInt)/2^Lev)^(Deg)*0.01;
+MaxIter = ceil(5/dt);
 for Iter = 1 : MaxIter
     
+%     time = dt*Iter;
+%     rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
+%     fn = f0 + dt * Mat*f0 + dt * rhs;
+%     f0 = fn;
+    
+    % 3rd-RK
     time = dt*Iter;
-    rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
-    fn = f0 + dt * Mat*f0 + dt * rhs;
+    rhs0 = ComputRHS(Lev,Deg,LInt,LEnd,source,time-dt);
+    rhs =  ComputRHS(Lev,Deg,LInt,LEnd,source,time);
+    rhs2 = ComputRHS(Lev,Deg,LInt,LEnd,source,time+dt);
+    f1 = f0 + dt*(  Mat*f0 +rhs0 );
+    f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+rhs);
+    fn = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+rhs2);
     f0 = fn;
     
     qn = Mat1*fn;
     
     plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',...
-        ...,x_node,Meval*qn,'g-o',...
+         ...x_node,Meval*qn,'g-o',...
         'LineWidth',2)
     title(num2str(time))
     pause(0.01)
