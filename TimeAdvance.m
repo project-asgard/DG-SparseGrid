@@ -1,4 +1,4 @@
-function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax)
+function f = TimeAdvance(A,f,t,dt,compression,deg,pde,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
@@ -6,15 +6,15 @@ function f = TimeAdvance(A,f,t,dt,compression,Deg,pde,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 
 if pde.implicit
-    f = backward_euler(pde,A,f,t,dt,compression,Deg,HASHInv,Vmax,Emax);
+    f = backward_euler(pde,A,f,t,dt,compression,deg,HASHInv,Vmax,Emax);
     %f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);
 else
-    f = RungeKutta3(pde,A,f,t,dt,compression,Deg,HASHInv,Vmax,Emax);
+    f = RungeKutta3(pde,A,f,t,dt,compression,deg,HASHInv,Vmax,Emax);
 end
 
 end
 
-function fval = RungeKutta3(pde,A,f,t,dt,compression,Deg,HASHInv,Vmax,Emax)
+function fval = RungeKutta3(pde,A,f,t,dt,compression,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % 3-rd Order Kutta Method
 %----------------------------------
@@ -31,24 +31,24 @@ b1 = 1/6;
 b2 = 2/3;
 b3 = 1/6;
 
-k_1 = ApplyA(pde,A,f,compression,Deg,Vmax,Emax)   + source1;
+k_1 = ApplyA(pde,A,f,compression,deg,Vmax,Emax)   + source1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(pde,A,y_1,compression,Deg,Vmax,Emax) + source2;
+k_2 = ApplyA(pde,A,y_1,compression,deg,Vmax,Emax) + source2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(pde,A,y_2,compression,Deg,Vmax,Emax) + source3;
+k_3 = ApplyA(pde,A,y_2,compression,deg,Vmax,Emax) + source3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
 end
 
-function f1 = backward_euler(pde,A,f0,t,dt,compression,Deg,HASHInv,Vmax,Emax)
+function f1 = backward_euler(pde,A,f0,t,dt,compression,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Backward Euler (First Order Implicit Time Advance)
 %----------------------------------
 
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(pde,A,f0,1,Deg);
+[~,AMat] = ApplyA(pde,A,f0,1,deg);
 
 I = eye(numel(diag(AMat)));
 AA = I - dt*AMat;
@@ -59,7 +59,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function f1 = crank_nicolson(pde,A,f0,t,dt,compression,Deg,HASHInv,Vmax,Emax)
+function f1 = crank_nicolson(pde,A,f0,t,dt,compression,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Crank Nicolson (Second Order Implicit Time Advance)
 %----------------------------------
@@ -67,7 +67,7 @@ function f1 = crank_nicolson(pde,A,f0,t,dt,compression,Deg,HASHInv,Vmax,Emax)
 s0 = source_vector(HASHInv,pde,t);
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(pde,A,f0,1,Deg);
+[~,AMat] = ApplyA(pde,A,f0,1,deg);
 
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
@@ -78,7 +78,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function [ftmp,A] = ApplyA(pde,A_Data,f,compression,Deg,Vmax,Emax)
+function [ftmp,A] = ApplyA(pde,A_Data,f,compression,deg,Vmax,Emax)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
@@ -89,6 +89,8 @@ use_kronmult2 = 1;
 
 nTerms = numel(pde.terms);
 nDims = numel(pde.dimensions);
+
+dimensions = pde.dimensions;
 
 Identity = speye(dof,dof);
 
@@ -266,12 +268,13 @@ elseif compression == 3
     
 elseif compression == 4
     
-    % Tensor product encoding over Deg (A_Data),
-    % i.e., tmpA and tmpB are Deg x Deg matricies
+    %%
+    % Tensor product encoding over DOF within an element, i.e., over "deg" (A_Data),
+    % i.e., tmpA and tmpB are deg_1 x deg_2 x deg_D matricies
     
     nWork = numel(A_Data.element_global_row_index);
     
-    workCnt = 1;
+%     workItem = 1;
     conCnt = 1;
     
     ftmpA = ftmp;
@@ -280,61 +283,109 @@ elseif compression == 4
         
         nConnected = A_Data.element_n_connected(workItem);
         
-        element_idx1D_1 = A_Data.element_local_1_index(workCnt);
-        element_idx1D_2 = A_Data.element_local_2_index(workCnt);
+        element_idx1D_1 = A_Data.element_local_1_index(workItem);
+        element_idx1D_2 = A_Data.element_local_2_index(workItem);
+        for d=1:nDims
+            element_idx1D_D{d} = A_Data.element_local_index_D{d}(workItem);
+        end
         
         % Expand out the local and global indicies for this compressed item
         
-        Index_I1 = zeros(Deg,1);
-        Index_I2 = zeros(Deg,1);
-        globalRow = zeros(Deg^2,1);
+        Index_I1 = zeros(deg,1);
+        Index_I2 = zeros(deg,1);
+%       globalRow = zeros(Deg^2,1);
+        globalRow = zeros(deg^nDims,1);
         degCnt1 = 1;
         degCnt2 = 1;
-        for k1 = 1:Deg
-            Index_I1(degCnt1) = (element_idx1D_1-1)*Deg+k1;
-            Index_I2(degCnt1) = (element_idx1D_2-1)*Deg+k1;
-            for k2 = 1:Deg
-                globalRow(degCnt2) = Deg^2*(workItem-1)+Deg*(k1-1)+k2;
+        for k1 = 1:deg
+            Index_I1(degCnt1) = (element_idx1D_1-1)*deg+k1;
+            Index_I2(degCnt1) = (element_idx1D_2-1)*deg+k1;
+            for k2 = 1:deg
+%               globalRow(degCnt2) = Deg^2*(workItem-1)+Deg*(k1-1)+k2;
+                globalRow(degCnt2) = deg^nDims*(workItem-1)+deg*(k1-1)+k2;
                 degCnt2 = degCnt2 + 1;
             end
             degCnt1 = degCnt1 + 1;
+        end
+        
+        elementDOF = deg^nDims;
+        
+        %%
+        % TODO : add dimension dependent deg, something like ...
+        % elementDOF = 1;
+        % for d=1:nDims
+        %     elementDOF = elementDOF * dimensions{d}.deg;
+        % end
+        
+        globalRowA = elementDOF*(workItem-1) + [1:elementDOF]';
+        if nDims==2
+            assert(norm(globalRowA - globalRow)==0);
+        end
+        globalRow = globalRowA;
+        
+        for d=1:nDims
+            myDeg = dimensions{d}.deg;
+            Index_I{d} = (element_idx1D_D{d}-1)*myDeg + [1:myDeg]';
+        end
+        if nDims==2
+            assert(norm(Index_I{1}-Index_I1)==0);
+            assert(norm(Index_I{2}-Index_I2)==0);
         end
         
         for j=1:nConnected
             
             connected_idx1D_1 = A_Data.connected_local_1_index(conCnt);
             connected_idx1D_2 = A_Data.connected_local_2_index(conCnt);
+            for d=1:nDims
+                connected_idx1D_D{d} = A_Data.connected_local_index_D{d}(conCnt);
+            end
+            
             connectedCol = A_Data.connected_global_col_index(conCnt);
             
             % Expand out the global col indicies for this compressed
             % connected item.
             
-            Index_J1 = zeros(Deg,1);
-            Index_J2 = zeros(Deg,1);
-            globalCol = zeros(Deg^2,1);
+            Index_J1 = zeros(deg,1);
+            Index_J2 = zeros(deg,1);
+            globalCol = zeros(deg^2,1);
             degCnt1 = 1;
             degCnt2 = 1;
-            for kk1 = 1:Deg
-                Index_J1(degCnt1) = (connected_idx1D_1-1)*Deg+kk1;
-                Index_J2(degCnt1) = (connected_idx1D_2-1)*Deg+kk1;
-                for kk2 = 1:Deg
-                    globalCol(degCnt2) = Deg^2*(connectedCol-1)+Deg*(kk1-1)+kk2;
+            for kk1 = 1:deg
+                Index_J1(degCnt1) = (connected_idx1D_1-1)*deg+kk1;
+                Index_J2(degCnt1) = (connected_idx1D_2-1)*deg+kk1;
+                for kk2 = 1:deg
+                    globalCol(degCnt2) = deg^2*(connectedCol-1)+deg*(kk1-1)+kk2;
                     degCnt2 = degCnt2 + 1;
                 end
                 degCnt1 = degCnt1 + 1;
             end
-           
-            nTerms = numel(pde.terms);
-            nDims = numel(pde.dimensions);
             
-            %%
-            % TODO : this needs to be generalized to dim.
+            % NOTE : if we go to p-adaptivity then we will need 
+            % a connected element DOF (connElementDOF) or the like.
             
-            Index_I{1} = Index_I1;
-            Index_I{2} = Index_I2;
+            globalColA = elementDOF*(connectedCol-1) + [1:elementDOF]';
+            if nDims==2
+                assert(norm(globalColA-globalCol)==0);
+            end
+            globalCol = globalColA;
             
-            Index_J{1} = Index_J1;
-            Index_J{2} = Index_J2;
+            for d=1:nDims
+                myDeg = dimensions{d}.deg;
+                Index_J{d} = (connected_idx1D_D{d}-1)*myDeg + [1:myDeg]';
+            end
+            if nDims==2
+                assert(norm(Index_J{1}-Index_J1)==0);
+                assert(norm(Index_J{2}-Index_J2)==0);
+            end
+            
+%             %%
+%             % TODO : this needs to be generalized to dim.
+%             
+%             Index_I{1} = Index_I1;
+%             Index_I{2} = Index_I2;
+%             
+%             Index_J{1} = Index_J1;
+%             Index_J{2} = Index_J2;
             
             %%
             % Apply operator matrices to present state using the pde spec
@@ -346,7 +397,7 @@ elseif compression == 4
                 %%
                 % Construct the list of matrices for the kron_mult for this
                 % operator (which has dimension many entries).
-                A = {}; 
+                clear A;
                 for d=1:nDims                    
                     idx_i = Index_I{d}; 
                     idx_j = Index_J{d};
@@ -431,7 +482,9 @@ elseif compression == 4
             
         end
         
-        workCnt = workCnt + 1;
+        assert(workItem==workItem);
+        
+%         workItem = workItem + 1;
         
     end
 end

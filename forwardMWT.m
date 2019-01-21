@@ -1,10 +1,10 @@
-function [f] = forwardMWT(Lev,Deg,Lmin,Lmax,foo,params)
+function [f] = forwardMWT(lev,deg,Lmin,Lmax,foo,params)
 
 %% Decompose a 1D function into the multiwavelet basis 
 
 % Get the Forward Multi-Wavelet Transform matrix
 
-FMWT = OperatorTwoScale(Deg,2^Lev);
+FMWT = OperatorTwoScale(deg,2^lev);
 
 % Get the Legendre-Gauss nodes (quad_x) and weights (quad_w) on the domain
 % [-1,+1] for performing quadrature.
@@ -12,18 +12,17 @@ FMWT = OperatorTwoScale(Deg,2^Lev);
 quad_num = 10;
 [quad_x,quad_w] = lgwt(quad_num,-1,1);
 
+% Get grid spacing.
+
+n=2^(lev);
+h=(Lmax-Lmin)/n;
+dof_1D=deg*n;
+f=zeros(dof_1D,1);
 
 % Get the Legendre basis function evaluated at the Legendre-Gauss nodes up
 % to order k.
 
-p_val = transpose(legendre(quad_x,Deg));
-
-% Get grid spacing.
-
-n=2^(Lev);
-h=(Lmax-Lmin)/n;
-dof_1D=Deg*n;
-f=zeros(dof_1D,1);
+p_val = transpose( legendre(quad_x,deg) * 1/sqrt(h) ); % TODO : this call happens in lots of places. We should consolidate if possible.
 
 for i=0:n-1
     
@@ -46,11 +45,11 @@ for i=0:n-1
     %end
     
     % Method 2: Do the GEMM directly 
-    f(i*Deg+1:i*Deg+Deg) = mtimes(p_val,this_quad); 
+    f(i*deg+1:i*deg+deg) = mtimes(p_val,this_quad); 
         
 end
 
-f = f * h * sqrt(1/h)/2;
+f = f * h / 2;
 
 % Transfer to multi-DG bases
 
@@ -60,7 +59,7 @@ f = mtimes( FMWT, f );
 % After the transformation to wavelet space there may be very tiny coefficient values.
 % Here we zero them out.
 
-tol = 1e-8;
+tol = 1e-12;
 
 f = f .* (abs(f) > tol );
 

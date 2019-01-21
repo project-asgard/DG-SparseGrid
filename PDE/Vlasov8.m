@@ -132,6 +132,7 @@ pde.analytic_solution = @ExactF;
 
 %% Other workflow options that should perhpas not be in the PDE?
 
+pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
 pde.Ex = @Ex; % These can actually get absorbed into the G functions above.
 pde.Et = @Et; % but I've not done it yet. 
 pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
@@ -229,4 +230,17 @@ f = sin(pi*v/5);
 end
 function f=ExactF(x,v,t)
 f = ExactFx(x).*ExactFv(v).*ExactFt(t);
+end
+
+%%
+% Function to set time step
+function dt=set_dt(pde)
+
+Vmax = pde.dimensions{1}.domainMax;
+Lmax = pde.dimensions{2}.domainMax;
+LevX = pde.dimensions{2}.lev;
+CFL = pde.CFL;
+Deg = pde.dimensions{1}.deg;
+
+dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
 end
