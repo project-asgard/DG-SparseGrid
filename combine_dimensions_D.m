@@ -19,16 +19,22 @@ for i=1:nHash
     %%
     % Kron product approach
     
-    A = 1;
+%     A = 1;
+    clear kronMatList;
     for d=1:nDims
         ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
         index_D = [(ID-1)*Deg+1 : ID*Deg];
         f = fD{d};
-        ftmp = f(index_D);
-        A = kron(A,ftmp);
+        kronMatList{d} = f(index_D);
+%         A = kron(A,ftmp);
+%         kronMatList{d} = ftmp;
     end
     
     B = ft;
+    
+    A = krond(nDims,kronMatList);
+%     tol = 1e-15;
+%     assert(norm(AA-A)<tol);
     
     tmp = A * B;
     

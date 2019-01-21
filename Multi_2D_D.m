@@ -1,7 +1,7 @@
 function [f_rSpace]=Multi_2D_D(Meval_D,f_wSpace,HASHInv,pde)
 
 %%
-% Apply dimension many inverse wavelet transforms to the solutionn vector
+% Apply dimension many inverse wavelet transforms to the solution vector
 % f_wSpace -> f_rSpace (wavelet space -> real space)
 % via Kron(tmp1,tmp2,...,tmpD)*f
 % Note: the output grid of this transform is specified in matrix_plot_D.m
@@ -19,8 +19,8 @@ lev = dimensions{1}.lev; % TODO : generalize to lev_D
 
 if nDims>1
     for d=2:nDims
-        assert(dimensions{d}.lev==dimensions{d}.lev);
-        assert(dimensions{d}.deg==dimensions{d}.deg);
+        assert(dimensions{d}.lev==lev);
+        assert(dimensions{d}.deg==deg);
     end
 end
 
@@ -104,7 +104,20 @@ for i=1:nHash
     element_ii = deg^nDims*(i-1)+1:deg^nDims*i;
     
     X = f_wSpace(element_ii);
+    
     Y = kron_multd(nDims,kronMatList,X);
+    
+    %%
+    % Test the kron_multd
+    
+    AA = 1;
+    for d=1:nDims
+        AA = kron(AA,kronMatList{d});  
+    end
+    YA = AA * X;
+    
+    tol=1e-15;
+    assert(norm(YA-Y)<tol);
     
     tol = 1e-15;
     if nDims==2

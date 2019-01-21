@@ -20,12 +20,12 @@ value = 1;
 
 for d=1:nDims
     foo = a{d}; % Function handle
-    value = value * foo(x{d});
+    value = value .* foo(x{d});
 end
 
 %%
 % Apply time variation
 foo = a{nDims+1};
-value = value * foo(t);
+value = value .* foo(t);
 
 end

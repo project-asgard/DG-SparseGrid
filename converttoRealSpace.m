@@ -15,6 +15,9 @@ end
 
 Lev = Lev_viz;
 
+idebug = 1;
+use_find = 1;
+
 if (idebug >= 1),
     disp(sprintf('Lev_solution=%d, Lev_viz=%d', ...
 		  Lev_solution, Lev_viz));
@@ -45,9 +48,18 @@ for idim=1:Dim,
    fxv_loc{idim} = EvalWavPoint4(Lmin(idim),Lmax(idim),Lev,Deg,xv{idim});
 end;
 
+%%
+% Plot basis functions in 1D
 
-
-
+% figure(11);
+% bFns1D = fxv_loc{1};
+% [nB,nP] = size(bFns1D);
+% iii=1;
+% for l=1:numel(bFns1D(:,1))
+%     ax=subplot(nB,1,iii);
+%     plot(bFns1D(iii,:));
+%     iii=iii+1;
+% end
 
 steps = 1:nT;
 
@@ -86,18 +98,25 @@ nsteps = numel(steps);
         for k=1:Dim,
             index_Ik{k} = LevCell2index( levels(k), icells(k));
         end;
+        
+        %% 
+        % Check LevCell2index output against approach in other chunks of code. 
+        
+        nDims = Dim;
+        for d=1:nDims
+            this_idx1D = ll(nDims*2+d);          
+            assert(this_idx1D==index_Ik{k});
+        end
 
         Index = (i-1)*(Deg^Dim) + (1:(Deg^Dim));
-
-
-        
+       
         % --------------------------------------------------
         % Note K1 and K2 should have contiguous index values
         % --------------------------------------------------
         sizes = zeros(1,Dim);
         for k=1:Dim,
           if (use_find),
-            Kindex{k} = find( sum(fxv_loc{k}(index_Ik(k),:) ~= 0,1));
+            Kindex{k} = find( sum(fxv_loc{k}(index_Ik{k},:) ~= 0,1));
             K_start = min(Kindex{k});
             K_end = max(Kindex{k});
           else
@@ -137,7 +156,7 @@ nsteps = numel(steps);
         
         Ymat = kron_multd(nkron,Acell,Xmat);
         
-        f_nd_t(Jindex 1:nsteps) = f_nd_t(Jindex, 1:nsteps) + ...
+        f_nd_t(Jindex, 1:nsteps) = f_nd_t(Jindex, 1:nsteps) + ...
             reshape( Ymat, [numel(Jindex), nsteps]);
         
     end;

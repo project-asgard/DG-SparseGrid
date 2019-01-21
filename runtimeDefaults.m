@@ -15,9 +15,9 @@ end
 
 %%
 % Number of levels
-if exist('Lev','var')
+if exist('lev','var')
     for d=1:nDims
-        pde.dimensions{d}.lev = Lev;
+        pde.dimensions{d}.lev = lev;
     end
 end
 

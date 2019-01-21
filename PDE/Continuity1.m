@@ -1,4 +1,4 @@
-function pde = Continuity1
+function pde = continuity1
 % 1D test case using continuity equation, i.e., 
 % df/dt + df/dx = 0
 
