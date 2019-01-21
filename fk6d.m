@@ -116,6 +116,34 @@ if nDims==2
     assert(norm(nodes{2}-x_node)<tol);
 end
 
+%%
+% Construct a n-D coordinate array
+% TODO : generalize to dimension better.
+if nDims==1
+    xx1 = nodes{1};
+    coord = {xx1};
+end
+if nDims==2
+    [xx1,xx2] = meshgrid(nodes{1},nodes{2});
+    coord = {xx1,xx2};
+end
+if nDims==3
+    [xx1,xx2,xx3] = meshgrid(nodes{1},nodes{2},nodes{3});
+    coord = {xx1(:),xx2(:),xx3(:)};
+end
+if nDims>3
+    disp('NOTE : no meshgrid for > 3D');
+end
+
+%%
+% Try transforming a known 3D function to wavelet space and then back again. 
+
+% fa = getAnalyticSolution_D(coord,5*dt,pde);
+% fa_wSpace = exact_solution_vector(HASHInv,pde,5*dt);
+% fa_rSpace = reshape(Multi_2D_D(Meval,fa_wSpace,HASHInv,pde),size(fa));
+% norm(fa-fa_rSpace)/norm(fa)
+
+
 %% Plot initial condition
 if nDims==2
 if ~quiet
@@ -316,21 +344,6 @@ for L = 1:nsteps,
         %%
         % Check the realspace solution
         
-        if nDims==1
-            xx1 = nodes{1};
-            coord = {xx1};
-        end
-        if nDims==2
-            [xx1,xx2] = meshgrid(nodes{1},nodes{2});
-            coord = {xx1,xx2};
-        end
-        if nDims==3
-            [xx1,xx2,xx3] = meshgrid(nodes{1},nodes{2},nodes{3});
-            coord = {xx1(:),xx2(:),xx3(:)};
-        end
-        if nDims>3
-            disp('NOTE : no meshgrid for > 3D');
-        end
         fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
         
 %         if nDims==2
