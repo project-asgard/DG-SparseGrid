@@ -119,30 +119,47 @@ end
 %%
 % Construct a n-D coordinate array
 % TODO : generalize to dimension better.
-if nDims==1
-    xx1 = nodes{1};
+
+if nDims ==1 
+    [xx1] = ndgrid(nodes{1});
     coord = {xx1};
 end
 if nDims==2
-    [xx1,xx2] = meshgrid(nodes{1},nodes{2});
-    coord = {xx1,xx2};
+    [xx1,xx2] = ndgrid(nodes{2},nodes{1});
+    coord = {xx2,xx1};
 end
 if nDims==3
-    [xx1,xx2,xx3] = meshgrid(nodes{1},nodes{2},nodes{3});
-    coord = {xx1(:),xx2(:),xx3(:)};
-end
-if nDims>3
-    disp('NOTE : no meshgrid for > 3D');
+    [xx1,xx2,xx3] = ndgrid(nodes{3},nodes{2},nodes{1});
+    coord = {xx3,xx2,xx1};
 end
 
-%%
-% Try transforming a known 3D function to wavelet space and then back again. 
-
+% %%
+% % Try transforming a known 3D function to wavelet space and then back again. 
+% 
 % fa = getAnalyticSolution_D(coord,5*dt,pde);
 % fa_wSpace = exact_solution_vector(HASHInv,pde,5*dt);
 % fa_rSpace = reshape(Multi_2D_D(Meval,fa_wSpace,HASHInv,pde),size(fa));
-% norm(fa-fa_rSpace)/norm(fa)
-
+% 
+% norm(fa(:)-fa_rSpace(:))/norm(fa(:))*100
+% 
+% sy=5;sz=10;
+% figure
+% hold on
+% plot(fa(:,sy,sz));
+% plot(fa_rSpace(:,sy,sz));
+% 
+% figure
+% subplot(2,2,1)
+% contour(fa_rSpace(:,:,sz));
+% hold on
+% subplot(2,2,2)
+% contour(fa(:,:,sz));
+% subplot(2,2,3)
+% fa2=permute(fa,[3,1,2]);
+% contour(fa2(:,:,sz));
+% subplot(2,2,4)
+% fa2=permute(fa,[3,2,1]);
+% contour(fa2(:,:,sz));
 
 %% Plot initial condition
 if nDims==2
@@ -423,6 +440,10 @@ for L = 1:nsteps,
             
             dofD = dof1*dof2;
             assert(dofD==numel(fval_realspace));
+
+            
+            %%
+            % Plot 2D
             
             f2d = reshape(fval_realspace,dof1,dof2);
             f2d_analytic = reshape(fval_realspace_analytic,dof1,dof2);
@@ -430,6 +451,32 @@ for L = 1:nsteps,
             x = nodes{1};
             y = nodes{2};
             
+                        
+            %%
+            % Plot a 1D line through the solution
+                        
+            sy = 9;
+            
+            f1d = f2d(:,sy);
+            x = nodes{1};
+            y = nodes{2};
+            ax1 = subplot(2,1,1);
+            plot(x,f1d,'-o');
+           
+            %%
+            % Overplot analytic solution
+            
+            if pde.checkAnalytic
+                f1d_analytic = f2d_analytic(:,sy);
+                hold on;
+                plot(x,f1d_analytic,'-');
+                hold off;
+            end
+            
+            %%
+            % Plot 2D
+            
+            figure()
             ax1 = subplot(2,1,1);
             contourf(x,y,f2d);  
             

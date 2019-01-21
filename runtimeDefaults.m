@@ -24,10 +24,10 @@ end
 %%
 % Polynomial degree
 % Deg = 2 Means Linear Element
-if exist('Deg','var')
+if exist('deg','var')
 
     for d=1:nDims
-        pde.dimensions{d}.deg = Deg;
+        pde.dimensions{d}.deg = deg;
     end
 end
 

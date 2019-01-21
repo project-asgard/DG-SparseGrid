@@ -59,7 +59,7 @@ f = mtimes( FMWT, f );
 % After the transformation to wavelet space there may be very tiny coefficient values.
 % Here we zero them out.
 
-tol = 1e-8;
+tol = 1e-12;
 
 f = f .* (abs(f) > tol );
 

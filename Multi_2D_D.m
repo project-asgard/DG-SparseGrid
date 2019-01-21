@@ -116,7 +116,7 @@ for i=1:nHash
     end
     YA = AA * X;
     
-    tol=1e-15;
+    tol=1e-12;
     assert(norm(YA-Y)<tol);
     
     tol = 1e-15;
