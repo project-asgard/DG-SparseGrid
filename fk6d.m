@@ -290,13 +290,16 @@ for L = 1:nsteps,
     %%
     % Try with function convertToRealSpace
     
-    LminB = zeros(1,nDims);
-    LmaxB = zeros(1,nDims);
-    for d=1:nDims
-        LminB(d) = pde.dimensions{d}.domainMin;
-        LmaxB(d) = pde.dimensions{d}.domainMax;
+    tryConvertToRealSpace = 0;
+    if tryConvertToRealSpace
+        LminB = zeros(1,nDims);
+        LmaxB = zeros(1,nDims);
+        for d=1:nDims
+            LminB(d) = pde.dimensions{d}.domainMin;
+            LmaxB(d) = pde.dimensions{d}.domainMax;
+        end
+        fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
     end
-    fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
     
     %%
     % Check against known solution
@@ -314,7 +317,8 @@ for L = 1:nsteps,
         % Check the realspace solution
         
         if nDims==1
-            coord = nodes{1};
+            xx1 = nodes{1};
+            coord = {xx1};
         end
         if nDims==2
             [xx1,xx2] = meshgrid(nodes{1},nodes{2});
