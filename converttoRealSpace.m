@@ -19,12 +19,22 @@ idebug = 1;
 use_find = 1;
 
 if (idebug >= 1),
-    disp(sprintf('Lev_solution=%d, Lev_viz=%d', ...
+    disp(sprintf('converttoRealSpace:Lev_solution=%d, Lev_viz=%d', ...
 		  Lev_solution, Lev_viz));
 end;
 
 
 [nW,nT] = size(fval_t);
+if (idebug >= 1),
+   disp(sprintf('converttoRealSpace:nW=%d,nT=%d,size(fval_t)', ...
+                                    nW,   nT));
+   size(fval_t)
+
+   for k=1:numel(Lmin),
+           disp(sprintf('Lmin(%d)=%g,Lmax(%d)=%g', ...
+                              k,Lmin(k),   k,Lmax(k) ));
+   end;
+end;
 
 LevX = Lev;
 LevV = Lev;
@@ -34,6 +44,9 @@ LevV = Lev;
 if (idebug >= 1),
     disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
         numel(HASH),    numel(HASHInv) ));
+    disp(sprintf('Dim=%g,gridType=%s,Lev_solution', ...
+                  Dim,   gridType));
+    Lev_solution
 end;
 
 n = 2^Lev*(Deg-1);
@@ -66,6 +79,9 @@ steps = 1:nT;
 
 nS = numel(steps);
 nsteps = numel(steps);
+if (idebug >= 1),
+     disp(sprintf('nS=%d,nsteps=%d', nS,nsteps));
+end;
 
 %n_t = zeros(nX,nS);
 
@@ -94,6 +110,8 @@ nsteps = numel(steps);
         ll = HASHInv{i};
         levels = ll(1:Dim);
         icells = ll( Dim + (1:Dim) );
+        
+           
 
         for k=1:Dim,
             index_Ik{k} = LevCell2index( levels(k), icells(k));
@@ -130,6 +148,10 @@ nsteps = numel(steps);
         sizes = n * ones(1,Dim);
         Jindex = index_nd( Dim, Kstart,Kend, sizes );
         Jindex = reshape( Jindex, numel(Jindex),1);
+        if (idebug >= 1),
+                disp(sprintf('converttoRealSpace:numel(Jindex)=%g', ...
+                                                 numel(Jindex)));
+        end;
 
         
         % --------------------------------------------
@@ -144,8 +166,19 @@ nsteps = numel(steps);
         for k=1:Dim,
            kk = Dim-k+1;
            Acell{kk} = transpose( full( fxv_loc{k}(index_Ik{k},Kindex{k}) ) );
+           if (idebug >= 1),
+              disp(sprintf('index_Ik{%d}',k));
+              index_Ik{k}
+              disp(sprintf('Kindex{%d}=%d:%d',...
+                   k,min(Kindex{k}), max(Kindex{k})));
+           end;
         end;
         Xmat = fval_t(  Index, 1:nsteps);
+
+        if (idebug >= 1),
+                disp(sprintf('converttoRealSpace:size(Xmat) '));
+                size(Xmat)
+        end;
         
         % -----------------------------------------------
         % Ymat = Bmat * Xmat * transpose(Amat)
@@ -155,6 +188,19 @@ nsteps = numel(steps);
         % -----------------------------------------------
         
         Ymat = kron_multd(nkron,Acell,Xmat);
+        if (idebug >= 1),
+          disp(sprintf('nkron=%d',nkron));
+          for k=1:nkron,
+             disp(sprintf('k=%d,size(Acell{k})=(%d,%d)', ...
+                   k,        size(Acell{k},1), size(Acell{k},2)));
+          end;
+        disp(sprintf('after kron_multd,nsteps=%d',...
+                      nsteps));
+        disp(sprintf('size(Ymat)'));
+        size(Ymat)
+        disp(sprintf('size(f_nd_t)'));
+        size(f_nd_t)
+        end;
         
         f_nd_t(Jindex, 1:nsteps) = f_nd_t(Jindex, 1:nsteps) + ...
             reshape( Ymat, [numel(Jindex), nsteps]);
