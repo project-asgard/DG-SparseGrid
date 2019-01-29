@@ -1,6 +1,6 @@
-function [f2d_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval_t,Lev_viz)
+function [f_nd_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval_t,Lev_viz)
 %
-% [f2d_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval,Lev_viz)
+% [f_nd_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval,Lev_viz)
 % convert from wavelet coefficient to real space  on grid at level Lev_viz
 % Note grid at level Lev_viz may be finer than solution grid at level Lev_solution
 % -----------------------------------------------------------------------
@@ -15,12 +15,12 @@ end
 
 Lev = Lev_viz;
 
-idebug = 1;
+idebug = 0;
 use_find = 1;
 
 if (idebug >= 1),
-    disp(sprintf('converttoRealSpace:Lev_solution=%d, Lev_viz=%d', ...
-		  Lev_solution, Lev_viz));
+    disp(sprintf('converttoRealSpace:Dim=%d,Deg=%d,Lev_solution=%d, Lev_viz=%d', ...
+		  Dim,Deg,   Lev_solution, Lev_viz));
 end;
 
 
@@ -59,6 +59,13 @@ for idim=1:Dim,
 % ----------------------------------------------
    xv{idim} = linspace(Lmin(idim),Lmax(idim),n );
    fxv_loc{idim} = EvalWavPoint4(Lmin(idim),Lmax(idim),Lev,Deg,xv{idim});
+end;
+
+if (idebug >= 1),
+    for idim=1:Dim,
+       disp(sprintf('idim=%d,size(fxv_loc{idim})=(%d,%d)', ...
+                     idim,   size(fxv_loc{idim},1), size(fxv_loc{idim},2) ));
+    end;
 end;
 
 %%
@@ -115,6 +122,7 @@ end;
 
         for k=1:Dim,
             index_Ik{k} = LevCell2index( levels(k), icells(k));
+            index_IkDeg{k} = (index_Ik{k}-1)*Deg + (1:Deg);
         end;
         
         %% 
@@ -123,7 +131,11 @@ end;
         nDims = Dim;
         for d=1:nDims
             this_idx1D = ll(nDims*2+d);          
-            assert(this_idx1D==index_Ik{k});
+            if (this_idx1D ~= index_Ik{d}),
+              disp(sprintf('d=%d,this_idx1d=%d,index_Ik{d}', ...
+                            d,   this_idx1d,   index_Ik{d}));
+            end;
+            assert(this_idx1D==index_Ik{d});
         end
 
         Index = (i-1)*(Deg^Dim) + (1:(Deg^Dim));
@@ -165,7 +177,7 @@ end;
         nkron = Dim;
         for k=1:Dim,
            kk = Dim-k+1;
-           Acell{kk} = transpose( full( fxv_loc{k}(index_Ik{k},Kindex{k}) ) );
+           Acell{kk} = transpose( full( fxv_loc{k}(index_IkDeg{k},Kindex{k}) ) );
            if (idebug >= 1),
               disp(sprintf('index_Ik{%d}',k));
               index_Ik{k}
