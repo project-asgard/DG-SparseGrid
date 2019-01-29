@@ -16,7 +16,7 @@ end
 Lev = Lev_viz;
 
 idebug = 0;
-use_find = 1;
+use_find = 0;
 
 if (idebug >= 1),
     disp(sprintf('converttoRealSpace:Dim=%d,Deg=%d,Lev_solution=%d, Lev_viz=%d', ...
