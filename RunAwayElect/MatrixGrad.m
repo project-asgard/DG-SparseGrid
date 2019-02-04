@@ -3,11 +3,16 @@ function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2,bcL,bcR)
 % d/dx[FunCoef*f]
 % Trace = FunCoef*f|_R - FunCoef*f|_L+
 % Volum = - (FunCoef*f,d/dx v)
+% Flux = {f}+FluxVal*abs(FunCoef)*[f]/2
 % FluxVal ::
 % FluxVal = 0 --> Central Flux
 % FluxVal = 1 --> Upwind Flux
-% FluxVal = 1;
-% To Do: B.C.
+%
+% FunCoef
+% FunCoef2
+%
+% bcL and bcR ::
+% bc = 0 --> Dirichlet; bc = 1 --> Neumann
 %-----------------------------------------------------
 if ~exist('FluxVal','var') || isempty(FluxVal)
     FluxVal = 0;
@@ -91,6 +96,7 @@ for WorkCel = 0 : Tol_Cel_Num - 1
             ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
             ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
             ];
+
     end
     if bcR == 0 && WorkCel == Tol_Cel_Num - 1
         TraVal = [...
