@@ -13,7 +13,7 @@ if ~exist('FluxVal','var') || isempty(FluxVal)
     FluxVal = 1;
 end
 
-Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,   @(x)0,f_bcL,f_bcR);% equation for q
+Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,  @(x)0,f_bcL,f_bcR);% equation for q
 
 Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,FunCoef,@(x)0,q_bcL,q_bcR); % equation for f
 Mat = Mat2*Mat1;
