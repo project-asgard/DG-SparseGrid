@@ -3,6 +3,8 @@ function pde = continuity3
 % df/dt + v.grad(f)==0 where v={1,1,1}
 
 %% Setup the dimensions
+isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
 %
 % Here we setup a 3D problem (x,y,z)
 
@@ -139,41 +141,80 @@ params.parameter2 = 1;
 pde.params = params;
 
 %% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1 (which here is 2+1 / (x,v) + time) functions describing the
+% Each source term must have nDims + 1 (which here is 2+1 / (x,v) + time) functions describing the 
 % variation of each source term with each dimension and time.
 % Here we define 3 source terms.
 
 %%
 % Source term 1
+if (isOctave),
+    source1 = { ...
+               @(x,p) cos(pi*x),     ... % s1x
+               @(y,p) sin(2*pi*y),   ... % s1y
+               @(z,p) cos(2*pi*z/3), ... % s1z
+               @(t)   2*cos(2*t)     ... % s1t
+               };
+else
     function f = s1t(t);   f = 2*cos(2*t);    end
     function f = s1x(x,p); f = cos(pi*x);     end
     function f = s1y(y,p); f = sin(2*pi*y);   end
     function f = s1z(z,p); f = cos(2*pi*z/3); end
 source1 = {@s1x,@s1y,@s1z,@s1t};
+end;
+
+
 
 %%
 % Source term 2
+if (isOctave),
+        source2 = { ...
+                   @(x,p) cos(pi*x),     ... % s2x
+                   @(y,p) cos(2*pi*y),   ... % s2y
+                   @(z,p) cos(2*pi*z/3), ... % s2z
+                   @(t)   2*pi*sin(2*t)  ... % s2t
+                   };
+else
     function f = s2t(t);   f = 2*pi*sin(2*t); end
     function f = s2x(x,p); f = cos(pi*x);     end
     function f = s2y(y,p); f = cos(2*pi*y);   end
     function f = s2z(z,p); f = cos(2*pi*z/3); end
 source2 = {@s2x,@s2y,@s2z,@s2t};
+end;
 
 %%
 % Source term 3
+if (isOctave),
+        source3 = { ...
+                  @(x,p) sin(pi*x),     ... % s3x
+                  @(y,p) sin(2*pi*y),   ... % s3y
+                  @(z,p) cos(2*pi*z/3), ... % s3z
+                  @(t)   -pi*sin(2*t)   ... % s3t
+                  };
+else
     function f = s3t(t);   f = -pi*sin(2*t);  end
     function f = s3x(x,p); f = sin(pi*x);     end
     function f = s3y(y,p); f = sin(2*pi*y);   end
     function f = s3z(z,p); f = cos(2*pi*z/3); end
 source3 = {@s3x,@s3y,@s3z,@s3t};
+end;
+
 
 %%
 % Source term 4
+if (isOctave),
+        source4 = { ...
+                  @(x,p) cos(pi*x),       ... % s4x
+                  @(y,p) sin(2*pi*y),     ... % s4y
+                  @(z,p) sin(2*pi*z/3),   ... % s4z
+                  @(t)   -2/3*pi*sin(2*t) ... % s4t
+                  };
+else
     function f = s4t(t);   f = -2/3*pi*sin(2*t); end
     function f = s4x(x,p); f = cos(pi*x);      end
     function f = s4y(y,p); f = sin(2*pi*y);    end
     function f = s4z(z,p); f = sin(2*pi*z/3);  end
 source4 = {@s4x,@s4y,@s4z,@s4t};
+end;
 
 %%
 % Add sources to the pde data structure
@@ -182,12 +223,21 @@ pde.sources = {source1,source2,source3,source4};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
+if (isOctave),
+pde.analytic_solutions_1D = { ...
+               @(x,p) cos(pi*x),     ... % a_x
+               @(y,p) sin(2*pi*y),   ... % a_y
+               @(z,p) cos(2*pi*z/3), ... % a_z
+               @(t)   sin(2*t)       ... % a_t
+               };
+else
 function f = a_t(t);   f = sin(2*t);      end
 function f = a_x(x,p); f = cos(pi*x);     end
 function f = a_y(y,p); f = sin(2*pi*y);   end
 function f = a_z(z,p); f = cos(2*pi*z/3); end
 
 pde.analytic_solutions_1D = {@a_x,@a_y,@a_z,@a_t};
+end;
 
 %% Other workflow options that should perhpas not be in the PDE?
 

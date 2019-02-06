@@ -335,7 +335,7 @@ for L = 1:nsteps,
     %%
     % Try with function convertToRealSpace
     
-    tryConvertToRealSpace = 0;
+    tryConvertToRealSpace = 1;
     if tryConvertToRealSpace
         LminB = zeros(1,nDims);
         LmaxB = zeros(1,nDims);

@@ -5,6 +5,8 @@ function pde = continuity2
 %% Setup the dimensions
 %
 % Here we setup a 2D problem (x,y)
+isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
 
 dim_x.name = 'x';
 dim_x.BCL = 0; % periodic
@@ -95,24 +97,51 @@ pde.params = params;
 
 %%
 % Source term 1
+if (isOctave),
+    source1 = { ...
+               @(x,p) cos(pi*x),   ...   % s1x
+               @(y,p) sin(2*pi*y), ...   % s1y
+               @(t)   2*cos(2*t)   ...   % s1t
+               };
+else
     function f = s1t(t);   f = 2*cos(2*t);    end
     function f = s1x(x,p); f = cos(pi*x);     end
     function f = s1y(y,p); f = sin(2*pi*y);   end
-source1 = {@s1x,@s1y,@s1t};
+    source1 = {@s1x,@s1y,@s1t};
+end;
 
 %%
 % Source term 2
+if (isOctave),
+    source2 = { ...
+                @(x,p)  cos(pi*x),    ...   % s2x
+                @(y,p)  cos(2*pi*y),  ...   % s2y
+                @(t)    2*pi*sin(2*t) ...   % s2t
+                };
+else
     function f = s2t(t);   f = 2*pi*sin(2*t); end
     function f = s2x(x,p); f = cos(pi*x);     end
     function f = s2y(y,p); f = cos(2*pi*y);   end
 source2 = {@s2x,@s2y,@s2t};
+end;
+
+
+
 
 %%
 % Source term 3
+if (isOctave),
+    source3 = { ...
+                @(x,p)  sin(pi*x),   ...  % s3x
+                @(y,p)  sin(2*pi*y), ...  % s3y
+                @(t)    -pi*sin(2*t) ...  % s3t
+                };
+else
     function f = s3t(t);   f = -pi*sin(2*t);  end
     function f = s3x(x,p); f = sin(pi*x);     end
     function f = s3y(y,p); f = sin(2*pi*y);   end
 source3 = {@s3x,@s3y,@s3t};
+end;
 
 %%
 % Add sources to the pde data structure
@@ -121,11 +150,21 @@ pde.sources = {source1,source2,source3};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
+if (isOctave),
+    pde.analytic_solutions_1D = { ...
+               @(x,p)  cos(pi*x),   ... % a_x
+               @(y,p)  sin(2*pi*y), ... % a_y
+               @(t)    sin(2*t)     ... % a_t
+               };
+else
 function f = a_t(t);   f = sin(2*t);      end
 function f = a_x(x,p); f = cos(pi*x);     end
 function f = a_y(y,p); f = sin(2*pi*y);   end
 
 pde.analytic_solutions_1D = {@a_x,@a_y,@a_t};
+end;
+
+
 
 %% Other workflow options that should perhpas not be in the PDE?
 
