@@ -49,11 +49,10 @@ nHash = numel(HASHInv);
 
 %% Construct the connectivity.
 if ~quiet; disp('Constructing connectivity table'); end
-Con2D = ConnectnD(nDims,HASH,HASHInv,lev,lev);
+connectivity = ConnectnD(nDims,HASH,HASHInv,lev,lev);
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
-% fval = initial_condition_vector(fx,fv,HASHInv,pde);
 fval = initial_condition_vector(HASHInv,pde,0);
 
 %% Construct the time-independent coefficient matrices
@@ -79,7 +78,7 @@ if compression == 3
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
-    A_data = GlobalMatrixSG_SlowVersion(pde,HASHInv,Con2D,deg,compression);
+    A_data = GlobalMatrixSG_SlowVersion(pde,HASHInv,connectivity,deg,compression);
 end
 
 %% Construct Poisson matrix
@@ -288,11 +287,6 @@ for L = 1:nsteps,
             A_data.vMassV    = pde.terms{1}{1}.coeff_mat;
             A_data.EMassX    = pde.terms{2}{2}.coeff_mat;
             A_data.GradV     = pde.terms{2}{1}.coeff_mat;
-                   
-            %         A_data.vMassV    = vMassV;
-            %         A_data.GradX     = GradX;
-            %         A_data.GradV     = GradV;
-            %         A_data.EMassX    = EMassX;
             
             A_data.FluxX = FluxX;
             A_data.FluxV = FluxV;
@@ -411,22 +405,8 @@ for L = 1:nsteps,
         end
         
         if nDims==2
-            
-            f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
-            
-            ax1 = subplot(2,2,1);
-            mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
-            axis([Lmin Lmax Vmin Vmax])
-            title('df');
-            
-            ax2 = subplot(2,2,2);
-            mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
-            axis([Lmin Lmax Vmin Vmax])
-            title('f');
-            
-            title(['f @ ', timeStr])
-            
-            figure(1001)
+                        
+            figure(1000)
                         
             dimensions = pde.dimensions;
             
@@ -440,17 +420,12 @@ for L = 1:nsteps,
             
             dofD = dof1*dof2;
             assert(dofD==numel(fval_realspace));
-
-            
-            %%
-            % Plot 2D
             
             f2d = reshape(fval_realspace,dof1,dof2);
             f2d_analytic = reshape(fval_realspace_analytic,dof1,dof2);
             
             x = nodes{1};
-            y = nodes{2};
-            
+            y = nodes{2};          
                         
             %%
             % Plot a 1D line through the solution
@@ -460,8 +435,9 @@ for L = 1:nsteps,
             f1d = f2d(:,sy);
             x = nodes{1};
             y = nodes{2};
-            ax1 = subplot(2,1,1);
+            ax1 = subplot(3,1,1);
             plot(x,f1d,'-o');
+            title('1D slice through 2D solution');
            
             %%
             % Overplot analytic solution
@@ -476,13 +452,14 @@ for L = 1:nsteps,
             %%
             % Plot 2D
             
-            figure()
-            ax1 = subplot(2,1,1);
-            contourf(x,y,f2d);  
+            ax1 = subplot(3,1,2);
+            contourf(x,y,f2d);
+            title('numeric 2D solution');
             
             if pde.checkAnalytic
-                ax2 = subplot(2,1,2);
+                ax2 = subplot(3,1,3);
                 contourf(x,y,squeeze(f2d_analytic));
+                title('analytic 2D solution');
             end
             
             pause (0.01)

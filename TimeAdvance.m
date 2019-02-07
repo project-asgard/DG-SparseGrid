@@ -274,39 +274,25 @@ elseif compression == 4
     
     nWork = numel(A_Data.element_global_row_index);
     
-%     workItem = 1;
     conCnt = 1;
     
     ftmpA = ftmp;
+    
+    useConnectivity = 0;
    
     for workItem=1:nWork
         
-        nConnected = A_Data.element_n_connected(workItem);
+        if useConnectivity
+            nConnected = A_Data.element_n_connected(workItem);
+        else
+            nConnected = nWork; % Simply assume all are connected.
+        end
         
-        element_idx1D_1 = A_Data.element_local_1_index(workItem);
-        element_idx1D_2 = A_Data.element_local_2_index(workItem);
         for d=1:nDims
             element_idx1D_D{d} = A_Data.element_local_index_D{d}(workItem);
         end
         
         % Expand out the local and global indicies for this compressed item
-        
-        Index_I1 = zeros(deg,1);
-        Index_I2 = zeros(deg,1);
-%       globalRow = zeros(Deg^2,1);
-        globalRow = zeros(deg^nDims,1);
-        degCnt1 = 1;
-        degCnt2 = 1;
-        for k1 = 1:deg
-            Index_I1(degCnt1) = (element_idx1D_1-1)*deg+k1;
-            Index_I2(degCnt1) = (element_idx1D_2-1)*deg+k1;
-            for k2 = 1:deg
-%               globalRow(degCnt2) = Deg^2*(workItem-1)+Deg*(k1-1)+k2;
-                globalRow(degCnt2) = deg^nDims*(workItem-1)+deg*(k1-1)+k2;
-                degCnt2 = degCnt2 + 1;
-            end
-            degCnt1 = degCnt1 + 1;
-        end
         
         elementDOF = deg^nDims;
         
@@ -317,75 +303,41 @@ elseif compression == 4
         %     elementDOF = elementDOF * dimensions{d}.deg;
         % end
         
-        globalRowA = elementDOF*(workItem-1) + [1:elementDOF]';
-        if nDims==2
-            assert(norm(globalRowA - globalRow)==0);
-        end
-        globalRow = globalRowA;
+        globalRow = elementDOF*(workItem-1) + [1:elementDOF]';
         
         for d=1:nDims
             myDeg = dimensions{d}.deg;
             Index_I{d} = (element_idx1D_D{d}-1)*myDeg + [1:myDeg]';
         end
-        if nDims==2
-            assert(norm(Index_I{1}-Index_I1)==0);
-            assert(norm(Index_I{2}-Index_I2)==0);
-        end
         
         for j=1:nConnected
             
-            connected_idx1D_1 = A_Data.connected_local_1_index(conCnt);
-            connected_idx1D_2 = A_Data.connected_local_2_index(conCnt);
             for d=1:nDims
-                connected_idx1D_D{d} = A_Data.connected_local_index_D{d}(conCnt);
+                if useConnectivity
+                    connected_idx1D_D{d} = A_Data.connected_local_index_D{d}(conCnt);
+                else
+                    connected_idx1D_D{d} = A_Data.element_local_index_D{d}(j);
+                end
             end
             
-            connectedCol = A_Data.connected_global_col_index(conCnt);
+            if useConnectivity
+                connectedCol = A_Data.connected_global_col_index(conCnt);
+            else
+                connectedCol = j;
+            end
             
             % Expand out the global col indicies for this compressed
             % connected item.
             
-            Index_J1 = zeros(deg,1);
-            Index_J2 = zeros(deg,1);
-            globalCol = zeros(deg^2,1);
-            degCnt1 = 1;
-            degCnt2 = 1;
-            for kk1 = 1:deg
-                Index_J1(degCnt1) = (connected_idx1D_1-1)*deg+kk1;
-                Index_J2(degCnt1) = (connected_idx1D_2-1)*deg+kk1;
-                for kk2 = 1:deg
-                    globalCol(degCnt2) = deg^2*(connectedCol-1)+deg*(kk1-1)+kk2;
-                    degCnt2 = degCnt2 + 1;
-                end
-                degCnt1 = degCnt1 + 1;
-            end
-            
             % NOTE : if we go to p-adaptivity then we will need 
             % a connected element DOF (connElementDOF) or the like.
             
-            globalColA = elementDOF*(connectedCol-1) + [1:elementDOF]';
-            if nDims==2
-                assert(norm(globalColA-globalCol)==0);
-            end
-            globalCol = globalColA;
+            globalCol = elementDOF*(connectedCol-1) + [1:elementDOF]';
             
             for d=1:nDims
                 myDeg = dimensions{d}.deg;
                 Index_J{d} = (connected_idx1D_D{d}-1)*myDeg + [1:myDeg]';
             end
-            if nDims==2
-                assert(norm(Index_J{1}-Index_J1)==0);
-                assert(norm(Index_J{2}-Index_J2)==0);
-            end
-            
-%             %%
-%             % TODO : this needs to be generalized to dim.
-%             
-%             Index_I{1} = Index_I1;
-%             Index_I{2} = Index_I2;
-%             
-%             Index_J{1} = Index_J1;
-%             Index_J{2} = Index_J2;
             
             %%
             % Apply operator matrices to present state using the pde spec
