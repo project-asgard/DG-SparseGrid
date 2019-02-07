@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType)
+function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity)
 
 format short e
 folder = fileparts(which(mfilename));
@@ -48,12 +48,15 @@ if ~quiet; disp('Constructing hash and inverse hash tables'); end
 nHash = numel(HASHInv);
 
 %% Construct the connectivity.
-if ~quiet; disp('Constructing connectivity table'); end
-Con2D = ConnectnD(nDims,HASH,HASHInv,lev,lev);
+if runTimeOpts.useConnectivity
+    if ~quiet; disp('Constructing connectivity table'); end
+    connectivity = ConnectnD(nDims,HASH,HASHInv,lev,lev);
+else
+    connectivity = [];
+end
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
-% fval = initial_condition_vector(fx,fv,HASHInv,pde);
 fval = initial_condition_vector(HASHInv,pde,0);
 
 %% Construct the time-independent coefficient matrices
@@ -79,7 +82,7 @@ if compression == 3
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
-    A_data = GlobalMatrixSG_SlowVersion(pde,HASHInv,Con2D,deg,compression);
+    A_data = GlobalMatrixSG_SlowVersion(pde,runTimeOpts,HASHInv,connectivity,deg);
 end
 
 %% Construct Poisson matrix
@@ -267,7 +270,7 @@ for L = 1:nsteps,
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
-    if compression == 3
+    if runTimeOpts.compression == 3
     % the new matrix construction is as _newCon, only works for 
     % compression= 3
 %         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
@@ -279,8 +282,8 @@ for L = 1:nsteps,
     
     %%% Advance Vlasov in time with RK3 time stepping method.
     if ~quiet; disp('    RK3 time step'); end
-    if compression == 3
-        fval = TimeAdvance(C_encode,fval,time(count),dt,compression,deg,pde,HASHInv);
+    if runTimeOpts.compression == 3
+        fval = TimeAdvance(pde,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
     else
         
         if nDims==2
@@ -288,11 +291,6 @@ for L = 1:nsteps,
             A_data.vMassV    = pde.terms{1}{1}.coeff_mat;
             A_data.EMassX    = pde.terms{2}{2}.coeff_mat;
             A_data.GradV     = pde.terms{2}{1}.coeff_mat;
-                   
-            %         A_data.vMassV    = vMassV;
-            %         A_data.GradX     = GradX;
-            %         A_data.GradV     = GradV;
-            %         A_data.EMassX    = EMassX;
             
             A_data.FluxX = FluxX;
             A_data.FluxV = FluxV;
@@ -303,11 +301,11 @@ for L = 1:nsteps,
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
         
         if nDims==2
-            fval = TimeAdvance(A_data,fval,time(count),dt,compression,deg,pde,HASHInv,Vmax,Emax);
+            fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
         else
             Vmax = 0;
             Emax = 0; % These are only used in the global LF flux
-            fval = TimeAdvance(A_data,fval,time(count),dt,compression,deg,pde,HASHInv,Vmax,Emax);
+            fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
         end
         
     end
@@ -411,22 +409,8 @@ for L = 1:nsteps,
         end
         
         if nDims==2
-            
-            f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
-            
-            ax1 = subplot(2,2,1);
-            mesh(xx,vv,f2d-f2d0,'FaceColor','interp','EdgeColor','none');
-            axis([Lmin Lmax Vmin Vmax])
-            title('df');
-            
-            ax2 = subplot(2,2,2);
-            mesh(xx,vv,f2d,'FaceColor','interp','EdgeColor','none');
-            axis([Lmin Lmax Vmin Vmax])
-            title('f');
-            
-            title(['f @ ', timeStr])
-            
-            figure(1001)
+                        
+            figure(1000)
                         
             dimensions = pde.dimensions;
             
@@ -440,17 +424,12 @@ for L = 1:nsteps,
             
             dofD = dof1*dof2;
             assert(dofD==numel(fval_realspace));
-
-            
-            %%
-            % Plot 2D
             
             f2d = reshape(fval_realspace,dof1,dof2);
             f2d_analytic = reshape(fval_realspace_analytic,dof1,dof2);
             
             x = nodes{1};
-            y = nodes{2};
-            
+            y = nodes{2};          
                         
             %%
             % Plot a 1D line through the solution
@@ -460,8 +439,9 @@ for L = 1:nsteps,
             f1d = f2d(:,sy);
             x = nodes{1};
             y = nodes{2};
-            ax1 = subplot(2,1,1);
+            ax1 = subplot(3,1,1);
             plot(x,f1d,'-o');
+            title('1D slice through 2D solution');
            
             %%
             % Overplot analytic solution
@@ -476,13 +456,14 @@ for L = 1:nsteps,
             %%
             % Plot 2D
             
-            figure()
-            ax1 = subplot(2,1,1);
-            contourf(x,y,f2d);  
+            ax1 = subplot(3,1,2);
+            contourf(x,y,f2d);
+            title('numeric 2D solution');
             
             if pde.checkAnalytic
-                ax2 = subplot(2,1,2);
+                ax2 = subplot(3,1,3);
                 contourf(x,y,squeeze(f2d_analytic));
+                title('analytic 2D solution');
             end
             
             pause (0.01)
@@ -490,6 +471,8 @@ for L = 1:nsteps,
         
         if nDims==3
             
+            figure(1000);
+                        
             dimensions = pde.dimensions;
             
             deg1=dimensions{1}.deg;
@@ -520,8 +503,9 @@ for L = 1:nsteps,
             x = nodes{1};
             y = nodes{2};
             z = nodes{3};
-            ax1 = subplot(2,3,1);
+            ax1 = subplot(3,3,1);
             plot(x,f1d,'-o');
+            title('1D slice through 3D'); 
             
             %%
             % Overplot analytic solution
@@ -536,36 +520,40 @@ for L = 1:nsteps,
             %%
             % Plot a 2D xy plane
             
-            figure(1001);
-
-            ax1 = subplot(2,3,1);
-            contourf(x,y,f3d(:,:,sz));    
+            ax1 = subplot(3,3,4);
+            contourf(x,y,f3d(:,:,sz));
+            title('2D slice through 3D numeric');
             
             if pde.checkAnalytic
-                ax2 = subplot(2,3,4);
+                ax2 = subplot(3,3,7);
                 contourf(x,y,f3d_analytic(:,:,sz));
+                title('2D slice through 3D analytic');
             end
             
             %%
             % Plot a 2D xz plane
             
-            ax3 = subplot(2,3,2);
-            contourf(x,y,squeeze(f3d(:,sy,:)));    
+            ax3 = subplot(3,3,5);
+            contourf(x,y,squeeze(f3d(:,sy,:))); 
+            title('2D slice through 3D numeric');
             
             if pde.checkAnalytic
-                ax3 = subplot(2,3,5);
+                ax3 = subplot(3,3,8);
                 contourf(x,y,squeeze(f3d_analytic(:,sy,:)));
+                title('2D slice through 3D analytic');
             end
             
             %%
             % Plot a 2D yz plane
             
-            ax3 = subplot(2,3,3);
-            contourf(x,y,squeeze(f3d(sx,:,:)));    
+            ax3 = subplot(3,3,6);
+            contourf(x,y,squeeze(f3d(sx,:,:))); 
+            title('2D slice through 3D numeric');
             
             if pde.checkAnalytic
-                ax3 = subplot(2,3,6);
+                ax3 = subplot(3,3,9);
                 contourf(x,y,squeeze(f3d_analytic(sx,:,:)));
+                title('2D slice through 3D analytic');
             end
             
             
