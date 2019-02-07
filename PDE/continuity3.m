@@ -16,7 +16,7 @@ dim_x.domainMax = +1;
 dim_x.lev = 2;
 dim_x.deg = 2;
 dim_x.FMWT = []; % Gets filled in later
-dim_x.init_cond_fn = @f0_x;
+dim_x.init_cond_fn = @(x,p) x.*0;
 
 dim_y.name = 'y';
 dim_y.BCL = 0; % periodic
@@ -26,7 +26,7 @@ dim_y.domainMax = +2;
 dim_y.lev = 2;
 dim_y.deg = 2;
 dim_y.FMWT = []; % Gets filled in later
-dim_y.init_cond_fn = @f0_y;
+dim_y.init_cond_fn = @(y,p) y.*0;
 
 dim_z.name = 'z';
 dim_z.BCL = 0; % periodic
@@ -36,7 +36,7 @@ dim_z.domainMax = +3;
 dim_z.lev = 2;
 dim_z.deg = 2;
 dim_z.FMWT = []; % Gets filled in later
-dim_z.init_cond_fn = @f0_z;
+dim_z.init_cond_fn = @(z,p) z.*0;
 
 %%
 % Add dimensions to the pde object
@@ -147,74 +147,39 @@ pde.params = params;
 
 %%
 % Source term 1
-if (isOctave),
-    source1 = { ...
-               @(x,p) cos(pi*x),     ... % s1x
-               @(y,p) sin(2*pi*y),   ... % s1y
-               @(z,p) cos(2*pi*z/3), ... % s1z
-               @(t)   2*cos(2*t)     ... % s1t
-               };
-else
-    function f = s1t(t);   f = 2*cos(2*t);    end
-    function f = s1x(x,p); f = cos(pi*x);     end
-    function f = s1y(y,p); f = sin(2*pi*y);   end
-    function f = s1z(z,p); f = cos(2*pi*z/3); end
-source1 = {@s1x,@s1y,@s1z,@s1t};
-end;
-
-
+source1 = { ...
+    @(x,p) cos(pi*x),     ... % s1x
+    @(y,p) sin(2*pi*y),   ... % s1y
+    @(z,p) cos(2*pi*z/3), ... % s1z
+    @(t)   2*cos(2*t)     ... % s1t
+    };
 
 %%
 % Source term 2
-if (isOctave),
-        source2 = { ...
-                   @(x,p) cos(pi*x),     ... % s2x
-                   @(y,p) cos(2*pi*y),   ... % s2y
-                   @(z,p) cos(2*pi*z/3), ... % s2z
-                   @(t)   2*pi*sin(2*t)  ... % s2t
-                   };
-else
-    function f = s2t(t);   f = 2*pi*sin(2*t); end
-    function f = s2x(x,p); f = cos(pi*x);     end
-    function f = s2y(y,p); f = cos(2*pi*y);   end
-    function f = s2z(z,p); f = cos(2*pi*z/3); end
-source2 = {@s2x,@s2y,@s2z,@s2t};
-end;
+source2 = { ...
+    @(x,p) cos(pi*x),     ... % s2x
+    @(y,p) cos(2*pi*y),   ... % s2y
+    @(z,p) cos(2*pi*z/3), ... % s2z
+    @(t)   2*pi*sin(2*t)  ... % s2t
+    };
 
 %%
 % Source term 3
-if (isOctave),
-        source3 = { ...
-                  @(x,p) sin(pi*x),     ... % s3x
-                  @(y,p) sin(2*pi*y),   ... % s3y
-                  @(z,p) cos(2*pi*z/3), ... % s3z
-                  @(t)   -pi*sin(2*t)   ... % s3t
-                  };
-else
-    function f = s3t(t);   f = -pi*sin(2*t);  end
-    function f = s3x(x,p); f = sin(pi*x);     end
-    function f = s3y(y,p); f = sin(2*pi*y);   end
-    function f = s3z(z,p); f = cos(2*pi*z/3); end
-source3 = {@s3x,@s3y,@s3z,@s3t};
-end;
-
+source3 = { ...
+    @(x,p) sin(pi*x),     ... % s3x
+    @(y,p) sin(2*pi*y),   ... % s3y
+    @(z,p) cos(2*pi*z/3), ... % s3z
+    @(t)   -pi*sin(2*t)   ... % s3t
+    };
 
 %%
 % Source term 4
-if (isOctave),
-        source4 = { ...
-                  @(x,p) cos(pi*x),       ... % s4x
-                  @(y,p) sin(2*pi*y),     ... % s4y
-                  @(z,p) sin(2*pi*z/3),   ... % s4z
-                  @(t)   -2/3*pi*sin(2*t) ... % s4t
-                  };
-else
-    function f = s4t(t);   f = -2/3*pi*sin(2*t); end
-    function f = s4x(x,p); f = cos(pi*x);      end
-    function f = s4y(y,p); f = sin(2*pi*y);    end
-    function f = s4z(z,p); f = sin(2*pi*z/3);  end
-source4 = {@s4x,@s4y,@s4z,@s4t};
-end;
+source4 = { ...
+    @(x,p) cos(pi*x),       ... % s4x
+    @(y,p) sin(2*pi*y),     ... % s4y
+    @(z,p) sin(2*pi*z/3),   ... % s4z
+    @(t)   -2/3*pi*sin(2*t) ... % s4t
+    };
 
 %%
 % Add sources to the pde data structure
@@ -223,21 +188,12 @@ pde.sources = {source1,source2,source3,source4};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-if (isOctave),
 pde.analytic_solutions_1D = { ...
-               @(x,p) cos(pi*x),     ... % a_x
-               @(y,p) sin(2*pi*y),   ... % a_y
-               @(z,p) cos(2*pi*z/3), ... % a_z
-               @(t)   sin(2*t)       ... % a_t
-               };
-else
-function f = a_t(t);   f = sin(2*t);      end
-function f = a_x(x,p); f = cos(pi*x);     end
-function f = a_y(y,p); f = sin(2*pi*y);   end
-function f = a_z(z,p); f = cos(2*pi*z/3); end
-
-pde.analytic_solutions_1D = {@a_x,@a_y,@a_z,@a_t};
-end;
+    @(x,p) cos(pi*x),     ... % a_x
+    @(y,p) sin(2*pi*y),   ... % a_y
+    @(z,p) cos(2*pi*z/3), ... % a_z
+    @(t)   sin(2*t)       ... % a_t
+    };
 
 %% Other workflow options that should perhpas not be in the PDE?
 
@@ -251,9 +207,9 @@ end
 
 %% Define the various input functions specified above.
 
-function f=f0_x(x,p); f=x.*0; end
-function f=f0_y(y,p); f=y.*0; end
-function f=f0_z(z,p); f=z.*0; end
+% function f=f0_x(x,p); f=x.*0; end
+% function f=f0_y(y,p); f=y.*0; end
+% function f=f0_z(z,p); f=z.*0; end
 
 %%
 % Function to set time step
