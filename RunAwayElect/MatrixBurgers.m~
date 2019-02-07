@@ -1,4 +1,4 @@
-function Mat = MatrixGradTD(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,bcL,bcR)
+function Mat = MatrixBurgers(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,bcL,bcR)
 %function Mat to compute the Grad operator
 % The FunCoef is a nonlinear term in the PDEs
 % FunCoef*d/dx[f]
@@ -68,17 +68,22 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     xR = xL + h;
     PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
     
-    FunVal = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c);
-%     if WorkCel > 0
+    ProjF = p_val*FunCoef(c); % solution on each quadratures
+    FunVal = p_val'*(quad_w.*ProjF.^2) * Jacobi;
+    
+%     FunVal = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c);
+    if WorkCel > 0
+        ProjF = p_val*FunCoef(c-Deg); % solution on each quadratures
+        FunValPre = p_val'*(quad_w.*ProjF.^2) * Jacobi;
 %         FunValPre = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c-Deg);       
-%     else
+    else
         FunValPre = FunVal;
-%     end
-%     if WorkCel < Tol_Cel_Num - 1
-%         FunValLat = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c+Deg);       
-%     else
+    end
+    if WorkCel < Tol_Cel_Num - 1
+        FunValLat = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c+Deg);       
+    else
         FunValLat = FunVal;
-%     end  
+    end  
     
     IntVal = ...
         - [Dp_val'*(quad_w.*FunVal.*p_val)] * Jacobi;

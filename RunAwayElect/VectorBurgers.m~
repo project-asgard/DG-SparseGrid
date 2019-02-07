@@ -1,4 +1,4 @@
-function Mat = MatrixGradTD(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,bcL,bcR)
+function FF = VectorBurgers(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,bcL,bcR)
 %function Mat to compute the Grad operator
 % The FunCoef is a nonlinear term in the PDEs
 % FunCoef*d/dx[f]
@@ -40,7 +40,7 @@ Tol_Cel_Num = 2^(Lev);
 h = L  / Tol_Cel_Num;
 DoF = Deg * Tol_Cel_Num;
 
-Mat = sparse(DoF,DoF);
+FF = sparse(DoF,1);
 
 quad_num = 10;
 
@@ -68,22 +68,27 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     xR = xL + h;
     PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
     
-    FunVal = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c);
-%     if WorkCel > 0
-%         FunValPre = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c-Deg);       
-%     else
-        FunValPre = FunVal;
-%     end
-%     if WorkCel < Tol_Cel_Num - 1
-%         FunValLat = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c+Deg);       
-%     else
-        FunValLat = FunVal;
-%     end  
+    EleFVal = p_val*FunCoef(c); % solution on each quadratures
+%     FunVal = p_val'*(quad_w.*ProjF.^2) * Jacobi;
+    
+%     FunVal = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c);
+    if WorkCel > 0
+        TraceFL = (p_R*FunCoef(c-Deg) + p_L*FunCoef(c))/2 +...
+            + Max(EleFVal)/2*; % solution on each quadratures
+   else
+        TraceFL = p_L*FunCoef(c);
+    end
+    if WorkCel < Tol_Cel_Num - 1
+        TraceFR = (p_R*FunCoef(c) + p_L*FunCoef(c+Deg))/2;       
+    else
+        TraceFR = p_R*FunCoef(c);
+    end  
     
     IntVal = ...
-        - [Dp_val'*(quad_w.*FunVal.*p_val)] * Jacobi;
+        - [Dp_val'*(quad_w.*EleFVal)] * Jacobi;
     
-    Mat = Mat + sparse(c'*ones(1,Deg),ones(Deg,1)*c,IntVal,DoF,DoF);
+    FF = FF + sparse(c'*ones(1,Deg),ones(Deg,1),IntVal,DoF,1);
+    
     %----------------------------------------------
     % -<funcCoef*{q},p>
     %----------------------------------------------

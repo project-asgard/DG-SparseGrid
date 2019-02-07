@@ -16,7 +16,7 @@ addpath(genpath(pwd))
 %bc = 1 :: Neumann Boundary
 PDE.BC.f_L = 0; PDE.BC.f_R = 1;
 
-Lev = 5;
+Lev = 6;
 Deg = 2;
 num_plot = 2;
 
@@ -26,10 +26,11 @@ LEnd = .1;
 Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
-CFL = 0.01;
-dt = CFL*(dx)^3;
+CFL = 0.1;
+dt = CFL*(dx);
 MaxT = ceil(1e-1/dt);
 
+switch 
 % Test 1
 ExactF = @(x,t)(t*sin(pi*x));
 Source = @(x,t)(sin(pi*x)+t*sin(pi*x)+pi*t*x.*cos(pi*x));
@@ -37,6 +38,12 @@ CoeFun = @(x)(x);
 BCFunc = @(x,t)(x.*t.*sin(pi*x));
 
 % Test 2
+ExactF = @(x,t)(exp(-t)*exp(x));
+Source = @(x,t)(x-x);
+CoeFun = @(x)(1);
+BCFunc = @(x,t)(exp(-t)*exp(x));
+
+% Test 3
 % ExactF = @(x,t)(t*sin(pi*x));
 % Source = @(x,t)(sin(pi*x)+pi*t*cos(pi*x));
 % CoeFun = @(x)(x-x+1);
@@ -51,12 +58,15 @@ n0 = zeros(DoFs,1);
 
 time = 0;
 
+[quad_x,quad_w]=lgwt(num_plot,-1,1);
+ww = repmat(quad_w,2^Lev,1)*2^(-Lev-1);
 
+[x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
 
 
 n0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,time);
 
-for T = 1 : 1%MaxT
+for T = 1 : MaxT
     rhs = ComputRHS(Lev,Deg,LInt,LEnd,Source,time);
 
     time = time + dt;
@@ -66,17 +76,28 @@ for T = 1 : 1%MaxT
     n1 = n0 - dt*Mat_Term1*n0 + dt*(rhs - bc);
     n0 = n1;
     
-    [x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
-    plot(x_node,Meval*n0,'r-',x_node,ExactF(x_node,time),'b--')
+    n0_tmp = Meval*n0;
+    plot(x_node,n0_tmp,'r-',x_node,ExactF(x_node,time),'b--','LineWidth',2)
     title(['time = ', num2str(time)])
     
+    % check about Mass 
+    Mas_tol(T) = sum(ww.*n0_tmp);
+    Eng_tol(T) = sum(ww.*n0_tmp.^2);
     pause(0.1)
 end
 
+figure;plot(Mas_tol,'r-','LineWidth',2);hold on;plot(Eng_tol,'b-','LineWidth',2)
+title('Total Mass');
+
+return
 % Eq(2): dV/dt + V*dV/dx - Gam*d^2V/dx^2 = f
 % Let Q = dV/dx
 % => dV/dt + V*dV/dx - Gam*dQ/dx = f
 %    Q = dV/dx
+
+CFL = 0.01;
+dt = CFL*(dx)^3;
+MaxT = ceil(1e-1/dt);
 
 Gam = 1;
 f_bcL = 0; f_bcR = 0;
@@ -107,9 +128,10 @@ for T = 1 : MaxT
     bc = ComputeBC(Lev,Deg,LInt,LEnd,BCFunc,time,f_bcL,f_bcR);
     
     Mat1 = MatrixGradTD(Lev,Deg,LInt,LEnd, 1,n0,f_bcL,f_bcR);% equation for q
-
     
-    n1 = n0 - dt*(Mat1+Mat2)*n0 + dt*(rhs - bc);
+    bc1 = ComputeBC(Lev,Deg,LInt,LEnd,@(x,t)(t*sin(pi*x).*t.*pi.*cos(pi*x)),time,f_bcL,f_bcR);
+    
+    n1 = n0 - dt*(Mat1+Mat2)*n0 + dt*(rhs - bc - bc1);
     n0 = n1;
     
     
