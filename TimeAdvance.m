@@ -1,20 +1,20 @@
-function f = TimeAdvance(A,f,t,dt,compression,deg,pde,HASHInv,Vmax,Emax)
+function f = TimeAdvance(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
 % Output: Vector:: f
 %-------------------------------------------------
 
-if pde.implicit
-    f = backward_euler(pde,A,f,t,dt,compression,deg,HASHInv,Vmax,Emax);
-    %f = crank_nicolson(A,f,t,dt,compression,Deg,pde,HASHInv);
+if runTimeOpts.implicit
+    f = backward_euler(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    %f = crank_nicolson(pde,runTimeOpts,A,f,t,dt,runTimeOpts.compressiond,eg,HASHInv);
 else
-    f = RungeKutta3(pde,A,f,t,dt,compression,deg,HASHInv,Vmax,Emax);
+    f = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 end
 
 end
 
-function fval = RungeKutta3(pde,A,f,t,dt,compression,deg,HASHInv,Vmax,Emax)
+function fval = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % 3-rd Order Kutta Method
 %----------------------------------
@@ -31,24 +31,24 @@ b1 = 1/6;
 b2 = 2/3;
 b3 = 1/6;
 
-k_1 = ApplyA(pde,A,f,compression,deg,Vmax,Emax)   + source1;
+k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(pde,A,y_1,compression,deg,Vmax,Emax) + source2;
+k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(pde,A,y_2,compression,deg,Vmax,Emax) + source3;
+k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
 end
 
-function f1 = backward_euler(pde,A,f0,t,dt,compression,deg,HASHInv,Vmax,Emax)
+function f1 = backward_euler(pde,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Backward Euler (First Order Implicit Time Advance)
 %----------------------------------
 
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(pde,A,f0,1,deg);
+[~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
 I = eye(numel(diag(AMat)));
 AA = I - dt*AMat;
@@ -59,7 +59,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function f1 = crank_nicolson(pde,A,f0,t,dt,compression,deg,HASHInv,Vmax,Emax)
+function f1 = crank_nicolson(pde,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Crank Nicolson (Second Order Implicit Time Advance)
 %----------------------------------
@@ -67,7 +67,7 @@ function f1 = crank_nicolson(pde,A,f0,t,dt,compression,deg,HASHInv,Vmax,Emax)
 s0 = source_vector(HASHInv,pde,t);
 s1 = source_vector(HASHInv,pde,t+dt);
 
-[~,AMat] = ApplyA(pde,A,f0,1,deg);
+[~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
@@ -78,7 +78,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function [ftmp,A] = ApplyA(pde,A_Data,f,compression,deg,Vmax,Emax)
+function [ftmp,A] = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
@@ -92,149 +92,32 @@ nDims = numel(pde.dimensions);
 
 dimensions = pde.dimensions;
 
-Identity = speye(dof,dof);
+useConnectivity = runTimeOpts.useConnectivity;
 
-if compression == 0
+if runTimeOpts.compression == 0
     
     % Explicitly construct the full A matrix (largest memory)
     
-    % Don't need this so removed. Compression == 1 is fine. 
+    % Don't need this so removed. runTimeOpts.compression == 1 is fine.
     
-elseif compression == 1
+    error('runTimeOpts.compression == 0 no longer valid, use runTimeOpts.compression == 4');
+    
+elseif runTimeOpts.compression == 1
     
     % Explicitly construct the sparse A matrix
     
-    dof = numel(A_Data.element_global_row_index);
+    % Don't need since matrix construction for implicit is now done more
+    % logically within the runTimeOpts.compression = 4.
     
-    dofCnt = 1;
-    conCnt = 1;
+    error('runTimeOpts.compression == 1 no longer valid, use runTimeOpts.compression == 4');
     
-    A = sparse(dof,dof);
+elseif runTimeOpts.compression == 2
     
-    for i=1:dof
-        
-        nConnected = A_Data.element_n_connected(i);
-        
-        for j=1:nConnected
-            
-            Index_I1 = A_Data.element_local_1_index(dofCnt);
-            Index_I2 = A_Data.element_local_2_index(dofCnt);
-            Index_J1 = A_Data.connected_local_1_index(conCnt);
-            Index_J2 = A_Data.connected_local_2_index(conCnt);
-            
-            IndexI = A_Data.element_global_row_index(dofCnt);
-            IndexJ = A_Data.connected_global_col_index(conCnt);
-            
-            %%
-            % TODO : this needs to be generalized to dim.
-            
-            Index_I{1} = Index_I1;
-            Index_I{2} = Index_I2;
-            
-            Index_J{1} = Index_J1;
-            Index_J{2} = Index_J2;
-            
-            %%
-            % Apply operator matrices to present state using the pde spec
-            % Y = A * X
-            
-            for t=1:nTerms
-            
-                %%
-                % Construct the list of matrices for the kron_mult for this
-                % operator (which has dimension many entries).
-                Atmp = 1;
-                for d=1:nDims                    
-                    idx_i = Index_I{d}; 
-                    idx_j = Index_J{d};
-                    tmp = pde.terms{t}{d}.coeff_mat;
-                    Atmp = Atmp * tmp(idx_i,idx_j);
-                end
-                
-                %%
-                % Construct global A matrix
-                
-                A(IndexI,IndexJ) = A(IndexI,IndexJ) + Atmp;
-
-            end
-            
-%             %% 
-%             % Apply each of the 2 terms in the equation 
-%             
-%             % Apply term1 v.d_dx (vMassV . GradX)
-%             
-%             tmpA = A_Data.vMassV(Index_I1,Index_J1);
-%             tmpB = A_Data.GradX(Index_I2,Index_J2);
-%             
-%             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
-%             
-%             % Apply term 2 E.d_dv (EMassX . GradV)
-%             
-%             tmpA = A_Data.GradV(Index_I1,Index_J1);
-%             tmpB = A_Data.EMassX(Index_I2,Index_J2);
-%             
-%             A(IndexI,IndexJ) = A(IndexI,IndexJ) + tmpA*tmpB;
-            
-            conCnt = conCnt+1;
-            
-        end
-        
-        dofCnt = dofCnt + 1;
-        
-    end
+    % Not used.
     
-    % Do the matrix-vector multiply
+    error('runTimeOpts.compression == 2 no longer valid, use runTimeOpts.compression == 4');
     
-    ftmp = A*f;
-    
-elseif compression == 2
-    
-    % Elementwise matrix-vector multipliction (no tensor product encoding),
-    % i.e., tmpA and tmpB are scalars
-    
-    dof = numel(A_Data.element_global_row_index);
-    
-    dofCnt = 1;
-    conCnt = 1;
-    
-    for i=1:dof
-        
-        nConnected = A_Data.element_n_connected(i);
-        
-        for j=1:nConnected
-            
-            Index_I1 = A_Data.element_local_1_index(dofCnt);
-            Index_I2 = A_Data.element_local_2_index(dofCnt);
-            Index_J1 = A_Data.connected_local_1_index(conCnt);
-            Index_J2 = A_Data.connected_local_2_index(conCnt);
-            
-            IndexI = A_Data.element_global_row_index(dofCnt);
-            IndexJ = A_Data.connected_global_col_index(conCnt);
-            
-            % Apply term1 v.d_dx (vMassV . GradX)
-            
-            tmpA = A_Data.vMassV(Index_I1,Index_J1);
-            tmpB = A_Data.GradX(Index_I2,Index_J2);
-            
-            ftmp(IndexI)=ftmp(IndexI)+tmpA*tmpB*f(IndexJ);
-            
-            % Apply term 2 E.d_dv (EMassX . GradV)
-            
-            tmpA = A_Data.GradV(Index_I1,Index_J1);
-            tmpB = A_Data.EMassX(Index_I2,Index_J2);
-            
-            ftmp(IndexI)=ftmp(IndexI)+tmpA*tmpB*f(IndexJ);
-            
-            conCnt = conCnt+1;
-            
-        end
-        
-        dofCnt = dofCnt + 1;
-        
-    end
-    
-    
-elseif compression == 3
+elseif runTimeOpts.compression == 3
     
     % Tensor product encoding over Deg (A_encode),
     % i.e., tmpA and tmpB are Deg x Deg matricies
@@ -242,12 +125,12 @@ elseif compression == 3
     % Note: here A_Data == A_encode and follows the A_encode data
     % structure.
     
-    for i=1:size(A_Data,2)
+    for i=1:size(A_data,2)
         
-        tmpA=A_Data{i}.A1;
-        tmpB=A_Data{i}.A2;
-        IndexI=A_Data{i}.IndexI;
-        IndexJ=A_Data{i}.IndexJ;
+        tmpA=A_data{i}.A1;
+        tmpB=A_data{i}.A2;
+        IndexI=A_data{i}.IndexI;
+        IndexJ=A_data{i}.IndexJ;
         
         if (use_kronmult2)
             ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
@@ -266,35 +149,40 @@ elseif compression == 3
         
     end
     
-elseif compression == 4
+elseif runTimeOpts.compression == 4
     
     %%
     % Tensor product encoding over DOF within an element, i.e., over "deg" (A_Data),
     % i.e., tmpA and tmpB are deg_1 x deg_2 x deg_D matricies
     
-    nWork = numel(A_Data.element_global_row_index);
+    nWork = numel(A_data.element_global_row_index);
     
     conCnt = 1;
     
     ftmpA = ftmp;
     
-    useConnectivity = 0;
-   
+    elementDOF = deg^nDims;
+    
+    implicit = runTimeOpts.implicit;
+
+    if implicit
+        totalDOF = nWork * elementDOF;
+        A = sparse(totalDOF,totalDOF);
+    end
+      
     for workItem=1:nWork
         
         if useConnectivity
-            nConnected = A_Data.element_n_connected(workItem);
+            nConnected = A_data.element_n_connected(workItem);
         else
             nConnected = nWork; % Simply assume all are connected.
         end
         
         for d=1:nDims
-            element_idx1D_D{d} = A_Data.element_local_index_D{d}(workItem);
+            element_idx1D_D{d} = A_data.element_local_index_D{d}(workItem);
         end
         
         % Expand out the local and global indicies for this compressed item
-        
-        elementDOF = deg^nDims;
         
         %%
         % TODO : add dimension dependent deg, something like ...
@@ -314,14 +202,14 @@ elseif compression == 4
             
             for d=1:nDims
                 if useConnectivity
-                    connected_idx1D_D{d} = A_Data.connected_local_index_D{d}(conCnt);
+                    connected_idx1D_D{d} = A_data.connected_local_index_D{d}(conCnt);
                 else
-                    connected_idx1D_D{d} = A_Data.element_local_index_D{d}(j);
+                    connected_idx1D_D{d} = A_data.element_local_index_D{d}(j);
                 end
             end
             
             if useConnectivity
-                connectedCol = A_Data.connected_global_col_index(conCnt);
+                connectedCol = A_data.connected_global_col_index(conCnt);
             else
                 connectedCol = j;
             end
@@ -349,52 +237,38 @@ elseif compression == 4
                 %%
                 % Construct the list of matrices for the kron_mult for this
                 % operator (which has dimension many entries).
-                clear A;
+                clear kronMatList;
                 for d=1:nDims                    
                     idx_i = Index_I{d}; 
                     idx_j = Index_J{d};
                     tmp = pde.terms{t}{d}.coeff_mat;
-                    A{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
+                    kronMatList{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
                 end
                 
-                %%
-                % Apply kron_mult
-                X = f(globalCol);
-                if use_kronmult2
-                    Y = kron_multd(nDims,A,X);
+                if implicit
+                
+                    %%
+                    % Apply krond to return A (implicit time advance)
+                    
+                    A(globalRow,globalCol) = A(globalRow,globalCol) + krond(nDims,kronMatList);
+                    
                 else
-                    Y = kron_multd_full(nDims,A,X);
+                    
+                    %%
+                    % Apply kron_mult to return A*Y (explicit time advance)
+                    X = f(globalCol);
+                    if use_kronmult2
+                        Y = kron_multd(nDims,kronMatList,X);
+                    else
+                        Y = kron_multd_full(nDims,kronMatList,X);
+                    end
+                    ftmpA(globalRow) = ftmpA(globalRow) + Y;
+                    
                 end
-                ftmpA(globalRow) = ftmpA(globalRow) + Y;
+                
+                
             end
             
-%             %%
-%             % Apply operator matrices using original Vlasov hardwired
-%             % approach
-%             
-%             % Apply term1 v.d_dx (vMassV . GradX)
-%             
-%             tmpA = A_Data.vMassV(Index_I1,Index_J1);
-%             tmpB = A_Data.GradX(Index_I2,Index_J2);            
-%             
-%             if use_kronmult2
-%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
-%             else
-%                 ftmp(globalRow)=ftmp(globalRow)+ ...
-% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);              
-%             end          
-%                          
-%             % Apply term 2 E.d_dv (EMassX . GradV)
-%             
-%             tmpA = A_Data.GradV(Index_I1,Index_J1);
-%             tmpB = A_Data.EMassX(Index_I2,Index_J2);
-%             
-%             if use_kronmult2
-%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));              
-%             else
-%                 ftmp(globalRow)=ftmp(globalRow)+ ...
-% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);               
-%             end
             
             %%
             % Overwrite previous approach with PDE spec approch
@@ -435,9 +309,7 @@ elseif compression == 4
         end
         
         assert(workItem==workItem);
-        
-%         workItem = workItem + 1;
-        
+                
     end
 end
 
