@@ -102,7 +102,7 @@ pause
 % => dV/dt + V*dV/dx - Gam*dQ/dx = f
 %    Q = dV/dx
 
-CFL = 0.01;
+CFL = 0.001;
 dt = CFL*(dx)^2;
 MaxT = ceil(1e-1/dt);
 

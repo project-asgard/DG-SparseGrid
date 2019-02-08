@@ -1,4 +1,4 @@
-function FF = VectorBurgers(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,bcL,bcR)
+function FF = VectorBurgers(Lev,Deg,LInt,LEnd,FluxVal,uold,bcL,bcR)
 %function Mat to compute the Grad operator
 % The FunCoef is a nonlinear term in the PDEs
 % FunCoef*d/dx[f]
@@ -58,6 +58,32 @@ Dp_val = dlegendre(quad_x,Deg) * 1/sqrt(h) * 2/h;
 
 Jacobi = h/2;
 
+% First compute the projection of u^2/2 on each cell
+MaxC = 0;
+for WorkCel = 0 : Tol_Cel_Num - 1
+    c = Deg*WorkCel+[1:Deg];
+    
+    xL = LInt + WorkCel*h;
+    xR = xL + h;
+    PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
+    
+    EleFVal = uold(c); % solution on each quadratures
+    NonVal = zeros(quad_num,1);
+    
+    MaxC = max([MaxC;abs(p_val*EleFVal)]);
+    
+    for i = 1 : Deg
+        for j = 1 : Deg
+            NonVal = NonVal + (p_val(:,i)*EleFVal(i)).*(p_val(:,j)*EleFVal(j));
+        end
+    end
+    
+    ProjU(c,1) = p_val'*(quad_w.*NonVal/2)* Jacobi;
+    
+end
+
+
+
 for WorkCel = 0 : Tol_Cel_Num - 1
     %---------------------------------------------
     % (funcCoef*q,d/dx p)
@@ -68,27 +94,31 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     xR = xL + h;
     PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
     
-    EleFVal = p_val*FunCoef(c); % solution on each quadratures
-%     FunVal = p_val'*(quad_w.*ProjF.^2) * Jacobi;
+    EleFVal = p_val*ProjU(c); % solution on each quadratures
+
+
     
 %     FunVal = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c);
     if WorkCel > 0
-        TraceFL = (p_R*FunCoef(c-Deg) + p_L*FunCoef(c))/2 +...
-            + Max(EleFVal)/2*; % solution on each quadratures
-   else
-        TraceFL = p_L*FunCoef(c);
+        TraceFL = (p_R*ProjU(c-Deg) + p_L*ProjU(c))/2 +...
+            + MaxC/2 * (p_R*ProjU(c-Deg) - p_L*ProjU(c) ); % solution on each quadratures
+    else
+        TraceFL = p_L*ProjU(c)/2 - MaxC/2 * p_L*ProjU(c);%- p_L*ProjU(c);
     end
     if WorkCel < Tol_Cel_Num - 1
-        TraceFR = (p_R*FunCoef(c) + p_L*FunCoef(c+Deg))/2;       
+        TraceFR = (p_R*ProjU(c) + p_L*ProjU(c+Deg))/2 + ...
+            + MaxC/2 * (p_R*ProjU(c) - p_L*ProjU(c+Deg));       
     else
-        TraceFR = p_R*FunCoef(c);
+        TraceFR = p_R*ProjU(c)/2 + MaxC/2 * p_R*ProjU(c);%p_R*ProjU(c);
     end  
     
     IntVal = ...
         - [Dp_val'*(quad_w.*EleFVal)] * Jacobi;
     
-    FF = FF + sparse(c'*ones(1,Deg),ones(Deg,1),IntVal,DoF,1);
+    FF = FF + sparse(c,ones(Deg,1),IntVal,DoF,1);
     
+    TraceVal = - p_L * TraceFL + p_R * TraceFR;
+    FF = FF + sparse(c,ones(Deg,1),TraceVal,DoF,1);
     %----------------------------------------------
     % -<funcCoef*{q},p>
     %----------------------------------------------
@@ -97,78 +127,6 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     %      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
     % [[v]] = v_R - v_L
 
-%     TraVal = [...
-%         (-p_L)' * FunCoef(xL) * p_R/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *   p_R,...
-%         (-p_L)' * FunCoef(xL) * p_L/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' * (-p_L),...% xL
-%         ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
-%         ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
-%         ];
-%     if bcL == 0 && WorkCel == 0
-%         TraVal = [...
-%             (-p_L)' * (p_L-p_L),...
-%             (-p_L)' * (p_L-p_L),...% xL
-%             ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
-%             ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
-%             ];
-% 
-%     end
-%     if bcR == 0 && WorkCel == Tol_Cel_Num - 1
-%         TraVal = [...
-%             (-p_L)' * FunCoef(xL) * p_R/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *   p_R,...
-%             (-p_L)' * FunCoef(xL) * p_L/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' * (-p_L),...% xL
-%             ( p_R)' * (p_R-p_R),...
-%             ( p_R)' * (p_R-p_R),...% xR
-%             ];
-%     end
-    
-	TraVal = [...
-        (-p_L)' * FunValPre * p_R/2 + FluxVal * abs(FunValPre)/2 * (-p_L)' *   p_R,...
-        (-p_L)' * FunVal * p_L/2 + FluxVal * abs(FunVal)/2 * (-p_L)' * (-p_L),...% xL
-        ( p_R)' * FunVal * p_R/2 + FluxVal * abs(FunVal)/2 * ( p_R)' *   p_R,...
-        ( p_R)' * FunValLat * p_L/2 + FluxVal * abs(FunValLat)/2 * ( p_R)' * (-p_L),...% xR
-        ];
-    if bcL == 0 && WorkCel == 0
-        TraVal = [...
-            (-p_L)' * (p_L-p_L),...
-            (-p_L)' * (p_L-p_L),...% xL
-            ( p_R)' * FunVal * p_R/2 + FluxVal * abs(FunVal)/2 * ( p_R)' *   p_R,...
-            ( p_R)' * FunValLat * p_L/2 + FluxVal * abs(FunValLat)/2 * ( p_R)' * (-p_L),...% xR
-            ];
-
-    end
-    if bcR == 0 && WorkCel == Tol_Cel_Num - 1
-        TraVal = [...
-            (-p_L)' * FunValPre * p_R/2 + FluxVal * abs(FunValPre)/2 * (-p_L)' *   p_R,...
-            (-p_L)' * FunVal * p_L/2 + FluxVal * abs(FunVal)/2 * (-p_L)' * (-p_L),...% xL
-            ( p_R)' * (p_R-p_R),...
-            ( p_R)' * (p_R-p_R),...% xR
-            ];
-    end
-    % Adding trace value to matrix
-    RowInd = [c'*ones(1,Deg) c'*ones(1,Deg) c'*ones(1,Deg) c'*ones(1,Deg)];
-    ColInd = [ones(Deg,1)*(c-Deg),ones(Deg,1)*c,ones(Deg,1)*c,ones(Deg,1)*(c+Deg)];
-    
-    
-    if WorkCel == 0
-        Iu = RowInd(:,Deg+1:end);
-        Iv = ColInd(:,Deg+1:end);
-        Val = TraVal(:,Deg+1:end);
-    elseif WorkCel == Tol_Cel_Num - 1
-        Iu = RowInd(:,1:3*Deg);
-        Iv = ColInd(:,1:3*Deg);
-        Val = TraVal(:,1:3*Deg);
-    else
-        Iu = RowInd;
-        Iv = ColInd;
-        Val = TraVal;
-    end
-    
-    
-    
-    Mat = Mat + sparse(Iu,Iv,Val,DoF,DoF);
-    
-  
-    
     
 end
 
