@@ -2,6 +2,10 @@ function rhs = ComputRHS(Lev,Deg,LInt,LEnd,Fun,time)
 %function rhs to compute the rhs term
 
 %-----------------------------------------------------
+if ~exist('time','var') || isempty(time)
+    time = 0;
+end
+
 L = LEnd-LInt;
 Tol_Cel_Num = 2^(Lev);
 h = L  / Tol_Cel_Num;

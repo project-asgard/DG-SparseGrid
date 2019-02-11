@@ -1,4 +1,4 @@
-function FF = VectorBurgers(Lev,Deg,LInt,LEnd,FluxVal,uold,bcL,bcR)
+function [FF,ProjU] = VectorBurgers(Lev,Deg,LInt,LEnd,FluxVal,uold,bcL,bcR)
 %function Mat to compute the Grad operator
 % The FunCoef is a nonlinear term in the PDEs
 % FunCoef*d/dx[f]
@@ -82,7 +82,7 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     
 end
 
-
+MaxC
 
 for WorkCel = 0 : Tol_Cel_Num - 1
     %---------------------------------------------
@@ -100,16 +100,18 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     
 %     FunVal = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c);
     if WorkCel > 0
-        TraceFL = (p_R*ProjU(c-Deg) + p_L*ProjU(c))/2 +...
-            + MaxC/2 * (p_R*ProjU(c-Deg) - p_L*ProjU(c) ); % solution on each quadratures
+        TraceFL = (p_R*ProjU(c-Deg) + p_L*ProjU(c))/2 +... % avg = {u^2/2}
+            + MaxC/2 * (p_R*ProjU(c-Deg) - p_L*ProjU(c) ); % Jum = [u^2/2] solution on each quadratures
     else
-        TraceFL = p_L*ProjU(c)/2 - MaxC/2 * p_L*ProjU(c);%- p_L*ProjU(c);
+        TraceFL = ProjU(c)-ProjU(c);%(p_L*ProjU(c));
+        %ProjU(c)-ProjU(c);%p_L*ProjU(c)/2 - MaxC/2 * p_L*ProjU(c);%- p_L*ProjU(c);
     end
     if WorkCel < Tol_Cel_Num - 1
         TraceFR = (p_R*ProjU(c) + p_L*ProjU(c+Deg))/2 + ...
             + MaxC/2 * (p_R*ProjU(c) - p_L*ProjU(c+Deg));       
     else
-        TraceFR = p_R*ProjU(c)/2 + MaxC/2 * p_R*ProjU(c);%p_R*ProjU(c);
+        TraceFR = (p_R*ProjU(c) );
+        %ProjU(c)-ProjU(c);%p_R*ProjU(c)/2 + MaxC/2 * p_R*ProjU(c);%p_R*ProjU(c);
     end  
     
     IntVal = ...
