@@ -102,7 +102,7 @@ title('Total Mass');
 % => dV/dt + V*dV/dx - Gam*dQ/dx = f
 %    Q = dV/dx
 
-CFL = .01;
+CFL = .05;
 dt = CFL*(dx)^2;
 MaxT = ceil(1e1/dt);
 
@@ -113,11 +113,11 @@ Source = @(x,t)( sin(pi*x)-pi^2*t.*sin(pi*x));% + t*sin(pi*x).*t.*pi.*cos(pi*x)
 % CoeFun = @(x)(x);
 BCFunc = @(x,t)( t.*sin(pi*x) );
 
-% % Test
-% ExactF = @(x,t)( t*cos(pi*x) );
-% Source = @(x,t)( cos(pi*x)-pi^2*t.*cos(pi*x));% + t*sin(pi*x).*t.*pi.*cos(pi*x) 
-% % CoeFun = @(x)(x);
-% BCFunc = @(x,t)( t.*cos(pi*x) );
+% Test
+ExactF = @(x,t)( t*cos(pi*x) );
+Source = @(x,t)( cos(pi*x)-pi^2*t.*cos(pi*x));% + t*sin(pi*x).*t.*pi.*cos(pi*x) 
+% CoeFun = @(x)(x);
+BCFunc = @(x,t)( t.*cos(pi*x) );
 
 % % Test
 % beta = 0.5;
@@ -127,10 +127,10 @@ BCFunc = @(x,t)( t.*sin(pi*x) );
 
 Gam = 1;
 f_bcL = 0; f_bcR = 0;
-q_bcL = 1; q_bcR = 1;
+q_bcL = 0; q_bcR = 0;
 
-Mat1 = MatrixGradU(Lev,Deg,LInt,LEnd,   1, @(x)1,@(x)0,f_bcL,f_bcR); % equation for q
-Mat2 = MatrixGradQ(Lev,Deg,LInt,LEnd,   -1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
+Mat1 = MatrixGradU(Lev,Deg,LInt,LEnd,   -1, @(x)1,@(x)0,f_bcL,f_bcR); % equation for q
+Mat2 = MatrixGradQ(Lev,Deg,LInt,LEnd,   1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
 
 % Mat2 =  Mat2*Mat1;
 
@@ -152,12 +152,12 @@ for T = 1 : MaxT
     
     bc1 = ComputeBC(Lev,Deg,LInt,LEnd,@(x,t)((t*sin(pi*x)).^2/2),time,0,1);
     
-    n1 = n0  + dt*(rhs - Mat2*bc) + dt*(Mat2*Mat1)*n0;%- dt*FF - dt*bc1
+    n1 = n0  + dt*(rhs + Mat2*bc) + dt*(Mat2*Mat1)*n0;%- dt*FF - dt*bc1
     n0 = n1;
     
     
-    plot(x_node,Meval*(Mat1*n0+bc),'k-',x_node,Meval*n0,'r-',x_node,ExactF(x_node,time),'b--','LineWidth',2)
-    title(['time = ', num2str(time)])%x_node,Meval*FF,'k--', %
+    plot(x_node,Meval*n0,'r-',x_node,ExactF(x_node,time),'b--','LineWidth',2)
+    title(['time = ', num2str(time)])%x_node,Meval*FF,'k--', %x_node,Meval*(Mat1*n0+bc),'k-',
     
     pause(0.1)
 end
