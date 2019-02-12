@@ -1,4 +1,4 @@
-function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2,bcL,bcR)
+function Mat = MatrixGradU(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2,bcL,bcR)
 %function Mat to compute the Grad operator
 % d/dx[FunCoef*f]
 % Trace = FunCoef*f|_R - FunCoef*f|_L+
