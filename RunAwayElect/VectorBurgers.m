@@ -1,4 +1,4 @@
-function [FF,ProjU] = VectorBurgers(Lev,Deg,LInt,LEnd,FluxVal,uold,bcL,bcR)
+function [FF,MaxC,ProjU] = VectorBurgers(Lev,Deg,LInt,LEnd,FluxVal,uold,bcL,bcR)
 %function Mat to compute the Grad operator
 % The FunCoef is a nonlinear term in the PDEs
 % FunCoef*d/dx[f]
@@ -84,6 +84,9 @@ end
 
 MaxC
 
+uL = p_L*uold(1:Deg);
+uR = p_R*uold(end-Deg+1:end);
+
 for WorkCel = 0 : Tol_Cel_Num - 1
     %---------------------------------------------
     % (funcCoef*q,d/dx p)
@@ -100,18 +103,44 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     
 %     FunVal = legendre( 0,Deg)* 1/sqrt(h)*FunCoef(c);
     if WorkCel > 0
-        TraceFL = (p_R*ProjU(c-Deg) + p_L*ProjU(c))/2 +... % avg = {u^2/2}
-            + MaxC/2 * (p_R*ProjU(c-Deg) - p_L*ProjU(c) ); % Jum = [u^2/2] solution on each quadratures
-    else
-        TraceFL = ProjU(c)-ProjU(c);%(p_L*ProjU(c));
-        %ProjU(c)-ProjU(c);%p_L*ProjU(c)/2 - MaxC/2 * p_L*ProjU(c);%- p_L*ProjU(c);
+        AvgF = (p_R*ProjU(c-Deg) + p_L*ProjU(c))/2;
+        JumU = (p_R*uold(c-Deg) - p_L*uold(c) );
+        TraceFL = AvgF + MaxC/2 * JumU;
+%         TraceFL = (p_R*ProjU(c-Deg) + p_L*ProjU(c))/2 +... % avg = {u^2/2}
+%             + MaxC/2 * (p_R*uold(c-Deg) - p_L*uold(c) ); % Jum = [u^2/2] solution on each quadratures
+    elseif bcL == 0 && WorkCel == 0
+        TraceFL = ProjU(c)-ProjU(c);
+    elseif bcL == 1 && WorkCel == 0
+        AvgF = ( p_L*ProjU(c))/2;
+        JumU = (-p_L*uold(c) );
+        TraceFL = AvgF + MaxC/2 * JumU;
+        
+%         AvgF = (p_R*ProjU(c-Deg) + p_L*ProjU(c))/2;
+%         JumU = (p_R*uold(c-Deg) - p_L*uold(c) );
+%         TraceFL = AvgF + MaxC/2 * JumU;
+        
+%     elseif p_L *uold(c) >= 0 && WorkCel == 0
+% %         TraceFL = ProjU(c)-ProjU(c);%(p_L*ProjU(c));
+%     elseif p_L *uold(c) < 0 && WorkCel == 0
+%         TraceFL = -(p_L*ProjU(c) );
+
     end
-    if WorkCel < Tol_Cel_Num - 1
-        TraceFR = (p_R*ProjU(c) + p_L*ProjU(c+Deg))/2 + ...
-            + MaxC/2 * (p_R*ProjU(c) - p_L*ProjU(c+Deg));       
-    else
-        TraceFR = (p_R*ProjU(c) );
-        %ProjU(c)-ProjU(c);%p_R*ProjU(c)/2 + MaxC/2 * p_R*ProjU(c);%p_R*ProjU(c);
+    if WorkCel < Tol_Cel_Num - 1   
+        AvgF = (p_R*ProjU(c) + p_L*ProjU(c+Deg))/2;
+        JumU = (p_R*uold(c) - p_L*uold(c+Deg) );
+        TraceFR = AvgF + MaxC/2 * JumU;
+%         TraceFR = (p_R*ProjU(c) + p_L*ProjU(c+Deg))/2 + ...
+%             + MaxC/2 * (p_R*uold(c) - p_L*uold(c+Deg));
+%     elseif p_R *uold(c) >= 0 && WorkCel == Tol_Cel_Num - 1
+%         TraceFR = (p_R*ProjU(c) );
+%     elseif p_R *uold(c) < 0 && WorkCel == Tol_Cel_Num - 1  
+    elseif bcR == 0 && WorkCel == Tol_Cel_Num - 1 
+        TraceFR = ProjU(c)-ProjU(c);
+    elseif bcR == 1 && WorkCel == Tol_Cel_Num - 1 
+        AvgF = (p_R*ProjU(c))/2;
+        JumU = (p_R*uold(c) );
+        TraceFR = 2*AvgF;% + MaxC/2 * JumU;
+%         TraceFR = (p_R*ProjU(c) );%ProjU(c)-ProjU(c);
     end  
     
     IntVal = ...

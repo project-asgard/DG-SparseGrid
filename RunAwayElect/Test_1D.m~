@@ -102,62 +102,104 @@ title('Total Mass');
 % => dV/dt + V*dV/dx - Gam*dQ/dx = f
 %    Q = dV/dx
 
-CFL = .001;
-dt = CFL*(dx)^2;
+CFL = .1;%0.01;%.1;
+dt = CFL*(dx);%^Deg;
 MaxT = ceil(1e1/dt);
 
-
+gamma = 0;%-1e-4; % gamma = -1 is correct, but fail on other cases
 % Test
 ExactF = @(x,t)( t*sin(pi*x) );
-Source = @(x,t)( sin(pi*x)-pi^2*t.*sin(pi*x));% + t*sin(pi*x).*t.*pi.*cos(pi*x) 
-% CoeFun = @(x)(x);
+ExactQ = @(x,t)( pi*t*cos(pi*x) );
+Source = @(x,t)( sin(pi*x) + gamma*(-pi^2*t.*sin(pi*x)) + t*sin(pi*x).*t.*pi.*cos(pi*x) );
 BCFunc = @(x,t)( t.*sin(pi*x) );
-
-% Test
-ExactF = @(x,t)( t*cos(pi*x) );
-Source = @(x,t)( cos(pi*x)-pi^2*t.*cos(pi*x));% + t*sin(pi*x).*t.*pi.*cos(pi*x) 
-% CoeFun = @(x)(x);
-BCFunc = @(x,t)( t.*cos(pi*x) );
+BCBurgers = @(x,t)((t*sin(pi*x)).^2/2);
 
 % % Test
-% beta = 0.5;
-% ExactF = @(x,t)(beta*sin(x));
-% Source = @(x,t)(sin(x).*cos(x));
-% BCFunc = @(x,t)(x-x);
+ExactF = @(x,t)( t*cos(pi*x) );
+ExactQ = @(x,t)( -pi*t*sin(pi*x) );
+Source = @(x,t)( cos(pi*x) + gamma * (-pi^2*t.*cos(pi*x)) - t*sin(pi*x).*t.*pi.*cos(pi*x) );
+BCFunc = @(x,t)( t.*cos(pi*x) );
+BCBurgers = @(x,t)((t*cos(pi*x)).^2/2);
 
-Gam = 1;
+% % Test
+% ExactF = @(x,t)( cos(pi*(t+x)) );
+% ExactQ = @(x,t)( -pi*sin(pi*(t+x)) );
+% Source = @(x,t)( -pi*sin(pi*(t+x)) + gamma*(-pi^2*cos(pi*(t+x)))  - pi*cos(pi*(t+x)).*sin(pi*(t+x)));
+% % CoeFun = @(x)(x);
+% BCFunc = @(x,t)( cos(pi*(t+x)) );
+% BCBurgers = @(x,t)( (cos(pi*(t+x))).^2/2 );
+
+% % % Test
+% % beta = 0.5;
+% % ExactF = @(x,t)(beta*sin(x));
+% % ExactQ = @(x,t)(beta*cos(x));
+% % Source = @(x,t)(sin(x).*cos(x));
+% % BCFunc = @(x,t)(x-x);
+
+% % Burgers Test 1
+% ExactF = @(x,t)((x<=0.5).*2+(x>0.5).*1);
+% ExactQ = @(x,t)(x-x);
+% Source = @(x,t)(x-x);
+% BCFunc = ExactQ;
+% BCBurgers = @(x,t)((x<=0.5).*2+(x>0.5).*1/2);
+
+% % Burgers Test 2
+% ExactF = @(x,t)(1+sin(pi*x));
+% ExactQ = @(x,t)(x-x);
+% Source = @(x,t)(x-x);
+% BCFunc = ExactQ;
+% BCBurgers = @(x,t)((1+sin(pi*x)).^2/2);
+
+Gam = -1;
 f_bcL = 0; f_bcR = 0;
-q_bcL = 1; q_bcR = 1;
+q_bcL = 0; q_bcR = 0;
 
-Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,  1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
-Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd, -1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
+Mat1 = MatrixGradU(Lev,Deg,LInt,LEnd,1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
+% Mat2 = MatrixGradQ(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
+Mat2 = MatrixGradQ(Lev,Deg,LInt,LEnd,-1,@(x)-gamma,@(x)0,q_bcL,q_bcR); % equation for f
 
-% Mat2 =  Mat2*Mat1;
-
-% Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)(1),@(x)0,f_bcL,f_bcR);% equation for q
-
-
+time = 0;
 n0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,time);
+nn0 = n0;
+FluxValue = 1;
 figure;
 for T = 1 : MaxT
-    rhs = ComputRHS(Lev,Deg,LInt,LEnd,Source,time);
-
     time = time + dt;
+    rhs = ComputRHS(Lev,Deg,LInt,LEnd,Source,time);
     
-    bc = ComputeBC(Lev,Deg,LInt,LEnd,BCFunc,time,f_bcL,f_bcR);
-    
-    FF = VectorBurgers(Lev,Deg,LInt,LEnd, 1,n0,f_bcL,f_bcR);% equation for q
+    bc = ComputeBC(Lev,Deg,LInt,LEnd,BCFunc,time,f_bcL,f_bcR,FluxValue);
+%     time = time + dt;
+
+    % Burgers Part
+    [FF,MaxC] = VectorBurgers(Lev,Deg,LInt,LEnd, 1,n0,f_bcL,f_bcR);% equation for q
     
 %     plot(x_node,Meval*n0,'r-',x_node,Meval*FF,'b--')
     
-    bc1 = ComputeBC(Lev,Deg,LInt,LEnd,@(x,t)((t*sin(pi*x)).^2/2),time,0,1);
+%     bc1 = ComputeBC(Lev,Deg,LInt,LEnd,@(x,t)((t*sin(pi*x)).^2/2),time,0,1);
+
+    bc1 = ComputeBCBurgers(Lev,Deg,LInt,LEnd,BCFunc,time,0,1,MaxC);
     
-    n1 = n0  + dt*(rhs - Mat2*bc) + dt*(Mat2*Mat1)*n0;%- dt*FF - dt*bc1
+    % Explicit Advance
+    n1 = n0  + dt*(rhs) - dt*FF + dt*bc1;% - gamma*dt*Mat2*bc -gamma* dt*(Mat2*Mat1)*n0 
     n0 = n1;
     
+    % Implicit Advance
+% %     Mat = speye(DoFs,DoFs) + gamma*dt*(Mat2*Mat1);
+% %     Mat = inv(Mat);
+% %     n1 = Mat*n0 + Mat*(dt*rhs - gamma*dt*Mat2*bc );
+% %     n0 = n1;
+
+% %     Mat = speye(DoFs,DoFs) -1*dt*(Mat2*Mat1);
+% %     Mat = inv(Mat);
+% %     n1 = Mat*n0 - dt*Mat*(FF + bc1) + dt*Mat*(rhs +1*Mat2*bc );
+% %     n0 = n1;
     
-    plot(x_node,Meval*Mat1*n0,'b-',x_node,Meval*n0,'r-',x_node,ExactF(x_node,time),'b--','LineWidth',2)
-    title(['time = ', num2str(time)])%x_node,Meval*FF,'k--',
+    subplot(1,2,1)
+    plot(x_node,ExactF(x_node,0),'k-',x_node,Meval*n0,'r-',x_node,ExactF(x_node,time),'b--','LineWidth',2)
+    title(['time = ', num2str(time)])%x_node,Meval*FF,'k--', %x_node,Meval*(Mat1*n0+bc),'k-',
+    subplot(1,2,2)
+    plot(x_node,Meval*(Mat1*n0+bc),'r-',x_node,ExactQ(x_node,time),'b--','LineWidth',2)
+    title(['time = ', num2str(time)])%x_node,Meval*FF,'k--', %x_node,Meval*(Mat1*n0+bc),'k-',
     
     pause(0.1)
 end

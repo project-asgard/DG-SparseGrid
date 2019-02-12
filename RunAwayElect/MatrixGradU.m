@@ -96,12 +96,6 @@ for WorkCel = 0 : Tol_Cel_Num - 1
             ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
             ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
             ];
-%         TraVal = [...
-%             (-p_L)' * FunCoef(xL) * (p_R-p_R) + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *  ( p_R-p_R),...
-%             (-p_L)' * FunCoef(xL) * p_L + FluxVal * abs(FunCoef(xL)) * (-p_L)' * (-p_L),...% xL
-%             ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
-%             ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
-%             ];
 
     end
     if bcR == 0 && WorkCel == Tol_Cel_Num - 1
@@ -111,12 +105,7 @@ for WorkCel = 0 : Tol_Cel_Num - 1
             ( p_R)' * (p_R-p_R),...
             ( p_R)' * (p_R-p_R),...% xR
             ];
-%     TraVal = [...
-%         (-p_L)' * FunCoef(xL) * p_R/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *   p_R,...
-%         (-p_L)' * FunCoef(xL) * p_L/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' * (-p_L),...% xL
-%         ( p_R)' * FunCoef(xR) * p_R + FluxVal * abs(FunCoef(xR)) * ( p_R)' *   p_R,...
-%         ( p_R)' * FunCoef(xR) * (p_L-p_L) + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (p_L-p_L),...% xR
-%         ];
+
     end
     % Adding trace value to matrix
     RowInd = [c'*ones(1,Deg) c'*ones(1,Deg) c'*ones(1,Deg) c'*ones(1,Deg)];
