@@ -26,8 +26,8 @@ LEnd = 1;
 Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
-CFL = 0.01;
-dt = CFL*(dx)^3;
+CFL = 0.02;
+dt = CFL*(dx)^2;
 MaxT = ceil(1e-1/dt);
 
 % Test 
@@ -39,22 +39,23 @@ ExactF = @(x,t)( sin(pi*x) );
 Source = @(x,t)( x-x );
 BCFunc = @(x,t)( sin(pi*x) );
 
-
-% Source = sin(pi*x).*sin(pi*y)-2*pi*t*x.*cos(pi*x).*sin(pi*y)+2*pi^2*t*x.^2.*sin(pi*x).*sin(pi*y);
-
 Gam = 1;
 f_bcL = 0; f_bcR = 0;
 q_bcL = 1; q_bcR = 1;
 
-Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)x.^2,@(x)0,f_bcL,f_bcR); % equation for q
-Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
-Delta = Mat2*Mat1;
+% Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
+% Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
+% Delta = Mat2*Mat1;
 
+Mat1 =  MatrixGradU(Lev,Deg,LInt,LEnd,1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
+Mat2 =  MatrixGradQ(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
+Delta = Mat2*Mat1;
 
 DoFs = (2^Lev*Deg);
 
 
 Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);
+Mat = Mat;%/(pi^2);
 
 F0 = zeros(DoFs,1);
 time = 0;
@@ -72,13 +73,15 @@ for T = 1 : MaxT
     bc0 = bc*exp(time);
     
     F1 = F0 + dt*(Mat)*F0 + dt*( bc0);
-%     mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0-F1),64,64),reshape(MM*(F0-F1),64,64))
+    mesh(x_2D_plot,y_2D_plot,reshape(MM*(F1),64,64));%reshape(MM*(F0-F1),64,64),reshape(MM*(F0-F1),64,64))
+    hold on;
     F0 = F1;
     
     val = exp(2*pi^2*time)*sin(pi*x_2D_plot).*sin(pi*y_2D_plot);
     
-    mesh(x_2D_plot,y_2D_plot,val);%reshape(MM*(F1),64,64))
+%     mesh(x_2D_plot,y_2D_plot,val);%reshape(MM*(F1),64,64));
     title(['time = ', num2str(time)])
+    hold off
     pause(0.1)
 end
 
