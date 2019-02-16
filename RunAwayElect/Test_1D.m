@@ -16,8 +16,8 @@ addpath(genpath(pwd))
 %bc = 1 :: Neumann Boundary
 PDE.BC.f_L = 0; PDE.BC.f_R = 1;
 
-Lev = 7;
-Deg = 3;
+Lev = 5;
+Deg = 2;
 num_plot = 2;
 
 DoFs = 2^Lev*Deg;
@@ -101,11 +101,11 @@ title('Total Mass');
 % => dV/dt + V*dV/dx - Gam*dQ/dx = f
 %    Q = dV/dx
 
-CFL = .05;
+CFL = .1;%.1;
 dt = CFL*(dx);%^Deg;
 MaxT = ceil(1e1/dt);
 
-gamma = 0.1;%-1e-0; % gamma = -1 is correct, but fail on other cases
+gamma = 0.001;%-1e-0; % gamma = -1 is correct, but fail on other cases
 
 % Test
 ExactF = @(x,t)(1-tanh(1/(2*gamma)*(x-t)));
@@ -150,7 +150,7 @@ figure;
 
 BurbcL = 0; BurbcR = 1;
 
-for T = 1 : MaxT
+for T = 1 : 100%MaxT
     time = time + dt;
     rhs = ComputRHS(Lev,Deg,LInt,LEnd,Source,time);
     % B.C for Diffusion Part
@@ -196,6 +196,7 @@ for T = 1 : MaxT
     plot(x_node,Meval*(Mat1*n0+bc),'r-',x_node,ExactQ(x_node,time),'b--','LineWidth',2)
     title(['time = ', num2str(time)])
     
+    sol(:,T) = Meval*n0;
     pause(0.1)
 end
 

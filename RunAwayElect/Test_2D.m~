@@ -47,8 +47,8 @@ q_bcL = 1; q_bcR = 1;
 % Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
 % Delta = Mat2*Mat1;
 
-Mat1 =  MatrixGradU(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
-Mat2 =  MatrixGradQ(Lev,Deg,LInt,LEnd,1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
+Mat1 =  MatrixGradU(Lev,Deg,LInt,LEnd,0,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
+Mat2 =  MatrixGradQ(Lev,Deg,LInt,LEnd,0,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
 Delta = Mat2*Mat1;
 
 DoFs = (2^Lev*Deg);
@@ -67,10 +67,8 @@ F0 = kron(n0,n0)*exp(2*pi^2*time);
 MM = kron(Meval,Meval);
 
 bc = ComputeBC(Lev,Deg,LInt,LEnd,BCFunc,time,f_bcL,f_bcR);
-bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
-
-% bc = kron(bc,bc);
-% mesh(x_2D_plot,y_2D_plot,reshape(MM*(bc),64,64));
+bc = kron(bc,bc);
+mesh(x_2D_plot,y_2D_plot,reshape(MM*(bc),64,64));
 for T = 1 : MaxT
     time = time + dt;
     bc0 = bc*exp(time);
