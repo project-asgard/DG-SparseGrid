@@ -1,4 +1,4 @@
-function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2,bcL,bcR)
+function Mat = MatrixGradBC(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2,bcL,bcR)
 %function Mat to compute the Grad operator
 % d/dx[FunCoef*f]
 % Trace = FunCoef*f|_R - FunCoef*f|_L+
@@ -70,56 +70,23 @@ for WorkCel = 0 : Tol_Cel_Num - 1
     xR = xL + h;
     PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
     
-    IntVal = ...
-        - [Dp_val'*(quad_w.*FunCoef(PhyQuad).*p_val)] * Jacobi+...
-        + [ p_val'*(quad_w.*FunCoef2(PhyQuad).*p_val)] * Jacobi ;
-    
-    Mat = Mat + sparse(c'*ones(1,Deg),ones(Deg,1)*c,IntVal,DoF,DoF);
-    %----------------------------------------------
-    % -<funcCoef*{q},p>
-    %----------------------------------------------
-    % Numerical Flux is defined as
-    % Flux = {{f}} + C/2*[[u]]
-    %      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
-    % [[v]] = v_R - v_L
 
-    TraVal = [...
-        (-p_L)' * FunCoef(xL) * p_R/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *   p_R,...
-        (-p_L)' * FunCoef(xL) * p_L/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' * (-p_L),...% xL
-        ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
-        ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
-        ];
     if WorkCel == 0%bcL == 0 && 
         TraVal = [...
-            (-p_L)' * (p_L-p_L),...
-            (-p_L)' * (p_L-p_L),...% xL
-            ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
-            ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
+            (-p_L)' * (p_L-p_L),...,...
+            (-p_L)' * FunCoef(xL) * p_L,...% xL       
+            ( p_R)' * (p_L-p_L),...
+            ( p_R)' * (p_L-p_L)...% xR
             ];
-
-%     elseif bcL == 1 && WorkCel == 0 % Neumann
-%         TraVal = [...
-%             (-p_L)' * (p_L-p_L),...,...
-%             (-p_L)' * FunCoef(xL) * p_L,...% xL       
-%             ( p_R)' * FunCoef(xR) * p_R/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' *   p_R,...
-%             ( p_R)' * FunCoef(xR) * p_L/2 + FluxVal * abs(FunCoef(xR))/2 * ( p_R)' * (-p_L),...% xR
-%             ];
     end
     if WorkCel == Tol_Cel_Num - 1%bcR == 0 && WorkCel == Tol_Cel_Num - 1
         TraVal = [...
-            (-p_L)' * FunCoef(xL) * p_R/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *   p_R,...
-            (-p_L)' * FunCoef(xL) * p_L/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' * (-p_L),...% xL
             ( p_R)' * (p_R-p_R),...
-            ( p_R)' * (p_R-p_R),...% xR
+            ( p_R)' * (p_R-p_R),...
+            ( p_R)' * FunCoef(xR) * p_R,...
+            ( p_R)' * (p_R-p_R),...% xR     
             ];
 
-%     elseif bcR == 1 && WorkCel == Tol_Cel_Num - 1
-%         TraVal = [...
-%             (-p_L)' * FunCoef(xL) * p_R/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' *   p_R,...
-%             (-p_L)' * FunCoef(xL) * p_L/2 + FluxVal * abs(FunCoef(xL))/2 * (-p_L)' * (-p_L),...% xL
-%             ( p_R)' * FunCoef(xR) * p_R,...
-%             ( p_R)' * (p_R-p_R),...% xR     
-%             ];
     end
     % Adding trace value to matrix
     RowInd = [c'*ones(1,Deg) c'*ones(1,Deg) c'*ones(1,Deg) c'*ones(1,Deg)];
@@ -135,9 +102,9 @@ for WorkCel = 0 : Tol_Cel_Num - 1
         Iv = ColInd(:,1:3*Deg);
         Val = TraVal(:,1:3*Deg);
     else
-        Iu = RowInd;
-        Iv = ColInd;
-        Val = TraVal;
+        Iu = 1;
+        Iv = 1;
+        Val = 0;
     end
     
     
