@@ -18,7 +18,7 @@
 clear
 close all
 
-Lev = 5;
+Lev = 2;
 Deg = 2;
 num_GridPoints = Deg * 2^Lev;
 num_plot = Deg;
@@ -58,10 +58,8 @@ Delta = Mat2*Mat1;
 DoFs = (2^Lev*Deg);
 
 II = speye(DoFs,DoFs);
-% Mat = kron(Mat2*Mat1,II)+kron(Mat2,Mat1) + kron(Mat1,Mat2) + kron(II,Mat2*Mat1);%+kron(II,MatBC)+kron(MatBC,II);
-% NewMat = (speye(DoFs^2,DoFs^2) - dt*Mat);
 
-Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);%+kron(II,MatBC)+kron(MatBC,II);
+Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);
 % NewMat = speye(DoFs^2,DoFs^2) - dt*Mat;
 
 F0 = zeros(DoFs,1);
@@ -77,7 +75,7 @@ bc = ComputeBC(Lev,Deg,LInt,LEnd,BCFunc,time,f_bcL,f_bcR);
 bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
 
 
-for T = 1 : MaxT
+for T = 1 : 10%MaxT
     time = time + dt;
     bc0 = bc * exp(-2*pi^2*time);
     
