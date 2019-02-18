@@ -28,9 +28,6 @@ end
 [HASH,HASHInv] = HashTable(lev,nDims,gridType);
 nHash = numel(HASHInv);
 
-% for matrix
-[vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI2(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
-     pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 
 dimension.lev = lev;
 dimension.deg = deg;
@@ -41,13 +38,52 @@ dimension.BCL = 1; % Dirichlet
 dimension.BCR = 1; % Dirichlet
 
 term_1D.dat = [];
-term_1D.LF = 1; % upwind Flux
+term_1D.LF = -1;       % upwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
-term_1D.type = 1; % Grad Operator
+term_1D.type = 1;      % Grad Operator
 
 t = 0;
- [mat] = coeff_matrix2(t,dimension,term_1D)
+ [mat1] = coeff_matrix2(t,dimension,term_1D);
  
+dimension.BCL = 2; % Dirichlet
+dimension.BCR = 2; % Dirichlet 
+term_1D.dat = [];
+term_1D.LF = 1;        % upwind Flux
+term_1D.G = @(x,t,y)1; % Grad Operator
+term_1D.type = 1;      % Grad Operator
+ 
+[mat2] = coeff_matrix2(t,dimension,term_1D);
+
+% Then the LDG matrix after reduction is 
+Delta = mat2*mat1;
+
+DoFs = (2^lev*deg);
+
+II = speye(DoFs,DoFs);
+Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);
+% NewMat = speye(DoFs^2,DoFs^2) - dt*Mat;
+
+F0 = zeros(DoFs^2,1);
+
+CFL = .01;
+dx = 1/2^lev;
+dt = CFL*(dx)^2;
+% MaxT = ceil(1e-1/dt);
+% n0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,time);
+% F0 = kron(n0,n0)*exp(-2*pi^2*time);
+
+time = 0;
+[n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(sin(pi*x)),1);
+F0 = kron(n0,n0)*exp(-2*pi^2*time);
+
+for T = 1 : 10 
+    
+    F1 = F0 + dt*(Mat)*F0 ;
+    
+end
+
+% check about the matrix for time advance method
+
 %% Set time step.
 pde.CFL = 0.1;
 %dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;

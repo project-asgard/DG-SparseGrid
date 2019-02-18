@@ -141,7 +141,7 @@ for i=0:N-1
         p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
     
     val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
-        -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+        -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
     
     %%
     % Combine AVG and JMP to give choice of flux for this operator type
@@ -220,11 +220,19 @@ for i=0:N-1
             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
             
-            val_AVG = (1/h) * [-p_L'*p_L/2, ...   % for x1 (left side)
-                p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
+%             val_AVG = (1/h) * [-p_L'*p_L/2, ...   % for x1 (left side)
+%                 p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
+%     
+%             val_JMP = (1/h) * [-p_L'*p_L, ...     % for x1 (left side)
+%                 -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+%     
+            val_AVG = (1/h) * [...
+                -p_L'*(p_L-p_L), ...            % for x1 (left side)
+                 p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
     
-            val_JMP = (1/h) * [-p_L'*p_L, ...     % for x1 (left side)
-                -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+            val_JMP = (1/h) * [...
+                -p_L'*(p_L-p_L), ...            % for x1 (left side)
+                -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
     
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
@@ -240,11 +248,19 @@ for i=0:N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
             
-            val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
-                    p_R'*p_R/2];      % for x2 (right side)
+%             val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
+%                     p_R'*p_R/2];      % for x2 (right side)
+%     
+%             val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
+%                     -p_R'*p_R]/2;    % for x2 (right side)
+
+            val_AVG = (1/h) * [...
+                -p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
+                 p_R'*(p_R-p_R)];               % for x2 (right side)
     
-            val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
-                    -p_R'*p_R]/2;    % for x2 (right side)
+            val_JMP = (1/h) * [...
+                 p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
+                -p_R'*(p_R-p_R)];             % for x2 (right side)
     
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
@@ -266,11 +282,17 @@ for i=0:N-1
             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
             
-            val_AVG = (1/h) * [-p_L'*p_L/2, ...   % for x1 (left side)
+%             val_AVG = (1/h) * [-p_L'*p_L/2, ...   % for x1 (left side)
+%                 p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
+%     
+%             val_JMP = (1/h) * [-p_L'*p_L, ...     % for x1 (left side)
+%                 -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+%     
+          val_AVG = (1/h) * [-p_L'*p_L, ...   % for x1 (left side)
                 p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
     
-            val_JMP = (1/h) * [-p_L'*p_L, ...     % for x1 (left side)
-                -p_R'*p_R     p_R'*p_L  ]/2;    % for x2 (right side)
+            val_JMP = (1/h) * [-p_L'*(p_L-p_L), ...     % for x1 (left side)
+                -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
     
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
@@ -285,11 +307,17 @@ for i=0:N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
             
+%             val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
+%                     p_R'*p_R/2];      % for x2 (right side)
+%     
+%             val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
+%                     -p_R'*p_R]/2;    % for x2 (right side)
+            
             val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
-                    p_R'*p_R/2];      % for x2 (right side)
+                    p_R'*p_R];      % for x2 (right side)
     
             val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
-                    -p_R'*p_R]/2;    % for x2 (right side)
+                    -p_R'*(p_R-p_R)];    % for x2 (right side)
     
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
@@ -310,17 +338,17 @@ end
 
 
 %% Transform coeff_mat to wavelet space
-Mass = FMWT * Mass * FMWT';
+% % Mass = FMWT * Mass * FMWT';
 % % Grad = FMWT * Grad * FMWT';
 
 %%
 % After the transformation to wavelet space there may be very tiny coefficient values.
 % Here we zero them out.
 
-tol = 1e-8;
-
-Mass = Mass .* (abs(Mass) > tol );
-Grad = Grad .* (abs(Grad) > tol );
+% % tol = 1e-8;
+% % 
+% % Mass = Mass .* (abs(Mass) > tol );
+% % Grad = Grad .* (abs(Grad) > tol );
 
 %% Construct block diagonal for LDG ?
 % This is TODO

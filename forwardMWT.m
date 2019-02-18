@@ -53,7 +53,7 @@ f = f * h / 2;
 
 % Transfer to multi-DG bases
 
-f = mtimes( FMWT, f );
+% % f = mtimes( FMWT, f );
 
 %%
 % After the transformation to wavelet space there may be very tiny coefficient values.

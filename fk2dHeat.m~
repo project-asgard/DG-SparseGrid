@@ -6,9 +6,9 @@ format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 
-Lmin = -1;
+Lmin = 0;
 Lmax = +1;
-Vmin = -1;
+Vmin = 0;
 Vmax = +1;
 
 LevX = 2;
@@ -36,18 +36,54 @@ dimension.lev = lev;
 dimension.deg = deg;
 dimension.domainMin = Lmin;
 dimension.domainMax = Lmax;
-FMWT = dimension.FMWT;
-BCL = dimension.BCL = 1; %
-BCR = dimension.BCR;
+dimension.FMWT = pde.dimensions{1}.FMWT;
+dimension.BCL = 1; % Dirichlet
+dimension.BCR = 1; % Dirichlet
 
-dat_W = term_1D.dat;
-LF = term_1D.LF;
-G = term_1D.G;
-type = term_1D.type;
+term_1D.dat = [];
+term_1D.LF = -1; % upwind Flux
+term_1D.G = @(x,t,y)1; % Grad Operator
+term_1D.type = 1; % Grad Operator
 
 t = 0;
- [mat] = coeff_matrix2(t,dimension,term_1D)
+ [mat1] = coeff_matrix2(t,dimension,term_1D);
  
+dimension.BCL = 2; % Dirichlet
+dimension.BCR = 2; % Dirichlet 
+term_1D.dat = [];
+term_1D.LF = 1; % upwind Flux
+term_1D.G = @(x,t,y)1; % Grad Operator
+term_1D.type = 1; % Grad Operator
+ 
+[mat2] = coeff_matrix2(t,dimension,term_1D);
+
+% Then the LDG matrix after reduction is 
+Delta = mat2*mat1;
+
+DoFs = (2^lev*deg);
+
+II = speye(DoFs,DoFs);
+Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);
+% NewMat = speye(DoFs^2,DoFs^2) - dt*Mat;
+
+F0 = zeros(DoFs^2,1);
+
+CFL = .01;
+dx = 1/2^lev;
+dt = CFL*(dx)^2;
+% MaxT = ceil(1e-1/dt);
+n0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,time);
+F0 = kron(n0,n0)*exp(-2*pi^2*time);
+
+
+for T = 1 : 10 
+    
+    F1 = F0 + dt*(Mat)*F0 ;
+    
+end
+
+% check about the matrix for time advance method
+
 %% Set time step.
 pde.CFL = 0.1;
 %dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
