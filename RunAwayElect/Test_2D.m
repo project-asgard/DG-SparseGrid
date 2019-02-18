@@ -18,7 +18,7 @@
 clear
 close all
 
-Lev = 2;
+Lev = 5;
 Deg = 2;
 num_GridPoints = Deg * 2^Lev;
 num_plot = Deg;
@@ -29,8 +29,8 @@ LEnd = 1;
 Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
-CFL = 1;
-dt = CFL*(dx);%^2;
+CFL = .01;
+dt = CFL*(dx)^2;
 MaxT = ceil(1e-1/dt);
 
 % Test 
@@ -46,10 +46,10 @@ Gam = 1;
 f_bcL = 0; f_bcR = 0;
 q_bcL = 1; q_bcR = 1;
 
-Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
-Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
+Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
+Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
 Delta = Mat2*Mat1;
-MatBC = MatrixGradBC(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR);
+% MatBC = MatrixGradBC(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR);
 
 % Mat1 =   MatrixGradU(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,f_bcL,f_bcR); % equation for q
 % Mat2 =   MatrixGradQ(Lev,Deg,LInt,LEnd,1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
@@ -58,10 +58,10 @@ MatBC = MatrixGradBC(Lev,Deg,LInt,LEnd, 1,@(x)1,@(x)0,q_bcL,q_bcR);
 DoFs = (2^Lev*Deg);
 
 II = speye(DoFs,DoFs);
-Mat = kron(Mat2*Mat1,II)+kron(Mat2,Mat1) + kron(Mat1,Mat2) + kron(II,Mat2*Mat1);%+kron(II,MatBC)+kron(MatBC,II);
-NewMat = (speye(DoFs^2,DoFs^2) - dt*Mat);
+% Mat = kron(Mat2*Mat1,II)+kron(Mat2,Mat1) + kron(Mat1,Mat2) + kron(II,Mat2*Mat1);%+kron(II,MatBC)+kron(MatBC,II);
+% NewMat = (speye(DoFs^2,DoFs^2) - dt*Mat);
 
-% Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);%+kron(II,MatBC)+kron(MatBC,II);
+Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);%+kron(II,MatBC)+kron(MatBC,II);
 % NewMat = speye(DoFs^2,DoFs^2) - dt*Mat;
 
 F0 = zeros(DoFs,1);
@@ -81,11 +81,11 @@ for T = 1 : MaxT
     time = time + dt;
     bc0 = bc * exp(-2*pi^2*time);
     
-%     F1 = F0 + dt*(-Mat)*F0 + dt*( bc0);
+    F1 = F0 + dt*(Mat)*F0 + dt*( bc0);
     val = exp(-2*pi^2*time)*sin(pi*x_2D_plot).*sin(pi*y_2D_plot);
     
-    F1 = NewMat\F0;
-    mesh(x_2D_plot,y_2D_plot,reshape(MM*(F1),num_GridPoints,num_GridPoints)-val);
+%     F1 = NewMat\F0;
+    mesh(x_2D_plot,y_2D_plot,reshape(MM*(F1),num_GridPoints,num_GridPoints));
 %     hold on;
     F0 = F1;
     [norm(MM*(F1)-val(:)) max(abs(MM*(F1)-val(:)))]
