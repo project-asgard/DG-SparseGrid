@@ -38,7 +38,7 @@ dimension.BCL = 1; % Dirichlet
 dimension.BCR = 1; % Dirichlet
 
 term_1D.dat = [];
-term_1D.LF = -1;       % upwind Flux
+term_1D.LF = -1;       % Upwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
 term_1D.type = 1;      % Grad Operator
 
@@ -48,7 +48,7 @@ t = 0;
 dimension.BCL = 2; % Dirichlet
 dimension.BCR = 2; % Dirichlet 
 term_1D.dat = [];
-term_1D.LF = 1;        % upwind Flux
+term_1D.LF = 1;        % Upwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
 term_1D.type = 1;      % Grad Operator
  
@@ -69,8 +69,7 @@ CFL = .01;
 dx = 1/2^lev;
 dt = CFL*(dx)^2;
 % MaxT = ceil(1e-1/dt);
-% n0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,time);
-% F0 = kron(n0,n0)*exp(-2*pi^2*time);
+
 
 time = 0;
 [n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(sin(pi*x)),1);
