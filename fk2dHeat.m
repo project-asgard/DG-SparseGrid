@@ -38,7 +38,7 @@ dimension.BCL = 1; % Dirichlet
 dimension.BCR = 1; % Dirichlet
 
 term_1D.dat = [];
-term_1D.LF = -1;       % Upwind Flux
+term_1D.LF = 1;       % Upwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
 term_1D.type = 1;      % Grad Operator
 
@@ -48,7 +48,7 @@ t = 0;
 dimension.BCL = 2; % Dirichlet
 dimension.BCR = 2; % Dirichlet 
 term_1D.dat = [];
-term_1D.LF = 1;        % Upwind Flux
+term_1D.LF = -1;        % Upwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
 term_1D.type = 1;      % Grad Operator
  
