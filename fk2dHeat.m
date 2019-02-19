@@ -102,7 +102,8 @@ bc = (pde.dimensions{1}.FMWT*bc);
 bc1 = ComputRHS(lev,deg,Lmin,Lmax,BCFunc,time);
 bc1 = (pde.dimensions{1}.FMWT*bc1);
 % 
-bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc) ;
+bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc); % this is the correct form
+% bc2 = kron(bc,bc1) +  kron(bc1,bc) ;
 % bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
 
 subplot(1,2,1)
