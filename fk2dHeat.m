@@ -1,6 +1,9 @@
 %% MATLAB (reference) version of the ASGarD solver
 % New test for 2D Heat equation
+% correct for non-homogeneous case
+% To do: SG case
 function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity)
+close all
 
 format short e
 folder = fileparts(which(mfilename));
@@ -11,11 +14,13 @@ Lmax = +1;
 Vmin = 0;
 Vmax = +1;
 
-LevX = 2;
-LevV = 2;
-
 deg = 2;
-lev = 2;
+lev = 5;
+
+LevX = lev;
+LevV = lev;
+
+
 
 gridType = 'SG'; % 'FG'
 nDims = 2;
@@ -70,14 +75,57 @@ dx = 1/2^lev;
 dt = CFL*(dx)^2;
 % MaxT = ceil(1e-1/dt);
 
-
+BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
 time = 0;
-[n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(sin(pi*x)),1);
+% [n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(sin(pi*x)),1);
+[n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(cos(pi*x)),1);
+n0 = pde.dimensions{1}.FMWT*n0;
 F0 = kron(n0,n0)*exp(-2*pi^2*time);
 
-for T = 1 : 10 
+
+[x_node,Meval] = PlotDGData(lev,deg,Lmin,Lmax,deg);
+Meval = Meval*pde.dimensions{1}.FMWT';
+[x_2D_plot,y_2D_plot] = meshgrid(x_node);
+MM = kron(Meval,Meval);
+num_GridPoints = deg * 2^lev;
+
+bc = ComputeBC(lev,deg,Lmin,Lmax,BCFunc,time,0,0);
+bc = (pde.dimensions{1}.FMWT*bc);
+
+bc1 = ComputRHS(lev,deg,Lmin,Lmax,BCFunc,time);
+bc1 = (pde.dimensions{1}.FMWT*bc1);
+% 
+bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc) ;
+% bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
+
+subplot(1,2,1)
+mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0),num_GridPoints,num_GridPoints));
+subplot(1,2,2)
+mesh(x_2D_plot,y_2D_plot,reshape(MM*(bc2),num_GridPoints,num_GridPoints));
+
+figure
+
+for T = 1 : 100
+    time = dt*T;
+    bc0 = bc2*exp(-2*pi^2*time);
+    F1 = F0 + dt*(Mat)*F0 - dt* bc0;
+    F0 = F1;
     
-    F1 = F0 + dt*(Mat)*F0 ;
+    val = reshape(MM*(F1),num_GridPoints,num_GridPoints);
+    subplot(1,3,1)
+    mesh(x_2D_plot,y_2D_plot,val,...
+        'FaceColor','interp','EdgeColor','none');
+    title(num2str(T))
+    val_ex = cos(pi*x_2D_plot).*cos(pi*y_2D_plot)*exp(-2*pi^2*time);
+    subplot(1,3,2)
+    mesh(x_2D_plot,y_2D_plot,cos(pi*x_2D_plot).*cos(pi*y_2D_plot)*exp(-2*pi^2*time),...
+        'FaceColor','interp','EdgeColor','none');
+    subplot(1,3,3)
+    
+    mesh(x_2D_plot,y_2D_plot,cos(pi*x_2D_plot).*cos(pi*y_2D_plot)*exp(-2*pi^2*time)-val,...
+        'FaceColor','interp','EdgeColor','none');
+    title(num2str(max(abs(val(:)-val_ex(:)))))
+    pause(0.1)
     
 end
 

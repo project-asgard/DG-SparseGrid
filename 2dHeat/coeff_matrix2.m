@@ -339,7 +339,7 @@ end
 
 %% Transform coeff_mat to wavelet space
 % % Mass = FMWT * Mass * FMWT';
-% % Grad = FMWT * Grad * FMWT';
+Grad = FMWT * Grad * FMWT';
 
 %%
 % After the transformation to wavelet space there may be very tiny coefficient values.
