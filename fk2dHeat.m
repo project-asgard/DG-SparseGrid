@@ -76,9 +76,16 @@ dt = CFL*(dx)^2;
 % MaxT = ceil(1e-1/dt);
 
 BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+ExaFunc = @(x,y,t)(cos(pi*x).*cos(pi*y)*exp(-2*pi^2*t));
+IntFunc = @(x,t)(cos(pi*x));
+
+% BCFunc = @(x,t)(sin(pi*x)*exp(-2*pi^2*t));
+% ExaFunc = @(x,y,t)(sin(pi*x).*sin(pi*y)*exp(-2*pi^2*t));
+% IntFunc = @(x,t)(sin(pi*x));
+
 time = 0;
-% [n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(sin(pi*x)),1);
-[n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(cos(pi*x)),1);
+[n0] = forwardMWT(lev,deg,Lmin,Lmax,IntFunc,1);
+% [n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(cos(pi*x)),1);
 n0 = pde.dimensions{1}.FMWT*n0;
 F0 = kron(n0,n0)*exp(-2*pi^2*time);
 
@@ -116,13 +123,13 @@ for T = 1 : 100
     mesh(x_2D_plot,y_2D_plot,val,...
         'FaceColor','interp','EdgeColor','none');
     title(num2str(T))
-    val_ex = cos(pi*x_2D_plot).*cos(pi*y_2D_plot)*exp(-2*pi^2*time);
+    val_ex = ExaFunc(x_2D_plot,y_2D_plot,time);
     subplot(1,3,2)
-    mesh(x_2D_plot,y_2D_plot,cos(pi*x_2D_plot).*cos(pi*y_2D_plot)*exp(-2*pi^2*time),...
+    mesh(x_2D_plot,y_2D_plot,val_ex,...
         'FaceColor','interp','EdgeColor','none');
     subplot(1,3,3)
     
-    mesh(x_2D_plot,y_2D_plot,cos(pi*x_2D_plot).*cos(pi*y_2D_plot)*exp(-2*pi^2*time)-val,...
+    mesh(x_2D_plot,y_2D_plot,val_ex-val,...
         'FaceColor','interp','EdgeColor','none');
     title(num2str(max(abs(val(:)-val_ex(:)))))
     pause(0.1)
