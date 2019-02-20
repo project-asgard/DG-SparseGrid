@@ -22,11 +22,17 @@ LevV = lev;
 
 
 
-gridType = 'SG'; % 'FG'
+gridType = 'FG'; %'SG'; %
 nDims = 2;
 
 for d=1:nDims
     pde.dimensions{d}.FMWT = OperatorTwoScale(deg,2^lev);
+    pde.dimensions{d}.init_cond_fn = @(x,parameter)cos(pi*x);
+    pde.dimensions{d}.lev = lev;
+    pde.dimensions{d}.deg = deg;
+    pde.dimensions{d}.domainMin = Lmin;
+    pde.dimensions{d}.domainMax = Lmax;
+    pde.params = 1;
 end
 
 % hash table
@@ -53,7 +59,7 @@ t = 0;
 dimension.BCL = 2; % Dirichlet
 dimension.BCR = 2; % Dirichlet 
 term_1D.dat = [];
-term_1D.LF = -1;        % Upwind Flux
+term_1D.LF = -1;       % Downwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
 term_1D.type = 1;      % Grad Operator
  
@@ -85,8 +91,8 @@ IntFunc = @(x,t)(cos(pi*x));
 
 time = 0;
 [n0] = forwardMWT(lev,deg,Lmin,Lmax,IntFunc,1);
-% [n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(cos(pi*x)),1);
 n0 = pde.dimensions{1}.FMWT*n0;
+% Initial condition
 F0 = kron(n0,n0)*exp(-2*pi^2*time);
 
 
@@ -111,9 +117,10 @@ mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0),num_GridPoints,num_GridPoints));
 subplot(1,2,2)
 mesh(x_2D_plot,y_2D_plot,reshape(MM*(bc2),num_GridPoints,num_GridPoints));
 
+    
 figure
 
-for T = 1 : 100
+for T = 1 : 1
     time = dt*T;
     bc0 = bc2*exp(-2*pi^2*time);
     F1 = F0 + dt*(Mat)*F0 - dt* bc0;
@@ -136,6 +143,44 @@ for T = 1 : 100
     pause(0.1)
     
 end
+% Check about sg scheme
+
+% Generate Hash Table
+
+% Initial Conditions
+
+fval = initial_condition_vector(HASHInv,pde,0);
+
+% Matrix
+A_encode=GlobalMatrixSG_newCon(Delta,II,HASH,lev,deg);
+B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg);
+
+A_encode = [A_encode,B_encode];
+
+
+ftmp = 0;
+use_kronmult2 = 1;
+for i=1:size(A_encode,2)
+        
+        tmpA=A_encode{i}.A1;
+        tmpB=A_encode{i}.A2;
+        IndexI=A_encode{i}.IndexI;
+        IndexJ=A_encode{i}.IndexJ;
+        
+%         if (use_kronmult2)
+%             ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
+%         else
+            
+            nrA = size(tmpA,1);
+            ncA = size(tmpA,2);
+            nrB = size(tmpB,1);
+            ncB = size(tmpB,2);
+            
+            ftmp(IndexI)=ftmp(IndexI) + ...
+                reshape(tmpB * reshape(f(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+%         end
+        
+  end
 
 % check about the matrix for time advance method
 

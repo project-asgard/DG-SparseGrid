@@ -22,7 +22,7 @@ LevV = lev;
 
 
 
-gridType = 'SG'; % 'FG'
+gridType = 'FG'; %'SG'; % 
 nDims = 2;
 
 for d=1:nDims
@@ -75,17 +75,16 @@ dx = 1/2^lev;
 dt = CFL*(dx)^2;
 % MaxT = ceil(1e-1/dt);
 
-% BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
-% ExaFunc = @(x,y,t)(cos(pi*x).*cos(pi*y)*exp(-2*pi^2*t));
-% IntFunc = @(x)(cos(pi*x));
+BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+ExaFunc = @(x,y,t)(cos(pi*x).*cos(pi*y)*exp(-2*pi^2*t));
+IntFunc = @(x,t)(cos(pi*x));
 
-BCFunc = @(x,t)(sin(pi*x)*exp(-2*pi^2*t));
-ExaFunc = @(x,y,t)(sin(pi*x).*sin(pi*y)*exp(-2*pi^2*t));
-IntFunc = @(x)(sin(pi*x));
+% BCFunc = @(x,t)(sin(pi*x)*exp(-2*pi^2*t));
+% ExaFunc = @(x,y,t)(sin(pi*x).*sin(pi*y)*exp(-2*pi^2*t));
+% IntFunc = @(x,t)(sin(pi*x));
 
 time = 0;
-[n0] = forwardMWT(lev,deg,Lmin,Lmax,Int,1);
-% [n0] = forwardMWT(lev,deg,Lmin,Lmax,@(x,t)(cos(pi*x)),1);
+[n0] = forwardMWT(lev,deg,Lmin,Lmax,IntFunc,1);
 n0 = pde.dimensions{1}.FMWT*n0;
 F0 = kron(n0,n0)*exp(-2*pi^2*time);
 
@@ -102,7 +101,8 @@ bc = (pde.dimensions{1}.FMWT*bc);
 bc1 = ComputRHS(lev,deg,Lmin,Lmax,BCFunc,time);
 bc1 = (pde.dimensions{1}.FMWT*bc1);
 % 
-bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc) ;
+bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc); % this is the correct form
+% bc2 = kron(bc,bc1) +  kron(bc1,bc) ;
 % bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
 
 subplot(1,2,1)
@@ -110,6 +110,36 @@ mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0),num_GridPoints,num_GridPoints));
 subplot(1,2,2)
 mesh(x_2D_plot,y_2D_plot,reshape(MM*(bc2),num_GridPoints,num_GridPoints));
 
+A_encode=GlobalMatrixSG_newCon(Delta,II,HASH,lev,deg);
+B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg);
+
+A_encode = [A_encode,B_encode];
+
+f = 
+ftmp = 0;
+use_kronmult2 = 1;
+for i=1:size(A_encode,2)
+        
+        tmpA=A_encode{i}.A1;
+        tmpB=A_encode{i}.A2;
+        IndexI=A_encode{i}.IndexI;
+        IndexJ=A_encode{i}.IndexJ;
+        
+%         if (use_kronmult2)
+%             ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
+%         else
+            
+            nrA = size(tmpA,1);
+            ncA = size(tmpA,2);
+            nrB = size(tmpB,1);
+            ncB = size(tmpB,2);
+            
+            ftmp(IndexI)=ftmp(IndexI) + ...
+                reshape(tmpB * reshape(f(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+%         end
+        
+  end
+    
 figure
 
 for T = 1 : 100
@@ -135,6 +165,7 @@ for T = 1 : 100
     pause(0.1)
     
 end
+% Check about sg scheme
 
 % check about the matrix for time advance method
 
