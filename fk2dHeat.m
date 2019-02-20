@@ -22,7 +22,7 @@ LevV = lev;
 
 
 
-gridType = 'FG'; %'SG'; %
+gridType = 'SG'; %'FG'; %
 nDims = 2;
 
 for d=1:nDims
@@ -91,7 +91,7 @@ IntFunc = @(x,t)(cos(pi*x));
 
 time = 0;
 [n0] = forwardMWT(lev,deg,Lmin,Lmax,IntFunc,1);
-n0 = pde.dimensions{1}.FMWT*n0;
+% n0 = pde.dimensions{1}.FMWT*n0;
 % Initial condition
 F0 = kron(n0,n0)*exp(-2*pi^2*time);
 
@@ -109,6 +109,15 @@ bc1 = ComputRHS(lev,deg,Lmin,Lmax,BCFunc,time);
 bc1 = (pde.dimensions{1}.FMWT*bc1);
 % 
 bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc); % this is the correct form
+
+% for sg
+ft = 1;
+fList{1} = mat2*bc;
+fList{2} = bc1;
+bc3= combine_dimensions_D(fList,ft,HASHInv,pde);
+fList{1} = bc1;
+fList{2} = mat2*bc;
+bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
 % bc2 = kron(bc,bc1) +  kron(bc1,bc) ;
 % bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
 
@@ -157,19 +166,22 @@ B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg);
 
 A_encode = [A_encode,B_encode];
 
-
-ftmp = 0;
+ [Meval_v,v_node,Meval_x,x_node]=matrix_plot(lev,lev,deg,Lmin,Lmax,Vmin,Vmax,...
+        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
+    
+ftmp = fval-fval;
 use_kronmult2 = 1;
+for T = 1 : 100
+    time = dt*T;
+    bc0 = bc2*exp(-2*pi^2*time);
+    ftmp = fval-fval;
 for i=1:size(A_encode,2)
         
         tmpA=A_encode{i}.A1;
         tmpB=A_encode{i}.A2;
         IndexI=A_encode{i}.IndexI;
         IndexJ=A_encode{i}.IndexJ;
-        
-%         if (use_kronmult2)
-%             ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
-%         else
+
             
             nrA = size(tmpA,1);
             ncA = size(tmpA,2);
@@ -177,11 +189,36 @@ for i=1:size(A_encode,2)
             ncB = size(tmpB,2);
             
             ftmp(IndexI)=ftmp(IndexI) + ...
-                reshape(tmpB * reshape(f(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+                reshape(tmpB * reshape(fval(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
 %         end
         
-  end
+end
+ ftmp = fval + dt*ftmp - dt* bc3;
+ fval = ftmp;
+ 
+ tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
+    figure(1000)
+    
+    f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
+    
+    [xx,vv]=meshgrid(x_node,v_node);
+    
+    ax1 = subplot(1,2,1);
+    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    view(-21,39)
+    title(num2str(T))
+    ax2 = subplot(1,2,2);
+     mesh(xx,vv,cos(pi*xx).*cos(pi*vv)*exp(-2*pi^2*dt*T),'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    view(-21,39)
+    pause(0.1)
+end
 
+
+ 
+ 
+    
 % check about the matrix for time advance method
 
 %% Set time step.
