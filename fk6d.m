@@ -78,7 +78,7 @@ if compression == 3
     % the new matrix construction is as _newCon, only works for 
     % compression= 3
 %     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
-    A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,lev,deg);
+    A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,lev,deg,gridType);
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.

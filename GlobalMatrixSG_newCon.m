@@ -1,4 +1,4 @@
-function A_encode=GlobalMatrixSG_newCon(A,B,HASH,Lev,Deg)
+function A_encode=GlobalMatrixSG_newCon(A,B,HASH,Lev,Deg,gridType)
 %Global Matrix construction from Matrices A1,...,ADim
 % This code is to generate global matrix
 % only works for
@@ -13,8 +13,14 @@ Dim = 2;
 Matrix{1} = A;
 Matrix{2} = B;
 
+is_sparse_grid = strcmp( gridType, 'SG');
+
 % All the possible combination of Lev for variables (x1,...xDim)
-ComLev = perm_leq( Dim, Lev);
+if (is_sparse_grid),
+    ComLev = perm_leq( Dim, Lev);
+else
+    ComLev = perm_max( Dim, Lev);
+end
 ComLevIndex = [];
 
 for i = 1:size(ComLev,1)
@@ -82,6 +88,7 @@ for i = 1:size(ComLev,1)
         
         IndexI = tmp(:);
         IndexI(rIndex(:)) = IndexI;
+
         
         % compute the column index
         tmp = Deg^Dim*(IndexJ(:)-1)+[1:Deg^Dim];
@@ -90,6 +97,7 @@ for i = 1:size(ComLev,1)
         
         IndexJ = tmp(:);
         IndexJ(cIndex(:)) = IndexJ;
+
         
         A_encode{count}.IndexI = IndexI;
         A_encode{count}.IndexJ = IndexJ;

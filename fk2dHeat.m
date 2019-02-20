@@ -15,14 +15,14 @@ Vmin = 0;
 Vmax = +1;
 
 deg = 2;
-lev = 5;
+lev = 2;
 
 LevX = lev;
 LevV = lev;
 
 
 
-gridType = 'SG'; %'FG'; %
+gridType = 'FG'; %'SG'; %
 nDims = 2;
 
 for d=1:nDims
@@ -56,8 +56,8 @@ term_1D.type = 1;      % Grad Operator
 t = 0;
  [mat1] = coeff_matrix2(t,dimension,term_1D);
  
-dimension.BCL = 2; % Dirichlet
-dimension.BCR = 2; % Dirichlet 
+dimension.BCL = 2; % Neumann
+dimension.BCR = 2; % Neumann
 term_1D.dat = [];
 term_1D.LF = -1;       % Downwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
@@ -152,17 +152,14 @@ for T = 1 : 1
     pause(0.1)
     
 end
-% Check about sg scheme
 
-% Generate Hash Table
-
-% Initial Conditions
 
 fval = initial_condition_vector(HASHInv,pde,0);
 
 % Matrix
-A_encode=GlobalMatrixSG_newCon(Delta,II,HASH,lev,deg);
-B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg);
+A_encode=GlobalMatrixSG_newCon(Delta,II,HASH,lev,deg,gridType);
+B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg,gridType);
+
 
 A_encode = [A_encode,B_encode];
 
@@ -203,14 +200,21 @@ end
     
     [xx,vv]=meshgrid(x_node,v_node);
     
-    ax1 = subplot(1,2,1);
+    ax1 = subplot(1,3,1);
     mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
     axis([Lmin Lmax Vmin Vmax])
     view(-21,39)
+    
     title(num2str(T))
-    ax2 = subplot(1,2,2);
-     mesh(xx,vv,cos(pi*xx).*cos(pi*vv)*exp(-2*pi^2*dt*T),'FaceColor','interp','EdgeColor','none');
+    ax2 = subplot(1,3,2);
+    val = cos(pi*xx).*cos(pi*vv)*exp(-2*pi^2*dt*T);
+     mesh(xx,vv,val,'FaceColor','interp','EdgeColor','none');
     axis([Lmin Lmax Vmin Vmax])
+    view(-21,39)
+    ax2 = subplot(1,3,3);
+    mesh(xx,vv,val-f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    title(num2str(max(abs(val(:)-f2d0(:)))))
     view(-21,39)
     pause(0.1)
 end
