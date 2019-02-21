@@ -15,14 +15,14 @@ Vmin = 0;
 Vmax = +1;
 
 deg = 2;
-lev = 2;
+lev = 6;
 
 LevX = lev;
 LevV = lev;
 
 
 
-gridType = 'FG'; %'SG'; %
+gridType = 'SG'; %'FG'; %
 nDims = 2;
 
 for d=1:nDims
