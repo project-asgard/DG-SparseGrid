@@ -34,7 +34,8 @@ for icase=1:ncase,
   end;
   
   if (~exist('hash_format')),
-    hash_format = 'i%04.4d_';
+      %     hash_format = 'i%04.4d';
+      set_hash_format
   end;
   
   % -------------------------------------------------

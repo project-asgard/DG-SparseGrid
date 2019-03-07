@@ -1,6 +1,6 @@
 function [keystr] = getHashKeyStr(key)
 
-hash_format =  'i%04.4d_';
+hash_format =  'i%04.4d';
 
 % Inputs
 %

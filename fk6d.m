@@ -135,6 +135,10 @@ if nDims==3
     [xx1,xx2,xx3] = ndgrid(nodes{3},nodes{2},nodes{1});
     coord = {xx3,xx2,xx1};
 end
+if nDims==6
+    [xx1,xx2,xx3,xx4,xx5,xx6] = ndgrid(nodes{6},nodes{5},nodes{4},nodes{3},nodes{2},nodes{1});
+    coord = {xx6,xx5,xx4,xx3,xx2,xx1};
+end
 
 % %%
 % % Try transforming a known 3D function to wavelet space and then back again. 

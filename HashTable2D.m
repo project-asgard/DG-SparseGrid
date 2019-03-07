@@ -17,12 +17,16 @@ if ~exist('gridType','var') || isempty(gridType)
     gridType = 'SG'; % Set default gridType to SG
 end
 
-global hash_format
+% global hash_format
+% 
+% % Specifies the number of allowable integers in the elements of the hash key
+% % If more are needed, i.e., > 99, then change to 'i%3.3i_'.
+% 
+% hash_format =  'i%04.4d';
 
-% Specifies the number of allowable integers in the elements of the hash key
-% If more are needed, i.e., > 99, then change to 'i%3.3i_'.
-
-hash_format =  'i%04.4d_';
+%%
+% Set the hash format in one place 
+set_hash_format
 
 count=1;
 forwardHash = struct(); % Empty struct array
