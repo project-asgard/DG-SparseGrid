@@ -1,4 +1,4 @@
-function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde)
+function [GradMat,GradGradMat] = Matrix_TI(Lev,Deg,Lmax,pde,FMWT_COMP_x)
 %========================================================
 % Construct the matrix for curl operator on [0,Lmax]
 % Input:

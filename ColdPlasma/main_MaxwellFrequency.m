@@ -172,14 +172,14 @@ ff = ff*(2*pi^2-pde.w2);
 x = zeros(Dofs3,1);
 uu = ff/(2*pi^2-pde.w2);
 
-% % sol = cg(x,ff,MaxIter,Tol);
-% % [max(abs(sol-uu)) norm(sol-uu)]
+% sol = cg(x,ff,MaxIter,Tol);
+% [max(abs(sol-uu)) norm(sol-uu)]
 
-% % [sol_bicg,flag_bicg,rr_bicg,iter_bicg,rv_bicg] = bicgstab(@afun,ff,Tol,MaxIter);
-% % semilogy(0:length(rv_bicg)-1,rv_bicg/norm(ff),'-o','linewidth',2,'markersize',8);
-% % hold on;
-% % [max(abs(sol_bicg-uu)) norm(sol_bicg-uu)]
-% % 'done of bicg'
+% [sol_bicg,flag_bicg,rr_bicg,iter_bicg,rv_bicg] = bicgstab(@afun,ff,Tol,MaxIter);
+% semilogy(0:length(rv_bicg)-1,rv_bicg/norm(ff),'-o','linewidth',2,'markersize',8);
+% hold on;
+% [max(abs(sol_bicg-uu)) norm(sol_bicg-uu)]
+% 'done of bicg'
 
 [sol_CG,flag2,rr2,iter2,rv_CG] = pcg(@afun2,ff,Tol,MaxIter);
 semilogy(0:length(rv_CG)-1,rv_CG/norm(ff),'-o','linewidth',2,'markersize',8);
@@ -189,12 +189,12 @@ hold on;
 
 
 
-% % [sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun,ff,100,Tol,MaxIter);
-% % semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
-% % legend({'CG','BICG','GMRES'},'fontsize',20)
-% % xlabel('Iteration number');
-% % ylabel('Relative residual');
-% % [max(abs(sol_GMRES-uu)) norm(sol_GMRES-uu)]
+[sol_GMRES,fl0,rr0,it0,rv_RMRES]= gmres(@afun2,ff,100,Tol,MaxIter);
+semilogy(0:length(rv_RMRES)-1,rv_RMRES/norm(ff),'-o','linewidth',2,'markersize',8);
+legend({'CG','BICG','GMRES'},'fontsize',20)
+xlabel('Iteration number');
+ylabel('Relative residual');
+[max(abs(sol_GMRES-uu)) norm(sol_GMRES-uu)]
 
 
 

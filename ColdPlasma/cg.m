@@ -26,7 +26,8 @@ function [x,error,iter,flag]=cg(x,b,max_it,tol)
 %  r = b - A*x;
 %    r = b - Fc(x);
 
-   r = b - ApplyA(x);
+%   r = b - ApplyA(x);
+   r = b - ApplyA2(x);
 
    
   error = norm( r ) / bnrm2;
@@ -47,7 +48,9 @@ function [x,error,iter,flag]=cg(x,b,max_it,tol)
 
 %     q = A*p;
 %       q = Fc(p);
-      q = ApplyA(p);
+
+%       q = ApplyA(p);
+      q = ApplyA2(p);
       
      alpha(iter) = rho / (p'*q );
      x = x + alpha(iter) * p;                    % update approximation vector
