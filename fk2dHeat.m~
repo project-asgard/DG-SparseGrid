@@ -22,14 +22,7 @@ lev = pde.dimensions{1}.lev;
 Lmin = pde.dimensions{1}.domainMin;
 Lmax = pde.dimensions{1}.domainMax;
 
-BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
-
-% for time stepping
-CFL = .01;
-dx = 1/2^lev;
-dt = CFL*(dx)^2;
-
-
+% Avoid connectivity
 
 % hash table
 [HASH,HASHInv] = HashTable(lev,nDims,gridType);
@@ -65,7 +58,19 @@ term_1D.type = 1;      % Grad Operator
 % conditions
 [mat2] = coeff_matrix2(t,dimension,term_1D);
 
+DoFs = (2^lev*deg);
 
+II = speye(DoFs,DoFs);
+
+
+CFL = .01;
+dx = 1/2^lev;
+dt = CFL*(dx)^2;
+% MaxT = ceil(1e-1/dt);
+
+BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+% ExaFunc = @(x,y,t)(cos(pi*x).*cos(pi*y)*exp(-2*pi^2*t));
+% IntFunc = @(x,t)(cos(pi*x));
 
 % for initial condition
 time = 0;
@@ -80,7 +85,7 @@ bc = (pde.dimensions{1}.FMWT*bc);
 bc1 = ComputRHS(lev,deg,dimension.domainMin,dimension.domainMax,BCFunc,time);
 bc1 = (pde.dimensions{1}.FMWT*bc1);
 
-% construct the 2D boundary
+% for 
 ft = 1;
 fList{1} = mat2*bc;
 fList{2} = bc1;
@@ -90,13 +95,12 @@ fList{2} = mat2*bc;
 bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
 
 
-% 2D Matrix construction for sparse grids
-DoFs = (2^lev*deg);
-II = speye(DoFs,DoFs);
-
+% Matrix
 A_encode=GlobalMatrixSG_newCon(Delta,II,HASH,lev,deg,gridType);
 B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg,gridType);
-C_encode = [A_encode,B_encode];
+
+
+A_encode = [A_encode,B_encode];
 
 [Meval_v,v_node,Meval_x,x_node]=matrix_plot(lev,lev,deg,...
     Lmin,Lmax, Lmin, Lmax,...
@@ -106,10 +110,8 @@ C_encode = [A_encode,B_encode];
 for T = 1 : 100
     time = dt*T;
     
-    % Euler time advance 
-    % df^1 = df^0 + dt*A*f^0 + dt*s + dt*bc
-    % just like Apply(A,f)
-    ftmp = fval-fval; 
+    ftmp = fval-fval;
+    
     for i=1:size(A_encode,2)
         
         tmpA=A_encode{i}.A1;
@@ -125,10 +127,9 @@ for T = 1 : 100
         
         ftmp(IndexI)=ftmp(IndexI) + ...
             reshape(tmpB * reshape(fval(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+        %         end
         
     end
-    % bc term is cos(pi*x)*cos(pi*y)*exp(-2*pi^2*time)
-    % thus we fully decomposite the x,y,t components
     ftmp = fval + dt*ftmp - dt* bc3 * exp(-2*pi^2*time);
     fval = ftmp;
     

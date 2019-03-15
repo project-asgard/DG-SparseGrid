@@ -331,31 +331,24 @@ Grad = FMWT * Grad * FMWT';
 % DeltaX = blkdiag( FMWT,FMWT) * ...
 %          DeltaX * ...
 %          blkdiag( FMWT',FMWT');
-mat = Grad;
 
 if type == 3 %(Output is Stiff)
+    term_1D.LF = -1;       % Downwind Flux
     term_1D.type = 1;      % Grad Operator
-    
-     term_1D.LF = -1;       % Downwind Flux
-     dimension.BCL = 2; % Neumann
-    dimension.BCR = 2; % Neumann
     matD = coeff_matrix2(t,dimension,term_1D);
     term_1D.LF = 1;       % Downwind Flux
-    dimension.BCL = 1; % Neumann
-    dimension.BCR = 1; % Neumann
     matU = coeff_matrix2(t,dimension,term_1D);
-    mat = matD*matU;
 end
 
-% if type == 1
-%     mat = Grad;
-% end
-% if type == 2
-%     mat = Mass;
-% end
-% if type == 3
-%     mat = Stif;
-% end
+if type == 1
+    mat = Grad;
+end
+if type == 2
+    mat = Mass;
+end
+if type == 3
+    mat = Stif;
+end
 
 
 

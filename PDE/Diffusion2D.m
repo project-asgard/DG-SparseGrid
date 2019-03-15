@@ -41,54 +41,55 @@ pde.dimensions = {dim_x, dim_y}; % Order chosen here to match the old hard wired
 
 %% Setup the terms of the PDE
 %
-% Here we have 2 terms, with each term having nDims (x and y) operators.
+% Here we have 1 term, with each term having nDims (x and y) operators.
 
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 term_1D.dat = [];
 term_1D.LF = 1;       % Upwind Flux
-term_1D.G = @(x,t,y)1; % Grad Operator 
-term_1D.type = 2;      % Delta Operator ::  Let this denote the derivative order
+term_1D.G = @(x,t,y)1; % Delta Operator 
+term_1D.type = 3;      % Delta Operator ::  Let this denote the derivative order
+pde.term_1D = term_1D;
 
-term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
-term2_x.TD = 0; % Time dependent term or not.
-term2_x.dat = []; % These are to be filled within the workflow for now
-term2_x.LF = 1; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-term2_x.name = 'd_dx';
-
-term2_y.type = 2; % mass (see coeff_matrix.m for available types)
-term2_y.G = @(v,t,dat) 1; % G function for use in coeff_matrix construction.
-term2_y.TD = 0; % Time dependent term or not.
-term2_y.dat = []; % These are to be filled within the workflow for now
-term2_y.LF = 0; % Use Lax-Friedrichs flux or not.
-term2_y.name = 'v';
-
-term2 = {term2_y, term2_x};
-
-%% 
-% Setup the E.d_dv (E.MassX . GradV) term
-
-term3_x.type = 2;
-term3_x.G = @(x,t,dat) dat;
-term3_x.TD = 1;
-term3_x.dat = [];
-term3_x.LF = 0;
-term3_x.name = 'E';
-
-term3_v.type = 1;
-term3_v.G = @(v,t,dat) v*0+1;
-term3_v.TD = 0;
-term3_v.dat = [];
-term3_v.LF = 0;
-term3_v.name = 'd_dv';
-
-term3 = {term3_v, term3_x};
+% term2_x.type = 1; % grad (see coeff_matrix.m for available types)
+% term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+% term2_x.TD = 0; % Time dependent term or not.
+% term2_x.dat = []; % These are to be filled within the workflow for now
+% term2_x.LF = 1; % Use Lax-Friedrichs flux or not TODO : what should this value be?
+% term2_x.name = 'd_dx';
+% 
+% term2_y.type = 2; % mass (see coeff_matrix.m for available types)
+% term2_y.G = @(v,t,dat) 1; % G function for use in coeff_matrix construction.
+% term2_y.TD = 0; % Time dependent term or not.
+% term2_y.dat = []; % These are to be filled within the workflow for now
+% term2_y.LF = 0; % Use Lax-Friedrichs flux or not.
+% term2_y.name = 'v';
+% 
+% term2 = {term2_y, term2_x};
+% 
+% %% 
+% % Setup the E.d_dv (E.MassX . GradV) term
+% 
+% term3_x.type = 2;
+% term3_x.G = @(x,t,dat) dat;
+% term3_x.TD = 1;
+% term3_x.dat = [];
+% term3_x.LF = 0;
+% term3_x.name = 'E';
+% 
+% term3_v.type = 1;
+% term3_v.G = @(v,t,dat) v*0+1;
+% term3_v.TD = 0;
+% term3_v.dat = [];
+% term3_v.LF = 0;
+% term3_v.name = 'd_dv';
+% 
+% term3 = {term3_v, term3_x};
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2, term3};
+% pde.terms = {term2, term3};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -132,10 +133,10 @@ pde.sources = {source1,source2,source3};
 % This requires nDims+time function handles.
 
 analytic_x = @ExactFx;
-analytic_v = @ExactFv;
+analytic_y = @ExactFy;
 analytic_t = @ExactFt;
 
-pde.analytic_solutions_1D = {analytic_v,analytic_x,analytic_t};
+pde.analytic_solutions_1D = {analytic_y,analytic_x,analytic_t};
 pde.analytic_solution = @ExactF;
 
 %% Other workflow options that should perhpas not be in the PDE?
@@ -152,15 +153,15 @@ end
 
 %% Define the various input functions specified above. 
 
-function f = Fx_0(x)
+function f = Fx_0(x,p)
 % Initial condition for x variable
 f = cos(pi*x);
 end
-function f = Fy_0(y)
+function f = Fy_0(y,p)
 % Initial condition for v variable
 f = cos(pi*y);
 end
-function f = Fxy_0(x,y)
+function f = Fxy_0(x,y,p)
 f = Fy_0(y).*Fx_0(x);
 end
 
@@ -168,13 +169,13 @@ end
 %%
 % Analytic Solution functions
 % f(x,y,t) = f(x)f(y)f(t)
-function f=ExactFt(t)
+function f=ExactFt(t,p)
 f = exp(-2*pi^2*t);
 end
-function f=ExactFx(x)
+function f=ExactFx(x,p)
 f = cos(pi*x);
 end
-function f=ExactFy(y)
+function f=ExactFy(y,p)
 f = cos(pi*y);
 end
 function f=ExactF(x,y,t)
