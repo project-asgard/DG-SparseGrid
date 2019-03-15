@@ -10,7 +10,7 @@ function pde = Diffusion2D
 %% Setup the dimensions
 % 
 % Here we setup a 2D problem (x,y)
-lev = 4;
+lev = 5;
 deg = 2;
 
 dim_x.name = 'x';
@@ -46,51 +46,34 @@ pde.dimensions = {dim_x, dim_y}; % Order chosen here to match the old hard wired
 
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
-term_1D.dat = [];
-term_1D.LF = 1;       % Upwind Flux
-term_1D.G = @(x,t,y)1; % Delta Operator 
-term_1D.type = 3;      % Delta Operator ::  Let this denote the derivative order
-pde.term_1D = term_1D;
+term1_x.dat = [];
+term1_x.LF = 1;       % Upwind Flux
+term1_x.G = @(x,t,y)1; % Delta Operator 
+term1_x.type = 3;      % Delta Operator ::  Let this denote the derivative order
 
-% term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-% term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
-% term2_x.TD = 0; % Time dependent term or not.
-% term2_x.dat = []; % These are to be filled within the workflow for now
-% term2_x.LF = 1; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-% term2_x.name = 'd_dx';
-% 
-% term2_y.type = 2; % mass (see coeff_matrix.m for available types)
-% term2_y.G = @(v,t,dat) 1; % G function for use in coeff_matrix construction.
-% term2_y.TD = 0; % Time dependent term or not.
-% term2_y.dat = []; % These are to be filled within the workflow for now
-% term2_y.LF = 0; % Use Lax-Friedrichs flux or not.
-% term2_y.name = 'v';
-% 
-% term2 = {term2_y, term2_x};
-% 
-% %% 
-% % Setup the E.d_dv (E.MassX . GradV) term
-% 
-% term3_x.type = 2;
-% term3_x.G = @(x,t,dat) dat;
-% term3_x.TD = 1;
-% term3_x.dat = [];
-% term3_x.LF = 0;
-% term3_x.name = 'E';
-% 
-% term3_v.type = 1;
-% term3_v.G = @(v,t,dat) v*0+1;
-% term3_v.TD = 0;
-% term3_v.dat = [];
-% term3_v.LF = 0;
-% term3_v.name = 'd_dv';
-% 
-% term3 = {term3_v, term3_x};
+term1_y.dat = [];
+term1_y.LF = 0;       % Upwind Flux
+term1_y.G = @(x,t,y)1; % Delta Operator 
+term1_y.type = 2;      % Delta Operator ::  Let this denote the derivative order
+
+term1 = {term1_x,term1_y};
+
+term2_x.dat = [];
+term2_x.LF = 0;       % Upwind Flux
+term2_x.G = @(x,t,y)1; % Delta Operator 
+term2_x.type = 2;      % Delta Operator ::  Let this denote the derivative order
+
+term2_y.dat = [];
+term2_y.LF = 0;       % Upwind Flux
+term2_y.G = @(x,t,y)1; % Delta Operator 
+term2_y.type = 3;      % Delta Operator ::  Let this denote the derivative order
+
+term2 = {term2_x,term2_y};
 
 %%
 % Add terms to the pde object
 
-% pde.terms = {term2, term3};
+ pde.terms = {term1, term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -105,30 +88,30 @@ pde.params = params;
 % variation of each source term with each dimension and time.
 % Here we define 3 source terms.
 
-%%
-% Source 1
-s1x = @source1x;
-s1v = @source1v;
-s1t = @source1t;
-source1 = {s1v,s1x,s1t};
-
-%%
-% Source 2
-s2x = @source2x;
-s2v = @source2v;
-s2t = @source2t;
-source2 = {s2v,s2x,s2t};
-
-%%
-% Source 3
-s3x = @source3x;
-s3v = @source3v;
-s3t = @source3t;
-source3 = {s3v,s3x,s3t};
+% %%
+% % Source 1
+% s1x = @source1x;
+% s1v = @source1v;
+% s1t = @source1t;
+% source1 = {s1v,s1x,s1t};
+% 
+% %%
+% % Source 2
+% s2x = @source2x;
+% s2v = @source2v;
+% s2t = @source2t;
+% source2 = {s2v,s2x,s2t};
+% 
+% %%
+% % Source 3
+% s3x = @source3x;
+% s3v = @source3v;
+% s3t = @source3t;
+% source3 = {s3v,s3x,s3t};
 
 %%
 % Add sources to the pde data structure
-pde.sources = {source1,source2,source3};
+pde.sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.

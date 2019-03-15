@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat] = coeff_matrix2(t,dimension,term_1D)
+function [mat,bc] = coeff_matrix2(t,dimension,term_1D)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -333,6 +333,12 @@ Grad = FMWT * Grad * FMWT';
 %          blkdiag( FMWT',FMWT');
 mat = Grad;
 
+% temp setting for boundary condition
+BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+time = 0;
+bc = ComputeBC(lev,deg,xMin,xMax,BCFunc,time,'D','D');
+bc = FMWT * bc;
+
 if type == 3 %(Output is Stiff)
     term_1D.type = 1;      % Grad Operator
     
@@ -340,11 +346,14 @@ if type == 3 %(Output is Stiff)
      dimension.BCL = 2; % Neumann
     dimension.BCR = 2; % Neumann
     matD = coeff_matrix2(t,dimension,term_1D);
-    term_1D.LF = 1;       % Downwind Flux
-    dimension.BCL = 1; % Neumann
-    dimension.BCR = 1; % Neumann
+    term_1D.LF = 1;       % Upwind Flux
+    dimension.BCL = 1; % Dirichlet
+    dimension.BCR = 1; % Dirichlet
     matU = coeff_matrix2(t,dimension,term_1D);
     mat = matD*matU;
+    
+    bc = matD*bc;
+    
 end
 
 % if type == 1

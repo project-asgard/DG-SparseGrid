@@ -47,25 +47,10 @@ t = 0;
 % here we use upwind for mat1 and downwind for mat2
 % bc is Dirichlet boundary for variable f
 % Denote Delta = mat2*mat1
-Delta = coeff_matrix2(t,pde.dimensions{1},pde.term_1D);
-
-dimension.lev = lev;
-dimension.deg = deg;
-dimension.domainMin = pde.dimensions{1}.domainMin;
-dimension.domainMax = pde.dimensions{1}.domainMax;
-dimension.FMWT = pde.dimensions{1}.FMWT;
-dimension.BCL = 2; % Neumann
-dimension.BCR = 2; % Neumann
-term_1D.dat = [];
-term_1D.LF = -1;       % Downwind Flux
-term_1D.G = @(x,t,y)1; % Grad Operator
-term_1D.type = 1;      % Grad Operator
-
-% generate the matrix for variable q: This is only for handling boundary
-% conditions
-[mat2] = coeff_matrix2(t,dimension,term_1D);
-
-
+% but the Boundary Function is defined inside coeff_matrix2
+for i = 1:nDims
+    [Delta,bc] = coeff_matrix2(t,pde.dimensions{i},pde.terms{1}{1});
+end
 
 % for initial condition
 time = 0;
@@ -73,20 +58,18 @@ fval = initial_condition_vector(HASHInv,pde,time);
 
 % boundary condition
 % bc is the two points value for the first component
-bc = ComputeBC(lev,deg,dimension.domainMin,dimension.domainMax,BCFunc,time,0,0);
-bc = (pde.dimensions{1}.FMWT*bc);
 % bc1 is the integration of \int_xMin^xMax f*v dx along the boundary 
 % x = Const or y = Const
-bc1 = ComputRHS(lev,deg,dimension.domainMin,dimension.domainMax,BCFunc,time);
+bc1 = ComputRHS(lev,deg,pde.dimensions{1}.domainMin,pde.dimensions{1}.domainMax,BCFunc,time);
 bc1 = (pde.dimensions{1}.FMWT*bc1);
 
 % construct the 2D boundary
 ft = 1;
-fList{1} = mat2*bc;
+fList{1} = bc;
 fList{2} = bc1;
 bc3= combine_dimensions_D(fList,ft,HASHInv,pde);
 fList{1} = bc1;
-fList{2} = mat2*bc;
+fList{2} = bc;
 bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
 
 
@@ -107,8 +90,8 @@ A_encode = [A_encode,B_encode];
 for T = 1 : 100
     time = dt*T;
     
-    % Euler time advance 
-    % df^1 = df^0 + dt*A*f^0 + dt*s + dt*bc
+    % Euler time advance for zero source
+    % df^1 = df^0 + dt*A*f^0  + dt*bc
     % just like Apply(A,f)
     ftmp = fval-fval; 
     for i=1:size(A_encode,2)
@@ -159,11 +142,6 @@ for T = 1 : 100
     view(-21,39)
     pause(0.1)
 end
-
-
-
-
-
 
 
 end

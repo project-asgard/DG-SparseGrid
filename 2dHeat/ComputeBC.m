@@ -15,14 +15,14 @@ p_L = legendre(-1,Deg) * 1/sqrt(h);
 p_R = legendre(+1,Deg) * 1/sqrt(h);
 
 WorkCel = 0;
-if bcL == 0 % if Dirichlet boundary?
+if bcL == 'D' % if Dirichlet boundary?
     c = [1:Deg];
     IntVal =  p_L'*(Fun(xMin,time)) ; 
     bc(c) = - IntVal;   
 end
 
 WorkCel = Tol_Cel_Num - 1;
-if bcR == 0    
+if bcR == 'D'    
     c = Deg*WorkCel+[1:Deg];
     IntVal =  p_R'*(Fun(xMax,time));
     bc(c) = IntVal;
