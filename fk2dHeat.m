@@ -96,7 +96,8 @@ II = speye(DoFs,DoFs);
 
 A_encode=GlobalMatrixSG_newCon(Delta,II,HASH,lev,deg,gridType);
 B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg,gridType);
-C_encode = [A_encode,B_encode];
+
+A_encode = [A_encode,B_encode];
 
 [Meval_v,v_node,Meval_x,x_node]=matrix_plot(lev,lev,deg,...
     Lmin,Lmax, Lmin, Lmax,...

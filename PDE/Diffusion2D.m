@@ -4,12 +4,13 @@ function pde = Diffusion2D
 % implies the need for an initial condition. 
 % PDE: df/dt = d^2 f/dx^2 + d^2 f/dy^2
 % Domain is [0,1]x[0,1]
-% Dirichlet boundary condition
+% Dirichlet boundary condition 
+% ToDo: need some effort for naming, boundary conditions, source terms
 
 %% Setup the dimensions
 % 
-% Here we setup a 2D problem (x,v)
-lev = 2;
+% Here we setup a 2D problem (x,y)
+lev = 4;
 deg = 2;
 
 dim_x.name = 'x';
@@ -18,7 +19,7 @@ dim_x.BCR = 1; % Dirichlet
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.lev = lev;
-dim_x.deg = lev;
+dim_x.deg = deg;
 dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @Fx_0;
 
