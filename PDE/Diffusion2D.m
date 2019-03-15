@@ -13,8 +13,8 @@ lev = 2;
 deg = 2;
 
 dim_x.name = 'x';
-dim_x.BCL = 1;
-dim_x.BCR = 1;
+dim_x.BCL = 1; % Dirichlet
+dim_x.BCR = 1; % Dirichlet
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.lev = lev;
@@ -47,8 +47,8 @@ pde.dimensions = {dim_x, dim_y}; % Order chosen here to match the old hard wired
 % Setup the v.d_dx (v.MassV . GradX) term
 term_1D.dat = [];
 term_1D.LF = 1;       % Upwind Flux
-term_1D.G = @(x,t,y)1; % Grad Operator
-term_1D.type = 1;      % Grad Operator
+term_1D.G = @(x,t,y)1; % Grad Operator 
+term_1D.type = 2;      % Delta Operator ::  Let this denote the derivative order
 
 term2_x.type = 1; % grad (see coeff_matrix.m for available types)
 term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
@@ -139,7 +139,7 @@ pde.analytic_solutions_1D = {analytic_v,analytic_x,analytic_t};
 pde.analytic_solution = @ExactF;
 
 %% Other workflow options that should perhpas not be in the PDE?
-
+% Need some work here
 pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
 pde.Ex = @Ex; % These can actually get absorbed into the G functions above.
 pde.Et = @Et; % but I've not done it yet. 
@@ -152,103 +152,60 @@ end
 
 %% Define the various input functions specified above. 
 
-function f=Fx_0(x,p)
+function f = Fx_0(x)
 % Initial condition for x variable
-f=x.*0;
-end
-function f=Fv_0(v,p)
-% Initial condition for v variable
-f=v.*0;
-end
-function f=Fxv_0(x,v,p)
-f=Fv_0(v).*Fx_0(x);
-end
-
-% Apply this specific E field
-function f=Ex(x, p)
-f=cos(pi*x);
-end
-function f=Et(t,p)
-f=cos(t);
-end
-function f=E(x,t,p)
-f=Ex(x).*Et(t);
-end
-
-%%
-% Source terms are composed of fully seperable functions
-% Source = source1 + source2 + source3
-
-%%
-% Source term 1
-function f = source1t(t)
-f = cos(t);
-end
-function f = source1x(x,p)
-f = sin(pi*x);
-end
-function f = source1v(v,p)
-f = sin(pi*v/5);
-end
-function f = source1(x,v,t)
-f = source1x(x).*source1v(v).*source1t(t);
-end
-
-%%
-% Source term 2
-function f = source2t(t)
-f = sin(t);
-end
-function f = source2x(x,p)
 f = cos(pi*x);
 end
-function f = source2v(v,p)
-f = pi*v.*sin(pi*v/5);
+function f = Fy_0(y)
+% Initial condition for v variable
+f = cos(pi*y);
 end
-function f = source2(x,v,t)
-f = source2x(x).*source2v(v).*source2t(t);
+function f = Fxy_0(x,y)
+f = Fy_0(y).*Fx_0(x);
 end
 
-%%
-% Source term 3
-function f = source3t(t)
-f = cos(t).*sin(t);
-end
-function f = source3x(x,p)
-f = cos(pi*x).*sin(pi*x);
-end
-function f = source3v(v,p)
-f = 1/5*pi*cos(pi*v/5);
-end
-function f = source3(x,v,t)
-f = source3x(x).*source3v(v).*source3t(t);
-end
 
 %%
 % Analytic Solution functions
-
+% f(x,y,t) = f(x)f(y)f(t)
 function f=ExactFt(t)
-f=sin(t);
+f = exp(-2*pi^2*t);
 end
-function f=ExactFx(x,p)
-f = sin(pi*x);
+function f=ExactFx(x)
+f = cos(pi*x);
 end
-function f=ExactFv(v,p)
-f = sin(pi*v/5);
+function f=ExactFy(y)
+f = cos(pi*y);
 end
-function f=ExactF(x,v,t)
-f = ExactFx(x).*ExactFv(v).*ExactFt(t);
+function f=ExactF(x,y,t)
+f = ExactFx(x).*ExactFy(y).*ExactFt(t);
 end
 
+%% Source term
+% df/dt - d^2 f/dx^2 = 0 for this test
+% But not true for other Manu-Sol
+function f = sourcet(t)
+f = t-t;
+end
+function f = sourcex(x)
+f = x-x;
+end
+function f = sourcey(y)
+f = y-y;
+end
+function f = source(x,v,t)
+f = sourcex(x).*sourcey(v).*sourcet(t);
+end
 %%
 % Function to set time step
 function dt=set_dt(pde)
 
-Vmax = pde.dimensions{1}.domainMax;
-Lmax = pde.dimensions{2}.domainMax;
+LXmax = pde.dimensions{1}.domainMax;
+LYmax = pde.dimensions{2}.domainMax;
 LevX = pde.dimensions{2}.lev;
 CFL = pde.CFL;
 Deg = pde.dimensions{1}.deg;
 
-dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
+% for Diffusion equation: dt = C * dx^2
+dt = LXmax/2^LevX/Vmax/(2*Deg+1)*CFL;
 end

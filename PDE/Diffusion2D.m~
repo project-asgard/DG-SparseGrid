@@ -57,14 +57,14 @@ term2_x.dat = []; % These are to be filled within the workflow for now
 term2_x.LF = 1; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term2_x.name = 'd_dx';
 
-term2_v.type = 2; % mass (see coeff_matrix.m for available types)
-term2_v.G = @(v,t,dat) v; % G function for use in coeff_matrix construction.
-term2_v.TD = 0; % Time dependent term or not.
-term2_v.dat = []; % These are to be filled within the workflow for now
-term2_v.LF = 0; % Use Lax-Friedrichs flux or not.
-term2_v.name = 'v';
+term2_y.type = 2; % mass (see coeff_matrix.m for available types)
+term2_y.G = @(v,t,dat) 1; % G function for use in coeff_matrix construction.
+term2_y.TD = 0; % Time dependent term or not.
+term2_y.dat = []; % These are to be filled within the workflow for now
+term2_y.LF = 0; % Use Lax-Friedrichs flux or not.
+term2_y.name = 'v';
 
-term2 = {term2_v, term2_x};
+term2 = {term2_y, term2_x};
 
 %% 
 % Setup the E.d_dv (E.MassX . GradV) term
@@ -164,91 +164,47 @@ function f=Fxv_0(x,v,p)
 f=Fv_0(v).*Fx_0(x);
 end
 
-% Apply this specific E field
-function f=Ex(x, p)
-f=cos(pi*x);
-end
-function f=Et(t,p)
-f=cos(t);
-end
-function f=E(x,t,p)
-f=Ex(x).*Et(t);
-end
 
 %%
-% Source terms are composed of fully seperable functions
-% Source = source1 + source2 + source3
+% Analytic Solution functions
+% f(x,y,t) = f(x)f(y)f(t)
+function f=ExactFt(t)
+f = exp(-2*pi^2*t);
+end
+function f=ExactFx(x)
+f = cos(pi*x);
+end
+function f=ExactFy(y)
+f = cos(pi*y);
+end
+function f=ExactF(x,y,t)
+f = ExactFx(x).*ExactFy(y).*ExactFt(t);
+end
 
-%%
-% Source term 1
-function f = source1t(t)
+%% Source term
+% df/dt - d^2 f/dx^2 = 0
+function f = sourcet(t)
 f = cos(t);
 end
-function f = source1x(x,p)
+function f = sourcex(x)
 f = sin(pi*x);
 end
-function f = source1v(v,p)
+function f = sourcey(y)
 f = sin(pi*v/5);
 end
 function f = source1(x,v,t)
 f = source1x(x).*source1v(v).*source1t(t);
 end
-
-%%
-% Source term 2
-function f = source2t(t)
-f = sin(t);
-end
-function f = source2x(x,p)
-f = cos(pi*x);
-end
-function f = source2v(v,p)
-f = pi*v.*sin(pi*v/5);
-end
-function f = source2(x,v,t)
-f = source2x(x).*source2v(v).*source2t(t);
-end
-
-%%
-% Source term 3
-function f = source3t(t)
-f = cos(t).*sin(t);
-end
-function f = source3x(x,p)
-f = cos(pi*x).*sin(pi*x);
-end
-function f = source3v(v,p)
-f = 1/5*pi*cos(pi*v/5);
-end
-function f = source3(x,v,t)
-f = source3x(x).*source3v(v).*source3t(t);
-end
-
-%%
-% Analytic Solution functions
-
-function f=ExactFt(t)
-f=sin(t);
-end
-function f=ExactFx(x,p)
-f = sin(pi*x);
-end
-function f=ExactFv(v,p)
-f = sin(pi*v/5);
-end
-function f=ExactF(x,v,t)
-f = ExactFx(x).*ExactFv(v).*ExactFt(t);
-end
-
 %%
 % Function to set time step
 function dt=set_dt(pde)
 
-Vmax = pde.dimensions{1}.domainMax;
-Lmax = pde.dimensions{2}.domainMax;
+LXmax = pde.dimensions{1}.domainMax;
+LYmax = pde.dimensions{2}.domainMax;
 LevX = pde.dimensions{2}.lev;
 CFL = pde.CFL;
 Deg = pde.dimensions{1}.deg;
 
+% for Diffusion equation: dt = C * dx^2
 dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
 end

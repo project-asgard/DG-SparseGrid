@@ -9,10 +9,12 @@ format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 
-Lmin = 0;
-Lmax = +1;
-Vmin = 0;
-Vmax = +1;
+pde = Diffusion2D;
+
+% Lmin = 0;
+% Lmax = +1;
+% Vmin = 0;
+% Vmax = +1;
 
 deg = 2;
 lev = 2;
@@ -22,31 +24,35 @@ LevV = lev;
 
 
 
-gridType = 'FG'; %'SG'; %
+gridType = 'FG';
 nDims = 2;
 
 for d=1:nDims
-    pde.dimensions{d}.FMWT = OperatorTwoScale(deg,2^lev);
-    pde.dimensions{d}.init_cond_fn = @(x,parameter)cos(pi*x);
-    pde.dimensions{d}.lev = lev;
-    pde.dimensions{d}.deg = deg;
-    pde.dimensions{d}.domainMin = Lmin;
-    pde.dimensions{d}.domainMax = Lmax;
-    pde.params = 1;
+    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.dimensions{d}.deg,2^pde.dimensions{d}.lev);
 end
+
+% for d=1:nDims
+%     pde.dimensions{d}.FMWT = OperatorTwoScale(deg,2^lev);
+% % %     pde.dimensions{d}.init_cond_fn = @(x,parameter)cos(pi*x);
+% % %     pde.dimensions{d}.lev = lev;
+% % %     pde.dimensions{d}.deg = deg;
+% % %     pde.dimensions{d}.domainMin = Lmin;
+% % %     pde.dimensions{d}.domainMax = Lmax;
+% % %     pde.params = 1;
+% end
 
 % hash table
 [HASH,HASHInv] = HashTable(lev,nDims,gridType);
 nHash = numel(HASHInv);
 
 
-dimension.lev = lev;
-dimension.deg = deg;
-dimension.domainMin = Lmin;
-dimension.domainMax = Lmax;
-dimension.FMWT = pde.dimensions{1}.FMWT;
-dimension.BCL = 1; % Dirichlet
-dimension.BCR = 1; % Dirichlet
+% dimension.lev = lev;
+% dimension.deg = deg;
+% dimension.domainMin = Lmin;
+% dimension.domainMax = Lmax;
+% dimension.FMWT = pde.dimensions{1}.FMWT;
+% dimension.BCL = 1; % Dirichlet
+% dimension.BCR = 1; % Dirichlet
 
 term_1D.dat = [];
 term_1D.LF = 1;       % Upwind Flux
@@ -54,25 +60,41 @@ term_1D.G = @(x,t,y)1; % Grad Operator
 term_1D.type = 1;      % Grad Operator
 
 t = 0;
- [mat1] = coeff_matrix2(t,dimension,term_1D);
- 
+
+for ndim = 1:2
+mat{ndim} = coeff_matrix2(t,pde.dimensions{ndim},term_1D);
+end
+
+Delta = mat{2}*mat{1};
+
+term_1D.dat = [];
+term_1D.LF = 1;       % Upwind Flux
+term_1D.G = @(x,t,y)1; % Grad Operator
+term_1D.type = 1;      % Grad Operator
+
+mat1 = coeff_matrix2(t,pde.dimensions{ndim},term_1D);
+
+dimension.lev = lev;
+dimension.deg = deg;
+dimension.domainMin = Lmin;
+dimension.domainMax = Lmax;
+dimension.FMWT = pde.dimensions{1}.FMWT;
 dimension.BCL = 2; % Neumann
 dimension.BCR = 2; % Neumann
 term_1D.dat = [];
 term_1D.LF = -1;       % Downwind Flux
 term_1D.G = @(x,t,y)1; % Grad Operator
 term_1D.type = 1;      % Grad Operator
- 
+
 [mat2] = coeff_matrix2(t,dimension,term_1D);
 
-% Then the LDG matrix after reduction is 
-Delta = mat2*mat1;
+% Then the LDG matrix after reduction is
+Delta2 = mat2*mat1;
 
 DoFs = (2^lev*deg);
 
 II = speye(DoFs,DoFs);
 Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);
-% NewMat = speye(DoFs^2,DoFs^2) - dt*Mat;
 
 F0 = zeros(DoFs^2,1);
 
@@ -85,13 +107,10 @@ BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
 ExaFunc = @(x,y,t)(cos(pi*x).*cos(pi*y)*exp(-2*pi^2*t));
 IntFunc = @(x,t)(cos(pi*x));
 
-% BCFunc = @(x,t)(sin(pi*x)*exp(-2*pi^2*t));
-% ExaFunc = @(x,y,t)(sin(pi*x).*sin(pi*y)*exp(-2*pi^2*t));
-% IntFunc = @(x,t)(sin(pi*x));
 
 time = 0;
 [n0] = forwardMWT(lev,deg,Lmin,Lmax,IntFunc,1);
-% n0 = pde.dimensions{1}.FMWT*n0;
+
 % Initial condition
 F0 = kron(n0,n0)*exp(-2*pi^2*time);
 
@@ -107,7 +126,7 @@ bc = (pde.dimensions{1}.FMWT*bc);
 
 bc1 = ComputRHS(lev,deg,Lmin,Lmax,BCFunc,time);
 bc1 = (pde.dimensions{1}.FMWT*bc1);
-% 
+%
 bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc); % this is the correct form
 
 % for sg
@@ -118,41 +137,6 @@ bc3= combine_dimensions_D(fList,ft,HASHInv,pde);
 fList{1} = bc1;
 fList{2} = mat2*bc;
 bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
-% bc2 = kron(bc,bc1) +  kron(bc1,bc) ;
-% bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
-
-subplot(1,2,1)
-mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0),num_GridPoints,num_GridPoints));
-subplot(1,2,2)
-mesh(x_2D_plot,y_2D_plot,reshape(MM*(bc2),num_GridPoints,num_GridPoints));
-
-    
-figure
-
-for T = 1 : 1
-    time = dt*T;
-    bc0 = bc2*exp(-2*pi^2*time);
-    F1 = F0 + dt*(Mat)*F0 - dt* bc0;
-    F0 = F1;
-    
-    val = reshape(MM*(F1),num_GridPoints,num_GridPoints);
-    subplot(1,3,1)
-    mesh(x_2D_plot,y_2D_plot,val,...
-        'FaceColor','interp','EdgeColor','none');
-    title(num2str(T))
-    val_ex = ExaFunc(x_2D_plot,y_2D_plot,time);
-    subplot(1,3,2)
-    mesh(x_2D_plot,y_2D_plot,val_ex,...
-        'FaceColor','interp','EdgeColor','none');
-    subplot(1,3,3)
-    
-    mesh(x_2D_plot,y_2D_plot,val_ex-val,...
-        'FaceColor','interp','EdgeColor','none');
-    title(num2str(max(abs(val(:)-val_ex(:)))))
-    pause(0.1)
-    
-end
-
 
 fval = initial_condition_vector(HASHInv,pde,0);
 
@@ -163,37 +147,37 @@ B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg,gridType);
 
 A_encode = [A_encode,B_encode];
 
- [Meval_v,v_node,Meval_x,x_node]=matrix_plot(lev,lev,deg,Lmin,Lmax,Vmin,Vmax,...
-        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
-    
+[Meval_v,v_node,Meval_x,x_node]=matrix_plot(lev,lev,deg,Lmin,Lmax,Vmin,Vmax,...
+    pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
+
 ftmp = fval-fval;
 use_kronmult2 = 1;
 for T = 1 : 100
     time = dt*T;
     bc0 = bc2*exp(-2*pi^2*time);
     ftmp = fval-fval;
-for i=1:size(A_encode,2)
+    for i=1:size(A_encode,2)
         
         tmpA=A_encode{i}.A1;
         tmpB=A_encode{i}.A2;
         IndexI=A_encode{i}.IndexI;
         IndexJ=A_encode{i}.IndexJ;
-
-            
-            nrA = size(tmpA,1);
-            ncA = size(tmpA,2);
-            nrB = size(tmpB,1);
-            ncB = size(tmpB,2);
-            
-            ftmp(IndexI)=ftmp(IndexI) + ...
-                reshape(tmpB * reshape(fval(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
-%         end
         
-end
- ftmp = fval + dt*ftmp - dt* bc3;
- fval = ftmp;
- 
- tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
+        
+        nrA = size(tmpA,1);
+        ncA = size(tmpA,2);
+        nrB = size(tmpB,1);
+        ncB = size(tmpB,2);
+        
+        ftmp(IndexI)=ftmp(IndexI) + ...
+            reshape(tmpB * reshape(fval(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+        %         end
+        
+    end
+    ftmp = fval + dt*ftmp - dt* bc3;
+    fval = ftmp;
+    
+    tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
     figure(1000)
     
     f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
@@ -208,7 +192,7 @@ end
     title(num2str(T))
     ax2 = subplot(1,3,2);
     val = cos(pi*xx).*cos(pi*vv)*exp(-2*pi^2*dt*T);
-     mesh(xx,vv,val,'FaceColor','interp','EdgeColor','none');
+    mesh(xx,vv,val,'FaceColor','interp','EdgeColor','none');
     axis([Lmin Lmax Vmin Vmax])
     view(-21,39)
     ax2 = subplot(1,3,3);
@@ -220,9 +204,9 @@ end
 end
 
 
- 
- 
-    
+
+
+
 % check about the matrix for time advance method
 
 %% Set time step.
@@ -258,8 +242,8 @@ fval = initial_condition_vector(HASHInv,pde,0);
 % The original way
 if ~quiet; disp('Calculate time independent matrix coefficients'); end
 if nDims==2
-[vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
-     pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
+    [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
+        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 end
 %%
 % The generalized PDE spec way
@@ -270,9 +254,9 @@ pde = getCoeffMats(pde,t,TD);
 %% Construct A_encode / A_data time independent data structures.
 if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
 if compression == 3
-    % the new matrix construction is as _newCon, only works for 
+    % the new matrix construction is as _newCon, only works for
     % compression= 3
-%     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
+    %     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
     A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,lev,deg);
 else
     % A_data is constructed only once per grid refinement, so can be done
@@ -290,11 +274,11 @@ end
 
 if ~quiet; disp('Construct matrix for Poisson solve'); end
 if pde.solvePoisson
-if DimX>1
-    % Construct DeltaX for DimX
-else
-    A_Poisson = DeltaX; 
-end
+    if DimX>1
+        % Construct DeltaX for DimX
+    else
+        A_Poisson = DeltaX;
+    end
 end
 
 %% Construct RMWT (Reverse Multi Wavelet Transform) in 2D
@@ -318,7 +302,7 @@ end
 % Construct a n-D coordinate array
 % TODO : generalize to dimension better.
 
-if nDims ==1 
+if nDims ==1
     [xx1] = ndgrid(nodes{1});
     coord = {xx1};
 end
@@ -332,20 +316,20 @@ if nDims==3
 end
 
 % %%
-% % Try transforming a known 3D function to wavelet space and then back again. 
-% 
+% % Try transforming a known 3D function to wavelet space and then back again.
+%
 % fa = getAnalyticSolution_D(coord,5*dt,pde);
 % fa_wSpace = exact_solution_vector(HASHInv,pde,5*dt);
 % fa_rSpace = reshape(Multi_2D_D(Meval,fa_wSpace,HASHInv,pde),size(fa));
-% 
+%
 % norm(fa(:)-fa_rSpace(:))/norm(fa(:))*100
-% 
+%
 % sy=5;sz=10;
 % figure
 % hold on
 % plot(fa(:,sy,sz));
 % plot(fa_rSpace(:,sy,sz));
-% 
+%
 % figure
 % subplot(2,2,1)
 % contour(fa_rSpace(:,:,sz));
@@ -361,28 +345,28 @@ end
 
 %% Plot initial condition
 if nDims==2
-if ~quiet
-    %%
-    % Transform from wavelet space to real space
-    tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
-    figure(1000)
-    
-    f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
-    
-    [xx,vv]=meshgrid(x_node,v_node);
-    
-    ax1 = subplot(1,2,1);
-    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
-    axis([Lmin Lmax Vmin Vmax])
-    %caxis([-range1 +range1]);
-    title('df');
-    
-    ax2 = subplot(1,2,2);
-    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
-    axis([Lmin Lmax Vmin Vmax])
-    %caxis([range2n +range2]);
-    title('f');
-end
+    if ~quiet
+        %%
+        % Transform from wavelet space to real space
+        tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
+        figure(1000)
+        
+        f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
+        
+        [xx,vv]=meshgrid(x_node,v_node);
+        
+        ax1 = subplot(1,2,1);
+        mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([-range1 +range1]);
+        title('df');
+        
+        ax2 = subplot(1,2,2);
+        mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([range2n +range2]);
+        title('f');
+    end
 end
 
 %% Write the initial condition to file.
@@ -428,12 +412,12 @@ for L = 1:nsteps,
     %     ax4 = subplot(2,2,4);
     %     plot(x_node,Meval_x*E,'r-o')
     
-
+    
     if ~quiet; disp('    Calculate time dependent matrix coeffs'); end
     if nDims==2
         if (pde.applySpecifiedE | pde.solvePoisson)
             
-            %% 
+            %%
             % Generate EMassX time dependent coefficient matrix.
             
             EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
@@ -445,7 +429,7 @@ for L = 1:nsteps,
         end
     end
     
-
+    
     
     %%
     % Now construct the TD coeff_mats.
@@ -455,20 +439,20 @@ for L = 1:nsteps,
     pde = getCoeffMats(pde,t,TD);
     
     %% Test new PDE spec based generation of the coeff_matrices
-   
-%     if nDims==2
-%         disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{2}.coeff_mat - GradX)/norm(GradX)) ]);
-%         disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{1}.coeff_mat - vMassV)/norm(vMassV)) ]);
-%         disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{2}.coeff_mat - EMassX)/norm(EMassX)) ]);
-%         disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{1}.coeff_mat - GradV)/norm(GradV)) ]);
-%     end
+    
+    %     if nDims==2
+    %         disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{2}.coeff_mat - GradX)/norm(GradX)) ]);
+    %         disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{1}.coeff_mat - vMassV)/norm(vMassV)) ]);
+    %         disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{2}.coeff_mat - EMassX)/norm(EMassX)) ]);
+    %         disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{1}.coeff_mat - GradV)/norm(GradV)) ]);
+    %     end
     
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
     if runTimeOpts.compression == 3
-    % the new matrix construction is as _newCon, only works for 
-    % compression= 3
-%         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
+        % the new matrix construction is as _newCon, only works for
+        % compression= 3
+        %         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
         B_encode=GlobalMatrixSG_newCon(GradV,EMassX,HASH,lev,deg);
         C_encode=[A_encode B_encode];
     else
@@ -556,19 +540,19 @@ for L = 1:nsteps,
         
         fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
         
-%         if nDims==2
-%             % Check the real space solution with the analytic solution
-%             f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
-%             
-%             f2d_analytic = pde.analytic_solution(xx,vv,L*dt);
-%             f2d_analytic = f2d_analytic';
-%             tol = 1e-15;
-%             assert(norm(f2d_analytic(:)-fval_realspace_analytic(:))<tol);
-%         end
+        %         if nDims==2
+        %             % Check the real space solution with the analytic solution
+        %             f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
+        %
+        %             f2d_analytic = pde.analytic_solution(xx,vv,L*dt);
+        %             f2d_analytic = f2d_analytic';
+        %             tol = 1e-15;
+        %             assert(norm(f2d_analytic(:)-fval_realspace_analytic(:))<tol);
+        %         end
         err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
         disp(['    real space absolute err : ', num2str(err_real)]);
         disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-
+        
         err = err_wavelet;
     end
     
@@ -604,16 +588,16 @@ for L = 1:nsteps,
         end
         
         if nDims==2
-                        
+            
             figure(1000)
-                        
+            
             dimensions = pde.dimensions;
             
             deg1=dimensions{1}.deg;
             lev1=dimensions{1}.lev;
             deg2=dimensions{2}.deg;
             lev2=dimensions{2}.lev;
-
+            
             dof1=deg1*2^lev1;
             dof2=deg2*2^lev2;
             
@@ -624,11 +608,11 @@ for L = 1:nsteps,
             f2d_analytic = reshape(fval_realspace_analytic,dof1,dof2);
             
             x = nodes{1};
-            y = nodes{2};          
-                        
+            y = nodes{2};
+            
             %%
             % Plot a 1D line through the solution
-                        
+            
             sy = 9;
             
             f1d = f2d(:,sy);
@@ -637,7 +621,7 @@ for L = 1:nsteps,
             ax1 = subplot(3,1,1);
             plot(x,f1d,'-o');
             title('1D slice through 2D solution');
-           
+            
             %%
             % Overplot analytic solution
             
@@ -667,7 +651,7 @@ for L = 1:nsteps,
         if nDims==3
             
             figure(1000);
-                        
+            
             dimensions = pde.dimensions;
             
             deg1=dimensions{1}.deg;
@@ -700,7 +684,7 @@ for L = 1:nsteps,
             z = nodes{3};
             ax1 = subplot(3,3,1);
             plot(x,f1d,'-o');
-            title('1D slice through 3D'); 
+            title('1D slice through 3D');
             
             %%
             % Overplot analytic solution
@@ -711,7 +695,7 @@ for L = 1:nsteps,
                 plot(x,f1d_analytic,'-');
                 hold off;
             end
-                        
+            
             %%
             % Plot a 2D xy plane
             
@@ -729,7 +713,7 @@ for L = 1:nsteps,
             % Plot a 2D xz plane
             
             ax3 = subplot(3,3,5);
-            contourf(x,y,squeeze(f3d(:,sy,:))); 
+            contourf(x,y,squeeze(f3d(:,sy,:)));
             title('2D slice through 3D numeric');
             
             if pde.checkAnalytic
@@ -742,7 +726,7 @@ for L = 1:nsteps,
             % Plot a 2D yz plane
             
             ax3 = subplot(3,3,6);
-            contourf(x,y,squeeze(f3d(sx,:,:))); 
+            contourf(x,y,squeeze(f3d(sx,:,:)));
             title('2D slice through 3D numeric');
             
             if pde.checkAnalytic
