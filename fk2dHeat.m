@@ -8,7 +8,7 @@ format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 
-pde = Diffusion2D;
+pde = diffusion2;
 
 gridType = 'SG';
 nDims = 2;

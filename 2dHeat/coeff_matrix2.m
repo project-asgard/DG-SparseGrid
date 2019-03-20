@@ -51,6 +51,8 @@ xMax = dimension.domainMax;
 FMWT = dimension.FMWT;
 BCL = dimension.BCL;
 BCR = dimension.BCR;
+BCL_fn = dimension.BCL_fn;
+BCR_fn = dimension.BCR_fn;
 
 %%
 % Shortcuts to term_1d quantities
@@ -219,18 +221,18 @@ for i=0:N-1
         if i==0
             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
-  
+            
             val_AVG = (1/h) * [...
                 -p_L'*(p_L-p_L), ...            % for x1 (left side)
-                 p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
-    
+                p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
+            
             val_JMP = (1/h) * [...
                 -p_L'*(p_L-p_L), ...            % for x1 (left side)
                 -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
-    
+            
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
-    
+            
             val_FLUX = val_AVG + val_JMP / 2 * LF;
         end
         
@@ -241,18 +243,18 @@ for i=0:N-1
         if i==N-1
             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-
+            
             val_AVG = (1/h) * [...
                 -p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
-                 p_R'*(p_R-p_R)];               % for x2 (right side)
-    
+                p_R'*(p_R-p_R)];               % for x2 (right side)
+            
             val_JMP = (1/h) * [...
-                 p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
+                p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
                 -p_R'*(p_R-p_R)];             % for x2 (right side)
-    
+            
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
-    
+            
             val_FLUX = val_AVG + val_JMP / 2 * LF;
         end
     end
@@ -269,16 +271,16 @@ for i=0:N-1
         if i==0
             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
-   
-          val_AVG = (1/h) * [-p_L'*p_L, ...   % for x1 (left side)
+            
+            val_AVG = (1/h) * [-p_L'*p_L, ...   % for x1 (left side)
                 p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
-    
+            
             val_JMP = (1/h) * [-p_L'*(p_L-p_L), ...     % for x1 (left side)
                 -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
-    
+            
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
-    
+            
             val_FLUX = val_AVG + val_JMP / 2 * LF;
         end
     end
@@ -290,14 +292,14 @@ for i=0:N-1
             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
             
             val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
-                    p_R'*p_R];      % for x2 (right side)
-    
+                p_R'*p_R];      % for x2 (right side)
+            
             val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
-                    -p_R'*(p_R-p_R)];    % for x2 (right side)
-    
+                -p_R'*(p_R-p_R)];    % for x2 (right side)
+            
             %%
             % Combine AVG and JMP to give choice of flux for this operator type
-    
+            
             val_FLUX = val_AVG + val_JMP / 2 * LF;
         end
     end
@@ -314,58 +316,55 @@ end
 
 
 %% Transform coeff_mat to wavelet space
-% % Mass = FMWT * Mass * FMWT';
+Mass = FMWT * Mass * FMWT';
 Grad = FMWT * Grad * FMWT';
 
 %%
-% After the transformation to wavelet space there may be very tiny coefficient values.
-% Here we zero them out.
-
-% % tol = 1e-8;
-% % 
-% % Mass = Mass .* (abs(Mass) > tol );
-% % Grad = Grad .* (abs(Grad) > tol );
-
-%% Construct block diagonal for LDG ?
-% This is TODO
-% DeltaX = blkdiag( FMWT,FMWT) * ...
-%          DeltaX * ...
-%          blkdiag( FMWT',FMWT');
-mat = Grad;
-
-% temp setting for boundary condition
-BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+% Is this related to the Stif mat or LDG? or only to inhomogeneous
+% dirichlet?
 time = 0;
-bc = ComputeBC(lev,deg,xMin,xMax,BCFunc,time,'D','D');
+bc = ComputeBC(lev,deg,xMin,xMax,BCL_fn,BCR_fn, time,'D','D'); % what to do when not D?
 bc = FMWT * bc;
 
-if type == 3 %(Output is Stiff)
-    term_1D.type = 1;      % Grad Operator
+if type == 3
     
-     term_1D.LF = -1;       % Downwind Flux
-     dimension.BCL = 2; % Neumann
+    % Use LDG method, i.e., split into two first order equations, then
+    % recombine
+    
+    %%
+    % Get a grad operator with downwind flux and Neumann BCs
+    term_1D.type = 1;      % Grad Operator    
+    term_1D.LF = -1;       % Downwind Flux
+    dimension.BCL = 2; % Neumann
     dimension.BCR = 2; % Neumann
     matD = coeff_matrix2(t,dimension,term_1D);
+    
+    %%
+    % Get a grad operator with upwind flux and Dirichlet BCs
+    term_1D.type = 1;      % Grad Operator      
     term_1D.LF = 1;       % Upwind Flux
     dimension.BCL = 1; % Dirichlet
     dimension.BCR = 1; % Dirichlet
     matU = coeff_matrix2(t,dimension,term_1D);
-    mat = matD*matU;
     
-    bc = matD*bc;
+    %% 
+    % Combine back into second order operator
+    Stif = matD*matU;
+    
+    %%
+    % ???
+    bc = matD*bc; 
     
 end
 
-% if type == 1
-%     mat = Grad;
-% end
-% if type == 2
-%     mat = Mass;
-% end
-% if type == 3
-%     mat = Stif;
-% end
-
-
+if type == 1
+    mat = Grad;
+end
+if type == 2
+    mat = Mass;
+end
+if type == 3
+    mat = Stif;
+end
 
 end
