@@ -126,10 +126,22 @@ if (use_method_1),
   % ----------------------------------
   % note may be batched gemm operation
   % ----------------------------------
+   use_Yi = 0;
+   if (use_Yi),
+    Y = zeros(nrowY,nvec);
     for i=1:nvec,
      Yi = reshape( Ytmp(:,i), [n1, ncol1])*transpose(A1);
      Y(:,i) = reshape(Yi, nrowY,1);
     end;
+   else
+    Y = zeros(nrowY,nvec);
+    for i=1:nvec,
+     Y(:,i) = reshape( ...
+                 reshape( Ytmp(:,i), n1, ncol1)*transpose(A1), ...
+                    nrowY,1);
+    end;
+
+   end;
   
     if (idebug >= 1),
       mm = n1; nn = nrow1; kk = ncol1;
