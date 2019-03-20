@@ -30,6 +30,16 @@ end
 if (nkron == 1)
   nc = size(Acell{1},2);
   Y = Acell{1} * reshape(X, [nc, prod(size(X))/nc]);
+elseif (nkron == 2),
+  Y = kronmult2( Acell{1}, Acell{2}, X );
+elseif (nkron == 3),
+  Y = kronmult3( Acell{1}, Acell{2}, Acell{3}, X );
+elseif (nkron == 4),
+  Y = kronmult4( Acell{1}, Acell{2}, Acell{3}, Acell{4}, X );
+elseif (nkron == 5),
+  Y = kronmult5( Acell{1}, Acell{2}, Acell{3}, Acell{4}, Acell{5},X );
+elseif (nkron == 6),
+  Y = kronmult6( Acell{1}, Acell{2}, Acell{3}, Acell{4}, Acell{5},Acell{6},X );
 else
   % ------------------------------
   % general case require recursion
