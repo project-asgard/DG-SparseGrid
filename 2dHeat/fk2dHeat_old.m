@@ -1,34 +1,229 @@
 %% MATLAB (reference) version of the ASGarD solver
-
+% New test for 2D Heat equation
+% correct for non-homogeneous case
+% To do: SG case
 function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity)
+close all
 
 format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 
-%% Load PDE and runtime defaults
-runtimeDefaults
+Lmin = 0;
+Lmax = +1;
+Vmin = 0;
+Vmax = +1;
 
-%% Shortcuts (some of this will go away soon)
-% Named domain ranges
-if nDims==2
-Lmin = pde.dimensions{2}.domainMin;
-Lmax = pde.dimensions{2}.domainMax;
-Vmin = pde.dimensions{1}.domainMin;
-Vmax = pde.dimensions{1}.domainMax;
+deg = 2;
+lev = 2;
 
-%%
-% Level information.
-LevX = pde.dimensions{2}.lev;
-LevV = pde.dimensions{1}.lev;
+LevX = lev;
+LevV = lev;
+
+
+
+gridType = 'FG'; %'SG'; %
+nDims = 2;
+
+for d=1:nDims
+    pde.dimensions{d}.FMWT = OperatorTwoScale(deg,2^lev);
+    pde.dimensions{d}.init_cond_fn = @(x,parameter)cos(pi*x);
+    pde.dimensions{d}.lev = lev;
+    pde.dimensions{d}.deg = deg;
+    pde.dimensions{d}.domainMin = Lmin;
+    pde.dimensions{d}.domainMax = Lmax;
+    pde.params = 1;
 end
 
-%%
-% Things to be removed
-deg = pde.dimensions{1}.deg;
-lev = pde.dimensions{1}.lev;
-DimX = 1;
-params = pde.params;
+% hash table
+[HASH,HASHInv] = HashTable(lev,nDims,gridType);
+nHash = numel(HASHInv);
+
+
+dimension.lev = lev;
+dimension.deg = deg;
+dimension.domainMin = Lmin;
+dimension.domainMax = Lmax;
+dimension.FMWT = pde.dimensions{1}.FMWT;
+dimension.BCL = 1; % Dirichlet
+dimension.BCR = 1; % Dirichlet
+
+term_1D.dat = [];
+term_1D.LF = 1;       % Upwind Flux
+term_1D.G = @(x,t,y)1; % Grad Operator
+term_1D.type = 1;      % Grad Operator
+
+t = 0;
+ [mat1] = coeff_matrix2(t,dimension,term_1D);
+ 
+dimension.BCL = 2; % Neumann
+dimension.BCR = 2; % Neumann
+term_1D.dat = [];
+term_1D.LF = -1;       % Downwind Flux
+term_1D.G = @(x,t,y)1; % Grad Operator
+term_1D.type = 1;      % Grad Operator
+ 
+[mat2] = coeff_matrix2(t,dimension,term_1D);
+
+% Then the LDG matrix after reduction is 
+Delta = mat2*mat1;
+
+DoFs = (2^lev*deg);
+
+II = speye(DoFs,DoFs);
+Mat = kron(Delta,speye(DoFs,DoFs))+kron(speye(DoFs,DoFs),Delta);
+% NewMat = speye(DoFs^2,DoFs^2) - dt*Mat;
+
+F0 = zeros(DoFs^2,1);
+
+CFL = .01;
+dx = 1/2^lev;
+dt = CFL*(dx)^2;
+% MaxT = ceil(1e-1/dt);
+
+BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+ExaFunc = @(x,y,t)(cos(pi*x).*cos(pi*y)*exp(-2*pi^2*t));
+IntFunc = @(x,t)(cos(pi*x));
+
+% BCFunc = @(x,t)(sin(pi*x)*exp(-2*pi^2*t));
+% ExaFunc = @(x,y,t)(sin(pi*x).*sin(pi*y)*exp(-2*pi^2*t));
+% IntFunc = @(x,t)(sin(pi*x));
+
+time = 0;
+[n0] = forwardMWT(lev,deg,Lmin,Lmax,IntFunc,1);
+% n0 = pde.dimensions{1}.FMWT*n0;
+% Initial condition
+F0 = kron(n0,n0)*exp(-2*pi^2*time);
+
+
+[x_node,Meval] = PlotDGData(lev,deg,Lmin,Lmax,deg);
+Meval = Meval*pde.dimensions{1}.FMWT';
+[x_2D_plot,y_2D_plot] = meshgrid(x_node);
+MM = kron(Meval,Meval);
+num_GridPoints = deg * 2^lev;
+
+bc = ComputeBC(lev,deg,Lmin,Lmax,BCFunc,time,0,0);
+bc = (pde.dimensions{1}.FMWT*bc);
+
+bc1 = ComputRHS(lev,deg,Lmin,Lmax,BCFunc,time);
+bc1 = (pde.dimensions{1}.FMWT*bc1);
+% 
+bc2 = kron(mat2*bc,bc1) +  kron(bc1,mat2*bc); % this is the correct form
+
+% for sg
+ft = 1;
+fList{1} = mat2*bc;
+fList{2} = bc1;
+bc3= combine_dimensions_D(fList,ft,HASHInv,pde);
+fList{1} = bc1;
+fList{2} = mat2*bc;
+bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
+% bc2 = kron(bc,bc1) +  kron(bc1,bc) ;
+% bc = kron(bc,ones(DoFs,1)) +  kron(ones(DoFs,1),bc) ;
+
+subplot(1,2,1)
+mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0),num_GridPoints,num_GridPoints));
+subplot(1,2,2)
+mesh(x_2D_plot,y_2D_plot,reshape(MM*(bc2),num_GridPoints,num_GridPoints));
+
+    
+figure
+
+for T = 1 : 1
+    time = dt*T;
+    bc0 = bc2*exp(-2*pi^2*time);
+    F1 = F0 + dt*(Mat)*F0 - dt* bc0;
+    F0 = F1;
+    
+    val = reshape(MM*(F1),num_GridPoints,num_GridPoints);
+    subplot(1,3,1)
+    mesh(x_2D_plot,y_2D_plot,val,...
+        'FaceColor','interp','EdgeColor','none');
+    title(num2str(T))
+    val_ex = ExaFunc(x_2D_plot,y_2D_plot,time);
+    subplot(1,3,2)
+    mesh(x_2D_plot,y_2D_plot,val_ex,...
+        'FaceColor','interp','EdgeColor','none');
+    subplot(1,3,3)
+    
+    mesh(x_2D_plot,y_2D_plot,val_ex-val,...
+        'FaceColor','interp','EdgeColor','none');
+    title(num2str(max(abs(val(:)-val_ex(:)))))
+    pause(0.1)
+    
+end
+
+
+fval = initial_condition_vector(HASHInv,pde,0);
+
+% Matrix
+A_encode=GlobalMatrixSG_newCon(Delta,II,HASH,lev,deg,gridType);
+B_encode=GlobalMatrixSG_newCon(II,Delta,HASH,lev,deg,gridType);
+
+
+A_encode = [A_encode,B_encode];
+
+ [Meval_v,v_node,Meval_x,x_node]=matrix_plot(lev,lev,deg,Lmin,Lmax,Vmin,Vmax,...
+        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
+    
+ftmp = fval-fval;
+use_kronmult2 = 1;
+for T = 1 : 100
+    time = dt*T;
+    bc0 = bc2*exp(-2*pi^2*time);
+    ftmp = fval-fval;
+for i=1:size(A_encode,2)
+        
+        tmpA=A_encode{i}.A1;
+        tmpB=A_encode{i}.A2;
+        IndexI=A_encode{i}.IndexI;
+        IndexJ=A_encode{i}.IndexJ;
+
+            
+            nrA = size(tmpA,1);
+            ncA = size(tmpA,2);
+            nrB = size(tmpB,1);
+            ncB = size(tmpB,2);
+            
+            ftmp(IndexI)=ftmp(IndexI) + ...
+                reshape(tmpB * reshape(fval(IndexJ),ncB,ncA)*transpose(tmpA), nrB*nrA,1);
+%         end
+        
+end
+ ftmp = fval + dt*ftmp - dt* bc3;
+ fval = ftmp;
+ 
+ tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
+    figure(1000)
+    
+    f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
+    
+    [xx,vv]=meshgrid(x_node,v_node);
+    
+    ax1 = subplot(1,3,1);
+    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    view(-21,39)
+    
+    title(num2str(T))
+    ax2 = subplot(1,3,2);
+    val = cos(pi*xx).*cos(pi*vv)*exp(-2*pi^2*dt*T);
+     mesh(xx,vv,val,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    view(-21,39)
+    ax2 = subplot(1,3,3);
+    mesh(xx,vv,val-f2d0,'FaceColor','interp','EdgeColor','none');
+    axis([Lmin Lmax Vmin Vmax])
+    title(num2str(max(abs(val(:)-f2d0(:)))))
+    view(-21,39)
+    pause(0.1)
+end
+
+
+ 
+ 
+    
+% check about the matrix for time advance method
 
 %% Set time step.
 pde.CFL = 0.1;
@@ -78,7 +273,7 @@ if compression == 3
     % the new matrix construction is as _newCon, only works for 
     % compression= 3
 %     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
-    A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,lev,deg,gridType);
+    A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,lev,deg);
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
@@ -134,10 +329,6 @@ end
 if nDims==3
     [xx1,xx2,xx3] = ndgrid(nodes{3},nodes{2},nodes{1});
     coord = {xx3,xx2,xx1};
-end
-if nDims==6
-    [xx1,xx2,xx3,xx4,xx5,xx6] = ndgrid(nodes{6},nodes{5},nodes{4},nodes{3},nodes{2},nodes{1});
-    coord = {xx6,xx5,xx4,xx3,xx2,xx1};
 end
 
 % %%
@@ -324,26 +515,28 @@ for L = 1:nsteps,
     %     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
     %     fclose(fd);
     
-    if nDims <=3
-        
-        %%
-        % Get the real space solution
-        fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
-        
-        %%
-        % Try with function convertToRealSpace
-        
-        tryConvertToRealSpace = 1;
-        if tryConvertToRealSpace
-            LminB = zeros(1,nDims);
-            LmaxB = zeros(1,nDims);
-            for d=1:nDims
-                LminB(d) = pde.dimensions{d}.domainMin;
-                LmaxB(d) = pde.dimensions{d}.domainMax;
-            end
-            fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
+    %%
+    % Get the real space solution
+    fval_realspaceA = Multi_2D_D(Meval,fval,HASHInv,pde);
+    if nDims==2
+        fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
+        tol = 1e-15;
+        assert(norm(fval_realspace-fval_realspaceA)<tol);
+    end
+    fval_realspace = fval_realspaceA;
+    
+    %%
+    % Try with function convertToRealSpace
+    
+    tryConvertToRealSpace = 1;
+    if tryConvertToRealSpace
+        LminB = zeros(1,nDims);
+        LmaxB = zeros(1,nDims);
+        for d=1:nDims
+            LminB(d) = pde.dimensions{d}.domainMin;
+            LmaxB(d) = pde.dimensions{d}.domainMax;
         end
-        
+        fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
     end
     
     %%
@@ -358,17 +551,24 @@ for L = 1:nsteps,
         disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
         disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
-        if nDims <= 3
-            %%
-            % Check the realspace solution
-            
-            fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
-            
-            err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-            disp(['    real space absolute err : ', num2str(err_real)]);
-            disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-        end
+        %%
+        % Check the realspace solution
         
+        fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
+        
+%         if nDims==2
+%             % Check the real space solution with the analytic solution
+%             f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
+%             
+%             f2d_analytic = pde.analytic_solution(xx,vv,L*dt);
+%             f2d_analytic = f2d_analytic';
+%             tol = 1e-15;
+%             assert(norm(f2d_analytic(:)-fval_realspace_analytic(:))<tol);
+%         end
+        err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
+        disp(['    real space absolute err : ', num2str(err_real)]);
+        disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+
         err = err_wavelet;
     end
     
