@@ -324,28 +324,26 @@ for L = 1:nsteps,
     %     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
     %     fclose(fd);
     
-    %%
-    % Get the real space solution
-    fval_realspaceA = Multi_2D_D(Meval,fval,HASHInv,pde);
-    if nDims==2
-        fval_realspace = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
-        tol = 1e-15;
-        assert(norm(fval_realspace-fval_realspaceA)<tol);
-    end
-    fval_realspace = fval_realspaceA;
-    
-    %%
-    % Try with function convertToRealSpace
-    
-    tryConvertToRealSpace = 1;
-    if tryConvertToRealSpace
-        LminB = zeros(1,nDims);
-        LmaxB = zeros(1,nDims);
-        for d=1:nDims
-            LminB(d) = pde.dimensions{d}.domainMin;
-            LmaxB(d) = pde.dimensions{d}.domainMax;
+    if nDims <=3
+        
+        %%
+        % Get the real space solution
+        fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
+        
+        %%
+        % Try with function convertToRealSpace
+        
+        tryConvertToRealSpace = 1;
+        if tryConvertToRealSpace
+            LminB = zeros(1,nDims);
+            LmaxB = zeros(1,nDims);
+            for d=1:nDims
+                LminB(d) = pde.dimensions{d}.domainMin;
+                LmaxB(d) = pde.dimensions{d}.domainMax;
+            end
+            fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
         end
-        fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
+        
     end
     
     %%
@@ -360,24 +358,17 @@ for L = 1:nsteps,
         disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
         disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
-        %%
-        % Check the realspace solution
+        if nDims <= 3
+            %%
+            % Check the realspace solution
+            
+            fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
+            
+            err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
+            disp(['    real space absolute err : ', num2str(err_real)]);
+            disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+        end
         
-        fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
-        
-%         if nDims==2
-%             % Check the real space solution with the analytic solution
-%             f2d = reshape(fval_realspace,Deg*2^LevX,Deg*2^LevV)';
-%             
-%             f2d_analytic = pde.analytic_solution(xx,vv,L*dt);
-%             f2d_analytic = f2d_analytic';
-%             tol = 1e-15;
-%             assert(norm(f2d_analytic(:)-fval_realspace_analytic(:))<tol);
-%         end
-        err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-        disp(['    real space absolute err : ', num2str(err_real)]);
-        disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-
         err = err_wavelet;
     end
     

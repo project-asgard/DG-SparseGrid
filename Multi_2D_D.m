@@ -6,6 +6,8 @@ function [f_rSpace]=Multi_2D_D(Meval_D,f_wSpace,HASHInv,pde)
 % via Kron(tmp1,tmp2,...,tmpD)*f
 % Note: the output grid of this transform is specified in matrix_plot_D.m
 
+use_kronmultd = 0;
+
 dimensions = pde.dimensions;
 
 nDims = numel(dimensions);
@@ -104,9 +106,13 @@ for i=1:nHash
     element_ii = deg^nDims*(i-1)+1:deg^nDims*i;
     
     X = f_wSpace(element_ii);
-    
-    Y = kron_multd(nDims,kronMatList,X);
-    
+
+    if use_kronmultd
+        Y = kron_multd(nDims,kronMatList,X);
+    else
+        Y = kron_multd_full(nDims,kronMatList,X);
+    end
+        
     %%
     % Test the kron_multd
     

@@ -85,7 +85,7 @@ function [ftmp,A] = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)
 %-----------------------------------
 dof = size(f,1);
 ftmp=sparse(dof,1);
-use_kronmult2 = 1;
+use_kronmultd = 0;
 
 nTerms = numel(pde.terms);
 nDims = numel(pde.dimensions);
@@ -132,7 +132,7 @@ elseif runTimeOpts.compression == 3
         IndexI=A_data{i}.IndexI;
         IndexJ=A_data{i}.IndexJ;
         
-        if (use_kronmult2)
+        if (use_kronmultd)
             ftmp(IndexI)=ftmp(IndexI)+kronmult2(tmpA,tmpB,f(IndexJ));
         else
             % [nrA,ncA] = size(tmpA);
@@ -171,6 +171,8 @@ elseif runTimeOpts.compression == 4
     end
       
     for workItem=1:nWork
+        
+        disp([num2str(workItem) ' of ' num2str(nWork)]);
         
         if useConnectivity
             nConnected = A_data.element_n_connected(workItem);
@@ -257,7 +259,7 @@ elseif runTimeOpts.compression == 4
                     %%
                     % Apply kron_mult to return A*Y (explicit time advance)
                     X = f(globalCol);
-                    if use_kronmult2
+                    if use_kronmultd
                         Y = kron_multd(nDims,kronMatList,X);
                     else
                         Y = kron_multd_full(nDims,kronMatList,X);

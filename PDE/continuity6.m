@@ -1,13 +1,13 @@
 function pde = continuity6
 % 3D test case using continuity equation, i.e.,
-% df/dt + v.grad_x(f) + a.grad_v(f)==0 where v={1,1,3}, a={4,3,2}
+% df/dt + b.grad_x(f) + a.grad_v(f)==0 where b={1,1,3}, a={4,3,2}
 
 %% Setup the dimensions
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
-vx=1;
-vy=1;
-vz=3;
+bx=1;
+by=1;
+bz=3;
 ax=4;
 ay=3;
 az=2;
@@ -90,7 +90,7 @@ pde.dimensions = {dim_x,dim_y,dim_z,dim_vx,dim_vy,dim_vz};
 % Setup the v_x.d_dx (v . GradX . MassY . MassZ) term
 
 term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,t,dat) x*0+vx; 
+term2_x.G = @(x,t,dat) x*0+bx; 
 term2_x.TD = 0; 
 term2_x.dat = []; 
 term2_x.LF = 0; 
@@ -102,7 +102,7 @@ term2 = term_fill({term2_x,[],[],[],[],[]});
 % Setup the v_y.d_dy (v . MassX . GradY . MassZ) term
 
 term3_y.type = 1; % grad (see coeff_matrix.m for available types)
-term3_y.G = @(y,t,dat) y*0+vy; 
+term3_y.G = @(y,t,dat) y*0+by; 
 term3_y.TD = 0; 
 term3_y.dat = []; 
 term3_y.LF = 0; 
@@ -114,7 +114,7 @@ term3 = term_fill({[],term3_y,[],[],[],[]});
 % Setup the v_z.d_dz (v . MassX . MassY . GradZ) term
 
 term4_z.type = 1; % grad (see coeff_matrix.m for available types)
-term4_z.G = @(z,t,dat) z*0+vz; 
+term4_z.G = @(z,t,dat) z*0+bz; 
 term4_z.TD = 0; 
 term4_z.dat = []; 
 term4_z.LF = 0; 
@@ -176,88 +176,96 @@ pde.params = params;
 % variation of each source term with each dimension and time.
 % Here we define 3 source terms.
 
+targ = 2;
+xarg = pi;
+yarg = pi/2;
+zarg = pi/3;
+vxarg = pi/10;
+vyarg = pi/20;
+vzarg = pi/30;
+
 %%
 % Source term 0
 source0 = { ...
-    @(x,p) cos(pi*x),         ... % s1x
-    @(y,p) sin(2*pi*y),       ... % s1y
-    @(z,p) cos(2*pi*z/3),     ... % s1z
-    @(vx,p) cos(pi*vx/5),     ... % s1vx
-    @(vy,p) sin(3*pi*vy/20),  ... % s1vy
-    @(vz,p) cos(pi*vz/30),    ... % s1vz
-    @(t)   2*cos(2*t)         ... % s1t
+    @(x,p)  cos(xarg*x), ... 
+    @(y,p)  sin(yarg*y), ... 
+    @(z,p)  cos(zarg*z), ... 
+    @(vx,p) cos(vxarg*vx), ...
+    @(vy,p) sin(vyarg*vy), ...
+    @(vz,p) cos(vzarg*vz), ...
+    @(t)  2*cos(targ*t)    ...
     };
 
 %%
 % Source term 1
 source1 = { ...
-    @(x,p) cos(pi*x),      ... % s2x
-    @(y,p) cos(2*pi*y),    ... % s2y
-    @(z,p) cos(2*pi*z/3),  ... % s2z
-    @(vx,p) cos(pi*vx/5),    ... % s2vx
-    @(vy,p) sin(3*pi*vy/20),  ... % s2vy
-    @(vz,p) cos(pi*vz/30),... % s2vz
-    @(t)   2*pi*sin(2*t)   ... % s2t
+    @(x,p)  cos(xarg*x), ... 
+    @(y,p)  cos(yarg*y), ... 
+    @(z,p)  cos(zarg*z), ... 
+    @(vx,p) cos(vxarg*vx), ...
+    @(vy,p) sin(vyarg*vy), ...
+    @(vz,p) cos(vzarg*vz), ...
+    @(t)  1/2*pi*sin(targ*t)    ...
     };
 
 %%
 % Source term 2
 source2 = { ...
-    @(x,p) sin(pi*x),     ... % s3x
-    @(y,p) sin(2*pi*y),   ... % s3y
-    @(z,p) cos(2*pi*z/3), ... % s3z
-    @(vx,p) cos(pi*vx/5),     ... % s3vx
-    @(vy,p) sin(3*pi*vy/20),   ... % s3vy
-    @(vz,p) cos(pi*vz/30), ... % s3vz
-    @(t)   -pi*sin(2*t)   ... % s3t
+    @(x,p)  sin(xarg*x), ... 
+    @(y,p)  sin(yarg*y), ... 
+    @(z,p)  cos(zarg*z), ... 
+    @(vx,p) cos(vxarg*vx), ...
+    @(vy,p) sin(vyarg*vy), ...
+    @(vz,p) cos(vzarg*vz), ...
+    @(t)  -pi*sin(targ*t)    ...
     };
 
 %%
 % Source term 3
 source3 = { ...
-    @(x,p) cos(pi*x),       ... % s4x
-    @(y,p) sin(2*pi*y),     ... % s4y
-    @(z,p) sin(2*pi*z/3),   ... % s4z
-    @(vx,p) cos(pi*vx/5),       ... % s4vx
-    @(vy,p) sin(3*pi*vy/20),     ... % s4vy
-    @(vz,p) cos(pi*vz/30),   ... % s4vz
-    @(t)   -2*pi*sin(2*t) ... % s4t
+    @(x,p)  cos(xarg*x), ... 
+    @(y,p)  sin(yarg*y), ... 
+    @(z,p)  sin(zarg*z), ... 
+    @(vx,p) cos(vxarg*vx), ...
+    @(vy,p) sin(vyarg*vy), ...
+    @(vz,p) cos(vzarg*vz), ...
+    @(t)  -pi*sin(targ*t)    ...
     };
 
 %%
 % Source term 4
 source4 = { ...
-    @(x,p) cos(pi*x),       ... % s4x
-    @(y,p) sin(2*pi*y),     ... % s4y
-    @(z,p) cos(2*pi*z/3),   ... % s4z
-    @(vx,p) cos(pi*vx/5),       ... % s4vx
-    @(vy,p) cos(3*pi*vy/20),     ... % s4vy
-    @(vz,p) cos(pi*vz/30),   ... % s4vz
-    @(t)   9/20*pi*sin(2*t) ... % s4t
+    @(x,p)  cos(xarg*x), ... 
+    @(y,p)  sin(yarg*y), ... 
+    @(z,p)  cos(zarg*z), ... 
+    @(vx,p) cos(vxarg*vx), ...
+    @(vy,p) cos(vyarg*vy), ...
+    @(vz,p) cos(vzarg*vz), ...
+    @(t)  3/20*pi*sin(targ*t)    ...
     };
 
 %%
 % Source term 5
 source5 = { ...
-    @(x,p) cos(pi*x),       ... % s4x
-    @(y,p) sin(2*pi*y),     ... % s4y
-    @(z,p) cos(2*pi*z/3),   ... % s4z
-    @(vx,p) cos(pi*vx/5),       ... % s4vx
-    @(vy,p) sin(3*pi*vy/20),     ... % s4vy
-    @(vz,p) cos(pi*vz/30),   ... % s4vz
-    @(t)   -4/5*pi*sin(2*t) ... % s4t
+    @(x,p)  cos(xarg*x), ... 
+    @(y,p)  sin(yarg*y), ... 
+    @(z,p)  cos(zarg*z), ... 
+    @(vx,p) sin(vxarg*vx), ...
+    @(vy,p) sin(vyarg*vy), ...
+    @(vz,p) cos(vzarg*vz), ...
+    @(t)  -2/5*pi*sin(targ*t)    ...
     };
 
 %%
 % Source term 6
 source6 = { ...
-    @(x,p) cos(pi*x),       ... % s4x
-    @(y,p) sin(2*pi*y),     ... % s4y
-    @(z,p) cos(2*pi*z/3),   ... % s4z
-    @(vx,p) cos(pi*vx/5),       ... % s4vx
-    @(vy,p) sin(3*pi*vy/20),     ... % s4vy
-    @(vz,p) sin(pi*vz/30),   ... % s4vz
-    @(t)   -1/15*pi*sin(2*t) ... % s4t
+    @(x,p)  cos(xarg*x), ... 
+    @(y,p)  sin(yarg*y), ... 
+    @(z,p)  cos(zarg*z), ... 
+    @(vx,p) cos(vxarg*vx), ...
+    @(vy,p) sin(vyarg*vy), ...
+    @(vz,p) sin(vzarg*vz), ...
+    @(t)  -1/15*pi*sin(targ*t)    ...
     };
 
 %%
@@ -268,13 +276,13 @@ pde.sources = {source0,source1,source2,source3,source4,source5,source6};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...
-    @(x,p) cos(pi*x),         ... % a_x
-    @(y,p) sin(2*pi*y),     ... % a_y
-    @(z,p) cos(2*pi*z/3), ... % a_z
-    @(vx,p) cos(pi*vx/5),     ... % a_vx
-    @(vy,p) sin(3*pi*vy/20),   ... % a_vy
-    @(vz,p) cos(pi*vz/30), ... % a_vz
-    @(t)   sin(2*t)       ... % a_t
+    @(x,p) cos(xarg*x), ...
+    @(y,p) sin(yarg*y), ... 
+    @(z,p) cos(zarg*z), ... 
+    @(vx,p) cos(vxarg*vx), ... 
+    @(vy,p) sin(vyarg*vy), ... 
+    @(vz,p) cos(vzarg*vz), ...
+    @(t)   sin(targ*t) 
     };
 
 %% Other workflow options that should perhpas not be in the PDE?
