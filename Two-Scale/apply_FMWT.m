@@ -4,7 +4,7 @@ function Y = apply_FMWT( kdeg, Lev, FMWT, X, imethod_in )
 % 
 % Y = FMWT * X
 %
-idebug = 1;
+idebug = 0;
 if (idebug >= 1),
         t1 = cputime();
 end;
@@ -26,7 +26,9 @@ if (nargin >= 5),
 end;
 
 if (imethod == 1),
+      % ----------------------------
       % just perform matrix multiply
+      % ----------------------------
       Y = FMWT * X;
 elseif (imethod == 2),
       % -------------------------------------------- 
@@ -59,6 +61,7 @@ elseif (imethod == 3),
 
       % -------------------------------------------- 
       % take advantage of special sparsity structure
+      % and identical sub-matrices
       % -------------------------------------------- 
       Y = zeros( size(FMWT,1), size(X,2) );
 

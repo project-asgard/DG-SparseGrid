@@ -38,10 +38,10 @@ time_3 = toc();
 
 
 err12 = norm(Y_1 - Y_2,1); 
-relerr12 = err / max( norm(Y_1,1), norm(Y_2,1) );
+relerr12 = err12 / max( norm(Y_1,1), norm(Y_2,1) );
 
 err13 = norm(Y_1 - Y_3,1); 
-relerr13 = err / max( norm(Y_1,1), norm(Y_3,1) );
+relerr13 = err13 / max( norm(Y_1,1), norm(Y_3,1) );
 
 disp(sprintf('kdeg=%d,Lev=%d,err12=%g,relerr12=%g, err13=%g, relerr13=%g',...
               kdeg,   Lev,   err12, relerr12,    err13,relerr13 ));
