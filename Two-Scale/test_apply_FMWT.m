@@ -31,11 +31,23 @@ tic;
 Y_2 = apply_FMWT(kdeg,Lev, FMWT, X, imethod);
 time_2 = toc();
 
-err = norm(Y_1 - Y_2,1); 
-relerr = err / max( norm(Y_1,1), norm(Y_2,1) );
+imethod = 3;
+tic;
+Y_3 = apply_FMWT(kdeg,Lev, FMWT, X, imethod);
+time_3 = toc();
 
-disp(sprintf('kdeg=%d,Lev=%d,err=%g,relerr=%g, time_1=%g, time_2=%g', ...
-              kdeg,   Lev,   err,   relerr,    time_1,    time_2 ));
+
+err12 = norm(Y_1 - Y_2,1); 
+relerr12 = err / max( norm(Y_1,1), norm(Y_2,1) );
+
+err13 = norm(Y_1 - Y_3,1); 
+relerr13 = err / max( norm(Y_1,1), norm(Y_3,1) );
+
+disp(sprintf('kdeg=%d,Lev=%d,err12=%g,relerr12=%g, err13=%g, relerr13=%g',...
+              kdeg,   Lev,   err12, relerr12,    err13,relerr13 ));
+
+disp(sprintf('time_1=%g, time_2=%g, time_3=%g', ...
+              time_1,    time_2,    time_3 ));
 
 if (is_show_gflops),
   gflops = 2.0*n*n * size(X,2) * 1e-9/time_1;
@@ -45,6 +57,10 @@ if (is_show_gflops),
   
   gflops = 2.0*nnz(FMWTs) * size(X,2) * 1e-9/time_2;
   disp(sprintf('Structure Dense Gflops is %g Gflops/sec ', ...
+                gflops ));
+
+  gflops = 2.0*nnz(FMWTs) * size(X,2) * 1e-9/time_3;
+  disp(sprintf('Structure Identical Dense Gflops is %g Gflops/sec ', ...
                 gflops ));
 end;
 
