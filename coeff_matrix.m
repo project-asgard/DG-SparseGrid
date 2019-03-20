@@ -36,7 +36,7 @@ function [mat] = coeff_matrix(t,dimension,term_1D)
 %   LF = 0 --> Central Flux
 %   LF = 1 -->Upwind Flux
 %   LF = Max(df/du) -->Lax-Friedrich Flux
-
+idebug = 1;
 %% TODO ...
 % * Choice of flux (may require input C)
 % * Other BCs are done, but the RHS (with source) needs more work
@@ -310,8 +310,50 @@ end
 
 
 %% Transform coeff_mat to wavelet space
-Mass = FMWT * Mass * FMWT';
-Grad = FMWT * Grad * FMWT';
+use_apply_FMWT = 1;
+if (use_apply_FMWT),
+
+  Lev = lev;
+  kdeg = deg;
+  % --------------------------------------------------
+  % Check: should it be transpose or conj(transpose) ?
+  % --------------------------------------------------
+  if (idebug >= 1),
+          Mass_org = Mass;
+          Grad_org = Grad;
+  end;
+
+  M1 = apply_FMWT( kdeg, Lev, FMWT, Mass );
+  M1 = transpose(M1); 
+  Mass = apply_FMWT( kdeg,Lev,FMWT, M1);
+  Mass = transpose(Mass);
+  clear M1;
+
+  G1 = apply_FMWT(kdeg,Lev, FMWT, Grad);
+  G1 = transpose(G1);
+  Grad = apply_FMWT( kdeg,Lev,FMWT,G1);
+  Grad = transpose(Grad);
+  clear G1
+
+  if (idebug >= 1),
+     errM = norm( Mass - FMWT * Mass_org * FMWT',1);
+     errG = norm( Grad - FMWT * Grad_org * FMWT',1);
+     relerrM = errM/norm(Mass,1);
+     relerrG = errG/norm(Grad,1);
+
+     clear Mass_org, Grad_org;
+
+     isok = (relerrM <= 1e-8) && (relerrG <= 1e-8);
+     if (~isok),
+        error('error in using apply_FMWT in coeff_matrix.m,relerrM=%g,relerrG=%g',...
+                      relerrM,    relerrG );
+        return;
+     end;
+  end;
+else
+  Mass = FMWT * Mass * FMWT';
+  Grad = FMWT * Grad * FMWT';
+end;
 
 %%
 % After the transformation to wavelet space there may be very tiny coefficient values.
