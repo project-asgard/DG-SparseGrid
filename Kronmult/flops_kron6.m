@@ -83,7 +83,7 @@ flops2 =  flops2 + (2.0 * nrow_X ) * ncol1 * nrow1;
 % ----------------------------
 nvec = ncol_Ytmp;
 [jflops1,jflops2,jmethod,jmem1,jmem2] = ...
-    flops_kron4( nrow2,ncol2,   nrow3,ncol3,   nrow4,ncol4,  nrow5,ncol5, nrow6,ncol6);
+    flops_kron5( nrow2,ncol2,   nrow3,ncol3,   nrow4,ncol4,  nrow5,ncol5, nrow6,ncol6);
 
 if (jmethod == 1),
   flops2 = flops2 +  jflops1 * nvec;
