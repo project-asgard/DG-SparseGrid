@@ -2,6 +2,8 @@ function Y = kronmult4(A1,A2,A3,A4, X )
 % Y = kronmult4(A1,A2,A3,A4, X )
 global idebug;
 
+always_use_method1 = 1;
+
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
 
@@ -28,12 +30,17 @@ nvec = numel( X )/nrowX;
 nrowY = nrow1*nrow2*nrow3*nrow4;
 Y = zeros(nrowY, nvec);
 
-[flops1,flops2,imethod] = flops_kron4( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3, nrow4,ncol4 );
-if (idebug >= 1),
-  disp(sprintf('kronmult4: flops1=%g, flops2=%g, imethod=%d', ...
-                           flops1,    flops2,    imethod ));
+if (always_use_method1),
+  use_method_1 = 1;
+else
+  [flops1,flops2,imethod] = flops_kron4( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3, nrow4,ncol4 );
+  if (idebug >= 1),
+    disp(sprintf('kronmult4: flops1=%g, flops2=%g, imethod=%d', ...
+                             flops1,    flops2,    imethod ));
+  end;
+  use_method_1 = (imethod == 1);
 end;
-use_method_1 = (imethod == 1);
+
 if (use_method_1),
 
 

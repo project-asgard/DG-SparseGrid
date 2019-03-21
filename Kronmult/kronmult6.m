@@ -3,6 +3,8 @@ function Y = kronmult6(A1,A2,A3,A4,A5,A6, X)
 
 global idebug;
 
+always_use_method1 = 1;
+
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
 
@@ -36,18 +38,24 @@ nvec = numel( X )/nrowX;
 nrowY = nrow1*nrow2*nrow3*nrow4*nrow5*nrow6;
 Y = zeros(nrowY, nvec);
 
-[flops1,flops2,imethod] = flops_kron6( nrow1,ncol1, ...
-                                       nrow2,ncol2, ...
-                                       nrow3,ncol3, ...
-                                       nrow4,ncol4, ...
-                                       nrow5,ncol5, ...
-                                       nrow6,ncol6 );
-if (idebug >= 1),
-  disp(sprintf('kronmult6: flops1=%g, flops2=%g, imethod=%d', ...
-                           flops1,    flops2,    imethod ));
+if (always_use_method1),
+        use_method_1 = 1;
+else
+   [flops1,flops2,imethod] = flops_kron6( nrow1,ncol1, ...
+                                          nrow2,ncol2, ...
+                                          nrow3,ncol3, ...
+                                          nrow4,ncol4, ...
+                                          nrow5,ncol5, ...
+                                          nrow6,ncol6 );
+   if (idebug >= 1),
+     disp(sprintf('kronmult6: flops1=%g, flops2=%g, imethod=%d', ...
+                              flops1,    flops2,    imethod ));
+   end;
+   
+   use_method_1 = (imethod == 1);
 end;
 
-use_method_1 = (imethod == 1);
+
 if (use_method_1),
   
   
