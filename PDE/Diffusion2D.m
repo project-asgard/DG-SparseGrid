@@ -10,7 +10,7 @@ function pde = Diffusion2D
 %% Setup the dimensions
 % 
 % Here we setup a 2D problem (x,y)
-lev = 5;
+lev = 4;
 deg = 2;
 
 dim_x.name = 'x';
