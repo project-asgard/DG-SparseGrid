@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,bc] = coeff_matrix2(t,dimension,term_1D)
+function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -320,11 +320,24 @@ Mass = FMWT * Mass * FMWT';
 Grad = FMWT * Grad * FMWT';
 
 %%
-% Is this related to the Stif mat or LDG? or only to inhomogeneous
-% dirichlet?
+% If inhomogeneous Dirichlet, add a combined left and right term which
+% is addative, i.e., if only left is D then the right component is added in
+% as zero. 
 time = 0;
-bc = ComputeBC(lev,deg,xMin,xMax,BCL_fn,BCR_fn, time,'D','D'); % what to do when not D?
-bc = FMWT * bc;
+
+%% 
+% TODO
+% Update ComputeBC to accept a list of dim many functions, one of which is
+% zero.
+% bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList,time,'L');
+% bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList,time,'R');
+
+BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+bcL = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'L');
+bcR = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'R');
+
+bcL = FMWT * bcL;
+bcR = FMWT * bcR;
 
 if type == 3
     
@@ -352,8 +365,9 @@ if type == 3
     Stif = matD*matU;
     
     %%
-    % ???
-    bc = matD*bc; 
+    % Apply the inhomogeneous Dirichlet to that part of the LDG 
+    bcL = matD*bcL;
+    bcR = matD*bcR;
     
 end
 

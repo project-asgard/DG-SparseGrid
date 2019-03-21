@@ -48,30 +48,78 @@ t = 0;
 % bc is Dirichlet boundary for variable f
 % Denote Delta = mat2*mat1
 % but the Boundary Function is defined inside coeff_matrix2
-for i = 1:nDims
-    [Delta,bc] = coeff_matrix2(t,pde.dimensions{i},pde.terms{1}{1});
+
+time = 0;
+for d = 1:nDims
+    
+    [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1});
+    bcL{d} = bcL_tmp;
+    bcR{d} = bcR_tmp;
+    
+    %     bc1Tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    
+    dim = pde.dimensions{d};
+    %%
+    % TODO
+    % Generalize "ComputRHS" to handle dim.BCL_fn be a dim length list where one element is zero
+    %     bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCL_fList,time);
+    %     bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCR_fList,time);
+    
+    BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+    bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    
+    bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp);
+    bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp);
 end
 
 % for initial condition
-time = 0;
 fval = initial_condition_vector(HASHInv,pde,time);
 
 % boundary condition
 % bc is the two points value for the first component
 % bc1 is the integration of \int_xMin^xMax f*v dx along the boundary 
 % x = Const or y = Const
-bc1 = ComputRHS(lev,deg,pde.dimensions{1}.domainMin,pde.dimensions{1}.domainMax,BCFunc,time);
-bc1 = (pde.dimensions{1}.FMWT*bc1);
 
-% construct the 2D boundary
+
+
+%%
+% Construct the RHS piece of the Dirichlet BCs
 ft = 1;
-fList{1} = bc;
-fList{2} = bc1;
-bc3= combine_dimensions_D(fList,ft,HASHInv,pde);
-fList{1} = bc1;
-fList{2} = bc;
-bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
+% fList{1} = bc;
+% fList{2} = bc1;
+% bc3= combine_dimensions_D(fList,ft,HASHInv,pde);
+% fList{1} = bc1;
+% fList{2} = bc;
+% bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
 
+bc3 = zeros(deg^nDims*nHash,1);
+for d=1:nDims
+    
+    %%
+    % For each dimensional boundary
+   clear fListL fListR;
+   for d2=1:nDims
+       
+       if d == d2
+           fListL{d2} = bcL{d};
+           fListR{d2} = bcR{d};
+       else
+           fListL{d2} = bcL1{d2};
+           fListR{d2} = bcR1{d2};
+       end
+   end
+   
+   bc3 = bc3 + combine_dimensions_D(fListL,ft,HASHInv,pde);
+   bc3 = bc3 + combine_dimensions_D(fListR,ft,HASHInv,pde);
+   
+end
+
+%%
+% Construct the RHS piece of the Neumann BCs
+%
+% TODO
+%
 
 % 2D Matrix construction for sparse grids
 DoFs = (2^lev*deg);
@@ -87,7 +135,7 @@ A_encode = [A_encode,B_encode];
     pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 
 
-for T = 1 : 100
+for T = 1 : 10
     time = dt*T;
     
     % Euler time advance for zero source
