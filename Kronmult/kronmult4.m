@@ -64,9 +64,21 @@ if (use_method_1),
   end;
   
   msize = nrowYtmp/ncol1;
-  for i=1:nvec,
-   Yi = reshape( Ytmp(:,i), [msize, ncol1]) * transpose(A1);
-   Y(:,i) = reshape( Yi, [nrowY,1]);
+  use_one_call = (nvec >= 8);
+  if (use_one_call),
+    Ytmp  = reshape(Ytmp, [msize,ncol1,nvec]);
+    Ytmp2 = permute( Ytmp, [1,3,2]);
+    Ytmp2 = reshape( Ytmp2, [msize*nvec, ncol1]);
+
+    Ytmp = Ytmp2 * transpose(A1);
+    Ytmp = reshape(Ytmp, [msize,nvec, nrow1]);
+    Y = permute( Ytmp, [1,3,2]);
+    Y = reshape( Y, [nrowY, nvec]);
+  else
+     for i=1:nvec,
+      Yi = reshape( Ytmp(:,i), [msize, ncol1]) * transpose(A1);
+      Y(:,i) = reshape( Yi, [nrowY,1]);
+     end;
   end;
 else
 % -------------------------------------------------
