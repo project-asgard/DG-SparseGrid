@@ -2,8 +2,8 @@
 %
 is_show_gflops = 0;
 
-kdeg = 10;
-Lev = 8;
+kdeg = 4;
+Lev = 10;
 n = kdeg * 2^Lev;
 nvec = n;
 X = rand(n,nvec);
@@ -79,4 +79,10 @@ if (is_show_gflops),
   disp(sprintf('sparse Gflops rate is %g Gflops/sec', ...
                 gflops ));
 end;
+
+err1s = norm(Y_1 - Y_s,1); 
+relerr1s = err1s / max( norm(Y_1,1), norm(Y_s,1) );
+
+disp(sprintf('kdeg=%d,Lev=%d,err1s=%g,relerr1s=%g ', ...
+              kdeg,   Lev,   err1s,   relerr1s ));
 
