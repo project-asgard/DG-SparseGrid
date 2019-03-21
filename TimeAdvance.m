@@ -84,7 +84,12 @@ function [ftmp,A] = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)
 % Multiply Matrix A by Vector f
 %-----------------------------------
 dof = size(f,1);
-ftmp=sparse(dof,1);
+use_sparse_ftmp = 0;
+if (use_sparse_ftmp),
+  ftmp=sparse(dof,1);
+else
+  ftmp = zeros(dof,1);
+end;
 use_kronmultd = 1;
 
 nTerms = numel(pde.terms);
