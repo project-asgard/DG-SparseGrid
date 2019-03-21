@@ -72,7 +72,7 @@ if (use_method_1),
   nrowYtmp = size(Ytmp,1);
   
   
-  use_single_call = 0;
+  use_single_call = (nvec >= 8);
   if (use_single_call),
     % -------------------------------------------
     % note: just change of view, no data movement
@@ -126,24 +126,10 @@ if (use_method_1),
   % ----------------------------------
   % note may be batched gemm operation
   % ----------------------------------
-   use_Yi = 0;
-   if (use_Yi),
-    Y = zeros(nrowY,nvec);
     for i=1:nvec,
      Yi = reshape( Ytmp(:,i), [n1, ncol1])*transpose(A1);
      Y(:,i) = reshape(Yi, nrowY,1);
     end;
-   else
-    % -----------------------
-    % use permute and reshape
-    % -----------------------
-    Ytmp = reshape(Ytmp, [n1, ncol1, nvec]);
-    Ytmp2 = reshape(permute(Ytmp, [1,3,2]), [n1*nvec, ncol1]);
-    Ytmp3 = Ytmp2 * transpose(A1);
-    Ytmp3 = reshape(Ytmp3, [n1, nvec, nrow1]);
-    Y = reshape(permute( Ytmp3, [1,3,2]), [n1*nrow1, nvec]);
-
-   end;
   
     if (idebug >= 1),
       mm = n1; nn = nrow1; kk = ncol1;
@@ -174,3 +160,5 @@ end;
 Y = reshape(  Y, (nrow2*nrow1), nvec );
 
 end
+
+
