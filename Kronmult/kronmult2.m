@@ -134,12 +134,14 @@ if (use_method_1),
      Y(:,i) = reshape(Yi, nrowY,1);
     end;
    else
-    Y = zeros(nrowY,nvec);
-    for i=1:nvec,
-     Y(:,i) = reshape( ...
-                 reshape( Ytmp(:,i), n1, ncol1)*transpose(A1), ...
-                    nrowY,1);
-    end;
+    % -----------------------
+    % use permute and reshape
+    % -----------------------
+    Ytmp = reshape(Ytmp, [n1, ncol1, nvec]);
+    Ytmp2 = reshape(permute(Ytmp, [1,3,2]), [n1*nvec, ncol1]);
+    Ytmp3 = Ytmp2 * transpose(A1);
+    Ytmp3 = reshape(Ytmp3, [n1, nvec, nrow1]);
+    Y = reshape(permute( Ytmp3, [1,3,2]), [n1*nrow1, nvec]);
 
    end;
   
