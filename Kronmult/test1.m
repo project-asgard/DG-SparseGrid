@@ -6,7 +6,7 @@ A2 = rand(3,4);
 A3 = rand(4,5);
 A4 = rand(5,6);
 A5 = rand(6,7);
-A5 = rand(3,2);
+A6 = rand(3,2);
 
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);

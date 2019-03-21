@@ -72,7 +72,7 @@ if (use_method_1),
   nrowYtmp = size(Ytmp,1);
   
   
-  use_single_call = 0;
+  use_single_call = (nvec >= 8);
   if (use_single_call),
     % -------------------------------------------
     % note: just change of view, no data movement

@@ -102,13 +102,25 @@ for j=1:n
             
             rs = cn+1;
             cs = cn+1;
-            for ii=0:maxDeg*maxLev - (cn+1)
+
+            use_for_loop = 0;
+            if (use_for_loop),
+              for ii=0:maxDeg*maxLev - (cn+1)
                 for jj=0:maxDeg*maxLev - (cn+1)
                     if (ii==jj)
                         cFMWT2(rs+ii,cs+jj) = 1;
                     end
                 end
-            end
+              end
+            else
+              % ---------------------------
+              % short-cut loop to assign 1 
+              % ---------------------------
+              for ii=0:maxDeg*maxLev - (cn+1)
+                jj = ii;
+                cFMWT2(rs+ii,cs+jj) = 1;
+              end
+            end;
             
             % cFMWT(1:cn/2,1:cn)=FMWT(1:cn/2,1:cn);
             

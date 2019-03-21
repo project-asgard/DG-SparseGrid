@@ -6,7 +6,7 @@ function [f_rSpace]=Multi_2D_D(Meval_D,f_wSpace,HASHInv,pde)
 % via Kron(tmp1,tmp2,...,tmpD)*f
 % Note: the output grid of this transform is specified in matrix_plot_D.m
 
-use_kronmultd = 0;
+use_kronmultd = 1;
 
 dimensions = pde.dimensions;
 

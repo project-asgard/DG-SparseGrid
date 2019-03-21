@@ -2,6 +2,8 @@ function Y = kronmult3(A1,A2,A3, X )
 % Y = kronmult3(A1,A2,A3, X )
 global idebug;
 
+always_use_method1 = 1;
+
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
 
@@ -28,13 +30,17 @@ nrowY = nrow1*nrow2*nrow3;
 
 Y = zeros(nrowY, nvec);
 
-[flops1,flops2,imethod] = flops_kron3( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3 );
-if (idebug >= 1),
-  disp(sprintf('kronmult3: flops1=%g, flops2=%g, imethod=%d', ...
-                           flops1,    flops2,    imethod ));
+if (always_use_method1),
+   use_method_1 = 1;
+else
+   [flops1,flops2,imethod] = flops_kron3( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3 );
+   if (idebug >= 1),
+     disp(sprintf('kronmult3: flops1=%g, flops2=%g, imethod=%d', ...
+                              flops1,    flops2,    imethod ));
+   end;
+   
+   use_method_1 = (imethod == 1);
 end;
-
-use_method_1 = (imethod == 1);
 
 if (use_method_1),
 
@@ -64,9 +70,22 @@ if (use_method_1),
     return;
   end;
   msize  = nrowYtmp/ncol1;
-  for i=1:nvec,
-    Yi = reshape(Ytmp(:,i), [msize, ncol1])*transpose(A1);
-    Y(:,i) = reshape(Yi, nrowY,1);
+  use_single_call = (nvec >= 8);
+  if (use_single_call),
+     Ytmp = reshape( Ytmp, [msize,ncol1,nvec]);
+     Ytmp2 = permute( Ytmp, [1,3,2]);
+     Ytmp2 = reshape(Ytmp2,[msize*nvec,ncol1]);
+
+     Ytmp = Ytmp2 * transpose(A1);
+     Ytmp = reshape( Ytmp, [msize,nvec,nrow1]);
+
+     Y = permute( Ytmp, [1,3,2]);
+     Y = reshape( Y, [nrowY,nvec]);
+  else
+    for i=1:nvec,
+      Yi = reshape(Ytmp(:,i), [msize, ncol1])*transpose(A1);
+      Y(:,i) = reshape(Yi, nrowY,1);
+    end;
   end;
 else
 %  ---------------------------------------

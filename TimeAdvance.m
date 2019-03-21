@@ -84,8 +84,13 @@ function [ftmp,A] = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)
 % Multiply Matrix A by Vector f
 %-----------------------------------
 dof = size(f,1);
-ftmp=sparse(dof,1);
-use_kronmultd = 0;
+use_sparse_ftmp = 0;
+if (use_sparse_ftmp),
+  ftmp=sparse(dof,1);
+else
+  ftmp = zeros(dof,1);
+end;
+use_kronmultd = 1;
 
 nTerms = numel(pde.terms);
 nDims = numel(pde.dimensions);
@@ -264,7 +269,18 @@ elseif runTimeOpts.compression == 4
                     else
                         Y = kron_multd_full(nDims,kronMatList,X);
                     end
-                    ftmpA(globalRow) = ftmpA(globalRow) + Y;
+
+                    use_globalRow = 0;
+                    if (use_globalRow),
+                      ftmpA(globalRow) = ftmpA(globalRow) + Y;
+                    else
+                      % ------------------------------------------------------
+                      % globalRow = elementDOF*(workItem-1) + [1:elementDOF]';
+                      % ------------------------------------------------------
+                      i1 = elementDOF*(workItem-1) + 1;
+                      i2 = elementDOF*(workItem-1) + elementDOF;
+                      ftmpA(i1:i2) = ftmpA(i1:i2) + Y;
+                     end;
                     
                 end
                 

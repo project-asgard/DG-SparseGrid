@@ -3,6 +3,8 @@ function Y = kronmult5(A1,A2,A3,A4,A5, X)
 
 global idebug;
 
+always_use_method_1 = 1;
+
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
 
@@ -33,13 +35,18 @@ nvec = numel( X )/nrowX;
 nrowY = nrow1*nrow2*nrow3*nrow4*nrow5;
 Y = zeros(nrowY, nvec);
 
-[flops1,flops2,imethod] = flops_kron5( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3, nrow4,ncol4, nrow5,ncol5 );
-if (idebug >= 1),
-  disp(sprintf('kronmult5: flops1=%g, flops2=%g, imethod=%d', ...
-                           flops1,    flops2,    imethod ));
+if (always_use_method_1),
+   use_method_1 = 1;
+else
+   [flops1,flops2,imethod] = flops_kron5( nrow1,ncol1, nrow2,ncol2, nrow3,ncol3, nrow4,ncol4, nrow5,ncol5 );
+   if (idebug >= 1),
+     disp(sprintf('kronmult5: flops1=%g, flops2=%g, imethod=%d', ...
+                              flops1,    flops2,    imethod ));
+   end;
+   
+   use_method_1 = (imethod == 1);
 end;
 
-use_method_1 = (imethod == 1);
 if (use_method_1),
   
   
@@ -109,4 +116,4 @@ else
 end;
 
 Y = reshape( Y,  nrowY, nvec );
-end;
+end

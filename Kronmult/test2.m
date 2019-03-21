@@ -1,12 +1,14 @@
 global idebug;
 idebug = 1;
+tol = 1e-7;
+nerr = 0;
 
 A1 = rand(2,3);
 A2 = rand(3,4);
 A3 = rand(4,5);
 A4 = rand(5,6);
 A5 = rand(6,7);
-A5 = rand(2,3);
+A6 = rand(2,3);
 
 nrow1 = size(A1,1);
 ncol1 = size(A1,2);
@@ -64,9 +66,15 @@ disp(sprintf('total_mem_use=%g, mem_use5=%g', ...
 
 Y = kronmult5(A1,A2,A3,A4,A5, X );
 
-Ytmp =  kron(A1,kron(A2,kron(A3,kron(A4,A5))))*X;
-diff = norm( Ytmp-Y,1);
+Yok =  kron(A1,kron(A2,kron(A3,kron(A4,A5))))*X;
+diff = norm( Yok-Y,1);
 disp(sprintf('diff from kronmult5 = %g', diff ));
+isok = (diff < tol*numel(Yok));
+if (~isok),
+  disp(sprintf('kronmult5 failed, diff=%g',diff));
+  nerr = nerr + 1;
+end;
+
 
 
 
@@ -105,6 +113,15 @@ disp(sprintf('total_mem_use=%g, mem_use6=%g', ...
 
 
 Y = kronmult6(A1,A2,A3,A4,A5,A6, X );
-Ytmp = kron(A1,kron(A2,kron(A3,kron(A4,kron(A5,A6))))) * X;
-diff = norm(Y-Ytmp,1);
+Yok = kron(A1,kron(A2,kron(A3,kron(A4,kron(A5,A6))))) * X;
+diff = norm(Y-Yok,1);
 disp(sprintf('diff from kronmult6 = %g ', diff ));
+isok = (diff < tol * numel(Yok));
+if (~isok),
+  disp(sprintf('kronmult6 failed, diff=%g',diff));
+  nerr = nerr + 1;
+end;
+
+if (nerr == 0),
+ disp('All OK');
+end;
