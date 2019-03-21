@@ -62,15 +62,24 @@ for d = 1:nDims
     %%
     % TODO
     % Generalize "ComputRHS" to handle dim.BCL_fn be a dim length list where one element is zero
-    %     bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCL_fList,time);
-    %     bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCR_fList,time);
+    % ComputRHS works for a list of functions
+    bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCL_fList,time);
+    bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCR_fList,time);
     
-    BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
-    bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
-    bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    for d2 = 1:nDims % only compute for the dimension other than d
+        if abs(d2-d)>0
+            bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp{d2});
+            bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp{d2});
+        end
+    end
     
-    bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp);
-    bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp);
+    %     BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+    %     bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    %     bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    
+    
+    %     bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp);
+    %     bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp);
 end
 
 % for initial condition

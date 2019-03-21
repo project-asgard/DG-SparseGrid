@@ -51,8 +51,8 @@ xMax = dimension.domainMax;
 FMWT = dimension.FMWT;
 BCL = dimension.BCL;
 BCR = dimension.BCR;
-BCL_fn = dimension.BCL_fn;
-BCR_fn = dimension.BCR_fn;
+BCL_fList = dimension.BCL_fList;
+BCR_fList = dimension.BCR_fList;
 
 %%
 % Shortcuts to term_1d quantities
@@ -332,6 +332,12 @@ time = 0;
 % bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList,time,'L');
 % bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList,time,'R');
 
+% % nDims = numel(bcL);
+% % for d = 1:nDims
+% %     bcL{d} = FMWT * bcL{d};
+% %     bcR{d} = FMWT * bcR{d};
+% % end
+
 BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
 bcL = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'L');
 bcR = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'R');
@@ -369,6 +375,10 @@ if type == 3
     bcL = matD*bcL;
     bcR = matD*bcR;
     
+% %     for d = 1:nDims
+% %         bcL{d} = matD * bcL{d};
+% %         bcR{d} = matD * bcR{d};
+% %     end
 end
 
 if type == 1

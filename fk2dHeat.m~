@@ -52,26 +52,33 @@ t = 0;
 time = 0;
 for d = 1:nDims
     
-    % [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1});
-    
+    [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1});
     bcL{d} = bcL_tmp;
     bcR{d} = bcR_tmp;
     
     %     bc1Tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
     
-    dim = dimensions{d};
+    dim = pde.dimensions{d};
     %%
     % TODO
     % Generalize "ComputRHS" to handle dim.BCL_fn be a dim length list where one element is zero
-    %     bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCL_fn,time);
-    %     bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCR_fn,time);
+    bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCL_fList,time);
+    bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCR_fList,time);
     
-    BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
-    bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
-    bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
-    
-    bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp);
+    for d2 = 1:nDims
+        if abs(d2-d)>0
+            bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp);
     bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp);
+        end
+    end
+    
+    %     BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+    %     bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    %     bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
+    
+    
+    %     bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp);
+    %     bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp);
 end
 
 % for initial condition
@@ -117,7 +124,7 @@ for d=1:nDims
 end
 
 %%
-% Construct the RHS piece of the Dirichlet BCs
+% Construct the RHS piece of the Neumann BCs
 %
 % TODO
 %

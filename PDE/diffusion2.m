@@ -16,21 +16,31 @@ deg = 2;
 
 BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
 
+% BCL_fList = { ...
+%     @(x,t,p) 0, ...
+%     @(y,t,p) BCFunc(y,t) 
+%     };
+% 
+% BCR_fList = { ...
+%     @(x,t,p) 0, ...
+%     @(y,t,p) BCFunc(y,t) 
+%     };
+
 BCL_fList = { ...
-    @(x,t,p) 0, ...
+    @(x,t,p) BCFunc(x,t), ...
     @(y,t,p) BCFunc(y,t) 
     };
 
 BCR_fList = { ...
-    @(x,t,p) 0, ...
+    @(x,t,p) BCFunc(x,t), ...
     @(y,t,p) BCFunc(y,t) 
     };
 
 dim_x.name = 'x';
 dim_x.BCL = 1; % Dirichlet
-dim_x.BCL_fList = BCL_fn;
+dim_x.BCL_fList = BCL_fList;
 dim_x.BCR = 1; % Dirichlet
-dim_x.BCR_fList = BCR_fn;
+dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.lev = lev;
@@ -38,14 +48,24 @@ dim_x.deg = deg;
 dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) cos(pi*x);
 
+% BCL_fList = { ...
+%     @(x,t,p) BCFunc(x,t), ...
+%     @(y,t,p) 0 
+%     };
+% 
+% BCR_fList = { ...
+%     @(x,t,p) BCFunc(x,t), ...
+%     @(y,t,p) 0 
+%     };
+
 BCL_fList = { ...
     @(x,t,p) BCFunc(x,t), ...
-    @(y,t,p) 0 
+    @(y,t,p) BCFunc(y,t) 
     };
 
 BCR_fList = { ...
     @(x,t,p) BCFunc(x,t), ...
-    @(y,t,p) 0 
+    @(y,t,p) BCFunc(y,t) 
     };
 
 dim_y.name = 'y';
