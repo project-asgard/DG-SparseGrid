@@ -3,7 +3,7 @@
 is_show_gflops = 0;
 
 kdeg = 4;
-Lev = 10;
+Lev = 11;
 n = kdeg * 2^Lev;
 nvec = n;
 X = rand(n,nvec);
