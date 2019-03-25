@@ -332,7 +332,7 @@ time = 0;
 % Assume we know the direction we are considering:: Indexd
 
 bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{Indexd},time,'L');
-bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{Indexd},time,'R');
+bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fRist{Indexd},time,'R');
 
 %
 % nDims = numel(bcL);
