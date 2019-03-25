@@ -26,13 +26,16 @@ BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
 %     @(y,t,p) BCFunc(y,t) 
 %     };
 
+% Domain is (a,b)x(c,d)
+% The function is defined for the plane
+% x = a and x = b
 BCL_fList = { ...
-    @(x,t,p) BCFunc(x,t), ...
+    @(x,t,p) BCFunc(x,t), ... % replace x by a
     @(y,t,p) BCFunc(y,t) 
     };
 
 BCR_fList = { ...
-    @(x,t,p) BCFunc(x,t), ...
+    @(x,t,p) BCFunc(x,t), ... % replace x by b
     @(y,t,p) BCFunc(y,t) 
     };
 
@@ -58,14 +61,16 @@ dim_x.init_cond_fn = @(x,p) cos(pi*x);
 %     @(y,t,p) 0 
 %     };
 
+% The function is defined for the plane
+% y = c and y = d
 BCL_fList = { ...
     @(x,t,p) BCFunc(x,t), ...
-    @(y,t,p) BCFunc(y,t) 
+    @(y,t,p) BCFunc(y,t)  % replace y by c
     };
 
 BCR_fList = { ...
     @(x,t,p) BCFunc(x,t), ...
-    @(y,t,p) BCFunc(y,t) 
+    @(y,t,p) BCFunc(y,t)  % replace y by d
     };
 
 dim_y.name = 'y';
