@@ -51,13 +51,6 @@ for lev=(L-1):-1:0,
 
    ndeg = 2*k-1;
    F = legendrepoly( ndeg, xx);
-   % ---------------------------
-   % extract the values from k of the
-   % highest degree polynomials
-   % ---------------------------
-   j2 = size(F,2);
-   j1 = j2 - k + 1;
-   F = F(1:isize, j1:j2);
    % ----------------------------
    % apply orthogonalization from 
    % previous levels
@@ -92,25 +85,33 @@ for lev=(L-1):-1:0,
        for j=1:(mcells/ncells),
          i1 = 1 + (j-1)*m;
          i2 = i1 + m-1;
-         QtF = Q(1:m,1:k)'*F( i1:i2, 1:k);
-         F(i1:i2,1:k) = F(i1:i2,1:k) - Q(1:m,1:k) * QtF(1:k,1:k);
+         QtF = Q(1:m,1:k)'*F( i1:i2, : );
+         F(i1:i2,:) = F(i1:i2,:) - Q(1:m,1:k) * QtF(1:k,:);
        end;
    end;
    % -------------------------
    % perform Gram-Schmdit orthogonalization
    % via QR factorization
    % -------------------------
-   block{ioff+lev} = ortho(F);
+   F = ortho(F);
+
+   % -----------------------------
+   % extra the high order terms
+   % that have k vanishing moments
+   % -----------------------------
+   i2 = size(F,2);
+   i1 = i2 - k + 1;
+   block{ioff+lev} = F(:,i1:i2);
 end;
 
 % ------------
 % coarse  grid
 % ------------
-ndeg = k-1;
 xx = (x - min(x))/(max(x)-min(x));
 if (need_shift_x),
   xx = 2*xx - 1;
 end;
+ndeg = k-1;
 F = legendrepoly( ndeg,  x );
 
 % ------------------------------------------------
