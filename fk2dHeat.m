@@ -52,9 +52,10 @@ t = 0;
 time = 0;
 for d = 1:nDims
     
-    [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1});
+    [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1},d);
     bcL{d} = bcL_tmp;
     bcR{d} = bcR_tmp;
+    d
     
     %     bc1Tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
     

@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D)
+function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D,Indexd)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -322,25 +322,28 @@ Grad = FMWT * Grad * FMWT';
 %%
 % If inhomogeneous Dirichlet, add a combined left and right term which
 % is addative, i.e., if only left is D then the right component is added in
-% as zero. 
+% as zero.
 time = 0;
 
-%% 
+%%
 % TODO
 % Update ComputeBC to accept a list of dim many functions, one of which is
 % zero.
-% bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList,time,'L');
-% bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList,time,'R');
+% Assume we know the direction we are considering:: Indexd
 
-% % nDims = numel(bcL);
-% % for d = 1:nDims
-% %     bcL{d} = FMWT * bcL{d};
-% %     bcR{d} = FMWT * bcR{d};
-% % end
+bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{Indexd},time,'L');
+bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{Indexd},time,'R');
 
-BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
-bcL = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'L');
-bcR = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'R');
+%
+% nDims = numel(bcL);
+% for d = 1:nDims
+%     bcL{d} = FMWT * bcL{d};
+%     bcR{d} = FMWT * bcR{d};
+% end
+
+% BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+% bcL = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'L');
+% bcR = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'R');
 
 bcL = FMWT * bcL;
 bcR = FMWT * bcR;
@@ -352,33 +355,33 @@ if type == 3
     
     %%
     % Get a grad operator with downwind flux and Neumann BCs
-    term_1D.type = 1;      % Grad Operator    
+    term_1D.type = 1;      % Grad Operator
     term_1D.LF = -1;       % Downwind Flux
     dimension.BCL = 2; % Neumann
     dimension.BCR = 2; % Neumann
-    matD = coeff_matrix2(t,dimension,term_1D);
+    matD = coeff_matrix2(t,dimension,term_1D,Indexd);
     
     %%
     % Get a grad operator with upwind flux and Dirichlet BCs
-    term_1D.type = 1;      % Grad Operator      
+    term_1D.type = 1;      % Grad Operator
     term_1D.LF = 1;       % Upwind Flux
     dimension.BCL = 1; % Dirichlet
     dimension.BCR = 1; % Dirichlet
-    matU = coeff_matrix2(t,dimension,term_1D);
+    matU = coeff_matrix2(t,dimension,term_1D,Indexd);
     
-    %% 
+    %%
     % Combine back into second order operator
     Stif = matD*matU;
     
     %%
-    % Apply the inhomogeneous Dirichlet to that part of the LDG 
+    % Apply the inhomogeneous Dirichlet to that part of the LDG
     bcL = matD*bcL;
     bcR = matD*bcR;
     
-% %     for d = 1:nDims
-% %         bcL{d} = matD * bcL{d};
-% %         bcR{d} = matD * bcR{d};
-% %     end
+    %     for d = 1:nDims
+    %         bcL{d} = matD * bcL{d};
+    %         bcR{d} = matD * bcR{d};
+    %     end
 end
 
 if type == 1
