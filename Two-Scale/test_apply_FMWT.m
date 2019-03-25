@@ -8,13 +8,12 @@ n = kdeg * 2^Lev;
 nvec = n;
 X = rand(n,nvec);
 
+global OperatorTwoScale_method;
+%OperatorTwoScale_method = 'nonwavelet';
+OperatorTwoScale_method = 'wavelet';
+
 tic();
-use_wavelet = 0;
-if (use_wavelet),
-   FMWT =  OperatorTwoScale_wavelet(kdeg,2^Lev);
-else
-   FMWT = OperatorTwoScale_nonwavelet(kdeg,2^Lev);
-end;
+FMWT = OperatorTwoScale(kdeg,2^Lev);
 time_fmwt = toc();
 if (use_wavelet),
   disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale is %g',...
