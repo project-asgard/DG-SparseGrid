@@ -149,11 +149,22 @@ for j=1:n
         if porting; assert(isequal(cFMWT,cFMWT2)); end
         
     end
-    
+
+    use_sparsify = 1;
+    if (use_sparsify),
+      cFMWT = sparsify_matrix(cFMWT);
+      FMWT_COMP = sparsify_matrix(FMWT_COMP); 
+    end;
+
     FMWT_COMP = cFMWT*FMWT_COMP;
     
     if porting
         
+      if (use_sparsify),
+        cFMWT2 = sparsify_matrix(cFMWT2);
+        FMWT_COMP2 = sparsify_matrix(FMWT_COMP2);
+      end;
+
         FMWT_COMP2 = cFMWT2*FMWT_COMP2;
         
         assert(isequal(cFMWT,cFMWT2));
