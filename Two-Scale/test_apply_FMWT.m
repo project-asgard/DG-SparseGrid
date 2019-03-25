@@ -11,7 +11,7 @@ X = rand(n,nvec);
 tic();
 use_wavelet = 0;
 if (use_wavelet),
-   FMWT =  OperatorTwoScale(kdeg,2^Lev);
+   FMWT =  OperatorTwoScale_wavelet(kdeg,2^Lev);
 else
    FMWT = OperatorTwoScale_nonwavelet(kdeg,2^Lev);
 end;
