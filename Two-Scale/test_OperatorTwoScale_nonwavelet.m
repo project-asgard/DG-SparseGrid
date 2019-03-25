@@ -1,11 +1,11 @@
-% simple test for OperatorTwoScale_sparse
+% simple test for OperatorTwoScale_nonwavelet
 %
 k = 8;
 L = 4;
 n = k*2^L;
 x = linspace(0,1,n);
 
-FMWTs = OperatorTwoScale_sparse( k, 2^L );
+FMWTs = OperatorTwoScale_nonwavelet( k, 2^L );
 FMWT  = OperatorTwoScale(k, 2^L);
 
 % -----------------------------------

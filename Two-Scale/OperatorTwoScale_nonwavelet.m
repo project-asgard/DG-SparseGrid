@@ -1,5 +1,5 @@
-function FMWT = OperatorTwoScale_sparse(maxDeg,maxLev)
-% FMWT = OperatorTwoScale_sparse(maxDeg,maxLev)
+function FMWT = OperatorTwoScale_nonwavelet(maxDeg,maxLev)
+% FMWT = OperatorTwoScale_nonwavelet(maxDeg,maxLev)
 %----------------------------------
 % Set-up Two-scale operator       %
 %----------------------------------
@@ -13,7 +13,7 @@ k = maxDeg;
 L = round(log2(maxLev));
 isok = (2^L == maxLev);
 if (~isok),
-    error('OperatorTwoScale_sparse: maxLev=%d must be a power of 2', ...
+    error('OperatorTwoScale_nonwavelet: maxLev=%d must be a power of 2', ...
                                     maxLev);
     return;
 end;
@@ -72,7 +72,7 @@ for lev=(L-1):-1:0,
        mcells = 2^ell;
        isok = (m*mcells == n);
        if (~isok),
-         error('OperatorTwoScale_sparse:m=%d,ell=%d,mcells=%d,n=%d', ...
+         error('OperatorTwoScale_nonwavelet:m=%d,ell=%d,mcells=%d,n=%d', ...
                                                m,   ell,   mcells,   n);
          return;
        end;
