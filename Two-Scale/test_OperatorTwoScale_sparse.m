@@ -38,6 +38,27 @@ for j=0:(k-1),
     end;
 end;
 
+tol = 1e-7;
+ip = k;
+for lev=(L-1):-1:0,
+  for i=1:k,
+    % ---------------------------------------------------
+    % basis i is has vanishing moments j=0..(k-1) + (i-1)
+    % ---------------------------------------------------
+    irow = ip + i;
+    for j=0:((k-1)+(i-1)),
+         err = norm(FMWTs(irow,1:n) * reshape( x.^j,n,1),1); 
+         isok = (err <= tol);
+         if (~isok)
+            disp(sprintf('lev=%d,i=%d,j=%d, moment error=%g',...
+                          lev,   i,   j,    err ));
+         end;
+    end;
+  end;
+  ncells = 2^lev;
+  ip = ip + k*ncells;
+end;
+
 
 figure();
 subplot(2,1,1); plot( FMWT(1:k,:)'); title('FMWT');
@@ -49,4 +70,35 @@ if (do_plot_mesh),
 figure();
 subplot(2,1,1); mesh( full(FMWT)); title('FMWT');
 subplot(2,1,2); mesh( full(FMWTs)); title('FMWTs');
+end;
+
+
+figure();
+% -----------------------------------------------------------
+% plot the basis vectors similar to figure 3 in A-B-C-R paper
+% -----------------------------------------------------------
+ip = k;
+for lev=0:(L-1),
+  ncells = 2^lev;
+  isize = n/ncells;
+  for j=1:k,
+    % --------------------
+    % coordinate (j,lev+1)
+    % --------------------
+    ifig = (L - lev) + (k-j)*L;
+    subplot(k,L,  ifig);
+
+    irow = ip + j;
+
+    j1 = 1;
+    j2 = j1 + isize-1;
+
+    
+    axis([1,n,-1,1]);
+    plot(1:(j2-j1+1), FMWTs(irow,j1:j2), '.-');
+    axis([1,n,-1,1]);
+
+    title(sprintf('lev=%d,j=%d,irow=%d',lev,j,irow));
+  end;
+  ip = ip + ncells*k;
 end;
