@@ -9,10 +9,21 @@ nvec = n;
 X = rand(n,nvec);
 
 tic();
-FMWT =  OperatorTwoScale(kdeg,2^Lev);
+use_wavelet = 0;
+if (use_wavelet),
+   FMWT =  OperatorTwoScale(kdeg,2^Lev);
+else
+   FMWT = OperatorTwoScale_sparse(kdeg,2^Lev);
+end;
 time_fmwt = toc();
-disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale is %g',...
-              kdeg,   Lev,   n,  time_fmwt));
+if (use_wavelet),
+  disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale is %g',...
+                kdeg,   Lev,   n,  time_fmwt));
+else
+  disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale_sparse is %g',...
+                kdeg,   Lev,   n,  time_fmwt));
+
+end;
 FMWT = full(FMWT);
 % ------------------------------
 % generate sparse matrix version
