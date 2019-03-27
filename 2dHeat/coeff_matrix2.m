@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D,Indexd)
+function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D,myDim)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -331,8 +331,8 @@ time = 0;
 % zero.
 % Assume we know the direction we are considering:: Indexd
 
-bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{Indexd},time,'L');
-bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{Indexd},time,'R');
+bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},time,'L');
+bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},time,'R');
 
 %
 % nDims = numel(bcL);
@@ -359,7 +359,7 @@ if type == 3
     term_1D.LF = -1;       % Downwind Flux
     dimension.BCL = 2; % Neumann
     dimension.BCR = 2; % Neumann
-    matD = coeff_matrix2(t,dimension,term_1D,Indexd);
+    matD = coeff_matrix2(t,dimension,term_1D,myDim);
     
     %%
     % Get a grad operator with upwind flux and Dirichlet BCs
@@ -367,7 +367,7 @@ if type == 3
     term_1D.LF = 1;       % Upwind Flux
     dimension.BCL = 1; % Dirichlet
     dimension.BCR = 1; % Dirichlet
-    matU = coeff_matrix2(t,dimension,term_1D,Indexd);
+    matU = coeff_matrix2(t,dimension,term_1D,myDim);
     
     %%
     % Combine back into second order operator
