@@ -16,17 +16,8 @@ deg = 2;
 
 BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
 
-% BCL_fList = { ...
-%     @(x,t,p) 0, ...
-%     @(y,t,p) BCFunc(y,t) 
-%     };
-% 
-% BCR_fList = { ...
-%     @(x,t,p) 0, ...
-%     @(y,t,p) BCFunc(y,t) 
-%     };
-
 % Domain is (a,b)x(c,d)
+
 % The function is defined for the plane
 % x = a and x = b
 BCL_fList = { ...
@@ -50,16 +41,6 @@ dim_x.lev = lev;
 dim_x.deg = deg;
 dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) cos(pi*x);
-
-% BCL_fList = { ...
-%     @(x,t,p) BCFunc(x,t), ...
-%     @(y,t,p) 0 
-%     };
-% 
-% BCR_fList = { ...
-%     @(x,t,p) BCFunc(x,t), ...
-%     @(y,t,p) 0 
-%     };
 
 % The function is defined for the plane
 % y = c and y = d
@@ -103,6 +84,7 @@ term1_x.dat = [];
 term1_x.LF = 1;         % Upwind Flux
 term1_x.G = @(x,t,y) 1; % Delta Operator 
 term1_x.type = 3;       % Delta Operator ::  Let this denote the derivative order
+term1_x.TD = 0;
 
 term1 = term_fill({term1_x,[]});
 
@@ -113,6 +95,7 @@ term2_y.dat = [];
 term2_y.LF = 0;         % Upwind Flux
 term2_y.G = @(x,t,y) 1; % Delta Operator 
 term2_y.type = 3;        % Delta Operator ::  Let this denote the derivative order
+term2_y.TD = 0;
 
 term2 = term_fill({[],term2_y});
 
@@ -161,7 +144,7 @@ pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with
 pde.Ex = @Ex; % These can actually get absorbed into the G functions above.
 pde.Et = @Et; % but I've not done it yet. 
 pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.applySpecifiedE = 1; % Controls the "workflow" ... something we still don't know how to do generally. 
+pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
 pde.implicit = 0; % Can likely be removed and be a runtime argument. 
 pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
 
@@ -171,12 +154,13 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-LXmax = pde.dimensions{1}.domainMax;
-LYmax = pde.dimensions{2}.domainMax;
-LevX = pde.dimensions{2}.lev;
-CFL = pde.CFL;
-Deg = pde.dimensions{1}.deg;
+dims = pde.dimensions;
 
 % for Diffusion equation: dt = C * dx^2
-dt = LXmax/2^LevX/Vmax/(2*Deg+1)*CFL;
+
+lev = dims{1}.lev;
+CFL = .01;
+dx = 1/2^lev;
+dt = CFL*dx^2;
+
 end

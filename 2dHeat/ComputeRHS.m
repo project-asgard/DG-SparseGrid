@@ -1,12 +1,15 @@
-function rhsList = ComputRHS(Lev,Deg,LInt,LEnd,Fun,time)
+function rhsList = ComputeRHS(Lev,Deg,dimension,Fun,time)
 %function rhs to compute the rhs term
+
+xMin = dimension.domainMin;
+xMax = dimension.domainMax;
 
 %-----------------------------------------------------
 if ~exist('time','var') || isempty(time)
     time = 0;
 end
 
-L = LEnd-LInt;
+L = xMax-xMin;
 Tol_Cel_Num = 2^(Lev);
 h = L  / Tol_Cel_Num;
 DoF = Deg * Tol_Cel_Num;
@@ -26,24 +29,6 @@ p_val  = legendre(quad_x,Deg)  * 1/sqrt(h);
 
 Jacobi = h/2;
 
-
-% rhs = sparse(DoF,1);
-% for WorkCel = 0 : Tol_Cel_Num - 1
-%     %---------------------------------------------
-%     % (funcCoef*q,d/dx p)
-%     %---------------------------------------------
-%     c = Deg*WorkCel+[1:Deg];
-%     
-%     xL = LInt + WorkCel*h;
-%     xR = xL + h;
-%     PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
-%     
-%     IntVal =  p_val'*(quad_w.*Fun{1}(PhyQuad,time)) * Jacobi;
-% 
-%     rhs(c) = rhs(c) + IntVal;
-%     
-% end
-
 nDims = numel(Fun);
 for d = 1 : nDims
     rhs = sparse(DoF,1);
@@ -53,7 +38,7 @@ for d = 1 : nDims
         %---------------------------------------------
         c = Deg*WorkCel+[1:Deg];
         
-        xL = LInt + WorkCel*h;
+        xL = xMin + WorkCel*h;
         xR = xL + h;
         PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
         

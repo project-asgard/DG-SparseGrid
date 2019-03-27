@@ -49,59 +49,36 @@ t = 0;
 % Denote Delta = mat2*mat1
 % but the Boundary Function is defined inside coeff_matrix2
 
+%% Boundary conditions
+% bc is the two points value for the first component
+% bc1 is the integration of \int_xMin^xMax f*v dx along the boundary 
+% x = Const or y = Const
+
 time = 0;
 for d = 1:nDims
     
     [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1},d);
     bcL{d} = bcL_tmp;
     bcR{d} = bcR_tmp;
-    
-    %     bc1Tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
-    
+        
     dim = pde.dimensions{d};
-    %%
-    % TODO
-    % Generalize "ComputRHS" to handle dim.BCL_fn be a dim length list where one element is zero
-    % ComputRHS works for a list of functions
-    bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCL_fList,time);
-    bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,dim.BCR_fList,time);
+
+    bcL1_tmp = ComputeRHS(lev,deg,dim,dim.BCL_fList,time);
+    bcR1_tmp = ComputeRHS(lev,deg,dim,dim.BCR_fList,time);
     
     for d2 = 1:nDims % only compute for the dimension other than d
         if abs(d2-d)>0
-            bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp{d2});
-            bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp{d2});
+            bcL1{d} = (dim.FMWT*bcL1_tmp{d2});
+            bcR1{d} = (dim.FMWT*bcR1_tmp{d2});
         end
     end
-    
-    %     BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
-    %     bcL1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
-    %     bcR1_tmp = ComputRHS(lev,deg,pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,BCFunc,time);
-    
-    
-    %     bcL1{d} = (pde.dimensions{d}.FMWT*bcL1_tmp);
-    %     bcR1{d} = (pde.dimensions{d}.FMWT*bcR1_tmp);
+
 end
-
-% for initial condition
-fval = initial_condition_vector(HASHInv,pde,time);
-
-% boundary condition
-% bc is the two points value for the first component
-% bc1 is the integration of \int_xMin^xMax f*v dx along the boundary 
-% x = Const or y = Const
-
-
 
 %%
 % Construct the RHS piece of the Dirichlet BCs
-ft = 1;
-% fList{1} = bc;
-% fList{2} = bc1;
-% bc3= combine_dimensions_D(fList,ft,HASHInv,pde);
-% fList{1} = bc1;
-% fList{2} = bc;
-% bc3= bc3+combine_dimensions_D(fList,ft,HASHInv,pde);
 
+ft = 1;
 bc3 = zeros(deg^nDims*nHash,1);
 for d=1:nDims
     
@@ -129,6 +106,9 @@ end
 %
 % TODO
 %
+
+% for initial condition
+fval = initial_condition_vector(HASHInv,pde,time);
 
 % 2D Matrix construction for sparse grids
 DoFs = (2^lev*deg);

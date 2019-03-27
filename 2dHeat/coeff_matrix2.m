@@ -310,7 +310,7 @@ for i=0:N-1
     % terms at this point, rather than leaving them as seperator operator
     % matrices?
     
-    Grad = Grad - sparse(Iv,Iu,val_FLUX,dof_1D,dof_1D); % ARE THE SAME CONDITIONS APPLIED TO EACH MAT?
+    Grad = Grad - sparse(Iv,Iu,val_FLUX,dof_1D,dof_1D);
     
 end
 
@@ -323,30 +323,25 @@ Grad = FMWT * Grad * FMWT';
 % If inhomogeneous Dirichlet, add a combined left and right term which
 % is addative, i.e., if only left is D then the right component is added in
 % as zero.
-time = 0;
 
-%%
-% TODO
-% Update ComputeBC to accept a list of dim many functions, one of which is
-% zero.
-% Assume we know the direction we are considering:: Indexd
+if type == 1 || type ==3
+    
+    time = 0;
+    
+    bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},time,'L');
+    bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},time,'R');
+    
+    bcL = FMWT * bcL;
+    bcR = FMWT * bcR;
 
-bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},time,'L');
-bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},time,'R');
-
-%
-% nDims = numel(bcL);
-% for d = 1:nDims
-%     bcL{d} = FMWT * bcL{d};
-%     bcR{d} = FMWT * bcR{d};
-% end
-
-% BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
-% bcL = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'L');
-% bcR = ComputeBC(lev,deg,xMin,xMax,BCFunc, time,'R');
-
-bcL = FMWT * bcL;
-bcR = FMWT * bcR;
+else
+    
+    % TODO : check if this is correct, i.e., should we return zero valued
+    % BC vectors in the case of a mass matrix?
+    bcL = zeros(dof_1D,1);
+    bcR = zeros(dof_1D,1);
+    
+end
 
 if type == 3
     
@@ -378,10 +373,6 @@ if type == 3
     bcL = matD*bcL;
     bcR = matD*bcR;
     
-    %     for d = 1:nDims
-    %         bcL{d} = matD * bcL{d};
-    %         bcR{d} = matD * bcR{d};
-    %     end
 end
 
 if type == 1

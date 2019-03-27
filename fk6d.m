@@ -70,7 +70,10 @@ end
 % The generalized PDE spec way
 t = 0;
 TD = 0;
-pde = getCoeffMats(pde,t,TD);
+[pde,bcL,bcR] = getCoeffMats(pde,t,TD);
+
+%% Get the boundary condition vectors
+BCVecs = getBoundaryConditionVectors(pde,HASHInv,bcL,bcR,t);
 
 %% Construct A_encode / A_data time independent data structures.
 if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
