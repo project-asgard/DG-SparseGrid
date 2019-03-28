@@ -16,6 +16,8 @@ dim_x.deg = 2;
 dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @Fx_0;
 
+dim_x = checkDimension(dim_x);
+
 %%
 % Add dimensions to the pde object
 % Note that the order of the dimensions must be consistent with this across
