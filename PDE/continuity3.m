@@ -1,6 +1,9 @@
 function pde = continuity3
 % 3D test case using continuity equation, i.e.,
 % df/dt + v.grad(f)==0 where v={1,1,1}
+%
+% Run with ...
+% fk6d(continuity3,5,3,0.0002,[],[],[],[]);
 
 %% Setup the dimensions
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
@@ -18,6 +21,8 @@ dim_x.deg = 2;
 dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) x.*0;
 
+dim_x = checkDimension(dim_x);
+
 dim_y.name = 'y';
 dim_y.BCL = 0; % periodic
 dim_y.BCR = 0;
@@ -28,6 +33,8 @@ dim_y.deg = 2;
 dim_y.FMWT = []; % Gets filled in later
 dim_y.init_cond_fn = @(y,p) y.*0;
 
+dim_y = checkDimension(dim_y);
+
 dim_z.name = 'z';
 dim_z.BCL = 0; % periodic
 dim_z.BCR = 0;
@@ -37,6 +44,8 @@ dim_z.lev = 2;
 dim_z.deg = 2;
 dim_z.FMWT = []; % Gets filled in later
 dim_z.init_cond_fn = @(z,p) z.*0;
+
+dim_z = checkDimension(dim_z);
 
 %%
 % Add dimensions to the pde object

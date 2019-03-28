@@ -32,7 +32,6 @@ params = pde.params;
 
 %% Set time step.
 pde.CFL = 0.1;
-%dt = Lmax/2^LevX/Vmax/(2*Deg+1)*CFL;
 dt = pde.set_dt(pde);
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
@@ -74,10 +73,12 @@ TD = 0;
 
 %%
 % Get the spatial dependence of the boundary condition vectors
+bcL1 = {};
+bcR1 = {};
 for d = 1:nDims
     dim = pde.dimensions{d};
-    bcL1{d} = ComputeRHS(nDims,dim,dim.BCL_fList);
-    bcR1{d} = ComputeRHS(nDims,dim,dim.BCR_fList);
+    bcL1{d} = ComputeRHS(nDims,dim,'L');
+    bcR1{d} = ComputeRHS(nDims,dim,'R');
 end
 
 %%

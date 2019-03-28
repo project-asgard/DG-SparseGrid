@@ -27,7 +27,7 @@ source2 = source_vector(HASHInv,pde,t+c2*dt);
 source3 = source_vector(HASHInv,pde,t+c3*dt);
 
 %%
-% Boundary Conditions
+% Inhomogeneous dirichlet boundary conditions
 bc1 = getBoundaryConditionVectors(pde,bc,HASHInv,t); 
 bc2 = getBoundaryConditionVectors(pde,bc,HASHInv,t+c2*dt); 
 bc3 = getBoundaryConditionVectors(pde,bc,HASHInv,t+c3*dt); 

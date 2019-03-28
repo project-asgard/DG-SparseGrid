@@ -324,24 +324,21 @@ Grad = FMWT * Grad * FMWT';
 % is addative, i.e., if only left is D then the right component is added in
 % as zero.
 
-if type == 1 || type ==3
-        
-%     bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},time,'L');
-%     bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},time,'R');
-    
-    bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},'L');
-    bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},'R');
-    
-    bcL = FMWT * bcL;
-    bcR = FMWT * bcR;
+bcL = zeros(dof_1D,1);
+bcR = zeros(dof_1D,1);
 
-else
+if type == 1 || type == 3 % grad or del^2 operators
     
-    % TODO : check if this is correct, i.e., should we return zero valued
-    % BC vectors in the case of a mass matrix?
-    bcL = zeros(dof_1D,1);
-    bcR = zeros(dof_1D,1);
+    if BCL == 1 % Dirichlet
+        bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},'L');
+        bcL = FMWT * bcL;        
+    end
     
+    if BCR == 1 % Dirichlet     
+        bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},'R');
+        bcR = FMWT * bcR;    
+    end
+
 end
 
 if type == 3
@@ -371,8 +368,13 @@ if type == 3
     
     %%
     % Apply the inhomogeneous Dirichlet to that part of the LDG
-    bcL = matD*bcL;
-    bcR = matD*bcR;
+    
+    if BCL == 1 % Dirichlet
+        bcL = matD*bcL;
+    end
+    if BCR == 1 % Dirichlet
+        bcR = matD*bcR;
+    end
     
 end
 

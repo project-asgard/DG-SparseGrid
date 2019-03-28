@@ -17,8 +17,14 @@ for d=1:nDims
     
     dim = pde.dimensions{d};
     
-    ftL = dim.BCL_fList{nDims+1}(time);
-    ftR = dim.BCR_fList{nDims+1}(time);
+    ftL = 1;
+    ftR = 1;
+    if dim.BCL == 1 % dirichlet
+        ftL = dim.BCL_fList{nDims+1}(time);
+    end
+    if dim.BCR == 1 % dirichlet
+        ftR = dim.BCR_fList{nDims+1}(time);
+    end
     
     %%
     % For each dimensional boundary

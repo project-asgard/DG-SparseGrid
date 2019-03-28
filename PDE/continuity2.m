@@ -17,6 +17,8 @@ dim_x.deg = 2;
 dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) x.*0;
 
+dim_x = checkDimension(dim_x);
+
 dim_y.name = 'y';
 dim_y.BCL = 0; % periodic
 dim_y.BCR = 0;
@@ -26,6 +28,8 @@ dim_y.lev = 2;
 dim_y.deg = 2;
 dim_y.FMWT = []; % Gets filled in later
 dim_y.init_cond_fn = @(y,p) y.*0;
+
+dim_y = checkDimension(dim_y);
 
 %%
 % Add dimensions to the pde object

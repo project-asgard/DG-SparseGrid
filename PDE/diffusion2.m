@@ -6,6 +6,9 @@ function pde = diffusion2
 % Domain is [0,1]x[0,1]
 % Dirichlet boundary condition 
 % ToDo: need some effort for naming, boundary conditions, source terms
+%
+% Run with
+% fk6d(diffusion2,4,2,0.0002,[],[],0,[]);
 
 lev = 5;
 deg = 2;
@@ -45,6 +48,8 @@ dim_x.deg = deg;
 dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) cos(pi*x);
 
+dim_x = checkDimension(dim_x);
+
 % The function is defined for the plane
 % y = c and y = d
 BCL_fList = { ...
@@ -70,6 +75,8 @@ dim_y.lev = lev;
 dim_y.deg = deg;
 dim_y.FMWT = []; % Gets filled in later
 dim_y.init_cond_fn = @(y,p) cos(pi*y);
+
+dim_y = checkDimension(dim_y);
 
 %%
 % Add dimensions to the pde object
