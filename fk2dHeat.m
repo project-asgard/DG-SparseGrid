@@ -51,7 +51,7 @@ t = 0;
 
 %% Boundary conditions
 % bc is the two points value for the first component
-% bc1 is the integration of \int_xMin^xMax f*v dx along the boundary 
+% bc1 is the integration of \int_xMin^xMax f*v dx along the boundary
 % x = Const or y = Const
 
 time = 0;
@@ -60,46 +60,14 @@ for d = 1:nDims
     [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1},d);
     bcL{d} = bcL_tmp;
     bcR{d} = bcR_tmp;
-        
+    
     dim = pde.dimensions{d};
-
-    bcL1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCL_fList);
-    bcR1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCR_fList);
     
-    for d2 = 1:nDims % only compute for the dimension other than d
-        if abs(d2-d)>0
-            bcL1{d} = (dim.FMWT*bcL1_tmp{d2});
-            bcR1{d} = (dim.FMWT*bcR1_tmp{d2});
-        end
-    end
-
+    bcL1{d} = ComputeRHS(nDims,dim,dim.BCL_fList);
+    bcR1{d} = ComputeRHS(nDims,dim,dim.BCR_fList);
+    
 end
 
-%%
-% Construct the RHS piece of the Dirichlet BCs
-
-ft = 1;
-bc3 = zeros(deg^nDims*nHash,1);
-for d=1:nDims
-    
-    %%
-    % For each dimensional boundary
-   clear fListL fListR;
-   for d2=1:nDims
-       
-       if d == d2
-           fListL{d2} = bcL{d};
-           fListR{d2} = bcR{d};
-       else
-           fListL{d2} = bcL1{d2};
-           fListR{d2} = bcR1{d2};
-       end
-   end
-   
-   bc3 = bc3 + combine_dimensions_D(fListL,ft,HASHInv,pde);
-   bc3 = bc3 + combine_dimensions_D(fListR,ft,HASHInv,pde);
-   
-end
 
 %%
 % Construct the RHS piece of the Neumann BCs
@@ -127,10 +95,40 @@ A_encode = [A_encode,B_encode];
 for T = 1 : 10
     time = dt*T;
     
+    %%
+    % Construct the time-dependent RHS piece of the Dirichlet BCs
+    
+    bc3 = zeros(deg^nDims*nHash,1);
+    for d=1:nDims
+        
+        dim = pde.dimensions{d};
+        
+        ftL = dim.BCL_fList{nDims+1}(time);
+        ftR = dim.BCR_fList{nDims+1}(time);
+        
+        %%
+        % For each dimensional boundary
+        clear fListL fListR;
+        for d2=1:nDims
+            
+            if d == d2
+                fListL{d2} = bcL{d};
+                fListR{d2} = bcR{d};
+            else
+                fListL{d2} = bcL1{d}{d2};
+                fListR{d2} = bcR1{d}{d2};
+            end
+        end
+        
+        bc3 = bc3 + combine_dimensions_D(fListL,ftL,HASHInv,pde);
+        bc3 = bc3 + combine_dimensions_D(fListR,ftR,HASHInv,pde);
+        
+    end
+    
     % Euler time advance for zero source
     % df^1 = df^0 + dt*A*f^0  + dt*bc
     % just like Apply(A,f)
-    ftmp = fval-fval; 
+    ftmp = fval-fval;
     for i=1:size(A_encode,2)
         
         tmpA=A_encode{i}.A1;
@@ -150,7 +148,7 @@ for T = 1 : 10
     end
     % bc term is cos(pi*x)*cos(pi*y)*exp(-2*pi^2*time)
     % thus we fully decomposite the x,y,t components
-    ftmp = fval + dt*ftmp - dt* bc3 * exp(-2*pi^2*time);
+    ftmp = fval + dt*ftmp - dt* bc3;% * exp(-2*pi^2*time);
     fval = ftmp;
     
     % plotting

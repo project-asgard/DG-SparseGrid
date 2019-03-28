@@ -63,15 +63,18 @@ for d = 1:nDims
         
     dim = pde.dimensions{d};
 
-    bcL1_tmp = ComputeRHS(lev,deg,dim,dim.BCL_fList)*dim.BCL_fList;
-    bcR1_tmp = ComputeRHS(lev,deg,dim,dim.BCR_fList);
+%     bcL1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCL_fList);
+%     bcR1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCR_fList);
+%     
+%     for d2 = 1:nDims % only compute for the dimension other than d
+%         if abs(d2-d)>0
+%             bcL1{d} = (dim.FMWT*bcL1_tmp{d2});
+%             bcR1{d} = (dim.FMWT*bcR1_tmp{d2});
+%         end
+%     end
     
-    for d2 = 1:nDims % only compute for the dimension other than d
-        if abs(d2-d)>0
-            bcL1{d} = (dim.FMWT*bcL1_tmp{d2});
-            bcR1{d} = (dim.FMWT*bcR1_tmp{d2});
-        end
-    end
+    bcL1{d} = ComputeRHS(nDims,lev,deg,dim,dim.BCL_fList);
+    bcR1{d} = ComputeRHS(nDims,lev,deg,dim,dim.BCR_fList);
 
 end
 
@@ -91,8 +94,8 @@ for d=1:nDims
            fListL{d2} = bcL{d};
            fListR{d2} = bcR{d};
        else
-           fListL{d2} = bcL1{d2};
-           fListR{d2} = bcR1{d2};
+           fListL{d2} = bcL1{d}{d2};
+           fListR{d2} = bcR1{d}{d2};
        end
    end
    

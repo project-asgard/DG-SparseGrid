@@ -72,8 +72,20 @@ t = 0;
 TD = 0;
 [pde,bcL,bcR] = getCoeffMats(pde,t,TD);
 
-%% Get the spatial dependence of the boundary condition vectors
-multiD_BCVecs = getBoundaryConditionVectors(pde,HASHInv,bcL,bcR,t);
+%%
+% Get the spatial dependence of the boundary condition vectors
+for d = 1:nDims
+    dim = pde.dimensions{d};
+    bcL1{d} = ComputeRHS(nDims,dim,dim.BCL_fList);
+    bcR1{d} = ComputeRHS(nDims,dim,dim.BCR_fList);
+end
+
+%%
+% Construct the BC boundary condition object
+bc.bcL = bcL;
+bc.bcR = bcR;
+bc.bcL1 = bcL1;
+bc.bcR1 = bcR1;
 
 %% Construct A_encode / A_data time independent data structures.
 if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
@@ -285,7 +297,7 @@ for L = 1:nsteps,
     %%% Advance Vlasov in time with RK3 time stepping method.
     if ~quiet; disp('    RK3 time step'); end
     if runTimeOpts.compression == 3
-        fval = TimeAdvance(pde,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
+        fval = TimeAdvance(pde,bc,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
     else
         
         if nDims==2
@@ -306,7 +318,7 @@ for L = 1:nsteps,
             Vmax = 0;
             Emax = 0; % These are only used in the global LF flux
         end
-        fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
+        fval = TimeAdvance(pde,bc,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
 
     end
     

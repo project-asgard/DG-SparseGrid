@@ -1,4 +1,4 @@
-function f = TimeAdvance(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
+function f = TimeAdvance(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
@@ -6,25 +6,31 @@ function f = TimeAdvance(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 
 if runTimeOpts.implicit
-    f = backward_euler(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    f = backward_euler(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
     %f = crank_nicolson(pde,runTimeOpts,A,f,t,dt,runTimeOpts.compressiond,eg,HASHInv);
 else
-    f = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    f = RungeKutta3(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 end
 
 end
 
-function fval = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
+function fval = RungeKutta3(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % 3-rd Order Kutta Method
 %----------------------------------
 
+%%
+% Sources
 c2 = 1/2; c3 = 1;
 source1 = source_vector(HASHInv,pde,t);
 source2 = source_vector(HASHInv,pde,t+c2*dt);
 source3 = source_vector(HASHInv,pde,t+c3*dt);
 
-%bc_TD = 
+%%
+% Boundary Conditions
+bc1 = getBoundaryConditionVectors(pde,bc,HASHInv,t); 
+bc2 = getBoundaryConditionVectors(pde,bc,HASHInv,t+c2*dt); 
+bc3 = getBoundaryConditionVectors(pde,bc,HASHInv,t+c3*dt); 
 
 a21 = 1/2;
 a31 = -1;
@@ -33,17 +39,17 @@ b1 = 1/6;
 b2 = 2/3;
 b3 = 1/6;
 
-k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1;
+k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 - bc1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2;
+k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 - bc2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3;
+k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 - bc3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
 end
 
-function f1 = backward_euler(pde,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
+function f1 = backward_euler(pde,bc,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Backward Euler (First Order Implicit Time Advance)
 %----------------------------------
@@ -61,7 +67,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function f1 = crank_nicolson(pde,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
+function f1 = crank_nicolson(pde,bc,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % Crank Nicolson (Second Order Implicit Time Advance)
 %----------------------------------
