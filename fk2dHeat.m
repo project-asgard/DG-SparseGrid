@@ -92,7 +92,7 @@ A_encode = [A_encode,B_encode];
     pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 
 
-for T = 1 : 10
+for T = 1 : 100
     time = dt*T;
     
     %%
@@ -103,7 +103,7 @@ for T = 1 : 10
         
         dim = pde.dimensions{d};
         
-        ftL = dim.BCL_fList{nDims+1}(time);
+        ftL = dim.BCL_fList{nDims+1}(time)
         ftR = dim.BCR_fList{nDims+1}(time);
         
         %%

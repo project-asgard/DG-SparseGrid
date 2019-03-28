@@ -6,8 +6,8 @@ function f = TimeAdvance(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 
 if runTimeOpts.implicit
-    f = backward_euler(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
-    %f = crank_nicolson(pde,runTimeOpts,A,f,t,dt,runTimeOpts.compressiond,eg,HASHInv);
+    %f = backward_euler(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    f = crank_nicolson(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 else
     f = RungeKutta3(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 end
@@ -55,13 +55,14 @@ function f1 = backward_euler(pde,bc,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,
 %----------------------------------
 
 s1 = source_vector(HASHInv,pde,t+dt);
+bc1 = getBoundaryConditionVectors(pde,bc,HASHInv,t+dt);
 
 [~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
 I = eye(numel(diag(AMat)));
 AA = I - dt*AMat;
 
-b = f0 + dt*s1;
+b = f0 + dt*s1 - dt*bc1;
 
 f1 = AA\b; % Solve at each timestep
 
@@ -75,12 +76,15 @@ function f1 = crank_nicolson(pde,bc,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,
 s0 = source_vector(HASHInv,pde,t);
 s1 = source_vector(HASHInv,pde,t+dt);
 
+bc0 = getBoundaryConditionVectors(pde,bc,HASHInv,t);
+bc1 = getBoundaryConditionVectors(pde,bc,HASHInv,t+dt);
+
 [~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
 
-b = 2*f0 + dt*AMat*f0 + dt*(s0+s1);
+b = 2*f0 + dt*AMat*f0 + dt*(s0+s1) - dt*(bc0+bc1);
 
 f1 = AA\b; % Solve at each timestep
 
