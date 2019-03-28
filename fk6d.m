@@ -129,9 +129,9 @@ if nDims==2
     [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
         pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
     tol = 1e-15;
-    assert(norm(Meval{1}-Meval_v)<tol);
+    assert(norm(full(Meval{1}-Meval_v))<tol);
     assert(norm(nodes{1}-v_node)<tol);
-    assert(norm(Meval{2}-Meval_x)<tol);
+    assert(norm(full(Meval{2}-Meval_x))<tol);
     assert(norm(nodes{2}-x_node)<tol);
 end
 

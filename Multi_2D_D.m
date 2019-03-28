@@ -93,10 +93,10 @@ for i=1:nHash
         % Assert match the 2D case
         if nDims==2
             if d==1
-                assert(norm(thisMat1-A(:,index_I1))==0);
+                assert(norm(full(thisMat1-A(:,index_I1)))==0);
             end
             if d==2
-                assert(norm(thisMat1-B(:,index_I2))==0);
+                assert(norm(full(thisMat1-B(:,index_I2)))==0);
             end
         end
         
@@ -125,7 +125,7 @@ for i=1:nHash
     tol=1e-12;
     assert(norm(YA-Y)<tol);
     
-    tol = 1e-15;
+    tol = 1e-12;
     if nDims==2
         assert(norm(Y-tmp)<tol);
     end

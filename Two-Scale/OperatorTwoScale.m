@@ -7,7 +7,7 @@ function FMWT_COMP = OperatorTwoScale(maxDeg,maxLev)
 % Output: Convert Matrix: FMWT_COMP
 %**********************************
 global OperatorTwoScale_method;
-idebug = 1;
+idebug = 0;
 
 imethod_default = 'nonwavelet';
 %imethod_default = 'wavelet';
