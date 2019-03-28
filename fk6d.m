@@ -72,8 +72,8 @@ t = 0;
 TD = 0;
 [pde,bcL,bcR] = getCoeffMats(pde,t,TD);
 
-%% Get the boundary condition vectors
-BCVecs = getBoundaryConditionVectors(pde,HASHInv,bcL,bcR,t);
+%% Get the spatial dependence of the boundary condition vectors
+multiD_BCVecs = getBoundaryConditionVectors(pde,HASHInv,bcL,bcR,t);
 
 %% Construct A_encode / A_data time independent data structures.
 if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
@@ -126,21 +126,25 @@ end
 % Construct a n-D coordinate array
 % TODO : generalize to dimension better.
 
-if nDims ==1 
-    [xx1] = ndgrid(nodes{1});
-    coord = {xx1};
-end
-if nDims==2
-    [xx1,xx2] = ndgrid(nodes{2},nodes{1});
-    coord = {xx2,xx1};
-end
-if nDims==3
-    [xx1,xx2,xx3] = ndgrid(nodes{3},nodes{2},nodes{1});
-    coord = {xx3,xx2,xx1};
-end
-if nDims==6
-    [xx1,xx2,xx3,xx4,xx5,xx6] = ndgrid(nodes{6},nodes{5},nodes{4},nodes{3},nodes{2},nodes{1});
-    coord = {xx6,xx5,xx4,xx3,xx2,xx1};
+if nDims <= 3
+    
+    if nDims ==1
+        [xx1] = ndgrid(nodes{1});
+        coord = {xx1};
+    end
+    if nDims==2
+        [xx1,xx2] = ndgrid(nodes{2},nodes{1});
+        coord = {xx2,xx1};
+    end
+    if nDims==3
+        [xx1,xx2,xx3] = ndgrid(nodes{3},nodes{2},nodes{1});
+        coord = {xx3,xx2,xx1};
+    end
+    if nDims==6
+        [xx1,xx2,xx3,xx4,xx5,xx6] = ndgrid(nodes{6},nodes{5},nodes{4},nodes{3},nodes{2},nodes{1});
+        coord = {xx6,xx5,xx4,xx3,xx2,xx1};
+    end
+    
 end
 
 % %%
@@ -266,15 +270,6 @@ for L = 1:nsteps,
     TD = 1;
     pde = getCoeffMats(pde,t,TD);
     
-    %% Test new PDE spec based generation of the coeff_matrices
-   
-%     if nDims==2
-%         disp( [ 'GradX error : '  num2str(norm(pde.terms{1}{2}.coeff_mat - GradX)/norm(GradX)) ]);
-%         disp( [ 'vMassV error : ' num2str(norm(pde.terms{1}{1}.coeff_mat - vMassV)/norm(vMassV)) ]);
-%         disp( [ 'EMassX error : ' num2str(norm(pde.terms{2}{2}.coeff_mat - EMassX)/norm(EMassX)) ]);
-%         disp( [ 'GradV error : '  num2str(norm(pde.terms{2}{1}.coeff_mat - GradV)/norm(GradV)) ]);
-%     end
-    
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
     if runTimeOpts.compression == 3
@@ -307,14 +302,12 @@ for L = 1:nsteps,
         write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
         
-        if nDims==2
-            fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
-        else
+        if nDims~=2
             Vmax = 0;
             Emax = 0; % These are only used in the global LF flux
-            fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
         end
-        
+        fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
+
     end
     
     %%% Write the present fval to file.

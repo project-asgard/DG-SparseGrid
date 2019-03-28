@@ -63,8 +63,8 @@ for d = 1:nDims
         
     dim = pde.dimensions{d};
 
-    bcL1_tmp = ComputeRHS(lev,deg,dim,dim.BCL_fList,time);
-    bcR1_tmp = ComputeRHS(lev,deg,dim,dim.BCR_fList,time);
+    bcL1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCL_fList);
+    bcR1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCR_fList);
     
     for d2 = 1:nDims % only compute for the dimension other than d
         if abs(d2-d)>0

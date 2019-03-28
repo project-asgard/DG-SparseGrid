@@ -325,11 +325,12 @@ Grad = FMWT * Grad * FMWT';
 % as zero.
 
 if type == 1 || type ==3
+        
+%     bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},time,'L');
+%     bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},time,'R');
     
-    time = 0;
-    
-    bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},time,'L');
-    bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},time,'R');
+    bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},'L');
+    bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},'R');
     
     bcL = FMWT * bcL;
     bcR = FMWT * bcR;

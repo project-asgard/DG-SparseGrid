@@ -4,19 +4,14 @@ nDims = numel(pde.dimensions);
 nHash = numel(HashInv);
 deg = pde.dimensions{1}.deg;
 
-% time = 0;
 for d = 1:nDims
-    
-%     [Delta,bcL_tmp,bcR_tmp] = coeff_matrix2(t,pde.dimensions{d},pde.terms{1}{1},d);
-%     bcL{d} = bcL_tmp;
-%     bcR{d} = bcR_tmp;
-    
+     
     dim = pde.dimensions{d};
     
     lev = dim.lev;
     
-    bcL1_tmp = ComputeRHS(lev,deg,dim,dim.BCL_fList,time);
-    bcR1_tmp = ComputeRHS(lev,deg,dim,dim.BCR_fList,time);
+    bcL1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCL_fList);
+    bcR1_tmp = ComputeRHS(nDims,lev,deg,dim,dim.BCR_fList);
     
     for d2 = 1:nDims % only compute for the dimension other than d
         if abs(d2-d)>0
@@ -24,6 +19,20 @@ for d = 1:nDims
             bcR1{d} = (dim.FMWT*bcR1_tmp{d2});
         end
     end
+    
+end
+
+%%
+% Apply time dependence
+
+for d=1:nDims
+    
+    dim = pde.dimensions{d};
+    
+    bcL_t{d} = bcL{d} * dim.BCL_fList{nDims+1}(time);
+    bcR_t{d} = bcR{d} * dim.BCR_fList{nDims+1}(time);
+
+    bcL1{d}
     
 end
 
@@ -46,6 +55,7 @@ for d=1:nDims
             fListL{d2} = bcL1{d2};
             fListR{d2} = bcR1{d2};
         end
+        
     end
     
     bc3 = bc3 + combine_dimensions_D(fListL,ft,HashInv,pde);

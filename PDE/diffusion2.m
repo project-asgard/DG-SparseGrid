@@ -14,20 +14,23 @@ deg = 2;
 % 
 % Here we setup a 2D problem (x,y)
 
-BCFunc = @(x,t)(cos(pi*x)*exp(-2*pi^2*t));
+BCFunc = @(x) cos(pi*x);
+BCFunc_t = @(t) exp(-2*pi^2*t);
 
 % Domain is (a,b)x(c,d)
 
 % The function is defined for the plane
 % x = a and x = b
 BCL_fList = { ...
-    @(x,t,p) BCFunc(x,t), ... % replace x by a
-    @(y,t,p) BCFunc(y,t) 
+    @(x,p) BCFunc(x), ... % replace x by a
+    @(y,p) BCFunc(y), ...
+    @(t,p) BCFunc_t(t)
     };
 
 BCR_fList = { ...
-    @(x,t,p) BCFunc(x,t), ... % replace x by b
-    @(y,t,p) BCFunc(y,t) 
+    @(x,p) BCFunc(x), ... % replace x by b
+    @(y,p) BCFunc(y), ...
+    @(t,p) BCFunc_t(t)
     };
 
 dim_x.name = 'x';
@@ -45,13 +48,15 @@ dim_x.init_cond_fn = @(x,p) cos(pi*x);
 % The function is defined for the plane
 % y = c and y = d
 BCL_fList = { ...
-    @(x,t,p) BCFunc(x,t), ...
-    @(y,t,p) BCFunc(y,t)  % replace y by c
+    @(x,p) BCFunc(x), ...
+    @(y,p) BCFunc(y), ... % replace y by c
+    @(t,p) BCFunc_t(t)
     };
 
 BCR_fList = { ...
-    @(x,t,p) BCFunc(x,t), ...
-    @(y,t,p) BCFunc(y,t)  % replace y by d
+    @(x,p) BCFunc(x), ...
+    @(y,p) BCFunc(y), ...  % replace y by d
+    @(t,p) BCFunc_t(t)
     };
 
 dim_y.name = 'y';
