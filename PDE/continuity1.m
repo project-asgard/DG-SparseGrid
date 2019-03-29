@@ -129,7 +129,7 @@ end
 function f=analytic_t(t)
 f=sin(t);
 end
-function f=analytic_x(x,p)
+function f=analytic_x(x,p,t)
 f = cos(2*pi*x);
 end
 

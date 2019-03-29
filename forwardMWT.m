@@ -1,4 +1,4 @@
-function [f] = forwardMWT(lev,deg,Lmin,Lmax,foo,params)
+function [f] = forwardMWT(lev,deg,Lmin,Lmax,foo,params,t)
 
 %% Decompose a 1D function into the multiwavelet basis 
 
@@ -30,7 +30,12 @@ for i=0:n-1
     x = h*(quad_x/2+1/2+i) + Lmin;
     
     % Get the function foo(x) at the quadrature points.
-    fxHere = foo(x, params);
+    switch nargin
+        case 6
+            fxHere = foo(x, params);
+        case 7
+            fxHere = foo(x, params, t);
+    end
     
     this_quad = (quad_w .* fxHere);
        

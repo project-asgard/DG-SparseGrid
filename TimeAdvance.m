@@ -189,7 +189,7 @@ elseif runTimeOpts.compression == 4
       
     for workItem=1:nWork
         
-        disp([num2str(workItem) ' of ' num2str(nWork)]);
+        %disp([num2str(workItem) ' of ' num2str(nWork)]);
         
         if useConnectivity
             nConnected = A_data.element_n_connected(workItem);

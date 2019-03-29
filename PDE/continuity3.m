@@ -198,9 +198,9 @@ pde.sources = {source1,source2,source3,source4};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...
-    @(x,p) cos(pi*x),     ... % a_x
-    @(y,p) sin(2*pi*y),   ... % a_y
-    @(z,p) cos(2*pi*z/3), ... % a_z
+    @(x,p,t) cos(pi*x),     ... % a_x
+    @(y,p,t) sin(2*pi*y),   ... % a_y
+    @(z,p,t) cos(2*pi*z/3), ... % a_z
     @(t)   sin(2*t)       ... % a_t
     };
 

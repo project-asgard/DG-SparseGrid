@@ -10,7 +10,7 @@ nDims = numel(pde.dimensions);
 for d=1:nDims
     fList{d} = forwardMWT(pde.dimensions{d}.lev,pde.dimensions{d}.deg,...
         pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,...
-        pde.analytic_solutions_1D{d},pde.params);
+        pde.analytic_solutions_1D{d},pde.params,time);
 end
 
 ft = pde.analytic_solutions_1D{nDims+1}(time);
