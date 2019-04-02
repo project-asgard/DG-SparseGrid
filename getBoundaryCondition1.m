@@ -64,30 +64,38 @@ for tt = 1:nTerms % Construct a BC object for each term
                 bcR{d1} = ComputeRHS(nDims,dim1,'R'); % returns a nDim length list
             end
             
-        end          
-
+        end
+        
         
         %%
         % Overwrite the boundary value just for this dimension
-       
-        % Func*v|_xMin and Func*v|_xMax      
+        
+        % Func*v|_xMin and Func*v|_xMax
         
         if term{d1}.type == 1 || term{d1}.type == 3 % grad or del^2 operators
             
             if BCL == 1 % Dirichlet
+                
                 bcL_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
+                bcL_tmp = FMWT * bcL_tmp;
+                
                 if term{d1}.type == 3 % LDG requires additional step
                     bcL_tmp = term{d1}.matD*bcL_tmp;
                 end
-                bcL{d1}{d1} = FMWT * bcL_tmp;
+                
+                bcL{d1}{d1} = bcL_tmp;
             end
             
             if BCR == 1 % Dirichlet
+                
                 bcR_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
+                bcR_tmp = FMWT * bcR_tmp;
+                
                 if term{d1}.type == 3 % LDG requires additional step
-                    bcR_tmp = term{d1}.matD*bcL_tmp;
+                    bcR_tmp = term{d1}.matD*bcR_tmp;
                 end
-                bcR{d1}{d1} = FMWT * bcR_tmp;
+                
+                bcR{d1}{d1} = bcR_tmp;
             end
             
         end
