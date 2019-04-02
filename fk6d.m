@@ -12,15 +12,15 @@ runtimeDefaults
 %% Shortcuts (some of this will go away soon)
 % Named domain ranges
 if nDims==2
-Lmin = pde.dimensions{2}.domainMin;
-Lmax = pde.dimensions{2}.domainMax;
-Vmin = pde.dimensions{1}.domainMin;
-Vmax = pde.dimensions{1}.domainMax;
-
-%%
-% Level information.
-LevX = pde.dimensions{2}.lev;
-LevV = pde.dimensions{1}.lev;
+    Lmin = pde.dimensions{2}.domainMin;
+    Lmax = pde.dimensions{2}.domainMax;
+    Vmin = pde.dimensions{1}.domainMin;
+    Vmax = pde.dimensions{1}.domainMax;
+    
+    %%
+    % Level information.
+    LevX = pde.dimensions{2}.lev;
+    LevV = pde.dimensions{1}.lev;
 end
 
 %%
@@ -62,38 +62,22 @@ fval = initial_condition_vector(HASHInv,pde,0);
 % The original way
 if ~quiet; disp('Calculate time independent matrix coefficients'); end
 if nDims==2
-[vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
-     pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
+    [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
+        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
 end
 %%
 % The generalized PDE spec way
 t = 0;
 TD = 0;
-[pde,bcL,bcR] = getCoeffMats(pde,t,TD);
+pde = getCoeffMats(pde,t,TD);
 
-%%
-% Get the spatial dependence of the boundary condition vectors
-bcL1 = {};
-bcR1 = {};
-for d = 1:nDims
-    dim = pde.dimensions{d};
-    bcL1{d} = ComputeRHS(nDims,dim,'L');
-    bcR1{d} = ComputeRHS(nDims,dim,'R');
-end
-
-%%
-% Construct the BC boundary condition object
-bc.bcL = bcL;
-bc.bcR = bcR;
-bc.bcL1 = bcL1;
-bc.bcR1 = bcR1;
 
 %% Construct A_encode / A_data time independent data structures.
 if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
 if compression == 3
-    % the new matrix construction is as _newCon, only works for 
+    % the new matrix construction is as _newCon, only works for
     % compression= 3
-%     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
+    %     A_encode=GlobalMatrixSG(vMassV,GradX,HASHInv,Con2D,Deg);
     A_encode=GlobalMatrixSG_newCon(vMassV,GradX,HASH,lev,deg,gridType);
 else
     % A_data is constructed only once per grid refinement, so can be done
@@ -111,11 +95,11 @@ end
 
 if ~quiet; disp('Construct matrix for Poisson solve'); end
 if pde.solvePoisson
-if DimX>1
-    % Construct DeltaX for DimX
-else
-    A_Poisson = DeltaX; 
-end
+    if DimX>1
+        % Construct DeltaX for DimX
+    else
+        A_Poisson = DeltaX;
+    end
 end
 
 %% Construct RMWT (Reverse Multi Wavelet Transform) in 2D
@@ -161,20 +145,20 @@ if nDims <= 3
 end
 
 % %%
-% % Try transforming a known 3D function to wavelet space and then back again. 
-% 
+% % Try transforming a known 3D function to wavelet space and then back again.
+%
 % fa = getAnalyticSolution_D(coord,5*dt,pde);
 % fa_wSpace = exact_solution_vector(HASHInv,pde,5*dt);
 % fa_rSpace = reshape(Multi_2D_D(Meval,fa_wSpace,HASHInv,pde),size(fa));
-% 
+%
 % norm(fa(:)-fa_rSpace(:))/norm(fa(:))*100
-% 
+%
 % sy=5;sz=10;
 % figure
 % hold on
 % plot(fa(:,sy,sz));
 % plot(fa_rSpace(:,sy,sz));
-% 
+%
 % figure
 % subplot(2,2,1)
 % contour(fa_rSpace(:,:,sz));
@@ -189,29 +173,40 @@ end
 % contour(fa2(:,:,sz));
 
 %% Plot initial condition
-if nDims==2
-if ~quiet
+if nDims <=3
+    
     %%
-    % Transform from wavelet space to real space
-    tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
-    figure(1000)
+    % Get the real space solution
+    fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
+    fval_realspace_analytic = getAnalyticSolution_D(coord,0,pde);
+
+    plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
     
-    f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
-    
-    [xx,vv]=meshgrid(x_node,v_node);
-    
-    ax1 = subplot(1,2,1);
-    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
-    axis([Lmin Lmax Vmin Vmax])
-    %caxis([-range1 +range1]);
-    title('df');
-    
-    ax2 = subplot(1,2,2);
-    mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
-    axis([Lmin Lmax Vmin Vmax])
-    %caxis([range2n +range2]);
-    title('f');
 end
+
+if nDims==2
+    if ~quiet
+        %%
+        % Transform from wavelet space to real space
+        tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
+        figure(1000)
+        
+        f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
+        
+        [xx,vv]=meshgrid(x_node,v_node);
+        
+        ax1 = subplot(1,2,1);
+        mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([-range1 +range1]);
+        title('df');
+        
+        ax2 = subplot(1,2,2);
+        mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
+        axis([Lmin Lmax Vmin Vmax])
+        %caxis([range2n +range2]);
+        title('f');
+    end
 end
 
 %% Write the initial condition to file.
@@ -257,12 +252,12 @@ for L = 1:nsteps,
     %     ax4 = subplot(2,2,4);
     %     plot(x_node,Meval_x*E,'r-o')
     
-
+    
     if ~quiet; disp('    Calculate time dependent matrix coeffs'); end
     if nDims==2
         if (pde.applySpecifiedE | pde.solvePoisson)
             
-            %% 
+            %%
             % Generate EMassX time dependent coefficient matrix.
             
             EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
@@ -274,7 +269,7 @@ for L = 1:nsteps,
         end
     end
     
-
+    
     
     %%
     % Now construct the TD coeff_mats.
@@ -286,9 +281,9 @@ for L = 1:nsteps,
     %%% Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
     if runTimeOpts.compression == 3
-    % the new matrix construction is as _newCon, only works for 
-    % compression= 3
-%         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
+        % the new matrix construction is as _newCon, only works for
+        % compression= 3
+        %         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
         B_encode=GlobalMatrixSG_newCon(GradV,EMassX,HASH,lev,deg);
         C_encode=[A_encode B_encode];
     else
@@ -298,7 +293,7 @@ for L = 1:nsteps,
     %%% Advance Vlasov in time with RK3 time stepping method.
     if ~quiet; disp('    RK3 time step'); end
     if runTimeOpts.compression == 3
-        fval = TimeAdvance(pde,bc,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
+        fval = TimeAdvance(pde,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
     else
         
         if nDims==2
@@ -319,8 +314,8 @@ for L = 1:nsteps,
             Vmax = 0;
             Emax = 0; % These are only used in the global LF flux
         end
-        fval = TimeAdvance(pde,bc,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
-
+        fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
+        
     end
     
     %%% Write the present fval to file.
@@ -388,180 +383,8 @@ for L = 1:nsteps,
         
         figure(1000)
         
-        if nDims==1
-            
-            %%
-            % Plot solution
-            
-            f1d = fval_realspace;
-            x = nodes{1};
-            plot(x,f1d,'-o');
-            
-            %%
-            % Overplot analytic solution
-            
-            if pde.checkAnalytic
-                hold on;
-                coord = {x};
-                f1d_analytic = getAnalyticSolution_D(coord,L*dt,pde);
-                plot(x,f1d_analytic,'-');
-                hold off;
-            end
-            
-            pause(0.01);
-            
-        end
+        plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
         
-        if nDims==2
-                        
-            figure(1000)
-                        
-            dimensions = pde.dimensions;
-            
-            deg1=dimensions{1}.deg;
-            lev1=dimensions{1}.lev;
-            deg2=dimensions{2}.deg;
-            lev2=dimensions{2}.lev;
-
-            dof1=deg1*2^lev1;
-            dof2=deg2*2^lev2;
-            
-            dofD = dof1*dof2;
-            assert(dofD==numel(fval_realspace));
-            
-            f2d = reshape(fval_realspace,dof1,dof2);
-            f2d_analytic = reshape(fval_realspace_analytic,dof1,dof2);
-            
-            x = nodes{1};
-            y = nodes{2};          
-                        
-            %%
-            % Plot a 1D line through the solution
-                        
-            sy = 9;
-            
-            f1d = f2d(:,sy);
-            x = nodes{1};
-            y = nodes{2};
-            ax1 = subplot(3,1,1);
-            plot(x,f1d,'-o');
-            title('1D slice through 2D solution');
-           
-            %%
-            % Overplot analytic solution
-            
-            if pde.checkAnalytic
-                f1d_analytic = f2d_analytic(:,sy);
-                hold on;
-                plot(x,f1d_analytic,'-');
-                hold off;
-            end
-            
-            %%
-            % Plot 2D
-            
-            ax1 = subplot(3,1,2);
-            contourf(x,y,f2d);
-            title('numeric 2D solution');
-            
-            if pde.checkAnalytic
-                ax2 = subplot(3,1,3);
-                contourf(x,y,squeeze(f2d_analytic));
-                title('analytic 2D solution');
-            end
-            
-            pause (0.01)
-        end
-        
-        if nDims==3
-            
-            figure(1000);
-                        
-            dimensions = pde.dimensions;
-            
-            deg1=dimensions{1}.deg;
-            lev1=dimensions{1}.lev;
-            deg2=dimensions{2}.deg;
-            lev2=dimensions{2}.lev;
-            deg3=dimensions{3}.deg;
-            lev3=dimensions{3}.lev;
-            
-            dof1=deg1*2^lev1;
-            dof2=deg2*2^lev2;
-            dof3=deg3*2^lev3;
-            
-            dofD = dof1*dof2*dof3;
-            assert(dofD==numel(fval_realspace));
-            
-            f3d = reshape(fval_realspace,dof1,dof2,dof3);
-            f3d_analytic = reshape(fval_realspace_analytic,dof1,dof2,dof3);
-            
-            %%
-            % Plot a 1D line through the solution
-            
-            sx = 9;
-            sy = 4;
-            sz = 12;
-            
-            f1d = f3d(:,sy,sz);
-            x = nodes{1};
-            y = nodes{2};
-            z = nodes{3};
-            ax1 = subplot(3,3,1);
-            plot(x,f1d,'-o');
-            title('1D slice through 3D'); 
-            
-            %%
-            % Overplot analytic solution
-            
-            if pde.checkAnalytic
-                f1d_analytic = f3d_analytic(:,sy,sz);
-                hold on;
-                plot(x,f1d_analytic,'-');
-                hold off;
-            end
-                        
-            %%
-            % Plot a 2D xy plane
-            
-            ax1 = subplot(3,3,4);
-            contourf(x,y,f3d(:,:,sz));
-            title('2D slice through 3D numeric');
-            
-            if pde.checkAnalytic
-                ax2 = subplot(3,3,7);
-                contourf(x,y,f3d_analytic(:,:,sz));
-                title('2D slice through 3D analytic');
-            end
-            
-            %%
-            % Plot a 2D xz plane
-            
-            ax3 = subplot(3,3,5);
-            contourf(x,y,squeeze(f3d(:,sy,:))); 
-            title('2D slice through 3D numeric');
-            
-            if pde.checkAnalytic
-                ax3 = subplot(3,3,8);
-                contourf(x,y,squeeze(f3d_analytic(:,sy,:)));
-                title('2D slice through 3D analytic');
-            end
-            
-            %%
-            % Plot a 2D yz plane
-            
-            ax3 = subplot(3,3,6);
-            contourf(x,y,squeeze(f3d(sx,:,:))); 
-            title('2D slice through 3D numeric');
-            
-            if pde.checkAnalytic
-                ax3 = subplot(3,3,9);
-                contourf(x,y,squeeze(f3d_analytic(sx,:,:)));
-                title('2D slice through 3D analytic');
-            end
-            
-            
-        end
     end
     
     count=count+1;
