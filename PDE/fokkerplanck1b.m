@@ -24,8 +24,6 @@ function pde = fokkerplanck1b
         ret = sum(ret,2);
     end
 
-sig = 0.1;
-
 BCL_fList = { ...
     @(z,p,t) soln(z,t), ...
     @(t,p) 1
@@ -117,9 +115,13 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-Lmax = pde.dimensions{1}.domainMax;
-LevX = pde.dimensions{1}.lev;
-CFL = pde.CFL;
+% for Diffusion equation: dt = C * dx^2
 
-dt = Lmax/2^LevX*CFL;
+dims = pde.dimensions;
+
+lev = dims{1}.lev;
+CFL = .01;
+dx = 1/2^lev;
+dt = CFL*dx^2;
+
 end

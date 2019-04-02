@@ -58,10 +58,10 @@ for tt = 1:nTerms % Construct a BC object for each term
         if term{d1}.type == 1 || term{d1}.type == 3 % grad or del^2 operators
             
             if BCL == 1
-                bcL{d1} = ComputeRHS(nDims,dim1,'L'); % returns a nDim length list
+                bcL{d1} = ComputeRHS(pde,time,nDims,dim1,'L'); % returns a nDim length list
             end
             if BCR == 1
-                bcR{d1} = ComputeRHS(nDims,dim1,'R'); % returns a nDim length list
+                bcR{d1} = ComputeRHS(pde,time,nDims,dim1,'R'); % returns a nDim length list
             end
             
         end

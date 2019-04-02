@@ -1,4 +1,4 @@
-function rhsList = ComputeRHS(nDims,dimension,LorR)
+function rhsList = ComputeRHS(pde,time,nDims,dimension,LorR)
 
 %function rhs to compute the rhs term
 
@@ -6,6 +6,8 @@ xMin = dimension.domainMin;
 xMax = dimension.domainMax;
 lev = dimension.lev;
 deg = dimension.deg;
+
+p = pde.params;
 
 bcIsDirichlet = 0;
 if strcmp(LorR,'L')
@@ -56,7 +58,7 @@ for d = 1 : nDims
             xR = xL + h;
             PhyQuad = quad_x*(xR-xL)/2+(xR+xL)/2;
             
-            IntVal =  p_val'*(quad_w.*fList{d}(PhyQuad)) * Jacobi;
+            IntVal =  p_val'*(quad_w.*fList{d}(PhyQuad,p,time)) * Jacobi;
             
             rhs(c) = rhs(c) + IntVal;
             
