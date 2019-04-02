@@ -1,13 +1,27 @@
-function pde = fokkerplanck1a
+function pde = fokkerplanck1a2
 % 1D test case using continuity equation, i.e., 
 % df/dt + d/dz ( (1-z^2)f ) = 0
 %
 % Run with ...
-% fk6d(fokkerplanck1a,5,3,0.1,[],[],0,[]);
+% fk6d(fokkerplanck1a2,4,2,0.2,[],[],0,[]);
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
+
+    function ret = phi(z,t)
+        ret = tanh(atanh(z)-t);
+    end
+    function ret = f0(z)
+        ret = exp(-z.^2/sig^2);
+    end
+    function ret = soln(z,t)
+        p = phi(z,t);
+        t1 = 1-p.^2;
+        t2 = 1-z.^2;
+        t3 = f0(p);
+        ret = t1./t2.*t3;
+    end
 
 sig = 0.1;
 
@@ -31,7 +45,7 @@ dim_z.domainMax = +1;
 dim_z.lev = 2;
 dim_z.deg = 2;
 dim_z.FMWT = []; % Gets filled in later
-dim_z.init_cond_fn = @(z,p) exp(-z.^2/sig^2);
+dim_z.init_cond_fn = @(z,p) soln(z,0);
 
 dim_z = checkDimension(dim_z);
 
@@ -80,20 +94,6 @@ pde.sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
-
-    function ret = phi(z,t)
-        ret = tanh(atanh(z)-t);
-    end
-    function ret = f0(z)
-        ret = exp(-z.^2/sig^2);
-    end
-    function ret = soln(z,t)
-        p = phi(z,t);
-        t1 = 1-p.^2;
-        t2 = 1-z.^2;
-        t3 = f0(p);
-        ret = t1./t2.*t3;
-    end
 
 pde.analytic_solutions_1D = { ...
     @(z,p,t) soln(z,t), ...

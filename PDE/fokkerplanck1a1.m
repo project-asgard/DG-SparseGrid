@@ -1,37 +1,38 @@
-function pde = fokkerplanck1b
-% 1D pitch angle collisional term 
-% df/dt - d/dz ( (1-z^2) df/dz ) = 0
+function pde = fokkerplanck1a1
+% 1D test case using continuity equation, i.e., 
+% df/dt + d/dz ( (1-z^2)f ) = 0
 %
 % Run with ...
-% fk6d(fokkerplanck1b,5,3,0.1,[],[],0,[]);
+% fk6d(fokkerplanck1a,5,3,0.1,[],[],0,[]);
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
 
+    function ret = phi(z,t)
+        ret = tanh(atanh(z)-t);
+    end
+    function ret = f0(z)
+        ret = z.*0+1;
+    end
     function ret = soln(z,t)
-      
-        h = [3,0.5,1,0.7,3,0,3];
-        
-        P = legendre(z,numel(h));
-        
-        ret = zeros(size(P));
-        for l=1:numel(h)
-            L = l-1;
-            ret(:,l) = h(l) * P(:,l) * exp(-L*(L+1)*t);
-        end
-        
-        ret = sum(ret,2);
+        p = phi(z,t);
+        t1 = 1-p.^2;
+        t2 = 1-z.^2;
+        t3 = f0(p);
+        ret = t1./t2.*t3;
     end
 
+sig = 0.1;
+
 BCL_fList = { ...
-    @(z,p,t) soln(z,t), ...
-    @(t,p) 1
+    @(z,p,t) 0, ...
+    @(t,p) 0
     };
 
 BCR_fList = { ...
-    @(z,p,t) soln(z,t), ...
-    @(t,p) 1
+    @(z,p,t) 0, ...
+    @(t,p) 0
     };
 
 dim_z.name = 'z';
@@ -62,11 +63,11 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 3; % grad (see coeff_matrix.m for available types)
+term2_z.type = 1; % grad (see coeff_matrix.m for available types)
 term2_z.G = @(z,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
-term2_z.LF = 0; % For terms of type==3 LDG is used.  
+term2_z.LF = -1; % Upwind 
 term2_z.name = 'd_dz';
 
 term2 = {term2_z};
@@ -115,13 +116,9 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-% for Diffusion equation: dt = C * dx^2
+Lmax = pde.dimensions{1}.domainMax;
+LevX = pde.dimensions{1}.lev;
+CFL = pde.CFL;
 
-dims = pde.dimensions;
-
-lev = dims{1}.lev;
-CFL = .01;
-dx = 1/2^lev;
-dt = CFL*dx^2;
-
+dt = Lmax/2^LevX*CFL;
 end

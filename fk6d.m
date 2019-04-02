@@ -180,7 +180,9 @@ if nDims <=3
     fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
     fval_realspace_analytic = getAnalyticSolution_D(coord,0,pde);
 
-    plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
+    if norm(fval_realspace) > 0
+        plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
+    end
     
 end
 
