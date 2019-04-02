@@ -3,7 +3,8 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D,myDim)
+% function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D,myDim)
+function [mat,matD] = coeff_matrix2(t,dimension,term_1D)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -96,6 +97,7 @@ Mass = sparse(dof_1D,dof_1D);
 Grad = sparse(dof_1D,dof_1D);
 Stif = sparse(dof_1D,dof_1D);
 Flux = sparse(dof_1D,dof_1D);
+matD = sparse(dof_1D,dof_1D);
 
 %%
 % Convert input dat from wavelet (_W) space to realspace (_R)
@@ -319,28 +321,6 @@ end
 Mass = FMWT * Mass * FMWT';
 Grad = FMWT * Grad * FMWT';
 
-%%
-% If inhomogeneous Dirichlet, add a combined left and right term which
-% is addative, i.e., if only left is D then the right component is added in
-% as zero.
-
-bcL = zeros(dof_1D,1);
-bcR = zeros(dof_1D,1);
-
-if type == 1 || type == 3 % grad or del^2 operators
-    
-    if BCL == 1 % Dirichlet
-        bcL = ComputeBC(lev,deg,xMin,xMax,BCL_fList{myDim},'L');
-        bcL = FMWT * bcL;        
-    end
-    
-    if BCR == 1 % Dirichlet     
-        bcR = ComputeBC(lev,deg,xMin,xMax,BCR_fList{myDim},'R');
-        bcR = FMWT * bcR;    
-    end
-
-end
-
 if type == 3
     
     % Use LDG method, i.e., split into two first order equations, then
@@ -352,7 +332,7 @@ if type == 3
     term_1D.LF = -1;       % Downwind Flux
     dimension.BCL = 2; % Neumann
     dimension.BCR = 2; % Neumann
-    matD = coeff_matrix2(t,dimension,term_1D,myDim);
+    matD = coeff_matrix2(t,dimension,term_1D);
     
     %%
     % Get a grad operator with upwind flux and Dirichlet BCs
@@ -360,21 +340,21 @@ if type == 3
     term_1D.LF = 1;       % Upwind Flux
     dimension.BCL = 1; % Dirichlet
     dimension.BCR = 1; % Dirichlet
-    matU = coeff_matrix2(t,dimension,term_1D,myDim);
+    matU = coeff_matrix2(t,dimension,term_1D);
     
     %%
     % Combine back into second order operator
     Stif = matD*matU;
     
-    %%
-    % Apply the inhomogeneous Dirichlet to that part of the LDG
-    
-    if BCL == 1 % Dirichlet
-        bcL = matD*bcL;
-    end
-    if BCR == 1 % Dirichlet
-        bcR = matD*bcR;
-    end
+%     %%
+%     % Apply the inhomogeneous Dirichlet to that part of the LDG
+%     
+%     if BCL == 1 % Dirichlet
+%         bcL = matD*bcL;
+%     end
+%     if BCR == 1 % Dirichlet
+%         bcR = matD*bcR;
+%     end
     
 end
 
