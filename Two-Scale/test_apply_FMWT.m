@@ -2,6 +2,9 @@
 %
 is_show_gflops = 0;
 
+nerrors = 0;
+tol = 1e-9;
+
 kdeg = 4;
 Lev = 11;
 n = kdeg * 2^Lev;
@@ -9,20 +12,25 @@ nvec = n;
 X = rand(n,nvec);
 
 global OperatorTwoScale_method;
-OperatorTwoScale_method = 'nonwavelet';
 
-tic();
-FMWT = OperatorTwoScale(kdeg,2^Lev);
-time_fmwt = toc();
-use_wavelet = (strcmp(OperatorTwoScale_method,'wavelet'));
-if (use_wavelet),
-  disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale is %g',...
-                kdeg,   Lev,   n,  time_fmwt));
-else
-  disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale_nonwavelet is %g',...
-                kdeg,   Lev,   n,  time_fmwt));
+for icase=1:2,
+  OperatorTwoScale_method = merge( icase==1,'wavelet','nonwavelet');
 
-end;
+  tic();
+  FMWT = OperatorTwoScale(kdeg,2^Lev);
+  time_fmwt = toc();
+  use_wavelet = (strcmp(OperatorTwoScale_method,'wavelet'));
+  if (use_wavelet),
+    disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale_wavelet is %g',...
+                  kdeg,   Lev,   n,  time_fmwt));
+  else
+    disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale_nonwavelet is %g',...
+                  kdeg,   Lev,   n,  time_fmwt));
+  
+  end;
+
+
+
 FMWT = full(FMWT);
 % ------------------------------
 % generate sparse matrix version
@@ -71,6 +79,13 @@ for isTrans=0:1,
   disp(sprintf('time_1=%g, time_2=%g, time_3=%g', ...
                 time_1,    time_2,    time_3 ));
   
+  if (relerr12 >= tol),
+     nerrors = nerrors + 1;
+  end;
+  if (relerr13 >= tol),
+     nerrors = nerrors + 1;
+  end;
+
   if (is_show_gflops),
     gflops = 2.0*n*n * size(X,2) * 1e-9/time_1;
     disp(sprintf('Dense Gflops is %g Gflops/sec ', ...
@@ -108,9 +123,24 @@ for isTrans=0:1,
   
   err1s = norm(Y_1 - Y_s,1); 
   relerr1s = err1s / max( norm(Y_1,1), norm(Y_s,1) );
+
+  if (relerr1s >= tol),
+    nerrors = nerrors + 1;
+  end;
   
   disp(sprintf('kdeg=%d,Lev=%d,err1s=%g,relerr1s=%g ', ...
                 kdeg,   Lev,   err1s,   relerr1s ));
 
 end; % for isTrans
 end; % for isLeft
+
+
+
+end; % icase
+
+if (nerrors == 0),
+   disp('ALL OK');
+else
+  disp(sprintf('there are %d errors ', nerrors ));
+end;
+

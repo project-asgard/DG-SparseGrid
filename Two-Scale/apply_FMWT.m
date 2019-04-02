@@ -103,17 +103,18 @@ elseif (imethod == 2),
       col1 = 1;
       col2 = n;
 
+      Fmat = full(FMWT(ip:ipend, col1:col2));
       if (isLeft),
          if (isTrans),
-           Y(col1:col2,1:ncolX) = FMWT(ip:ipend, col1:col2)' * X( ip:ipend,1:ncolX);
+           Y(col1:col2,1:ncolX) = Fmat' * X( ip:ipend,1:ncolX);
          else
-           Y(ip:ipend,1:ncolX) = FMWT(ip:ipend, col1:col2) * X( col1:col2,1:ncolX);
+           Y(ip:ipend,1:ncolX) = Fmat * X( col1:col2,1:ncolX);
          end;
       else
          if (isTrans),
-           Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * FMWT(ip:ipend, col1:col2)';
+           Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * Fmat';
          else
-           Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * FMWT(ip:ipend, col1:col2);
+           Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * Fmat;
          end;
       end;
 
@@ -125,21 +126,22 @@ elseif (imethod == 2),
              ipend = ip + kdeg-1;
                   col1 = 1 + (icell-1)*isize;
                   col2 = col1 + isize-1;
+		  Fmat = full( FMWT(ip:ipend, col1:col2) );
                   if (isLeft),
                      if (isTrans),
                        Y(col1:col2,1:ncolX) = Y(col1:col2,1:ncolX) + ...
-                                              FMWT(ip:ipend,  col1:col2)' * X( ip:ipend,1:ncolX);
+                                              Fmat' * X( ip:ipend,1:ncolX);
                      else
                        Y(ip:ipend,1:ncolX) = Y(ip:ipend,1:ncolX) + ...
-                                             FMWT(ip:ipend,  col1:col2) * X( col1:col2,1:ncolX);
+                                             Fmat * X( col1:col2,1:ncolX);
                      end;
                   else
                      if (isTrans),
                        Y(1:nrowX,ip:ipend) = Y(1:nrowX,ip:ipend) + ...
-                                             X(1:nrowX, col1:col2) * FMWT(ip:ipend,col1:col2)'; 
+                                             X(1:nrowX, col1:col2) * Fmat'; 
                      else
                        Y(1:nrowX,col1:col2) = Y(1:nrowX,col1:col2) + ...
-                                              X(1:nrowX, ip:ipend) * FMWT(ip:ipend,col1:col2); 
+                                              X(1:nrowX, ip:ipend) * Fmat; 
                      end;
                   end;
 
@@ -160,17 +162,18 @@ elseif (imethod == 3),
       ipend = 2*kdeg;
       col1 = 1;
       col2 = n;
+      Fmat = full( FMWT(ip:ipend,col1:col2) );
       if (isLeft),
          if (isTrans),
-            Y(col1:col2,1:ncolX) = FMWT(ip:ipend, col1:col2)' * X( ip:ipend,1:ncolX);
+            Y(col1:col2,1:ncolX) = Fmat' * X( ip:ipend,1:ncolX);
          else
-            Y(ip:ipend,1:ncolX) = FMWT(ip:ipend, col1:col2) * X( col1:col2,1:ncolX);
+            Y(ip:ipend,1:ncolX) = Fmat * X( col1:col2,1:ncolX);
          end;
       else
          if (isTrans),
-            Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * FMWT(ip:ipend, col1:col2)'; 
+            Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * Fmat'; 
          else
-            Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * FMWT(ip:ipend, col1:col2);
+            Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * Fmat;
          end;
       end;
 
@@ -188,7 +191,7 @@ elseif (imethod == 3),
           col1 = 1 + (icell-1)*isize;
           col2 = col1 + isize-1;
 
-          Fmat = FMWT(ip:ipend,col1:col2);
+          Fmat = full(FMWT(ip:ipend,col1:col2));
           ip2 = ip + (ncells * isize)-1;
 
           ncol = (n*ncolX/isize);

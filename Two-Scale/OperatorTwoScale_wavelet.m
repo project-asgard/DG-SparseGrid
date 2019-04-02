@@ -33,8 +33,10 @@ for j_x = 1:maxDeg
     end
 end
 
+use_sparsify = 1;
 FMWT = zeros(maxDeg*maxLev);
 FMWT2 = zeros(maxDeg*maxLev);
+
 
 % Unroll the matlab for easier porting
 porting = 1;
@@ -80,8 +82,13 @@ end
 
 if porting; assert(isequal(FMWT,FMWT2)); end
 
-FMWT_COMP = eye(maxDeg*maxLev);
-FMWT_COMP2 = eye(maxDeg*maxLev);
+if (use_sparsify),
+  FMWT_COMP = speye(maxDeg*maxLev,maxDeg*maxLev);
+  FMWT_COMP2 = speye(maxDeg*maxLev,maxDeg*maxLev);
+else
+  FMWT_COMP = eye(maxDeg*maxLev);
+  FMWT_COMP2 = eye(maxDeg*maxLev);
+end;
 
 n = floor( log2(maxLev) );
 % n = maxLev;
@@ -91,8 +98,14 @@ for j=1:n
     cFMWT2 = FMWT;
     % Reverse the index in matrix from Lin
     if j>1
+      if (use_sparsify),
+        nzmax = (maxDeg*maxLev)*maxDeg;
+        cFMWT = sparse([],[],[], maxDeg*maxLev, maxDeg*maxLev,nzmax);
+        cFMWT2 = sparse([],[],[],maxDeg*maxLev, maxDeg*maxLev,nzmax);
+      else
         cFMWT = zeros(maxDeg*maxLev);
         cFMWT2 = zeros(maxDeg*maxLev);
+      end;
         
         cn = 2^(n-j+1)*maxDeg;
         cnr=maxLev*maxDeg-cn;
@@ -142,7 +155,11 @@ for j=1:n
             
         end
         
-        cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=eye(maxLev*maxDeg-cn);
+	if (use_sparsify),
+          cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=speye(maxLev*maxDeg-cn,maxLev*maxDeg-cn);
+	else
+          cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=eye(maxLev*maxDeg-cn);
+	end;
         cFMWT(1:cn/2,1:cn)=FMWT(1:cn/2,1:cn);
         cFMWT(cn/2+1:cn,1:cn)=FMWT(maxDeg*maxLev/2+1:maxDeg*maxLev/2+cn/2,1:cn);
         
@@ -150,7 +167,6 @@ for j=1:n
         
     end
 
-    use_sparsify = 1;
     if (use_sparsify),
       cFMWT = sparsify_matrix(cFMWT);
       FMWT_COMP = sparsify_matrix(FMWT_COMP); 
