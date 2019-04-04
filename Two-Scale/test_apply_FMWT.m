@@ -6,28 +6,33 @@ nerrors = 0;
 tol = 1e-9;
 
 kdeg = 4;
-Lev = 11;
+Lev = 8;
 n = kdeg * 2^Lev;
 nvec = n;
 X = rand(n,nvec);
 
 global OperatorTwoScale_method;
 
-for icase=1:2,
-  OperatorTwoScale_method = cmerge( icase==1,'wavelet','nonwavelet');
+for icase=1:3,
+  OperatorTwoScale_method = cmerge( icase==1,'wavelet', ...
+				    cmerge(icase==2,'wavelet2', 'nonwavelet'));
 
   tic();
   FMWT = OperatorTwoScale(kdeg,2^Lev);
   time_fmwt = toc();
-  use_wavelet = (strcmp(OperatorTwoScale_method,'wavelet'));
-  if (use_wavelet),
+  disp('==========');
+  if (strcmp(OperatorTwoScale_method,'wavelet')),
     disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale_wavelet is %g',...
                   kdeg,   Lev,   n,  time_fmwt));
-  else
+  elseif (strcmp(OperatorTwoScale_method,'nonwavelet')),
     disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale_nonwavelet is %g',...
                   kdeg,   Lev,   n,  time_fmwt));
   
+  elseif (strcmp(OperatorTwoScale_method,'wavelet2')),
+    disp(sprintf('kdeg=%d,Lev=%d,n=%d, time for OperatorTwoScale_wavelet2 is %g',...
+                  kdeg,   Lev,   n,  time_fmwt));
   end;
+  disp('==========');
 
 
 
