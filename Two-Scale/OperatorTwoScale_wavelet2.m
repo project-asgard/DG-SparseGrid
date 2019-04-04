@@ -59,13 +59,37 @@ n =  maxDeg * 2^(nLev);
 % so  blocks{ ioff + (-1)} is accessing blocks{1}
 % -----------------------------------------------
 ioff = 2;
-Hmat =  [ eye(maxDeg,maxDeg)];
-for j=(nLev-1):-1:0,
-   ncells = 2^j;
-   isize = n/ncells;
 
-   Gmat = [G0 * Hmat, G1 * Hmat];
-   Hmat = [H0 * Hmat, H1 * Hmat];
+use_portable = 1;
+if (use_portable),
+   Gmat = zeros(maxDeg, n);
+   Hmat = zeros(maxDeg, n);
+   Hmat(1:maxDeg,1:maxDeg) = eye(maxDeg,maxDeg);
+else
+Hmat =  [ eye(maxDeg,maxDeg)];
+end;
+
+
+for j=(nLev-1):-1:0,
+   ncells = 2^(j);
+   isize = n/ncells;
+   isizeh = isize/2;
+
+   if (use_portable),
+     Htmp = zeros(maxDeg, isizeh);
+     Htmp(1:maxDeg, 1:isizeh) = Hmat(1:maxDeg,1:isizeh);
+
+
+     Gmat(1:maxDeg, 1:isizeh) = G0(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg, 1:isizeh );
+     Gmat(1:maxDeg, isizeh + (1:isizeh)) = G1(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg, 1:isizeh);
+
+
+     Hmat(1:maxDeg, 1:isizeh) = H0(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg,1:isizeh);
+     Hmat(1:maxDeg, isizeh + (1:isizeh)) = H1(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg,1:isizeh);
+   else
+     Gmat = [G0 * Hmat, G1 * Hmat];
+     Hmat = [H0 * Hmat, H1 * Hmat];
+   end;
    blocks{ioff + j} = Gmat(1:maxDeg,1:isize);
 end;
 blocks{ioff + (-1)} = Hmat(1:maxDeg,1:n);
