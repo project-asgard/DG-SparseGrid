@@ -1,7 +1,7 @@
 % simple test for OperatorTwoScale_wavelet2
 %
 maxDeg = 8;
-nLev = 7;
+nLev = 9;
 
 k = maxDeg;
 L = nLev;
@@ -29,6 +29,7 @@ disp(sprintf('norm 1 difference is %g ', ...
 	      norm( FMWT2 - FMWT,1) ));
 
 max_diff = max( abs( FMWT2(:) - FMWT(:) ) );
+max_diff = full(max_diff);
 disp(sprintf('max difference is %g ', ...
 	      max_diff ));
 
