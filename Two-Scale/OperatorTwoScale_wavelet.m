@@ -9,6 +9,7 @@ function FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev)
 %**********************************
 
 % % Load G0 and H0 from file
+idebug = 0;
 
 fileName = ['Two-Scale/two_scale_rel_',num2str(maxDeg),'.mat'];
 
@@ -78,6 +79,14 @@ for j=1:maxLev/2
     FMWT(maxDeg*(j-1)+1:maxDeg*j,2*maxDeg*(j-1)+1:2*maxDeg*j)=[H0 H1];
     FMWT(maxDeg*(j+maxLev/2-1)+1:maxDeg*(j+maxLev/2),2*maxDeg*(j-1)+1:2*maxDeg*j) = [G0 G1];
 end
+
+if (idebug >= 1),
+   figure();
+   spy( FMWT );
+   title(sprintf('line 86:N=%d,maxDeg=%d,maxLev=%d',...
+		 size(FMWT,1),maxDeg,maxLev));
+end;
+
 
 
 if porting; assert(isequal(FMWT,FMWT2)); end
@@ -162,6 +171,18 @@ for j=1:n
 	end;
         cFMWT(1:cn/2,1:cn)=FMWT(1:cn/2,1:cn);
         cFMWT(cn/2+1:cn,1:cn)=FMWT(maxDeg*maxLev/2+1:maxDeg*maxLev/2+cn/2,1:cn);
+
+	if (idebug >= 1),
+	  figure();
+          subplot(2,1,1);
+          spy(cFMWT);
+	  title(sprintf('line 178: j=%d, cFMWT, N=(%d,%d)',...
+			 j, size(cFMWT,1),size(cFMWT,2) ));
+          subplot(2,1,2);
+          spy(FMWT_COMP);
+	  title(sprintf('FMWT COMP,N=(%d,%d)', ...
+			size(FMWT_COMP,1),size(FMWT_COMP,2)  ));
+	end;
         
         if porting; assert(isequal(cFMWT,cFMWT2)); end
         
