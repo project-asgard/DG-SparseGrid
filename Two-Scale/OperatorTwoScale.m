@@ -9,8 +9,9 @@ function FMWT_COMP = OperatorTwoScale(maxDeg,maxLev)
 global OperatorTwoScale_method;
 idebug = 0;
 
-imethod_default = 'nonwavelet';
-%imethod_default = 'wavelet';
+% imethod_default = 'nonwavelet';
+% imethod_default = 'wavelet';
+imethod_default = 'wavelet2';
 
 imethod = imethod_default;
 
@@ -24,6 +25,8 @@ end;
 
 if (strcmp(imethod, 'nonwavelet')),
         FMWT_COMP = OperatorTwoScale_nonwavelet(maxDeg,maxLev);
+elseif (strcmp(imethod,'wavelet2')),
+       FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,maxLev);
 else
         FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev);
 end;
