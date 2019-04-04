@@ -14,7 +14,7 @@ X = rand(n,nvec);
 global OperatorTwoScale_method;
 
 for icase=1:2,
-  OperatorTwoScale_method = merge( icase==1,'wavelet','nonwavelet');
+  OperatorTwoScale_method = cmerge( icase==1,'wavelet','nonwavelet');
 
   tic();
   FMWT = OperatorTwoScale(kdeg,2^Lev);
@@ -43,8 +43,8 @@ for isLeft=1:-1:0,
 for isTrans=0:1,
 
    LT_in = strcat( ...
-             merge( isLeft,'L','R'), ...
-             merge( isTrans,'T','N') );
+             cmerge( isLeft,'L','R'), ...
+             cmerge( isTrans,'T','N') );
    
    disp('------------');
    disp(sprintf('LT_in=%s', LT_in));
@@ -107,9 +107,9 @@ for isTrans=0:1,
   
   tic;
   if (isLeft),
-     Y_s = merge(isTrans, FMWTs',FMWTs) * X;
+     Y_s = cmerge(isTrans, FMWTs',FMWTs) * X;
   else
-     Y_s = X * merge(isTrans, FMWTs', FMWTs);
+     Y_s = X * cmerge(isTrans, FMWTs', FMWTs);
   end;
   time_s = toc;
   disp(sprintf('nnz(FMWTs)=%g, time_s=%g', ...
