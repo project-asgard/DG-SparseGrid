@@ -66,6 +66,12 @@ for lev=(L-1):-1:0,
    %            = 0
    % ----------------------------
 
+
+   % -----------------------------------------
+   % note dense blocks are stored in block{} as
+   % block * COLUMNS *
+   % -----------------------------------------
+
    for ell=(L-1):-1:(lev+1),
        Q = block{ioff+ell};
        m = size(Q,1);
