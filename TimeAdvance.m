@@ -1,4 +1,4 @@
-function f = TimeAdvance(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
+function f = TimeAdvance(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
@@ -6,15 +6,15 @@ function f = TimeAdvance(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 
 if runTimeOpts.implicit
-    %f = backward_euler(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
-    f = crank_nicolson(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    %f = backward_euler(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    f = crank_nicolson(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 else
-    f = RungeKutta3(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    f = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 end
 
 end
 
-function fval = RungeKutta3(pde,bc,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
+function fval = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %----------------------------------
 % 3-rd Order Kutta Method
 %----------------------------------
@@ -28,16 +28,12 @@ source3 = source_vector(HASHInv,pde,t+c3*dt);
 
 %%
 % Inhomogeneous dirichlet boundary conditions
-bc1 = getBoundaryConditionVectors(pde,bc,HASHInv,t); 
-bc2 = getBoundaryConditionVectors(pde,bc,HASHInv,t+c2*dt); 
-bc3 = getBoundaryConditionVectors(pde,bc,HASHInv,t+c3*dt); 
+bc1 = getBoundaryCondition1(pde,HASHInv,t); 
+bc2 = getBoundaryCondition1(pde,HASHInv,t+c2*dt); 
+bc3 = getBoundaryCondition1(pde,HASHInv,t+c3*dt); 
 
-a21 = 1/2;
-a31 = -1;
-a32 = 2;
-b1 = 1/6;
-b2 = 2/3;
-b3 = 1/6;
+a21 = 1/2; a31 = -1; a32 = 2;
+b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
 k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 - bc1;
 y_1 = f + dt*a21*k_1;
