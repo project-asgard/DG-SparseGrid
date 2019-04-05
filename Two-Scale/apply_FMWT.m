@@ -73,6 +73,36 @@ isRight = ~isLeft;
    Y = zeros(nrowY, ncolY);
 
 
+% --------------------------
+% extract small dense blocks
+% --------------------------
+use_portable = 1;
+if ((imethod ~= 1) && use_portable),
+    % -----------------------
+    % basis from coarses grid
+    % -----------------------
+    ioff = 2;
+    blocks{ioff + (-1)} = FMWT( 1:kdeg, 1:n );
+
+    % -----------------------------------
+    % extract basis from different levels
+    % -----------------------------------
+    irow = 1 + kdeg;
+    for ilev=0:(Lev-1),
+        ncells = 2^(ilev);
+        isize = n/ncells;
+
+        i1 = irow;
+        j1 = 1;
+        i2 = i1 + kdeg-1;
+        j2 = j1 + isize - 1;
+        blocks{ioff + ilev} = FMWT( i1:i2, j1:j2 );
+
+        irow = irow + ncells * kdeg;
+    end;
+end;
+
+
 if (imethod == 1),
       % ----------------------------
       % just perform matrix multiply
@@ -99,11 +129,16 @@ elseif (imethod == 2),
       % special case for coarsest level
       % -------------------------------
       ip = 1;
-      ipend = 2*kdeg;
+      ipend = ip + kdeg - 1;
       col1 = 1;
       col2 = n;
 
-      Fmat = full(FMWT(ip:ipend, col1:col2));
+      if (use_portable),
+           Fmat = blocks{ioff + (-1)};
+      else
+           Fmat = full(FMWT(ip:ipend, col1:col2));
+      end;
+
       if (isLeft),
          if (isTrans),
            Y(col1:col2,1:ncolX) = Fmat' * X( ip:ipend,1:ncolX);
@@ -118,15 +153,20 @@ elseif (imethod == 2),
          end;
       end;
 
-      ip = 2*kdeg + 1;
-      for lev=1:(Lev-1),
+      ip = kdeg + 1;
+      for lev=0:(Lev-1),
           ncells = 2^lev;
           isize = n/ncells;
           for icell=1:ncells,
              ipend = ip + kdeg-1;
                   col1 = 1 + (icell-1)*isize;
                   col2 = col1 + isize-1;
-		  Fmat = full( FMWT(ip:ipend, col1:col2) );
+                  if (use_portable),
+                     Fmat = blocks{ioff + lev};
+                  else
+		     Fmat = full( FMWT(ip:ipend, col1:col2) );
+                  end;
+
                   if (isLeft),
                      if (isTrans),
                        Y(col1:col2,1:ncolX) = Y(col1:col2,1:ncolX) + ...
@@ -159,10 +199,14 @@ elseif (imethod == 3),
       % special case for coarsest level
       % -------------------------------
       ip = 1;
-      ipend = 2*kdeg;
+      ipend = ip + kdeg-1;
       col1 = 1;
       col2 = n;
-      Fmat = full( FMWT(ip:ipend,col1:col2) );
+      if (use_portable),
+         Fmat = blocks{ ioff + (-1) };
+      else
+         Fmat = full( FMWT(ip:ipend,col1:col2) );
+      end;
       if (isLeft),
          if (isTrans),
             Y(col1:col2,1:ncolX) = Fmat' * X( ip:ipend,1:ncolX);
@@ -177,8 +221,8 @@ elseif (imethod == 3),
          end;
       end;
 
-      ip = 2*kdeg + 1;
-      for lev=1:(Lev-1),
+      ip = kdeg + 1;
+      for lev=0:(Lev-1),
           ncells = 2^lev;
           isize = n/ncells;
 
@@ -191,7 +235,11 @@ elseif (imethod == 3),
           col1 = 1 + (icell-1)*isize;
           col2 = col1 + isize-1;
 
-          Fmat = full(FMWT(ip:ipend,col1:col2));
+          if (use_portable),
+            Fmat = blocks{ ioff + lev };
+          else
+            Fmat = full(FMWT(ip:ipend,col1:col2));
+          end;
           ip2 = ip + (ncells * isize)-1;
 
           ncol = (n*ncolX/isize);
