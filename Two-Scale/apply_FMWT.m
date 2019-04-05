@@ -75,6 +75,12 @@ isRight = ~isLeft;
 
 % --------------------------
 % extract small dense blocks
+%
+% Note: this may avoid storing large dense matrices
+% or need to implement sparse matrix class in C++
+%
+% One may internally store a list of small dense matrices 
+% This list may be sufficient for implementing apply_FMWT()
 % --------------------------
 use_portable = 1;
 if ((imethod ~= 1) && use_portable),
@@ -133,23 +139,32 @@ elseif (imethod == 2),
       col1 = 1;
       col2 = n;
 
+      nrowF = kdeg;
+      ncolF = n;
+      Fmat = zeros( nrowF, ncolF );
       if (use_portable),
-           Fmat = blocks{ioff + (-1)};
+           Fmat(1:nrowF,1:ncolF) = blocks{ioff + (-1)};
       else
-           Fmat = full(FMWT(ip:ipend, col1:col2));
+           Fmat(1:nrowF,1:ncolF) = full(FMWT(ip:ipend, col1:col2));
       end;
 
       if (isLeft),
          if (isTrans),
-           Y(col1:col2,1:ncolX) = Fmat' * X( ip:ipend,1:ncolX);
+           % -----------------------------------
+           % note use transA = 'T' argument in GEMM
+           % -----------------------------------
+           Y(col1:col2,1:ncolX) = Fmat(1:nrowF,1:ncolF)' * X( ip:ipend,1:ncolX);
          else
-           Y(ip:ipend,1:ncolX) = Fmat * X( col1:col2,1:ncolX);
+           Y(ip:ipend,1:ncolX) = Fmat(1:nrowF,1:ncolF) * X( col1:col2,1:ncolX);
          end;
       else
          if (isTrans),
-           Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * Fmat';
+           % --------------------------------------
+           % note use transB = 'T' argument in GEMM
+           % --------------------------------------
+           Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * Fmat(1:nrowF,1:ncolF)';
          else
-           Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * Fmat;
+           Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * Fmat(1:nrowF,1:ncolF);
          end;
       end;
 
@@ -157,31 +172,42 @@ elseif (imethod == 2),
       for lev=0:(Lev-1),
           ncells = 2^lev;
           isize = n/ncells;
+          nrowF = kdeg;
+          ncolF = isize;
+          Fmat = zeros(nrowF,ncolF);
+
           for icell=1:ncells,
              ipend = ip + kdeg-1;
                   col1 = 1 + (icell-1)*isize;
                   col2 = col1 + isize-1;
+
                   if (use_portable),
-                     Fmat = blocks{ioff + lev};
+                     Fmat(1:nrowF,1:ncolF) = blocks{ioff + lev};
                   else
-		     Fmat = full( FMWT(ip:ipend, col1:col2) );
+		     Fmat(1:nrowF,1:ncolF) = full( FMWT(ip:ipend, col1:col2) );
                   end;
 
                   if (isLeft),
                      if (isTrans),
+                       % ------------------------------------
+                       % note use transA='T' argument in GEMM
+                       % ------------------------------------
                        Y(col1:col2,1:ncolX) = Y(col1:col2,1:ncolX) + ...
-                                              Fmat' * X( ip:ipend,1:ncolX);
+                                              Fmat(1:nrowF,1:ncolF)' * X( ip:ipend,1:ncolX);
                      else
                        Y(ip:ipend,1:ncolX) = Y(ip:ipend,1:ncolX) + ...
-                                             Fmat * X( col1:col2,1:ncolX);
+                                             Fmat(1:nrowF,1:ncolF) * X( col1:col2,1:ncolX);
                      end;
                   else
                      if (isTrans),
+                       % ------------------------------------
+                       % note use transB='T' argument in GEMM
+                       % ------------------------------------
                        Y(1:nrowX,ip:ipend) = Y(1:nrowX,ip:ipend) + ...
-                                             X(1:nrowX, col1:col2) * Fmat'; 
+                                             X(1:nrowX, col1:col2) * Fmat(1:nrowF,1:ncolF)'; 
                      else
                        Y(1:nrowX,col1:col2) = Y(1:nrowX,col1:col2) + ...
-                                              X(1:nrowX, ip:ipend) * Fmat; 
+                                              X(1:nrowX, ip:ipend) * Fmat(1:nrowF,1:ncolF); 
                      end;
                   end;
 
@@ -202,22 +228,32 @@ elseif (imethod == 3),
       ipend = ip + kdeg-1;
       col1 = 1;
       col2 = n;
+      nrowF = kdeg;
+      ncolF = n;
+      Fmat = zeros(nrowF,ncolF);
+
       if (use_portable),
-         Fmat = blocks{ ioff + (-1) };
+         Fmat(1:nrowF,1:ncolF) = blocks{ ioff + (-1) };
       else
-         Fmat = full( FMWT(ip:ipend,col1:col2) );
+         Fmat(1:nrowF,1:ncolF) = full( FMWT(ip:ipend,col1:col2) );
       end;
       if (isLeft),
          if (isTrans),
-            Y(col1:col2,1:ncolX) = Fmat' * X( ip:ipend,1:ncolX);
+            % -------------------------------------
+            % note use transA='T' argument in GEMM
+            % -------------------------------------
+            Y(col1:col2,1:ncolX) = Fmat(1:nrowF,1:ncolF)' * X( ip:ipend,1:ncolX);
          else
-            Y(ip:ipend,1:ncolX) = Fmat * X( col1:col2,1:ncolX);
+            Y(ip:ipend,1:ncolX) = Fmat(1:nrowF,1:ncolF) * X( col1:col2,1:ncolX);
          end;
       else
          if (isTrans),
-            Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * Fmat'; 
+            % -------------------------------------
+            % note use transB='T' argument in GEMM
+            % -------------------------------------
+            Y(1:nrowX,ip:ipend) = X(1:nrowX, col1:col2) * Fmat(1:nrowF,1:ncolF)'; 
          else
-            Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * Fmat;
+            Y(1:nrowX,col1:col2) = X(1:nrowX, ip:ipend) * Fmat(1:nrowF,1:ncolF);
          end;
       end;
 
@@ -235,10 +271,14 @@ elseif (imethod == 3),
           col1 = 1 + (icell-1)*isize;
           col2 = col1 + isize-1;
 
+          nrowF = kdeg;
+          ncolF = isize;
+          Fmat = zeros( nrowF, ncolF );
+
           if (use_portable),
-            Fmat = blocks{ ioff + lev };
+            Fmat(1:nrowF,1:ncolF) = blocks{ ioff + lev };
           else
-            Fmat = full(FMWT(ip:ipend,col1:col2));
+            Fmat(1:nrowF,1:ncolF) = full(FMWT(ip:ipend,col1:col2));
           end;
           ip2 = ip + (ncells * isize)-1;
 
@@ -254,6 +294,9 @@ elseif (imethod == 3),
                         reshape( X(ip:ipend,1:ncolX), kdeg, ((ipend-ip+1)*ncolX/kdeg)), ...
                     nrowY, ncolY );
             else
+             % -------------------------------------------
+             % note special case, direct copy assignment into Y
+             % -------------------------------------------
              Y(ip:ipend,1:ncolX) = ...
                reshape(  Fmat(1:kdeg,1:isize)*reshape(X(1:n,1:ncolX), isize, ncol), ...
                      nrows, (kdeg*ncol)/nrows  );
@@ -266,6 +309,9 @@ elseif (imethod == 3),
 
                  jx1 = 1 + (icell-1)*isize;
                  jx2 = jx1 + isize-1;
+                 % ------------------------------------
+                 % note use transB='T' argument in GEMM
+                 % ------------------------------------
                  Y(1:nrowX, j1:j2) = ...
                      X(1:nrowX, jx1:jx2) * Fmat(1:kdeg,1:isize)';
                end; % end for
