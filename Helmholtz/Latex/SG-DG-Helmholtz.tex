@@ -1,14 +1,24 @@
-
-\documentclass[final,leqno]{siamltex704}
+%\documentclass[final,leqno]{siamltex704}
 %\documentclass[leqno]{siamltex704}
-\usepackage{epsfig}
-\usepackage{amsmath,bm}
-\usepackage{amssymb}
+
+\documentclass[preprint,11pt]{elsarticle}
+
+
+\usepackage{epsfig,graphicx}
+\usepackage{amssymb,amsmath,bm}
 \usepackage{float}
 \usepackage{tikz}
-\usepackage{graphicx}
-\usepackage[notcite,notref]{showkeys}
-\newtheorem{algorithm}{Weak Galerkin Algorithm}
+
+\usepackage{todonotes}
+
+%\usepackage[notcite,notref]{showkeys}
+
+\newproof{proof}{Proof}
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{remark}{Remark}[section]
+
+
 \newcommand{\bq}{{\bf q}}
 \newcommand{\bn}{{\bf n}}
 \newcommand{\bx}{{\bf x}}
@@ -18,10 +28,10 @@
 \def\E{{\mathcal E}}
 \def\V{{\mathcal V}}
 \def\W{{\mathcal W}}
-\def\F{{\mathcal F}}
 \def\l{{\langle}}
 \def\r{{\rangle}}
 \def\jump#1{{[\![#1[\!]}}
+\def\bL{{\bf L}}
 \def\bbF{{\bf F}}
 \def\bbf{{\bf f}}
 \def\bn{{\bf n}}
@@ -42,8 +52,6 @@
 \def\bV{{\bf V}}
 \def\bJ{{\bf J}}
 \def\be{{\bf e}}
-\def\mL{{\mathcal L}}
-\def\mF{\mathcal{F}}
 
 \def\ljump{{[\![}}
 \def\rjump{{]\!]}}
@@ -53,119 +61,262 @@
 
 \def\aa{\mathfrak{a}}
 \def\bbQ{\mathbb{Q}}
-\newcommand{\pT}{{\partial T}}
-\newtheorem{defi}{Definition}[section]
+
+
 \def\3bar{{|\hspace{-.02in}|\hspace{-.02in}|}}
+
 %\setlength{\textwidth}{6truein} \setlength{\textheight}{8truein}
 %\voffset=-0.55truein
 %\hoffset=-0.65truein
-\renewcommand{\ldots}{\dotsc}
-\setlength{\parskip}{1\parskip}
 
-\title{Discontinuous Galerkin Sparse Grids Methods for Helmholtz Equations}
+\setlength{\textwidth}{6.5truein} \setlength{\textheight}{8truein}
+\voffset=-0.6truein
+\hoffset=-0.7truein
 
 
-\author{
-}
+\journal{Journal of Computational Physics}
 
 \begin{document}
 
-\maketitle
+\begin{frontmatter}
+
+\title{Discontinuous Galerkin Sparse Grids Methods for Helmholtz Equations with Large Wave Numbers}
+\tnotetext[t1]{This material is based upon work supported in part by the Laboratory Directed Research and Development program at the Oak Ridge National Laboratory, which is operated by UT-Battelle, LLC., for the U.S. Department of Energy under Contract DE-AC05-00OR22725.} 
+%\tnotetext[t2]{The second title footnote which is a longer
+%text matter to fill through the whole text width and overflow into another line in the footnotes area of the first page.}
+
+\author[1]{E. D'Azevedo}
+\address[1]{Computational and Applied Mathematics Division, Oak Ridge National Laboratory, Oak Ridge, TN 37831, USA}
+\ead{dazevedoef@ornl.gov}
+
+\author[2]{David Green}
+\address[2]{Fusion \& Materials for Nuclear Systems Division
+Oak Ridge National Laboratory, Oak Ridge, TN 37831, USA}
+\ead{greendl1@ornl.gov}
+
+\author[3]{Lin Mu\corref{cor1}}%\fnref{fn1}}
+\address[3]{Computational and Applied Mathematics Division, Oak Ridge National Laboratory, Oak Ridge,  TN 37831, USA}
+\ead{mul1@ornl.gov}
+
+\cortext[cor1]{Corresponding author}
+
 
 \begin{abstract}
+I
 \end{abstract}
 
-\begin{keywords}
+\begin{keyword}
 Helmholtz equations, discontinuous Galerkin method, sparse grids methods.
-\end{keywords}
+\end{keyword}
 
-\begin{AMS}
-Primary: 65N15, 65N30; Secondary: 35J50
-\end{AMS}
-\pagestyle{myheadings}
+\end{frontmatter}
 
-\section{Introduction}
-The Helmholtz equation is the simplest possible model of wave propagation. Although most applications are concerned with the propagation of waves in exterior domains, it is common to use as a model problem the Helmholtz equation posed in an interior domain with an impedance boundary conditions, i.e.,
+
+
+
+%===============
+% Introduction
+%===============
+\section{Introduction}\label{Sect:Intro}
+Helmholtz equation arise in a number of physical applications, in particular in problems of wave scattering and fluid-solid-interaction.
+%----------------------------
+% Helmholtz Equations
+%----------------------------
+In this paper, we shall consider the following Helmholtz equations 
 \begin{eqnarray}
-\Delta u+k^2 u &=& -f \mbox{ in }\Omega,\\
-\frac{\partial u}{\partial \bf n}-\text{i}ku &=& g,\mbox{ on }\Gamma.
+-\Delta u - \kappa^2 u &=& f,\text{ in }\Omega \\
+\frac{\partial u}{\partial\bn} + i\kappa u &=& g, \text{ on }\Gamma_R\\
+u &=&  0,\text{ on }\Gamma_D,
 \end{eqnarray}
+where $\kappa$ is the wave number. The quality of discrete numerical solutions to the Helmholtz equation depends significantly on the physical parameter $\kappa$. It is clear and well known that the stepwidth $h$ of meshes for finite element or finite difference computations should be adjusted to the wavenumber $\kappa$. In practice, one usually follows a "rule of the thumb" of the following form
+$$\kappa h = \text{const}.$$
+In computations with low wavenumber, this rule leads to sufficiently correct results. The quality of numerical results, however, deteriorates if the wavenumber $\kappa$ increases. On the other hand, the erros are bounded on a series of meshes with $\kappa^3h^2\approx$const. It is shown that, if $\kappa^2h$ is sufficiently small, the error in $H^1$-seminorm satisfies a quasioptimal estimate
+$$|u-u_{h}|_1\le C\inf_{v\in V_h}|u-v|_1,$$
+where $V_h$ is the finite element subspace and $C$ is a constant that does not depend on $\kappa$ and $h.$ However, the assumption on $\kappa^2h$ is unsatisfactory from a practical point of view since it generally holds on very fine mesh only. It is shown in previous reference that the relative error of the FE-solution in $H^1$-seminorm generally can be written as
+$$|u-u_h|_1\le C_1kh+C_2k^3h^2.$$
+The first term on the right hand side reflects the approximation error which is of local character; the second part is due to numerical pollution, which is a global effect that can be connected to a phase lead of the numerical solution. 
 
-We shall consider about the discretization of the original Helmholtz problem with a complex shift
+\section{Numerical Experiment}\label{Sect:NumTest}
+\subsection{Test 1}
+In this test, the analytical solution is chosen as $u=e^{i\kappa x}$ and the domain is $[0,1]$. We shall compare two different numerical schemes:
+\begin{itemize}
+\item New Formulation
 \begin{eqnarray}
-\Delta u+(k^2+\text{i}\epsilon) u &=& -f \mbox{ in }\Omega,\\
-\frac{\partial u}{\partial \bf n}-\text{i}\eta u &=& g,\mbox{ on }\Gamma.
+\mathcal{A}(u,v) = B(u,v) - C(u,v)+ \text{i}\frac{\sigma}{h}D(u,v) + \text{i}\kappa E(u,v) + \text{i}J(u,v),\label{scheme1}
 \end{eqnarray}
-
-The following DG scheme will be utilized in the computing: find $u\in V_h$, such that
-\begin{eqnarray}
-A_{\epsilon}(u_h,v) = (f,v)+\langle g,v \rangle_{\Gamma},\ \forall v\in V_h,
-\end{eqnarray}
-where
+where 
 \begin{eqnarray*}
-A_{\epsilon}(u_h,v)&=&(\nabla_h u_h,\nabla_h v)-(k^2+\text{i}\epsilon)(u,v)-\langle\lavg\nabla u_h\ravg,\ljump v\rjump\rangle_{\mathcal{E}_h^0}-\langle\lavg\nabla v\ravg,\ljump u_h\rjump\rangle_{\mathcal{E}_h^0}\\
-%%%%%%
-&+&\frac{\alpha}{h}\langle\ljump u_h\rjump,\ljump v\rjump\rangle_{\mathcal{E}_h^0}-\langle\text{i}\eta u,v\rangle_{\Gamma}.
+B(u,v)&=&\sum_{K\in\mathcal{T}_h}(\nabla u,\nabla v) - \kappa^2(u,v),\\
+C(u,v)&=&\sum_{e\in\mathcal{E}_h^0}\int_e \left(\lavg\nabla u\ravg\ljump v\rjump + \lavg\nabla v\ravg\ljump u\rjump\right) ds,\\
+D(u,v) &=& \sum_{e\in\mathcal{E}_h^0}\int_e \ljump u\rjump\cdot\ljump v\rjump ds,\\
+E(u,v) &=& \sum_{e\in\Gamma_R}\int_e uvds\\
+J(u,v) &=& \sum_{e\in\mathcal{E}_h^0}\sum_{0< q\le p}\int_e\ljump u^q\rjump\cdot\ljump v^q\rjump ds.
 \end{eqnarray*}
-The original Helmholtz equation that we are interested in solving, is taking $\epsilon = 0$ and $\eta = k$, and in this case we write $A(u,v)$ instead of $A_{\epsilon}(u,v)$.
 
-The Galerkin equation are equivalent to the linear system
-\begin{eqnarray}
-\mathbb{A}_{\epsilon}{\bf u}={\bf f}.
-\end{eqnarray}
+\item IPDG scheme
+\begin{eqnarray*}
+A(u,v) = B(u,v) - C(u,v)+\frac{\sigma}{h}D(u,v) + \text{i}\kappa E(u,v).\label{scheme2}
+\end{eqnarray*}
 
-% results from REF
+
+\end{itemize}
+
+The first test is to compare the eigenvalues of the matrices from the bilinear form $\mathcal{A}(u,v)$ and  $A(u,v)$. In this test, we choose $\kappa = 10$ and the eigenvalues are plotted in Figure \ref{Fig:Ex1-Eigs}.
 \begin{figure}[H]
 \centering
-\begin{tabular}{ccc}
-  {\includegraphics[width=.31\textwidth]{./Ref-fig/epsk}}&
-  {\includegraphics[width=.31\textwidth]{./Ref-fig/epsk32}}&
-  {\includegraphics[width=.31\textwidth]{./Ref-fig/eps2}}
-  \\
-  (a) & (b) & (c)
+\begin{tabular}{cc}
+\includegraphics[width=.49\textwidth,height=.49\textwidth]{./Fig/Test_1D_k10_Method1}
+&\includegraphics[width=.49\textwidth,height=.49\textwidth]{./Fig/Test_1D_k10_Method2}\\
+(a) & (b)
 \end{tabular}
-\caption{Numerical range of $\mathbb{A}_{\epsilon}^{-1}\mathbb{A}$ for (a) $\epsilon=k$; (b) $\epsilon=k^{3/2}$; (c) $\epsilon = k^2$.}\label{fig:ex_ref}
+\caption{Example \ref{Test:Ex1}: Illustration of eigenvalues from linear system $\mathcal{A}(u_h,v)$ and ${A}(u_h,v)$.}\label{Fig:Ex1-Eigs}
 \end{figure}
 
-Figure \ref{fig:ex_ref} shows that when $\epsilon = k$, the numerical range remains bounded away from the origin as $k$ increases, whereas when $\epsilon = k^{3/2}$ or $\epsilon=k^2$ the distance of the numerical range from the origin decreases as $k$ increases.
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+\includegraphics[width=.49\textwidth,height=.45\textwidth]{./Fig/Test_1D_k100_ConvRate}
+&\includegraphics[width=.49\textwidth,height=.45\textwidth]{./Fig/Test_1D_k100_CondNumb}\\
+(a) & (b)
+\end{tabular}
+\caption{Example \ref{Test:Ex1}: Illustration of eigenvalues from linear system $\mathcal{A}(u_h,v)$ and ${A}(u_h,v)$.}\label{Fig:Ex1-ConRate}
+\end{figure}
 
-% 1D results
-\section{1-dimensional numerical experiment}
-\subsection{Example 1} Let exact solution be $u=\sin(k\pi x)$.
-
-
-
-\begin{thebibliography}{99}
-\bibitem{Dolean2010}
-V. Dolean, H. Fahs, L. Fezoui, and S. Lanteri. Locally implicit discontinous Galerkin method for time domain electromagnetics, J. Comput. Phys., 229 (2010): 512-526.
-
-\bibitem{GuoCheng2016}
-W. Guo and Y. Cheng. A Sparse Grid Discontinuous Galerkin Method for High-Dimensional Transport Equations and Its Application to Kinetic Simulations. SIAM J. Sci. Comput., 38(6), A3381-A3409. 
-
-\bibitem{HoustonPerugiaSchneebeli2005b}
-P. Houston, I. Perugia, A. Schneebeli, and D. Sch\"{o}tzau. Interior penalty method for the indefinite time-harmonic
-Maxwell equations. Numer. Math., 100 (2005): 485-518.
-
-\bibitem{Kopriva2002}
-D.A.Kopriva, S.L.Woodruff and M.Y.Hussaini. Computation of electromagnetic scattering with a non-conforming discontinuous spectral element method, Int. J. Numr. Meth. Engng, 53 (2002): 105-122.
-
-\bibitem{LiHesthaven2014}
-J. Li and J.S.Hesthaven. Analysis and application of the nodal discontinuous Galerkin method for wave propagation in metamaterials, J. Comput. Phys., 258 (2014): 915-930.
-
-\bibitem{ShuOsher1988}
-C.W. Shu and S. Osher. Efficient implementation of essentially non-oscillatory shock-capturing schemes. J. Comput.
-Phys., 77 (1988):439-471.
+\begin{figure}[H]
+\centering
+\includegraphics[width=.7\textwidth]{./Fig/Test_1D_k1000_CondNumb}
+\caption{Example \ref{Test:Ex1}: Illustration of eigenvalues from linear system $\mathcal{A}(u_h,v)$ and ${A}(u_h,v)$.}\label{Fig:Ex1-1000}
+\end{figure}
 
 
-\bibitem{Warburton2000}
-T. Warburton. Application of the discontinuous Galerkin method to Maxwell's equations using unstructured polymorphic hp-dinite elements, In Discontinuous Galerkin Methods, 2000, 451-458.
 
-\bibitem{XieWangZhang2013}
-Z. Xie, B. Wang and Z. Zhang. Space-Time discontinuous Galerkin method for Maxwell's equations, Commun. Comput.Phys., 14 (2013): 916-939.
 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.7\textwidth]{./Fig/Test_1D_Method1_k3h2}
+\caption{Example \ref{Test:Ex1}: Illustration of eigenvalues from linear system $\mathcal{A}(u_h,v)$ and ${A}(u_h,v)$.}\label{Fig:Ex1-k3h2}
+\end{figure}
+
+%-----------------
+% Test 2
+%-----------------
+\subsection{Test 2}\label{Test:Ex2}
+In this test, let $\Omega = (0,1)$ and the exact solution as 
+$$u = \frac{1-\cos(\kappa x)-\sin(\kappa)\sin(\kappa x)+\text{i}(1-\cos(\kappa))\sin(\kappa x)}{\kappa^2}.$$
+The boundary conditions are given as
+\begin{eqnarray*}
+u = 0, \text{ if }x=0; \quad \frac{\partial u}{\partial\bn}+\text{i}\kappa u = 0, \text{ if }x=1.
+\end{eqnarray*}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.48\textwidth]{./Fig/Eigs-k1000-Deg6-Method1}
+\includegraphics[width=.49\textwidth]{./Fig/Eigs-k1000-Deg6-Method2}
+%\includegraphics[width=.23\textwidth]{./Fig/Eigs-k1000-Deg10-Method1}
+%\includegraphics[width=.23\textwidth]{./Fig/Eigs-k1000-Deg10-Method2}
+\caption{Example \ref{Test:Ex2}: Eigenvalues corresponding to Scheme (\ref{scheme1}) and Scheme (\ref{scheme2}) on mesh with Lev = 8, Deg = 5. The $L^2$-errors are 2.86E-2 and 3.93E-2.}%\label{Fig:Ex2-1}
+\end{figure}
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.45\textwidth]{./Fig/sol-Test2-k32}
+\includegraphics[width=.49\textwidth]{./Fig/ConRate-Deg2}
+%\includegraphics[width=.32\textwidth]{./Fig/ConRate-Deg4}
+\caption{Example \ref{Test:Ex2}: Error profiles and convergence tests for scheme (\ref{scheme1}) with $p = 2$, $p = 3$, $p=4$. The wave numbers are chosen as $\kappa = 2^4,2^5,\cdots,2^9$.}\label{Fig:Ex2-1}
+\end{figure}
+
+
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=.32\textwidth]{./Fig/ConRate-Deg2}
+\includegraphics[width=.49\textwidth]{./Fig/ConRate-Deg3}
+\includegraphics[width=.49\textwidth]{./Fig/ConRate-Deg4}
+\caption{Example \ref{Test:Ex2}: Error profiles and convergence tests for scheme (\ref{scheme1}) with $p = 2$, $p = 3$, $p=4$. The wave numbers are chosen as $\kappa = 2^4,2^5,\cdots,2^9$.}\label{Fig:Ex2-2}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=.32\textwidth]{./Fig/ConRate-Deg2}
+\includegraphics[width=.49\textwidth]{./Fig/ConRate-Deg6}
+\includegraphics[width=.49\textwidth]{./Fig/ConRate-Deg7}
+\caption{Example \ref{Test:Ex2}: Error profiles and convergence tests for scheme (\ref{scheme1}) with $p = 2$, $p = 3$, $p=4$. The wave numbers are chosen as $\kappa = 2^4,2^5,\cdots,2^9$.}\label{Fig:Ex2-3}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+%\includegraphics[width=.32\textwidth]{./Fig/ConRate-Deg2}
+\includegraphics[width=.49\textwidth]{./Fig/ConRate-Deg4}
+\includegraphics[width=.49\textwidth]{./Fig/ConRate-Deg5-Method2}
+\caption{Example \ref{Test:Ex2}: Error profiles and convergence tests for scheme (\ref{scheme1}) with $p = 2$, $p = 3$, $p=4$. The wave numbers are chosen as $\kappa = 2^4,2^5,\cdots,2^9$.}\label{Fig:Ex2-}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+%\includegraphics[width=.32\textwidth]{./Fig/ConRate-Deg2}
+\includegraphics[width=.49\textwidth]{./Fig/ConvRate-k100-Method1}
+&
+\includegraphics[width=.49\textwidth]{./Fig/ConvRate-k1000-Method1}\\
+(a) & (b)
+\end{tabular}
+\caption{Example \ref{Test:Ex2}: Error profiles and convergence tests for scheme (\ref{scheme1}) with: (a) $\kappa = 100$, (b) $\kappa = 1000$.}\label{Fig:Ex2-3}
+\end{figure}
+
+\subsection{Shifted Laplacian}
+In this test, we shall choose the preconditioner as
+\begin{eqnarray*}
+-\Delta u - \kappa^2 u -\text{i}\epsilon u = f.
+\end{eqnarray*}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{cc}
+%\includegraphics[width=.32\textwidth]{./Fig/ConRate-Deg2}
+\includegraphics[width=.49\textwidth]{./Fig/Eig-Method2-kappa}
+&
+\includegraphics[width=.49\textwidth]{./Fig/Eig-Method2-kappa2}\\
+(a) & (b)
+\end{tabular}
+\caption{(a) $\epsilon = \kappa$, (b) $\epsilon = \kappa^2$.}\label{Fig:Ex3-1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c}
+%\includegraphics[width=.32\textwidth]{./Fig/ConRate-Deg2}
+\includegraphics[width=.6\textwidth]{./Fig/Method1-Lev10-Deg4-BICG}
+%&
+%\includegraphics[width=.49\textwidth]{./Fig/Eig-Method2-kappa2}\\
+%(a) & (b)
+\end{tabular}
+\caption{(a) $\epsilon = \kappa$.}\label{Fig:Ex3-2}
+\end{figure}
+
+
+
+%============
+% Reference
+%============
+%\begin{thebibliography}{99}
+\begin{thebibliography}{00}
+
+\bibitem{MelenkParsaniaSauter2013}
+J.M. Melenk, A. Parsania, S. Sauter. General DG-methods for highly indefinite Helmholtz problems. Journal of Scientific Computing. 57(2013):536-81.
+
+\bibitem{IhlenburgBabuska1997}
+F. Ihlenburg, I. Babuska.
+Finite Element Solution of the Helmholtz Equation with High Wave Number Part II: The h-p Version of the FEM. SIAM J. Numer. Anal., 34(1997), 315-358.
 
 
 \end{thebibliography}
+
+
 
 \end{document}
 
