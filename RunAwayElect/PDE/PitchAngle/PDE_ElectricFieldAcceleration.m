@@ -15,7 +15,7 @@ PDE.term3.FunCoef = @(x)( -(x.*(1-x.^2)) );
 PDE.term3.Coef =  -R;
 
 PDE.BC.q_L = 0; PDE.BC.q_R = 1;
-PDE.BC.f_L = 1;  PDE.BC.f_R = 1;
+PDE.BC.f_L = 1; PDE.BC.f_R = 1;
 
 sigma = 0.1;
 f0 = @(x)( exp(-x.^2/sigma^2) );

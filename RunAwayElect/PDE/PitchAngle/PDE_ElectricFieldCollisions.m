@@ -19,7 +19,8 @@ PDE.BC.f_L = 1;  PDE.BC.f_R = 1;
 
 A = E/C;
 ff0 = @(x)(x-x+1/2);
-ExactF = @(x,t)(A/(2*sinh(A))*exp(A*x));
+ExactF = @(x,t)(2*x+2);
+ExactFF = @(x,t)(A/(2*sinh(A))*exp(A*x));
 source = @(x,t)(x-x);
 
 

@@ -16,11 +16,11 @@ format short e
 addpath(genpath(pwd))
 % clc
 
-% PDE_FP2;
-Test_Momentum;
+PDE_FP2;
+% Test_Momentum;
 
 
-Lev = 5;
+Lev = 4;
 Deg = 2;
 num_plot = 2;
 
@@ -48,8 +48,8 @@ MatMass = inv(MatMass);
 Mat = ... 
     PDE.term1.Coef * Mat_Term1 + ...
     PDE.term2.Coef * Mat_Term2 + ...
-     PDE.term3.Coef * Mat_Term3 + ...
-     PDE.term4.Coef * Mat_Term4 ;
+    PDE.term3.Coef * Mat_Term3 + ...
+    PDE.term4.Coef * Mat_Term4 ;
 
 %% RHS
 time = 0;
@@ -68,7 +68,7 @@ f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 q0 = ComputRHS(Lev,Deg,LInt,LEnd,@(x,t)(-2*x.*exp(-x.^2)),0);
 fn = f0;
 dt = ((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
-MaxIter = ceil(0.05/dt);
+MaxIter = ceil(10/dt);
 for Iter = 1 : MaxIter
     
     time = dt*Iter;
@@ -89,7 +89,7 @@ for Iter = 1 : MaxIter
     qn = Mat1*fn;
     
     plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',...
-         x_node,Meval*qn,'g-<',x_node,ExactQ(x_node,time),'b--',...
+         x_node,exp(-x_node.^2),'k-',...x_node,Meval*qn,'g-<',x_node,ExactQ(x_node,time),'b--',...
          'LineWidth',2)
     title(num2str(time))
     pause(0.01)

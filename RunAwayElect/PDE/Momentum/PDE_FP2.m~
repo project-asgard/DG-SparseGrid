@@ -1,8 +1,8 @@
 %This code presents the analytical solution of the FP
 % df/dt = 1/x^2 d/dx (Ca*FunCoef1*df/dx+Cf*FunCoef3*f) 
-Q = 2;b = 1;
-% ExactFF = @(x,t)(Q*exp(-b*x.^2));
-ExactF = @(x,t)(Q*exp(-x.^2));%(x.^2.*(4-x));
+Q = 1;b = 1;
+% ExactFT = @(x,t)(Q*exp(-b*x.^2));
+ExactF = @(x,t)(1-x/4);
 source = @(x,t)(x-x); 
 ExactQ = @(x,t)(-2*b*x.*Q.*exp(-b.*x.^2));
 

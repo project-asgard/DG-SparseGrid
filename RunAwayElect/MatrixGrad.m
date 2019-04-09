@@ -17,7 +17,7 @@ function Mat = MatrixGrad(Lev,Deg,LInt,LEnd,FluxVal,FunCoef,FunCoef2,bcL,bcR)
 if ~exist('FluxVal','var') || isempty(FluxVal)
     FluxVal = 0;
 end
-
+% FluxVal = 1;
 if ~exist('FunCoef','var') || isempty(FunCoef)
     FunCoef = @(x)1;
 end
