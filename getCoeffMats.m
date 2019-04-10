@@ -28,7 +28,7 @@ for tt = 1:nTerms
             
             disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]);
             
-            [mat,matD] = coeff_matrix2(t,dim,term{d});
+            [mat,matD] = coeff_matrix2(pde,t,dim,term{d});
             
             pde.terms{tt}{d}.coeff_mat = mat;
             if term{d}.type == 3 % Keep matU and matD from LDG for use in BC application

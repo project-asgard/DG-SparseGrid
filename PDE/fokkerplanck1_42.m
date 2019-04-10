@@ -1,38 +1,48 @@
-function pde = fokkerplanck1a2
-% 1D test case using continuity equation, i.e., 
-% df/dt + d/dz ( (1-z^2)f ) = 0
+function pde = fokkerplanck1_42
+% 1D pitch angle collisional term 
+% df/dt - d/dz ( (1-z^2) df/dz ) = 0
+% 
+% Here we use LDG for this second order system. We impose homogeneous
+% Neumann BCs on the flux equation in the LDG splitting, i.e.,
+%
+% d/dz( (1-z^2) df/dz ) becomes
+%
+% dq/dz with free (homogeneous Neumann BC)
+% and the flux is 
+% q=(1-z^2) df/fz  where q=0 @ z=+1=-1
 %
 % Run with ...
-% fk6d(fokkerplanck1a2,4,2,0.2,[],[],0,[]);
+% fk6d(fokkerplanck1_42,5,3,0.1,[],[],0,[]);
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
 
-    function ret = phi(z,t)
-        ret = tanh(atanh(z)-t);
-    end
-    function ret = f0(z)
-        ret = exp(-z.^2/sig^2);
-    end
     function ret = soln(z,t)
-        p = phi(z,t);
-        t1 = 1-p.^2;
-        t2 = 1-z.^2;
-        t3 = f0(p);
-        ret = t1./t2.*t3;
+      
+        h = [3,0.5,1,0.7,3,0,3];
+        
+        P = legendre(z,numel(h));
+        
+        ret = zeros(size(P));
+        for l=1:numel(h)
+            L = l-1;
+            ret(:,l) = h(l) * P(:,l) * exp(-L*(L+1)*t);
+        end
+        
+        ret = sum(ret,2);
     end
 
 sig = 0.1;
 
 BCL_fList = { ...
-    @(z,p,t) 0, ...
-    @(t,p) 0
+    @(z,p,t) z*0, ...
+    @(t,p) 1
     };
 
 BCR_fList = { ...
-    @(z,p,t) 0, ...
-    @(t,p) 0
+    @(z,p,t) z*0, ...
+    @(t,p) 1
     };
 
 dim_z.name = 'z';
@@ -63,11 +73,11 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 1; % grad (see coeff_matrix.m for available types)
+term2_z.type = 3; % grad (see coeff_matrix.m for available types)
 term2_z.G = @(z,p,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
-term2_z.LF = -1; % Upwind 
+term2_z.LF = 0; % Upwind 
 term2_z.name = 'd_dz';
 
 term2 = {term2_z};

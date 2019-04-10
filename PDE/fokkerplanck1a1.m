@@ -2,8 +2,11 @@ function pde = fokkerplanck1a1
 % 1D test case using continuity equation, i.e., 
 % df/dt + d/dz ( (1-z^2)f ) = 0
 %
+% Problem is left to right convection, so we can upwind and only require
+% one boundary condition, which is neumann on the left.
+%
 % Run with ...
-% fk6d(fokkerplanck1a,5,3,0.1,[],[],0,[]);
+% fk6d(fokkerplanck1a1,5,3,0.01,[],[],0,[]);
 
 %% Setup the dimensions
 % 
@@ -23,23 +26,9 @@ function pde = fokkerplanck1a1
         ret = t1./t2.*t3;
     end
 
-sig = 0.1;
-
-BCL_fList = { ...
-    @(z,p,t) 0, ...
-    @(t,p) 0
-    };
-
-BCR_fList = { ...
-    @(z,p,t) 0, ...
-    @(t,p) 0
-    };
-
 dim_z.name = 'z';
-dim_z.BCL = 1; % dirichlet
-dim_z.BCL_fList = BCL_fList;
-dim_z.BCR = 1;
-dim_z.BCR_fList = BCR_fList;
+dim_z.BCL = 2; % neumann
+dim_z.BCR = 2; % not set (equivalent to neumann)
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.lev = 2;
@@ -64,10 +53,10 @@ pde.dimensions = {dim_z};
 % Setup the v.d_dx (v.MassV . GradX) term
 
 term2_z.type = 1; % grad (see coeff_matrix.m for available types)
-term2_z.G = @(z,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
+term2_z.G = @(z,p,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
-term2_z.LF = -1; % Upwind 
+term2_z.LF = +1; % Upwind 
 term2_z.name = 'd_dz';
 
 term2 = {term2_z};
@@ -116,9 +105,10 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-Lmax = pde.dimensions{1}.domainMax;
-LevX = pde.dimensions{1}.lev;
-CFL = pde.CFL;
+dims = pde.dimensions;
+lev = dims{1}.lev;
+CFL = .01;
+dx = 1/2^lev;
+dt = CFL * dx;
 
-dt = Lmax/2^LevX*CFL;
 end

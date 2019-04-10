@@ -62,21 +62,21 @@ pde.dimensions = {dim_x,dim_y,dim_z};
 % Setup the v_x.d_dx (v . GradX . MassY . MassZ) term
 
 term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term2_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
 term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term2_x.name = 'v_x.d_dx';
 
 term2_y.type = 2; % mass (see coeff_matrix.m for available types)
-term2_y.G = @(y,t,dat) y*0+1; % G function for use in coeff_matrix construction.
+term2_y.G = @(y,p,t,dat) y*0+1; % G function for use in coeff_matrix construction.
 term2_y.TD = 0; % Time dependent term or not.
 term2_y.dat = []; % These are to be filled within the workflow for now
 term2_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term2_y.name = 'massY';
 
 term2_z.type = 2; % mass (see coeff_matrix.m for available types)
-term2_z.G = @(z,t,dat) z*0+1; % G function for use in coeff_matrix construction.
+term2_z.G = @(z,p,t,dat) z*0+1; % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
 term2_z.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
@@ -88,21 +88,21 @@ term2 = {term2_x,term2_y,term2_z};
 % Setup the v_y.d_dy (v . MassX . GradY . MassZ) term
 
 term3_x.type = 2; % mass (see coeff_matrix.m for available types)
-term3_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term3_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term3_x.TD = 0; % Time dependent term or not.
 term3_x.dat = []; % These are to be filled within the workflow for now
 term3_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term3_x.name = 'massX';
 
 term3_y.type = 1; % grad (see coeff_matrix.m for available types)
-term3_y.G = @(y,t,dat) y*0+1; % G function for use in coeff_matrix construction.
+term3_y.G = @(y,p,t,dat) y*0+1; % G function for use in coeff_matrix construction.
 term3_y.TD = 0; % Time dependent term or not.
 term3_y.dat = []; % These are to be filled within the workflow for now
 term3_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term3_y.name = 'v_y.d_dy';
 
 term3_z.type = 2; % mass (see coeff_matrix.m for available types)
-term3_z.G = @(z,t,dat) z*0+1; % G function for use in coeff_matrix construction.
+term3_z.G = @(z,p,t,dat) z*0+1; % G function for use in coeff_matrix construction.
 term3_z.TD = 0; % Time dependent term or not.
 term3_z.dat = []; % These are to be filled within the workflow for now
 term3_z.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
@@ -114,21 +114,21 @@ term3 = {term3_x,term3_y,term3_z};
 % Setup the v_z.d_dz (v . MassX . MassY . GradZ) term
 
 term4_x.type = 2; % mass (see coeff_matrix.m for available types)
-term4_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term4_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term4_x.TD = 0; % Time dependent term or not.
 term4_x.dat = []; % These are to be filled within the workflow for now
 term4_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term4_x.name = 'massX';
 
 term4_y.type = 2; % mass (see coeff_matrix.m for available types)
-term4_y.G = @(y,t,dat) y*0+1; % G function for use in coeff_matrix construction.
+term4_y.G = @(y,p,t,dat) y*0+1; % G function for use in coeff_matrix construction.
 term4_y.TD = 0; % Time dependent term or not.
 term4_y.dat = []; % These are to be filled within the workflow for now
 term4_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term4_y.name = 'massY';
 
 term4_z.type = 1; % grad (see coeff_matrix.m for available types)
-term4_z.G = @(z,t,dat) z*0+1; % G function for use in coeff_matrix construction.
+term4_z.G = @(z,p,t,dat) z*0+1; % G function for use in coeff_matrix construction.
 term4_z.TD = 0; % Time dependent term or not.
 term4_z.dat = []; % These are to be filled within the workflow for now
 term4_z.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?

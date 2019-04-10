@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity)
+function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity,CFL)
 
 format short e
 folder = fileparts(which(mfilename));
@@ -31,7 +31,6 @@ DimX = 1;
 params = pde.params;
 
 %% Set time step.
-pde.CFL = 0.1;
 dt = pde.set_dt(pde);
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 

@@ -1,6 +1,9 @@
 function pde = continuity2
 % 2D test case using continuity equation, i.e.,
 % df/dt + v_x * df/dx + v_y * df/dy == 0
+%
+% Run with ...
+%  fk6d(continuity2,4,3,0.01,[],[],0,[]);
 
 %% Setup the dimensions
 %
@@ -46,14 +49,14 @@ pde.dimensions = {dim_x,dim_y};
 % Setup the v_x * d_dx (v_x . GradX . MassY ) term
 
 term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term2_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
 term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term2_x.name = 'v_x.d_dx';
 
 term2_y.type = 2; % mass (see coeff_matrix.m for available types)
-term2_y.G = @(y,t,dat) y*0+1; % G function for use in coeff_matrix construction.
+term2_y.G = @(y,p,t,dat) y*0+1; % G function for use in coeff_matrix construction.
 term2_y.TD = 0; % Time dependent term or not.
 term2_y.dat = []; % These are to be filled within the workflow for now
 term2_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
@@ -65,14 +68,14 @@ term2 = {term2_x,term2_y};
 % Setup the v_y * d_dy (v_y . MassX . GradY) term
 
 term3_x.type = 2; % mass (see coeff_matrix.m for available types)
-term3_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term3_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term3_x.TD = 0; % Time dependent term or not.
 term3_x.dat = []; % These are to be filled within the workflow for now
 term3_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term3_x.name = 'massX';
 
 term3_y.type = 1; % grad (see coeff_matrix.m for available types)
-term3_y.G = @(y,t,dat) y*0+1; % G function for use in coeff_matrix construction.
+term3_y.G = @(y,p,t,dat) y*0+1; % G function for use in coeff_matrix construction.
 term3_y.TD = 0; % Time dependent term or not.
 term3_y.dat = []; % These are to be filled within the workflow for now
 term3_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?

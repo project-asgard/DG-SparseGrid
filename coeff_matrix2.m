@@ -4,7 +4,7 @@
 % matricies. These operators can only use the supported types below.
 
 % function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D,myDim)
-function [mat,matD] = coeff_matrix2(t,dimension,term_1D)
+function [mat,matD] = coeff_matrix2(pde,t,dim,term_1D)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -44,16 +44,19 @@ function [mat,matD] = coeff_matrix2(t,dimension,term_1D)
 % * Picking which term type
 
 %%
-% Shortcuts to dimension quantities
-lev = dimension.lev;
-deg = dimension.deg;
-xMin = dimension.domainMin;
-xMax = dimension.domainMax;
-FMWT = dimension.FMWT;
-BCL = dimension.BCL;
-BCR = dimension.BCR;
-BCL_fList = dimension.BCL_fList;
-BCR_fList = dimension.BCR_fList;
+% Shortcuts
+
+params = pde.params;
+
+lev = dim.lev;
+deg = dim.deg;
+xMin = dim.domainMin;
+xMax = dim.domainMax;
+FMWT = dim.FMWT;
+BCL = dim.BCL;
+BCR = dim.BCR;
+BCL_fList = dim.BCL_fList;
+BCR_fList = dim.BCR_fList;
 
 %%
 % Shortcuts to term_1d quantities
@@ -162,17 +165,17 @@ for i=0:N-1
     
     %%
     % M // mass matrix u . v
-    G1 = G(quad_xi,t,dat_R_quad);
+    G1 = G(quad_xi,params,t,dat_R_quad);
     val_mass = p_val' * (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % G // grad matrix u . v'
-    G1 = G(quad_xi,t,dat_R_quad);
+    G1 = G(quad_xi,params,t,dat_R_quad);
     val_grad  = Dp_val'* (G1 .* p_val .* quad_w) * h/2;
     
     %%
     % S // stiffness matrix u' . v'
-    G1 = G(quad_xi,t,dat_R_quad);
+    G1 = G(quad_xi,params,t,dat_R_quad);
     val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) * h/2;
     
     Iu = meshgrid( deg*i+1 : deg*(i+1) );
@@ -328,19 +331,29 @@ if type == 3
     
     %%
     % Get a grad operator with downwind flux and Neumann BCs
-    term_1D.type = 1;      % Grad Operator
-    term_1D.LF = -1;       % Downwind Flux
-    dimension.BCL = 2; % Neumann
-    dimension.BCR = 2; % Neumann
-    matD = coeff_matrix2(t,dimension,term_1D);
+    
+    termA = term_1D;
+    dimA = dim;
+    
+    termA.type = 1;      % Grad Operator
+    termA.LF = -1;       % Downwind Flux
+    termA.G = @(x,p,t,dat) x*0+1;
+    dimA.BCL = 2; % Neumann
+    dimA.BCR = 2; % Neumann
+    matD = coeff_matrix2(pde,t,dimA,termA);
     
     %%
     % Get a grad operator with upwind flux and Dirichlet BCs
-    term_1D.type = 1;      % Grad Operator
-    term_1D.LF = 1;       % Upwind Flux
-    dimension.BCL = 1; % Dirichlet
-    dimension.BCR = 1; % Dirichlet
-    matU = coeff_matrix2(t,dimension,term_1D);
+    
+    termB = term_1D;
+    dimB = dim;
+    
+    termB.type = 1;      % Grad Operator
+    termB.LF = 1;       % Upwind Flux
+%     termB.G = @(x,p,t,dat) x*0+1;
+    dimB.BCL = 1; % Dirichlet
+    dimB.BCR = 1; % Dirichlet
+    matU = coeff_matrix2(pde,t,dimB,termB);
     
     %%
     % Combine back into second order operator

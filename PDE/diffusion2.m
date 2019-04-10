@@ -94,7 +94,7 @@ pde.dimensions = {dim_x, dim_y};
 
 term1_x.dat = [];
 term1_x.LF = 1;         % Upwind Flux
-term1_x.G = @(x,t,y) 1; % Delta Operator 
+term1_x.G = @(x,p,t,dat) 1; % Delta Operator 
 term1_x.type = 3;       % Delta Operator ::  Let this denote the derivative order
 term1_x.TD = 0;
 
@@ -105,7 +105,7 @@ term1 = term_fill({term1_x,[]});
 
 term2_y.dat = [];
 term2_y.LF = 0;         % Upwind Flux
-term2_y.G = @(x,t,y) 1; % Delta Operator 
+term2_y.G = @(x,p,t,dat) 1; % Delta Operator 
 term2_y.type = 3;        % Delta Operator ::  Let this denote the derivative order
 term2_y.TD = 0;
 

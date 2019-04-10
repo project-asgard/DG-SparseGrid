@@ -1,6 +1,9 @@
 function pde = continuity1
 % 1D test case using continuity equation, i.e., 
 % df/dt + df/dx = 0
+%
+% Run with
+% fk6d(continuity1,4,2,0.05,[],[],0,[]);
 
 %% Setup the dimensions
 % 
@@ -33,7 +36,7 @@ pde.dimensions = {dim_x};
 % Setup the v.d_dx (v.MassV . GradX) term
 
 term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term2_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
 term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
 term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
