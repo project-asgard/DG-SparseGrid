@@ -18,7 +18,7 @@ PDE.BC.q_L = 0; PDE.BC.q_R = 1;
 PDE.BC.f_L = 1; PDE.BC.f_R = 1;
 
 sigma = 0.1;
-% f0 = @(x)( exp(-x.^2/sigma^2) );
+f0 = @(x)( exp(-x.^2/sigma^2) );
 f0 = @(x)(x-x+1);
 phi = @(x,t)( tanh(atanh(x)-t) );
 ExactF = @(x,t)( (1-phi(x,t).^2)./(1-x.^2).*f0(phi(x,t)) );

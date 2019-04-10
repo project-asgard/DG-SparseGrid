@@ -107,7 +107,7 @@ DoFs = (2^Lev*Deg)^2;
 
 F0 = zeros(DoFs,1);
 time = 0;
-F0 = ComputRHS2D(Lev,Deg,LInt,LEnd,ExactF,time);
+F0 = ComputRHS2D(Lev,Deg,LInt,LEnd,Exa0,time);
 % F0 = kron(n0,n0)*exp(2*pi^2*time);
 
 [x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
@@ -115,7 +115,7 @@ F0 = ComputRHS2D(Lev,Deg,LInt,LEnd,ExactF,time);
 MM = kron(Meval,Meval);
 nz = size(x_2D_plot,1);
 
-val_plot = reshape(MM*(n0),nz,nz);
+val_plot = reshape(MM*(F0),nz,nz);
 surf(x_2D_plot,y_2D_plot,val_plot,val_plot)
 
 % val_plot = reshape(MM*(rhs),nz,nz);
@@ -136,7 +136,7 @@ for T = 1 : MaxT
     
 %     val = exp(2*pi^2*time)*sin(pi*x_2D_plot).*sin(pi*y_2D_plot);
     
-    val_plot = reshape(MM*(n0),nz,nz);
+    val_plot = reshape(MM*(F0),nz,nz);
     surf(x_2D_plot,y_2D_plot,val_plot,val_plot)
 
 %     mesh(x_2D_plot,y_2D_plot,reshape(MM*(F1),64,64))

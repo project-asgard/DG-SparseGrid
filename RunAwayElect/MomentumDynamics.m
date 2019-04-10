@@ -20,7 +20,7 @@ PDE_FP2;
 % Test_Momentum;
 
 
-Lev = 4;
+Lev = 3;
 Deg = 2;
 num_plot = 2;
 

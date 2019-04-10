@@ -11,14 +11,14 @@ format short e
 addpath(genpath(pwd))
 
 
-% PDE_ElectricFieldAcceleration;
+PDE_ElectricFieldAcceleration;
 % PDE_Collisions;
 % PDE_RadiationDamping;
 % PDE_ElectricFieldCollisions;
-PDE_FullPitchAngle;
+% PDE_FullPitchAngle;
 
 Lev = 5;
-Deg = 4;
+Deg = 3;
 num_plot = Deg;
 
 LInt = -1;
@@ -62,7 +62,7 @@ CFL = 0.01;
 
 dx = ((LEnd - LInt)/2^Lev);
 % dt = ((LEnd - LInt)/2^Lev)^(2*(Deg)/3)*CFL;
-dt = CFL*dx*2^(2-Lev);
+dt = CFL*dx;%*2^(2-Lev);
 MaxIter = ceil(1/dt);
 
 [quad_x,quad_w]=lgwt(Deg,-1,1);
