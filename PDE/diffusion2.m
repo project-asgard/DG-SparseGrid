@@ -8,7 +8,11 @@ function pde = diffusion2
 % ToDo: need some effort for naming, boundary conditions, source terms
 %
 % Run with
+%
+% explicit
 % fk6d(diffusion2,4,2,0.0002,[],[],0,[]);
+
+pde.CFL = 0.01;
 
 lev = 5;
 deg = 2;
@@ -37,9 +41,9 @@ BCR_fList = { ...
     };
 
 dim_x.name = 'x';
-dim_x.BCL = 1; % Dirichlet
+dim_x.BCL = 'D'; % Dirichlet
 dim_x.BCL_fList = BCL_fList;
-dim_x.BCR = 1; % Dirichlet
+dim_x.BCR = 'D'; % Dirichlet
 dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
@@ -65,9 +69,9 @@ BCR_fList = { ...
     };
 
 dim_y.name = 'y';
-dim_y.BCL = 1;
+dim_y.BCL = 'D';
 dim_y.BCL_fList = BCL_fList;
-dim_y.BCR = 1;
+dim_y.BCR = 'D';
 dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
@@ -93,9 +97,9 @@ pde.dimensions = {dim_x, dim_y};
 % Setup the d^2_dx^2 term
 
 term1_x.dat = [];
-term1_x.LF = 1;         % Upwind Flux
-term1_x.G = @(x,p,t,dat) 1; % Delta Operator 
-term1_x.type = 3;       % Delta Operator ::  Let this denote the derivative order
+term1_x.LF = 0;         % Upwind Flux
+term1_x.G = @(x,p,t,dat) x.*0 + 1; % Delta Operator 
+term1_x.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
 term1_x.TD = 0;
 
 term1 = term_fill({term1_x,[]});
@@ -105,8 +109,8 @@ term1 = term_fill({term1_x,[]});
 
 term2_y.dat = [];
 term2_y.LF = 0;         % Upwind Flux
-term2_y.G = @(x,p,t,dat) 1; % Delta Operator 
-term2_y.type = 3;        % Delta Operator ::  Let this denote the derivative order
+term2_y.G = @(x,p,t,dat) x.*0 + 1; % Delta Operator 
+term2_y.type = 'diff';        % Delta Operator ::  Let this denote the derivative order
 term2_y.TD = 0;
 
 term2 = term_fill({[],term2_y});
@@ -171,7 +175,7 @@ dims = pde.dimensions;
 % for Diffusion equation: dt = C * dx^2
 
 lev = dims{1}.lev;
-CFL = .01;
+CFL = pde.CFL;
 dx = 1/2^lev;
 dt = CFL*dx^2;
 

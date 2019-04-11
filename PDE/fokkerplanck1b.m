@@ -1,9 +1,16 @@
 function pde = fokkerplanck1b
 % 1D pitch angle collisional term 
-% df/dt - d/dz ( (1-z^2) df/dz ) = 0
+% df/dt == d/dz ( (1-z^2) df/dz )
 %
 % Run with ...
+%
+% explicit
 % fk6d(fokkerplanck1b,5,3,0.1,[],[],0,[]);
+%
+% implicit
+% fk6d(fokkerplanck1b,5,3,0.01,[],[],1,[],[],0.1);
+
+pde.CFL=0.01;
 
 %% Setup the dimensions
 % 
@@ -35,9 +42,9 @@ BCR_fList = { ...
     };
 
 dim_z.name = 'z';
-dim_z.BCL = 1; % dirichlet
+dim_z.BCL = 'D'; % dirichlet
 dim_z.BCL_fList = BCL_fList;
-dim_z.BCR = 1;
+dim_z.BCR = 'D';
 dim_z.BCR_fList = BCR_fList;
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
@@ -62,8 +69,8 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 3; % grad (see coeff_matrix.m for available types)
-term2_z.G = @(z,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
+term2_z.type = 'diff'; % (see coeff_matrix.m for available types)
+term2_z.G = @(z,p,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
 term2_z.LF = 0; % For terms of type==3 LDG is used.  
@@ -120,7 +127,7 @@ function dt=set_dt(pde)
 dims = pde.dimensions;
 
 lev = dims{1}.lev;
-CFL = .01;
+CFL = pde.CFL;
 dx = 1/2^lev;
 dt = CFL*dx^2;
 

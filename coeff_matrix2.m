@@ -19,14 +19,14 @@ function [mat,matD] = coeff_matrix2(pde,t,dim,term_1D)
 
 %% Supported boundary condition types (BCL and BCR)
 % These are chosen in the pde.dimensions options.
-% 0 == periodic
-% 1 == dirichlet (set value of solution)
-% 2 == neumann   (set first derivative of solution)
+% 'P' == periodic (was 0)
+% 'D' == dirichlet (set value of solution) (was 1)
+% 'N' == neumann   (set first derivative of solution) (was 2)
 
 %% Available coefficient types (coeff_type)
-% 1 == G (v .u')   Grad
-% 2 == M (v .u )   Mass
-% 3 == S (v'.u')   Stiffness
+% 'grad' == G (v .u')   Grad (was 1)
+% 'mass' == M (v .u )   Mass (was 2)
+% 'diff' == D (v'.u')   Diffusion (was 3)
 
 %% Note on global vs local Lax-Friedrichs (LF) flux
 % We do not (cannot) use local upwinding or LF because selecting
@@ -55,8 +55,6 @@ xMax = dim.domainMax;
 FMWT = dim.FMWT;
 BCL = dim.BCL;
 BCR = dim.BCR;
-BCL_fList = dim.BCL_fList;
-BCR_fList = dim.BCR_fList;
 
 %%
 % Shortcuts to term_1d quantities
@@ -95,11 +93,11 @@ p_R = legendre(+1,deg) * 1/sqrt(h);
 p_val  = legendre(quad_x,deg)  * 1/sqrt(h);
 Dp_val = dlegendre(quad_x,deg) * 1/sqrt(h) * 2/h;
 
+Jacobi = h/2;
 
 Mass = sparse(dof_1D,dof_1D);
 Grad = sparse(dof_1D,dof_1D);
-Stif = sparse(dof_1D,dof_1D);
-Flux = sparse(dof_1D,dof_1D);
+Diff = sparse(dof_1D,dof_1D);
 matD = sparse(dof_1D,dof_1D);
 
 %%
@@ -140,23 +138,21 @@ for i=0:N-1
     l = l1:l2;
     
     %%
+    % First element
+    first1 = deg*(1-1)+1;
+    first2 = deg*((1-1)+1);
+    first = first1:first2;
+    
+    %%
+    % Last element
+    last1 = deg*(N-1)+1;
+    last2 = deg*((N-1)+1);
+    last = last1:last2;
+    
+    %%
     % Map quadrature points from [-1,1] to physical domain of this i element
     
     quad_xi = (((quad_x+1)/2+i)*h+xMin);
-    
-    %%
-    % Build Average (AVG) and Jump (JMP) operators
-    
-    val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
-        p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
-    
-    val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
-        -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
-    
-    %%
-    % Combine AVG and JMP to give choice of flux for this operator type
-    
-    val_FLUX = val_AVG + val_JMP / 2 * FluxVal;
     
     %%
     % Perform volume integral to give deg x deg matrix block
@@ -169,55 +165,21 @@ for i=0:N-1
     %%
     % M // mass matrix u . v
     G1 = G(quad_xi,params,t,dat_R_quad);
-    val_mass = p_val' * (G1 .* p_val .* quad_w) * h/2;
+    val_mass = p_val' * (G1 .* p_val .* quad_w) * Jacobi;
     
     %%
     % G // grad matrix u . v'
     G1 = G(quad_xi,params,t,dat_R_quad);
-    val_grad  = -Dp_val'* (G1 .* p_val .* quad_w) * h/2;
-    
-    %%
-    % S // stiffness matrix u' . v'
-    G1 = G(quad_xi,params,t,dat_R_quad);
-    val_stif  = Dp_val'* (G1 .* Dp_val .* quad_w) * h/2;
+    val_grad  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
     
     Iu = meshgrid( deg*i+1 : deg*(i+1) );
     
     Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
     Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
-    Stif = Stif + sparse(Iu',Iu,val_stif,dof_1D,dof_1D);
     
-    %%
-    % Setup numerical flux choice (interior elements only)
-    
-    if i<N-1 && i>0
-        Iu = [ meshgrid(p), meshgrid(c), meshgrid(c), meshgrid(l) ];
-        Iv = [ meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-    end
     
     %%
     % Setup boundary conditions
-    
-    %%
-    % If periodic
-    
-    if BCL == 0 || BCR == 0 %% periodic'
-        
-        %%
-        % Left boundary
-        if i==0
-            Iu=[meshgrid([deg*(N-1)+1:deg*(N)]),meshgrid(c),meshgrid(c),meshgrid(l)];
-            Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-        end
-        
-        %%
-        % Right boundary
-        if i==N-1
-            Iu=[meshgrid(p),meshgrid(c),meshgrid(c),meshgrid([1:deg])];
-            Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-        end
-        
-    end
     
     %%
     % -<funcCoef*{q},p>
@@ -241,46 +203,25 @@ for i=0:N-1
     % u^-_LEFT = g(LEFT)
     % u^+_RIGHT = g(RIGHT)
     
-    if BCL == 1 %% left dirichlet
-        
-        if i==0
-            Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
-            Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
-            
-            val_AVG = (1/h) * [...
-                -p_L'*(p_L-p_L), ...            % for x1 (left side)
-                p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
-            
-            val_JMP = (1/h) * [...
-                -p_L'*(p_L-p_L), ...            % for x1 (left side)
-                -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
-            
-            %%
-            % Combine AVG and JMP to give choice of flux for this operator type
-            
-            val_FLUX = val_AVG + val_JMP / 2 * FluxVal;
-        end
-        
+    if strcmp(BCL,'D') %% left dirichlet      
+        if i==0        
+            TraVal = [...
+                (-p_L)' * (p_L-p_L),...
+                (-p_L)' * (p_L-p_L),...% xL
+                ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
+                ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
+                ];
+        end   
     end
     
-    if BCR == 1 %% right dirichlet
-        
-        if i==N-1
-            Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
-            Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-            
-            val_AVG = (1/h) * [...
-                -p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
-                p_R'*(p_R-p_R)];               % for x2 (right side)
-            
-            val_JMP = (1/h) * [...
-                p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
-                -p_R'*(p_R-p_R)];             % for x2 (right side)
-            
-            %%
-            % Combine AVG and JMP to give choice of flux for this operator type
-            
-            val_FLUX = val_AVG + val_JMP / 2 * FluxVal;
+    if strcmp(BCR,'D') %% right dirichlet   
+        if i==N-1   
+            TraVal = [...
+                (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
+                (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
+                ( p_R)' * (p_R-p_R),...
+                ( p_R)' * (p_R-p_R),...% xR
+                ];
         end
     end
     
@@ -291,51 +232,19 @@ for i=0:N-1
     % q*n = g (=> q = g for 1D variable)
     % only work for derivatives greater than 1
     
-    if BCL == 2 %% left neumann
-        
-        if i==0
-            %             Iu=[meshgrid(c) , meshgrid(c) ,meshgrid(l) ];
-            %             Iv=[meshgrid(c)', meshgrid(c)',meshgrid(c)'];
-            %
-            %             val_AVG = (1/h) * [-p_L'*p_L, ...   % for x1 (left side)
-            %                 p_R'*p_R/2   p_R'*p_L/2];      % for x2 (right side)
-            %
-            %             val_JMP = (1/h) * [-p_L'*(p_L-p_L), ...     % for x1 (left side)
-            %                 -p_R'*p_R     p_R'*p_L  ];    % for x2 (right side)
-            %
-            %             %%
-            %             % Combine AVG and JMP to give choice of flux for this operator type
-            %
-            %             val_FLUX = val_AVG + val_JMP / 2 * FluxVal;
-                    
+    if strcmp(BCL,'N') %% left neumann    
+        if i==0         
             TraVal = [...
                 (-p_L)' * (p_L-p_L),...,...
                 (-p_L)' * FCL * p_L,...% xL
                 ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
                 ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
-                ];
-            
+                ];       
         end
     end
     
-    if BCR == 2 %% right neumann
-        
-        if i==N-1
-            %             Iu=[meshgrid(p),meshgrid(c),meshgrid(c)];
-            %             Iv=[meshgrid(c)',meshgrid(c)',meshgrid(c)'];
-            %
-            %             val_AVG = (1/h) * [-p_L'*p_R/2  -p_L'*p_L/2, ...   % for x1 (left side)
-            %                 p_R'*p_R];      % for x2 (right side)
-            %
-            %             val_JMP = (1/h) * [ p_L'*p_R    -p_L'*p_L, ...     % for x1 (left side)
-            %                 -p_R'*(p_R-p_R)];    % for x2 (right side)
-            %
-            %             %%
-            %             % Combine AVG and JMP to give choice of flux for this operator type
-            %
-            %             val_FLUX = val_AVG + val_JMP / 2 * FluxVal;
-            %
-            
+    if strcmp(BCR,'N') %% right neumann  
+        if i==N-1      
             TraVal = [...
                 (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
                 (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
@@ -366,7 +275,25 @@ for i=0:N-1
         Val = TraVal;
     end
     
-    %     Grad = Grad - sparse(Iv,Iu,val_FLUX,dof_1D,dof_1D);
+    %%
+    % If periodic (Note: the order matters here)
+    
+    if strcmp(BCL,'P') || strcmp(BCR,'P') == 0 %% periodic'
+        if i==0
+            RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+            ColInd = [ones(deg,1)*last,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];            
+        end
+        if i==N-1
+            RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+            ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*first];
+        end
+        
+        Iu = RowInd;
+        Iv = ColInd;
+        Val = TraVal;
+        
+    end
+    
     Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
     
 end
@@ -376,7 +303,7 @@ end
 Mass = FMWT * Mass * FMWT';
 Grad = FMWT * Grad * FMWT';
 
-if type == 3
+if strcmp(type,'diff')
     
     % Use LDG method, i.e., split into two first order equations, then
     % recombine
@@ -387,11 +314,11 @@ if type == 3
     termA = term_1D;
     dimA = dim;
     
-    termA.type = 1;      % Grad Operator
+    termA.type = 'grad';      % Grad Operator
     termA.LF = -1;       % Downwind Flux
     termA.G = @(x,p,t,dat) x*0+1;
-    dimA.BCL = 2; % Neumann
-    dimA.BCR = 2; % Neumann
+    dimA.BCL = 'N'; % Neumann
+    dimA.BCR = 'N'; % Neumann
     matD = coeff_matrix2(pde,t,dimA,termA);
     
     %%
@@ -400,27 +327,27 @@ if type == 3
     termB = term_1D;
     dimB = dim;
     
-    termB.type = 1;      % Grad Operator
+    termB.type = 'grad';      % Grad Operator
     termB.LF = 1;       % Upwind Flux
     %     termB.G = @(x,p,t,dat) x*0+1;
-    dimB.BCL = 1; % Dirichlet
-    dimB.BCR = 1; % Dirichlet
+    dimB.BCL = 'D'; % Dirichlet
+    dimB.BCR = 'D'; % Dirichlet
     matU = coeff_matrix2(pde,t,dimB,termB);
     
     %%
     % Combine back into second order operator
-    Stif = matD*matU;
+    Diff = matD*matU;
     
 end
 
-if type == 1
+if strcmp(type,'grad')
     mat = Grad;
 end
-if type == 2
+if strcmp(type,'mass')
     mat = Mass;
 end
-if type == 3
-    mat = Stif;
+if strcmp(type,'diff')
+    mat = Diff;
 end
 
 end

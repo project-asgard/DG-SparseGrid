@@ -11,8 +11,8 @@ function pde = continuity2
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
 dim_x.name = 'x';
-dim_x.BCL = 0; % periodic
-dim_x.BCR = 0;
+dim_x.BCL = 'P'; % periodic
+dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.lev = 2;
@@ -23,8 +23,8 @@ dim_x.init_cond_fn = @(x,p) x.*0;
 dim_x = checkDimension(dim_x);
 
 dim_y.name = 'y';
-dim_y.BCL = 0; % periodic
-dim_y.BCR = 0;
+dim_y.BCL = 'P'; % periodic
+dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
 dim_y.lev = 2;
@@ -48,40 +48,27 @@ pde.dimensions = {dim_x,dim_y};
 %%
 % Setup the v_x * d_dx (v_x . GradX . MassY ) term
 
-term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term2_x.type = 'grad'; % grad (see coeff_matrix.m for available types)
+term2_x.G = @(x,p,t,dat) x*0-1; % G function for use in coeff_matrix construction.
 term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
 term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term2_x.name = 'v_x.d_dx';
 
-term2_y.type = 2; % mass (see coeff_matrix.m for available types)
-term2_y.G = @(y,p,t,dat) y*0+1; % G function for use in coeff_matrix construction.
-term2_y.TD = 0; % Time dependent term or not.
-term2_y.dat = []; % These are to be filled within the workflow for now
-term2_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-term2_y.name = 'massY';
+term2 = term_fill({term2_x,[]});
 
-term2 = {term2_x,term2_y};
 
 %%
 % Setup the v_y * d_dy (v_y . MassX . GradY) term
 
-term3_x.type = 2; % mass (see coeff_matrix.m for available types)
-term3_x.G = @(x,p,t,dat) x*0+1; % G function for use in coeff_matrix construction.
-term3_x.TD = 0; % Time dependent term or not.
-term3_x.dat = []; % These are to be filled within the workflow for now
-term3_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-term3_x.name = 'massX';
-
-term3_y.type = 1; % grad (see coeff_matrix.m for available types)
-term3_y.G = @(y,p,t,dat) y*0+1; % G function for use in coeff_matrix construction.
+term3_y.type = 'grad'; % grad (see coeff_matrix.m for available types)
+term3_y.G = @(y,p,t,dat) y*0-1; % G function for use in coeff_matrix construction.
 term3_y.TD = 0; % Time dependent term or not.
 term3_y.dat = []; % These are to be filled within the workflow for now
 term3_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
 term3_y.name = 'v_y.d_dy';
 
-term3 = {term3_x,term3_y};
+term3 = term_fill({[],term3_y});
 
 %%
 % Add terms to the pde object

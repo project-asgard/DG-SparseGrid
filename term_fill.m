@@ -2,7 +2,7 @@ function termOut = term_fill(termIn)
 
 termOut = termIn;
 
-mass_term.type = 2;
+mass_term.type = 'mass';
 mass_term.G = @(x,p,t,dat) x*0+1;
 mass_term.TD = 0;
 mass_term.dat = [];

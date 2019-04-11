@@ -35,11 +35,11 @@ bc3 = getBoundaryCondition1(pde,HASHInv,t+c3*dt);
 a21 = 1/2; a31 = -1; a32 = 2;
 b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
-k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1;% - bc1;
+k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 - bc1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2;% - bc2;
+k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 - bc2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3;% - bc3;
+k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 - bc3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 

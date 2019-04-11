@@ -55,12 +55,12 @@ for tt = 1:nTerms % Construct a BC object for each term
         %%
         % Get the boundary integral for all other dimensions
         
-        if term{d1}.type == 1 || term{d1}.type == 3 % grad or del^2 operators
+        if strcmp(term{d1}.type,'grad') || strcmp(term{d1}.type,'diff') % grad or diffusion operators
             
-            if BCL == 1
+            if strcmp(BCL,'D')
                 bcL{d1} = ComputeRHS(pde,time,nDims,dim1,'L'); % returns a nDim length list
             end
-            if BCR == 1
+            if strcmp(BCR,'D')
                 bcR{d1} = ComputeRHS(pde,time,nDims,dim1,'R'); % returns a nDim length list
             end
             
@@ -72,7 +72,7 @@ for tt = 1:nTerms % Construct a BC object for each term
         
         % Func*v|_xMin and Func*v|_xMax
         
-        if term{d1}.type == 1 || term{d1}.type == 3 % grad or del^2 operators
+        if strcmp(term{d1}.type,'grad') || strcmp(term{d1}.type,'diff') % grad or diffusion operators
             
             if BCL == 1 % Dirichlet
                 

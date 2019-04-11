@@ -64,7 +64,7 @@ pde.dimensions = {dim_z};
 % Setup the v.d_dx (v.MassV . GradX) term
 
 term2_z.type = 1; % grad (see coeff_matrix.m for available types)
-term2_z.G = @(z,p,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
+term2_z.G = @(z,p,t,dat) -(1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
 term2_z.LF = -1; % Upwind 
