@@ -1,12 +1,13 @@
 %This code presents the analytical solution of the FP
 % df/dt = 1/x^2 d/dx (Ca*FunCoef1*df/dx+Cf*FunCoef3*f) 
-Q = 2;b = 1;
+Q = 1;b = 1;
 % ExactFF = @(x,t)(Q*exp(-b*x.^2));
 ExactF = @(x,t)(Q*exp(-x.^2));%(x.^2.*(4-x));
 source = @(x,t)(x-x); 
 ExactQ = @(x,t)(-2*b*x.*Q.*exp(-b.*x.^2));
 
-psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
+% psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
+psi = @(x)(1./(2*x.^2).*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
 
 Ca = 1;
 Cf = 1;

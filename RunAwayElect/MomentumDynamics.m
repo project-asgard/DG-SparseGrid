@@ -20,12 +20,12 @@ PDE_FP2;
 % Test_Momentum;
 
 
-Lev = 3;
+Lev = 5;
 Deg = 2;
 num_plot = 2;
 
 LInt = 0;
-LEnd = 4;
+LEnd = 10;
 Lmax = LEnd-LInt;
 
 %% Matrix
@@ -67,8 +67,11 @@ DoFs = size(Mat,1);
 f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 q0 = ComputRHS(Lev,Deg,LInt,LEnd,@(x,t)(-2*x.*exp(-x.^2)),0);
 fn = f0;
-dt = ((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
-MaxIter = ceil(10/dt);
+dt = 0.1;%((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
+MaxIter = ceil(100/dt);
+
+InvMat = inv(speye(DoFs,DoFs)-dt*MatMass*Mat);
+
 for Iter = 1 : MaxIter
     
     time = dt*Iter;
@@ -80,10 +83,13 @@ for Iter = 1 : MaxIter
 %     fn = f0 + dt * MatMass * Mat*f0 + dt * MatMass *rhs;
 %     f0 = fn;
     
-    % 3rd-RK
-    f1 = f0 + dt* MatMass *(  Mat*f0 +rhs0 );
-    f2 = 3/4*f0+1/4*f1+1/4*dt*MatMass *(Mat*f1+rhs);
-    fn = 1/3*f0+2/3*f2+2/3*dt*MatMass *(Mat*f2+rhs2);
+%     % 3rd-RK
+%     f1 = f0 + dt* MatMass *(  Mat*f0 +rhs0 );
+%     f2 = 3/4*f0+1/4*f1+1/4*dt*MatMass *(Mat*f1+rhs);
+%     fn = 1/3*f0+2/3*f2+2/3*dt*MatMass *(Mat*f2+rhs2);
+%     f0 = fn;
+    
+    fn = InvMat*f0;
     f0 = fn;
     
     qn = Mat1*fn;

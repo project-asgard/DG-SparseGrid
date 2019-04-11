@@ -10,7 +10,7 @@
 % 1/p^2*d/dp [q] + 1/p^2 d/dp [Cf*p^2*f] + 1/p^4 d/dx[r]
 % => 
 
-Lev = 3;
+Lev = 4;
 Deg = 2;
 num_plot = 2;
 
@@ -20,15 +20,15 @@ DoFs = (2^Lev*Deg);
 LInt = -1;
 LEnd = 1;
 
-pInt = 0.1;
-pEnd = 4;
+pInt = 0.5;
+pEnd = 10;
 
 Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
 CFL = 0.001;
-dt = 5e-6;%CFL*(dx)^3;
-MaxT = ceil(5/dt);
+dt = 1e-1;%2e-9;%CFL*(dx)^3;
+MaxT = ceil(100/dt);
 
 
 FullModel;
@@ -89,7 +89,7 @@ F0 = zeros(DoFs,1);
 
 % Initial Condition
 time = 0;
-F0 = ComputRHS2D(Lev,Deg,pInt,pEnd,Exa0,time);
+F0 = ComputRHS2D(Lev,Deg,[pInt LInt ],[pEnd LEnd ],Exa0,time);
 
 [x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
 [p_node,Peval] = PlotDGData(Lev,Deg,pInt,pEnd,num_plot);
@@ -101,13 +101,25 @@ val_plot = reshape(MM*(F0),nz,nz);
 surf(x_2D_plot,y_2D_plot,val_plot,val_plot)
 shading interp
 
+Mat = Inv*Mat_All;
+InvMat = inv(speye(DoFs,DoFs)-dt*Mat);
+
 for T = 1 : MaxT
     
     rhs = F0-F0;%ComputRHS2D(Lev,Deg,LInt,LEnd,Source2D);
     
-    F1 = F0 + dt*(Inv*Mat_All)*F0 + dt*(Inv*rhs);
+%     F1 = F0 + dt*(Mat)*F0 + dt*(Inv*rhs);
+    
+    % RK3
+%     F1 = F0 + dt*(  Mat*F0 );
+%     F2 = 3/4*F0+1/4*F1+1/4*dt*(Mat*F1);
+%     Fn = 1/3*F0+2/3*F2+2/3*dt*(Mat*F2);
+%     F0 = Fn;
+    
+    Fn = InvMat*F0;
+    F0 = Fn;
 %     mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0-F1),64,64),reshape(MM*(F0-F1),64,64))
-    F0 = F1;
+%     F0 = F1;
     
     time = time + dt;
 %     bc0 = bc*exp(time);

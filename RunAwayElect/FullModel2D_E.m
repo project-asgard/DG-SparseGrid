@@ -10,7 +10,7 @@
 % 1/p^2*d/dp [q] + 1/p^2 d/dp [Cf*p^2*f] + 1/p^4 d/dx[r]
 % => 
 
-Lev = 3;
+Lev = 4;
 Deg = 2;
 num_plot = 2;
 
@@ -20,15 +20,15 @@ DoFs = (2^Lev*Deg);
 LInt = -1;
 LEnd = 1;
 
-pInt = 0.01;
-pEnd = 4;
+pInt = 0;
+pEnd = 10;
 
 Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
 CFL = 0.001;
-dt = 2e-9;%CFL*(dx)^3;
-MaxT = ceil(.3/dt);
+dt = 1e-1;%2e-9;%CFL*(dx)^3;
+MaxT = ceil(100/dt);
 
 
 FullModel;
@@ -39,44 +39,38 @@ q_bcL = 0; q_bcR = 1;
 
 Mat_Mass_p = MatrixMass(Lev,Deg,pInt,pEnd,@(x)(x.^2));
 
+E = 0.0025;
+
 % Term 1
-% q = Ca * p^2 * df/dp
-% Q = (Gp x I ) * F
+% x*d/dp(p^2*E*f)
+
 f_bcL = 1; f_bcR = 0;
 q_bcL = 0; q_bcR = 1;
 
-% PDE_FP2;
-[Mat_Term1_p,Mat1,Mat2] = MatrixDiff_Momentum(Lev,Deg,pInt,pEnd,@(x)(x.^2.*Ca(x)),q_bcL,q_bcR,f_bcL,f_bcR);
+fp_bcL = 1; fp_bcR = 0;
+qp_bcL = 0; qp_bcR = 1;
 
-Mat_Term1 = kron(Mat_Term1_p,speye(DoFs,DoFs));
+fx_bcL = 1; fx_bcR = 1;
+qx_bcL = 0; qx_bcR = 0;
+
+
+Mat_Term1_p = MatrixGrad(Lev,Deg,pInt,pEnd,1,@(x)x.^2.*E,@(x)0,fp_bcL,fp_bcR); 
+Mat_Term1_x = MatrixMass(Lev,Deg,LInt,LEnd,@(x)(x));
+Mat_Term1 = - kron(Mat_Term1_p,Mat_Term1_x);
 
 % Term 2
 % r = 1/p^2 * d/dp*[p^2*Cf*f]
 % R = (Gp * I ) * F
 % Here we should use BC for x variable
-Mat_Term2_p = MatrixGrad(Lev,Deg,pInt,pEnd,1,@(x)x.^2.*Cf(x),@(x)0,f_bcL,f_bcR); 
-Mat_Term2 = kron(Mat_Term2_p,speye(DoFs,DoFs));
-
-% Term 3
-% r = Cb * (1-x^2) * df/dx
-% R = (I x Gx ) * F
-% Here we should use BC for x variable
-f_bcL = 1; f_bcR = 1;
-q_bcL = 0; q_bcR = 0;
-% Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)(1-x.^2),@(x)0,f_bcL,f_bcR); % equation for q
-% Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
-% Mat_Term3_x = Mat2*Mat1;
-[Mat_Term3_x,Mat1,Mat2] = MatrixDiff_Momentum(Lev,Deg,LInt,LEnd,@(x)(1-x.^2),q_bcL,q_bcR,f_bcL,f_bcR);
-
-Mat_Term3_p = MatrixMass(Lev,Deg,pInt,pEnd,@(x)(Cb(x)./x.^2));
-Mat_Term3 = kron(Mat_Term3_p,Mat_Term3_x);
-
+Mat_Term2_p = MatrixMass(Lev,Deg,pInt,pEnd,@(x)(x*E));
+Mat_Term2_x = MatrixGrad(Lev,Deg,pInt,pEnd,0,@(x)(1-x.^2),@(x)0,fx_bcL,fx_bcR); 
+Mat_Term2 = - kron(Mat_Term2_p,Mat_Term2_x);
 
 
 Mat_Mass = kron(Mat_Mass_p,speye(DoFs,DoFs));
 Inv = inv(Mat_Mass);
 
-Mat_All = Mat_Term1 + Mat_Term2 + Mat_Term3;
+Mat_All = Mat_Term1;%Mat_Term1 + Mat_Term2;
 
 
 % Term 3
@@ -89,7 +83,7 @@ F0 = zeros(DoFs,1);
 
 % Initial Condition
 time = 0;
-F0 = ComputRHS2D(Lev,Deg,pInt,pEnd,Exa0,time);
+F0 = ComputRHS2D(Lev,Deg,[pInt LInt ],[pEnd LEnd ],Exa0,time);
 
 [x_node,Meval] = PlotDGData(Lev,Deg,LInt,LEnd,num_plot);
 [p_node,Peval] = PlotDGData(Lev,Deg,pInt,pEnd,num_plot);
@@ -102,7 +96,7 @@ surf(x_2D_plot,y_2D_plot,val_plot,val_plot)
 shading interp
 
 Mat = Inv*Mat_All;
-InvMat = inv(speyd(DoFs,DoFs)-Mat);
+InvMat = inv(speye(DoFs,DoFs)-dt*Mat);
 
 for T = 1 : MaxT
     
@@ -111,12 +105,13 @@ for T = 1 : MaxT
 %     F1 = F0 + dt*(Mat)*F0 + dt*(Inv*rhs);
     
     % RK3
-    F1 = F0 + dt*(  Mat*F0 );
-    F2 = 3/4*F0+1/4*F1+1/4*dt*(Mat*F1);
-    Fn = 1/3*F0+2/3*F2+2/3*dt*(Mat*F2);
-    F0 = Fn;
+%     F1 = F0 + dt*(  Mat*F0 );
+%     F2 = 3/4*F0+1/4*F1+1/4*dt*(Mat*F1);
+%     Fn = 1/3*F0+2/3*F2+2/3*dt*(Mat*F2);
+%     F0 = Fn;
     
-    F
+    Fn = InvMat*F0;
+    F0 = Fn;
 %     mesh(x_2D_plot,y_2D_plot,reshape(MM*(F0-F1),64,64),reshape(MM*(F0-F1),64,64))
 %     F0 = F1;
     
