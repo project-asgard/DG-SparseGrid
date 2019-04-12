@@ -31,7 +31,7 @@ for tt = 1:nTerms
             [mat,matD] = coeff_matrix2(pde,t,dim,term{d});
             
             pde.terms{tt}{d}.coeff_mat = mat;
-            if term{d}.type == 3 % Keep matU and matD from LDG for use in BC application
+            if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
                 pde.terms{tt}{d}.matD = matD;    
             end
             

@@ -33,10 +33,10 @@ for tt = 1:nTerms % Construct a BC object for each term
         
         ftL = 1;
         ftR = 1;
-        if BCL == 1 % dirichlet
+        if strcmp(BCL,'D') % dirichlet
             ftL = dim1.BCL_fList{nDims+1}(time);
         end
-        if BCR == 1 % dirichlet
+        if strcmp(BCR,'D') % dirichlet
             ftR = dim1.BCR_fList{nDims+1}(time);
         end
         
@@ -74,24 +74,24 @@ for tt = 1:nTerms % Construct a BC object for each term
         
         if strcmp(term{d1}.type,'grad') || strcmp(term{d1}.type,'diff') % grad or diffusion operators
             
-            if BCL == 1 % Dirichlet
+            if strcmp(BCL,'D') % Dirichlet
                 
                 bcL_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
                 bcL_tmp = FMWT * bcL_tmp;
                 
-                if term{d1}.type == 3 % LDG requires additional step
+                if strcmp(term{d1}.type,'diff') % LDG requires additional step
                     bcL_tmp = term{d1}.matD*bcL_tmp;
                 end
                 
                 bcL{d1}{d1} = bcL_tmp;
             end
             
-            if BCR == 1 % Dirichlet
+            if strcmp(BCR,'D') % Dirichlet
                 
                 bcR_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
                 bcR_tmp = FMWT * bcR_tmp;
                 
-                if term{d1}.type == 3 % LDG requires additional step
+                if strcmp(term{d1}.type,'diff') % LDG requires additional step
                     bcR_tmp = term{d1}.matD*bcR_tmp;
                 end
                 
