@@ -2,8 +2,13 @@ function pde = continuity2
 % 2D test case using continuity equation, i.e.,
 % df/dt + v_x * df/dx + v_y * df/dy == 0
 %
-% Run with ...
-%  fk6d(continuity2,4,3,0.01,[],[],0,[]);
+% Run with
+%
+% explicit
+% fk6d(continuity2,4,3,0.02);
+%
+% implicit
+% fk6d(continuity2,4,3,0.2,[],[],1,[],[],1.0);
 
 %% Setup the dimensions
 %

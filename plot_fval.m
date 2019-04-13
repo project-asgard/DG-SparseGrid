@@ -28,9 +28,7 @@ if nDims==1
         end
         hold off;
     end
-    
-    pause(0.01);
-    
+        
 end
 
 if nDims==2
@@ -91,7 +89,6 @@ if nDims==2
         title('analytic 2D solution');
     end
     
-    pause (0.01)
 end
 
 if nDims==3
@@ -183,5 +180,7 @@ if nDims==3
     
     
 end
+
+pause (0.01)
 
 end

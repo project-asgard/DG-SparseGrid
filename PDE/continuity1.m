@@ -3,7 +3,12 @@ function pde = continuity1
 % df/dt + df/dx = 0
 %
 % Run with
-% fk6d(continuity1,4,2,0.05,[],[],0,[]);
+%
+% explicit
+% fk6d(continuity1,4,2,0.01);
+%
+% implicit
+% fk6d(continuity1,4,2,0.01,[],[],1,[],[],0.1);
 
 %% Setup the dimensions
 % 

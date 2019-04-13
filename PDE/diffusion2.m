@@ -10,7 +10,10 @@ function pde = diffusion2
 % Run with
 %
 % explicit
-% fk6d(diffusion2,4,2,0.0002,[],[],0,[]);
+% fk6d(diffusion2,3,2,0.001);
+%
+% implicit
+% fk6d(diffusion2,4,2,0.002,[],[],1,[],[],0.1);
 
 pde.CFL = 0.01;
 

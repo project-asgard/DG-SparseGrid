@@ -59,7 +59,7 @@ bc1 = getBoundaryCondition1(pde,HASHInv,t+dt);
 I = eye(numel(diag(AMat)));
 AA = I - dt*AMat;
 
-b = f0 + dt*s1 - dt*bc1;
+b = f0 + dt*s1 + dt*bc1;
 
 f1 = AA\b; % Solve at each timestep
 
@@ -81,7 +81,7 @@ bc1 = getBoundaryCondition1(pde,HASHInv,t+dt);
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
 
-b = 2*f0 + dt*AMat*f0 + dt*(s0+s1) - dt*(bc0+bc1);
+b = 2*f0 + dt*AMat*f0 + dt*(s0+s1) + dt*(bc0+bc1);
 
 f1 = AA\b; % Solve at each timestep
 
