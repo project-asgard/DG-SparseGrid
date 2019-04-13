@@ -1,9 +1,8 @@
-%% Construct 1D coefficient matrix
+%% Construct 1D coefficient matrices
 % This routine returns a 2D array representing an operator coefficient
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-% function [mat,bcL,bcR] = coeff_matrix2(t,dimension,term_1D,myDim)
 function [mat,matD] = coeff_matrix2(pde,t,dim,term_1D)
 
 % Grad
@@ -44,264 +43,29 @@ function [mat,matD] = coeff_matrix2(pde,t,dim,term_1D)
 % * Picking which term type
 
 %%
-% Shortcuts
+% pde shortcuts
 
-params = pde.params;
-
-lev = dim.lev;
-deg = dim.deg;
-xMin = dim.domainMin;
-xMax = dim.domainMax;
-FMWT = dim.FMWT;
-BCL = dim.BCL;
-BCR = dim.BCR;
+params  = pde.params;
 
 %%
-% Shortcuts to term_1d quantities
-dat_W = term_1D.dat;
+% dim shortcuts
+
+lev     = dim.lev;
+deg     = dim.deg;
+xMin    = dim.domainMin;
+xMax    = dim.domainMax;
+FMWT    = dim.FMWT;
+BCL     = dim.BCL;
+BCR     = dim.BCR;
+
+%%
+% term shortcuts
+
+dat_W   = term_1D.dat;
 FluxVal = term_1D.LF;
-G = term_1D.G;
-type = term_1D.type;
+G       = term_1D.G;
+type    = term_1D.type;
 
-%%
-% Setup jacobi of variable x and define coeff_mat
-N = 2^(lev);
-h = (xMax-xMin) / N;
-dof_1D = deg * N;
-
-%%
-% Set number of quatrature points (should this be order dependant?)
-quad_num = 10;
-
-%%
-%  Get quadrature points and weights.
-%  quad_x(:) is quad_num by 1
-%  quad_w(:) is quad_num by 1
-[quad_x,quad_w] = lgwt(quad_num,-1,1);
-
-%%
-%  Compute the trace values (values at the left and right of each element for all k)
-%  p_L(:) is 1 by deg
-%  p_R(:) is 1 by deg
-p_L = legendre(-1,deg) * 1/sqrt(h);
-p_R = legendre(+1,deg) * 1/sqrt(h);
-
-%%
-%  Get the basis functions and derivatives for all k
-%  p_val(:,:) is quad_num by deg
-%  Dp_val(:,:) is quad_num by deg
-p_val  = legendre(quad_x,deg)  * 1/sqrt(h);
-Dp_val = dlegendre(quad_x,deg) * 1/sqrt(h) * 2/h;
-
-Jacobi = h/2;
-
-Mass = sparse(dof_1D,dof_1D);
-Grad = sparse(dof_1D,dof_1D);
-Diff = sparse(dof_1D,dof_1D);
-matD = sparse(dof_1D,dof_1D);
-
-%%
-% Convert input dat from wavelet (_W) space to realspace (_R)
-
-if isempty(dat_W)
-    dat_W = ones(dof_1D,1);
-end
-dat_R = FMWT' * dat_W;
-
-%% Loop over all elements in this D
-%  Here we construct the 1D coeff_mat in realspace, then transform to
-%  wavelet space afterwards.
-for i=0:N-1
-    
-    xL = xMin + i*h;
-    xR = xL + h;
-    
-    %%
-    % Get index ranges for ...
-    
-    %%
-    %  Current element
-    c1 = deg*i+1;
-    c2 = deg*(i+1);
-    c = c1:c2;
-    
-    %%
-    % Previous element
-    p1 = deg*(i-1)+1;
-    p2 = deg*i;
-    p = p1:p2;
-    
-    %%
-    % Later element
-    l1 = deg*(i+1)+1;
-    l2 = deg*(i+2);
-    l = l1:l2;
-    
-    %%
-    % First element
-    first1 = deg*(1-1)+1;
-    first2 = deg*((1-1)+1);
-    first = first1:first2;
-    
-    %%
-    % Last element
-    last1 = deg*(N-1)+1;
-    last2 = deg*((N-1)+1);
-    last = last1:last2;
-    
-    %%
-    % Map quadrature points from [-1,1] to physical domain of this i element
-    
-    quad_xi = (((quad_x+1)/2+i)*h+xMin);
-    
-    %%
-    % Perform volume integral to give deg x deg matrix block
-    
-    %%
-    % Get dat_R at the quadrature points
-    
-    dat_R_quad = p_val * dat_R(c1:c2);
-    
-    %%
-    % M // mass matrix u . v
-    G1 = G(quad_xi,params,t,dat_R_quad);
-    val_mass = p_val' * (G1 .* p_val .* quad_w) * Jacobi;
-    
-    %%
-    % G // grad matrix u . v'
-    G1 = G(quad_xi,params,t,dat_R_quad);
-    val_grad  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
-    
-    Iu = meshgrid( deg*i+1 : deg*(i+1) );
-    
-    Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
-    Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
-    
-    
-    %%
-    % Setup boundary conditions
-    
-    %%
-    % -<funcCoef*{q},p>
-    %----------------------------------------------
-    % Numerical Flux is defined as
-    % Flux = {{f}} + C/2*[[u]]
-    %      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
-    % [[v]] = v_R - v_L
-    
-    FCL = G(xL,params,t,dat_R_quad);
-    FCR = G(xR,params,t,dat_R_quad);
-    TraVal = [...
-        (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
-        (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
-        ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
-        ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
-        ];
-    
-    %%
-    % If dirichelt
-    % u^-_LEFT = g(LEFT)
-    % u^+_RIGHT = g(RIGHT)
-    
-    if strcmp(BCL,'D') %% left dirichlet      
-        if i==0        
-            TraVal = [...
-                (-p_L)' * (p_L-p_L),...
-                (-p_L)' * (p_L-p_L),...% xL
-                ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
-                ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
-                ];
-        end   
-    end
-    
-    if strcmp(BCR,'D') %% right dirichlet   
-        if i==N-1   
-            TraVal = [...
-                (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
-                (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
-                ( p_R)' * (p_R-p_R),...
-                ( p_R)' * (p_R-p_R),...% xR
-                ];
-        end
-    end
-    
-    %%
-    % If neumann
-    % (gradient u)*n = g
-    % by splitting grad u = q by LDG methods, the B.C is changed to
-    % q*n = g (=> q = g for 1D variable)
-    % only work for derivatives greater than 1
-    
-    if strcmp(BCL,'N') %% left neumann    
-        if i==0         
-            TraVal = [...
-                (-p_L)' * (p_L-p_L),...,...
-                (-p_L)' * FCL * p_L,...% xL
-                ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
-                ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
-                ];       
-        end
-    end
-    
-    if strcmp(BCR,'N') %% right neumann  
-        if i==N-1      
-            TraVal = [...
-                (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
-                (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
-                ( p_R)' * FCR * p_R,...
-                ( p_R)' * (p_R-p_R),...% xR
-                ];
-        end
-    end
-    
-    
-    %%
-    % Adding trace value to matrix
-    
-    RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-    ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
-    
-    if i == 0
-        Iu = RowInd(:,deg+1:end);
-        Iv = ColInd(:,deg+1:end);
-        Val = TraVal(:,deg+1:end);
-    elseif i == N - 1
-        Iu = RowInd(:,1:3*deg);
-        Iv = ColInd(:,1:3*deg);
-        Val = TraVal(:,1:3*deg);
-    else
-        Iu = RowInd;
-        Iv = ColInd;
-        Val = TraVal;
-    end
-    
-    %%
-    % If periodic (Note: the order matters here)
-    
-    if strcmp(BCL,'P') || strcmp(BCR,'P') == 0 %% periodic'
-        if i==0
-            RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-            ColInd = [ones(deg,1)*last,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];            
-        end
-        if i==N-1
-            RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-            ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*first];
-        end
-        
-        Iu = RowInd;
-        Iv = ColInd;
-        Val = TraVal;
-        
-    end
-    
-    Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
-    
-end
-
-
-%% Transform coeff_mat to wavelet space
-Mass = FMWT * Mass * FMWT';
-Grad = FMWT * Grad * FMWT';
 
 if strcmp(type,'diff')
     
@@ -315,8 +79,8 @@ if strcmp(type,'diff')
     dimA = dim;
     
     termA.type = 'grad';      % Grad Operator
-    termA.LF = -1;       % Downwind Flux
-    termA.G = @(x,p,t,dat) x*0+1;
+    termA.LF = +1;       % Downwind Flux
+    %     termA.G = @(x,p,t,dat) x*0+1;
     dimA.BCL = 'N'; % Neumann
     dimA.BCR = 'N'; % Neumann
     matD = coeff_matrix2(pde,t,dimA,termA);
@@ -328,7 +92,7 @@ if strcmp(type,'diff')
     dimB = dim;
     
     termB.type = 'grad';      % Grad Operator
-    termB.LF = 1;       % Upwind Flux
+    termB.LF = -1;       % Upwind Flux
     %     termB.G = @(x,p,t,dat) x*0+1;
     dimB.BCL = 'D'; % Dirichlet
     dimB.BCR = 'D'; % Dirichlet
@@ -336,7 +100,252 @@ if strcmp(type,'diff')
     
     %%
     % Combine back into second order operator
+    
     Diff = matD*matU;
+    
+else
+    
+    
+    %%
+    % Setup jacobi of variable x and define coeff_mat
+    N = 2^(lev);
+    h = (xMax-xMin) / N;
+    dof_1D = deg * N;
+    
+    %%
+    % Set number of quatrature points (should this be order dependant?)
+    quad_num = 10;
+    
+    %%
+    %  Get quadrature points and weights.
+    %  quad_x(:) is quad_num by 1
+    %  quad_w(:) is quad_num by 1
+    [quad_x,quad_w] = lgwt(quad_num,-1,1);
+    
+    %%
+    %  Compute the trace values (values at the left and right of each element for all k)
+    %  p_L(:) is 1 by deg
+    %  p_R(:) is 1 by deg
+    p_L = legendre(-1,deg) * 1/sqrt(h);
+    p_R = legendre(+1,deg) * 1/sqrt(h);
+    
+    %%
+    %  Get the basis functions and derivatives for all k
+    %  p_val(:,:) is quad_num by deg
+    %  Dp_val(:,:) is quad_num by deg
+    p_val  = legendre(quad_x,deg)  * 1/sqrt(h);
+    Dp_val = dlegendre(quad_x,deg) * 1/sqrt(h) * 2/h;
+    
+    Jacobi = h/2;
+    
+    Mass = sparse(dof_1D,dof_1D);
+    Grad = sparse(dof_1D,dof_1D);
+    Diff = sparse(dof_1D,dof_1D);
+    matD = sparse(dof_1D,dof_1D);
+    
+    %%
+    % Convert input dat from wavelet (_W) space to realspace (_R)
+    
+    if isempty(dat_W)
+        dat_W = ones(dof_1D,1);
+    end
+    dat_R = FMWT' * dat_W;
+    
+    %% Loop over all elements in this D
+    %  Here we construct the 1D coeff_mat in realspace, then transform to
+    %  wavelet space afterwards.
+    for i=0:N-1
+        
+        xL = xMin + i*h;
+        xR = xL + h;
+        
+        %%
+        % Get index ranges for ...
+        
+        %%
+        %  Current element
+        c1 = deg*i+1;
+        c2 = deg*(i+1);
+        c = c1:c2;
+        
+        %%
+        % Previous element
+        p1 = deg*(i-1)+1;
+        p2 = deg*i;
+        p = p1:p2;
+        
+        %%
+        % Later element
+        l1 = deg*(i+1)+1;
+        l2 = deg*(i+2);
+        l = l1:l2;
+        
+        %%
+        % First element
+        first1 = deg*(1-1)+1;
+        first2 = deg*((1-1)+1);
+        first = first1:first2;
+        
+        %%
+        % Last element
+        last1 = deg*(N-1)+1;
+        last2 = deg*((N-1)+1);
+        last = last1:last2;
+        
+        %%
+        % Map quadrature points from [-1,1] to physical domain of this i element
+        
+        quad_xi = (((quad_x+1)/2+i)*h+xMin);
+        
+        %%
+        % Perform volume integral to give deg x deg matrix block
+        
+        %%
+        % Get dat_R at the quadrature points
+        
+        dat_R_quad = p_val * dat_R(c1:c2);
+        
+        %%
+        % M // mass matrix u . v
+        G1 = G(quad_xi,params,t,dat_R_quad);
+        val_mass = p_val' * (G1 .* p_val .* quad_w) * Jacobi;
+        
+        %%
+        % G // grad matrix u . v'
+        G1 = G(quad_xi,params,t,dat_R_quad);
+        val_grad  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
+        
+        Iu = meshgrid( deg*i+1 : deg*(i+1) );
+        
+        Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
+        Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
+        
+        
+        %%
+        % Setup boundary conditions
+        
+        %%
+        % -<funcCoef*{q},p>
+        %----------------------------------------------
+        % Numerical Flux is defined as
+        % Flux = {{f}} + C/2*[[u]]
+        %      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
+        % [[v]] = v_R - v_L
+        
+        FCL = G(xL,params,t,dat_R_quad);
+        FCR = G(xR,params,t,dat_R_quad);
+        TraVal = [...
+            (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
+            (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
+            ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
+            ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
+            ];
+        
+        %%
+        % If dirichelt
+        % u^-_LEFT = g(LEFT)
+        % u^+_RIGHT = g(RIGHT)
+        
+        if strcmp(BCL,'D') %% left dirichlet
+            if i==0
+                TraVal = [...
+                    (-p_L)' * (p_L-p_L),...
+                    (-p_L)' * (p_L-p_L),...% xL
+                    ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
+                    ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
+                    ];
+            end
+        end
+        
+        if strcmp(BCR,'D') %% right dirichlet
+            if i==N-1
+                TraVal = [...
+                    (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
+                    (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
+                    ( p_R)' * (p_R-p_R),...
+                    ( p_R)' * (p_R-p_R),...% xR
+                    ];
+            end
+        end
+        
+        %%
+        % If neumann
+        % (gradient u)*n = g
+        % by splitting grad u = q by LDG methods, the B.C is changed to
+        % q*n = g (=> q = g for 1D variable)
+        % only work for derivatives greater than 1
+        
+        if strcmp(BCL,'N') %% left neumann
+            if i==0
+                TraVal = [...
+                    (-p_L)' * (p_L-p_L),...,...
+                    (-p_L)' * FCL * p_L,...% xL
+                    ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
+                    ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
+                    ];
+            end
+        end
+        
+        if strcmp(BCR,'N') %% right neumann
+            if i==N-1
+                TraVal = [...
+                    (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
+                    (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
+                    ( p_R)' * FCR * p_R,...
+                    ( p_R)' * (p_R-p_R),...% xR
+                    ];
+            end
+        end
+        
+        
+        %%
+        % Adding trace value to matrix
+        
+        RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+        ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
+        
+        if i == 0
+            Iu = RowInd(:,deg+1:end);
+            Iv = ColInd(:,deg+1:end);
+            Val = TraVal(:,deg+1:end);
+        elseif i == N - 1
+            Iu = RowInd(:,1:3*deg);
+            Iv = ColInd(:,1:3*deg);
+            Val = TraVal(:,1:3*deg);
+        else
+            Iu = RowInd;
+            Iv = ColInd;
+            Val = TraVal;
+        end
+        
+        %%
+        % If periodic (Note: the order of this block relative to above matters)
+        
+        if strcmp(BCL,'P') || strcmp(BCR,'P') %% periodic'
+            
+            if i==0
+                RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+                ColInd = [ones(deg,1)*last,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
+            end
+            if i==N-1
+                RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+                ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*first];
+            end
+            
+            Iu = RowInd;
+            Iv = ColInd;
+            Val = TraVal;
+            
+        end
+        
+        Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
+        
+    end
+    
+    
+    %% Transform coeff_mat to wavelet space
+    Mass = FMWT * Mass * FMWT';
+    Grad = FMWT * Grad * FMWT';
     
 end
 

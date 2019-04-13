@@ -5,13 +5,20 @@ function bcVec = getBoundaryCondition1(pde,HashInv,time)
 % is addative, i.e., if only left is D then the right component is added in
 % as zero.
 
-nHash = numel(HashInv);
-nTerms = numel(pde.terms);
-nDims = numel(pde.dimensions);
+%%
+% pde shortcuts
+
 dims = pde.dimensions;
 terms = pde.terms;
 
+%%
+% dim shortcuts
+
 deg = dims{1}.deg; % TODO
+
+nHash = numel(HashInv);
+nTerms = numel(pde.terms);
+nDims = numel(dims);
 
 bcVec = zeros(deg^nDims*nHash,1);
 

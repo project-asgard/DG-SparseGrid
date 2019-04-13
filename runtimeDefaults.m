@@ -77,7 +77,9 @@ end
 %%
 % CFL number
 if ~exist('CFL','var') || isempty(CFL)
-    pde.CFL = 0.1;
+    if ~isfield(pde,'CFL')
+        pde.CFL = 0.1;
+    end
 else
     pde.CFL = CFL;
 end

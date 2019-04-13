@@ -14,7 +14,7 @@ DoF = Deg * Tol_Cel_Num;
 
 bc = sparse(DoF,1);
 
-p_L = legendre(-1,Deg) * 1/sqrt(h);
+p_L = legendre(-1,Deg) * 1/sqrt(h); % TODO : this happens in multiple places. Consolidate. 
 p_R = legendre(+1,Deg) * 1/sqrt(h);
 
 if strcmp(LorR,'L')
@@ -22,8 +22,6 @@ if strcmp(LorR,'L')
     WorkCel = 0;
     c = [1:Deg];
     IntVal =  p_L'*Fun(xMin,p,t) ;
-%     IntVal =  p_L'*(Fun(xMin,time)) ;
-
     bc(c) = - IntVal;
     
 else
@@ -31,7 +29,6 @@ else
     WorkCel = Tol_Cel_Num - 1;
     c = Deg*WorkCel+[1:Deg];
     IntVal =  p_R'*Fun(xMax,p,t);
-%     IntVal =  p_R'*(Fun(xMax,time));
     bc(c) = IntVal;
     
 end

@@ -21,8 +21,12 @@ deg = 2;
 % 
 % Here we setup a 2D problem (x,y)
 
-BCFunc = @(x) cos(pi*x);
-BCFunc_t = @(t) exp(-2*pi^2*t);
+soln_x = @(x) cos(pi*x);
+soln_y = @(y) cos(pi*y);
+soln_t = @(t) exp(-2*pi^2*t);
+
+BCFunc = @(x) soln_x(x);
+BCFunc_t = @(t) soln_t(t);
 
 % Domain is (a,b)x(c,d)
 
@@ -50,7 +54,7 @@ dim_x.domainMax = 1;
 dim_x.lev = lev;
 dim_x.deg = deg;
 dim_x.FMWT = []; % Gets filled in later
-dim_x.init_cond_fn = @(x,p) cos(pi*x);
+dim_x.init_cond_fn = @(x,p) soln_x(x)*soln_t(0);
 
 dim_x = checkDimension(dim_x);
 
@@ -78,7 +82,7 @@ dim_y.domainMax = 1;
 dim_y.lev = lev;
 dim_y.deg = deg;
 dim_y.FMWT = []; % Gets filled in later
-dim_y.init_cond_fn = @(y,p) cos(pi*y);
+dim_y.init_cond_fn = @(y,p) soln_y(y)*soln_t(0);
 
 dim_y = checkDimension(dim_y);
 
@@ -149,9 +153,9 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...
-    @(x,p,t) cos(pi*x), ...
-    @(y,p,t) cos(pi*y), ... 
-    @(t,p) exp(-2*pi^2*t) 
+    @(x,p,t) soln_x(x), ...
+    @(y,p,t) soln_y(y), ... 
+    @(t,p) soln_t(t) 
     };
 
 %% Other workflow options that should perhpas not be in the PDE?
