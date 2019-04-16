@@ -2,8 +2,13 @@ function pde = fokkerplanck1a2
 % 1D test case using continuity equation, i.e., 
 % df/dt + d/dz ( (1-z^2)f ) = 0
 %
-% Run with ...
-% fk6d(fokkerplanck1a2,4,2,0.2,[],[],0,[]);
+% Run with
+%
+% explicit
+% fk6d(fokkerplanck1a2,4,2,0.2,[],[],0,[])
+%
+% implicit
+% fk6d(fokkerplanck1a2,6,4,0.5,[],[],1,[],[],1.0)
 
 %% Setup the dimensions
 % 
@@ -36,9 +41,9 @@ BCR_fList = { ...
     };
 
 dim_z.name = 'z';
-dim_z.BCL = 1; % dirichlet
+dim_z.BCL = 'D'; % dirichlet
 dim_z.BCL_fList = BCL_fList;
-dim_z.BCR = 1;
+dim_z.BCR = 'D';
 dim_z.BCR_fList = BCR_fList;
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
@@ -63,7 +68,7 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 1; % grad (see coeff_matrix.m for available types)
+term2_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
 term2_z.G = @(z,p,t,dat) -(1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now

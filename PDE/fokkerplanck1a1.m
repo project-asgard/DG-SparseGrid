@@ -5,8 +5,13 @@ function pde = fokkerplanck1a1
 % Problem is left to right convection, so we can upwind and only require
 % one boundary condition, which is neumann on the left.
 %
-% Run with ...
-% fk6d(fokkerplanck1a1,5,3,0.01,[],[],0,[]);
+% Run with
+%
+% explicit
+% fk6d(fokkerplanck1a1,5,3,0.01)
+%
+% implicit
+% fk6d(fokkerplanck1a1,5,3,0.01,[],[],1,[],[],0.1)
 
 %% Setup the dimensions
 % 
@@ -27,8 +32,8 @@ function pde = fokkerplanck1a1
     end
 
 dim_z.name = 'z';
-dim_z.BCL = 2; % neumann
-dim_z.BCR = 2; % not set (equivalent to neumann)
+dim_z.BCL = 'N'; % neumann
+dim_z.BCR = 'N'; % not set (equivalent to neumann)
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.lev = 2;
@@ -52,7 +57,7 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 1; % grad (see coeff_matrix.m for available types)
+term2_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
 term2_z.G = @(z,p,t,dat) -1.*(1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
