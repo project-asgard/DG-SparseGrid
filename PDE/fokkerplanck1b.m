@@ -5,7 +5,7 @@ function pde = fokkerplanck1b
 % Run with ...
 %
 % explicit
-% fk6d(fokkerplanck1b,5,3,0.1,[],[],0,[])
+% fk6d(fokkerplanck1b,5,3,0.0002,[],[],0,[])
 %
 % implicit
 % fk6d(fokkerplanck1b,5,3,0.01,[],[],1,[],[],0.1)

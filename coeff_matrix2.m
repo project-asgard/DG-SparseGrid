@@ -73,6 +73,7 @@ if strcmp(type,'diff')
     % recombine
     
     %%
+    % 
     % Get a grad operator with downwind flux and Neumann BCs
     
     termA = term_1D;
@@ -80,7 +81,7 @@ if strcmp(type,'diff')
     
     termA.type = 'grad';      % Grad Operator
     termA.LF = +1;       % Downwind Flux
-    %     termA.G = @(x,p,t,dat) x*0+1;
+    termA.G = @(x,p,t,dat) x*0+1;
     dimA.BCL = 'N'; % Neumann
     dimA.BCR = 'N'; % Neumann
     matD = coeff_matrix2(pde,t,dimA,termA);
@@ -93,7 +94,7 @@ if strcmp(type,'diff')
     
     termB.type = 'grad';      % Grad Operator
     termB.LF = -1;       % Upwind Flux
-    %     termB.G = @(x,p,t,dat) x*0+1;
+%    termB.G = @(x,p,t,dat) x*0+1;
     dimB.BCL = 'D'; % Dirichlet
     dimB.BCR = 'D'; % Dirichlet
     matU = coeff_matrix2(pde,t,dimB,termB);

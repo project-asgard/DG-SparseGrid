@@ -1,6 +1,6 @@
 function pde = fokkerplanck1_42
 % 1D pitch angle collisional term 
-% df/dt - d/dz ( (1-z^2) df/dz ) = 0
+% df/dt == d/dz ( (1-z^2) df/dz ) 
 % 
 % Here we use LDG for this second order system. We impose homogeneous
 % Neumann BCs on the flux equation in the LDG splitting, i.e.,
@@ -8,11 +8,21 @@ function pde = fokkerplanck1_42
 % d/dz( (1-z^2) df/dz ) becomes
 %
 % dq/dz with free (homogeneous Neumann BC)
+%
 % and the flux is 
+%
 % q=(1-z^2) df/fz  where q=0 @ z=+1=-1
 %
-% Run with ...
-% fk6d(fokkerplanck1_42,5,3,0.1,[],[],0,[]);
+% Run with
+%
+% explicit
+% fk6d(fokkerplanck1_42,5,3,0.00005);
+%
+% implicit
+% fk6d(fokkerplanck1_42,5,4,0.005,[],[],1,[],[],0.5);
+
+pde.CFL = 0.01;
+
 
 %% Setup the dimensions
 % 
@@ -33,8 +43,6 @@ function pde = fokkerplanck1_42
         ret = sum(ret,2);
     end
 
-sig = 0.1;
-
 BCL_fList = { ...
     @(z,p,t) z*0, ...
     @(t,p) 1
@@ -46,9 +54,9 @@ BCR_fList = { ...
     };
 
 dim_z.name = 'z';
-dim_z.BCL = 1; % dirichlet
+dim_z.BCL = 'D'; % dirichlet
 dim_z.BCL_fList = BCL_fList;
-dim_z.BCR = 1;
+dim_z.BCR = 'D';
 dim_z.BCR_fList = BCR_fList;
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
@@ -73,7 +81,7 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 3; % grad (see coeff_matrix.m for available types)
+term2_z.type = 'diff'; % (see coeff_matrix.m for available types)
 term2_z.G = @(z,p,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
@@ -126,9 +134,18 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-Lmax = pde.dimensions{1}.domainMax;
-LevX = pde.dimensions{1}.lev;
-CFL = pde.CFL;
+% Lmax = pde.dimensions{1}.domainMax;
+% LevX = pde.dimensions{1}.lev;
+% CFL = pde.CFL;
+% 
+% dt = Lmax/2^LevX*CFL;
 
-dt = Lmax/2^LevX*CFL;
+dims = pde.dimensions;
+
+% for Diffusion equation: dt = C * dx^2
+
+lev = dims{1}.lev;
+CFL = pde.CFL;
+dx = 1/2^lev;
+dt = CFL*dx^2;
 end
