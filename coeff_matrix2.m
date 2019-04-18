@@ -73,31 +73,32 @@ if strcmp(type,'diff')
     % recombine
     
     %%
-    % 
+    % dq/dx
     % Get a grad operator with downwind flux and Neumann BCs
     
     termA = term_1D;
     dimA = dim;
     
     termA.type = 'grad';      % Grad Operator
-    termA.LF = +1;       % Downwind Flux
+    termA.LF = -1;       % Downwind Flux
     termA.G = @(x,p,t,dat) x*0+1;
     dimA.BCL = 'N'; % Neumann
     dimA.BCR = 'N'; % Neumann
-    matD = coeff_matrix2(pde,t,dimA,termA);
+    matU = coeff_matrix2(pde,t,dimA,termA);
     
     %%
+    % d/dx( df/dx )
     % Get a grad operator with upwind flux and Dirichlet BCs
     
     termB = term_1D;
     dimB = dim;
     
     termB.type = 'grad';      % Grad Operator
-    termB.LF = -1;       % Upwind Flux
+    termB.LF = +1;       % Upwind Flux
 %    termB.G = @(x,p,t,dat) x*0+1;
     dimB.BCL = 'D'; % Dirichlet
     dimB.BCR = 'D'; % Dirichlet
-    matU = coeff_matrix2(pde,t,dimB,termB);
+    matD = coeff_matrix2(pde,t,dimB,termB);
     
     %%
     % Combine back into second order operator
@@ -127,15 +128,15 @@ else
     %  Compute the trace values (values at the left and right of each element for all k)
     %  p_L(:) is 1 by deg
     %  p_R(:) is 1 by deg
-    p_L = legendre(-1,deg) * 1/sqrt(h);
-    p_R = legendre(+1,deg) * 1/sqrt(h);
+    p_L = lin_legendre(-1,deg) * 1/sqrt(h);
+    p_R = lin_legendre(+1,deg) * 1/sqrt(h);
     
     %%
     %  Get the basis functions and derivatives for all k
     %  p_val(:,:) is quad_num by deg
     %  Dp_val(:,:) is quad_num by deg
-    p_val  = legendre(quad_x,deg)  * 1/sqrt(h);
-    Dp_val = dlegendre(quad_x,deg) * 1/sqrt(h) * 2/h;
+    p_val  = lin_legendre(quad_x,deg)  * 1/sqrt(h);
+    Dp_val = lin_dlegendre(quad_x,deg) * 1/sqrt(h) * 2/h;
     
     Jacobi = h/2;
     

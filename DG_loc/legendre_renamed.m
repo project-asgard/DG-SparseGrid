@@ -1,4 +1,4 @@
-function v=legendre(x,k)
+function v=legendre_renamed(x,k)
 % Legendre Polynomials with degree k on [-1,1]
 v(:,1)=x-x+1;
 v(:,2)=x*sqrt(2^2-1);
@@ -14,3 +14,5 @@ ix=find(x>1);
 f(ix,:)=0;
 ix=find(x<-1);
 f(ix,:)=0;
+
+broken

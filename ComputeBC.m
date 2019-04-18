@@ -14,8 +14,8 @@ DoF = Deg * Tol_Cel_Num;
 
 bc = sparse(DoF,1);
 
-p_L = legendre(-1,Deg) * 1/sqrt(h); % TODO : this happens in multiple places. Consolidate. 
-p_R = legendre(+1,Deg) * 1/sqrt(h);
+p_L = lin_legendre(-1,Deg) * 1/sqrt(h); % TODO : this happens in multiple places. Consolidate. 
+p_R = lin_legendre(+1,Deg) * 1/sqrt(h);
 
 if strcmp(LorR,'L')
     

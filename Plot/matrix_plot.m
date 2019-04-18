@@ -6,7 +6,7 @@ function [Meval_v,v_node,Meval_x,x_node]=matrix_plot(Lev_x,Lev_v,k,Lmin,Lmax,Vmi
 %--Quadrature
 %-----------------
 [quad_x,quad_w]=lgwt(k,-1,1);
-p_val = legendre(quad_x,k);
+p_val = lin_legendre(quad_x,k);
 
 %---------------------------
 % Jacobi of variable x and v

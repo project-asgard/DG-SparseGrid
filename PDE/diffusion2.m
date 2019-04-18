@@ -2,7 +2,10 @@ function pde = diffusion2
 % Example PDE using the 2D (1x-1y) Heat Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
-% PDE: df/dt = d^2 f/dx^2 + d^2 f/dy^2
+% PDE:
+% 
+% df/dt = d^2 f/dx^2 + d^2 f/dy^2
+%
 % Domain is [0,1]x[0,1]
 % Dirichlet boundary condition 
 % ToDo: need some effort for naming, boundary conditions, source terms

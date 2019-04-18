@@ -29,18 +29,20 @@ pde.CFL = 0.01;
 % Here we setup a 1D problem (x)
 
     function ret = soln(z,t)
-      
+        
         h = [3,0.5,1,0.7,3,0,3];
         
-        P = legendre(z,numel(h));
-        
-        ret = zeros(size(P));
+        ret = zeros(size(z));
         for l=1:numel(h)
+            
             L = l-1;
-            ret(:,l) = h(l) * P(:,l) * exp(-L*(L+1)*t);
+            P_m = legendre(L,z); % Use matlab rather than Lin's legendre.
+            P = P_m(1,:)';
+            
+            ret = ret + h(l) * P * exp(-L*(L+1)*t);
+            
         end
         
-        ret = sum(ret,2);
     end
 
 BCL_fList = { ...
@@ -134,18 +136,16 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-% Lmax = pde.dimensions{1}.domainMax;
-% LevX = pde.dimensions{1}.lev;
-% CFL = pde.CFL;
-% 
-% dt = Lmax/2^LevX*CFL;
-
 dims = pde.dimensions;
 
 % for Diffusion equation: dt = C * dx^2
 
 lev = dims{1}.lev;
+xMax = dims{1}.domainMax;
+xMin = dims{1}.domainMin;
+xRange = xMax-xMin;
 CFL = pde.CFL;
-dx = 1/2^lev;
+dx = xRange/2^lev;
 dt = CFL*dx^2;
+dt = 1.5e-4;
 end

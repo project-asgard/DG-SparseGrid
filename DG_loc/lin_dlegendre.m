@@ -1,4 +1,4 @@
-function v=dlegendre(x,k)
+function v=lin_dlegendre(x,k)
 % Legendre Polynomials with degree k on [-1,1]
 v(:,1)=x-x;
 v(:,2)=x-x+1*sqrt(2*2-1);

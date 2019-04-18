@@ -173,7 +173,7 @@ for L = 1:nsteps,
     
     tic;
     time(count) = (L-1)*dt;
-    timeStr = sprintf('Step %i of %i',L,nsteps);
+    timeStr = sprintf('Step %i of %i at %f seconds',L,nsteps,time(count));
     
     if ~quiet; disp(timeStr); end
     Emax = 0;

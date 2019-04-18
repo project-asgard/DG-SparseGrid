@@ -26,7 +26,7 @@ Meval = sparse(dof_1D,dof_1D);
 %%
 % Quadrature points (quad_x) and weights (quad_w)
 [quad_x,quad_w]=lgwt(deg,-1,1);
-p_val = legendre(quad_x,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
+p_val = lin_legendre(quad_x,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
 
 for i=0:n-1
     
