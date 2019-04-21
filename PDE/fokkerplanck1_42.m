@@ -83,12 +83,39 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 'diff'; % (see coeff_matrix.m for available types)
-term2_z.G = @(z,p,t,dat) (1-z.^2); % G function for use in coeff_matrix construction.
-term2_z.TD = 0; % Time dependent term or not.
-term2_z.dat = []; % These are to be filled within the workflow for now
-term2_z.LF = 0; % Upwind 
-term2_z.name = 'd_dz';
+% % matD*matU
+% term2_z.type = 'diff';
+% % eq1 : 1 * dq/dx
+% term2_z.G2 = @(z,p,t,dat) z.*0+1;
+% term2_z.LF2 = +1; % upwind left
+% term2_z.BCL2 = 'N';
+% term2_z.BCR2 = 'N';
+% term2_z.BCL2_fList = []; % Defaults to zero
+% term2_z.BCR2_fList = []; % Defaults to zero
+% % eq2 : (1-z^2) * df/dx 
+% term2_z.G1 = @(z,p,t,dat) (1-z.^2);
+% term2_z.LF1 = -1; % upwind right
+% term2_z.BCL1 = 'D';
+% term2_z.BCR1 = 'D';
+% term2_z.BCL1_fList = []; % Defaults to zero
+% term2_z.BCR1_fList = []; % Defaults to zero
+
+% matU*matD
+term2_z.type = 'diff';
+% eq1 : 1 * dq/dx
+term2_z.G1 = @(z,p,t,dat) z.*0+1;
+term2_z.LF1 = +1; % upwind left
+term2_z.BCL1 = 'N';
+term2_z.BCR1 = 'N';
+term2_z.BCL1_fList = []; % Defaults to zero
+term2_z.BCR1_fList = []; % Defaults to zero
+% eq2 : (1-z^2) * df/dx 
+term2_z.G2 = @(z,p,t,dat) (1-z.^2);
+term2_z.LF2 = -1; % upwind right
+term2_z.BCL2 = 'D';
+term2_z.BCR2 = 'D';
+term2_z.BCL2_fList = []; % Defaults to zero
+term2_z.BCR2_fList = []; % Defaults to zero
 
 term2 = {term2_z};
 

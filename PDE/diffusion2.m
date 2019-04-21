@@ -8,7 +8,17 @@ function pde = diffusion2
 %
 % Domain is [0,1]x[0,1]
 % Dirichlet boundary condition 
-% ToDo: need some effort for naming, boundary conditions, source terms
+%
+% Diffusion terms are dealt with via LDG, i.e., splitting into two first
+% order equations:
+%
+% d/dx ( df/dx ) becomes
+%
+% dq/dx with free (homogeneous Neumann BC)
+%
+% and
+%
+% q=df/dx
 %
 % Run with
 %
@@ -21,7 +31,7 @@ function pde = diffusion2
 pde.CFL = 0.01;
 
 lev = 5;
-deg = 2;
+deg = 3;
 
 %% Setup the dimensions
 % 
@@ -106,22 +116,44 @@ pde.dimensions = {dim_x, dim_y};
 %% 
 % Setup the d^2_dx^2 term
 
-term1_x.dat = [];
-term1_x.LF = 0;         % Upwind Flux
-term1_x.G = @(x,p,t,dat) x.*0 + 1; % Delta Operator 
+% matD*matU
 term1_x.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
-term1_x.TD = 0;
+% eq1 : g1 * dq/dx (flux eqn)
+term1_x.G1 = @(x,p,t,dat) x*0+1;
+term1_x.LF1 = -1; % upwind left
+term1_x.BCL1 = 'N';
+term1_x.BCR1 = 'N';
+term1_x.BCL1_fList = []; % Defaults to zero
+term1_x.BCR1_fList = []; % Defaults to zero
+% eq2 : g2 * df/dx (actual variable equation)
+term1_x.G2 = @(x,p,t,dat) x*0+1;
+term1_x.LF2 = +1; % upwind right
+term1_x.BCL2 = 'D';
+term1_x.BCR2 = 'D';
+term1_x.BCL2_fList = BCL_fList;
+term1_x.BCR2_fList = BCR_fList;
+
 
 term1 = term_fill({term1_x,[]});
 
 %% 
 % Setup the d^2_dy^2 term
 
-term2_y.dat = [];
-term2_y.LF = 0;         % Upwind Flux
-term2_y.G = @(x,p,t,dat) x.*0 + 1; % Delta Operator 
-term2_y.type = 'diff';        % Delta Operator ::  Let this denote the derivative order
-term2_y.TD = 0;
+term2_y.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
+% eq1 : g1 * dq/dx (flux eqn)
+term2_y.G1 = @(y,p,t,dat) y*0+1;
+term2_y.LF1 = -1; % upwind left
+term2_y.BCL1 = 'N';
+term2_y.BCR1 = 'N';
+term2_y.BCL1_fList = []; % Defaults to zero
+term2_y.BCR1_flIST = []; % Defaults to zero
+% eq2 : g2 * df/dx (actual variable equation)
+term2_y.G2 = @(y,p,t,dat) y*0+1;
+term2_y.LF2 = +1; % upwind right
+term2_y.BCL2 = 'D';
+term2_y.BCR2 = 'D';
+term2_y.BCL2_fList = BCL_fList;
+term2_y.BCR2_fList = BCR_fList;
 
 term2 = term_fill({[],term2_y});
 

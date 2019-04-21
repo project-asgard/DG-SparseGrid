@@ -47,66 +47,70 @@ function [mat,matD] = coeff_matrix2(pde,t,dim,term_1D)
 
 params  = pde.params;
 
-%%
-% dim shortcuts
-
-lev     = dim.lev;
-deg     = dim.deg;
-xMin    = dim.domainMin;
-xMax    = dim.domainMax;
-FMWT    = dim.FMWT;
-BCL     = dim.BCL;
-BCR     = dim.BCR;
-
-%%
-% term shortcuts
-
-dat_W   = term_1D.dat;
-FluxVal = term_1D.LF;
-G       = term_1D.G;
 type    = term_1D.type;
-
 
 if strcmp(type,'diff')
     
     % Use LDG method, i.e., split into two first order equations, then
     % recombine
     
-    %%
-    % dq/dx
-    % Get a grad operator with downwind flux and Neumann BCs
-    
-    termA = term_1D;
     dimA = dim;
     
-    termA.type = 'grad';      % Grad Operator
-    termA.LF = -1;       % Downwind Flux
-    termA.G = @(x,p,t,dat) x*0+1;
-    dimA.BCL = 'N'; % Neumann
-    dimA.BCR = 'N'; % Neumann
-    matU = coeff_matrix2(pde,t,dimA,termA);
+    %%
+    % Equation 1 of LDG
+    
+    termA.type = 'grad';
+    termA.LF = term_1D.LF1;
+    termA.G = term_1D.G1;
+    termA = checkPartialTerm(termA);
+    
+    dimA.BCL = term_1D.BCL1;
+    dimA.BCR = term_1D.BCR1;
+    dimA = checkDimension(dimA);
+
+    matD = coeff_matrix2(pde,t,dimA,termA);
     
     %%
-    % d/dx( df/dx )
-    % Get a grad operator with upwind flux and Dirichlet BCs
+    % Equation 2 of LDG
     
-    termB = term_1D;
     dimB = dim;
     
-    termB.type = 'grad';      % Grad Operator
-    termB.LF = +1;       % Upwind Flux
-%    termB.G = @(x,p,t,dat) x*0+1;
-    dimB.BCL = 'D'; % Dirichlet
-    dimB.BCR = 'D'; % Dirichlet
-    matD = coeff_matrix2(pde,t,dimB,termB);
+    termB.type = 'grad';
+    termB.LF = term_1D.LF2;
+    termB.G = term_1D.G2;
+    termB = checkPartialTerm(termB);
+  
+    dimB.BCL = term_1D.BCL2;
+    dimB.BCR = term_1D.BCR2;
+    dimB = checkDimension(dimB);
+
+    matU = coeff_matrix2(pde,t,dimB,termB);
     
     %%
     % Combine back into second order operator
     
     Diff = matD*matU;
     
+    
 else
     
+    %%
+    % dim shortcuts
+    
+    lev     = dim.lev;
+    deg     = dim.deg;
+    xMin    = dim.domainMin;
+    xMax    = dim.domainMax;
+    FMWT    = dim.FMWT;
+    BCL     = dim.BCL;
+    BCR     = dim.BCR;
+    
+    %%
+    % term shortcuts
+    
+    dat_W   = term_1D.dat;
+    FluxVal = term_1D.LF;
+    G       = term_1D.G;
     
     %%
     % Setup jacobi of variable x and define coeff_mat

@@ -4,8 +4,8 @@ function default_dim = checkDimension(dim);
 
 default_dim.name = 'x';
 default_dim.BCL = 2; % neumann
-default_dim.BCL_fList = [];
 default_dim.BCR = 2; % neumann
+default_dim.BCL_fList = [];
 default_dim.BCR_fList = [];
 default_dim.domainMin = 0;
 default_dim.domainMax = 1;

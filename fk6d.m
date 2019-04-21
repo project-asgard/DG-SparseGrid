@@ -9,6 +9,9 @@ addpath(genpath(folder));
 %% Load PDE and runtime defaults
 runtimeDefaults
 
+%% Check terms
+pde = checkTerms(pde);
+
 %% Shortcuts (some of this will go away soon)
 % Named domain ranges
 if nDims==2
