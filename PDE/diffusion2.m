@@ -116,23 +116,21 @@ pde.dimensions = {dim_x, dim_y};
 %% 
 % Setup the d^2_dx^2 term
 
-% matD*matU
 term1_x.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
-% eq1 : g1 * dq/dx (flux eqn)
+% eq1 : g1 * dq/dx (flux equation)
 term1_x.G1 = @(x,p,t,dat) x*0+1;
-term1_x.LF1 = -1; % upwind left
-term1_x.BCL1 = 'N';
-term1_x.BCR1 = 'N';
-term1_x.BCL1_fList = []; % Defaults to zero
-term1_x.BCR1_fList = []; % Defaults to zero
-% eq2 : g2 * df/dx (actual variable equation)
+term1_x.LF1 = +1; % upwind right
+term1_x.BCL1 = 'D';
+term1_x.BCR1 = 'D';
+% term1_x.BCL1_fList = BCL_fList;
+% term1_x.BCR1_fList = BCR_fList;
+% eq2 : g2 * df/dx (actual variable eqn)
 term1_x.G2 = @(x,p,t,dat) x*0+1;
-term1_x.LF2 = +1; % upwind right
-term1_x.BCL2 = 'D';
-term1_x.BCR2 = 'D';
-term1_x.BCL2_fList = BCL_fList;
-term1_x.BCR2_fList = BCR_fList;
-
+term1_x.LF2 = -1; % upwind left
+term1_x.BCL2 = 'N';
+term1_x.BCR2 = 'N';
+% term1_x.BCL2_fList = []; % Defaults to zero
+% term1_x.BCR2_fList = []; % Defaults to zero
 
 term1 = term_fill({term1_x,[]});
 
@@ -140,20 +138,20 @@ term1 = term_fill({term1_x,[]});
 % Setup the d^2_dy^2 term
 
 term2_y.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
-% eq1 : g1 * dq/dx (flux eqn)
+% eq1 : g1 * dq/dy (flux equation)
 term2_y.G1 = @(y,p,t,dat) y*0+1;
-term2_y.LF1 = -1; % upwind left
-term2_y.BCL1 = 'N';
-term2_y.BCR1 = 'N';
-term2_y.BCL1_fList = []; % Defaults to zero
-term2_y.BCR1_flIST = []; % Defaults to zero
-% eq2 : g2 * df/dx (actual variable equation)
+term2_y.LF1 = +1; % upwind right
+term2_y.BCL1 = 'D';
+term2_y.BCR1 = 'D';
+% term2_y.BCL1_fList = BCL_fList;
+% term2_y.BCR1_fList = BCR_fList;
+% eq2 : g2 * df/dy (actual variable eqn)
 term2_y.G2 = @(y,p,t,dat) y*0+1;
-term2_y.LF2 = +1; % upwind right
-term2_y.BCL2 = 'D';
-term2_y.BCR2 = 'D';
-term2_y.BCL2_fList = BCL_fList;
-term2_y.BCR2_fList = BCR_fList;
+term2_y.LF2 = -1; % upwind left
+term2_y.BCL2 = 'N';
+term2_y.BCR2 = 'N';
+% term2_y.BCL2_fList = []; % Defaults to zero
+% term2_y.BCR2_flIST = []; % Defaults to zero
 
 term2 = term_fill({[],term2_y});
 

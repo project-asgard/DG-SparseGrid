@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,matD] = coeff_matrix2(pde,t,dim,term_1D)
+function [mat,mat2] = coeff_matrix2(pde,t,dim,term)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -47,7 +47,7 @@ function [mat,matD] = coeff_matrix2(pde,t,dim,term_1D)
 
 params  = pde.params;
 
-type    = term_1D.type;
+type    = term.type;
 
 if strcmp(type,'diff')
     
@@ -60,15 +60,15 @@ if strcmp(type,'diff')
     % Equation 1 of LDG
     
     termA.type = 'grad';
-    termA.LF = term_1D.LF1;
-    termA.G = term_1D.G1;
+    termA.LF = term.LF1;
+    termA.G = term.G1;
     termA = checkPartialTerm(termA);
     
-    dimA.BCL = term_1D.BCL1;
-    dimA.BCR = term_1D.BCR1;
+    dimA.BCL = term.BCL1;
+    dimA.BCR = term.BCR1;
     dimA = checkDimension(dimA);
 
-    matD = coeff_matrix2(pde,t,dimA,termA);
+    mat1 = coeff_matrix2(pde,t,dimA,termA);
     
     %%
     % Equation 2 of LDG
@@ -76,20 +76,22 @@ if strcmp(type,'diff')
     dimB = dim;
     
     termB.type = 'grad';
-    termB.LF = term_1D.LF2;
-    termB.G = term_1D.G2;
+    termB.LF = term.LF2;
+    termB.G = term.G2;
     termB = checkPartialTerm(termB);
   
-    dimB.BCL = term_1D.BCL2;
-    dimB.BCR = term_1D.BCR2;
+    dimB.BCL = term.BCL2;
+    dimB.BCR = term.BCR2;
     dimB = checkDimension(dimB);
 
-    matU = coeff_matrix2(pde,t,dimB,termB);
+    mat2 = coeff_matrix2(pde,t,dimB,termB);
     
     %%
     % Combine back into second order operator
     
-    Diff = matD*matU;
+    % mat1 = matD
+    % mat2 = matU
+    Diff = mat2*mat1;
     
     
 else
@@ -108,9 +110,9 @@ else
     %%
     % term shortcuts
     
-    dat_W   = term_1D.dat;
-    FluxVal = term_1D.LF;
-    G       = term_1D.G;
+    dat_W   = term.dat;
+    FluxVal = term.LF;
+    G       = term.G;
     
     %%
     % Setup jacobi of variable x and define coeff_mat
@@ -147,7 +149,8 @@ else
     Mass = sparse(dof_1D,dof_1D);
     Grad = sparse(dof_1D,dof_1D);
     Diff = sparse(dof_1D,dof_1D);
-    matD = sparse(dof_1D,dof_1D);
+    mat1 = sparse(dof_1D,dof_1D);
+    mat2 = sparse(dof_1D,dof_1D);
     
     %%
     % Convert input dat from wavelet (_W) space to realspace (_R)
