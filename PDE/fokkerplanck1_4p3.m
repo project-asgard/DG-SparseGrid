@@ -1,39 +1,66 @@
-function pde = fokkerplanck1a1
-% 1D test case using continuity equation, i.e., 
-% df/dt + d/dz ( (1-z^2)f ) = 0
-%
-% Problem is left to right convection, so we can upwind and only require
-% one boundary condition, which is neumann on the left.
+function pde = fokkerplanck1_4p3
+% Problem 4.3 from the RE paper - radiation damping term  
+% df/dt == -d/dz ( z(1-z^2)f )
 %
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1a1,5,3,0.01)
+% fk6d(fokkerplanck1_4p3,4,2,0.2,[],[],0,[])
 %
 % implicit
-% fk6d(fokkerplanck1a1,5,3,0.01,[],[],1,[],[],0.1)
+% fk6d(fokkerplanck1_4p3,6,4,0.5,[],[],1,[],[],1.0)
+
+pde.CFL = 0.01;
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
 
     function ret = phi(z,t)
-        ret = tanh(atanh(z)-t);
+        ret = z.*exp(-t) ./ sqrt(1-(exp(-2*t)-1).*(z.^2));
     end
     function ret = f0(z)
-        ret = z.*0+1;
+        
+        caseNumber = 4;
+        shift = 0.36;
+        
+        switch caseNumber
+            case 1
+                f = exp(-z.^2/sig^2);
+            case 2
+                f = exp(-(z-shift).^2/sig^2);
+            case 3
+                f = exp(-(z+shift).^2/sig^2);
+            case 4
+                f = exp(-(z-shift).^2/sig^2) + exp(-(z+shift).^2/sig^2);
+        end    
+        ret = f;
     end
     function ret = soln(z,t)
         p = phi(z,t);
-        t1 = 1-p.^2;
-        t2 = 1-z.^2;
+        t1 = p.*(1-p.^2);
+        t2 = z.*(1-z.^2);
         t3 = f0(p);
         ret = t1./t2.*t3;
     end
 
+sig = 0.1;
+
+BCL_fList = { ...
+    @(z,p,t) 0, ...
+    @(t,p) 0
+    };
+
+BCR_fList = { ...
+    @(z,p,t) 0, ...
+    @(t,p) 0
+    };
+
 dim_z.name = 'z';
-dim_z.BCL = 'N'; % neumann
-dim_z.BCR = 'N'; % not set (equivalent to neumann)
+dim_z.BCL = 'D'; % dirichlet
+dim_z.BCL_fList = BCL_fList;
+dim_z.BCR = 'D';
+dim_z.BCR_fList = BCR_fList;
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.lev = 2;
@@ -58,10 +85,10 @@ pde.dimensions = {dim_z};
 % Setup the v.d_dx (v.MassV . GradX) term
 
 term2_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
-term2_z.G = @(z,p,t,dat) -1.*(1-z.^2); % G function for use in coeff_matrix construction.
+term2_z.G = @(z,p,t,dat) -z.*(1-z.^2); % G function for use in coeff_matrix construction.
 term2_z.TD = 0; % Time dependent term or not.
 term2_z.dat = []; % These are to be filled within the workflow for now
-term2_z.LF = +1; % Upwind 
+term2_z.LF = -1; % Upwind 
 term2_z.name = 'd_dz';
 
 term2 = {term2_z};
@@ -110,11 +137,8 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-dims = pde.dimensions;
-xRange = dims{1}.domainMax-dims{1}.domainMin;
-lev = dims{1}.lev;
-CFL = .01;
-dx = xRange/2^lev;
-dt = CFL * dx;
-
+Lmax = pde.dimensions{1}.domainMax;
+LevX = pde.dimensions{1}.lev;
+CFL = pde.CFL;
+dt = Lmax/2^LevX*CFL;
 end

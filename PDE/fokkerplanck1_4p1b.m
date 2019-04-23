@@ -1,14 +1,16 @@
-function pde = fokkerplanck1a2
-% 1D test case using continuity equation, i.e., 
-% df/dt + d/dz ( (1-z^2)f ) = 0
+function pde = fokkerplanck1_4p1b
+% Problem 4.1b from the RE paper.  
+% df/dt == -d/dz ( (1-z^2)f )
 %
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1a2,4,2,0.2,[],[],0,[])
+% fk6d(fokkerplanck1_4p1b,4,2,0.2,[],[],0,[])
 %
 % implicit
-% fk6d(fokkerplanck1a2,6,4,0.5,[],[],1,[],[],1.0)
+% fk6d(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],1.0)
+
+pde.CFL = 0.01;
 
 %% Setup the dimensions
 % 
@@ -124,6 +126,5 @@ function dt=set_dt(pde)
 Lmax = pde.dimensions{1}.domainMax;
 LevX = pde.dimensions{1}.lev;
 CFL = pde.CFL;
-
 dt = Lmax/2^LevX*CFL;
 end
