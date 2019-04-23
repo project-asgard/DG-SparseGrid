@@ -9,6 +9,7 @@ function FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev)
 %**********************************
 
 % % Load G0 and H0 from file
+idebug = 0;
 
 fileName = ['Two-Scale/two_scale_rel_',num2str(maxDeg),'.mat'];
 
@@ -33,8 +34,10 @@ for j_x = 1:maxDeg
     end
 end
 
+use_sparsify = 1;
 FMWT = zeros(maxDeg*maxLev);
 FMWT2 = zeros(maxDeg*maxLev);
+
 
 % Unroll the matlab for easier porting
 porting = 1;
@@ -77,11 +80,24 @@ for j=1:maxLev/2
     FMWT(maxDeg*(j+maxLev/2-1)+1:maxDeg*(j+maxLev/2),2*maxDeg*(j-1)+1:2*maxDeg*j) = [G0 G1];
 end
 
+if (idebug >= 1),
+   figure();
+   spy( FMWT );
+   title(sprintf('line 86:N=%d,maxDeg=%d,maxLev=%d',...
+		 size(FMWT,1),maxDeg,maxLev));
+end;
+
+
 
 if porting; assert(isequal(FMWT,FMWT2)); end
 
-FMWT_COMP = eye(maxDeg*maxLev);
-FMWT_COMP2 = eye(maxDeg*maxLev);
+if (use_sparsify),
+  FMWT_COMP = speye(maxDeg*maxLev,maxDeg*maxLev);
+  FMWT_COMP2 = speye(maxDeg*maxLev,maxDeg*maxLev);
+else
+  FMWT_COMP = eye(maxDeg*maxLev);
+  FMWT_COMP2 = eye(maxDeg*maxLev);
+end;
 
 n = floor( log2(maxLev) );
 % n = maxLev;
@@ -91,8 +107,14 @@ for j=1:n
     cFMWT2 = FMWT;
     % Reverse the index in matrix from Lin
     if j>1
+      if (use_sparsify),
+        nzmax = (maxDeg*maxLev)*maxDeg;
+        cFMWT = sparse([],[],[], maxDeg*maxLev, maxDeg*maxLev,nzmax);
+        cFMWT2 = sparse([],[],[],maxDeg*maxLev, maxDeg*maxLev,nzmax);
+      else
         cFMWT = zeros(maxDeg*maxLev);
         cFMWT2 = zeros(maxDeg*maxLev);
+      end;
         
         cn = 2^(n-j+1)*maxDeg;
         cnr=maxLev*maxDeg-cn;
@@ -142,15 +164,30 @@ for j=1:n
             
         end
         
-        cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=eye(maxLev*maxDeg-cn);
+	if (use_sparsify),
+          cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=speye(maxLev*maxDeg-cn,maxLev*maxDeg-cn);
+	else
+          cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=eye(maxLev*maxDeg-cn);
+	end;
         cFMWT(1:cn/2,1:cn)=FMWT(1:cn/2,1:cn);
         cFMWT(cn/2+1:cn,1:cn)=FMWT(maxDeg*maxLev/2+1:maxDeg*maxLev/2+cn/2,1:cn);
+
+	if (idebug >= 1),
+	  figure();
+          subplot(2,1,1);
+          spy(cFMWT);
+	  title(sprintf('line 178: j=%d, cFMWT, N=(%d,%d)',...
+			 j, size(cFMWT,1),size(cFMWT,2) ));
+          subplot(2,1,2);
+          spy(FMWT_COMP);
+	  title(sprintf('FMWT COMP,N=(%d,%d)', ...
+			size(FMWT_COMP,1),size(FMWT_COMP,2)  ));
+	end;
         
         if porting; assert(isequal(cFMWT,cFMWT2)); end
         
     end
 
-    use_sparsify = 1;
     if (use_sparsify),
       cFMWT = sparsify_matrix(cFMWT);
       FMWT_COMP = sparsify_matrix(FMWT_COMP); 
