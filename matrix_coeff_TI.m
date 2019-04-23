@@ -22,8 +22,8 @@ quad_num=10;
 % note vector p_1[] is 1 by k, 
 %      vector p_2[] is 1 by k
 % ------------------------------------
-p_1 = legendre(-1,k);
-p_2 = legendre(1,k);
+p_1 = lin_legendre(-1,k);
+p_2 = lin_legendre(1,k);
 
 % ----------------------------------
 % note quad_x(:) is quad_num by 1
@@ -32,8 +32,8 @@ p_2 = legendre(1,k);
 %      Dp_val(:,:) is quad_num by k
 % ----------------------------------
 [quad_x,quad_w]=lgwt(quad_num,-1,1);
-p_val = legendre(quad_x,k);
-Dp_val = dlegendre(quad_x,k);
+p_val = lin_legendre(quad_x,k);
+Dp_val = lin_dlegendre(quad_x,k);
 
 %---------------------------
 % Jacobi of variable x and v
@@ -380,7 +380,7 @@ end
 
 % Handle B.C. for Poisson solver
 DeltaX(dof_1D_x+1,:)=0;
-DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*legendre(-1,k);
+DeltaX(dof_1D_x+1,dof_1D_x+[1:k])=sqrt(1/hx)*lin_legendre(-1,k);
 
 % % iend = size_DeltaX;
 % % DeltaX(iend,1:size_DeltaX)=0;

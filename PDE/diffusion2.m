@@ -2,23 +2,47 @@ function pde = diffusion2
 % Example PDE using the 2D (1x-1y) Heat Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
-% PDE: df/dt = d^2 f/dx^2 + d^2 f/dy^2
+% PDE:
+% 
+% df/dt = d^2 f/dx^2 + d^2 f/dy^2
+%
 % Domain is [0,1]x[0,1]
 % Dirichlet boundary condition 
-% ToDo: need some effort for naming, boundary conditions, source terms
+%
+% Diffusion terms are dealt with via LDG, i.e., splitting into two first
+% order equations:
+%
+% d/dx ( df/dx ) becomes
+%
+% dq/dx with free (homogeneous Neumann BC)
+%
+% and
+%
+% q=df/dx
 %
 % Run with
-% fk6d(diffusion2,4,2,0.0002,[],[],0,[]);
+%
+% explicit
+% fk6d(diffusion2,3,2,0.001);
+%
+% implicit
+% fk6d(diffusion2,4,2,0.05,[],[],1,[],[],1.9);
+
+pde.CFL = 0.01;
 
 lev = 5;
-deg = 2;
+deg = 3;
 
 %% Setup the dimensions
 % 
 % Here we setup a 2D problem (x,y)
 
-BCFunc = @(x) cos(pi*x);
-BCFunc_t = @(t) exp(-2*pi^2*t);
+soln_x = @(x) cos(pi*x);
+soln_y = @(y) cos(pi*y);
+soln_t = @(t) exp(-2*pi^2*t);
+
+BCFunc = @(x) soln_x(x);
+BCFunc_t = @(t) soln_t(t);
 
 % Domain is (a,b)x(c,d)
 
@@ -37,16 +61,16 @@ BCR_fList = { ...
     };
 
 dim_x.name = 'x';
-dim_x.BCL = 1; % Dirichlet
+dim_x.BCL = 'D'; % Dirichlet
 dim_x.BCL_fList = BCL_fList;
-dim_x.BCR = 1; % Dirichlet
+dim_x.BCR = 'D'; % Dirichlet
 dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.lev = lev;
 dim_x.deg = deg;
 dim_x.FMWT = []; % Gets filled in later
-dim_x.init_cond_fn = @(x,p) cos(pi*x);
+dim_x.init_cond_fn = @(x,p) soln_x(x)*soln_t(0);
 
 dim_x = checkDimension(dim_x);
 
@@ -65,16 +89,16 @@ BCR_fList = { ...
     };
 
 dim_y.name = 'y';
-dim_y.BCL = 1;
+dim_y.BCL = 'D';
 dim_y.BCL_fList = BCL_fList;
-dim_y.BCR = 1;
+dim_y.BCR = 'D';
 dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
 dim_y.lev = lev;
 dim_y.deg = deg;
 dim_y.FMWT = []; % Gets filled in later
-dim_y.init_cond_fn = @(y,p) cos(pi*y);
+dim_y.init_cond_fn = @(y,p) soln_y(y)*soln_t(0);
 
 dim_y = checkDimension(dim_y);
 
@@ -92,22 +116,42 @@ pde.dimensions = {dim_x, dim_y};
 %% 
 % Setup the d^2_dx^2 term
 
-term1_x.dat = [];
-term1_x.LF = 1;         % Upwind Flux
-term1_x.G = @(x,t,y) 1; % Delta Operator 
-term1_x.type = 3;       % Delta Operator ::  Let this denote the derivative order
-term1_x.TD = 0;
+term1_x.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
+% eq1 : g1 * dq/dx (flux equation)
+term1_x.G1 = @(x,p,t,dat) x*0+1;
+term1_x.LF1 = +1; % upwind right
+term1_x.BCL1 = 'D';
+term1_x.BCR1 = 'D';
+% term1_x.BCL1_fList = BCL_fList;
+% term1_x.BCR1_fList = BCR_fList;
+% eq2 : g2 * df/dx (actual variable eqn)
+term1_x.G2 = @(x,p,t,dat) x*0+1;
+term1_x.LF2 = -1; % upwind left
+term1_x.BCL2 = 'N';
+term1_x.BCR2 = 'N';
+% term1_x.BCL2_fList = []; % Defaults to zero
+% term1_x.BCR2_fList = []; % Defaults to zero
 
 term1 = term_fill({term1_x,[]});
 
 %% 
 % Setup the d^2_dy^2 term
 
-term2_y.dat = [];
-term2_y.LF = 0;         % Upwind Flux
-term2_y.G = @(x,t,y) 1; % Delta Operator 
-term2_y.type = 3;        % Delta Operator ::  Let this denote the derivative order
-term2_y.TD = 0;
+term2_y.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
+% eq1 : g1 * dq/dy (flux equation)
+term2_y.G1 = @(y,p,t,dat) y*0+1;
+term2_y.LF1 = +1; % upwind right
+term2_y.BCL1 = 'D';
+term2_y.BCR1 = 'D';
+% term2_y.BCL1_fList = BCL_fList;
+% term2_y.BCR1_fList = BCR_fList;
+% eq2 : g2 * df/dy (actual variable eqn)
+term2_y.G2 = @(y,p,t,dat) y*0+1;
+term2_y.LF2 = -1; % upwind left
+term2_y.BCL2 = 'N';
+term2_y.BCR2 = 'N';
+% term2_y.BCL2_fList = []; % Defaults to zero
+% term2_y.BCR2_flIST = []; % Defaults to zero
 
 term2 = term_fill({[],term2_y});
 
@@ -145,9 +189,9 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...
-    @(x,p,t) cos(pi*x), ...
-    @(y,p,t) cos(pi*y), ... 
-    @(t,p) exp(-2*pi^2*t) 
+    @(x,p,t) soln_x(x), ...
+    @(y,p,t) soln_y(y), ... 
+    @(t,p) soln_t(t) 
     };
 
 %% Other workflow options that should perhpas not be in the PDE?
@@ -171,7 +215,7 @@ dims = pde.dimensions;
 % for Diffusion equation: dt = C * dx^2
 
 lev = dims{1}.lev;
-CFL = .01;
+CFL = pde.CFL;
 dx = 1/2^lev;
 dt = CFL*dx^2;
 

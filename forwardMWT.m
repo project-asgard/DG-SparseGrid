@@ -22,7 +22,7 @@ f=zeros(dof_1D,1);
 % Get the Legendre basis function evaluated at the Legendre-Gauss nodes up
 % to order k.
 
-p_val = transpose( legendre(quad_x,deg) * 1/sqrt(h) ); % TODO : this call happens in lots of places. We should consolidate if possible.
+p_val = transpose( lin_legendre(quad_x,deg) * 1/sqrt(h) ); % TODO : this call happens in lots of places. We should consolidate if possible.
 
 for i=0:n-1
     

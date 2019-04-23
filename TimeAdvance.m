@@ -14,10 +14,10 @@ end
 
 end
 
+
+%% 3-rd Order Kutta Method (explicit time advance)
+
 function fval = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
-%----------------------------------
-% 3-rd Order Kutta Method
-%----------------------------------
 
 %%
 % Sources
@@ -35,52 +35,53 @@ bc3 = getBoundaryCondition1(pde,HASHInv,t+c3*dt);
 a21 = 1/2; a31 = -1; a32 = 2;
 b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
-k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 - bc1;
+k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 + bc1;
 y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 - bc2;
+k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 + bc2;
 y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 - bc3;
+k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 + bc3;
 
 fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
 
 end
 
-function f1 = backward_euler(pde,bc,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
-%----------------------------------
-% Backward Euler (First Order Implicit Time Advance)
-%----------------------------------
+
+%% Backward Euler (first order implicit time advance)
+
+function f1 = backward_euler(pde,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
+
 
 s1 = source_vector(HASHInv,pde,t+dt);
-bc1 = getBoundaryConditionVectors(pde,bc,HASHInv,t+dt);
+bc1 = getBoundaryCondition1(pde,HASHInv,t+dt);
 
 [~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
 I = eye(numel(diag(AMat)));
 AA = I - dt*AMat;
 
-b = f0 + dt*s1 - dt*bc1;
+b = f0 + dt*s1 + dt*bc1;
 
 f1 = AA\b; % Solve at each timestep
 
 end
 
-function f1 = crank_nicolson(pde,bc,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
-%----------------------------------
-% Crank Nicolson (Second Order Implicit Time Advance)
-%----------------------------------
+
+%% Crank Nicolson (second order implicit time advance)
+
+function f1 = crank_nicolson(pde,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
 
 s0 = source_vector(HASHInv,pde,t);
 s1 = source_vector(HASHInv,pde,t+dt);
 
-bc0 = getBoundaryConditionVectors(pde,bc,HASHInv,t);
-bc1 = getBoundaryConditionVectors(pde,bc,HASHInv,t+dt);
+bc0 = getBoundaryCondition1(pde,HASHInv,t);
+bc1 = getBoundaryCondition1(pde,HASHInv,t+dt);
 
 [~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
 
-b = 2*f0 + dt*AMat*f0 + dt*(s0+s1) - dt*(bc0+bc1);
+b = 2*f0 + dt*AMat*f0 + dt*(s0+s1) + dt*(bc0+bc1);
 
 f1 = AA\b; % Solve at each timestep
 

@@ -1,4 +1,4 @@
-function v=legendre2(x,k)
+function v=lin_legendre2(x,k)
 % v=legendre2(x,k)
 %
 % Legendre Polynomials with degree k on [-1,1]
@@ -62,5 +62,4 @@ v( out_of_range, 1:k) = 0;
 % ----------------------------------------
 v = v * sqrt(2);
 
-broken
 

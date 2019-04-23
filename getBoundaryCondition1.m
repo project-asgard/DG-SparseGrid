@@ -5,13 +5,20 @@ function bcVec = getBoundaryCondition1(pde,HashInv,time)
 % is addative, i.e., if only left is D then the right component is added in
 % as zero.
 
-nHash = numel(HashInv);
-nTerms = numel(pde.terms);
-nDims = numel(pde.dimensions);
+%%
+% pde shortcuts
+
 dims = pde.dimensions;
 terms = pde.terms;
 
+%%
+% dim shortcuts
+
 deg = dims{1}.deg; % TODO
+
+nHash = numel(HashInv);
+nTerms = numel(pde.terms);
+nDims = numel(dims);
 
 bcVec = zeros(deg^nDims*nHash,1);
 
@@ -33,10 +40,10 @@ for tt = 1:nTerms % Construct a BC object for each term
         
         ftL = 1;
         ftR = 1;
-        if BCL == 1 % dirichlet
+        if strcmp(BCL,'D') % dirichlet
             ftL = dim1.BCL_fList{nDims+1}(time);
         end
-        if BCR == 1 % dirichlet
+        if strcmp(BCR,'D') % dirichlet
             ftR = dim1.BCR_fList{nDims+1}(time);
         end
         
@@ -55,12 +62,12 @@ for tt = 1:nTerms % Construct a BC object for each term
         %%
         % Get the boundary integral for all other dimensions
         
-        if term{d1}.type == 1 || term{d1}.type == 3 % grad or del^2 operators
+        if strcmp(term{d1}.type,'grad') || strcmp(term{d1}.type,'diff') % grad or diffusion operators
             
-            if BCL == 1
+            if strcmp(BCL,'D')
                 bcL{d1} = ComputeRHS(pde,time,nDims,dim1,'L'); % returns a nDim length list
             end
-            if BCR == 1
+            if strcmp(BCR,'D')
                 bcR{d1} = ComputeRHS(pde,time,nDims,dim1,'R'); % returns a nDim length list
             end
             
@@ -72,26 +79,26 @@ for tt = 1:nTerms % Construct a BC object for each term
         
         % Func*v|_xMin and Func*v|_xMax
         
-        if term{d1}.type == 1 || term{d1}.type == 3 % grad or del^2 operators
+        if strcmp(term{d1}.type,'grad') || strcmp(term{d1}.type,'diff') % grad or diffusion operators
             
-            if BCL == 1 % Dirichlet
+            if strcmp(BCL,'D') % Dirichlet
                 
                 bcL_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
                 bcL_tmp = FMWT * bcL_tmp;
                 
-                if term{d1}.type == 3 % LDG requires additional step
+                if strcmp(term{d1}.type,'diff') % LDG requires additional step
                     bcL_tmp = term{d1}.matD*bcL_tmp;
                 end
                 
                 bcL{d1}{d1} = bcL_tmp;
             end
             
-            if BCR == 1 % Dirichlet
+            if strcmp(BCR,'D') % Dirichlet
                 
                 bcR_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
                 bcR_tmp = FMWT * bcR_tmp;
                 
-                if term{d1}.type == 3 % LDG requires additional step
+                if strcmp(term{d1}.type,'diff') % LDG requires additional step
                     bcR_tmp = term{d1}.matD*bcR_tmp;
                 end
                 

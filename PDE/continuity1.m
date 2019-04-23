@@ -1,20 +1,28 @@
 function pde = continuity1
 % 1D test case using continuity equation, i.e., 
 % df/dt + df/dx = 0
+%
+% Run with
+%
+% explicit
+% fk6d(continuity1,4,2,0.01);
+%
+% implicit
+% fk6d(continuity1,4,2,0.01,[],[],1,[],[],0.1);
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
 
 dim_x.name = 'x';
-dim_x.BCL = 0; % periodic
-dim_x.BCR = 0;
+dim_x.BCL = 'P';
+dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.lev = 2;
 dim_x.deg = 2;
 dim_x.FMWT = []; % Gets filled in later
-dim_x.init_cond_fn = @Fx_0;
+dim_x.init_cond_fn = @(x,p) x.*0;
 
 dim_x = checkDimension(dim_x);
 
@@ -32,8 +40,8 @@ pde.dimensions = {dim_x};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,t,dat) x*0+1; % G function for use in coeff_matrix construction.
+term2_x.type = 'grad';
+term2_x.G = @(x,p,t,dat) x*0-1; % G function for use in coeff_matrix construction.
 term2_x.TD = 0; % Time dependent term or not.
 term2_x.dat = []; % These are to be filled within the workflow for now
 term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
@@ -96,11 +104,6 @@ end
 
 %% Define the various input functions specified above. 
 
-function f=Fx_0(x,p)
-% Initial condition for x variable
-f=x.*0;
-end
-
 %%
 % Source terms are composed of fully seperable functions
 % Source = source1 + source2
@@ -137,9 +140,12 @@ end
 % Function to set time step
 function dt=set_dt(pde)
 
-Lmax = pde.dimensions{1}.domainMax;
-LevX = pde.dimensions{1}.lev;
-CFL = pde.CFL;
-
-dt = Lmax/2^LevX*CFL;
+dim = pde.dimensions{1};
+lev = dim.lev;
+xMax = dim.domainMax;
+xMin = dim.domainMin;
+xRange = xMax-xMin;
+dx = xRange/(2^lev);
+CFL = 0.01;
+dt = CFL*dx;
 end

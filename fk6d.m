@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity)
+function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity,CFL)
 
 format short e
 folder = fileparts(which(mfilename));
@@ -8,6 +8,9 @@ addpath(genpath(folder));
 
 %% Load PDE and runtime defaults
 runtimeDefaults
+
+%% Check terms
+pde = checkTerms(pde);
 
 %% Shortcuts (some of this will go away soon)
 % Named domain ranges
@@ -31,7 +34,6 @@ DimX = 1;
 params = pde.params;
 
 %% Set time step.
-pde.CFL = 0.1;
 dt = pde.set_dt(pde);
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
@@ -144,34 +146,6 @@ if nDims <= 3
     
 end
 
-% %%
-% % Try transforming a known 3D function to wavelet space and then back again.
-%
-% fa = getAnalyticSolution_D(coord,5*dt,pde);
-% fa_wSpace = exact_solution_vector(HASHInv,pde,5*dt);
-% fa_rSpace = reshape(Multi_2D_D(Meval,fa_wSpace,HASHInv,pde),size(fa));
-%
-% norm(fa(:)-fa_rSpace(:))/norm(fa(:))*100
-%
-% sy=5;sz=10;
-% figure
-% hold on
-% plot(fa(:,sy,sz));
-% plot(fa_rSpace(:,sy,sz));
-%
-% figure
-% subplot(2,2,1)
-% contour(fa_rSpace(:,:,sz));
-% hold on
-% subplot(2,2,2)
-% contour(fa(:,:,sz));
-% subplot(2,2,3)
-% fa2=permute(fa,[3,1,2]);
-% contour(fa2(:,:,sz));
-% subplot(2,2,4)
-% fa2=permute(fa,[3,2,1]);
-% contour(fa2(:,:,sz));
-
 %% Plot initial condition
 if nDims <=3
     
@@ -186,31 +160,6 @@ if nDims <=3
     
 end
 
-if nDims==2
-    if ~quiet
-        %%
-        % Transform from wavelet space to real space
-        tmp = Multi_2D(Meval_v,Meval_x,fval,HASHInv,lev,deg);
-        figure(1000)
-        
-        f2d0 = reshape(tmp,deg*2^LevX,deg*2^LevV)';
-        
-        [xx,vv]=meshgrid(x_node,v_node);
-        
-        ax1 = subplot(1,2,1);
-        mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
-        axis([Lmin Lmax Vmin Vmax])
-        %caxis([-range1 +range1]);
-        title('df');
-        
-        ax2 = subplot(1,2,2);
-        mesh(xx,vv,f2d0,'FaceColor','interp','EdgeColor','none');
-        axis([Lmin Lmax Vmin Vmax])
-        %caxis([range2n +range2]);
-        title('f');
-    end
-end
-
 %% Write the initial condition to file.
 write_fval = 0;
 if write_fval; write_fval_to_file(fval,lev,deg,0); end
@@ -220,13 +169,14 @@ plotFreq = 1;
 err = 0;
 
 %% Time Loop
+
 if ~quiet; disp('Advancing time ...'); end
 nsteps = max(1,floor( TEND/dt));
 for L = 1:nsteps,
     
     tic;
     time(count) = (L-1)*dt;
-    timeStr = sprintf('Step %i of %i',L,nsteps);
+    timeStr = sprintf('Step %i of %i at %f seconds',L,nsteps,time(count));
     
     if ~quiet; disp(timeStr); end
     Emax = 0;
@@ -246,18 +196,10 @@ for L = 1:nsteps,
         E = E * pde.Et(time(count),params);
         Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
     end
-    
-    
-    %     ax3 = subplot(2,2,3);
-    %     plot(x_node,Meval_x*u,'r-o')
-    %     title(['time = ',num2str(dt*L)])
-    %     ax4 = subplot(2,2,4);
-    %     plot(x_node,Meval_x*E,'r-o')
-    
-    
+        
     if ~quiet; disp('    Calculate time dependent matrix coeffs'); end
     if nDims==2
-        if (pde.applySpecifiedE | pde.solvePoisson)
+        if (pde.applySpecifiedE || pde.solvePoisson)
             
             %%
             % Generate EMassX time dependent coefficient matrix.
@@ -268,9 +210,9 @@ for L = 1:nsteps,
             % Set the dat portion of the EMassX part of E.d_dv term.
             
             pde.terms{2}{2}.dat = E;
+            
         end
-    end
-    
+    end    
     
     
     %%
@@ -280,7 +222,8 @@ for L = 1:nsteps,
     TD = 1;
     pde = getCoeffMats(pde,t,TD);
     
-    %%% Update A_encode for time-dependent coefficient matricies.
+    %%
+    % Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
     if runTimeOpts.compression == 3
         % the new matrix construction is as _newCon, only works for
@@ -292,7 +235,9 @@ for L = 1:nsteps,
         
     end
     
-    %%% Advance Vlasov in time with RK3 time stepping method.
+    %%
+    % Advance in time
+    
     if ~quiet; disp('    RK3 time step'); end
     if runTimeOpts.compression == 3
         fval = TimeAdvance(pde,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);

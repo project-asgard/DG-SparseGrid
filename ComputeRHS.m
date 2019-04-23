@@ -1,24 +1,24 @@
-function rhsList = ComputeRHS(pde,time,nDims,dimension,LorR)
+function rhsList = ComputeRHS(pde,time,nDims,dim,LorR)
 
 %function rhs to compute the rhs term
 
-xMin = dimension.domainMin;
-xMax = dimension.domainMax;
-lev = dimension.lev;
-deg = dimension.deg;
+xMin = dim.domainMin;
+xMax = dim.domainMax;
+lev = dim.lev;
+deg = dim.deg;
 
 p = pde.params;
 
 bcIsDirichlet = 0;
 if strcmp(LorR,'L')
-    if dimension.BCL == 1 % dirichlet
+    if strcmp(dim.BCL,'D') % dirichlet
         bcIsDirichlet = 1;
-        fList = dimension.BCL_fList;
+        fList = dim.BCL_fList;
     end
 else
-    if dimension.BCR == 1 % dirichlet
+    if strcmp(dim.BCR,'D') % dirichlet
         bcIsDirichlet = 1;
-        fList = dimension.BCR_fList;
+        fList = dim.BCR_fList;
     end
 end
 
@@ -38,7 +38,7 @@ quad_num = 10;
 %  p_val(:,:) is quad_num by deg
 %  Dp_val(:,:) is quad_num by deg
 [quad_x,quad_w] = lgwt(quad_num,-1,1);
-p_val  = legendre(quad_x,deg)  * 1/sqrt(h);
+p_val  = lin_legendre(quad_x,deg)  * 1/sqrt(h);
 
 Jacobi = h/2;
 
@@ -65,7 +65,7 @@ for d = 1 : nDims
         end     
     end
     
-    rhsList{d} = dimension.FMWT*rhs;
+    rhsList{d} = dim.FMWT*rhs;
 
 end
 

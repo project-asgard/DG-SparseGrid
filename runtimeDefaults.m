@@ -73,3 +73,13 @@ if ~exist('useConnectivity','var') || isempty(useConnectivity)
 else
     runTimeOpts.useConnectivity = useConnectivity;
 end
+
+%%
+% CFL number
+if ~exist('CFL','var') || isempty(CFL)
+    if ~isfield(pde,'CFL')
+        pde.CFL = 0.1;
+    end
+else
+    pde.CFL = CFL;
+end
