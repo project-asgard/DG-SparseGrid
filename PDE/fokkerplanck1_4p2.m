@@ -83,28 +83,28 @@ pde.dimensions = {dim_z};
 %% 
 % Setup the v.d_dx (v.MassV . GradX) term
 
-term2_z.type = 'diff';
+termC_z.type = 'diff';
 % eq1 : 1 * dq/dx
-term2_z.G1 = @(z,p,t,dat) z.*0+1;
-term2_z.LF1 = -1; % upwind left
-term2_z.BCL1 = 'N';
-term2_z.BCR1 = 'N';
+termC_z.G1 = @(z,p,t,dat) z.*0+1;
+termC_z.LF1 = -1; % upwind left
+termC_z.BCL1 = 'N';
+termC_z.BCR1 = 'N';
 % term2_z.BCL1_fList = []; % Defaults to zero
 % term2_z.BCR1_fList = []; % Defaults to zero
 % eq2 : (1-z^2) * df/dx 
-term2_z.G2 = @(z,p,t,dat) (1-z.^2);
-term2_z.LF2 = +1; % upwind right
-term2_z.BCL2 = 'D';
-term2_z.BCR2 = 'D';
+termC_z.G2 = @(z,p,t,dat) (1-z.^2);
+termC_z.LF2 = +1; % upwind right
+termC_z.BCL2 = 'D';
+termC_z.BCR2 = 'D';
 % term2_z.BCL2_fList = []; % Defaults to zero
 % term2_z.BCR2_fList = []; % Defaults to zero
 
-term2 = {term2_z};
+termC = {termC_z};
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2};
+pde.terms = {termC};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
