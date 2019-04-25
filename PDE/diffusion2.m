@@ -12,13 +12,13 @@ function pde = diffusion2
 % Diffusion terms are dealt with via LDG, i.e., splitting into two first
 % order equations:
 %
-% d/dx ( df/dx ) becomes
+% d^2 f / dx^2 becomes
 %
 % dq/dx with free (homogeneous Neumann BC)
 %
 % and
 %
-% q=df/dx
+% q=df/dx with Dirichlet BCs specified by analytic solution
 %
 % Run with
 %
@@ -29,9 +29,6 @@ function pde = diffusion2
 % fk6d(diffusion2,4,2,0.05,[],[],1,[],[],1.9);
 
 pde.CFL = 0.01;
-
-lev = 5;
-deg = 3;
 
 %% Setup the dimensions
 % 
@@ -67,12 +64,7 @@ dim_x.BCR = 'D'; % Dirichlet
 dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
-dim_x.lev = lev;
-dim_x.deg = deg;
-dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) soln_x(x)*soln_t(0);
-
-dim_x = checkDimension(dim_x);
 
 % The function is defined for the plane
 % y = c and y = d
@@ -95,12 +87,7 @@ dim_y.BCR = 'D';
 dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
-dim_y.lev = lev;
-dim_y.deg = deg;
-dim_y.FMWT = []; % Gets filled in later
 dim_y.init_cond_fn = @(y,p) soln_y(y)*soln_t(0);
-
-dim_y = checkDimension(dim_y);
 
 %%
 % Add dimensions to the pde object
@@ -116,42 +103,38 @@ pde.dimensions = {dim_x, dim_y};
 %% 
 % Setup the d^2_dx^2 term
 
-term1_x.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
+term1_x.type = 'diff';
 % eq1 : g1 * dq/dx (flux equation)
 term1_x.G1 = @(x,p,t,dat) x*0+1;
 term1_x.LF1 = +1; % upwind right
-term1_x.BCL1 = 'D';
-term1_x.BCR1 = 'D';
-% term1_x.BCL1_fList = BCL_fList;
-% term1_x.BCR1_fList = BCR_fList;
+term1_x.BCL1 = 'N';
+term1_x.BCR1 = 'N';
 % eq2 : g2 * df/dx (actual variable eqn)
 term1_x.G2 = @(x,p,t,dat) x*0+1;
 term1_x.LF2 = -1; % upwind left
-term1_x.BCL2 = 'N';
-term1_x.BCR2 = 'N';
-% term1_x.BCL2_fList = []; % Defaults to zero
-% term1_x.BCR2_fList = []; % Defaults to zero
+term1_x.BCL2 = 'D';
+term1_x.BCR2 = 'D';
+term1_x.BCL2_fList = BCL_fList;
+term1_x.BCR2_fList = BCR_fList;
 
 term1 = term_fill({term1_x,[]});
 
 %% 
 % Setup the d^2_dy^2 term
 
-term2_y.type = 'diff';       % Delta Operator ::  Let this denote the derivative order
+term2_y.type = 'diff';
 % eq1 : g1 * dq/dy (flux equation)
 term2_y.G1 = @(y,p,t,dat) y*0+1;
 term2_y.LF1 = +1; % upwind right
-term2_y.BCL1 = 'D';
-term2_y.BCR1 = 'D';
-% term2_y.BCL1_fList = BCL_fList;
-% term2_y.BCR1_fList = BCR_fList;
+term2_y.BCL1 = 'N';
+term2_y.BCR1 = 'N';
 % eq2 : g2 * df/dy (actual variable eqn)
 term2_y.G2 = @(y,p,t,dat) y*0+1;
 term2_y.LF2 = -1; % upwind left
-term2_y.BCL2 = 'N';
-term2_y.BCR2 = 'N';
-% term2_y.BCL2_fList = []; % Defaults to zero
-% term2_y.BCR2_flIST = []; % Defaults to zero
+term2_y.BCL2 = 'D';
+term2_y.BCR2 = 'D';
+term2_y.BCL2_fList = BCL_fList;
+term2_y.BCR2_fList = BCR_fList;
 
 term2 = term_fill({[],term2_y});
 
@@ -167,19 +150,6 @@ params.parameter1 = 0;
 params.parameter2 = 1;
 
 pde.params = params;
-
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1 (which here is 2+1 / (x,v) + time) functions describing the
-% variation of each source term with each dimension and time.
-% Here we define 3 source terms.
-
-% %%
-% % Source 1
-% s1x = @source1x;
-% s1v = @source1v;
-% s1t = @source1t;
-% source1 = {s1v,s1x,s1t};
-
 
 %%
 % Add sources to the pde data structure
@@ -208,6 +178,7 @@ end
 
 %%
 % Function to set time step
+
 function dt=set_dt(pde)
 
 dims = pde.dimensions;

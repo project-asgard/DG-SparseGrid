@@ -28,11 +28,12 @@ for tt = 1:nTerms
             
             disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]);
             
-            [mat,matD] = coeff_matrix2(pde,t,dim,term{d});
+            [mat,mat1,mat2] = coeff_matrix2(pde,t,dim,term{d});
             
             pde.terms{tt}{d}.coeff_mat = mat;
             if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
-                pde.terms{tt}{d}.matD = matD;    
+                pde.terms{tt}{d}.mat1 = mat1; 
+                pde.terms{tt}{d}.mat2 = mat2;
             end
             
         end

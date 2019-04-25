@@ -1,26 +1,27 @@
-function rhsList = ComputeRHS(pde,time,nDims,dim,LorR)
-
+% function rhsList = ComputeRHS(pde,time,nDims,dim,LorR)
+function rhsList = ComputeRHS(pde,time,dim,fList,FMWT)
 %function rhs to compute the rhs term
+
+p = pde.params;
+nDims = numel(pde.dimensions);
 
 xMin = dim.domainMin;
 xMax = dim.domainMax;
 lev = dim.lev;
 deg = dim.deg;
 
-p = pde.params;
-
-bcIsDirichlet = 0;
-if strcmp(LorR,'L')
-    if strcmp(dim.BCL,'D') % dirichlet
-        bcIsDirichlet = 1;
-        fList = dim.BCL_fList;
-    end
-else
-    if strcmp(dim.BCR,'D') % dirichlet
-        bcIsDirichlet = 1;
-        fList = dim.BCR_fList;
-    end
-end
+bcIsDirichlet = 1;
+% if strcmp(LorR,'L')
+%     if strcmp(dim.BCL,'D') % dirichlet
+%         bcIsDirichlet = 1;
+%         fList = dim.BCL_fList;
+%     end
+% else
+%     if strcmp(dim.BCR,'D') % dirichlet
+%         bcIsDirichlet = 1;
+%         fList = dim.BCR_fList;
+%     end
+% end
 
 L = xMax-xMin;
 Tol_Cel_Num = 2^(lev);
@@ -65,7 +66,7 @@ for d = 1 : nDims
         end     
     end
     
-    rhsList{d} = dim.FMWT*rhs;
+    rhsList{d} = FMWT*rhs;
 
 end
 

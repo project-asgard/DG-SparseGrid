@@ -8,7 +8,7 @@ nterms = numel(terms);
 
 for t=1:nterms
     for d=1:ndims
-        terms{t}{d} = checkPartialTerm(terms{t}{d});
+        terms{t}{d} = checkPartialTerm(ndims,terms{t}{d});
     end
 end
 

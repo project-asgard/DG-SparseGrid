@@ -1,71 +1,52 @@
-function pde = fokkerplanck1_4p2
-% 1D pitch angle collisional term 
-% df/dt == d/dz ( (1-z^2) df/dz ) 
-% 
-% Here we use LDG for this second order system. We impose homogeneous
-% Neumann BCs on f
+function pde = fokkerplanck1_5p1a
+% Test the momentum dynamics for the RE problem for E = R = 0
 %
-% d/dz( (1-z^2) df/dz ) becomes
+% x^2 * df/dt == d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
+%             == d/dx*x^2*psi(x)/x*df/dx  +  d/dx*x^2*2*psi(x)*f
 %
-% d/dz (1-z^2)*q  with free (homogeneous Neumann BC)
+% (note the x^2 moved to the left side)
 %
-% and the flux is 
-%
-% q=df/fz  with homogeneous Dirichlet BC
 %
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1_4p2,4,4,0.01);
+% fk6d(fokkerplanck1_5p1a,5,3,0.01)
 %
 % implicit
-% fk6d(fokkerplanck1_4p2,5,4,0.01,[],[],1,[],[],0.5);
+% fk6d(fokkerplanck1_5p1a,5,4,3,[],[],1,'SG',[],1.5)
 
-pde.CFL = 0.005;
-
+pde.CFL = 0.01;
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
 
-    function ret = soln(z,t)
+    function ret = psi(x,t)
         
-        h = [3,0.5,1,0.7,3,0,3];
-        
-        ret = zeros(size(z));
-        for l=1:numel(h)
-            
-            L = l-1;
-            P_m = legendre(L,z); % Use matlab rather than Lin's legendre.
-            P = P_m(1,:)';
-            
-            ret = ret + h(l) * P * exp(-L*(L+1)*t);
-            
-        end
-        
+        phi = erf(x);
+        dphi_dx = 2/sqrt(pi) * exp(-x.^2);
+
+        ret = 1/(2*x.^2) * (phi - x.*dphi_dx)
     end
 
-BCL_fList = { ...
-    @(z,p,t) z*0, ...
-    @(t,p) 1
-    };
+    function ret = f0(x)
+        a = 2;
+        ret = 4.0/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
+    end
 
-BCR_fList = { ...
-    @(z,p,t) z*0, ...
-    @(t,p) 1
-    };
+    function ret = soln(x,t)
+        ret = 4/sqrt(pi) * exp(-x.^2);
+    end
 
 dim_z.name = 'z';
-dim_z.BCL = 'D'; % dirichlet
-dim_z.BCL_fList = BCL_fList;
-dim_z.BCR = 'D';
-dim_z.BCR_fList = BCR_fList;
+dim_z.BCL = 'N'; % neumann
+dim_z.BCR = 'N'; % not set (equivalent to neumann)
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.lev = 2;
 dim_z.deg = 2;
 dim_z.FMWT = []; % Gets filled in later
-dim_z.init_cond_fn = @(z,p) soln(z,0);
+dim_z.init_cond_fn = @(z,p) f0(z);
 
 dim_z = checkDimension(dim_z);
 
@@ -77,30 +58,20 @@ dim_z = checkDimension(dim_z);
 pde.dimensions = {dim_z};
 
 %% Setup the terms of the PDE
-%
-% Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% d/dz( (1-z^2) df/dz )
+% d/dx*x^2*psi(x)/x*df/dx
 
-termC_z.type = 'diff';
-% eq1 : 1 * d/dx (1-z^2) q
-termC_z.G1 = @(z,p,t,dat) 1-z.^2;
-termC_z.LF1 = -1; % upwind left
-termC_z.BCL1 = 'D';
-termC_z.BCR1 = 'D';
-% eq2 : q = df/dx 
-termC_z.G2 = @(z,p,t,dat) z*0+1;
-termC_z.LF2 = +1; % upwind right
-termC_z.BCL2 = 'N';
-termC_z.BCR2 = 'N';
+term1_z.type = 'diff'; % grad (see coeff_matrix.m for available types)
+term1_z.G = @(x,p,t,dat) x.^2.*psi(x)./x; % G function for use in coeff_matrix construction.
+term1_z.LF = -1; % Upwind 
 
-termC = {termC_z};
+term2 = term_fill({term1_z});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {termC};
+pde.terms = {term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -142,14 +113,10 @@ end
 function dt=set_dt(pde)
 
 dims = pde.dimensions;
-
-% for Diffusion equation: dt = C * dx^2
-
+xRange = dims{1}.domainMax-dims{1}.domainMin;
 lev = dims{1}.lev;
-xMax = dims{1}.domainMax;
-xMin = dims{1}.domainMin;
-xRange = xMax-xMin;
 CFL = pde.CFL;
 dx = xRange/2^lev;
-dt = CFL*dx^2;
+dt = CFL * dx;
+
 end

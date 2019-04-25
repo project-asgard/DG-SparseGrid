@@ -1,4 +1,4 @@
-function term_out = checkPartialTerm(term)
+function term_out = checkPartialTerm(nDims,term)
 
 % Check to make sure each partial term has the all the right fields.
 
