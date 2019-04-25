@@ -70,6 +70,7 @@ if strcmp(type,'diff')
     dimA = checkDimension(nDims,dimA);
 
     mat1 = coeff_matrix2(pde,t,dimA,termA);
+    assert(~isnan(sum(mat1,'all')))
     
     %%
     % Equation 2 of LDG
@@ -86,6 +87,8 @@ if strcmp(type,'diff')
     dimB = checkDimension(nDims,dimB);
 
     mat2 = coeff_matrix2(pde,t,dimB,termB);
+    assert(~isnan(sum(mat2,'all')))
+
     
     %%
     % Combine back into second order operator
@@ -225,10 +228,15 @@ else
         G1 = G(quad_xi,params,t,dat_R_quad);
         val_grad  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
         
+        assert(~isnan(norm(G1)))
+        
         Iu = meshgrid( deg*i+1 : deg*(i+1) );
         
         Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
         Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
+        
+        assert(~isnan(sum(Mass,'all')))
+        assert(~isnan(sum(Grad,'all')))
         
         
         %%
@@ -349,13 +357,17 @@ else
         end
         
         Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
-        
+        assert(~isnan(sum(Grad,'all')))
+       
     end
     
     
     %% Transform coeff_mat to wavelet space
     Mass = FMWT * Mass * FMWT';
     Grad = FMWT * Grad * FMWT';
+    
+    assert(~isnan(sum(Mass,'all')))
+    assert(~isnan(sum(Grad,'all')))
     
 end
 

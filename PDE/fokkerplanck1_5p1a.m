@@ -24,9 +24,9 @@ pde.CFL = 0.01;
     function ret = psi(x,t)
         
         phi = erf(x);
-        dphi_dx = 2/sqrt(pi) * exp(-x.^2);
+        dphi_dx = 2./sqrt(pi) * exp(-x.^2);
 
-        ret = 1/(2*x.^2) * (phi - x.*dphi_dx)
+        ret = 1./(2*x.^2) .* (phi - x.*dphi_dx);
     end
 
     function ret = f0(x)
@@ -34,44 +34,66 @@ pde.CFL = 0.01;
         ret = 4.0/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
     end
 
+    function ret = x_psi(x) % manage the singularity at x=0      
+        for i=1:numel(x)
+            if abs(x(i))<1e-5
+                ret(i) = x(i).*0;
+            else
+                ret(i) = x(i).*psi(x(i));
+            end
+        end
+    end
+
     function ret = soln(x,t)
         ret = 4/sqrt(pi) * exp(-x.^2);
     end
 
-dim_z.name = 'z';
-dim_z.BCL = 'N'; % neumann
-dim_z.BCR = 'N'; % not set (equivalent to neumann)
-dim_z.domainMin = -1;
-dim_z.domainMax = +1;
-dim_z.lev = 2;
-dim_z.deg = 2;
-dim_z.FMWT = []; % Gets filled in later
-dim_z.init_cond_fn = @(z,p) f0(z);
-
-dim_z = checkDimension(dim_z);
+dim_x.BCL = 'N'; % neumann
+dim_x.BCR = 'N'; % not set (equivalent to neumann)
+dim_x.domainMin = 0;
+dim_x.domainMax = +10;
+dim_x.init_cond_fn = @(z,p) f0(z);
 
 %%
 % Add dimensions to the pde object
 % Note that the order of the dimensions must be consistent with this across
 % the remainder of this PDE.
 
-pde.dimensions = {dim_z};
+pde.dimensions = {dim_x};
 
 %% Setup the terms of the PDE
 
 %% 
 % d/dx*x^2*psi(x)/x*df/dx
 
-term1_z.type = 'diff'; % grad (see coeff_matrix.m for available types)
-term1_z.G = @(x,p,t,dat) x.^2.*psi(x)./x; % G function for use in coeff_matrix construction.
-term1_z.LF = -1; % Upwind 
+term1_x.type = 'diff';
+% Eq 1 : d/dx * x*psi(x) * q
+term1_x.G1 = @(x,p,t,dat) x_psi(x);
+term1_x.LF1 = -1; % Upwind
+term1_x.BCL1 = 'D';
+term1_x.BCR1 = 'D';
+% Eq 2 : q = df/dx
+term1_x.G2 = @(x,p,t,dat) x.*0+1;
+term1_x.LF2 = +1; % Downwind
+term1_x.BCL1 = 'N';
+term1_x.BCR1 = 'N';
 
-term2 = term_fill({term1_z});
+term1 = term_fill({term1_x});
+
+%%
+% d/dx*x^2*2*psi(x)*f
+
+term2_x.type = 'grad';
+term2_x.G1 = @(x,p,t,dat) x.^2*2.*psi(x);
+term2_x.LF = -1;
+
+term2 = term_fill({term2_x});
+
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2};
+pde.terms = {term1,term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -96,27 +118,22 @@ pde.analytic_solutions_1D = { ...
     @(t,p) 1 
     };
 
-%% Other workflow options that should perhpas not be in the PDE?
-
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.implicit = 0; % Can likely be removed and be a runtime argument. 
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
-
-end
-
-%% Define the various input functions specified above. 
 
 %%
 % Function to set time step
-function dt=set_dt(pde)
+    function dt=set_dt(pde)
+        
+        dims = pde.dimensions;
+        xRange = dims{1}.domainMax-dims{1}.domainMin;
+        lev = dims{1}.lev;
+        CFL = pde.CFL;
+        dx = xRange/2^lev;
+        dt = CFL * dx;
+        
+    end
 
-dims = pde.dimensions;
-xRange = dims{1}.domainMax-dims{1}.domainMin;
-lev = dims{1}.lev;
-CFL = pde.CFL;
-dx = xRange/2^lev;
-dt = CFL * dx;
+pde.set_dt = @set_dt;
 
 end
+
+
