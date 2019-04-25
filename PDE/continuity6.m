@@ -1,9 +1,14 @@
 function pde = continuity6
 % 3D test case using continuity equation, i.e.,
+%
 % df/dt + b.grad_x(f) + a.grad_v(f)==0 where b={1,1,3}, a={4,3,2}
-
-%% Setup the dimensions
-isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+%
+% df/dt == -bx*df/dx - by*df/dy - bz*df/dz - ax*df/dvx - ay*df/dvy - az*df/dvz
+%
+% Run with 
+%
+% explicit
+% fk6d(continuity6,3,2,0.0002);
 
 bx=1;
 by=1;
@@ -12,67 +17,45 @@ ax=4;
 ay=3;
 az=2;
 
-%
+%% Setup the dimensions
+
+%%
 % Here we setup a 6D problem (x,y,z,vx,vy,vz)
 
-dim_x.name = 'x';
-dim_x.BCL = 0; % periodic
-dim_x.BCR = 0;
+dim_x.BCL = 'P'; % periodic
+dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
-dim_x.lev = 2;
-dim_x.deg = 2;
-dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) x.*0;
 
-dim_y.name = 'y';
-dim_y.BCL = 0; % periodic
-dim_y.BCR = 0;
+dim_y.BCL = 'P'; % periodic
+dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
-dim_y.lev = 2;
-dim_y.deg = 2;
-dim_y.FMWT = []; % Gets filled in later
 dim_y.init_cond_fn = @(y,p) y.*0;
 
-dim_z.name = 'z';
-dim_z.BCL = 0; % periodic
-dim_z.BCR = 0;
+dim_z.BCL = 'P'; % periodic
+dim_z.BCR = 'P';
 dim_z.domainMin = -3;
 dim_z.domainMax = +3;
-dim_z.lev = 2;
-dim_z.deg = 2;
-dim_z.FMWT = []; % Gets filled in later
 dim_z.init_cond_fn = @(z,p) z.*0;
 
-dim_vx.name = 'vx';
-dim_vx.BCL = 0; % periodic
-dim_vx.BCR = 0;
+dim_vx.BCL = 'P'; % periodic
+dim_vx.BCR = 'P';
 dim_vx.domainMin = -10;
 dim_vx.domainMax = +10;
-dim_vx.lev = 2;
-dim_vx.deg = 2;
-dim_vx.FMWT = []; % Gets filled in later
 dim_vx.init_cond_fn = @(x,p) x.*0;
 
-dim_vy.name = 'vy';
-dim_vy.BCL = 0; % periodic
-dim_vy.BCR = 0;
+dim_vy.BCL = 'P'; % periodic
+dim_vy.BCR = 'P';
 dim_vy.domainMin = -20;
 dim_vy.domainMax = +20;
-dim_vy.lev = 2;
-dim_vy.deg = 2;
-dim_vy.FMWT = []; % Gets filled in later
 dim_vy.init_cond_fn = @(y,p) y.*0;
 
-dim_vz.name = 'vz';
-dim_vz.BCL = 0; % periodic
-dim_vz.BCR = 0;
+dim_vz.BCL = 'P'; % periodic
+dim_vz.BCR = 'P';
 dim_vz.domainMin = -30;
 dim_vz.domainMax = +30;
-dim_vz.lev = 2;
-dim_vz.deg = 2;
-dim_vz.FMWT = []; % Gets filled in later
 dim_vz.init_cond_fn = @(z,p) z.*0;
 
 %%
@@ -87,74 +70,50 @@ pde.dimensions = {dim_x,dim_y,dim_z,dim_vx,dim_vy,dim_vz};
 % Here we have 6 terms, having only nDims=6 (x,y,z,vx,vy,vz) operators.
 
 %%
-% Setup the v_x.d_dx (v . GradX . MassY . MassZ) term
+% -bx*df/dx
 
-term2_x.type = 1; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,p,t,dat) x*0+bx; 
-term2_x.TD = 0; 
-term2_x.dat = []; 
-term2_x.LF = 0; 
-term2_x.name = 'v_x.d_dx';
+term2_x.type = 'grad';
+term2_x.G = @(x,p,t,dat) x*0-bx; 
 
 term2 = term_fill({term2_x,[],[],[],[],[]});
 
 %%
-% Setup the v_y.d_dy (v . MassX . GradY . MassZ) term
+% -by*df/dy
 
-term3_y.type = 1; % grad (see coeff_matrix.m for available types)
-term3_y.G = @(y,p,t,dat) y*0+by; 
-term3_y.TD = 0; 
-term3_y.dat = []; 
-term3_y.LF = 0; 
-term3_y.name = 'v_y.d_dy';
+term3_y.type = 'grad'; 
+term3_y.G = @(y,p,t,dat) y*0-by; 
 
 term3 = term_fill({[],term3_y,[],[],[],[]});
 
 %%
-% Setup the v_z.d_dz (v . MassX . MassY . GradZ) term
+% -bz*df/dz
 
-term4_z.type = 1; % grad (see coeff_matrix.m for available types)
-term4_z.G = @(z,p,t,dat) z*0+bz; 
-term4_z.TD = 0; 
-term4_z.dat = []; 
-term4_z.LF = 0; 
-term4_z.name = 'v_z.d_dz';
+term4_z.type = 'grad';
+term4_z.G = @(z,p,t,dat) z*0-bz; 
 
 term4 = term_fill({[],[],term4_z,[],[],[]});
 
 %%
-% Setup the a_x.d_dvx (a . GradVX . MassVY . MassVZ) term
+% -ax*df/dvx
 
-term5_vx.type = 1; % grad (see coeff_matrix.m for available types)
-term5_vx.G = @(x,p,t,dat) x*0+ax; 
-term5_vx.TD = 0; 
-term5_vx.dat = []; 
-term5_vx.LF = 0; 
-term5_vx.name = 'a_x.d_dvx';
+term5_vx.type = 'grad'; 
+term5_vx.G = @(x,p,t,dat) x*0-ax; 
 
 term5 = term_fill({[],[],[],term5_vx,[],[]});
 
 %%
-% Setup the a_y.d_dvy (a . MassVX . GradVY . MassVZ) term
+% -ay*df/dvy
 
-term6_vy.type = 1; % grad (see coeff_matrix.m for available types)
-term6_vy.G = @(y,p,t,dat) y*0+ay; 
-term6_vy.TD = 0; 
-term6_vy.dat = []; 
-term6_vy.LF = 0; 
-term6_vy.name = 'a_y.d_dvy';
+term6_vy.type = 'grad'; 
+term6_vy.G = @(y,p,t,dat) y*0-ay; 
 
 term6 = term_fill({[],[],[],[],term6_vy,[]});
 
 %%
-% Setup the a_z.d_dvz (a . MassVX . MassVY . GradVZ) term
+% -az*df/dvz
 
-term7_vz.type = 1; % grad (see coeff_matrix.m for available types)
-term7_vz.G = @(z,p,t,dat) z*0+az; 
-term7_vz.TD = 0; 
-term7_vz.dat = []; 
-term7_vz.LF = 0; 
-term7_vz.name = 'a_z.d_dvz';
+term7_vz.type = 'grad'; 
+term7_vz.G = @(z,p,t,dat) z*0-az; 
 
 term7 = term_fill({[],[],[],[],[],term7_vz});
 
@@ -285,29 +244,19 @@ pde.analytic_solutions_1D = { ...
     @(t)   sin(targ*t) 
     };
 
-%% Other workflow options that should perhpas not be in the PDE?
-
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally.
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally.
-pde.implicit = 0; % Can likely be removed and be a runtime argument.
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
-
-end
-
-%% Define the various input functions specified above.
-
-% function f=f0_x(x,p); f=x.*0; end
-% function f=f0_y(y,p); f=y.*0; end
-% function f=f0_z(z,p); f=z.*0; end
-
 %%
 % Function to set time step
-function dt=set_dt(pde)
+    function dt=set_dt(pde)
+        
+        Lmax = pde.dimensions{1}.domainMax;
+        LevX = pde.dimensions{1}.lev;
+        CFL = pde.CFL;
+        
+        dt = Lmax/2^LevX*CFL;
+    end
 
-Lmax = pde.dimensions{1}.domainMax;
-LevX = pde.dimensions{1}.lev;
-CFL = pde.CFL;
+pde.set_dt = @set_dt;
 
-dt = Lmax/2^LevX*CFL;
 end
+
+

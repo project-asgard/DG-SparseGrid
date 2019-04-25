@@ -1,6 +1,7 @@
 function pde = continuity1
 % 1D test case using continuity equation, i.e., 
-% df/dt + df/dx = 0
+%
+% df/dt == -df/dx
 %
 % Run with
 %
@@ -14,17 +15,11 @@ function pde = continuity1
 % 
 % Here we setup a 1D problem (x)
 
-dim_x.name = 'x';
 dim_x.BCL = 'P';
 dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
-dim_x.lev = 2;
-dim_x.deg = 2;
-dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) x.*0;
-
-dim_x = checkDimension(dim_x);
 
 %%
 % Add dimensions to the pde object
@@ -38,14 +33,11 @@ pde.dimensions = {dim_x};
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% Setup the v.d_dx (v.MassV . GradX) term
+% -df/dx
 
 term2_x.type = 'grad';
 term2_x.G = @(x,p,t,dat) x*0-1; % G function for use in coeff_matrix construction.
-term2_x.TD = 0; % Time dependent term or not.
-term2_x.dat = []; % These are to be filled within the workflow for now
-term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-term2_x.name = 'd_dx';
+term2_x.LF = 0; % Use central flux
 
 term2 = {term2_x};
 
@@ -69,14 +61,14 @@ pde.params = params;
 
 %%
 % Source 1
-s1x = @source1x;
-s1t = @source1t;
+s1x = @(x,p,t) cos(2*pi*x);
+s1t = @(t,p) cos(t);
 source1 = {s1x,s1t};
 
 %%
 % Source 2
-s2x = @source2x;
-s2t = @source2t;
+s2x = @(x,p,t) sin(2*pi*x);
+s2t = @(t,p) -2*pi*sin(t);
 source2 = {s2x,s2t};
 
 %%
@@ -86,66 +78,28 @@ pde.sources = {source1,source2};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-a_x = @analytic_x;
-a_t = @analytic_t;
+a_x = @(x,p,t) cos(2*pi*x);
+a_t = @(t,p) sin(t);
 
 pde.analytic_solutions_1D = {a_x,a_t};
-pde.analytic_solution = @ExactF;
-
-%% Other workflow options that should perhpas not be in the PDE?
-
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.implicit = 0; % Can likely be removed and be a runtime argument. 
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
-
-end
-
-%% Define the various input functions specified above. 
-
-%%
-% Source terms are composed of fully seperable functions
-% Source = source1 + source2
-
-%%
-% Source term 1
-function f = source1t(t)
-f = cos(t);
-end
-function f = source1x(x,p)
-f = cos(2*pi*x);
-end
-
-%%
-% Source term 2
-function f = source2t(t)
-f = -2*pi*sin(t);
-end
-function f = source2x(x,p)
-f = sin(2*pi*x);
-end
-
-%%
-% Analytic Solution functions
-
-function f=analytic_t(t)
-f=sin(t);
-end
-function f=analytic_x(x,p,t)
-f = cos(2*pi*x);
-end
 
 %%
 % Function to set time step
-function dt=set_dt(pde)
 
-dim = pde.dimensions{1};
-lev = dim.lev;
-xMax = dim.domainMax;
-xMin = dim.domainMin;
-xRange = xMax-xMin;
-dx = xRange/(2^lev);
-CFL = 0.01;
-dt = CFL*dx;
+    function dt=set_dt(pde)
+        
+        dim = pde.dimensions{1};
+        lev = dim.lev;
+        xMax = dim.domainMax;
+        xMin = dim.domainMin;
+        xRange = xMax-xMin;
+        dx = xRange/(2^lev);
+        CFL = 0.01;
+        dt = CFL*dx;
+    end
+
+pde.set_dt = @set_dt;
+
 end
+
+

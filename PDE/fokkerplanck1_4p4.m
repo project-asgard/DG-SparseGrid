@@ -46,29 +46,11 @@ C = 1.0;
         ret = A / (2*sinh(A)) * exp(A*z);
     end
 
-BCL_fList = { ...
-    @(z,p,t) 0, ...
-    @(t,p) 0
-    };
-
-BCR_fList = { ...
-    @(z,p,t) 0, ...
-    @(t,p) 0
-    };
-
-dim_z.name = 'z';
 dim_z.BCL = 'D'; % dirichlet
-dim_z.BCL_fList = BCL_fList;
 dim_z.BCR = 'D';
-dim_z.BCR_fList = BCR_fList;
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.lev = 2;
-dim_z.deg = 2;
-dim_z.FMWT = []; % Gets filled in later
 dim_z.init_cond_fn = @(z,p) f0(z);
-
-dim_z = checkDimension(dim_z);
 
 %%
 % Add dimensions to the pde object
@@ -86,30 +68,26 @@ pde.dimensions = {dim_z};
 
 termE_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
 termE_z.G = @(z,p,t,dat) -E.*(1-z.^2); % G function for use in coeff_matrix construction.
-termE_z.TD = 0; % Time dependent term or not.
-termE_z.dat = []; % These are to be filled within the workflow for now
 termE_z.LF = -1; % Upwind 
-termE_z.name = 'd_dz';
 
 termE = term_fill({termE_z});
 
-%%
-% +C d/dz((1-z^2) d/dz))
+%% 
+% +C * d/dz( (1-z^2) df/dz )
 
 termC_z.type = 'diff';
-% eq1 : 1 * dq/dx
-termC_z.G1 = @(z,p,t,dat) z.*0+C;
+% eq1 : 1 * d/dx (1-z^2) q
+termC_z.G1 = @(z,p,t,dat) 1-z.^2;
 termC_z.LF1 = -1; % upwind left
-termC_z.BCL1 = 'N';
-termC_z.BCR1 = 'N';
-% eq2 : (1-z^2) * df/dx 
-termC_z.G2 = @(z,p,t,dat) (1-z.^2);
+termC_z.BCL1 = 'D';
+termC_z.BCR1 = 'D';
+% eq2 : q = df/dx 
+termC_z.G2 = @(z,p,t,dat) z*0+1;
 termC_z.LF2 = +1; % upwind right
-termC_z.BCL2 = 'D';
-termC_z.BCR2 = 'D';
+termC_z.BCL2 = 'N';
+termC_z.BCR2 = 'N';
 
 termC = term_fill({termC_z});
-
 
 %%
 % Add terms to the pde object
@@ -139,24 +117,18 @@ pde.analytic_solutions_1D = { ...
     @(t,p) 1 
     };
 
-%% Other workflow options that should perhpas not be in the PDE?
-
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.implicit = 0; % Can likely be removed and be a runtime argument. 
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
-
-end
-
-%% Define the various input functions specified above. 
-
 %%
 % Function to set time step
-function dt=set_dt(pde)
 
-Lmax = pde.dimensions{1}.domainMax;
-LevX = pde.dimensions{1}.lev;
-CFL = pde.CFL;
-dt = Lmax/2^LevX*CFL;
+    function dt=set_dt(pde)
+        
+        Lmax = pde.dimensions{1}.domainMax;
+        LevX = pde.dimensions{1}.lev;
+        CFL = pde.CFL;
+        dt = Lmax/2^LevX*CFL;
+    end
+
+pde.set_dt = @set_dt;
+
 end
+

@@ -36,11 +36,6 @@ for tt = 1:nTerms % Construct a BC object for each term
         xMax = dim.domainMax;
         FMWT = dim.FMWT;
         
-%         BCL = dim.BCL;
-%         BCR = dim.BCR;
-%         BCL_fList = dim.BCL_fList;
-%         BCR_fList = dim.BCR_fList;
-        
         lev = dim.lev;
         N = 2^lev;
         dof_1D = deg * N;
@@ -97,7 +92,6 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-%                     bcL{d1} = ComputeRHS(pde,time,nDims,dim,'L'); % returns a nDim length list
                     bcL{d1} = ComputeRHS(pde,time,dim,BCL_fList,FMWT); % returns a nDim length list
                     
                     %%
@@ -127,7 +121,6 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-%                     bcR{d1} = ComputeRHS(pde,time,nDims,dim,'R'); % returns a nDim length list
                     bcR{d1} = ComputeRHS(pde,time,dim,BCR_fList,FMWT); % returns a nDim length list
                     
                     %%

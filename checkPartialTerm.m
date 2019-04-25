@@ -12,7 +12,6 @@ end
 if strcmp(term.type,'grad')
     term_out = term_grad;
 end
-
 if strcmp(term.type,'diff')
     term_out = term_diff;
 end
