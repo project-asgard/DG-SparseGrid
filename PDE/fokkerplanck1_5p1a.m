@@ -30,8 +30,24 @@ pde.CFL = 0.01;
     end
 
     function ret = f0(x)
-        a = 2;
-        ret = 4.0/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
+        
+        test = 2;
+        
+        ret = zeros(size(x));
+        switch test
+            case 1
+                a = 2;
+                ret = 4.0/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
+            case 2
+                for i=1:numel(x)
+                    if x(i) <= 5
+                        ret(i) = 3/5^3;
+                    else
+                        ret(i) = 0;
+                    end
+                end
+                
+        end
     end
 
     function ret = x_psi(x) % manage the singularity at x=0
