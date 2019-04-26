@@ -14,6 +14,9 @@ else
     TD_STR = 'TI';
 end
 
+%%
+% Normal RHS terms
+
 for tt = 1:nTerms
     
     term = pde.terms{tt};
@@ -38,6 +41,38 @@ for tt = 1:nTerms
             
         end
     end
+end
+
+%%
+% LHS mass matrix 
+
+
+if ~isempty(pde.termsLHS)
+    
+    nTermsLHS = numel(pde.termsLHS);
+    
+    for tt=1:nTermsLHS
+        
+        term = pde.termsLHS{tt};
+        
+        for d = 1:nDims
+            
+            dim = pde.dimensions{d};
+            
+            if term{d}.TD == TD
+                
+                disp([TD_STR ' - LHS term : ' num2str(1) '  d : ' num2str(d) ]);
+                
+                assert(strcmp(term{d}.type,'mass'));
+                
+                [mat] = coeff_matrix2(pde,t,dim,term{d});
+                pde.termsLHS{tt}{d}.matInv = inv(mat);
+                
+            end
+            
+        end
+    end
+    
 end
 
 end

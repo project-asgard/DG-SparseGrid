@@ -104,12 +104,12 @@ pde.dimensions = {dim_x, dim_y};
 % Setup the d^2_dx^2 term
 
 term1_x.type = 'diff';
-% eq1 : g1 * dq/dx (flux equation)
+% eq1 : dq/dx (flux equation)
 term1_x.G1 = @(x,p,t,dat) x*0+1;
 term1_x.LF1 = +1; % upwind right
 term1_x.BCL1 = 'N';
 term1_x.BCR1 = 'N';
-% eq2 : g2 * df/dx (actual variable eqn)
+% eq2 : df/dx (actual variable eqn)
 term1_x.G2 = @(x,p,t,dat) x*0+1;
 term1_x.LF2 = -1; % upwind left
 term1_x.BCL2 = 'D';
@@ -123,12 +123,12 @@ term1 = term_fill({term1_x,[]});
 % Setup the d^2_dy^2 term
 
 term2_y.type = 'diff';
-% eq1 : g1 * dq/dy (flux equation)
+% eq1 : dq/dy (flux equation)
 term2_y.G1 = @(y,p,t,dat) y*0+1;
 term2_y.LF1 = +1; % upwind right
 term2_y.BCL1 = 'N';
 term2_y.BCR1 = 'N';
-% eq2 : g2 * df/dy (actual variable eqn)
+% eq2 : df/dy (actual variable eqn)
 term2_y.G2 = @(y,p,t,dat) y*0+1;
 term2_y.LF2 = -1; % upwind left
 term2_y.BCL2 = 'D';

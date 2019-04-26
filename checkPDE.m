@@ -13,6 +13,7 @@ default_pde.terms = {};
 default_pde.params = {};
 default_pde.analytic_solutions_1D = {};
 default_pde.sources = {};
+default_pde.termsLHS = {};
 
 % Check to make sure all fields exist.
 % If not, use default.
@@ -21,6 +22,16 @@ fn = fieldnames(default_pde);
 for k=1:numel(fn)
     if isfield(pde,fn{k})
         default_pde.(fn{k}) = pde.(fn{k});
+    end
+end
+
+%%
+% Check if there are erroneous field names
+
+fn = fieldnames(pde);
+for k=1:numel(fn)
+    if ~isfield(default_pde,fn{k})
+        error(strcat('Unrecognized term in PDE: ', fn{k} ));
     end
 end
 

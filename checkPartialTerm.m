@@ -26,4 +26,14 @@ for k=1:numel(fn)
     end
 end
 
+%%
+% Check if there are erroneous field names
+
+fn = fieldnames(term);
+for k=1:numel(fn)
+    if ~isfield(term_out,fn{k})
+        error(strcat('Unrecognized term in term: ', fn{k} ));
+    end
+end
+
 end

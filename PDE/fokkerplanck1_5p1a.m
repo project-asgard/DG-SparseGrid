@@ -10,10 +10,10 @@ function pde = fokkerplanck1_5p1a
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1_5p1a,5,3,0.01)
+% fk6d(fokkerplanck1_5p1a,4,2,1)
 %
 % implicit
-% fk6d(fokkerplanck1_5p1a,5,4,3,[],[],1,'SG',[],1.5)
+% fk6d(fokkerplanck1_5p1a,4,2,100,[],[],1,[],[],5.0)
 
 pde.CFL = 0.01;
 
@@ -34,7 +34,8 @@ pde.CFL = 0.01;
         ret = 4.0/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
     end
 
-    function ret = x_psi(x) % manage the singularity at x=0      
+    function ret = x_psi(x) % manage the singularity at x=0
+        ret = zeros(size(x));
         for i=1:numel(x)
             if abs(x(i))<1e-5
                 ret(i) = x(i).*0;
@@ -49,7 +50,7 @@ pde.CFL = 0.01;
     end
 
 dim_x.BCL = 'N'; % neumann
-dim_x.BCR = 'N'; % not set (equivalent to neumann)
+dim_x.BCR = 'D'; % not set (equivalent to neumann)
 dim_x.domainMin = 0;
 dim_x.domainMax = +10;
 dim_x.init_cond_fn = @(z,p) f0(z);
@@ -63,6 +64,17 @@ pde.dimensions = {dim_x};
 
 %% Setup the terms of the PDE
 
+%%
+% x^2 * df/dt (LHS non-identity coeff requires special treatment)
+
+termLHS_x.type = 'mass';
+termLHS_x.G = @(x,p,t,dat) x.^2;
+
+termLHS = term_fill({termLHS_x});
+
+pde.termsLHS = {termLHS};
+
+
 %% 
 % d/dx*x^2*psi(x)/x*df/dx
 
@@ -71,20 +83,21 @@ term1_x.type = 'diff';
 term1_x.G1 = @(x,p,t,dat) x_psi(x);
 term1_x.LF1 = -1; % Upwind
 term1_x.BCL1 = 'D';
-term1_x.BCR1 = 'D';
+term1_x.BCR1 = 'N';
 % Eq 2 : q = df/dx
 term1_x.G2 = @(x,p,t,dat) x.*0+1;
 term1_x.LF2 = +1; % Downwind
-term1_x.BCL1 = 'N';
-term1_x.BCR1 = 'N';
+term1_x.BCL2 = 'N';
+term1_x.BCR2 = 'D';
 
 term1 = term_fill({term1_x});
+
 
 %%
 % d/dx*x^2*2*psi(x)*f
 
 term2_x.type = 'grad';
-term2_x.G1 = @(x,p,t,dat) x.^2*2.*psi(x);
+term2_x.G = @(x,p,t,dat) x*2.*x_psi(x);
 term2_x.LF = -1;
 
 term2 = term_fill({term2_x});

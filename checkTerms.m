@@ -1,6 +1,7 @@
 function pde = checkTerms(pde)
 
 terms = pde.terms;
+termsLHS = pde.termsLHS;
 dims = pde.dimensions;
 
 ndims = numel(dims);
@@ -13,5 +14,15 @@ for t=1:nterms
 end
 
 pde.terms = terms;
+
+ntermsLHS = numel(termsLHS);
+
+for t=1:ntermsLHS
+    for d=1:ndims
+        termsLHS{t}{d} = checkPartialTerm(ndims,termsLHS{t}{d});
+    end
+end
+
+pde.termsLHS = termsLHS;
 
 end
