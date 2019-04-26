@@ -1,17 +1,19 @@
 function pde = continuity3
 % 3D test case using continuity equation, i.e.,
-% df/dt + v.grad(f)==0 where v={1,1,1}
+%
+% df/dt + v.grad(f)==0 where v={1,1,1}, so 
+%
+% df/dt = -df/dx -df/dy - df/dz
 %
 % Run with 
 %
 % explicit
-% fk6d(continuity3,5,3,0.0002,[],[],[],[]);
+% fk6d(continuity3,5,3,0.0002);
 %
 % implicit
-%
+% fk6d(continuity3,4,4,0.002,[],[],1,[],[],1.0);
 
 %% Setup the dimensions
-isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
 %
 % Here we setup a 3D problem (x,y,z)
@@ -21,36 +23,21 @@ dim_x.BCL = 'P'; % periodic
 dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
-dim_x.lev = 2;
-dim_x.deg = 2;
-dim_x.FMWT = []; % Gets filled in later
 dim_x.init_cond_fn = @(x,p) x.*0;
-
-dim_x = checkDimension(dim_x);
 
 dim_y.name = 'y';
 dim_y.BCL = 'P'; % periodic
 dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
-dim_y.lev = 2;
-dim_y.deg = 2;
-dim_y.FMWT = []; % Gets filled in later
 dim_y.init_cond_fn = @(y,p) y.*0;
-
-dim_y = checkDimension(dim_y);
 
 dim_z.name = 'z';
 dim_z.BCL = 'P'; % periodic
 dim_z.BCR = 'P';
 dim_z.domainMin = -3;
 dim_z.domainMax = +3;
-dim_z.lev = 2;
-dim_z.deg = 2;
-dim_z.FMWT = []; % Gets filled in later
 dim_z.init_cond_fn = @(z,p) z.*0;
-
-dim_z = checkDimension(dim_z);
 
 %%
 % Add dimensions to the pde object
@@ -64,38 +51,29 @@ pde.dimensions = {dim_x,dim_y,dim_z};
 % Here we have 3 terms, having only nDims=3 (x,y,z) operators.
 
 %%
-% Setup the v_x.d_dx (v . GradX . MassY . MassZ) term
+% -df/dx
 
 term2_x.type = 'grad';
 term2_x.G = @(x,p,t,dat) x*0-1; % G function for use in coeff_matrix construction.
-term2_x.TD = 0; % Time dependent term or not.
-term2_x.dat = []; % These are to be filled within the workflow for now
-term2_x.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-term2_x.name = 'v_x.d_dx';
+term2_x.LF = 0; % central flux
 
 term2 = term_fill({term2_x,[],[]});
 
 %%
-% Setup the v_y.d_dy (v . MassX . GradY . MassZ) term
+% -df/fy
 
 term3_y.type = 'grad'; % grad (see coeff_matrix.m for available types)
 term3_y.G = @(y,p,t,dat) y*0-1; % G function for use in coeff_matrix construction.
-term3_y.TD = 0; % Time dependent term or not.
-term3_y.dat = []; % These are to be filled within the workflow for now
-term3_y.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-term3_y.name = 'v_y.d_dy';
+term3_y.LF = 0; % central flux
 
 term3 = term_fill({[],term3_y,[]});
 
 %%
-% Setup the v_z.d_dz (v . MassX . MassY . GradZ) term
+% -df/dz
 
 term4_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
 term4_z.G = @(z,p,t,dat) z*0-1; % G function for use in coeff_matrix construction.
-term4_z.TD = 0; % Time dependent term or not.
-term4_z.dat = []; % These are to be filled within the workflow for now
-term4_z.LF = 0; % Use Lax-Friedrichs flux or not TODO : what should this value be?
-term4_z.name = 'v_z.d_dz';
+term4_z.LF = 0; % central flux
 
 term4 = term_fill({[],[],term4_z});
 
@@ -167,29 +145,18 @@ pde.analytic_solutions_1D = { ...
     @(t)   sin(2*t)       ... % a_t
     };
 
-%% Other workflow options that should perhpas not be in the PDE?
-
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally.
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally.
-pde.implicit = 0; % Can likely be removed and be a runtime argument.
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
-
-end
-
-%% Define the various input functions specified above.
-
-% function f=f0_x(x,p); f=x.*0; end
-% function f=f0_y(y,p); f=y.*0; end
-% function f=f0_z(z,p); f=z.*0; end
-
 %%
 % Function to set time step
-function dt=set_dt(pde)
 
-Lmax = pde.dimensions{1}.domainMax;
-LevX = pde.dimensions{1}.lev;
-CFL = pde.CFL;
+    function dt=set_dt(pde)    
+        Lmax = pde.dimensions{1}.domainMax;
+        LevX = pde.dimensions{1}.lev;
+        CFL = pde.CFL;
+        dt = Lmax/2^LevX*CFL;
+    end
 
-dt = Lmax/2^LevX*CFL;
+pde.set_dt = @set_dt;
+
 end
+
+

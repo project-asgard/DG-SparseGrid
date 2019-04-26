@@ -14,7 +14,7 @@ terms = pde.terms;
 %%
 % dim shortcuts
 
-deg = dims{1}.deg; % TODO
+deg = dims{1}.deg; % TODO : assumes deg independent of dim
 
 nHash = numel(HashInv);
 nTerms = numel(pde.terms);
@@ -28,89 +28,127 @@ for tt = 1:nTerms % Construct a BC object for each term
     
     for d1 = 1:nDims
         
-        dim1 = dims{d1};
+        dim = dims{d1};
+        pTerm = term{d1};
+        type = pTerm.type;
         
-        xMin = dim1.domainMin;
-        xMax = dim1.domainMax;
-        FMWT = dim1.FMWT;
-        BCL = dim1.BCL;
-        BCR = dim1.BCR;
-        BCL_fList = dim1.BCL_fList;
-        BCR_fList = dim1.BCR_fList;
+        xMin = dim.domainMin;
+        xMax = dim.domainMax;
+        FMWT = dim.FMWT;
         
-        ftL = 1;
-        ftR = 1;
-        if strcmp(BCL,'D') % dirichlet
-            ftL = dim1.BCL_fList{nDims+1}(time);
-        end
-        if strcmp(BCR,'D') % dirichlet
-            ftR = dim1.BCR_fList{nDims+1}(time);
-        end
-        
-        lev = dim1.lev;
+        lev = dim.lev;
         N = 2^lev;
         dof_1D = deg * N;
         
         %%
-        % Initialize to zero for when the term is of type 2 for example
+        % Here we account for the different types of operators which do
+        % (grad,diff) or do not (mass) require BCs
         
-        for d2=1:nDims
-            bcL{d1}{d2} = zeros(dof_1D,1);
-            bcR{d1}{d2} = zeros(dof_1D,1);
+        n_parts = 0;
+        if strcmp(type,'grad')
+            n_parts = 1;
+            n_types = {type};
+            n_BCLs = {dim.BCL};
+            n_BCRs = {dim.BCR};
+            n_BCL_fLists = {dim.BCL_fList};
+            n_BCR_fLists = {dim.BCR_fList};
+        elseif strcmp(type,'diff')  % to allow for diff being composed of two grad pieces
+            n_parts = 2;
+            n_types = {'grad','grad'};
+            n_BCLs = {pTerm.BCL1,pTerm.BCL2};
+            n_BCRs = {pTerm.BCR1,pTerm.BCR2};
+            n_BCL_fLists = {pTerm.BCL1_fList,pTerm.BCL2_fList};
+            n_BCR_fLists = {pTerm.BCR1_fList,pTerm.BCR2_fList};
         end
         
-        %%
-        % Get the boundary integral for all other dimensions
-        
-        if strcmp(term{d1}.type,'grad') || strcmp(term{d1}.type,'diff') % grad or diffusion operators
+        for n=1:n_parts
             
-            if strcmp(BCL,'D')
-                bcL{d1} = ComputeRHS(pde,time,nDims,dim1,'L'); % returns a nDim length list
+            thisType = n_types{n};
+            thisBCL = n_BCLs{n};
+            thisBCR = n_BCRs{n};
+            BCL_fList = n_BCL_fLists{n};
+            BCR_fList = n_BCR_fLists{n};
+            
+            %%
+            % Initialize to zero
+            
+            for d2=1:nDims
+                bcL{d1}{d2} = zeros(dof_1D,1);
+                bcR{d1}{d2} = zeros(dof_1D,1);
             end
-            if strcmp(BCR,'D')
-                bcR{d1} = ComputeRHS(pde,time,nDims,dim1,'R'); % returns a nDim length list
-            end
             
-        end
-        
-        
-        %%
-        % Overwrite the boundary value just for this dimension
-        
-        % Func*v|_xMin and Func*v|_xMax
-        
-        if strcmp(term{d1}.type,'grad') || strcmp(term{d1}.type,'diff') % grad or diffusion operators
+            timeFacL = 1;
+            timeFacR = 1;
             
-            if strcmp(BCL,'D') % Dirichlet
+            if strcmp(thisType,'grad')
                 
-                bcL_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
-                bcL_tmp = FMWT * bcL_tmp;
-                
-                if strcmp(term{d1}.type,'diff') % LDG requires additional step
-                    bcL_tmp = term{d1}.matD*bcL_tmp;
+                if strcmp(thisBCL,'D') % Left side
+                    
+                    %%
+                    % Get time multiplier
+                    
+                    timeFacL = BCL_fList{nDims+1}(time);
+                    
+                    %%
+                    % Get boundary functions for all dims
+                    
+                    bcL{d1} = ComputeRHS(pde,time,dim,BCL_fList,FMWT); % returns a nDim length list
+                    
+                    %%
+                    % Overwrite the trace (boundary) value just for this dim
+                    % Func*v|_xMin and Func*v|_xMax
+                    
+                    bcL_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
+                    bcL_tmp = FMWT * bcL_tmp;
+                    
+                    %%
+                    % LDG requires and additional step
+                    
+                    if strcmp(type,'diff')
+                        bcL_tmp = pTerm.mat1*bcL_tmp;  % TODO : is this mat1 always? or mat2 sometimes?
+                    end
+                    
+                    bcL{d1}{d1} = bcL_tmp;
                 end
                 
-                bcL{d1}{d1} = bcL_tmp;
-            end
-            
-            if strcmp(BCR,'D') % Dirichlet
-                
-                bcR_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
-                bcR_tmp = FMWT * bcR_tmp;
-                
-                if strcmp(term{d1}.type,'diff') % LDG requires additional step
-                    bcR_tmp = term{d1}.matD*bcR_tmp;
+                if strcmp(thisBCR,'D') % Right side
+                    
+                    %%
+                    % Get time multiplier
+                    
+                    timeFacR = BCR_fList{nDims+1}(time);
+                                
+                    %%
+                    % Get boundary functions for all dims
+                    
+                    bcR{d1} = ComputeRHS(pde,time,dim,BCR_fList,FMWT); % returns a nDim length list
+                    
+                    %%
+                    % Overwrite the trace (boundary) value just for this dim
+                    % Func*v|_xMin and Func*v|_xMax
+                    
+                    bcR_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
+                    bcR_tmp = FMWT * bcR_tmp;
+                    
+                    %%
+                    % LDG requires and additional step
+                    
+                    if strcmp(type,'diff')
+                        bcR_tmp = pTerm.mat1*bcR_tmp; % TODO : is this mat1 always? or mat2 sometimes?
+                    end
+                    
+                    bcR{d1}{d1} = bcR_tmp;
                 end
                 
-                bcR{d1}{d1} = bcR_tmp;
             end
             
+            fListL = bcL{d1};
+            fListR = bcR{d1};
+             
+            bcVec = bcVec + combine_dimensions_D(fListL,timeFacL,HashInv,pde);
+            bcVec = bcVec + combine_dimensions_D(fListR,timeFacR,HashInv,pde);
+            
         end
-        
-        fListL = bcL{d1};
-        fListR = bcR{d1};
-        bcVec = bcVec + combine_dimensions_D(fListL,ftL,HashInv,pde);
-        bcVec = bcVec + combine_dimensions_D(fListR,ftR,HashInv,pde);
         
     end % loop over dim1
     

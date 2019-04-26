@@ -6,8 +6,8 @@ function f = TimeAdvance(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
 %-------------------------------------------------
 
 if runTimeOpts.implicit
-    %f = backward_euler(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
-    f = crank_nicolson(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    f = backward_euler(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    %f = crank_nicolson(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 else
     f = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 end
@@ -18,6 +18,8 @@ end
 %% 3-rd Order Kutta Method (explicit time advance)
 
 function fval = RungeKutta3(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax)
+
+dims = pde.dimensions;
 
 %%
 % Sources
@@ -32,16 +34,32 @@ bc1 = getBoundaryCondition1(pde,HASHInv,t);
 bc2 = getBoundaryCondition1(pde,HASHInv,t+c2*dt); 
 bc3 = getBoundaryCondition1(pde,HASHInv,t+c3*dt); 
 
+% %%
+% Apply any non-identity LHS mass matrix coefficient
+
+applyLHS = ~isempty(pde.termsLHS);
+if applyLHS
+    matInvLHS = pde.termsLHS{1}{1}.matInv;
+end
+
 a21 = 1/2; a31 = -1; a32 = 2;
 b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
-k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 + bc1;
-y_1 = f + dt*a21*k_1;
-k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 + bc2;
-y_2 = f+ dt*(a31*k_1+a32*k_2);
-k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 + bc3;
+if applyLHS
+    k_1 = matInvLHS * (ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 + bc1);
+    y_1 = f + dt*a21*k_1;
+    k_2 = matInvLHS * (ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 + bc2);
+    y_2 = f + dt*(a31*k_1 + a32*k_2);
+    k_3 = matInvLHS * (ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 + bc3);   
+else
+    k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 + bc1;
+    y_1 = f + dt*a21*k_1;
+    k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 + bc2;
+    y_2 = f + dt*(a31*k_1 + a32*k_2);
+    k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 + bc3;
+end
 
-fval = f + dt*(b1*k_1+b2*k_2+b3*k_3);
+fval = f + dt*(b1*k_1 + b2*k_2 + b3*k_3);
 
 end
 
@@ -50,16 +68,29 @@ end
 
 function f1 = backward_euler(pde,runTimeOpts,A_data,f0,t,dt,deg,HASHInv,Vmax,Emax)
 
-
 s1 = source_vector(HASHInv,pde,t+dt);
 bc1 = getBoundaryCondition1(pde,HASHInv,t+dt);
+
+% %%
+% Apply any non-identity LHS mass matrix coefficient
+
+applyLHS = ~isempty(pde.termsLHS);
+if applyLHS
+    matInvLHS = pde.termsLHS{1}{1}.matInv;
+end
 
 [~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
 I = eye(numel(diag(AMat)));
-AA = I - dt*AMat;
 
-b = f0 + dt*s1 + dt*bc1;
+if applyLHS
+    AA = I - dt*matInvLHS*AMat;
+    b = f0 + dt*matInvLHS*(s1 + bc1);
+else
+    AA = I - dt*AMat;
+    b = f0 + dt*(s1 + bc1);
+end
+
 
 f1 = AA\b; % Solve at each timestep
 

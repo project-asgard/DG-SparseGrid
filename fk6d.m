@@ -9,6 +9,12 @@ addpath(genpath(folder));
 %% Load PDE and runtime defaults
 runtimeDefaults
 
+%% Check PDE
+pde = checkPDE(pde);
+
+%% Check dimensions
+pde = checkAllDimensions(pde);
+
 %% Check terms
 pde = checkTerms(pde);
 

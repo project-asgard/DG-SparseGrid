@@ -38,12 +38,7 @@ dim_z.BCL = 'N'; % neumann
 dim_z.BCR = 'N'; % not set (equivalent to neumann)
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.lev = 2;
-dim_z.deg = 2;
-dim_z.FMWT = []; % Gets filled in later
 dim_z.init_cond_fn = @(z,p) soln(z,0);
-
-dim_z = checkDimension(dim_z);
 
 %%
 % Add dimensions to the pde object
@@ -57,12 +52,10 @@ pde.dimensions = {dim_z};
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% Setup the v.d_dx (v.MassV . GradX) term
+%  -d/dz ( (1-z^2)*f )
 
 term2_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
 term2_z.G = @(z,p,t,dat) -1.*(1-z.^2); % G function for use in coeff_matrix construction.
-term2_z.TD = 0; % Time dependent term or not.
-term2_z.dat = []; % These are to be filled within the workflow for now
 term2_z.LF = -1; % Upwind 
 term2_z.name = 'd_dz';
 
@@ -96,27 +89,22 @@ pde.analytic_solutions_1D = { ...
     @(t,p) 1 
     };
 
-%% Other workflow options that should perhpas not be in the PDE?
-
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.implicit = 0; % Can likely be removed and be a runtime argument. 
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
+%%
+% Function to set time step
+    function dt=set_dt(pde)
+        
+        dims = pde.dimensions;
+        xRange = dims{1}.domainMax-dims{1}.domainMin;
+        lev = dims{1}.lev;
+        CFL = pde.CFL;
+        dx = xRange/2^lev;
+        dt = CFL * dx;
+        
+    end
+pde.set_dt = @set_dt;
 
 end
 
 %% Define the various input functions specified above. 
 
-%%
-% Function to set time step
-function dt=set_dt(pde)
 
-dims = pde.dimensions;
-xRange = dims{1}.domainMax-dims{1}.domainMin;
-lev = dims{1}.lev;
-CFL = pde.CFL;
-dx = xRange/2^lev;
-dt = CFL * dx;
-
-end

@@ -1,12 +1,18 @@
-function default_dim = checkDimension(dim);
+function default_dim = checkDimension(nDims,dim)
 
 % Set defaults for dimension
 
 default_dim.name = 'x';
-default_dim.BCL = 2; % neumann
-default_dim.BCR = 2; % neumann
-default_dim.BCL_fList = [];
-default_dim.BCR_fList = [];
+default_dim.BCL = 'N'; % neumann
+default_dim.BCR = 'N'; % neumann
+
+for d=1:nDims % BC variation in all dimensions
+    default_dim.BCL_fList{d} = @(x,p,t) x.*0;
+    default_dim.BCR_fList{d} = @(x,p,t) x.*0;
+end
+default_dim.BCL_fList{nDims+1} = @(t,p) 1;  % time variation of BCS
+default_dim.BCR_fList{nDims+1} = @(t,p) 1;
+
 default_dim.domainMin = 0;
 default_dim.domainMax = 1;
 default_dim.lev = 3;
@@ -14,50 +20,24 @@ default_dim.deg = 2;
 default_dim.FMWT = []; % Gets filled in later
 default_dim.init_cond_fn = @(x,p) x.*0;
 
-% Overwrite with present entries from specified dimension
+% Check to make sure all fields exist.
+% If not, use default.
 
-if isfield(dim,'name')    
-    default_dim.name = dim.name;
+fn = fieldnames(default_dim);
+for k=1:numel(fn)
+    if isfield(dim,fn{k})
+        default_dim.(fn{k}) = dim.(fn{k});
+    end
 end
 
-if isfield(dim,'BCL')    
-    default_dim.BCL = dim.BCL;
-end
+%%
+% Check for erroneous fields
 
-if isfield(dim,'BCL_fList')
-    default_dim.BCL_fList = dim.BCL_fList;
-end
-
-if isfield(dim,'BCR')    
-    default_dim.BCR = dim.BCR;
-end
-
-if isfield(dim,'BCR_fList')
-    default_dim.BCR_fList = dim.BCR_fList;
-end
-
-if isfield(dim,'domainMin')
-    default_dim.domainMin = dim.domainMin;
-end
-
-if isfield(dim,'domainMax')
-    default_dim.domainMax = dim.domainMax;
-end
-
-if isfield(dim,'lev')
-    default_dim.lev = dim.lev;
-end
-
-if isfield(dim,'deg')
-    default_dim.deg = dim.deg;
-end
-
-if isfield(dim,'FMWT')
-    default_dim.FMWT = dim.FMWT;
-end
-
-if isfield(dim,'init_cond_fn')
-    default_dim.init_cond_fn = dim.init_cond_fn;
+fn = fieldnames(dim);
+for k=1:numel(fn)
+    if ~isfield(default_dim,fn{k})
+        error(strcat('Unrecognized field in dim', fn{k} ));
+    end
 end
 
 end

@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,mat2] = coeff_matrix2(pde,t,dim,term)
+function [mat,mat1,mat2] = coeff_matrix2(pde,t,dim,term)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -46,6 +46,7 @@ function [mat,mat2] = coeff_matrix2(pde,t,dim,term)
 % pde shortcuts
 
 params  = pde.params;
+nDims = numel(pde.dimensions);
 
 type    = term.type;
 
@@ -62,13 +63,14 @@ if strcmp(type,'diff')
     termA.type = 'grad';
     termA.LF = term.LF1;
     termA.G = term.G1;
-    termA = checkPartialTerm(termA);
+    termA = checkPartialTerm(nDims,termA);
     
     dimA.BCL = term.BCL1;
     dimA.BCR = term.BCR1;
-    dimA = checkDimension(dimA);
+    dimA = checkDimension(nDims,dimA);
 
     mat1 = coeff_matrix2(pde,t,dimA,termA);
+    assert(~isnan(sum(mat1,'all')))
     
     %%
     % Equation 2 of LDG
@@ -78,20 +80,22 @@ if strcmp(type,'diff')
     termB.type = 'grad';
     termB.LF = term.LF2;
     termB.G = term.G2;
-    termB = checkPartialTerm(termB);
+    termB = checkPartialTerm(nDims,termB);
   
     dimB.BCL = term.BCL2;
     dimB.BCR = term.BCR2;
-    dimB = checkDimension(dimB);
+    dimB = checkDimension(nDims,dimB);
 
     mat2 = coeff_matrix2(pde,t,dimB,termB);
+    assert(~isnan(sum(mat2,'all')))
+
     
     %%
     % Combine back into second order operator
     
     % mat1 = matD
     % mat2 = matU
-    Diff = mat2*mat1;
+    Diff = mat1*mat2;
     
     
 else
@@ -224,10 +228,15 @@ else
         G1 = G(quad_xi,params,t,dat_R_quad);
         val_grad  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
         
+        assert(~isnan(norm(G1)))
+        
         Iu = meshgrid( deg*i+1 : deg*(i+1) );
         
         Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
         Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
+        
+        assert(~isnan(sum(Mass,'all')))
+        assert(~isnan(sum(Grad,'all')))
         
         
         %%
@@ -348,13 +357,17 @@ else
         end
         
         Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
-        
+        assert(~isnan(sum(Grad,'all')))
+       
     end
     
     
     %% Transform coeff_mat to wavelet space
     Mass = FMWT * Mass * FMWT';
     Grad = FMWT * Grad * FMWT';
+    
+    assert(~isnan(sum(Mass,'all')))
+    assert(~isnan(sum(Grad,'all')))
     
 end
 

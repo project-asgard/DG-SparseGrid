@@ -3,15 +3,15 @@ function pde = fokkerplanck1_4p2
 % df/dt == d/dz ( (1-z^2) df/dz ) 
 % 
 % Here we use LDG for this second order system. We impose homogeneous
-% Neumann BCs on the flux equation in the LDG splitting, i.e.,
+% Neumann BCs on f
 %
 % d/dz( (1-z^2) df/dz ) becomes
 %
-% dq/dz with free (homogeneous Neumann BC)
+% d/dz (1-z^2)*q  with free (homogeneous Neumann BC)
 %
 % and the flux is 
 %
-% q=(1-z^2) df/fz  where q=0 @ z=+1=-1
+% q=df/fz  with homogeneous Dirichlet BC
 %
 % Run with
 %
@@ -45,29 +45,11 @@ pde.CFL = 0.005;
         
     end
 
-BCL_fList = { ...
-    @(z,p,t) z*0, ...
-    @(t,p) 1
-    };
-
-BCR_fList = { ...
-    @(z,p,t) z*0, ...
-    @(t,p) 1
-    };
-
-dim_z.name = 'z';
 dim_z.BCL = 'D'; % dirichlet
-dim_z.BCL_fList = BCL_fList;
 dim_z.BCR = 'D';
-dim_z.BCR_fList = BCR_fList;
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.lev = 2;
-dim_z.deg = 2;
-dim_z.FMWT = []; % Gets filled in later
 dim_z.init_cond_fn = @(z,p) soln(z,0);
-
-dim_z = checkDimension(dim_z);
 
 %%
 % Add dimensions to the pde object
@@ -81,30 +63,26 @@ pde.dimensions = {dim_z};
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% Setup the v.d_dx (v.MassV . GradX) term
+% d/dz( (1-z^2) df/dz )
 
-term2_z.type = 'diff';
-% eq1 : 1 * dq/dx
-term2_z.G1 = @(z,p,t,dat) z.*0+1;
-term2_z.LF1 = -1; % upwind left
-term2_z.BCL1 = 'N';
-term2_z.BCR1 = 'N';
-% term2_z.BCL1_fList = []; % Defaults to zero
-% term2_z.BCR1_fList = []; % Defaults to zero
-% eq2 : (1-z^2) * df/dx 
-term2_z.G2 = @(z,p,t,dat) (1-z.^2);
-term2_z.LF2 = +1; % upwind right
-term2_z.BCL2 = 'D';
-term2_z.BCR2 = 'D';
-% term2_z.BCL2_fList = []; % Defaults to zero
-% term2_z.BCR2_fList = []; % Defaults to zero
+termC_z.type = 'diff';
+% eq1 : 1 * d/dx (1-z^2) q
+termC_z.G1 = @(z,p,t,dat) 1-z.^2;
+termC_z.LF1 = -1; % upwind left
+termC_z.BCL1 = 'D';
+termC_z.BCR1 = 'D';
+% eq2 : q = df/dx 
+termC_z.G2 = @(z,p,t,dat) z*0+1;
+termC_z.LF2 = +1; % upwind right
+termC_z.BCL2 = 'N';
+termC_z.BCR2 = 'N';
 
-term2 = {term2_z};
+termC = term_fill({termC_z});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2};
+pde.terms = {termC};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -129,31 +107,22 @@ pde.analytic_solutions_1D = { ...
     @(t,p) 1 
     };
 
-%% Other workflow options that should perhpas not be in the PDE?
-
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.implicit = 0; % Can likely be removed and be a runtime argument. 
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
-
-end
-
-%% Define the various input functions specified above. 
-
 %%
 % Function to set time step
-function dt=set_dt(pde)
 
-dims = pde.dimensions;
+    function dt=set_dt(pde)
+        dims = pde.dimensions;
+        % for Diffusion equation: dt = C * dx^2
+        lev = dims{1}.lev;
+        xMax = dims{1}.domainMax;
+        xMin = dims{1}.domainMin;
+        xRange = xMax-xMin;
+        CFL = pde.CFL;
+        dx = xRange/2^lev;
+        dt = CFL*dx^2;
+    end
 
-% for Diffusion equation: dt = C * dx^2
+pde.set_dt = @set_dt;
 
-lev = dims{1}.lev;
-xMax = dims{1}.domainMax;
-xMin = dims{1}.domainMin;
-xRange = xMax-xMin;
-CFL = pde.CFL;
-dx = xRange/2^lev;
-dt = CFL*dx^2;
 end
+
