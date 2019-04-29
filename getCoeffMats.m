@@ -31,9 +31,10 @@ for tt = 1:nTerms
             
             disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]);
             
-            [mat,mat1,mat2] = coeff_matrix2(pde,t,dim,term{d});
+            [mat,mat1,mat2,mat0] = coeff_matrix2(pde,t,dim,term{d});
             
             pde.terms{tt}{d}.coeff_mat = mat;
+            pde.terms{tt}{d}.coeff_mat0 = mat0;
             if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
                 pde.terms{tt}{d}.mat1 = mat1; 
                 pde.terms{tt}{d}.mat2 = mat2;
@@ -65,8 +66,9 @@ if ~isempty(pde.termsLHS)
                 
                 assert(strcmp(term{d}.type,'mass'));
                 
-                [mat] = coeff_matrix2(pde,t,dim,term{d});
-                pde.termsLHS{tt}{d}.matInv = inv(mat);
+                [mat,~,~,mat0] = coeff_matrix2(pde,t,dim,term{d});
+                pde.termsLHS{tt}{d}.coeff_mat = mat;
+                pde.termsLHS{tt}{d}.coeff_mat0 = mat0;
                 
             end
             

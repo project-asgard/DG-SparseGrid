@@ -247,18 +247,7 @@ for L = 1:nsteps,
     if ~quiet; disp('    RK3 time step'); end
     if runTimeOpts.compression == 3
         fval = TimeAdvance(pde,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
-    else
-        
-        if nDims==2
-            A_data.GradX     = pde.terms{1}{2}.coeff_mat;
-            A_data.vMassV    = pde.terms{1}{1}.coeff_mat;
-            A_data.EMassX    = pde.terms{2}{2}.coeff_mat;
-            A_data.GradV     = pde.terms{2}{1}.coeff_mat;
-            
-            A_data.FluxX = FluxX;
-            A_data.FluxV = FluxV;
-        end
-        
+    else       
         % Write the A_data structure components for use in HPC version.
         write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end

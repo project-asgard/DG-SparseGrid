@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,mat1,mat2] = coeff_matrix2(pde,t,dim,term)
+function [mat,mat1,mat2,mat0] = coeff_matrix2(pde,t,dim,term)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -69,7 +69,7 @@ if strcmp(type,'diff')
     dimA.BCR = term.BCR1;
     dimA = checkDimension(nDims,dimA);
 
-    mat1 = coeff_matrix2(pde,t,dimA,termA);
+    [mat1,~,~,mat10] = coeff_matrix2(pde,t,dimA,termA);
     assert(~isnan(sum(mat1,'all')))
     
     %%
@@ -86,9 +86,8 @@ if strcmp(type,'diff')
     dimB.BCR = term.BCR2;
     dimB = checkDimension(nDims,dimB);
 
-    mat2 = coeff_matrix2(pde,t,dimB,termB);
+    [mat2,~,~,mat20] = coeff_matrix2(pde,t,dimB,termB);
     assert(~isnan(sum(mat2,'all')))
-
     
     %%
     % Combine back into second order operator
@@ -97,6 +96,7 @@ if strcmp(type,'diff')
     % mat2 = matU
     Diff = mat1*mat2;
     
+    Diff0 = mat10*mat20;
     
 else
     
@@ -361,6 +361,11 @@ else
        
     end
     
+    %%
+    % Store non-transformed matrices for convenince 
+    
+    Mass0 = Mass;
+    Grad0 = Grad;
     
     %% Transform coeff_mat to wavelet space
     Mass = FMWT * Mass * FMWT';
@@ -373,12 +378,15 @@ end
 
 if strcmp(type,'grad')
     mat = Grad;
+    mat0 = Grad0;
 end
 if strcmp(type,'mass')
     mat = Mass;
+    mat0 = Mass0;
 end
 if strcmp(type,'diff')
     mat = Diff;
+    mat0 = Diff0;
 end
 
 end
