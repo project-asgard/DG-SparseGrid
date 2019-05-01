@@ -11,14 +11,14 @@ format short e
 addpath(genpath(pwd))
 
 
-PDE_ElectricFieldAcceleration;
+% PDE_ElectricFieldAcceleration;
 % PDE_Collisions;
-% PDE_RadiationDamping;
+PDE_RadiationDamping;
 % PDE_ElectricFieldCollisions;
 % PDE_FullPitchAngle;
 
-Lev = 5;
-Deg = 3;
+Lev = 7;
+Deg = 4;
 num_plot = Deg;
 
 LInt = -1;
@@ -62,12 +62,14 @@ CFL = 0.01;
 
 dx = ((LEnd - LInt)/2^Lev);
 % dt = ((LEnd - LInt)/2^Lev)^(2*(Deg)/3)*CFL;
-dt = CFL*dx;%*2^(2-Lev);
-MaxIter = ceil(1/dt);
+dt = .01;%CFL*dx;%*2^(2-Lev);
+MaxIter = ceil(3/dt);
 
 [quad_x,quad_w]=lgwt(Deg,-1,1);
 quad_w = 2^(-Lev)/2*quad_w;
 ww = repmat(quad_w,2^Lev,1);
+
+InvMat = inv(speye(DoFs,DoFs)-dt*Mat);
 
 for Iter = 1 : MaxIter
     
@@ -78,15 +80,19 @@ for Iter = 1 : MaxIter
     
     % 3rd-RK
     time = dt*Iter;
-    rhs0 = ComputRHS(Lev,Deg,LInt,LEnd,source,time-dt);
-    rhs =  ComputRHS(Lev,Deg,LInt,LEnd,source,time);
-    rhs2 = ComputRHS(Lev,Deg,LInt,LEnd,source,time-dt/2);
-    f1 = f0 + dt*(  Mat*f0 +rhs0 );
-    f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+rhs);
-    fn = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+rhs2);
-    f0 = fn;
+% %     rhs0 = ComputRHS(Lev,Deg,LInt,LEnd,source,time-dt);
+% %     rhs =  ComputRHS(Lev,Deg,LInt,LEnd,source,time);
+% %     rhs2 = ComputRHS(Lev,Deg,LInt,LEnd,source,time-dt/2);
+% %     f1 = f0 + dt*(  Mat*f0 +rhs0 );
+% %     f2 = 3/4*f0+1/4*f1+1/4*dt*(Mat*f1+rhs);
+% %     fn = 1/3*f0+2/3*f2+2/3*dt*(Mat*f2+rhs2);
+% %     f0 = fn;
+% %     
+% %     qn = Mat1*fn;
     
-    qn = Mat1*fn;
+    % implicit
+    fn = InvMat*f0;
+    f0 = fn;
     
     val = Meval*fn;
     Exval = ExactF(x_node,time);
@@ -121,3 +127,6 @@ ww = repmat(quad_w,2^Lev,1);
 ErrL2 = sqrt(sum(ww.*val.^2));
 
 [ErrMax ErrL2]
+
+figure;
+plot(TolTime,TolMass)

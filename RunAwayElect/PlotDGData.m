@@ -23,7 +23,7 @@ for L=0:2^Lev-1
     
     x0 = LInt+L*h;
     x1 = x0+h;
-    xi = quad_x*(x1-x0)/2+(x1+x0)/2;
+    xi = quad_x*(x1-x0)/2+(x1+x0)/2; %[x0,x1];%
     
     
     Meval(Iv,Iu)=sqrt(1/h)*p_val;

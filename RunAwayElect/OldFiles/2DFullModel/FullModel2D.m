@@ -10,7 +10,7 @@
 % 1/p^2*d/dp [q] + 1/p^2 d/dp [Cf*p^2*f] + 1/p^4 d/dx[r]
 % => 
 
-Lev = 4;
+Lev = 5;
 Deg = 2;
 num_plot = 2;
 
@@ -40,7 +40,7 @@ q_bcL = 0; q_bcR = 1;
 Mat_Mass_p = MatrixMass(Lev,Deg,pInt,pEnd,@(x)(x.^2));
 
 % Term 1
-% q = x*d
+% q = Ca * p^2 * df/dp
 % Q = (Gp x I ) * F
 f_bcL = 1; f_bcR = 0;
 q_bcL = 0; q_bcR = 1;

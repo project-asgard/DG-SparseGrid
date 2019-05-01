@@ -1,8 +1,14 @@
 %This code presents the analytical solution of the FP
 % df/dt = 1/x^2 d/dx (Ca*FunCoef1*df/dx+Cf*FunCoef3*f) 
 Q = 1;b = 1;
-% ExactFF = @(x,t)(Q*exp(-b*x.^2));
-ExactF = @(x,t)(Q*exp(-x.^2));%(x.^2.*(4-x));
+
+% ExactF = @(x,t)(ExactF2(x,t));
+
+a = 2;
+ExactF = @(x,t)(exp(-(x).^2/a^2)*4/(sqrt(pi)*a^3));
+
+% ExactF = @(x,t)exp(-x.^2)*4/sqrt(pi);
+
 source = @(x,t)(x-x); 
 ExactQ = @(x,t)(-2*b*x.*Q.*exp(-b.*x.^2));
 
@@ -36,7 +42,7 @@ PDE.BC.q_L = 0; PDE.BC.q_R = 1;
 PDE.BC.f_L = 1;  PDE.BC.f_R = 0;
 
 function y = FunCoef1(x)
-psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
+psi = @(x)(1./(2*x.^2).*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
 if abs(x)<1e-5
     y = 0;
 else
@@ -45,7 +51,7 @@ end
 end
 
 function y = FunCoef2(x)
-psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
+psi = @(x)(1./(2*x.^2).*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
 dpsi = @(x)(2*exp(-x.^2)/sqrt(pi)-(erf(x)-2*x.*exp(-x.^2)/sqrt(pi))./x.^3);
 if abs(x)<1e-5
     y = 0;
@@ -55,11 +61,17 @@ end
 end
 
 function y = FunCoef3(x)
-psi = @(x)(1./x.^2.*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
+psi = @(x)(1./(2*x.^2).*(erf(x)-2*x/sqrt(pi).*exp(-x.^2)));
 if abs(x)<1e-5
     y = 0;
 else
     y = x.*psi(x);
 end
 
+end
+
+function y = ExactF2(x,t)
+y = x-x + (3/5^3);
+ix = find(x>5);
+y(ix) = 0;
 end

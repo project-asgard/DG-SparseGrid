@@ -10,6 +10,8 @@
 % 1/p^2*d/dp [q] + 1/p^2 d/dp [Cf*p^2*f] + 1/p^4 d/dx[r]
 % => 
 
+addpath(genpath(pwd))
+
 Lev = 4;
 Deg = 2;
 num_plot = 2;
@@ -20,7 +22,7 @@ DoFs = (2^Lev*Deg);
 LInt = -1;
 LEnd = 1;
 
-pInt = 0.5;
+pInt = 0;
 pEnd = 10;
 
 Lmax = LEnd-LInt;
@@ -28,10 +30,11 @@ dx = Lmax/2^Lev;
 
 CFL = 0.001;
 dt = 1e-1;%2e-9;%CFL*(dx)^3;
-MaxT = ceil(100/dt);
+MaxT = ceil(1000/dt);
 
 
-FullModel;
+% FullModel;
+FullModel2;
 
 Gam = 1;
 f_bcL = 1; f_bcR = 0;

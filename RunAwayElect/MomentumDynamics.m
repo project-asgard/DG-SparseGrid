@@ -19,10 +19,10 @@ addpath(genpath(pwd))
 PDE_FP2;
 % Test_Momentum;
 
-
+epseps = 1e-10;
 Lev = 5;
-Deg = 2;
-num_plot = 2;
+Deg = 4;
+num_plot = Deg;
 
 LInt = 0;
 LEnd = 10;
@@ -67,10 +67,14 @@ DoFs = size(Mat,1);
 f0 = ComputRHS(Lev,Deg,LInt,LEnd,ExactF,0);
 q0 = ComputRHS(Lev,Deg,LInt,LEnd,@(x,t)(-2*x.*exp(-x.^2)),0);
 fn = f0;
-dt = 0.1;%((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
-MaxIter = ceil(100/dt);
+dt = 1;%((LEnd - LInt)/2^Lev)^(Deg/3)*0.001;
+MaxIter = ceil(1e3/dt);
 
 InvMat = inv(speye(DoFs,DoFs)-dt*MatMass*Mat);
+
+[quad_x,quad_w]=lgwt(Deg,-1,1);
+quad_w = 2^(-Lev)/2*quad_w*(Lmax);
+ww = repmat(quad_w,2^Lev,1);
 
 for Iter = 1 : MaxIter
     
@@ -90,23 +94,42 @@ for Iter = 1 : MaxIter
 %     f0 = fn;
     
     fn = InvMat*f0;
+    if norm(fn-f0)<epseps
+        break
+    end
     f0 = fn;
     
-    qn = Mat1*fn;
+%     qn = Mat1*fn;
     
     plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--',...
-         x_node,exp(-x_node.^2),'k-',...x_node,Meval*qn,'g-<',x_node,ExactQ(x_node,time),'b--',...
+         x_node,exp(-x_node.^2)*4/sqrt(pi),'k-',...x_node,Meval*qn,'g-<',x_node,ExactQ(x_node,time),'b--',...
          'LineWidth',2)
     title(num2str(time))
     pause(0.01)
+    
+%     if abs(time-1)<1e-2 || abs(time-5)<1e-2 || abs(time-10)<1e-2 ....
+%        || abs(time-15)<1e-2 || abs(time-20)<1e-2 || abs(time-30)<1e-2 || abs(time-40)<1e-2 || abs(time-50)<1e-2 ....
+%        || abs(time-60)<1e-2 || abs(time-70)<1e-2 || abs(time-80)<1e-2 || abs(time-90)<1e-2
+%         1111
+%     end
+    
+    val = Meval*fn;
+    TolTime(Iter) = time;
+    TolMass(Iter) = sum(ww.*val.*x_node.^2);
     
 end
 
 
 figure;
 plot(x_node,Meval*fn,'r-o',x_node,ExactF(x_node,time),'b--','LineWidth',2)
-legend('Numerical Solution','Exact Solution')
+legend('Final Solution','Initial Condition')
 
-val = Meval*fn - ExactF(x_node,time);
+figure;
+plot(TolTime,TolMass)
 
-[max(abs(val)) norm(val)]
+val = Meval*fn - exp(-x_node.^2)*4/sqrt(pi);%ExactF(x_node,time);
+
+ErrL2 = sqrt(sum(ww.*val.^2));
+[Iter time]
+
+[max(abs(val)) ErrL2 norm(val)]

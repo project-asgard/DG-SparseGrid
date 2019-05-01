@@ -1,8 +1,8 @@
 nuEE = 1;
 vT = 1;
-delta = 0.042;
+delta = 0.1;%0.042;
 Z = 1;
-E = 0.0025;
+E = .01;%0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));

@@ -33,7 +33,7 @@ Mat = MatrixGrad2(Lev,Deg,LInt,LEnd,0,@(x)1);
 
 %% RHS
 time = 0;
-source = @(x,t)(cos(t).*cos(2*pi*x)+2*pi*sin(2*pi*x).*sin(t));
+source = @(x,t)(cos(t).*cos(2*pi*x)2*pi*sin(2*pi*x).*sin(t));
 rhs = ComputRHS(Lev,Deg,LInt,LEnd,source,time);
 
 %% B.C
