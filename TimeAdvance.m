@@ -38,28 +38,37 @@ bc3 = getBoundaryCondition1(pde,HASHInv,t+c3*dt);
 % Apply any non-identity LHS mass matrix coefficient
 
 applyLHS = ~isempty(pde.termsLHS);
-if applyLHS
-    matInvLHS = pde.termsLHS{1}{1}.matInv;
-end
 
 a21 = 1/2; a31 = -1; a32 = 2;
 b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
 if applyLHS
-    k_1 = matInvLHS * (ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 + bc1);
-    y_1 = f + dt*a21*k_1;
-    k_2 = matInvLHS * (ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 + bc2);
-    y_2 = f + dt*(a31*k_1 + a32*k_2);
-    k_3 = matInvLHS * (ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 + bc3);   
+    [k1,A1,ALHS] = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax);
+    rhs1 = source1 + bc1;
+%     invMatLHS = inv(ALHS); % NOTE : assume time independent for now for speed. 
+%     k1 = invMatLHS * (k1 + rhs1);
+    k1 = ALHS \ (k1 + rhs1);
+    y1 = f + dt*a21*k1;
+    
+    [k2] = ApplyA(pde,runTimeOpts,A_data,y1,deg,Vmax,Emax);
+    rhs2 = source2 + bc2;
+%     k2 = invMatLHS * (k2 + rhs2);
+    k2 = ALHS \ (k2 + rhs2);
+    y2 = f + dt*(a31*k1 + a32*k2);
+    
+    k3 = ApplyA(pde,runTimeOpts,A_data,y2,deg,Vmax,Emax);
+    rhs3 = source3 + bc3;
+%     k3 = invMatLHS * (k3 + rhs3);
+    k3 = ALHS \ (k3 + rhs3);
 else
-    k_1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 + bc1;
-    y_1 = f + dt*a21*k_1;
-    k_2 = ApplyA(pde,runTimeOpts,A_data,y_1,deg,Vmax,Emax) + source2 + bc2;
-    y_2 = f + dt*(a31*k_1 + a32*k_2);
-    k_3 = ApplyA(pde,runTimeOpts,A_data,y_2,deg,Vmax,Emax) + source3 + bc3;
+    k1 = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)   + source1 + bc1;
+    y1 = f + dt*a21*k1;
+    k2 = ApplyA(pde,runTimeOpts,A_data,y1,deg,Vmax,Emax) + source2 + bc2;
+    y2 = f + dt*(a31*k1 + a32*k2);
+    k3 = ApplyA(pde,runTimeOpts,A_data,y2,deg,Vmax,Emax) + source3 + bc3;
 end
 
-fval = f + dt*(b1*k_1 + b2*k_2 + b3*k_3);
+fval = f + dt*(b1*k1 + b2*k2 + b3*k3);
 
 end
 
@@ -75,19 +84,18 @@ bc1 = getBoundaryCondition1(pde,HASHInv,t+dt);
 % Apply any non-identity LHS mass matrix coefficient
 
 applyLHS = ~isempty(pde.termsLHS);
-if applyLHS
-    matInvLHS = pde.termsLHS{1}{1}.matInv;
-end
 
-[~,AMat] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
+[~,A,ALHS] = ApplyA(pde,runTimeOpts,A_data,f0,deg);
 
-I = eye(numel(diag(AMat)));
+I = eye(numel(diag(A)));
 
 if applyLHS
-    AA = I - dt*matInvLHS*AMat;
-    b = f0 + dt*matInvLHS*(s1 + bc1);
+%     AA = I - dt*inv(ALHS)*A;
+%     b = f0 + dt*inv(ALHS)*(s1 + bc1);
+    AA = I - dt*(ALHS \ A);
+    b = f0 + dt*(ALHS \ (s1 + bc1));
 else
-    AA = I - dt*AMat;
+    AA = I - dt*A;
     b = f0 + dt*(s1 + bc1);
 end
 
@@ -118,7 +126,7 @@ f1 = AA\b; % Solve at each timestep
 
 end
 
-function [ftmp,A] = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)
+function [ftmp,A,ALHS] = ApplyA(pde,runTimeOpts,A_data,f,deg,Vmax,Emax)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
@@ -133,6 +141,7 @@ end;
 use_kronmultd = 1;
 
 nTerms = numel(pde.terms);
+nTermsLHS = numel(pde.termsLHS);
 nDims = numel(pde.dimensions);
 
 dimensions = pde.dimensions;
@@ -209,11 +218,10 @@ elseif runTimeOpts.compression == 4
     elementDOF = deg^nDims;
     
     implicit = runTimeOpts.implicit;
-
-    if implicit
-        totalDOF = nWork * elementDOF;
-        A = sparse(totalDOF,totalDOF);
-    end
+    
+    totalDOF = nWork * elementDOF;
+    A = sparse(totalDOF,totalDOF); % Only filled if implicit
+    ALHS = sparse(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
       
     for workItem=1:nWork
         
@@ -323,7 +331,24 @@ elseif runTimeOpts.compression == 4
                      end;
                     
                 end
+                             
+            end
+            
+            %%
+            % Construct the mat list for a non-identity LHS mass matrix
+            for t=1:nTermsLHS
+                clear kronMatListLHS;
+                for d=1:nDims
+                    idx_i = Index_I{d};
+                    idx_j = Index_J{d};
+                    tmp = pde.termsLHS{t}{d}.coeff_mat;
+                    kronMatListLHS{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
+                end
                 
+                %%
+                % Apply krond to return A (recall this term requires inversion)
+                
+                ALHS(globalRow,globalCol) = ALHS(globalRow,globalCol) + krond(nDims,kronMatListLHS);
                 
             end
             
@@ -331,36 +356,6 @@ elseif runTimeOpts.compression == 4
             %%
             % Overwrite previous approach with PDE spec approch
             ftmp = ftmpA; 
-
-                        
-            % if CF, comment Line 360-386, if LF, uncomment them
-%            % Apply term3 vMax*Mass x FluxX
-%             
-%             tmpA = Identity(Index_I1,Index_J1);
-%             tmpB = Vmax*A_Data.FluxX(Index_I2,Index_J2);
-%             
-%             
-%             if use_kronmult2
-%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
-%             else
-%                 ftmp(globalRow)=ftmp(globalRow)+ ...
-% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
-%                 
-%             end 
-%             
-%           % Apply term4 Emax*FluxV x Mass
-%             
-%             tmpA = -Emax*A_Data.FluxV(Index_I1,Index_J1);
-%             tmpB = Identity(Index_I2,Index_J2);
-%             
-%             
-%             if use_kronmult2
-%                 ftmp(globalRow)=ftmp(globalRow)+kronmult2(tmpA,tmpB,f(globalCol));
-%             else
-%                 ftmp(globalRow)=ftmp(globalRow)+ ...
-% 		      reshape(tmpB * reshape( f(globalCol),Deg,Deg)* transpose(tmpA),Deg*Deg,1);
-%                 
-%             end 
             
             conCnt = conCnt+1;
             
