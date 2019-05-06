@@ -16,7 +16,7 @@ format short e
 addpath(genpath(pwd))
 
 % start with coarse mesh
-Deg = 5;
+Deg = 4;
 num_plot = Deg;
 
 Lstart = -1;
@@ -78,7 +78,7 @@ f0val(1:IniDof,1) = f_MW_full(1:IniDof);
 % % plot(xxplot,MM*f0val)
 
 EpsMax = 1e-10;
-EpsMin = EpsMax/10;
+EpsMin = EpsMax/100;
 
 MaxIter = 20;
 figure;
@@ -87,7 +87,7 @@ for iter = 1:MaxIter
     
     subplot(2,2,1);hold on
     idPlot = find(VecFlag>0);
-    PlotGridsInd(Lstart,Lend,idPlot,VecFlag)
+    PlotGridsInd(Lstart,Lend,idPlot,VecFlag,1)
     title(['Grid 0 - ',num2str(size(idPlot,1))])
     
     % Input is f0val
@@ -123,7 +123,7 @@ for iter = 1:MaxIter
     
     subplot(2,2,3);hold on
     idPlot = find(VecFlag1>0);
-    PlotGridsInd(Lstart,Lend,idPlot,VecFlag1);
+    PlotGridsInd(Lstart,Lend,idPlot,VecFlag1,1);
     title(['Grid p - ',num2str(size(idPlot,1))])
     hold off;
     
@@ -158,29 +158,34 @@ for iter = 1:MaxIter
     CelUp = ceil((CoarseCel-1)/2);
     IndUp = (2.^(LevUp-1)+CelUp+1)';
     VecFlag1(IndUp) = 2;
+    
     % check whether no chidren
-	for Num_Coarse = 1:size(CoarseLev,1)
-        LevDown = CoarseLev(i);
-        CelDown = [2*CelUp(i),2*CelUp(i)+1];
+	for Num_Coarse = 1:size(LevUp,1)
+        LevDown = LevUp(Num_Coarse)+1;
+        CelDown = [2*CelUp(Num_Coarse),2*CelUp(Num_Coarse)+1];
         CheckIndGrid = (2.^(LevDown-1)+CelDown+1)';
     if VecFlag1(CheckIndGrid(1)) == 0 && VecFlag1(CheckIndGrid(2)) == 0
-         LevUp2 = CoarseLev(i)-1;
-        CelUp2 = ceil((CoarseCel-1)/2);
+         LevUp2 = LevUp(Num_Coarse);
+         CelUp2 = CelUp(Num_Coarse);
         IndUp2 = (2.^(LevUp2-1)+CelUp2+1)';
         VecFlag1(IndUp2) = 3;
+%         1111
     end
     end
     
 
-
-    
-
-    
     DelIndDof = Grid2Dof(DelIndGrid,Deg);
     f1val(DelIndDof) = 0;
     subplot(2,2,2);
     plot(xxplot,MM*f1val,'g--','LineWidth',2);
     hold off
+    
+        % plot grids
+    subplot(2,2,4);hold on
+    idPlot = find(VecFlag1>0);
+    PlotGridsInd(Lstart,Lend,idPlot,VecFlag1,1);
+    title(['Grid 1 - ',num2str(size(idPlot,1))])
+    hold off;
     
     if norm(VecFlag-VecFlag1) == 0
         break
@@ -189,14 +194,14 @@ for iter = 1:MaxIter
     f0val = f1val; 
     VecFlag = VecFlag1;
     
-    % plot grids
-    subplot(2,2,4);hold on
-    idPlot = find(VecFlag>0);
-    PlotGridsInd(Lstart,Lend,idPlot,VecFlag);
-    title(['Grid 1 - ',num2str(size(idPlot,1))])
-    hold off;
+%     % plot grids
+%     subplot(2,2,4);hold on
+%     idPlot = find(VecFlag>0);
+%     PlotGridsInd(Lstart,Lend,idPlot,VecFlag);
+%     title(['Grid 1 - ',num2str(size(idPlot,1))])
+%     hold off;
     
-    pause%(0.1)
+    pause(0.3)
 end
 
 iter

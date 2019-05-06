@@ -235,8 +235,8 @@ else
         Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
         Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
         
-        assert(~isnan(sum(Mass,'all')))
-        assert(~isnan(sum(Grad,'all')))
+%         assert(~isnan(sum(Mass,'all')))
+%         assert(~isnan(sum(Grad,'all')))
         
         
         %%
@@ -357,7 +357,7 @@ else
         end
         
         Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
-        assert(~isnan(sum(Grad,'all')))
+%         assert(~isnan(sum(Grad,'all')))
        
     end
     
@@ -371,8 +371,8 @@ else
     Mass = FMWT * Mass * FMWT';
     Grad = FMWT * Grad * FMWT';
     
-    assert(~isnan(sum(Mass,'all')))
-    assert(~isnan(sum(Grad,'all')))
+%     assert(~isnan(sum(Mass,'all')))
+%     assert(~isnan(sum(Grad,'all')))
     
 end
 
