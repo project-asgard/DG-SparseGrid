@@ -1,4 +1,4 @@
-% This is a 1D test for adaptivity test
+% This is 1D adaptivity test for hyperbolic equation
 close all
 clear
 clc
@@ -16,27 +16,31 @@ format short e
 addpath(genpath(pwd))
 
 % start with coarse mesh
-Deg = 5;
+Deg = 2;
 num_plot = Deg;
 
 Lstart = -1;
 Lend = 1;
 EndTime = 3;
 
-% Step 1. Calculate a large grad operator
+
 % First set MaxLev = 12
 MaxLev = 10;
 Num_MaxNode = 2^MaxLev;
 MaxDof = Deg*Num_MaxNode;
 
-IniLev = 3;
+IniLev = 5;
 Num_IniNode = 2^IniLev;
 IniDof = Deg*Num_IniNode;
 
 CFL = 0.01;
 h = (Lend-Lstart)/2^MaxLev;
-dt = CFL*h^((Deg)/3);
+dt = CFL*h;%^((Deg)/3);
 maxT = ceil(EndTime/dt);
+
+% Step 1. Calculate a large grad operator
+Mat = MatrixGrad(MaxLev,Deg,Lstart,Lend,1,funcCoef );
+
 
 % Step 2. List of FLAG
 VecFlag = sparse(Num_MaxNode,1);
@@ -51,7 +55,7 @@ pV = lin_legendre2(quad_x,Deg)*1/sqrt(h);
 
 
 fval = sparse(MaxDof,1);
-f0val = sparse(MaxDof,1);
+fval0 = sparse(MaxDof,1);
 for Num_RealSpaceCell=0:2^MaxLev-1
     
     x0 = Lstart+Num_RealSpaceCell*(Lend-Lstart)/2^MaxLev;
@@ -72,35 +76,41 @@ FMWT = OperatorTwoScale(Deg,2^MaxLev);
 f_MW_full =  FMWT*fval;
 MM = MMeval*FMWT';
 
-f0val(1:IniDof,1) = f_MW_full(1:IniDof);
-% % plot(xxplot,MM*f_MW_full)
-% % hold on;
-% % plot(xxplot,MM*f0val)
+fval0(1:IniDof,1) = f_MW_full(1:IniDof);
+Mat = FMWT* Mat*FMWT';
 
-EpsMax = 1e-10;
+IdOn = find(VecFlag>0);
+IdDofOn = Grid2Dof(IdOn,Deg);
+A_encode{1}.A = Mat(IdDofOn,IdDofOn);
+A_encode{1}.IndexI = IdDofOn;
+A_encode{1}.IndexJ = IdDofOn;
+
+EpsMax = 1e-6;
 EpsMin = EpsMax/10;
+% begin of time loop
+count = 1;
 
-MaxIter = 20;
 figure;
-
-for iter = 1:MaxIter
-    
-    subplot(2,2,1);hold on
-    idPlot = find(VecFlag>0);
-    PlotGridsInd(Lstart,Lend,idPlot,VecFlag)
-    title(['Grid 0 - ',num2str(size(idPlot,1))])
-    
-    % Input is f0val
-    f1val = f0val;
+for iter = 1:100%MaxIter
     VecFlag1 = VecFlag;
+    B_encode = A_encode;
     
-    subplot(2,2,2);
-    plot(xxplot,MM*f0val,'k-','LineWidth',2);hold on
+    subplot(1,3,1);
+    plot(xxplot,MM*fval0,'b-','LineWidth',2);hold on;
+     idPlot = find(VecFlag>0);
+    PlotGridsInd(Lstart,Lend,idPlot,VecFlag1);
     
-    % checking for refinement
+    % pre-computing f1
+    fval_tmp = fval0 + dt*( ApplyA(B_encode,fval0,VecFlag) );
+%     subplot(1,3,2);
+    plot(xxplot,MM*fval_tmp,'r--','LineWidth',2);
+    title('Input Grids')
+    hold off;
+    % 
+        % checking for refinement
     Leaf4Refine = find(VecFlag > 1);
     Ind4Refine = Grid2Dof(Leaf4Refine,Deg);
-    Val4Check = reshape(f0val(Ind4Refine),Deg,size(f0val(Ind4Refine),1)/Deg);
+    Val4Check = reshape(fval_tmp(Ind4Refine),Deg,size(fval_tmp(Ind4Refine),1)/Deg);
     tmp = MarkElem(Val4Check,'refine',EpsMax);
     IndGridRefine = Leaf4Refine(tmp);
 
@@ -121,22 +131,39 @@ for iter = 1:MaxIter
     VecFlag1(AddIndGrid) = 3;
     VecFlag1(IndGridRefine) = 1;
     
-    subplot(2,2,3);hold on
-    idPlot = find(VecFlag1>0);
-    PlotGridsInd(Lstart,Lend,idPlot,VecFlag1);
-    title(['Grid p - ',num2str(size(idPlot,1))])
-    hold off;
-    
-    % update coefficients
+     % update coefficients
     AddDofInd = Grid2Dof(AddIndGrid,Deg);
-    f1val(AddDofInd) = f_MW_full(AddDofInd);
-    subplot(2,2,2);
-    plot(xxplot,MM*f1val,'b-','LineWidth',2);
+    fval0_tmp = fval0;
+    
+    % update matrix
+    IdDofOn = find(VecFlag1>0);
+    
+    count = count+1;
+    B_encode{count}.A = Mat(IdDofOn,AddDofInd);
+    B_encode{count}.IndexI = IdDofOn;
+    B_encode{count}.IndexJ = AddDofInd;
+    count = count+1;
+    B_encode{count}.A = Mat(AddDofInd,IdDofOn);
+    B_encode{count}.IndexI = AddDofInd;
+    B_encode{count}.IndexJ = IdDofOn;
+    count = count+1;
+    B_encode{count}.A = Mat(AddDofInd,AddDofInd);
+    B_encode{count}.IndexI = AddDofInd;
+    B_encode{count}.IndexJ = AddDofInd;
+    
+    fval_tmp = fval0 + dt*( ApplyA(B_encode,fval0,VecFlag) );
+    subplot(1,3,2);
+    plot(xxplot,MM*fval_tmp,'b-','LineWidth',2);
+    hold on;
+     idPlot = find(VecFlag1>0);
+    PlotGridsInd(Lstart,Lend,idPlot,VecFlag1);
+    title(['Pre-Refinement ',num2str( size(idPlot,1))])
+    hold off;
     
     % coarsen check
     Leaf4Coarse = find(VecFlag1 > 2);
     Ind4Coarse = Grid2Dof(Leaf4Coarse,Deg);
-    Val4Check = reshape(f1val(Ind4Coarse),Deg,size(f1val(Ind4Coarse),1)/Deg);
+    Val4Check = reshape(fval_tmp(Ind4Coarse),Deg,size(fval_tmp(Ind4Coarse),1)/Deg);
     tmp = MarkElem(Val4Check,'coarse',EpsMin);
     IndGridCoarse = Leaf4Coarse(tmp);
 
@@ -158,45 +185,37 @@ for iter = 1:MaxIter
     CelUp = ceil((CoarseCel-1)/2);
     IndUp = (2.^(LevUp-1)+CelUp+1)';
     VecFlag1(IndUp) = 2;
-    % check whether no chidren
-	for Num_Coarse = 1:size(CoarseLev,1)
-        LevDown = CoarseLev(i);
-        CelDown = [2*CelUp(i),2*CelUp(i)+1];
-        CheckIndGrid = (2.^(LevDown-1)+CelDown+1)';
-    if VecFlag1(CheckIndGrid(1)) == 0 && VecFlag1(CheckIndGrid(2)) == 0
-         LevUp2 = CoarseLev(i)-1;
-        CelUp2 = ceil((CoarseCel-1)/2);
-        IndUp2 = (2.^(LevUp2-1)+CelUp2+1)';
-        VecFlag1(IndUp2) = 3;
-    end
-    end
-    
-
-
-    
-
     
     DelIndDof = Grid2Dof(DelIndGrid,Deg);
-    f1val(DelIndDof) = 0;
-    subplot(2,2,2);
-    plot(xxplot,MM*f1val,'g--','LineWidth',2);
-    hold off
+    fval_tmp(DelIndDof) = 0;
     
-    if norm(VecFlag-VecFlag1) == 0
-        break
-    end
-    % update coefficients
-    f0val = f1val; 
-    VecFlag = VecFlag1;
-    
-    % plot grids
-    subplot(2,2,4);hold on
-    idPlot = find(VecFlag>0);
-    PlotGridsInd(Lstart,Lend,idPlot,VecFlag);
-    title(['Grid 1 - ',num2str(size(idPlot,1))])
+    subplot(1,3,3);
+    plot(xxplot,MM*fval_tmp,'b-','LineWidth',2);
+    hold on;
+     idPlot = find(VecFlag1>0);
+    PlotGridsInd(Lstart,Lend,idPlot,VecFlag1);
+    title(['Post-Coarsen ',num2str( size(idPlot,1))])
     hold off;
-    
-    pause%(0.1)
+   [size(A_encode), size(B_encode)]
+    pause(0.1);
+    A_encode = B_encode;
+    fval0 = fval_tmp;
 end
 
-iter
+function ff = ApplyA(A,f,VecFlag)
+    nz = size(A,2);
+    Dof = size(f,1);
+    ff = sparse(Dof,1);
+    for i = 1:nz
+        indexI = A{i}.IndexI;
+        indexJ = A{i}.IndexJ;
+        f_tmp = f(indexJ);
+        ix = find(VecFlag(indexJ)==0);
+        f_tmp = 0;
+        tmp = A{i}.A*f(indexJ);
+        ix = find(VecFlag(indexI)==0);
+        tmp( (ix) ) = 0;
+        ff(indexI) = ff(indexI) + tmp;%A{i}.A*f(indexJ);
+        clear tmp
+    end
+end
