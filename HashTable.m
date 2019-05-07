@@ -98,7 +98,7 @@ istartv(2:(ncase+1)) = cumsum(isize);
 istartv(2:(ncase+1)) = istartv(2:(ncase+1)) + 1;
 
 % ------------------------------------------------------------------
-% Note: option whether to append the values of LevCell2index(nlev,cell)
+% Note: option whether to append the values of lev_cell_to_singleD_index(nlev,cell)
 % in the inverseHash{i}
 % the "key" has sufficient information to recompute this information
 % ------------------------------------------------------------------
@@ -119,7 +119,7 @@ for icase=1:ncase,
 
 
   levels(1:nDims) = ptable(icase,1:nDims);
-  index_set = LevCell2index_set( levels(1:nDims) );
+  index_set = lev_cell_to_singleD_index_set( levels(1:nDims) );
   for i=istart:iend,
      icells = index_set(i-istart+1,:);
      key = [levels,icells];
@@ -133,14 +133,14 @@ for icase=1:ncase,
 
      if (append_index_k),
        for kdim=1:nDims,
-         index_k(kdim) = LevCell2index( levels(kdim), icells(kdim));
+         index_k(kdim) = lev_cell_to_singleD_index( levels(kdim), icells(kdim));
        end;
        inverseHash{i} = [key,index_k];
      else
        inverseHash{i} = [key];
      end;
      
-     element_idx = LevCell2ElementIndex(pde,levels,icells);
+     element_idx = lev_cell_to_element_index(pde,levels,icells);
      elementsIDX(i) = element_idx;
      for d=1:nDims
          elements{d}.lev (element_idx) = levels(d)+1; % NOTE : have to start lev  index from 1 for sparse storage

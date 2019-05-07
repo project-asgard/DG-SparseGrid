@@ -118,15 +118,13 @@ end;
         levels = ll(1:Dim);
         icells = ll( Dim + (1:Dim) );
         
-           
-
         for k=1:Dim,
-            index_Ik{k} = LevCell2index( levels(k), icells(k));
+            index_Ik{k} = lev_cell_to_singleD_index( levels(k), icells(k));
             index_IkDeg{k} = (index_Ik{k}-1)*Deg + (1:Deg);
         end;
         
         %% 
-        % Check LevCell2index output against approach in other chunks of code. 
+        % Check lev_cell_to_singleD_index output against approach in other chunks of code. 
         
         nDims = Dim;
         for d=1:nDims

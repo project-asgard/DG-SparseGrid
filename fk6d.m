@@ -50,12 +50,15 @@ end
 
 %% Construct the Element (Hash) tables.
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
-%[HASH,HASHInv,index1D] = HashTable2(Lev,Dim); % I dont recall what the index1D information was added here for?
+
+pde.useHash = 0;
 [HASH,HASHInv,elements,elementsIDX] = HashTable(pde,lev,nDims,gridType);
-nHash = numel(HASHInv);
-pde.elements = elements;
-% pde.elementsIDX = find(elements{1}.lev);
-pde.elementsIDX = elementsIDX; % only to get the same order as the hash table
+if pde.useHash
+else
+    pde.elements = elements;
+    % pde.elementsIDX = find(elements{1}.lev);
+    pde.elementsIDX = elementsIDX; % only to get the same order as the hash table
+end
 
 %% Construct the connectivity.
 if runTimeOpts.useConnectivity
@@ -70,18 +73,10 @@ if ~quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(HASHInv,pde,0);
 
 %% Construct the time-independent coefficient matrices
-% The original way
 if ~quiet; disp('Calculate time independent matrix coefficients'); end
-if nDims==2
-    [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
-        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
-end
-%%
-% The generalized PDE spec way
 t = 0;
 TD = 0;
 pde = getCoeffMats(pde,t,TD);
-
 
 %% Construct A_encode / A_data time independent data structures.
 if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
@@ -118,16 +113,6 @@ end
 % locations for each dimension.
 for d=1:nDims
     [Meval{d},nodes{d}] = matrix_plot_D(pde.dimensions{d});
-end
-if nDims==2
-    if ~quiet; disp('Plotting intial condition'); end
-    [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
-        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
-    tol = 1e-15;
-    assert(norm(full(Meval{1}-Meval_v))<tol);
-    assert(norm(nodes{1}-v_node)<tol);
-    assert(norm(full(Meval{2}-Meval_x))<tol);
-    assert(norm(nodes{2}-x_node)<tol);
 end
 
 %%

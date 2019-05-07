@@ -16,11 +16,18 @@ terms = pde.terms;
 
 deg = dims{1}.deg; % TODO : assumes deg independent of dim
 
-nHash = numel(HashInv);
+if pde.useHash
+    N = numel(HashInv);
+else
+    N = numel(HashInv);
+    Ne = numel(pde.elementsIDX);
+    assert(N==Ne);
+    N=Ne;
+end
 nTerms = numel(pde.terms);
 nDims = numel(dims);
 
-bcVec = zeros(deg^nDims*nHash,1);
+bcVec = zeros(deg^nDims*N,1);
 
 for tt = 1:nTerms % Construct a BC object for each term
     

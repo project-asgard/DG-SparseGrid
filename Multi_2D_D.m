@@ -11,7 +11,14 @@ use_kronmultd = 1;
 dimensions = pde.dimensions;
 
 nDims = numel(dimensions);
-nHash = numel(HASHInv);
+if pde.useHash
+    N = numel(HASHInv);
+else
+    N = numel(HASHInv);
+    Ne = numel(pde.elementsIDX);
+    assert(N==Ne);
+    N = Ne;
+end
 
 deg = dimensions{1}.deg; % TODO : generalize to deg_D
 lev = dimensions{1}.lev; % TODO : generalize to lev_D
@@ -45,7 +52,7 @@ if nDims==2
     f = f_wSpace;
 end
 
-for i=1:nHash
+for i=1:N
     
     ll=HASHInv{i};
     
@@ -72,14 +79,18 @@ for i=1:nHash
     
     clear kronMatList;
     for d=1:nDims
-        ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
-                      
-        %% Etable
-        IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
-        IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
-        IDe = LevCell2index(IDlev-1,IDcell-1);
-        assert(ID==IDe);
         
+        if pde.useHash
+            ID = ll(nDims*2+d);
+        else
+            ID = ll(nDims*2+d);
+            %% Etable
+            IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
+            IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
+            IDe = lev_cell_to_singleD_index(IDlev-1,IDcell-1);
+            assert(ID==IDe);
+            ID = IDe;
+        end
         index_D = [(ID-1)*deg+1 : ID*deg];
        
         %%

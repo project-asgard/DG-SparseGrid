@@ -1,4 +1,4 @@
-function eIdx = LevCell2ElementIndex(pde,lev,cell)
+function eIdx = lev_cell_to_element_index(pde,lev,cell)
 
 %%
 % Given the lev and cell d-dim vectors, return the global element idx.
@@ -9,7 +9,7 @@ nDims = numel(dims);
 assert(numel(lev)==nDims);
 assert(numel(cell)==nDims);
 
-idx1D = LevCell2index(lev,cell);
+idx1D = lev_cell_to_singleD_index(lev,cell);
 
 eIdx = 0;
 stride = 1;

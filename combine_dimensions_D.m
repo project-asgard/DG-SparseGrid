@@ -24,13 +24,17 @@ for i=1:nHash
     clear kronMatList;
     for d=1:nDims
         
-        ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
-        
-        %% Etable
-        IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
-        IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
-        IDe = LevCell2index(IDlev-1,IDcell-1);
-        assert(ID==IDe);
+        if pde.useHash
+            ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
+        else
+            ID = ll(nDims*2+d);
+            %% Etable
+            IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
+            IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
+            IDe = lev_cell_to_singleD_index(IDlev-1,IDcell-1);
+            assert(ID==IDe);
+            ID = IDe;
+        end
         
         index_D = [(ID-1)*Deg+1 : ID*Deg];
         f = fD{d};
