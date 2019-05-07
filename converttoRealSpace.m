@@ -1,4 +1,4 @@
-function [f_nd_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval_t,Lev_viz)
+function [f_nd_t] = converttoRealSpace(pde,Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval_t,Lev_viz)
 %
 % [f_nd_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval,Lev_viz)
 % convert from wavelet coefficient to real space  on grid at level Lev_viz
@@ -40,7 +40,7 @@ LevX = Lev;
 LevV = Lev;
 
 
-[HASH,HASHInv] = HashTable(Lev_solution,Dim,gridType);
+[HASH,HASHInv] = HashTable(pde,Lev_solution,Dim,gridType);
 if (idebug >= 1),
     disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
         numel(HASH),    numel(HASHInv) ));

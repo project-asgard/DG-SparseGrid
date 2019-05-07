@@ -12,6 +12,8 @@ Deg = pde.dimensions{1}.deg; % TODO Need to generalize this deg_D
 
 fval = sparse(Deg^nDims * nHash,1);
 
+nze = nonzeros(pde.elements{1}.lev);
+
 for i=1:nHash
     
     ll=HASHInv{i};
@@ -21,7 +23,15 @@ for i=1:nHash
     
     clear kronMatList;
     for d=1:nDims
+        
         ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
+        
+        %% Etable
+        IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
+        IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
+        IDe = LevCell2index(IDlev-1,IDcell-1);
+        assert(ID==IDe);
+        
         index_D = [(ID-1)*Deg+1 : ID*Deg];
         f = fD{d};
         ftmp = f(index_D);

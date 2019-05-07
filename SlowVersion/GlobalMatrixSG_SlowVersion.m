@@ -56,6 +56,13 @@ elseif runTimeOpts.compression == 4
         
         for d=1:nDims
             element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
+            
+            %% Etable
+            IDlev  = pde.elements{d}.lev(pde.elementsIDX(workItem));
+            IDcell = pde.elements{d}.cell(pde.elementsIDX(workItem));
+            IDe = LevCell2index(IDlev-1,IDcell-1);
+            assert(element_idx1D_D{d}==IDe);
+            
         end
         
         % Store the element data in arrays

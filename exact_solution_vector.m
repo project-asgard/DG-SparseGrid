@@ -1,4 +1,4 @@
-function fval = exact_solution_vector(HASHInv,pde,time)
+function fval = exact_solution_vector(pde,HASHInv,time)
 
 % Returns the wavelet transformed exact solution
 

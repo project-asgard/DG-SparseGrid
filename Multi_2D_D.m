@@ -1,4 +1,4 @@
-function [f_rSpace]=Multi_2D_D(Meval_D,f_wSpace,HASHInv,pde)
+function [f_rSpace]=Multi_2D_D(pde,Meval_D,f_wSpace,HASHInv)
 
 %%
 % Apply dimension many inverse wavelet transforms to the solution vector
@@ -73,6 +73,13 @@ for i=1:nHash
     clear kronMatList;
     for d=1:nDims
         ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
+                      
+        %% Etable
+        IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
+        IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
+        IDe = LevCell2index(IDlev-1,IDcell-1);
+        assert(ID==IDe);
+        
         index_D = [(ID-1)*deg+1 : ID*deg];
        
         %%

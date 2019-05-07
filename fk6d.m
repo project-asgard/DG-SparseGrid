@@ -51,8 +51,11 @@ end
 %% Construct the Element (Hash) tables.
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
 %[HASH,HASHInv,index1D] = HashTable2(Lev,Dim); % I dont recall what the index1D information was added here for?
-[HASH,HASHInv] = HashTable(lev,nDims,gridType);
+[HASH,HASHInv,elements,elementsIDX] = HashTable(pde,lev,nDims,gridType);
 nHash = numel(HASHInv);
+pde.elements = elements;
+% pde.elementsIDX = find(elements{1}.lev);
+pde.elementsIDX = elementsIDX; % only to get the same order as the hash table
 
 %% Construct the connectivity.
 if runTimeOpts.useConnectivity
@@ -157,7 +160,7 @@ if nDims <=3
     
     %%
     % Get the real space solution
-    fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
+    fval_realspace = Multi_2D_D(pde,Meval,fval,HASHInv);
     fval_realspace_analytic = getAnalyticSolution_D(coord,0,pde);
 
     if norm(fval_realspace) > 0
@@ -274,7 +277,7 @@ for L = 1:nsteps,
         
         %%
         % Get the real space solution
-        fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
+        fval_realspace = Multi_2D_D(pde,Meval,fval,HASHInv);
         
         %%
         % Try with function convertToRealSpace
@@ -287,7 +290,7 @@ for L = 1:nsteps,
                 LminB(d) = pde.dimensions{d}.domainMin;
                 LmaxB(d) = pde.dimensions{d}.domainMax;
             end
-            fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
+            fval_realspaceB = converttoRealSpace(pde,nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
         end
         
     end
@@ -299,7 +302,7 @@ for L = 1:nsteps,
         %%
         % Check the wavelet space solution with the analytic solution
         
-        fval_analytic = exact_solution_vector(HASHInv,pde,L*dt);
+        fval_analytic = exact_solution_vector(pde,HASHInv,L*dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
         disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
