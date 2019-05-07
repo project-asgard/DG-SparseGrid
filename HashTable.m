@@ -140,6 +140,8 @@ for icase=1:ncase,
        inverseHash{i} = [key];
      end;
      
+     %%
+     % Element Table (large address space approach)
      element_idx = lev_cell_to_element_index(pde,levels,icells);
      elementsIDX(i) = element_idx;
      for d=1:nDims

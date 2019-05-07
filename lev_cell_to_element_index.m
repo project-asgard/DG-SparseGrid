@@ -11,7 +11,7 @@ assert(numel(cell)==nDims);
 
 idx1D = lev_cell_to_singleD_index(lev,cell);
 
-eIdx = 0;
+eIdx = uint64(0);
 stride = 1;
 for d=1:nDims
     dim = dims{d};

@@ -8,7 +8,7 @@ function pde = fokkerplanck1_4p1b
 % fk6d(fokkerplanck1_4p1b,4,2,0.02,[],[],0,[])
 %
 % implicit
-% fk6d(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],1.0)
+% fk6d(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],0.1)
 
 pde.CFL = 0.01;
 sig = 0.1;
