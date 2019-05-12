@@ -1,4 +1,4 @@
-function FMWT = OperatorTwoScale_nonwavelet(maxDeg,maxLev)
+function FMWT = OperatorTwoScale_nonwavelet(pde,maxDeg,maxLev)
 % FMWT = OperatorTwoScale_nonwavelet(maxDeg,maxLev)
 %----------------------------------
 % Set-up Two-scale operator       %

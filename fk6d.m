@@ -45,23 +45,26 @@ if ~quiet; disp(sprintf('dt = %g', dt )); end
 
 %% Construct the 1D multi-wavelet transform for each dimension.
 for d=1:nDims
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.dimensions{d}.deg,2^pde.dimensions{d}.lev);
+    pde.dimensions{d}.FMWT = OperatorTwoScale(pde,pde.dimensions{d}.deg,2^pde.dimensions{d}.lev);
 end
 
 %% Construct the Element (Hash) tables.
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
 
-pde.useHash = 0;
-[HASH,HASHInv,elements,elementsIDX] = HashTable(pde,lev,nDims,gridType);
+pde.useHash = 1;
+pde.doRefine = 0;
+[HASH,HASHInv,elements,elementsIDX] = HashTable(pde,lev,nDims,gridType); % TODO : move this call inside the if below.
+
 if pde.useHash
 else
+    [elements,elementsIDX] = elementTable(pde,opts,lev,gridType);
     pde.elements = elements;
     % pde.elementsIDX = find(elements{1}.lev);
     pde.elementsIDX = elementsIDX; % only to get the same order as the hash table
 end
 
 %% Construct the connectivity.
-if runTimeOpts.useConnectivity
+if opts.useConnectivity
     if ~quiet; disp('Constructing connectivity table'); end
     connectivity = ConnectnD(nDims,HASH,HASHInv,lev,lev);
 else
@@ -88,7 +91,7 @@ if compression == 3
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
-    A_data = GlobalMatrixSG_SlowVersion(pde,runTimeOpts,HASHInv,connectivity,deg);
+    A_data = GlobalMatrixSG_SlowVersion(pde,opts,HASHInv,connectivity,deg);
 end
 
 %% Construct Poisson matrix
@@ -219,7 +222,7 @@ for L = 1:nsteps,
     %%
     % Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
-    if runTimeOpts.compression == 3
+    if opts.compression == 3
         % the new matrix construction is as _newCon, only works for
         % compression= 3
         %         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
@@ -233,8 +236,8 @@ for L = 1:nsteps,
     % Advance in time
     
     if ~quiet; disp('    RK3 time step'); end
-    if runTimeOpts.compression == 3
-        fval = TimeAdvance(pde,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
+    if opts.compression == 3
+        fval = TimeAdvance(pde,opts,C_encode,fval,time(count),dt,deg,HASHInv);
     else       
         % Write the A_data structure components for use in HPC version.
         write_A_data = 0;
@@ -244,7 +247,7 @@ for L = 1:nsteps,
             Vmax = 0;
             Emax = 0; % These are only used in the global LF flux
         end
-        fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
+        fval = TimeAdvance(pde,opts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
         
     end
     
@@ -328,6 +331,13 @@ for L = 1:nsteps,
         fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
         save(fName,'f2d','fval');
+    end
+    
+    %%
+    % Apply adaptivity
+    
+    if pde.doRefine
+        [pde,fval] = refine(pde,fval);
     end
     
 end

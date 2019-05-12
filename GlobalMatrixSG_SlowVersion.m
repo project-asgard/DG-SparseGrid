@@ -68,8 +68,8 @@ elseif runTimeOpts.compression == 4
             else
                 element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
                 %% Etable
-                IDlev  = pde.elements{d}.lev(pde.elementsIDX(workItem));
-                IDcell = pde.elements{d}.cell(pde.elementsIDX(workItem));
+                IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(workItem));
+                IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(workItem));
                 IDe = lev_cell_to_singleD_index(IDlev-1,IDcell-1);
                 assert(element_idx1D_D{d}==IDe);
                 element_idx1D_D{d} = IDe;

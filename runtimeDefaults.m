@@ -12,7 +12,7 @@ nDims = numel(pde.dimensions);
 if ~exist('TEND','var') || isempty(TEND)   
     TEND = 0.001;
 end
-runTimeOpts.TEND = TEND;
+opts.TEND = TEND;
 
 %%
 % Number of levels
@@ -37,14 +37,14 @@ end
 if ~exist('quiet','var') || isempty(quiet)
     quiet = 0;
 end
-runTimeOpts.quiet = quiet;
+opts.quiet = quiet;
 
 %%
 % Use or not the compression reference version
 if ~exist('compression','var') || isempty(compression)
     compression = 4;
 end
-runTimeOpts.compression = compression;
+opts.compression = compression;
 
 %%
 % Sparse or Full grid
@@ -56,22 +56,22 @@ else
         error("gridType must be set to 'SG' or 'FG'");
     end
 end
-runTimeOpts.gridType = gridType;
+opts.gridType = gridType;
 
 %%
 % Implicit or explicit time advance
 if ~exist('implicit','var') || isempty(implicit)
-    runTimeOpts.implicit = 0;
+    opts.implicit = 0;
 else
-    runTimeOpts.implicit = implicit;
+    opts.implicit = implicit;
 end
 
 %%
 % Use connectivity or not
 if ~exist('useConnectivity','var') || isempty(useConnectivity)
-    runTimeOpts.useConnectivity = 0;
+    opts.useConnectivity = 0;
 else
-    runTimeOpts.useConnectivity = useConnectivity;
+    opts.useConnectivity = useConnectivity;
 end
 
 %%

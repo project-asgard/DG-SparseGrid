@@ -5,12 +5,11 @@ function fval = initial_condition_vector(HASHInv,pde,time)
 % fvList = {fv};
 % ftList = {1};
 
-nDims = numel(pde.dimensions);
+dims = pde.dimensions;
+nDims = numel(dims);
 
 for d=1:nDims
-    fList{d} = forwardMWT(pde.dimensions{d}.lev,pde.dimensions{d}.deg,...
-        pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,...
-        pde.dimensions{d}.init_cond_fn,pde.params);
+    fList{d} = forwardMWT(pde,dims{d}.lev,dims{d}.deg,dims{d}.domainMin,dims{d}.domainMax,dims{d}.init_cond_fn,pde.params);
 end
 
 % fx = pde.dimensions{1}.f0;

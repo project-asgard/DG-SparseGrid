@@ -19,9 +19,9 @@ deg = dims{1}.deg; % TODO : assumes deg independent of dim
 if pde.useHash
     N = numel(HashInv);
 else
-    N = numel(HashInv);
+%     N = numel(HashInv);
     Ne = numel(pde.elementsIDX);
-    assert(N==Ne);
+%     assert(N==Ne);
     N=Ne;
 end
 nTerms = numel(pde.terms);
@@ -99,7 +99,10 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-                    bcL{d1} = ComputeRHS(pde,time,dim,BCL_fList,FMWT); % returns a nDim length list
+%                     bcL{d1} = ComputeRHS(pde,time,dim,BCL_fList,FMWT); % returns a nDim length list
+                    for d2=1:nDims
+                        bcL{d1}{d2} = forwardMWT(dims{d2}.lev,dims{d2}.deg,dims{d2}.domainMin,dims{d2}.domainMax,BCR_fList{d2},pde.params);
+                    end
                     
                     %%
                     % Overwrite the trace (boundary) value just for this dim
@@ -128,7 +131,10 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-                    bcR{d1} = ComputeRHS(pde,time,dim,BCR_fList,FMWT); % returns a nDim length list
+%                     bcR{d1} = ComputeRHS(pde,time,dim,BCR_fList,FMWT); % returns a nDim length list 
+                    for d2=1:nDims
+                        bcR{d1}{d2} = forwardMWT(dims{d2}.lev,dims{d2}.deg,dims{d2}.domainMin,dims{d2}.domainMax,BCR_fList{d2},pde.params);
+                    end                    
                     
                     %%
                     % Overwrite the trace (boundary) value just for this dim

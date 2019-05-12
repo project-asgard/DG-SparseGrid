@@ -1,4 +1,4 @@
-function FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev)
+function FMWT_COMP = OperatorTwoScale_wavelet(pde,maxDeg,maxLev)
 % FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev)
 %----------------------------------
 % Set-up Two-scale operator       %

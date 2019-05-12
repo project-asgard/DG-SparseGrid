@@ -85,8 +85,8 @@ for i=1:N
         else
             ID = ll(nDims*2+d);
             %% Etable
-            IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
-            IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
+            IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(i));
+            IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(i));
             IDe = lev_cell_to_singleD_index(IDlev-1,IDcell-1);
             assert(ID==IDe);
             ID = IDe;

@@ -6,17 +6,19 @@ function [fval] = combine_dimensions_D(fD,ft,HASHInv,pde)
 % ft is the time multiplier.
 
 nDims = numel(fD);
-nHash = numel(HASHInv);
+if pde.useHash
+    N = numel(HASHInv);
+else
+    N = numel(pde.elementsIDX);
+end
 
 Deg = pde.dimensions{1}.deg; % TODO Need to generalize this deg_D
 
-fval = sparse(Deg^nDims * nHash,1);
+fval = sparse(Deg^nDims * N,1);
 
-nze = nonzeros(pde.elements{1}.lev);
+% nze = nonzeros(pde.elements.coords{1}.lev);
 
-for i=1:nHash
-    
-    ll=HASHInv{i};
+for i=1:N
     
     %%
     % Kron product approach
@@ -25,14 +27,16 @@ for i=1:nHash
     for d=1:nDims
         
         if pde.useHash
+            ll=HASHInv{i};
             ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
         else
-            ID = ll(nDims*2+d);
+%             ll=HASHInv{i};
+%             ID = ll(nDims*2+d);
             %% Etable
-            IDlev  = pde.elements{d}.lev(pde.elementsIDX(i));
-            IDcell = pde.elements{d}.cell(pde.elementsIDX(i));
-            IDe = lev_cell_to_singleD_index(IDlev-1,IDcell-1);
-            assert(ID==IDe);
+            IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(i))-1;
+            IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(i))-1;
+            IDe = lev_cell_to_singleD_index(IDlev,IDcell);
+%             assert(ID==IDe);
             ID = IDe;
         end
         
