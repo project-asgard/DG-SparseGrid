@@ -43,17 +43,12 @@ params = pde.params;
 dt = pde.set_dt(pde);
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
-%% Construct the 1D multi-wavelet transform for each dimension.
-for d=1:nDims
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde,pde.dimensions{d}.deg,2^pde.dimensions{d}.lev);
-end
-
 %% Construct the Element (Hash) tables.
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
 
 pde.useHash = 1;
 pde.doRefine = 0;
-[HASH,HASHInv,elements,elementsIDX] = HashTable(pde,lev,nDims,gridType); % TODO : move this call inside the if below.
+[HASH,HASHInv] = HashTable(pde,lev,nDims,gridType); % TODO : move this call inside the if below.
 
 if pde.useHash
 else
@@ -61,6 +56,11 @@ else
     pde.elements = elements;
     % pde.elementsIDX = find(elements{1}.lev);
     pde.elementsIDX = elementsIDX; % only to get the same order as the hash table
+end
+
+%% Construct the 1D multi-wavelet transform for each dimension.
+for d=1:nDims
+    pde.dimensions{d}.FMWT = OperatorTwoScale(pde,d,deg,pde.dimensions{d}.lev);
 end
 
 %% Construct the connectivity.

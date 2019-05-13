@@ -9,7 +9,7 @@ dims = pde.dimensions;
 nDims = numel(dims);
 
 for d=1:nDims
-    fList{d} = forwardMWT(pde,dims{d}.lev,dims{d}.deg,dims{d}.domainMin,dims{d}.domainMax,dims{d}.init_cond_fn,pde.params);
+    fList{d} = forwardMWT(pde,d,dims{d}.init_cond_fn,time);
 end
 
 % fx = pde.dimensions{1}.f0;

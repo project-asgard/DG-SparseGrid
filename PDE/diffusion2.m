@@ -64,7 +64,7 @@ dim_x.BCR = 'D'; % Dirichlet
 dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
-dim_x.init_cond_fn = @(x,p) soln_x(x)*soln_t(0);
+dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
 
 % The function is defined for the plane
 % y = c and y = d
@@ -87,7 +87,7 @@ dim_y.BCR = 'D';
 dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
-dim_y.init_cond_fn = @(y,p) soln_y(y)*soln_t(0);
+dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
 
 %%
 % Add dimensions to the pde object

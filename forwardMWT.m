@@ -1,10 +1,20 @@
-function [f] = forwardMWT(pde,lev,deg,Lmin,Lmax,foo,params,t)
+function [f] = forwardMWT(pde,dimIdx,foo,t)
+
+dims = pde.dimensions;
 
 %% Decompose a 1D function into the multiwavelet basis 
 
+lev = dims{dimIdx}.lev;
+deg = dims{dimIdx}.deg;
+Lmin = dims{dimIdx}.domainMin;
+Lmax = dims{dimIdx}.domainMax;
+params = pde.params;
+
 % Get the Forward Multi-Wavelet Transform matrix
 
-FMWT = OperatorTwoScale(pde,deg,2^lev);
+% FMWT = OperatorTwoScale(pde,dimIdx,deg,2^lev);\
+FMWT = OperatorTwoScale(pde,dimIdx,deg,lev);
+
 
 % Get the Legendre-Gauss nodes (quad_x) and weights (quad_w) on the domain
 % [-1,+1] for performing quadrature.
@@ -31,9 +41,9 @@ for i=0:n-1
     
     % Get the function foo(x) at the quadrature points.
     switch nargin
-        case 7
+        case 3
             fxHere = foo(x, params);
-        case 8
+        case 4
             fxHere = foo(x, params, t);
     end
     

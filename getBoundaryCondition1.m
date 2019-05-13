@@ -101,7 +101,7 @@ for tt = 1:nTerms % Construct a BC object for each term
                     
 %                     bcL{d1} = ComputeRHS(pde,time,dim,BCL_fList,FMWT); % returns a nDim length list
                     for d2=1:nDims
-                        bcL{d1}{d2} = forwardMWT(dims{d2}.lev,dims{d2}.deg,dims{d2}.domainMin,dims{d2}.domainMax,BCR_fList{d2},pde.params);
+                        bcL{d1}{d2} = forwardMWT(pde,d2,BCR_fList{d2},time);
                     end
                     
                     %%
@@ -133,7 +133,7 @@ for tt = 1:nTerms % Construct a BC object for each term
                     
 %                     bcR{d1} = ComputeRHS(pde,time,dim,BCR_fList,FMWT); % returns a nDim length list 
                     for d2=1:nDims
-                        bcR{d1}{d2} = forwardMWT(dims{d2}.lev,dims{d2}.deg,dims{d2}.domainMin,dims{d2}.domainMax,BCR_fList{d2},pde.params);
+                        bcR{d1}{d2} = forwardMWT(pde,d2,BCR_fList{d2},time);
                     end                    
                     
                     %%
