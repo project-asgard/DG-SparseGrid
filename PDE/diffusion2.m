@@ -164,30 +164,23 @@ pde.analytic_solutions_1D = { ...
     @(t,p) soln_t(t) 
     };
 
-%% Other workflow options that should perhpas not be in the PDE?
-% Need some work here
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
-pde.Ex = @Ex; % These can actually get absorbed into the G functions above.
-pde.Et = @Et; % but I've not done it yet. 
-pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-pde.implicit = 0; % Can likely be removed and be a runtime argument. 
-pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
+    function dt=set_dt(pde)
+        
+        dims = pde.dimensions;
+        
+        % for Diffusion equation: dt = C * dx^2
+        
+        lev = dims{1}.lev;
+        CFL = pde.CFL;
+        dx = 1/2^lev;
+        dt = CFL*dx^2;
+        
+    end
+
+pde.set_dt = @set_dt;
 
 end
 
 %%
 % Function to set time step
 
-function dt=set_dt(pde)
-
-dims = pde.dimensions;
-
-% for Diffusion equation: dt = C * dx^2
-
-lev = dims{1}.lev;
-CFL = pde.CFL;
-dx = 1/2^lev;
-dt = CFL*dx^2;
-
-end

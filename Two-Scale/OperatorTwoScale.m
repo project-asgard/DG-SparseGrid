@@ -15,9 +15,10 @@ imethod_default = 'wavelet2';
 
 imethod = imethod_default;
 
-if exist('OperatorTwoScale_method','var'),
-        imethod = OperatorTwoScale_method;
-end;
+% NOTE: this was overwriting the choice above so commented out.
+% if exist('OperatorTwoScale_method','var'), 
+%         imethod = OperatorTwoScale_method;
+% end;
 if (idebug >= 1),
     disp(sprintf('OperatorTwoScale:maxDeg=%d,maxLev=%d,imethod=%s', ...
                                    maxDeg,   maxLev,   imethod ));
