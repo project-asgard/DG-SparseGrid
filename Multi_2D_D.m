@@ -14,9 +14,9 @@ nDims = numel(dimensions);
 if pde.useHash
     N = numel(HASHInv);
 else
-    N = numel(HASHInv);
+%     N = numel(HASHInv);
     Ne = numel(pde.elementsIDX);
-    assert(N==Ne);
+%     assert(N==Ne);
     N = Ne;
 end
 
@@ -41,38 +41,41 @@ dof_1D_FG = deg*2^(lev);
 %%
 % The real space vector is on the full-grid size? Where is this decided?
 % (matrix_plot_D.m I think)
-fnew = sparse(dof_1D_FG^nDims,1);
+% fnew = sparse(dof_1D_FG^nDims,1);
 f_rSpace = sparse(dof_1D_FG^nDims,1);
 
 %% 
 % To be removed
-if nDims==2
-    A = Meval_D{1};
-    B = Meval_D{2};
-    f = f_wSpace;
-end
+% if nDims==2
+%     A = Meval_D{1};
+%     B = Meval_D{2};
+%     f = f_wSpace;
+% end
 
 for i=1:N
     
-    ll=HASHInv{i};
+    if pde.useHash
+        ll=HASHInv{i};
+    else
+    end
     
     %%
     % Retain 2D version for checking but don't use
-    if nDims==2
-        I1=HASHInv{i}(5);
-        I2=HASHInv{i}(6);
-        
-        index_I1=[(I1-1)*deg+1:I1*deg];
-        index_I2=[(I2-1)*deg+1:I2*deg];
-        
-        Index = deg^2*(i-1)+1:deg^2*i;
-        
-        tmp=kron(...
-            A(:,index_I1),...
-            B(:,index_I2) ...
-            )*f(Index(:));
-        fnew=fnew+tmp;
-    end
+%     if nDims==2
+%         I1=HASHInv{i}(5);
+%         I2=HASHInv{i}(6);
+%         
+%         index_I1=[(I1-1)*deg+1:I1*deg];
+%         index_I2=[(I2-1)*deg+1:I2*deg];
+%         
+%         Index = deg^2*(i-1)+1:deg^2*i;
+%         
+%         tmp=kron(...
+%             A(:,index_I1),...
+%             B(:,index_I2) ...
+%             )*f(Index(:));
+%         fnew=fnew+tmp;
+%     end
     
     %%
     % kron(tmp1,tmp2,...,tmpD)*fwav
@@ -83,40 +86,42 @@ for i=1:N
         if pde.useHash
             ID = ll(nDims*2+d);
         else
-            ID = ll(nDims*2+d);
+%             ID = ll(nDims*2+d);
             %% Etable
-            IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(i));
-            IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(i));
-            IDe = lev_cell_to_singleD_index(IDlev-1,IDcell-1);
-            assert(ID==IDe);
+%             IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(i));
+%             IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(i));
+            IDlev = pde.elements.lev(pde.elementsIDX(i),d)-1;
+            IDpos = pde.elements.pos(pde.elementsIDX(i),d)-1;
+            IDe = lev_cell_to_singleD_index(IDlev,IDpos);
+%             assert(ID==IDe);
             ID = IDe;
         end
         index_D = [(ID-1)*deg+1 : ID*deg];
        
         %%
         % Assert match the 2D case
-        if nDims==2
-            if d==1
-                assert(norm(index_D-index_I1)==0);
-            end
-            if d==2
-                assert(norm(index_D-index_I2)==0);
-            end
-        end
+%         if nDims==2
+%             if d==1
+%                 assert(norm(index_D-index_I1)==0);
+%             end
+%             if d==2
+%                 assert(norm(index_D-index_I2)==0);
+%             end
+%         end
         
         thisMat = Meval_D{d};
         thisMat1 = thisMat(:,index_D);
         
         %%
         % Assert match the 2D case
-        if nDims==2
-            if d==1
-                assert(norm(full(thisMat1-A(:,index_I1)))==0);
-            end
-            if d==2
-                assert(norm(full(thisMat1-B(:,index_I2)))==0);
-            end
-        end
+%         if nDims==2
+%             if d==1
+%                 assert(norm(full(thisMat1-A(:,index_I1)))==0);
+%             end
+%             if d==2
+%                 assert(norm(full(thisMat1-B(:,index_I2)))==0);
+%             end
+%         end
         
         kronMatList{d} = thisMat1; % Build kron list
     end
@@ -131,30 +136,30 @@ for i=1:N
         Y = kron_multd_full(nDims,kronMatList,X);
     end
         
-    %%
-    % Test the kron_multd
+%     %%
+%     % Test the kron_multd
+%     
+%     AA = 1;
+%     for d=1:nDims
+%         AA = kron(AA,kronMatList{d});  
+%     end
+%     YA = AA * X;
+%     
+%     tol=1e-12;
+%     assert(norm(YA-Y)<tol);
     
-    AA = 1;
-    for d=1:nDims
-        AA = kron(AA,kronMatList{d});  
-    end
-    YA = AA * X;
-    
-    tol=1e-12;
-    assert(norm(YA-Y)<tol);
-    
-    tol = 1e-12;
-    if nDims==2
-        assert(norm(Y-tmp)<tol);
-    end
+%     tol = 1e-12;
+%     if nDims==2
+%         assert(norm(Y-tmp)<tol);
+%     end
     
     f_rSpace = f_rSpace + Y;
     
 end
 
-if nDims==2
-    assert(norm(fnew-f_rSpace)<tol);
-end
+% if nDims==2
+%     assert(norm(fnew-f_rSpace)<tol);
+% end
 
 end
 

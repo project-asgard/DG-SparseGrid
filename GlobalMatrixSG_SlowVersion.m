@@ -9,9 +9,9 @@ function [A_Data] = GlobalMatrixSG_SlowVersion(pde,runTimeOpts,HASHInv,connectiv
 if pde.useHash
     N = size(HASHInv,2);
 else
-    N = size(HASHInv,2);
+%     N = size(HASHInv,2);
     Ne = numel(pde.elementsIDX);
-    assert(N==Ne);
+%     assert(N==Ne);
     N = Ne;
 end
 nDims = numel(pde.dimensions);
@@ -56,8 +56,11 @@ elseif runTimeOpts.compression == 4
         % Get the coordinates in the basis function space for myRow (this
         % element). (Lev1,Lev2,Cel1,Cel2,idx1D_1,idx1D_2) Lev1,Lev2,Cel1,Cel2
         % are NOT used here.
-        
-        thisRowBasisCoords = HASHInv{workItem};
+       
+        if pde.useHash
+            thisRowBasisCoords = HASHInv{workItem};
+        else
+        end
         
         % Get the 1D indexes into the [lev,pos] space for this element (row)
         
@@ -66,12 +69,14 @@ elseif runTimeOpts.compression == 4
             if pde.useHash
                 element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
             else
-                element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
+%                 element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
                 %% Etable
-                IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(workItem));
-                IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(workItem));
-                IDe = lev_cell_to_singleD_index(IDlev-1,IDcell-1);
-                assert(element_idx1D_D{d}==IDe);
+%                 IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(workItem));
+%                 IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(workItem));
+                IDlev = pde.elements.lev(pde.elementsIDX(workItem),d);
+                IDpos = pde.elements.pos(pde.elementsIDX(workItem),d);
+                IDe = lev_cell_to_singleD_index(IDlev-1,IDpos-1);
+%                 assert(element_idx1D_D{d}==IDe);
                 element_idx1D_D{d} = IDe;
             end
         end

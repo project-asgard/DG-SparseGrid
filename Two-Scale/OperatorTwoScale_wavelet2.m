@@ -1,4 +1,4 @@
-function FMWT_COMP = OperatorTwoScale_wavelet2(pde,dimIdx,deg,nLev)
+function FMWT = OperatorTwoScale_wavelet2(pde,dimIdx,deg,nLev)
 % FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,maxLev)
 %----------------------------------
 % Set-up Two-scale operator       %
@@ -108,10 +108,10 @@ end;
 % form sparse matrix from small dense blocks stored in blocks{-1..(nLev-1)}
 % ---------------------------------------------------
 nzmax = deg * (nLev)*n;
-FMWT_COMP = sparse( [], [], [], n,n, nzmax );
+FMWT = sparse( [], [], [], n,n, nzmax );
 irow = 1;
 j = -1;
-FMWT_COMP( 1:deg, 1:n) = blocks{ioff+(-1)};
+FMWT( 1:deg, 1:n) = blocks{ioff+(-1)};
 
 irow = 1 + deg;
 for j=0:(nLev-1),
@@ -123,10 +123,43 @@ for j=0:(nLev-1),
        j2 = j1 + isize - 1;
        i1 = (icell-1)*deg + irow;
        i2 = i1 + deg-1;
-       FMWT_COMP( i1:i2, j1:j2) = Fmat(1:deg, 1:isize);
+       FMWT( i1:i2, j1:j2) = Fmat(1:deg, 1:isize);
     end;
     irow = irow + deg * ncells;
 end;
+
+
+%%
+% Now extract out only the elements we need (i.e., for the case on non-full
+% levels during adativity)
+
+extract = 0;
+if extract
+    N = numel(pde.elementsIDX);
+    NF = numel(FMWT(:,1));
+    keep = zeros(NF,1);
+    
+%     thisDimLev = pde.elements.lev;
+%     thisDimPos = pde.elements.pos;
+    
+    for n=1:N
+        
+        idx = pde.elementsIDX(n);
+        
+%         thisLev = full(thisDimLev(idx)-1);
+%         thisPos = full(thisDimPos(idx)-1);
+        thisLev = full(pde.elements.lev(idx,dimIdx)-1);
+        thisPos = full(pde.elements.pos(idx,dimIdx)-1);
+        
+        idx1D = lev_cell_to_singleD_index(thisLev,thisPos);
+        fprintf('lev: %i, pos: %i, idx: %i\n',thisLev,thisPos,idx1D);
+        keep((idx1D-1)*deg+1:idx1D*deg) = 1;
+    end
+    
+    FMWT = FMWT(find(keep),find(keep));
+end
+
+end
 
 
 

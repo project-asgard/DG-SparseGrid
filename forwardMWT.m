@@ -4,7 +4,8 @@ dims = pde.dimensions;
 
 %% Decompose a 1D function into the multiwavelet basis 
 
-lev = dims{dimIdx}.lev;
+% lev = dims{dimIdx}.lev;
+lev = max(pde.elements.lev(:,dimIdx)-1);
 deg = dims{dimIdx}.deg;
 Lmin = dims{dimIdx}.domainMin;
 Lmax = dims{dimIdx}.domainMax;
