@@ -36,7 +36,7 @@ dim_z.BCL = 'D'; % dirichlet
 dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(z,p) soln(z,0);
+dim_z.init_cond_fn = @(z,p,t) soln(z,0);
 
 %%
 % Add dimensions to the pde object

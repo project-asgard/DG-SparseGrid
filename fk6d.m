@@ -118,30 +118,8 @@ for d=1:nDims
     [Meval{d},nodes{d}] = matrix_plot_D(pde.dimensions{d});
 end
 
-%%
-% Construct a n-D coordinate array
-% TODO : generalize to dimension better.
-
-if nDims <= 3
-    
-    if nDims ==1
-        [xx1] = ndgrid(nodes{1});
-        coord = {xx1};
-    end
-    if nDims==2
-        [xx1,xx2] = ndgrid(nodes{2},nodes{1});
-        coord = {xx2,xx1};
-    end
-    if nDims==3
-        [xx1,xx2,xx3] = ndgrid(nodes{3},nodes{2},nodes{1});
-        coord = {xx3,xx2,xx1};
-    end
-    if nDims==6
-        [xx1,xx2,xx3,xx4,xx5,xx6] = ndgrid(nodes{6},nodes{5},nodes{4},nodes{3},nodes{2},nodes{1});
-        coord = {xx6,xx5,xx4,xx3,xx2,xx1};
-    end
-    
-end
+%% Construct a n-D coordinate array
+coord = get_realspace_coords(pde,nodes);
 
 %% Plot initial condition
 if nDims <=3
@@ -270,7 +248,7 @@ for L = 1:nsteps,
         %%
         % Try with function convertToRealSpace
         
-        tryConvertToRealSpace = 1;
+        tryConvertToRealSpace = 0;
         if tryConvertToRealSpace
             LminB = zeros(1,nDims);
             LmaxB = zeros(1,nDims);
@@ -279,6 +257,7 @@ for L = 1:nsteps,
                 LmaxB(d) = pde.dimensions{d}.domainMax;
             end
             fval_realspaceB = converttoRealSpace(pde,nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
+%             fval_realspace = fval_realspaceB;
         end
         
     end
@@ -337,7 +316,7 @@ for L = 1:nsteps,
     % Apply adaptivity
     
     if pde.doRefine
-        [pde,fval,A_data] = refine(pde,opts,fval,HASHInv,connectivity);
+        [pde,fval,A_data,Meval,nodes,coord] = refine(pde,opts,fval,HASHInv,connectivity);
     end
     
 end

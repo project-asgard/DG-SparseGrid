@@ -111,12 +111,27 @@ end;
     time_main = tic();
     
     f_nd_t = zeros( [n^Dim, nsteps]);
+        
+    if pde.useHash
+        N = numel(HASHInv);
+    else
+        Ne = numel(pde.elementsIDX);
+        N = Ne;
+    end
     
-    nHash = numel(HASHInv);
-    for i=1:nHash,
-        ll = HASHInv{i};
-        levels = ll(1:Dim);
-        icells = ll( Dim + (1:Dim) );
+    for i=1:N,
+
+        
+        if pde.useHash
+            ll = HASHInv{i};
+            levels = ll(1:Dim);
+            icells = ll( Dim + (1:Dim) );
+        else         
+            levels_e = pde.elements.lev(pde.elementsIDX(i),:)-1;
+            icells_e = pde.elements.pos(pde.elementsIDX(i),:)-1;    
+            levels = levels_e;
+            icells = icells_e;
+        end
         
         for k=1:Dim,
             index_Ik{k} = lev_cell_to_singleD_index( levels(k), icells(k));
@@ -128,7 +143,13 @@ end;
         
         nDims = Dim;
         for d=1:nDims
-            this_idx1D = ll(nDims*2+d);          
+            if pde.useHash
+                this_idx1D = ll(nDims*2+d);
+            else
+                this_lev = pde.elements.lev(pde.elementsIDX(i),d)-1;
+                this_pos = pde.elements.pos(pde.elementsIDX(i),d)-1;
+                this_idx1D = lev_cell_to_singleD_index(this_lev,this_pos);
+            end
             if (this_idx1D ~= index_Ik{d}),
               disp(sprintf('d=%d,this_idx1d=%d,index_Ik{d}', ...
                             d,   this_idx1d,   index_Ik{d}));

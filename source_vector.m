@@ -11,9 +11,7 @@ nSources = numel(pde.sources);
 fval = 0;
 for s=1:nSources
     for d=1:nDims
-        fList{d} = forwardMWT(pde.dimensions{d}.lev,pde.dimensions{d}.deg,...
-            pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,...
-            pde.sources{s}{d},pde.params);
+        fList{d} = forwardMWT(pde,d,pde.sources{s}{d},time);
     end
     fs_d{s}{nDims+1} = pde.sources{s}{nDims+1}(time);
     

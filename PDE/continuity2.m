@@ -19,13 +19,13 @@ dim_x.BCL = 'P'; % periodic
 dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
-dim_x.init_cond_fn = @(x,p) x.*0;
+dim_x.init_cond_fn = @(x,p,t) x.*0;
 
 dim_y.BCL = 'P'; % periodic
 dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
-dim_y.init_cond_fn = @(y,p) y.*0;
+dim_y.init_cond_fn = @(y,p,t) y.*0;
 
 %%
 % Add dimensions to the pde object
@@ -77,24 +77,24 @@ pde.params = params;
 %%
 % Source term 1
 source1 = { ...
-    @(x,p) cos(pi*x),   ...   % s1x
-    @(y,p) sin(2*pi*y), ...   % s1y
+    @(x,p,t) cos(pi*x),   ...   % s1x
+    @(y,p,t) sin(2*pi*y), ...   % s1y
     @(t)   2*cos(2*t)   ...   % s1t
     };
 
 %%
 % Source term 2
 source2 = { ...
-    @(x,p)  cos(pi*x),    ...   % s2x
-    @(y,p)  cos(2*pi*y),  ...   % s2y
+    @(x,p,t)  cos(pi*x),    ...   % s2x
+    @(y,p,t)  cos(2*pi*y),  ...   % s2y
     @(t)    2*pi*sin(2*t) ...   % s2t
     };
 
 %%
 % Source term 3
 source3 = { ...
-    @(x,p)  sin(pi*x),   ...  % s3x
-    @(y,p)  sin(2*pi*y), ...  % s3y
+    @(x,p,t)  sin(pi*x),   ...  % s3x
+    @(y,p,t)  sin(2*pi*y), ...  % s3y
     @(t)    -pi*sin(2*t) ...  % s3t
     };
 

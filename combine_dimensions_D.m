@@ -30,15 +30,9 @@ for i=1:N
             ll=HASHInv{i};
             ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
         else
-            %             ll=HASHInv{i};
-            %             ID = ll(nDims*2+d);
-            %% Etable
-            %             IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(i))-1;
-            %             IDpos = pde.elements.coords{d}.cell(pde.elementsIDX(i))-1;
             IDlev = pde.elements.lev(pde.elementsIDX(i),d)-1;
             IDpos = pde.elements.pos(pde.elementsIDX(i),d)-1;
             IDe = lev_cell_to_singleD_index(IDlev,IDpos);
-            %             assert(ID==IDe);
             ID = IDe;
         end
         

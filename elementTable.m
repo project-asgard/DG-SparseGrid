@@ -13,10 +13,10 @@ N_max = double((uint64(2)^lev)^nDims); % This number is HUGE
 %     elements.coords{d}.cell = sparse(N_max,1);
 % end
 
-elements.lev  = sparse(N_max,nDims);
-elements.cell = sparse(N_max,nDims);
+elements.lev = sparse(N_max,nDims);
+elements.pos = sparse(N_max,nDims);
 elements.node_type = sparse(N_max,1);
-elements.idx = sparse(N_max,1);
+% elements.idx = sparse(N_max,1);
 
 
 %%
