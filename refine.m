@@ -12,6 +12,9 @@ newElementVal = 1e-15;
 
 debug = 0;
 
+%%
+% Plot the grid (1D only)
+
 plot_grid = 1;
 if plot_grid
     if nDims == 1
@@ -43,6 +46,9 @@ if plot_grid
     end
 end
 
+%%
+% Determine which elements to refine and add them.
+
 cnt = 1;
 for n=1:nElements
     
@@ -63,63 +69,69 @@ for n=1:nElements
             thisElemLevVec = pde.elements.lev(idx,:)-1; % NOTE : remove the 1 per note below
             thisElemPosVec = pde.elements.pos(idx,:)-1; % NOTE : remove the 1 per note below
             
+            %%
+            % Generate list of new elements which satisfy selection rule
+            
             for d=1:nDims
                 
                 %%
-                % Now add two daughter nodes in each dimension
+                % Add two daughter nodes in each dimension for each leaf
+                % element
                 
                 for d2=1:nDims
                     
                     %%
                     % TODO : This refinement is not sparse. Need to add the
                     % sparse grid selection rule here also.
-                    
+                                        
                     %%
                     % First daughter
                     
-                    newElemLevVec = thisElemLevVec;
-                    newElemPosVec = thisElemPosVec;
+                    newElemLevVecs(cnt,:) = thisElemLevVec;
+                    newElemPosVecs(cnt,:) = thisElemPosVec;
                     
-                    newElemLevVec(d2) = thisElemLevVec(d)+1;
-                    newElemPosVec(d2) = thisElemPosVec(d)*2; % Assumes pos starts at 0
-                    
-                    element_idx = lev_cell_to_element_index(pde,newElemLevVec,newElemPosVec);
-                    pde.elementsIDX(nElements+cnt) = element_idx; % Extend element list
-                    i1 = (nElements+cnt-1)*elementDOF-1; % Get the start and end global row indices of the new element
-                    i2 = (nElements+cnt)*elementDOF;
-                    fval(i1:i2) = newElementVal; % Extend coefficient list with near zero magnitude (ideally would be zero)
-                    
-                    assert(newElemPosVec(d2) >= 0);
-                    assert(newElemLevVec(d2) >= 0);
-                    
-                    pde.elements.lev(element_idx,:) = newElemLevVec+1; % NOTE : have to start lev  index from 1 for sparse storage
-                    pde.elements.pos(element_idx,:) = newElemPosVec+1; % NOTE : have to start cell index from 1 for sparse storage
-                    pde.elements.node_type(element_idx) = 2; % This new element is now a leaf
-                    
+                    newElemLevVecs(cnt,d2) = thisElemLevVec(d)+1;
+                    newElemPosVecs(cnt,d2) = thisElemPosVec(d)*2; % Assumes pos starts at 0
+                                   
+                    assert(newElemPosVecs(cnt,d2) >= 0);
+                    assert(newElemLevVecs(cnt,d2) >= 0);
+                                     
                     cnt = cnt + 1;
                     
                     %%
                     % Second daughter
                     
-                    newElemLevVec = thisElemLevVec;
-                    newElemPosVec = thisElemPosVec;
+                    newElemLevVecs(cnt,:) = thisElemLevVec;
+                    newElemPosVecs(cnt,:) = thisElemPosVec;
                     
-                    newElemLevVec(d2) = thisElemLevVec(d)+1;
-                    newElemPosVec(d2) = thisElemPosVec(d)*2+1; % Assumes pos starts at 0
-                    
-                    element_idx = lev_cell_to_element_index(pde,newElemLevVec,newElemPosVec);
-                    pde.elementsIDX(nElements+cnt) = element_idx; % Extend element list
-                    i1 = (nElements+cnt-1)*elementDOF-1; % Get the start and end global row indices of the new element
-                    i2 = (nElements+cnt)*elementDOF;
-                    fval(i1:i2) = newElementVal; % Extend coefficient list with near zero magnitude (ideally would be zero)
-                    
-                    pde.elements.lev(element_idx,:) = newElemLevVec+1; % NOTE : have to start lev  index from 1 for sparse storage
-                    pde.elements.pos(element_idx,:) = newElemPosVec+1; % NOTE : have to start cell index from 1 for sparse storage
-                    pde.elements.node_type(element_idx) = 2; % This new element is now a leaf
+                    newElemLevVecs(cnt,d2) = thisElemLevVec(d)+1;
+                    newElemPosVecs(cnt,d2) = thisElemPosVec(d)*2+1; % Assumes pos starts at 0
                     
                     cnt = cnt + 1;
-                    
+                                        
                 end
+                
+            end
+            
+            %%
+            % Now add these elements with (almost) zero coefficient to the
+            % elements table and elementsIDX
+            
+            nAdd = cnt-1;
+            for i=1:nAdd
+                
+                thisElemLevVec = newElemLevVecs(i,:);
+                thisElemPosVec = newElemPosVecs(i,:);
+
+                element_idx = lev_cell_to_element_index(pde,thisElemLevVec,thisElemPosVec);
+                pde.elementsIDX(nElements+i) = element_idx; % Extend element list
+                i1 = (nElements+i-1)*elementDOF-1; % Get the start and end global row indices of the new element
+                i2 = (nElements+i)*elementDOF;
+                fval(i1:i2) = newElementVal; % Extend coefficient list with near zero magnitude (ideally would be zero)
+                
+                pde.elements.lev(element_idx,:) = thisElemLevVec+1; % NOTE : have to start lev  index from 1 for sparse storage
+                pde.elements.pos(element_idx,:) = thisElemPosVec+1; % NOTE : have to start cell index from 1 for sparse storage
+                pde.elements.node_type(element_idx) = 2; % This new element is now a leaf
                 
             end
             
@@ -139,6 +151,9 @@ for n=1:nElements
 end
 
 assert(numel(fval)==numel(pde.elementsIDX)*elementDOF);
+
+%%
+% Update all the setup outputs which need updating on the new element list
 
 %%
 % Update the FMWT transform matrices

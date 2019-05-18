@@ -19,7 +19,7 @@ dim_x.BCL = 'P';
 dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
-dim_x.init_cond_fn = @(x,p) x.*0;
+dim_x.init_cond_fn = @(x,p,t) x.*0;
 
 %%
 % Add dimensions to the pde object
