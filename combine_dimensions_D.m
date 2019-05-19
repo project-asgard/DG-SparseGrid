@@ -30,8 +30,8 @@ for i=1:N
             ll=HASHInv{i};
             ID = ll(nDims*2+d); % TODO : Check if this indexing correct for D != 2?
         else
-            IDlev = pde.elements.lev(pde.elementsIDX(i),d)-1;
-            IDpos = pde.elements.pos(pde.elementsIDX(i),d)-1;
+            IDlev = pde.elements.lev_p1(pde.elementsIDX(i),d)-1;
+            IDpos = pde.elements.pos_p1(pde.elementsIDX(i),d)-1;
             IDe = lev_cell_to_singleD_index(IDlev,IDpos);
             ID = IDe;
         end

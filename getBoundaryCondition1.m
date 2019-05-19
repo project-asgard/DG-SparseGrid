@@ -44,7 +44,7 @@ for tt = 1:nTerms % Construct a BC object for each term
         FMWT = dim.FMWT;
         
 %         lev = dim.lev;
-        lev = max(pde.elements.lev(:,d1)-1);
+        lev = max(pde.elements.lev_p1(:,d1)-1);
         N_1D = 2^lev;
         dof_1D = deg * N_1D;
         

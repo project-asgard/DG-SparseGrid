@@ -69,14 +69,9 @@ elseif runTimeOpts.compression == 4
             if pde.useHash
                 element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
             else
-%                 element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
-                %% Etable
-%                 IDlev  = pde.elements.coords{d}.lev(pde.elementsIDX(workItem));
-%                 IDcell = pde.elements.coords{d}.cell(pde.elementsIDX(workItem));
-                IDlev = pde.elements.lev(pde.elementsIDX(workItem),d);
-                IDpos = pde.elements.pos(pde.elementsIDX(workItem),d);
-                IDe = lev_cell_to_singleD_index(IDlev-1,IDpos-1);
-%                 assert(element_idx1D_D{d}==IDe);
+                IDlev = pde.elements.lev_p1(pde.elementsIDX(workItem),d)-1;
+                IDpos = pde.elements.pos_p1(pde.elementsIDX(workItem),d)-1;
+                IDe = lev_cell_to_singleD_index(IDlev,IDpos);
                 element_idx1D_D{d} = IDe;
             end
         end

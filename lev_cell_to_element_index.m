@@ -12,11 +12,14 @@ assert(numel(cell)==nDims);
 idx1D = lev_cell_to_singleD_index(lev,cell);
 
 eIdx = uint64(0);
-stride = 1;
+maxLev = pde.maxLev;
+stride = uint64(1);
 for d=1:nDims
     dim = dims{d};
     eIdx = eIdx + idx1D(d)*stride;
-    stride = stride * 2^dim.lev;
+    assert(dim.lev <= maxLev); % 
+%     stride = stride * 2^dim.lev;
+    stride = stride * 2^maxLev;
 end
 
 end

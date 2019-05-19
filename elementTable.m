@@ -7,16 +7,12 @@ is_sparse_grid = strcmp( opts.gridType, 'SG');
 % Setup element table as a collection of 2*nDims many sparse vectors to
 % store the lev and cell info for each dim. 
 
-N_max = double((uint64(2)^lev)^nDims); % This number is HUGE
-% for d=1:nDims
-%     elements.coords{d}.lev  = sparse(N_max,1);
-%     elements.coords{d}.cell = sparse(N_max,1);
-% end
+maxLev = pde.maxLev;
+N_max = double((uint64(2)^maxLev)^nDims); % This number is HUGE
 
-elements.lev = sparse(N_max,nDims);
-elements.pos = sparse(N_max,nDims);
+elements.lev_p1 = sparse(N_max,nDims);
+elements.pos_p1 = sparse(N_max,nDims);
 elements.node_type = sparse(N_max,1);
-% elements.idx = sparse(N_max,1);
 
 
 %%
@@ -79,8 +75,8 @@ for icase=1:ncase
      %%
      % Set the lev and cell coordinate for each dim
      
-     elements.lev(element_idx,:) = levels+1; % NOTE : have to start lev  index from 1 for sparse storage
-     elements.pos(element_idx,:) = icells+1; % NOTE : have to start lev  index from 1 for sparse storage
+     elements.lev_p1(element_idx,:) = levels+1; % NOTE : have to start lev  index from 1 for sparse storage
+     elements.pos_p1(element_idx,:) = icells+1; % NOTE : have to start lev  index from 1 for sparse storage
      
 %      for d=1:nDims    
 %          elements.coords{d}.lev (element_idx) = levels(d)+1; % NOTE : have to start lev  index from 1 for sparse storage
@@ -93,7 +89,7 @@ for icase=1:ncase
      
      for d=1:nDims
          elements.node_type(element_idx) = 1; % 'internal'; % Internale nodes will not be checked for refinement.
-         if elements.lev(element_idx,d) == lev+1
+         if elements.lev_p1(element_idx,d) == lev+1
              elements.node_type(element_idx) = 2; % 'leaf'; % Leaf nodes are checked for refinement
          end
      end
