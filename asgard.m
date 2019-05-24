@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity,CFL)
+function [err,fval,fval_realspace] = asgard(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity,CFL)
 
 format short e
 folder = fileparts(which(mfilename));
@@ -316,7 +316,7 @@ for L = 1:nsteps,
     % Apply adaptivity
     
     if pde.doRefine
-        [pde,fval,A_data,Meval,nodes,coord] = refine(pde,opts,fval,HASHInv,connectivity);
+        [pde,fval,A_data,Meval,nodes,coord] = refine(pde,opts,fval,HASHInv,connectivity,nodes,fval_realspace);
     end
     
 end

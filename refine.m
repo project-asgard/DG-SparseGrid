@@ -1,4 +1,4 @@
-function [pde,fval,A_data,Meval,nodes,coord] = refine(pde,opts,fval,HASHInv,connectivity)
+function [pde,fval,A_data,Meval,nodes,coord] = refine(pde,opts,fval,HASHInv,connectivity,nodes0,fval_realspace0)
 
 nElements = numel(pde.elementsIDX);
 nDims = numel(pde.dimensions);
@@ -13,45 +13,25 @@ newElementVal = 1e-15;
 
 debug = 1;
 coarsen = 1;
-refine = 0;
+refine = 1;
+
+assert(numel(find(pde.elementsIDX))==numel(pde.elementsIDX));
+
+%%
+% Store unrefined fval for comparison with refined fval after
+
+fval0 = fval;
 
 %%
 % Plot the grid (1D only)
 
 plot_grid = 1;
 if plot_grid
-    if nDims == 1
-        figure(222);
-        subplot(1,2,1)
-        hold on
-        for i=1:nElements
-            x = pde.elements.pos_p1(pde.elementsIDX(i))-1;
-            y = pde.elements.lev_p1(pde.elementsIDX(i))-1;
-            c = pde.elements.node_type(pde.elementsIDX(i));
-            if c == 1
-                style = 'ob';
-            elseif c == 2
-                style = 'or';
-            end
-            offset = 2^(y-1)/2;
-            if y > 1
-                
-                s = 2^(y-1)-1;
-                h = 1/(2^(y-1));
-                w = 1-h;
-                o = h/2;
-                plot(x/s*w+o,-y,style);
-                
-            else
-                plot(x+0.5,-y,style);
-            end
-        end
-        hold off
-    end
+    plot_adapt(pde,1);
 end
 
 %%
-% Determine which elements to refine and add them.
+% Coarsen
 
 if coarsen
     
@@ -61,14 +41,14 @@ if coarsen
     for n=1:nElements
         
         idx = pde.elementsIDX(n);
-        gidx = (n-1)*elementDOF+1;
+        gidx = (n-1)*elementDOF+1; % this is the deg=0 part of this element
         
         if pde.elements.node_type(idx) == 2 % refine leaf nodes
             
             %%
             % Check for coarsening (de-refinement)
             
-            if abs(fval(gidx)) <= coarsen_threshold
+            if abs(fval(gidx)) <= coarsen_threshold % Check only the deg=0 term for each element
                 
                 if debug; fprintf('leaf node to be REMOVED, fval=%f\n',fval(gidx)); end
                 
@@ -92,7 +72,7 @@ if coarsen
                     %%
                     % Assert this element exists
                     
-                    assert(pde.elements.lev_p1(element_idx,1) ~= 0);
+                    assert(pde.elements.lev_p1(element_idx,d) ~= 0);
                     
                     %%
                     % Set element type to leaft == 2
@@ -112,23 +92,28 @@ if coarsen
     % Now remove elements
     
     assert(numel(remove_list)==nRemove);
+    
+    remove_list2 = [];
     for n=1:nRemove
         
         %%
-        % Remove entries from element table
+        % Remove entries from element table (recall sparse storage means =0
+        % removes it from the table
         
         pde.elements.lev_p1(pde.elementsIDX(remove_list(n)),:) = 0;
         pde.elements.pos_p1(pde.elementsIDX(remove_list(n)),:) = 0;
         pde.elements.node_type(pde.elementsIDX(remove_list(n)))= 0;
         
         %%
-        % Remove enetries from fval
+        % Remove all deg parts of this element from fval
         
-        i1 = (n-1)*elementDOF+1; % Get the start and end global row indices of the new element
-        i2 = (n)*elementDOF;
+        nn = remove_list(n);
+        
+        i1 = (nn-1)*elementDOF+1; % Get the start and end global row indices of the element
+        i2 = (nn)*elementDOF;
         assert(i2-i1==elementDOF-1);
         
-        fval(i1:i2) = []; % Extend coefficient list with near zero magnitude (ideally would be zero)
+        remove_list2 = [remove_list2,i1:i2];
         
     end
     
@@ -136,23 +121,35 @@ if coarsen
     % Remove entries from elementsIDX
     
     pde.elementsIDX(remove_list) = [];
+    fval(remove_list2) = [];
     
 end
 assert(numel(fval)==numel(pde.elementsIDX)*elementDOF);
+assert(numel(find(pde.elementsIDX))==numel(pde.elementsIDX));
 
+%%
+% Plot the refined grid (1D only)
+
+plot_grid = 1;
+if plot_grid
+   plot_adapt(pde,2);
+end
+
+%%
+% Refine
 
 if refine
     
     nElements = numel(pde.elementsIDX);
-    cnt = 1;
+    cnt = 0;
     clear newElemLevVecs;
     clear newElemPosVecs;
     for n=1:nElements
         
         idx = pde.elementsIDX(n);
-        gidx = (n-1)*elementDOF+1;
+        gidx = (n-1)*elementDOF+1; % this is deg=0 part of this element
         
-        if pde.elements.node_type(idx) == 2 % refine leaf nodes
+        if pde.elements.node_type(idx) == 2 % refine leaf nodes only according to their deg=0 element
             
             %%
             % Check for refinement
@@ -161,86 +158,12 @@ if refine
                 
                 if debug; fprintf('leaf node to be refined, fval=%f\n',fval(gidx)); end
                 
-                %%
-                % Get this coordinate vector
-                % levVec = [lev1,lev2,...,levD]
-                % posVec = [pos1,pos2,...,posD]
+                [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = getMyDaughters(pde,idx);
                 
-                thisElemLevVec = pde.elements.lev_p1(idx,:)-1; % NOTE : remove the 1 per note below
-                thisElemPosVec = pde.elements.pos_p1(idx,:)-1; % NOTE : remove the 1 per note below
+                newElemLevVecs(cnt+1:cnt+nDaughters,:) = daughterElemLevVecs;
+                newElemPosVecs(cnt+1:cnt+nDaughters,:) = daughterElemPosVecs; 
                 
-                %%
-                % Generate list of new elements which satisfy selection rule
-                
-                for d=1:nDims
-                    
-                    %%
-                    % Add two daughter nodes in each dimension for each leaf
-                    % element
-                    
-                    for d2=1:nDims
-                        
-                        %%
-                        % TODO : This refinement is not sparse. Need to add the
-                        % sparse grid selection rule here also.
-                        
-                        %%
-                        % First daughter
-                        
-                        newElemLevVec = thisElemLevVec;
-                        newElemPosVec = thisElemPosVec;
-                        newElemLevVec(d2) = newElemLevVec(d)+1;
-                        newElemPosVec(d2) = newElemPosVec(d)*2; % Assumes pos starts at 0
-                        
-                        if sum(newElemLevVec)<=thisElemLevVec(d)+1 && newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
-                            
-                            newElemLevVecs(cnt,:) = newElemLevVec;
-                            newElemPosVecs(cnt,:) = newElemPosVec; % Assumes pos starts at 0
-                            
-                            assert(newElemPosVecs(cnt,d2) >= 0);
-                            assert(newElemLevVecs(cnt,d2) >= 0);
-                            
-                            cnt = cnt + 1;
-                            
-                            pde.elements.node_type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
-                            
-                        else
-                            
-                            disp('element not added because it did not obey sparse selection rule');
-                            
-                        end
-                        
-                        %%
-                        % Second daughter
-                        
-                        newElemLevVec = thisElemLevVec;
-                        newElemPosVec = thisElemPosVec;
-                        
-                        newElemLevVec(d2) = newElemLevVec(d)+1;
-                        newElemPosVec(d2) = newElemPosVec(d)*2+1; % Assumes pos starts at 0
-                        
-                        if sum(newElemLevVec)<=thisElemLevVec(d)+1 && newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
-                            
-                            newElemLevVecs(cnt,:) = newElemLevVec;
-                            newElemPosVecs(cnt,:) = newElemPosVec; % Assumes pos starts at 0
-                            
-                            assert(newElemPosVecs(cnt,d2) >= 0);
-                            assert(newElemLevVecs(cnt,d2) >= 0);
-                            
-                            cnt = cnt + 1;
-                            
-                            pde.elements.node_type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
-
-                        else
-                            
-                            disp('element not added because it did not obey sparse selection rule');
-                            
-                            
-                        end
-                        
-                    end
-                    
-                end
+                cnt = cnt + nDaughters;
                                 
             else
                 
@@ -260,21 +183,25 @@ if refine
     % Now add these elements with (almost) zero coefficient to the
     % elements table and elementsIDX
     
-    nAdd = cnt-1;
+    nAdd = cnt;
+    addCnt = 0;
     for i=1:nAdd
         
         thisElemLevVec = newElemLevVecs(i,:);
         thisElemPosVec = newElemPosVecs(i,:);
         element_idx = lev_cell_to_element_index(pde,thisElemLevVec,thisElemPosVec);
+        assert(element_idx>=0);
         
         %%
         % If element does not exist, add it
         
         if pde.elements.lev_p1(element_idx,1)==0
             
-            pde.elementsIDX(nElements+i) = element_idx; % Extend element list
-            i1 = (nElements+i-1)*elementDOF+1; % Get the start and end global row indices of the new element
-            i2 = (nElements+i)*elementDOF;
+            addCnt = addCnt + 1;
+            myIdx = nElements+addCnt;
+            pde.elementsIDX(myIdx) = element_idx; % Extend element list
+            i1 = (myIdx-1)*elementDOF+1; % Get the start and end global row indices of the new element
+            i2 = (myIdx)*elementDOF;
             assert(i2-i1==elementDOF-1);
             fval(i1:i2) = newElementVal; % Extend coefficient list with near zero magnitude (ideally would be zero)
             
@@ -288,45 +215,55 @@ if refine
         
         pde.elements.node_type(element_idx) = 2;
         
+        if thisElemLevVec(1) == 3 && thisElemPosVec(1)==2
+            disp('');
+        end
+        
     end
 end
 assert(numel(fval)==numel(pde.elementsIDX)*elementDOF);
+assert(numel(find(pde.elementsIDX))==numel(pde.elementsIDX));
+
+%%
+% Set any leafs with all leaf daughters to be a node
+
+leafCheck = 1;
+if leafCheck
+    for n=1:numel(pde.elementsIDX)
+        if pde.elements.node_type(pde.elementsIDX(n)) == 2
+            idx = pde.elementsIDX(n);
+            [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = getMyDaughters(pde,idx);
+            
+            nLeaves = 0;
+            for nn=1:nDaughters
+                thisElemLevVec = daughterElemLevVecs(nn,:);
+                thisElemPosVec = daughterElemPosVecs(nn,:);
+                idx2 = lev_cell_to_element_index(pde,thisElemLevVec,thisElemPosVec);
+                if pde.elements.node_type(idx2) ~= 0 % check for existence
+                    nLeaves = nLeaves + 1;
+                end
+            end
+            
+            if nLeaves == nDaughters && nDaughters > 0
+                pde.elements.node_type(idx) = 1; % No longer a leaf
+            end
+            
+        end
+    end
+end
+assert(numel(fval)==numel(pde.elementsIDX)*elementDOF);
+assert(numel(find(pde.elementsIDX))==numel(pde.elementsIDX));
+
 
 %%
 % Plot the refined grid (1D only)
 
-nElements = numel(pde.elementsIDX);
 plot_grid = 1;
 if plot_grid
-    if nDims == 1
-        figure(222);
-        subplot(1,2,2)
-        hold on
-        for i=1:nElements
-            x = pde.elements.pos_p1(pde.elementsIDX(i))-1;
-            y = pde.elements.lev_p1(pde.elementsIDX(i))-1;
-            c = pde.elements.node_type(pde.elementsIDX(i));
-            if c == 1
-                style = 'ob';
-            elseif c == 2
-                style = 'or';
-            end
-            offset = 2^(y-1)/2;
-            if y > 1
-                
-                s = 2^(y-1)-1;
-                h = 1/(2^(y-1));
-                w = 1-h;
-                o = h/2;
-                plot(x/s*w+o,-y,style);
-                
-            else
-                plot(x+0.5,-y,style);
-            end
-        end
-        hold off
-    end
+   plot_adapt(pde,3);
 end
+
+elementsIDX0 = pde.elementsIDX;
 
 %%
 % Update all the setup outputs which need updating on the new element list
@@ -362,5 +299,26 @@ end
 % Update the coordinates for realspace evaluation
 
 coord = get_realspace_coords(pde,nodes);
+
+%%
+% Get the new real space solution and check against unrefined solution
+
+fval_realspace_refined = Multi_2D_D(pde,Meval,fval,HASHInv);
+
+
+subplot(2,3,4)
+plot(fval)
+hold on
+plot(fval0)
+hold off
+subplot(2,3,5)
+plot(nodes0{1},fval_realspace0)
+hold on
+plot(nodes{1},fval_realspace_refined)
+hold off
+
+assert(numel(fval)==numel(pde.elementsIDX)*elementDOF);
+assert(numel(find(pde.elementsIDX))==numel(pde.elementsIDX));
+assert(sum(pde.elementsIDX-elementsIDX0)==0);
 
 end

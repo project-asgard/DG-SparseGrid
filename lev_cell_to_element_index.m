@@ -22,4 +22,6 @@ for d=1:nDims
     stride = stride * 2^maxLev;
 end
 
+assert(eIdx >= 0);
+
 end
