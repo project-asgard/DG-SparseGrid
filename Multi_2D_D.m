@@ -24,12 +24,12 @@ lev = dimensions{1}.lev; % TODO : generalize to lev_D
 %%
 % Catch for TODO
 
-if nDims>1
-    for d=2:nDims
-        assert(dimensions{d}.lev==lev);
-        assert(dimensions{d}.deg==deg);
-    end
-end
+% if nDims>1
+%     for d=2:nDims
+%         assert(dimensions{d}.lev==lev);
+%         assert(dimensions{d}.deg==deg);
+%     end
+% end
 
 %%
 % TODO : surely this size depends on the parameters in the matrix_plot_D
@@ -40,7 +40,10 @@ dof_1D_FG = deg*2^(lev);
 % The real space vector is on the full-grid size? Where is this decided?
 % (matrix_plot_D.m I think)
 % fnew = sparse(dof_1D_FG^nDims,1);
+
 f_rSpace = sparse(dof_1D_FG^nDims,1);
+% nDOF = numel(f_wSpace);
+% f_rSpace = sparse(N,1);
 
 for i=1:N
     

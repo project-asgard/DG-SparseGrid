@@ -2,6 +2,8 @@ function plot_adapt(pde,pos)
 
 nElements = numel(pde.elementsIDX);
 nDims = numel(pde.dimensions);
+xMin = pde.dimensions{1}.domainMin;
+xMax = pde.dimensions{1}.domainMax;
 
 if nDims == 1
     figure(222);
@@ -9,27 +11,20 @@ if nDims == 1
     cla
     hold on
     for i=1:nElements
-        x = pde.elements.pos_p1(pde.elementsIDX(i))-1;
-        y = pde.elements.lev_p1(pde.elementsIDX(i))-1;
-        c = pde.elements.node_type(pde.elementsIDX(i));
+        
+        idx = pde.elementsIDX(i);
+        y = pde.elements.lev_p1(idx,1)-1;
+        c = pde.elements.node_type(idx);
         if c == 1
             style = 'ob';
         elseif c == 2
             style = 'or';
         end
-        offset = 2^(y-1)/2;
-        if y > 1
-            
-            s = 2^(y-1)-1;
-            h = 1/(2^(y-1));
-            w = 1-h;
-            o = h/2;
-            plot(x/s*w+o,-y,style);
-            
-        else
-            plot(x+0.5,-y,style);
-        end
-        xlim([0,1]);
+        
+        coord_D = getMyRealSpaceCoord(pde,idx);
+        plot(coord_D(1),-y,style);
+        
+        xlim([xMin,xMax]);
     end
     hold off
 end

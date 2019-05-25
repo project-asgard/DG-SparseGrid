@@ -133,6 +133,8 @@ if nDims <=3
         plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
     end
     
+    fval_realspace_SG = real_space_solution_at_sparse_grid(pde,fval);
+    
 end
 
 %% Write the initial condition to file.
