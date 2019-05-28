@@ -24,75 +24,101 @@ nPts = numel(allCoords(:,1));
 fval_r = zeros(nPts,1);
 
 %%
-% Loop over elements, and evaluate which other elements each contributes to
-% and evaluate and add its contribution.
+% For the desired set of grid points, constuct (for each dimension) the M
+% transform ...
+%
+% M * f_legendre => f_realspace
 
-for elem=1:nElem
+for d=1:nDims
     
-    %%
-    % Get this element coordinate vector
+    dim = pde.dimensions{d};
     
-    idx = pde.elementsIDX(elem);
-    
-    [elem_coord_D,elem_coord_L_D,elem_coord_R_D] = getMyRealSpaceCoord(pde,idx);
-    lev_D = pde.elements.lev_p1(idx,:)-1;
-    pos_D = pde.elements.pos_p1(idx,:)-1;
-    
-    clear kronMatList;
-    for d=1:nDims
-             
-        dim = pde.dimensions{d};
+    clear M;
+    for elem=1:nElem
+        
+        %%
+        % Get the lev, pos and range of this element
+        
+        idx = pde.elementsIDX(elem);
+        [elem_coord_D,elem_coord_L_D,elem_coord_R_D] = getMyRealSpaceCoord(pde,idx);
+        lev_D = pde.elements.lev_p1(idx,:)-1;
         lev = lev_D(d);
-        pos = pos_D(d);
         
         %%
-        % Get this elements piece of 1D FMWT (legendre -> wavelet)
-        
-        idx_1D = lev_cell_to_singleD_index(lev,pos);
-        i1 = (idx_1D-1)*deg+1;
-        i2 = idx_1D*deg;
-        
-        FMWT_T = dim.FMWT';
-        F_T = FMWT_T(i1:i2,i1:i2); % note the transpose
-        
-        %%
-        % Get this elements scale factor
-        
-        dMin = dim.domainMin;
-        dMax = dim.domainMax;
-        h = (dMax-dMin)/(2^lev);
-        scale_fac = sqrt(1/h);
-        
-        %%
-        % Map desired coordinates to this elements 1D [-1,+1] range
+        % Get the scale_fac for this element
         
         xMin = elem_coord_L_D(d); % left side of element
         xMax = elem_coord_R_D(d); % right side of element
+        h = (xMax-xMin)/(2^lev);
+        scale_fac = sqrt(1/h);
+        
+        %%
+        % Get the normalized to [-1,+1] coordinates for this element
         
         x = allCoords(:,d);
         x_norm = (x - xMin)/(xMax-xMin)*2-1;
         
         %%
-        % Get legenre functions at these locations (legendre -> realspace)
+        % Evaluate the legendre functions at these coordinates with
+        % P(x)<-1 == 0 & P(x)>+1 == 0
         
-        M = lin_legendre(x_norm,deg) * scale_fac;
+        p_val = lin_legendre(x_norm,deg) * scale_fac;
         
-        %%
-        % F_T = wavelet  -> legendre
-        % M   = legendre -> real
+        %         %%
+        %         % Plot realspace basis functions
+        %
+        %         figure(88)
+        %         cla
+        %         for dd=1:deg
+        %             plot(x_norm,p_val(:,dd));
+        %             hold on
+        %         end
+        %         hold off
+        
+        i1 = deg*(elem-1)+1;
+        i2 = deg*(elem);
+        
+        M(:,i1:i2) = p_val;
+        
+    end
+    
+    M_D{d} = M;
+    
+end
+
+%%
+% Evaluate M * F' * f_wavelet = f_realspace
+%
+% Other notes ...
+%
+% M  * f_legendre => f_realspace
+% F' * f_wavelet  => f_legendre
+
+for elem=1:nElem
+    
+    clear kronMatList;
+    for d=1:nDims
+        
+        i1 = deg*(elem-1)+1;
+        i2 = deg*(elem);
+        
+        FMWT_T = dim.FMWT';
+        F_T = FMWT_T(i1:i2,i1:i2); % note the transpose
+        
+        M = M_D{d}(:,i1:i2);
         
         kron_mat_list{d} = M * F_T; % Build kron list
         
     end
     
-    fval_r = fval_r + kron_multd(nDims,kron_mat_list,wavelet_coeffs);
+    fval_r =  fval_r + kron_multd(nDims,kron_mat_list,wavelet_coeffs);
     
-    %     figure(99);
-    %     hold on
-    %     x = allCoords(:,1);
-    %     [X,I] = sort(x);
-    %     plot(X,fval_r(I),'-o')
-    
+%     figure(99);
+%     hold on
+%     x = allCoords(:,1);
+%     [X,I] = sort(x);
+%     plot(X,fval_r(I),'-o')
+   
 end
 
 %%
