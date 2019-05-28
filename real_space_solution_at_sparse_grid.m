@@ -34,7 +34,7 @@ for elem=1:nElem
     
     idx = pde.elementsIDX(elem);
     
-    [myCoord,myCoordL,myCoordR] = getMyRealSpaceCoord(pde,idx);
+    [elem_coord_D,elem_coord_L_D,elem_coord_R_D] = getMyRealSpaceCoord(pde,idx);
     lev_D = pde.elements.lev_p1(idx,:)-1;
     pos_D = pde.elements.pos_p1(idx,:)-1;
     
@@ -52,8 +52,8 @@ for elem=1:nElem
         i1 = (idx_1D-1)*deg+1;
         i2 = idx_1D*deg;
         
-        FMWT = dim.FMWT;
-        F_T = FMWT(i1:i2,i1:i2)'; % note the transpose
+        FMWT_T = dim.FMWT';
+        F_T = FMWT_T(i1:i2,i1:i2); % note the transpose
         
         %%
         % Get this elements scale factor
@@ -66,8 +66,8 @@ for elem=1:nElem
         %%
         % Map desired coordinates to this elements 1D [-1,+1] range
         
-        xMin = myCoordL(d); % left side of element
-        xMax = myCoordR(d); % right side of element
+        xMin = elem_coord_L_D(d); % left side of element
+        xMax = elem_coord_R_D(d); % right side of element
         
         x = allCoords(:,d);
         x_norm = (x - xMin)/(xMax-xMin)*2-1;
