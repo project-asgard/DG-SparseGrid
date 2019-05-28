@@ -1,6 +1,6 @@
-function fval_r = real_space_solution_at_sparse_grid(pde,fval)
+function fval_r = real_space_solution_at_sparse_grid(pde,wavelet_coeffs)
 
-N = numel(pde.elementsIDX);
+nElem = numel(pde.elementsIDX);
 nDims = numel(pde.dimensions);
 deg = pde.dimensions{1}.deg;
 
@@ -21,83 +21,78 @@ allCoords(:,1) = [-1:0.01:+1];
 
 nPts = numel(allCoords(:,1));
 
-fval_r_D = zeros(nPts,nDims);
 fval_r = zeros(nPts,1);
 
 %%
 % Loop over elements, and evaluate which other elements each contributes to
 % and evaluate and add its contribution.
 
-for n=1:N
-    
+for elem=1:nElem    
+      
     %%
     % Get this element coordinate vector
     
-    idx = pde.elementsIDX(n);
+    idx = pde.elementsIDX(elem);
     
     [myCoord,myCoordL,myCoordR] = getMyRealSpaceCoord(pde,idx);
-    myLevVec = pde.elements.lev_p1(idx,:)-1;
-    myPosVec = pde.elements.pos_p1(idx,:)-1;
+    lev_D = pde.elements.lev_p1(idx,:)-1;
     
     %%
     % Get this element coefficients
     
     elementDOF = deg^nDims;
-    i1 = (n-1)*elementDOF+1;
-    i2 = n*elementDOF;
-    myCoeffs = fval(i1:i2);
+    i1 = (elem-1)*elementDOF+1;
+    i2 = elem*elementDOF;
     
+    clear kronMatList;
     for d=1:nDims
         
-        %%
-        % Get this element spatial range for each dim
-        
-        myLev = myLevVec(d)
-        myLev_n = 2^myLev;
-        myLev_min = pde.dimensions{d}.domainMin;
-        myLev_max = pde.dimensions{d}.domainMax;
-        myLev_h = (myLev_max-myLev_min)/myLev_n;    
+        dim = pde.dimensions{d};
         
         %%
-        % Find the idx's of all the elements this element contributes to
+        % Get this elements piece of 1D FMWT (legendre -> wavelet)
+        
+        FMWT = dim.FMWT;       
+        F_T = FMWT(i1:i2,i1:i2)'; % note the transpose
+
+        %%
+        % Get this elements scale factor
+        
+        lev = lev_D(d);
+        dMin = dim.domainMin;
+        dMax = dim.domainMax;
+        h = (dMax-dMin)/(2^lev);
+        scale_fac = sqrt(1/h);
+                
+        %%
+        % Map desired coordinates to this elements 1D [-1,+1] range
         
         xMin = myCoordL(d); % left side of element
         xMax = myCoordR(d); % right side of element
         
-        allCoord = allCoords(:,d);
-        
-        iiList = find(allCoord >= xMin & allCoord <= xMax);
-        
-        %%
-        % Get value of this element at the center of all those element it
-        % contributes to (mapped to the [-1,1] range
-        
-        allCoordNorm = (allCoord - xMin)/(xMax-xMin)*2-1;
-        
-        p_val = lin_legendre(allCoordNorm(iiList),deg)*sqrt(1/myLev_h);
+        x = allCoords(:,d);
+        x_norm = (x - xMin)/(xMax-xMin)*2-1;
         
         %%
-        % Now multiply the basis functions by their coefficients for all
-        % the points we need them at
+        % Get legenre functions at these locations (legendre -> realspace)
         
-        fval_r_D(iiList,d) = fval_r_D(iiList,d) + p_val * myCoeffs;
+        M = lin_legendre(x_norm,deg) * scale_fac;
+        
+        %%
+        % F_T = wavelet  -> legendre
+        % M   = legendre -> real
+          
+        kron_mat_list{d} = M * F_T; % Build kron list
         
     end
     
-    %%
-    % Now combine all the dimensions via multiplication (as this is point
-    % wise)
-    
-    fval_r = fval_r_D(:,1);
-    for d=2:nDims
-        fval_r = fval_r .* fval_r_D(:,d);
-    end
-    
-    figure(99);
-    hold on
-    x = allCoords(:,1);
-    [X,I] = sort(x);
-    plot(X,fval_r(I),'-o')
+    fval_r = fval_r + kron_multd(nDims,kron_mat_list,wavelet_coeffs);
+  
+%     figure(99);
+%     hold on
+%     x = allCoords(:,1);
+%     [X,I] = sort(x);
+%     plot(X,fval_r(I),'-o')
     
 end
 
