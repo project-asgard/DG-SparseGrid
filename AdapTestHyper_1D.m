@@ -16,7 +16,7 @@ format short e
 addpath(genpath(pwd))
 
 % start with coarse mesh
-Deg = 2;
+Deg = 4;
 num_plot = Deg;
 
 Lstart = -1;
@@ -92,7 +92,7 @@ Aij = Mat(IdDofOn,IdDofOn);
 Mat_A = sparse(Iu,Iu',Aij);
 
 EpsMax = 1e-5;
-EpsMin = EpsMax/100;
+EpsMin = EpsMax/10;
 % begin of time loop
 count = 1;
 
