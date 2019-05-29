@@ -79,7 +79,8 @@ MM = MMeval*FMWT';
 fval0(1:IniDof,1) = f_MW_full(1:IniDof);
 % Mat = FMWT* Mat*FMWT';
 
-load('Mat_Lev10_Deg2_v2.mat','Mat')
+% load('Mat_Lev10_Deg2_v2.mat','Mat')
+load(['Mat_Lev10_Deg',num2str(Deg),'.mat'],'Mat')
 IdOn = find(VecFlag>0);
 IdDofOn = Grid2Dof(IdOn,Deg);
 % A_encode{1}.A = Mat(IdDofOn,IdDofOn);
@@ -217,9 +218,9 @@ for iter = 1:1000%MaxIter
     end
     
     %     subplot(1,3,2);
-    plot(xxplot,MM*fval_tmp,'r--','LineWidth',2);
+    plot(xxplot,MM*fval_tmp,'r-','LineWidth',2);
     hold on;
-    plot(xxplot,exactf(xxplot,time),'g-','LineWidth',2)
+    plot(xxplot,exactf(xxplot,time),'k--','LineWidth',2)
     idPlot = find(VecFlag1>0);
     PlotGridsInd(Lstart,Lend,idPlot,VecFlag1,2);
     title(['Post-Coarsen ',num2str( size(idPlot,1))])
