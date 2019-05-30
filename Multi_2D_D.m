@@ -12,10 +12,9 @@ dimensions = pde.dimensions;
 
 nDims = numel(dimensions);
 if pde.useHash
-    N = numel(HASHInv);
+    num_elements = numel(HASHInv);
 else
-    Ne = numel(pde.elementsIDX);
-    N = Ne;
+    num_elements = numel(pde.elementsIDX);
 end
 
 deg = dimensions{1}.deg; % TODO : generalize to deg_D
@@ -40,13 +39,9 @@ for d=1:nDims
 end
 num_pts = prod(dof_1D_FG);
 
-% dof_1D_FG = deg*2^(lev); 
-
-% f_rSpace = sparse(dof_1D_FG^nDims,1);
 f_rSpace = sparse(num_pts,1);
 
-
-for i=1:N
+for i=1:num_elements
     
     if pde.useHash
         ll=HASHInv{i};
@@ -61,15 +56,14 @@ for i=1:N
         else
             IDlev = pde.elements.lev_p1(pde.elementsIDX(i),d)-1;
             IDpos = pde.elements.pos_p1(pde.elementsIDX(i),d)-1;
-            IDe = lev_cell_to_singleD_index(IDlev,IDpos);
-            ID = IDe;
+            ID = lev_cell_to_singleD_index(IDlev,IDpos);
         end
         index_D = [(ID-1)*deg+1 : ID*deg];
         
         thisMat = Meval_D{d};
         thisMat1 = thisMat(:,index_D);
         
-        kronMatList{d} = thisMat1; % Build kron list
+        kron_mat_list{d} = thisMat1; % Build kron list
     end
    
     element_ii = deg^nDims*(i-1)+1:deg^nDims*i;
@@ -77,9 +71,9 @@ for i=1:N
     X = f_wSpace(element_ii);
 
     if use_kronmultd
-        Y = kron_multd(nDims,kronMatList,X);
+        Y = kron_multd(nDims,kron_mat_list,X);
     else
-        Y = kron_multd_full(nDims,kronMatList,X);
+        Y = kron_multd_full(nDims,kron_mat_list,X);
     end
         
     f_rSpace = f_rSpace + Y;

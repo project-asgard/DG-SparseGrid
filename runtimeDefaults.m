@@ -17,8 +17,10 @@ opts.TEND = TEND;
 %%
 % Number of levels
 if exist('lev','var')
-    for d=1:nDims
-        pde.dimensions{d}.lev = lev;
+    if ~isempty(lev)
+        for d=1:nDims
+            pde.dimensions{d}.lev = lev;
+        end
     end
 end
 
@@ -26,7 +28,6 @@ end
 % Polynomial degree
 % Deg = 2 Means Linear Element
 if exist('deg','var')
-
     for d=1:nDims
         pde.dimensions{d}.deg = deg;
     end
