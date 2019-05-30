@@ -122,7 +122,7 @@ for icase=1:ncase
      
      for d=1:num_dimensions
          elements.node_type(element_idx) = 1; % 'internal'; % Internale nodes will not be checked for refinement.
-         if elements.lev_p1(element_idx,d) == lev+1
+         if elements.lev_p1(element_idx,d)-1 == pde.dimensions{d}.lev
              elements.node_type(element_idx) = 2; % 'leaf'; % Leaf nodes are checked for refinement
          end
      end
