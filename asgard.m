@@ -50,13 +50,12 @@ pde.useHash = 1;
 pde.do_adapt = 0;
 [HASH,HASHInv] = HashTable(pde,lev,nDims,gridType); % TODO : move this call inside the if below.
 
-if pde.useHash
-else
-    [elements,elementsIDX] = elementTable(pde,opts,lev,gridType);
-    pde.elements = elements;
-    % pde.elementsIDX = find(elements{1}.lev);
-    pde.elementsIDX = elementsIDX; % only to get the same order as the hash table
-end
+% if pde.useHash
+% else
+    [elements, elements_idx]    = element_table (pde,opts);
+    pde.elements                = elements;
+    pde.elementsIDX             = elements_idx; % only to get the same order as the hash table
+% end
 
 %% Construct the 1D multi-wavelet transform for each dimension.
 for d=1:nDims

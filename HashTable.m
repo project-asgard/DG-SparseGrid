@@ -35,6 +35,23 @@ if (is_sparse_grid),
 else
    ptable = perm_max( nDims,  lev );
 end;
+
+%%
+% Remove lev values not allowed due to rectangularity (yes, it is a word)
+
+keep = ones(size(ptable,1),1);
+for i=1:size (ptable, 1)
+    for d=1:nDims
+        if (ptable(i,d) > pde.dimensions{d}.lev)
+            keep(i) = 0;
+        end
+    end
+end
+
+ptable = ptable(find(keep),:);
+
+
+
 elapsed_time_perm = toc( time_perm);
 if (idebug >= 1),
   disp(sprintf('HashTable:Dim=%d,Lev=%d,gridType=%s,time %g, size=%g',...
