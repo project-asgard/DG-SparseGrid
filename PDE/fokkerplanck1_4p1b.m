@@ -90,10 +90,11 @@ pde.analytic_solutions_1D = { ...
 % Function to set time step
     
     function dt=set_dt(pde)
-        Lmax = pde.dimensions{1}.domainMax;
-        LevX = pde.dimensions{1}.lev;
-        CFL = pde.CFL;
-        dt = Lmax/2^LevX*CFL;
+        x_max = pde.dimensions{1}.domainMax;
+        x_min = pde.dimensions{1}.domainMin;
+        lev   = pde.dimensions{1}.lev;
+        CFL   = pde.CFL;
+        dt    = (x_max - x_min) / 2^lev * CFL;
     end
 
 pde.set_dt = @set_dt;

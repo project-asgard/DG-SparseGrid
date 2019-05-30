@@ -47,7 +47,7 @@ if ~quiet; disp(sprintf('dt = %g', dt )); end
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
 
 pde.useHash = 0;
-pde.doRefine = 1;
+pde.do_adapt = 1;
 [HASH,HASHInv] = HashTable(pde,lev,nDims,gridType); % TODO : move this call inside the if below.
 
 if pde.useHash
@@ -133,7 +133,8 @@ if nDims <=3
         plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
     end
     
-    fval_realspace_SG = real_space_solution_at_sparse_grid(pde,fval);
+    coordinates = get_sparse_grid_coordinates(pde);
+    fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
     
 end
 
@@ -262,6 +263,9 @@ for L = 1:nsteps,
 %             fval_realspace = fval_realspaceB;
         end
         
+        coordinates = get_sparse_grid_coordinates(pde);
+        fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
+        
     end
     
     %%
@@ -317,8 +321,8 @@ for L = 1:nsteps,
     %%
     % Apply adaptivity
     
-    if pde.doRefine
-        [pde,fval,A_data,Meval,nodes,coord] = refine(pde,opts,fval,HASHInv,connectivity,nodes,fval_realspace);
+    if pde.do_adapt
+        [pde,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,HASHInv,connectivity,nodes,fval_realspace);
     end
     
 end
