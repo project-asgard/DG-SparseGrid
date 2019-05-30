@@ -17,17 +17,14 @@ terms = pde.terms;
 deg = dims{1}.deg; % TODO : assumes deg independent of dim
 
 if pde.useHash
-    N = numel(HashInv);
+    num_elements = numel(HashInv);
 else
-%     N = numel(HashInv);
-    Ne = numel(pde.elementsIDX);
-%     assert(N==Ne);
-    N=Ne;
+    num_elements = numel(pde.elementsIDX);
 end
 nTerms = numel(pde.terms);
 nDims = numel(dims);
 
-bcVec = zeros(deg^nDims*N,1);
+bcVec = zeros(deg^nDims*num_elements,1);
 
 for tt = 1:nTerms % Construct a BC object for each term
     
@@ -43,8 +40,7 @@ for tt = 1:nTerms % Construct a BC object for each term
         xMax = dim.domainMax;
         FMWT = dim.FMWT;
         
-%         lev = dim.lev;
-        lev = max(pde.elements.lev_p1(:,d1)-1);
+        lev = dim.lev;
         N_1D = 2^lev;
         dof_1D = deg * N_1D;
         
@@ -80,9 +76,10 @@ for tt = 1:nTerms % Construct a BC object for each term
             %%
             % Initialize to zero
             
-            for d2=1:nDims
-                bcL{d1}{d2} = zeros(dof_1D,1);
-                bcR{d1}{d2} = zeros(dof_1D,1);
+            for d2=1:nDims           
+                this_dof_1D = deg * 2^dims{d2}.lev;
+                bcL{d1}{d2} = zeros(this_dof_1D,1);
+                bcR{d1}{d2} = zeros(this_dof_1D,1);
             end
             
             timeFacL = 1;
@@ -100,7 +97,6 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-%                     bcL{d1} = ComputeRHS(pde,time,dim,BCL_fList,FMWT); % returns a nDim length list
                     for d2=1:nDims
                         bcL{d1}{d2} = forwardMWT(pde,d2,BCR_fList{d2},time);
                     end
@@ -132,7 +128,6 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-%                     bcR{d1} = ComputeRHS(pde,time,dim,BCR_fList,FMWT); % returns a nDim length list 
                     for d2=1:nDims
                         bcR{d1}{d2} = forwardMWT(pde,d2,BCR_fList{d2},time);
                     end                    

@@ -62,26 +62,26 @@ if nDims==2
     
     sy = ny/2;
     
-    f1d = f2d(:,sy);
+    f1d = f2d(sy,:);
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    plot(x,f1d,'-o');
+    plot(y,f1d,'-o');
     title('1D slice (vertical)');
     
     %%
     % Overplot analytic solution
     
     if pde.checkAnalytic
-        f1d_analytic = f2d_analytic(:,sy);
+        f1d_analytic = f2d_analytic(sy,:);
         hold on;
-        plot(x,f1d_analytic,'-');
+        plot(y,f1d_analytic,'-');
         hold off;
     end
     
     sx = nx/2;
     
-    f1d = f2d(sx,:);
+    f1d = f2d(:,sx);
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,2);
@@ -89,7 +89,7 @@ if nDims==2
     title('1D slice (horizontal)');
     
     if pde.checkAnalytic
-        f1d_analytic = f2d_analytic(sx,:);
+        f1d_analytic = f2d_analytic(:,sx);
         hold on;
         plot(x,f1d_analytic,'-');
         hold off;
@@ -99,12 +99,12 @@ if nDims==2
     % Plot 2D
     
     ax1 = subplot(2,2,3);
-    contourf(x,y,f2d);
+    contourf(x,y,f2d');
     title('numeric 2D solution');
     
     if pde.checkAnalytic
         ax2 = subplot(2,2,4);
-        contourf(x,y,squeeze(f2d_analytic));
+        contourf(x,y,squeeze(f2d_analytic'));
         title('analytic 2D solution');
     end
     

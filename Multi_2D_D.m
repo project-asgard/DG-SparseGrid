@@ -34,16 +34,17 @@ lev = dimensions{1}.lev; % TODO : generalize to lev_D
 %%
 % TODO : surely this size depends on the parameters in the matrix_plot_D
 % routine? i.e., the grid upon which we decide to evaluate the solution?
-dof_1D_FG = deg*2^(lev); 
 
-%%
-% The real space vector is on the full-grid size? Where is this decided?
-% (matrix_plot_D.m I think)
-% fnew = sparse(dof_1D_FG^nDims,1);
+for d=1:nDims
+    dof_1D_FG(d) = deg*2^(dimensions{d}.lev);
+end
+num_pts = prod(dof_1D_FG);
 
-f_rSpace = sparse(dof_1D_FG^nDims,1);
-% nDOF = numel(f_wSpace);
-% f_rSpace = sparse(N,1);
+% dof_1D_FG = deg*2^(lev); 
+
+% f_rSpace = sparse(dof_1D_FG^nDims,1);
+f_rSpace = sparse(num_pts,1);
+
 
 for i=1:N
     

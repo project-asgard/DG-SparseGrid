@@ -134,7 +134,7 @@ if nDims <=3
     end
     
     coordinates = get_sparse_grid_coordinates(pde);
-    fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
+%     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
 end
 
@@ -264,7 +264,7 @@ for L = 1:nsteps,
         end
         
         coordinates = get_sparse_grid_coordinates(pde);
-        fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
+%         fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
         
     end
     

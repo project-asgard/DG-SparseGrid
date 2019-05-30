@@ -123,8 +123,14 @@ end
 %%
 % Test plot
 
-figure(2000)
-x = coordinates(:,1);
-plot(x,fval_r,'o');
+do_plot = 0;
+if do_plot
+    figure(2000)
+    if num_dims == 1
+        x = coordinates(:,1);
+        plot(x,fval_r,'o');
+    elseif num_dims == 2
+    end
+end
 
 end

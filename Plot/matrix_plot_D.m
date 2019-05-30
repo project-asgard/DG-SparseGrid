@@ -1,4 +1,4 @@
-function [Meval,nodes]=matrix_plot_D(dimension)
+function [Meval,nodes] = matrix_plot_D(dimension)
 
 %%
 % Generate the evaluation matrix and plotting points
