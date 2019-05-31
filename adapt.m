@@ -6,8 +6,8 @@ deg          = pde.dimensions{1}.deg; % TODO
 
 elementDOF = deg^num_dims;
 
-refine_threshold  = max(fval) * 1e-5;
-coarsen_threshold = max(fval) * 1e-7;
+refine_threshold  = max(abs(fval)) * 1e-6;
+coarsen_threshold = max(abs(fval)) * 1e-10;
 
 newElementVal = 1e-15;
 
@@ -331,7 +331,7 @@ elseif num_dims == 2
     f2d = reshape(fval_realspace0,dof2,dof1);
     x = nodes0{1};
     y = nodes0{2};   
-    contour(x,y,f2d');
+    contour(x,y,f2d);
     
     subplot(2,3,5)
     deg1=pde.dimensions{1}.deg;
@@ -342,10 +342,10 @@ elseif num_dims == 2
     dof2=deg2*2^lev2;
     dofD = dof1*dof2;
     assert(dofD==numel(fval_realspace_refined));
-    f2d = reshape(fval_realspace_refined,dof1,dof2);
+    f2d = reshape(fval_realspace_refined,dof2,dof1);
     x = nodes{1};
     y = nodes{2};   
-    contour(x,y,f2d');
+    contour(x,y,f2d);
     
 end
 

@@ -89,7 +89,7 @@ dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
 dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
-dim_y.lev = 3;
+dim_y.lev = 5;
 
 %%
 % Add dimensions to the pde object

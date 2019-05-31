@@ -43,7 +43,7 @@ for d=1:nDims
         newElemLevVec(d2) = newElemLevVec(d)+1;
         newElemPosVec(d2) = newElemPosVec(d)*2; % Assumes pos starts at 0
         
-        if sum(newElemLevVec)<=thisElemLevVec(d)+1 && newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
+        if sum(newElemLevVec)<=thisElemLevVec(d)+1 & newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
             
             newElemLevVecs(cnt+1,:) = newElemLevVec;
             newElemPosVecs(cnt+1,:) = newElemPosVec; % Assumes pos starts at 0
@@ -70,7 +70,7 @@ for d=1:nDims
         newElemLevVec(d2) = newElemLevVec(d)+1;
         newElemPosVec(d2) = newElemPosVec(d)*2+1; % Assumes pos starts at 0
         
-        if sum(newElemLevVec)<=thisElemLevVec(d)+1 && newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
+        if sum(newElemLevVec)<=thisElemLevVec(d)+1 & newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
             
             newElemLevVecs(cnt+1,:) = newElemLevVec;
             newElemPosVecs(cnt+1,:) = newElemPosVec; % Assumes pos starts at 0

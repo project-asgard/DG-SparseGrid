@@ -4,22 +4,30 @@ function eIdx = lev_cell_to_element_index(pde,lev,pos)
 % Given the lev and cell d-dim vectors, return the global element idx.
 
 dims  = pde.dimensions;
-nDims = numel(dims);
+num_dimensions = numel(dims);
 
-assert(numel(lev)==nDims);
-assert(numel(pos)==nDims);
+assert(numel(lev)==num_dimensions);
+assert(numel(pos)==num_dimensions);
 
-idx1D = lev_cell_to_singleD_index(lev,pos);
-
-eIdx   = uint64(0);
+eIdx   = uint64(1);
 stride = uint64(1);
-for d=1:nDims
+for d=1:num_dimensions
+    
+    
+    %%
+    % ensure we are within the addressable space
+    
     dim = dims{d};
-    eIdx = eIdx + idx1D(d)*stride;
     assert(dim.lev <= pde.maxLev);
-    stride = stride * 2^pde.maxLev;
+
+    idx_1D  = lev_cell_to_singleD_index(lev(d),pos(d));
+    fprintf('dim: %i, idx: %i\n',d,idx_1D);
+    eIdx    = eIdx + (idx_1D-1)*stride;
+    stride  = stride * 2^pde.maxLev;
+    
 end
 
 assert(eIdx >= 0);
+assert(eIdx <= (uint64(2)^pde.maxLev)^num_dimensions);
 
 end
