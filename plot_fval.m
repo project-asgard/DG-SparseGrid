@@ -48,8 +48,12 @@ if nDims==2
     dofD = dof1*dof2;
     assert(dofD==numel(fval_realspace));
     
-    f2d = reshape(fval_realspace,dof1,dof2);
-    f2d_analytic = reshape(fval_realspace_analytic,dof1,dof2);
+    %%
+    % Reshape dimension ordering is likely a result of kron product dimension
+    % ordering. 
+    
+    f2d = reshape(fval_realspace,dof2,dof1);
+    f2d_analytic = reshape(fval_realspace_analytic,dof2,dof1);
     
     x = nodes{1};
     y = nodes{2};
@@ -66,7 +70,7 @@ if nDims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    plot(y,f1d,'-o');
+    plot(x,f1d,'-o');
     title('1D slice (vertical)');
     
     %%
@@ -75,7 +79,7 @@ if nDims==2
     if pde.checkAnalytic
         f1d_analytic = f2d_analytic(sy,:);
         hold on;
-        plot(y,f1d_analytic,'-');
+        plot(x,f1d_analytic,'-');
         hold off;
     end
     
@@ -85,13 +89,13 @@ if nDims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,2);
-    plot(x,f1d,'-o');
+    plot(y,f1d,'-o');
     title('1D slice (horizontal)');
     
     if pde.checkAnalytic
         f1d_analytic = f2d_analytic(:,sx);
         hold on;
-        plot(x,f1d_analytic,'-');
+        plot(y,f1d_analytic,'-');
         hold off;
     end
     
@@ -99,12 +103,12 @@ if nDims==2
     % Plot 2D
     
     ax1 = subplot(2,2,3);
-    contourf(x,y,f2d');
+    contourf(x,y,f2d);
     title('numeric 2D solution');
     
     if pde.checkAnalytic
         ax2 = subplot(2,2,4);
-        contourf(x,y,squeeze(f2d_analytic'));
+        contourf(x,y,f2d_analytic);
         title('analytic 2D solution');
     end
     
