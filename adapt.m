@@ -42,16 +42,21 @@ if coarsen
     for n=1:num_elements
         
         idx = pde.elementsIDX(n);
-        gidx = (n-1)*elementDOF+1; % this is the deg=0 part of this element
+%         gidx = (n-1)*elementDOF+1; % this is the deg=0 part of this element
+        
+        gidx1 = (n-1)*elementDOF+1;
+        gidx2 = gidx1 + elementDOF - 1;
+        
+        element_sum = sum(abs(fval(gidx1:gidx2)),'all');
         
         if pde.elements.node_type(idx) == 2 % refine leaf nodes
             
             %%
             % Check for coarsening (de-refinement)
             
-            if abs(fval(gidx)) <= coarsen_threshold % Check only the deg=0 term for each element
+            if element_sum <= coarsen_threshold % Check only the deg=0 term for each element
                 
-                if debug; fprintf('leaf node to be REMOVED, fval=%f\n',fval(gidx)); end
+                if debug; fprintf('leaf node to be REMOVED, fval=%f\n', element_sum); end
                 
                 thisElemLevVec = pde.elements.lev_p1(idx,:)-1; % NOTE : remove the 1 per note below
                 thisElemPosVec = pde.elements.pos_p1(idx,:)-1; % NOTE : remove the 1 per note below
@@ -148,16 +153,21 @@ if refine
     for n=1:num_elements
         
         idx = pde.elementsIDX(n);
-        gidx = (n-1)*elementDOF+1; % this is deg=0 part of this element
+%         gidx = (n-1)*elementDOF+1; % this is deg=0 part of this element
+        
+        gidx1 = (n-1)*elementDOF+1;
+        gidx2 = gidx1 + elementDOF - 1;
+        
+        element_sum = sum(abs(fval(gidx1:gidx2)),'all');
         
         if pde.elements.node_type(idx) == 2 % refine leaf nodes only according to their deg=0 element
             
             %%
             % Check for refinement
             
-            if abs(fval(gidx)) >= refine_threshold
+            if element_sum >= refine_threshold
                 
-                if debug; fprintf('leaf node to be refined, fval=%f\n',fval(gidx)); end
+                if debug; fprintf('leaf node to be refined, fval=%f\n', element_sum); end
                 
                 [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = getMyDaughters(pde,idx);
                 

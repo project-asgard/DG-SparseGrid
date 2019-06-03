@@ -111,20 +111,14 @@ for icase=1:ncase
      elements.lev_p1(element_idx,:) = levels+1; % NOTE : have to start lev  index from 1 for sparse storage
      elements.pos_p1(element_idx,:) = icells+1; % NOTE : have to start lev  index from 1 for sparse storage
      
-%      for d=1:nDims    
-%          elements.coords{d}.lev (element_idx) = levels(d)+1; % NOTE : have to start lev  index from 1 for sparse storage
-%          elements.coords{d}.cell(element_idx) = icells(d)+1; % NOTE : have to start cell index from 1 for sparse storage   
-%      end
-     
      %%
-     % Set the element type ("leaf" or "internal") by checking if ANY of
-     % the lev coordinates are in the bottom level
+     % Set the element type ("leaf" or "internal") by checking if the sum
+     % over level across dimensions equals the sparse grid selection limit
+     % from perm_leq (pde, lev)
      
-     for d=1:num_dimensions
-         elements.node_type(element_idx) = 1; % 'internal'; % Internale nodes will not be checked for refinement.
-         if elements.lev_p1(element_idx,d)-1 == pde.dimensions{d}.lev
-             elements.node_type(element_idx) = 2; % 'leaf'; % Leaf nodes are checked for refinement
-         end
+     elements.node_type(element_idx) = 1; % 'internal'; % Internale nodes will not be checked for refinement.
+     if sum (elements.lev_p1(element_idx,:)-1) == lev
+         elements.node_type(element_idx) = 2; % 'leaf'; % Leaf nodes are checked for refinement
      end
 
   end

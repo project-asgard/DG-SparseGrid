@@ -9,7 +9,9 @@ xMax = pde.dimensions{1}.domainMax;
 %%
 % Get grid point coordinates
 
-coordinates = zeros(num_elements, num_dims);
+coordinates = zeros (num_elements, num_dims);
+levels      = zeros (num_elements, 1);
+style       = strings (num_elements, 1);
 
 for i=1:num_elements
     
@@ -17,12 +19,14 @@ for i=1:num_elements
     c = pde.elements.node_type(idx);
     
     if c == 1
-        style{i} = 'ob';
+        style(i) = 'ob';
     elseif c == 2
-        style{i} = 'or';
+        style(i) = 'or';
     end
     
     coordinates(i,:) = getMyRealSpaceCoord(pde,idx);
+    
+    levels(i) = sum (pde.elements.lev_p1(idx,:)-1,'all');
 
 end
 
@@ -53,7 +57,8 @@ if num_dims == 1
 elseif num_dims == 2
 
     for i=1:num_elements
-    plot(coordinates(i,1),coordinates(i,2),style{i});
+        plot3 (coordinates(i,1), coordinates(i,2), levels(i), style(i));
+        hold on
     end
 
 end
