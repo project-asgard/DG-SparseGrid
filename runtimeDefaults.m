@@ -4,8 +4,8 @@ if ~exist('pde','var') || isempty(pde)
     pde = Vlasov8;
 end
 
-nTerms = numel(pde.terms);
-nDims = numel(pde.dimensions);
+num_terms = numel(pde.terms);
+num_dimensions = numel(pde.dimensions);
 
 %%
 % Simulation end time
@@ -18,7 +18,7 @@ opts.TEND = TEND;
 % Number of levels
 if exist('lev','var')
     if ~isempty(lev)
-        for d=1:nDims
+        for d=1:num_dimensions
             pde.dimensions{d}.lev = lev;
         end
     end
@@ -28,7 +28,7 @@ end
 % Polynomial degree
 % Deg = 2 Means Linear Element
 if exist('deg','var')
-    for d=1:nDims
+    for d=1:num_dimensions
         pde.dimensions{d}.deg = deg;
     end
 end

@@ -8,10 +8,10 @@ function pde = continuity3
 % Run with 
 %
 % explicit
-% fk6d(continuity3,5,3,0.0002);
+% asgard(continuity3,5,3,0.0002);
 %
 % implicit
-% fk6d(continuity3,4,4,0.002,[],[],1,[],[],1.0);
+% asgard(continuity3,4,4,0.002,[],[],1,[],[],1.0);
 
 %% Setup the dimensions
 
@@ -23,21 +23,21 @@ dim_x.BCL = 'P'; % periodic
 dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
-dim_x.init_cond_fn = @(x,p) x.*0;
+dim_x.init_cond_fn = @(x,p,t) x.*0;
 
 dim_y.name = 'y';
 dim_y.BCL = 'P'; % periodic
 dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
-dim_y.init_cond_fn = @(y,p) y.*0;
+dim_y.init_cond_fn = @(y,p,t) y.*0;
 
 dim_z.name = 'z';
 dim_z.BCL = 'P'; % periodic
 dim_z.BCR = 'P';
 dim_z.domainMin = -3;
 dim_z.domainMax = +3;
-dim_z.init_cond_fn = @(z,p) z.*0;
+dim_z.init_cond_fn = @(z,p,t) z.*0;
 
 %%
 % Add dimensions to the pde object
@@ -98,36 +98,36 @@ pde.params = params;
 %%
 % Source term 1
 source1 = { ...
-    @(x,p) cos(pi*x),     ... % s1x
-    @(y,p) sin(2*pi*y),   ... % s1y
-    @(z,p) cos(2*pi*z/3), ... % s1z
+    @(x,p,t) cos(pi*x),     ... % s1x
+    @(y,p,t) sin(2*pi*y),   ... % s1y
+    @(z,p,t) cos(2*pi*z/3), ... % s1z
     @(t)   2*cos(2*t)     ... % s1t
     };
 
 %%
 % Source term 2
 source2 = { ...
-    @(x,p) cos(pi*x),     ... % s2x
-    @(y,p) cos(2*pi*y),   ... % s2y
-    @(z,p) cos(2*pi*z/3), ... % s2z
+    @(x,p,t) cos(pi*x),     ... % s2x
+    @(y,p,t) cos(2*pi*y),   ... % s2y
+    @(z,p,t) cos(2*pi*z/3), ... % s2z
     @(t)   2*pi*sin(2*t)  ... % s2t
     };
 
 %%
 % Source term 3
 source3 = { ...
-    @(x,p) sin(pi*x),     ... % s3x
-    @(y,p) sin(2*pi*y),   ... % s3y
-    @(z,p) cos(2*pi*z/3), ... % s3z
+    @(x,p,t) sin(pi*x),     ... % s3x
+    @(y,p,t) sin(2*pi*y),   ... % s3y
+    @(z,p,t) cos(2*pi*z/3), ... % s3z
     @(t)   -pi*sin(2*t)   ... % s3t
     };
 
 %%
 % Source term 4
 source4 = { ...
-    @(x,p) cos(pi*x),       ... % s4x
-    @(y,p) sin(2*pi*y),     ... % s4y
-    @(z,p) sin(2*pi*z/3),   ... % s4z
+    @(x,p,t) cos(pi*x),       ... % s4x
+    @(y,p,t) sin(2*pi*y),     ... % s4y
+    @(z,p,t) sin(2*pi*z/3),   ... % s4z
     @(t)   -2/3*pi*sin(2*t) ... % s4t
     };
 

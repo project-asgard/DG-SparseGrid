@@ -1,23 +1,22 @@
-function [newElemLevVecs,newElemPosVecs,cnt] = getMyDaughters(pde,idx)
+function [new_elem_lev_vecs, new_elem_pos_vecs, cnt] = getMyDaughters (lev_vec, pos_vec)
 
-nDims = numel(pde.dimensions);
+%%
+% Takes lev and pos vector as input, returns the same for a list of
+% daughter elements which also obey the sparse selecttion rule for the next
+% deepest level. 
+
+nDims = numel(lev_vec);
+
+assert (nDims == numel (pos_vec) );
 
 debug = 1;
 
-%%
-% Get this coordinate vector
-% levVec = [lev1,lev2,...,levD]
-% posVec = [pos1,pos2,...,posD]
-
-thisElemLevVec = pde.elements.lev_p1(idx,:)-1; % NOTE : remove the 1 per note below
-thisElemPosVec = pde.elements.pos_p1(idx,:)-1; % NOTE : remove the 1 per note below
-
-if thisElemLevVec(1) == 2
+if lev_vec(1) == 2
     disp('should never get here');
 end
 
-newElemLevVecs = [];
-newElemPosVecs = [];
+new_elem_lev_vecs = [];
+new_elem_pos_vecs = [];
 
 %%
 % Generate list of new elements which satisfy selection rule
@@ -32,56 +31,48 @@ for d=1:nDims
     for d2=1:nDims
         
         %%
-        % TODO : This refinement is not sparse. Need to add the
-        % sparse grid selection rule here also.
-        
-        %%
         % First daughter
+          
+        new_elem_lev_vec = lev_vec;
+        new_elem_pos_vec = pos_vec;
+        new_elem_lev_vec(d2) = new_elem_lev_vec(d)+1;
+        new_elem_pos_vec(d2) = new_elem_pos_vec(d)*2; % Assumes pos starts at 0
         
-        newElemLevVec = thisElemLevVec;
-        newElemPosVec = thisElemPosVec;
-        newElemLevVec(d2) = newElemLevVec(d)+1;
-        newElemPosVec(d2) = newElemPosVec(d)*2; % Assumes pos starts at 0
-        
-        if sum(newElemLevVec)<=thisElemLevVec(d)+1 & newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
+        if sum(new_elem_lev_vec)<=lev_vec(d)+1 & new_elem_lev_vec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
             
-            newElemLevVecs(cnt+1,:) = newElemLevVec;
-            newElemPosVecs(cnt+1,:) = newElemPosVec; % Assumes pos starts at 0
+            new_elem_lev_vecs(cnt+1,:) = new_elem_lev_vec;
+            new_elem_pos_vecs(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
             
-            assert(newElemPosVecs(cnt+1,d2) >= 0);
-            assert(newElemLevVecs(cnt+1,d2) >= 0);
+            assert(new_elem_pos_vecs(cnt+1,d2) >= 0);
+            assert(new_elem_lev_vecs(cnt+1,d2) >= 0);
             
             cnt = cnt + 1;
-            
-            pde.elements.node_type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
-            
+                        
         else
             
-            disp('element not added because it did not obey sparse selection rule');
+            disp('element not added because it did not obey sparse selection rule or is > pde.maxLev');
             
         end
         
         %%
         % Second daughter
         
-        newElemLevVec = thisElemLevVec;
-        newElemPosVec = thisElemPosVec;
+        new_elem_lev_vec = lev_vec;
+        new_elem_pos_vec = pos_vec;
         
-        newElemLevVec(d2) = newElemLevVec(d)+1;
-        newElemPosVec(d2) = newElemPosVec(d)*2+1; % Assumes pos starts at 0
+        new_elem_lev_vec(d2) = new_elem_lev_vec(d)+1;
+        new_elem_pos_vec(d2) = new_elem_pos_vec(d)*2+1; % Assumes pos starts at 0
         
-        if sum(newElemLevVec)<=thisElemLevVec(d)+1 & newElemLevVec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
+        if sum(new_elem_lev_vec)<=lev_vec(d)+1 & new_elem_lev_vec(d2)<=pde.maxLev % Sparse grid selection rule AND max depth check
             
-            newElemLevVecs(cnt+1,:) = newElemLevVec;
-            newElemPosVecs(cnt+1,:) = newElemPosVec; % Assumes pos starts at 0
+            new_elem_lev_vecs(cnt+1,:) = new_elem_lev_vec;
+            new_elem_pos_vecs(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
             
-            assert(newElemPosVecs(cnt+1,d2) >= 0);
-            assert(newElemLevVecs(cnt+1,d2) >= 0);
+            assert(new_elem_pos_vecs(cnt+1,d2) >= 0);
+            assert(new_elem_lev_vecs(cnt+1,d2) >= 0);
             
             cnt = cnt + 1;
-            
-            pde.elements.node_type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
-            
+                        
         else
             
             disp('element not added because it did not obey sparse selection rule');

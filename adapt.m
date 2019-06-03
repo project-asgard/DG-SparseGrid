@@ -169,10 +169,16 @@ if refine
                 
                 if debug; fprintf('leaf node to be refined, fval=%f\n', element_sum); end
                 
+                nDaughters = 0;
                 [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = getMyDaughters(pde,idx);
                 
                 newElemLevVecs(cnt+1:cnt+nDaughters,:) = daughterElemLevVecs;
                 newElemPosVecs(cnt+1:cnt+nDaughters,:) = daughterElemPosVecs; 
+
+                if nDaughters > 0
+                    pde.elements.node_type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
+
+                end
                 
                 cnt = cnt + nDaughters;
                                 

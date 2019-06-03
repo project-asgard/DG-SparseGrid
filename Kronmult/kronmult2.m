@@ -86,7 +86,7 @@ if (use_method_1),
   
   
     n1 = numel(Ytmp)/(ncol1*nvec);
-    Ytmp =  reshape( Ytmp, [n1,ncol1,nvec]);
+    Ytmp =  reshape( full(Ytmp), [n1,ncol1,nvec]);
   
     
     % ------------------------------

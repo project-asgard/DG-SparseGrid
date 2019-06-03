@@ -21,7 +21,7 @@ for d=1:num_dimensions
     assert(dim.lev <= pde.maxLev);
 
     idx_1D  = lev_cell_to_singleD_index(lev(d),pos(d));
-    fprintf('dim: %i, idx: %i\n',d,idx_1D);
+%     fprintf('dim: %i, idx: %i\n',d,idx_1D);
     eIdx    = eIdx + (idx_1D-1)*stride;
     stride  = stride * 2^pde.maxLev;
     

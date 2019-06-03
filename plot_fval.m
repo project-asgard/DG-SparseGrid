@@ -140,9 +140,9 @@ if nDims==3
     %%
     % Plot a 1D line through the solution
     
-    sx = 9;
-    sy = 4;
-    sz = 12;
+    sx = numel(f3d(:,1,1))/2;
+    sy = numel(f3d(1,:,1))/2;
+    sz = numel(f3d(1,1,:))/2;
     
     f1d = f3d(:,sy,sz);
     x = nodes{1};
