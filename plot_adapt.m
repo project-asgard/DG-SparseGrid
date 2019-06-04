@@ -27,16 +27,15 @@ for i=1:num_elements
     coordinates(i,:) = getMyRealSpaceCoord(pde,idx);
     
     levels(i) = sum (pde.elements.lev_p1(idx,:)-1,'all');
-
+    
 end
 
 figure(222);
-subplot(2,3,pos)
-cla
-hold on
 
 if num_dims == 1
-
+    subplot(2,3,pos)
+    cla
+    hold on
     for i=1:num_elements
         
         idx = pde.elementsIDX(i);
@@ -53,14 +52,16 @@ if num_dims == 1
         
         xlim([xMin,xMax]);
     end
-
+    
 elseif num_dims == 2
-
+    subplot(3,3,pos)
+    cla
+    hold on
     for i=1:num_elements
         plot3 (coordinates(i,1), coordinates(i,2), levels(i), style(i));
         hold on
     end
-
+    
 end
 
 hold off

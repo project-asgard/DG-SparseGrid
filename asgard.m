@@ -46,8 +46,8 @@ if ~quiet; disp(sprintf('dt = %g', dt )); end
 %% Construct the Element (Hash) tables.
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
 
-pde.useHash  = 1;
-pde.do_adapt = 0;
+pde.useHash  = 0;
+pde.do_adapt = 1;
 
 [HASH,HASHInv] = HashTable(pde,lev,num_dimensions,gridType); % TODO : move this call inside the if below.
 
@@ -328,7 +328,7 @@ for L = 1:nsteps,
     
     %%
     % Apply adaptivity
-    
+    if ~quiet; disp('Adapt grid ...'); end
     if pde.do_adapt
         [pde,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,HASHInv,connectivity,nodes,fval_realspace);
     end

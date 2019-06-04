@@ -8,6 +8,8 @@ function pde = getCoeffMats (pde, t, TD)
 nTerms = numel(pde.terms);
 nDims = numel(pde.dimensions);
 
+debug = 0;
+
 if TD
     TD_STR = 'TD';
 else
@@ -29,7 +31,7 @@ for tt = 1:nTerms
         
         if term{d}.TD == TD
             
-            disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]);
+            if debug; disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]); end
             
             [mat,mat1,mat2,mat0] = coeff_matrix2(pde,t,dim,term{d});
             
@@ -62,7 +64,7 @@ if ~isempty(pde.termsLHS)
             
             if term{d}.TD == TD
                 
-                disp([TD_STR ' - LHS term : ' num2str(1) '  d : ' num2str(d) ]);
+                if debug; disp([TD_STR ' - LHS term : ' num2str(1) '  d : ' num2str(d) ]); end
                 
                 assert(strcmp(term{d}.type,'mass'));
                 

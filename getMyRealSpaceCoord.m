@@ -3,9 +3,9 @@ function [coord_D, coord_D_L, coord_D_R] = getMyRealSpaceCoord (pde,idx)
 %%
 % Get the center, left and right coordinates for this element
 
-nDims = numel(pde.dimensions);
+num_dimensions = numel(pde.dimensions);
 
-for d=1:nDims
+for d=1:num_dimensions
     
     xMin = pde.dimensions{d}.domainMin;
     xMax = pde.dimensions{d}.domainMax;
@@ -16,6 +16,8 @@ for d=1:nDims
     
     lev = pde.elements.lev_p1(idx,d)-1;
     pos = pde.elements.pos_p1(idx,d)-1;
+    
+    assert(lev <= pde.maxLev);
     
     %%
     % Scaled to [0,1]
@@ -45,6 +47,9 @@ for d=1:nDims
     coord_D(d) = x;
     coord_D_L(d) = xL;
     coord_D_R(d) = xR;
+    
+    assert(xL >= xMin);
+    assert(xR <= xMax);
     
 end
 
