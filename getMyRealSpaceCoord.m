@@ -17,7 +17,7 @@ for d=1:num_dimensions
     lev = pde.elements.lev_p1(idx,d)-1;
     pos = pde.elements.pos_p1(idx,d)-1;
     
-    assert(lev <= pde.maxLev);
+    assert(lev <= pde.max_lev);
     
     %%
     % Scaled to [0,1]

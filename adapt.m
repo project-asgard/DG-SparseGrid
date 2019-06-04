@@ -6,14 +6,15 @@ deg             = pde.dimensions{1}.deg; % TODO
 
 elementDOF = deg^num_dimensions;
 
-refine_threshold  = max(abs(fval)) * 1e-4;
-coarsen_threshold = max(abs(fval)) * 1e-6;
+refine_threshold  = max(abs(fval)) * 1e-2;
+coarsen_threshold = max(abs(fval)) * 1e-4;
 
 newElementVal = 1e-15;
 
 debug   = 0;
 coarsen = 1;
 refine  = 1;
+method  = 1;
 
 assert(numel(find(pde.elementsIDX))==numel(pde.elementsIDX));
 
@@ -179,7 +180,7 @@ if refine
                 
                 if debug; fprintf('leaf node to be refined, fval=%f\n', element_sum); end
                                 
-                [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = get_my_daughters(lev_vec,pos_vec,pde.maxLev);
+                [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = get_my_daughters(lev_vec,pos_vec,pde.max_lev, method);
                 
                 newElemLevVecs(cnt+1:cnt+nDaughters,:) = daughterElemLevVecs;
                 newElemPosVecs(cnt+1:cnt+nDaughters,:) = daughterElemPosVecs; 
@@ -259,7 +260,7 @@ if leafCheck
             idx = pde.elementsIDX(n);
             lev_vec = pde.elements.lev_p1(idx,:)-1;
             pos_vec = pde.elements.pos_p1(idx,:)-1;
-            [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = get_my_daughters(lev_vec,pos_vec,pde.maxLev);
+            [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = get_my_daughters(lev_vec,pos_vec,pde.maxLev, method);
             
             nLeaves = 0;
             for nn=1:nDaughters

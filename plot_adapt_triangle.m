@@ -3,10 +3,10 @@ function plot_adapt_triangle(pde,plot_num)
 num_dimensions  = numel (pde.dimensions);
 num_elements    = numel (pde.elementsIDX);
 
-subplot(3,3,plot_num);
-cla
-hold on
 if num_dimensions == 2
+    subplot(3,3,plot_num);
+    cla
+    hold on
     
     for n=1:num_elements
         idx = pde.elementsIDX(n);
@@ -14,7 +14,8 @@ if num_dimensions == 2
         plot(lev_vec(1),lev_vec(2),'o','MarkerSize',8,'MarkerFaceColor','k');
         
     end
+    hold off
+    
 end
-hold off
 
 end
