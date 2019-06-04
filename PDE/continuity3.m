@@ -24,6 +24,7 @@ dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.init_cond_fn = @(x,p,t) x.*0;
+dim_x.lev = 5;
 
 dim_y.name = 'y';
 dim_y.BCL = 'P'; % periodic
@@ -31,6 +32,7 @@ dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
 dim_y.init_cond_fn = @(y,p,t) y.*0;
+dim_y.lev = 4;
 
 dim_z.name = 'z';
 dim_z.BCL = 'P'; % periodic
@@ -38,6 +40,7 @@ dim_z.BCR = 'P';
 dim_z.domainMin = -3;
 dim_z.domainMax = +3;
 dim_z.init_cond_fn = @(z,p,t) z.*0;
+dim_z.lev = 3;
 
 %%
 % Add dimensions to the pde object

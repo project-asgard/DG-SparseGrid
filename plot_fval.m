@@ -134,31 +134,31 @@ if nDims==3
     dofD = dof1*dof2*dof3;
     assert(dofD==numel(fval_realspace));
     
-    f3d = reshape(fval_realspace,dof1,dof2,dof3);
-    f3d_analytic = reshape(fval_realspace_analytic,dof1,dof2,dof3);
+    f3d = reshape(fval_realspace,dof3,dof2,dof1);
+    f3d_analytic = reshape(fval_realspace_analytic,dof3,dof2,dof1);
     
     %%
     % Plot a 1D line through the solution
     
-    sx = numel(f3d(:,1,1))/2;
+    sz = numel(f3d(:,1,1))/2;
     sy = numel(f3d(1,:,1))/2;
-    sz = numel(f3d(1,1,:))/2;
+    sx = numel(f3d(1,1,:))/2;
     
-    f1d = f3d(:,sy,sz);
+    f1d = f3d(:,sy,sx);
     x = nodes{1};
     y = nodes{2};
     z = nodes{3};
     ax1 = subplot(3,3,1);
-    plot(x,f1d,'-o');
+    plot(z,f1d,'-o');
     title('1D slice through 3D');
     
     %%
     % Overplot analytic solution
     
     if pde.checkAnalytic
-        f1d_analytic = f3d_analytic(:,sy,sz);
+        f1d_analytic = f3d_analytic(:,sy,sx);
         hold on;
-        plot(x,f1d_analytic,'-');
+        plot(z,f1d_analytic,'-');
         hold off;
     end
     
@@ -166,12 +166,12 @@ if nDims==3
     % Plot a 2D xy plane
     
     ax1 = subplot(3,3,4);
-    contourf(x,y,f3d(:,:,sz));
+    contourf(z,y,f3d(:,:,sx)');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
         ax2 = subplot(3,3,7);
-        contourf(x,y,f3d_analytic(:,:,sz));
+        contourf(z,y,f3d_analytic(:,:,sx)');
         title('2D slice through 3D analytic');
     end
     
@@ -179,12 +179,12 @@ if nDims==3
     % Plot a 2D xz plane
     
     ax3 = subplot(3,3,5);
-    contourf(x,y,squeeze(f3d(:,sy,:)));
+    contourf(z,x,squeeze(f3d(:,sy,:))');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
         ax3 = subplot(3,3,8);
-        contourf(x,y,squeeze(f3d_analytic(:,sy,:)));
+        contourf(z,x,squeeze(f3d_analytic(:,sy,:))');
         title('2D slice through 3D analytic');
     end
     
@@ -192,12 +192,12 @@ if nDims==3
     % Plot a 2D yz plane
     
     ax3 = subplot(3,3,6);
-    contourf(x,y,squeeze(f3d(sx,:,:)));
+    contourf(y,x,squeeze(f3d(sz,:,:))');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
         ax3 = subplot(3,3,9);
-        contourf(x,y,squeeze(f3d_analytic(sx,:,:)));
+        contourf(y,x,squeeze(f3d_analytic(sz,:,:))');
         title('2D slice through 3D analytic');
     end
     
