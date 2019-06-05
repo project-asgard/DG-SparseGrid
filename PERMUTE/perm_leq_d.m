@@ -1,47 +1,39 @@
-function [result] = perm_leq_d( idim, LevMax, SumMax, order_by_n_in )
-% [result] = perm_leq( idim, n  [, order_by_n_in] )
+function [result] = perm_leq_d( idim, LevMax, SumMax, ...
+                                increasing_sum_order_in )
+% [result] = perm_leq_d( idim, LevMax, SumMax, ...
+%                        [, increasing_sum_order_in] )
 %
 % return tuples where sum of indices is less than or
-% equal to n
+% equal to SumMax and  i-th index in [0,LevMax(i)]
 %
-icount = perm_leq_count( idim, n );
+icount = perm_leq_d_count( idim, LevMax, SumMax );
 result = zeros( icount, idim );
 
-order_by_n = 0;
-if (nargin >= 3),
-    order_by_n = order_by_n_in;
+increasing_sum_order = 0;
+if (nargin >= 4),
+    increasing_sum_order = increasing_sum_order_in;
 end;
 
 
-if (order_by_n),
+if (increasing_sum_order),
+    i1 = 0;
+    inc = 1;
+    i2 = SumMax;
+else
+    i1 = SumMax;
+    inc = -1;
+    i2 = 0;
+end;
+
     ip = 1;
-    for i=0:SumMax,
+    for i=i1:inc:i2,
         SumEq = i;
         isize = perm_eq_d_count(idim, LevMax,SumEq);
-        
-        result( ip:(ip+isize-1),1:idim) = perm_eq_d(idim,LevMax,i);
-        
-        ip = ip + isize;
+        if (isize >= 1),
+         result( ip:(ip+isize-1),1:idim) = perm_eq_d(idim,LevMax, SumEq);
+         ip = ip + isize;
+        end;
     end;
-else
-    if (idim == 1),
-        n = LevMax(1);
-        result = reshape(0:n, (n+1),1);
-        return;
-    end;
-    
-    n = LevMax(idim); 
-    ip = 1;
-    for i=0:min(n,SumMax),
-        isize = perm_leq_d_count(idim-1, n-i);
-        result( ip:(ip+isize-1),1:(idim-1)) = ...
-            perm_leq_d(idim-1,LevMax(1:(idim-1))-i,SumMax-i,order_by_n);
-        result( ip:(ip+isize-1),idim) = i;
-        
-        ip = ip + isize;
-    end;
-end;
-
 return
 end
 
