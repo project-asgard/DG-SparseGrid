@@ -1,5 +1,5 @@
 
-function [icount] = perm_eq_d_count( idim, LevMax, SumEq )
+function [icount] = perm_eq_d_count( idim, LevMax_in, SumEq )
 %
 % [icount] = perm_eq_d_count( idim, LevMax, SumEq )
 %
@@ -11,8 +11,12 @@ function [icount] = perm_eq_d_count( idim, LevMax, SumEq )
 % (0, 3), (1,2), (2, 1), (3,0)
 % so icount is 4
 %
+LevMax = LevMax_in;
+is_scalar = (size(LevMax_in,1) == 1) && (size(LevMax_in,2) == 1);
+if (is_scalar),
+        LevMax = LevMax_in * ones(idim,1);
+end;
 
-idebug = 1;
 
 
 if (idim == 1)
