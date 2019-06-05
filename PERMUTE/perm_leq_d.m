@@ -1,4 +1,4 @@
-function [result] = perm_leq_d( idim, LevMax, SumMax, ...
+function [result] = perm_leq_d( idim, LevMax_in, SumMax, ...
                                 increasing_sum_order_in )
 % [result] = perm_leq_d( idim, LevMax, SumMax, ...
 %                        [, increasing_sum_order_in] )
@@ -6,6 +6,14 @@ function [result] = perm_leq_d( idim, LevMax, SumMax, ...
 % return tuples where sum of indices is less than or
 % equal to SumMax and  i-th index in [0,LevMax(i)]
 %
+
+LevMax = LevMax_in;
+is_scalar = (size(LevMax_in,1)==1) && (size(LevMax_in,2)==1);
+if (is_scalar),
+    LevMax  = LevMax_in * ones(idim,1);
+end;
+
+
 icount = perm_leq_d_count( idim, LevMax, SumMax );
 result = zeros( icount, idim );
 

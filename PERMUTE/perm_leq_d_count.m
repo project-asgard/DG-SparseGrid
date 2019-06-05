@@ -1,4 +1,4 @@
-function [icount] = perm_leq_d_count( idim, LevMax, SumMax )
+function [icount] = perm_leq_d_count( idim, LevMax_in, SumMax )
 %
 % [icount] = perm_leq_d_count( idim, LevMax, SumMax )
 %
@@ -14,6 +14,12 @@ function [icount] = perm_leq_d_count( idim, LevMax, SumMax )
 %
 % thus icount is 1 + 2 + 3 = 6
 %
+
+LevMax = LevMax_in;
+is_scalar = (size(LevMax_in,1) == 1) && (size(LevMax_in,2) == 1);
+if (is_scalar),
+    LevMax = LevMax_in * ones(idim,1);
+end;
 
 icount = 0;
 for lSumMax=0:SumMax,
