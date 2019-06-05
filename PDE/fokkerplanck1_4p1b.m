@@ -11,6 +11,8 @@ function pde = fokkerplanck1_4p1b
 % asgard(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],0.1)
 
 pde.CFL = 0.01;
+pde.max_lev = 8;
+
 sig = 0.1;
 
 

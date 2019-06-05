@@ -16,7 +16,7 @@ lev  = 0;
 for d=1:num_dimensions
     
 %     this_num_elements = uint64(2)^pde.dimension{d}.lev;
-    this_num_elements = uint64(2)^pde.maxLev;
+    this_num_elements = uint64(2)^pde.max_lev;
 
     num_elements_max  = num_elements_max * this_num_elements;
     

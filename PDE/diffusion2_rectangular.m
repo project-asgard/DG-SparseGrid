@@ -23,7 +23,7 @@ function pde = diffusion2_rectangular
 % Run with
 %
 % explicit
-% asgard(diffusion2_rectangular,3,2,0.001);
+% asgard(diffusion2_rectangular,[],2,0.001);
 %
 % implicit
 % asgard(diffusion_rectangular2,4,2,0.05,[],[],1,[],[],1.9);
@@ -66,7 +66,7 @@ dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
-dim_x.lev = 4;
+dim_x.lev = 2;
 
 % The function is defined for the plane
 % y = c and y = d
@@ -90,7 +90,7 @@ dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
 dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
-dim_y.lev = 5;
+dim_y.lev = 3;
 
 %%
 % Add dimensions to the pde object
