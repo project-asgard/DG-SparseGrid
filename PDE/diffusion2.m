@@ -164,10 +164,6 @@ pde.analytic_solutions_1D = { ...
     @(t,p) soln_t(t) 
     };
 
-
-%%
-% Function to set time step
-
     function dt=set_dt(pde)
         
         dims = pde.dimensions;
@@ -181,8 +177,10 @@ pde.analytic_solutions_1D = { ...
         
     end
 
-pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
+pde.set_dt = @set_dt;
 
 end
 
+%%
+% Function to set time step
 

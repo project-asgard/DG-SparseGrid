@@ -16,7 +16,8 @@ imethod_default = 'wavelet2';
 
 imethod = imethod_default;
 
-% if exist('OperatorTwoScale_method','var'),
+% NOTE: this was overwriting the choice above so commented out.
+% if exist('OperatorTwoScale_method','var'), 
 %         imethod = OperatorTwoScale_method;
 % end;
 if (idebug >= 1),
