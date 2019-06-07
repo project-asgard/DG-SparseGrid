@@ -26,31 +26,29 @@ N_max = double((uint64(2)^lev)^nDims); % This number is HUGE
 for d=1:nDims
     elements{d}.lev  = sparse(N_max,1);
     elements{d}.cell = sparse(N_max,1);
+    lev_vec(d) = pde.dimensions{d}.lev;
 end
-
 
 time_perm = tic();
-if (is_sparse_grid),
-   ptable = perm_leq( nDims, lev );
+if (is_sparse_grid)
+   ptable = perm_leq( nDims, lev_vec, max(lev_vec) );
 else
-   ptable = perm_max( nDims,  lev );
-end;
-
-%%
-% Remove lev values not allowed due to rectangularity (yes, it is a word)
-
-keep = ones(size(ptable,1),1);
-for i=1:size (ptable, 1)
-    for d=1:nDims
-        if (ptable(i,d) > pde.dimensions{d}.lev)
-            keep(i) = 0;
+    ptable = perm_max( nDims, max(lev_vec) );
+    %%
+    % Remove lev values not allowed due to rectangularity (yes, it is a word)
+    % TODO : remove when we have a perm_max_d function.
+    
+    keep = ones(size(ptable,1),1);
+    for i=1:size (ptable, 1)
+        for d=1:nDims
+            if (ptable(i,d) > pde.dimensions{d}.lev)
+                keep(i) = 0;
+            end
         end
     end
+    
+    ptable = ptable(find(keep),:);
 end
-
-ptable = ptable(find(keep),:);
-
-
 
 elapsed_time_perm = toc( time_perm);
 if (idebug >= 1),

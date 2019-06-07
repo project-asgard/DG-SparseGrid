@@ -46,8 +46,8 @@ if ~quiet; disp(sprintf('dt = %g', dt )); end
 %% Construct the Element (Hash) tables.
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
 
-pde.useHash  = 0;
-pde.do_adapt = 1;
+pde.useHash  = 1;
+pde.do_adapt = 0;
 
 [HASH,HASHInv] = HashTable(pde,lev,num_dimensions,gridType); % TODO : move this call inside the if below.
 

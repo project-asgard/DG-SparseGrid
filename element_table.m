@@ -11,19 +11,11 @@ is_sparse_grid = strcmp( opts.gridType, 'SG');
 % set the maximum number of elements we can refine to
 
 num_elements_max = 1;
-lev  = 0;
 
-for d=1:num_dimensions
-    
-%     this_num_elements = uint64(2)^pde.dimension{d}.lev;
-    this_num_elements = uint64(2)^pde.max_lev;
-
-    num_elements_max  = num_elements_max * this_num_elements;
-    
-    if pde.dimensions{d}.lev > lev
-        lev = pde.dimensions{d}.lev;
-    end
-    
+for d=1:num_dimensions   
+    this_num_elements   = uint64(2)^pde.max_lev;
+    num_elements_max    = num_elements_max * this_num_elements; 
+    lev_vec(d)          = pde.dimensions{d}.lev;
 end
 num_elements_max = double(num_elements_max); % This number is HUGE
 
@@ -35,27 +27,29 @@ elements.pos_p1     = sparse (num_elements_max, num_dimensions);
 elements.node_type  = sparse (num_elements_max, 1);
 
 %%
-% Get the combinations of levels
+% Get combinations of elements across dimensions and apply sparse-grid selection rule
 
 if (is_sparse_grid)
-   ptable = perm_leq( num_dimensions, lev );
-else
-   ptable = perm_max( num_dimensions, lev );
+   ptable = perm_leq_d (num_dimensions, lev_vec, max(lev_vec) );
+else   
+   ptable = perm_max (num_dimensions, max(lev_vec), max(lev_vec) );
+   
+   %%
+   % Remove lev values not allowed due to rectangularity (yes, it is a word)
+   % TODO : remove this when we have a "perm_max_D" function
+   
+   keep = ones(size(ptable,1),1);
+   for i=1:size (ptable, 1)
+       for d=1:num_dimensions
+           if (ptable(i,d) > pde.dimensions{d}.lev)
+               keep(i) = 0;
+           end
+       end
+   end
+   
+   ptable = ptable(find(keep),:);
+   
 end
-
-%%
-% Remove lev values not allowed due to rectangularity (yes, it is a word)
-
-keep = ones(size(ptable,1),1);
-for i=1:size (ptable, 1)
-    for d=1:num_dimensions
-        if (ptable(i,d) > pde.dimensions{d}.lev)
-            keep(i) = 0;
-        end
-    end
-end
-
-ptable = ptable(find(keep),:);
 
 %%
 % compute the number of cells for each combination of levels
@@ -110,16 +104,6 @@ for icase=1:ncase
      
      elements.lev_p1(element_idx,:) = levels+1; % NOTE : have to start lev  index from 1 for sparse storage
      elements.pos_p1(element_idx,:) = icells+1; % NOTE : have to start lev  index from 1 for sparse storage
-     
-     %%
-     % Set the element type ("leaf" or "internal") by checking if the sum
-     % over level across dimensions equals the sparse grid selection limit
-     % from perm_leq (pde, lev)
-     
-     elements.node_type(element_idx) = 1; % 'internal'; % Internale nodes will not be checked for refinement.
-     if sum (elements.lev_p1(element_idx,:)-1) == lev
-         elements.node_type(element_idx) = 2; % 'leaf'; % Leaf nodes are checked for refinement
-     end
 
   end
 end

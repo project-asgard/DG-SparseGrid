@@ -26,10 +26,10 @@ function pde = diffusion2_rectangular
 % asgard(diffusion2_rectangular,[],2,0.001);
 %
 % implicit
-% asgard(diffusion_rectangular2,4,2,0.05,[],[],1,[],[],1.9);
+%  asgard(diffusion2_rectangular,[],2,0.05,[],[],1,[],[],0.1);
 
 pde.CFL = 0.01;
-pde.maxLev = 8;
+pde.max_lev = 6;
 
 %% Setup the dimensions
 % 
