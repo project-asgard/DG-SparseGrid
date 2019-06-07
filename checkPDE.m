@@ -15,6 +15,7 @@ default_pde.analytic_solutions_1D = {};
 default_pde.sources = {};
 default_pde.termsLHS = {};
 default_pde.max_lev = 8; % This sets the maximum addressable space for the elements, i.e., cannot refine below this.
+default_pde.deg = 2;
 
 % Check to make sure all fields exist.
 % If not, use default.

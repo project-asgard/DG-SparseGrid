@@ -1,4 +1,4 @@
-function bcVec = getBoundaryCondition1(pde,HashInv,time)
+function bcVec = getBoundaryCondition1(pde, opts, hash_table, time)
 
 %%
 % If inhomogeneous Dirichlet, add a combined left and right term which
@@ -14,12 +14,12 @@ terms = pde.terms;
 %%
 % dim shortcuts
 
-deg = dims{1}.deg; % TODO : assumes deg independent of dim
+deg = pde.deg;
 
-if pde.useHash
-    num_elements = numel(HashInv);
+if opts.use_oldhash
+    num_elements = numel(hash_table);
 else
-    num_elements = numel(pde.elementsIDX);
+    num_elements = numel(hash_table.elements_idx);
 end
 nTerms = numel(pde.terms);
 nDims = numel(dims);
@@ -154,8 +154,8 @@ for tt = 1:nTerms % Construct a BC object for each term
             fListL = bcL{d1};
             fListR = bcR{d1};
              
-            bcVec = bcVec + combine_dimensions_D(fListL,timeFacL,HashInv,pde);
-            bcVec = bcVec + combine_dimensions_D(fListR,timeFacR,HashInv,pde);
+            bcVec = bcVec + combine_dimensions_D(pde,opts,fListL,timeFacL,hash_table);
+            bcVec = bcVec + combine_dimensions_D(pde,opts,fListR,timeFacR,hash_table);
             
         end
         

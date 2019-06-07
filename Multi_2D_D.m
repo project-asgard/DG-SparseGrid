@@ -1,4 +1,4 @@
-function [f_rSpace]=Multi_2D_D(pde,Meval_D,f_wSpace,HASHInv)
+function [f_rSpace]=multi_2D_D(pde, opts, Meval_D, f_wSpace, hash_table)
 
 %%
 % Apply dimension many inverse wavelet transforms to the solution vector
@@ -11,13 +11,13 @@ use_kronmultd = 1;
 dimensions = pde.dimensions;
 
 nDims = numel(dimensions);
-if pde.useHash
-    num_elements = numel(HASHInv);
+if opts.use_oldhash
+    num_elements = numel(hash_table);
 else
-    num_elements = numel(pde.elementsIDX);
+    num_elements = numel(hash_table.elements_idx);
 end
 
-deg = dimensions{1}.deg; % TODO : generalize to deg_D
+deg = pde.deg; % TODO : generalize to deg_D
 lev = dimensions{1}.lev; % TODO : generalize to lev_D
 
 %%
@@ -43,19 +43,19 @@ f_rSpace = sparse(num_pts,1);
 
 for i=1:num_elements
     
-    if pde.useHash
-        ll=HASHInv{i};
+    if opts.use_oldhash
+        ll=hash_table{i};
     else
     end
     
     clear kronMatList;
     for d=1:nDims
         
-        if pde.useHash
+        if opts.use_oldhash
             ID = ll(nDims*2+d);
         else
-            IDlev = pde.elements.lev_p1(pde.elementsIDX(i),d)-1;
-            IDpos = pde.elements.pos_p1(pde.elementsIDX(i),d)-1;
+            IDlev = hash_table.elements.lev_p1(hash_table.elements_idx(i),d)-1;
+            IDpos = hash_table.elements.pos_p1(hash_table.elements_idx(i),d)-1;
             ID = lev_cell_to_singleD_index(IDlev,IDpos);
         end
         index_D = [(ID-1)*deg+1 : ID*deg];

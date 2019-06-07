@@ -1,4 +1,4 @@
-function [Meval,nodes] = matrix_plot_D(dimension)
+function [Meval,nodes] = matrix_plot_D(pde,dimension)
 
 %%
 % Generate the evaluation matrix and plotting points
@@ -8,7 +8,7 @@ function [Meval,nodes] = matrix_plot_D(dimension)
 % Setup a few shortcuts
 
 lev = dimension.lev;
-deg = dimension.deg;
+deg = pde.deg;
 xMin = dimension.domainMin;
 xMax = dimension.domainMax;
 FMWT = dimension.FMWT;

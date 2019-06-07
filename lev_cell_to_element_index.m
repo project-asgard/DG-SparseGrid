@@ -13,7 +13,6 @@ eIdx   = uint64(1);
 stride = uint64(1);
 for d=1:num_dimensions
     
-    
     %%
     % ensure we are within the addressable space
     

@@ -1,4 +1,4 @@
-function fval = exact_solution_vector(pde,HASHInv,time)
+function fval = exact_solution_vector(pde,opts,hash_table,time)
 
 % Returns the wavelet transformed exact solution
 
@@ -12,6 +12,6 @@ for d=1:nDims
 end
 
 ft = pde.analytic_solutions_1D{nDims+1}(time);
-fval = combine_dimensions_D(fList,ft,HASHInv,pde);
+fval = combine_dimensions_D(pde,opts,fList,ft,hash_table);
 
 end

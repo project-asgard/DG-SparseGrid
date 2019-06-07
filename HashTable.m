@@ -1,4 +1,4 @@
-function [forwardHash,inverseHash,elements,elementsIDX] = HashTable(pde,lev,nDims,gridType)
+function [forwardHash,inverseHash,elements,elementsIDX] = HashTable(pde,nDims,gridType)
 %-------------------------------------------------
 % Generate  multi-dimension Hash Table s.t n1+n2<=Lev
 % Input: Lev:: Level information
@@ -22,11 +22,14 @@ is_sparse_grid = strcmp( gridType, 'SG');
 % Setup element table as a collection of 2*nDims many sparse vectors to
 % store the lev and cell info for each dim. 
 
-N_max = double((uint64(2)^lev)^nDims); % This number is HUGE
+for d=1:nDims
+    lev_vec(d) = pde.dimensions{d}.lev;
+end
+N_max = double((uint64(2)^max(lev_vec))^nDims); % This number is HUGE
+
 for d=1:nDims
     elements{d}.lev  = sparse(N_max,1);
     elements{d}.cell = sparse(N_max,1);
-    lev_vec(d) = pde.dimensions{d}.lev;
 end
 
 time_perm = tic();
@@ -53,7 +56,7 @@ end
 elapsed_time_perm = toc( time_perm);
 if (idebug >= 1),
   disp(sprintf('HashTable:Dim=%d,Lev=%d,gridType=%s,time %g, size=%g',...
-        nDims,lev,gridType, ...
+        nDims,max(lev_vec),gridType, ...
         elapsed_time_perm,  size(ptable,1) ));
 end;
 
@@ -176,7 +179,7 @@ end;
 % Add some other useful information to the forwardHash struct
 % -----------------------------------------------------------
 
-forwardHash.Lev = lev;
-forwardHash.Dim = nDims;
+% forwardHash.Lev = lev;
+% forwardHash.Dim = nDims;
 
 end

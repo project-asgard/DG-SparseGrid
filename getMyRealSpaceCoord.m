@@ -1,4 +1,4 @@
-function [coord_D, coord_D_L, coord_D_R] = getMyRealSpaceCoord (pde,idx)
+function [coord_D, coord_D_L, coord_D_R] = getMyRealSpaceCoord (pde, opts, hash_table, idx)
 
 %%
 % Get the center, left and right coordinates for this element
@@ -14,10 +14,15 @@ for d=1:num_dimensions
     %%
     % Get coordinate for this dimension
     
-    lev = pde.elements.lev_p1(idx,d)-1;
-    pos = pde.elements.pos_p1(idx,d)-1;
+    if opts.use_oldhash
+    else
+        lev = hash_table.elements.lev_p1(idx,d)-1;
+        pos = hash_table.elements.pos_p1(idx,d)-1;
+    end
     
     assert(lev <= pde.max_lev);
+    assert(lev >= 0);
+    assert(pos >= 0);
     
     %%
     % Scaled to [0,1]

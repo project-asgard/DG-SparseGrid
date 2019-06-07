@@ -1,4 +1,4 @@
-function fval = initial_condition_vector(HASHInv,pde,time)
+function fval = initial_condition_vector(pde, opts, hash_table, time)
 
 dims = pde.dimensions;
 nDims = numel(dims);
@@ -8,6 +8,6 @@ for d=1:nDims
 end
 
 ft = 1;
-fval = combine_dimensions_D(fList,ft,HASHInv,pde);
+fval = combine_dimensions_D(pde, opts, fList, ft, hash_table);
 
 end

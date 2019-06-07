@@ -28,7 +28,6 @@ function pde = diffusion2_rectangular
 % implicit
 %  asgard(diffusion2_rectangular,[],2,0.05,[],[],1,[],[],0.1);
 
-pde.CFL = 0.01;
 pde.max_lev = 6;
 
 %% Setup the dimensions
@@ -167,18 +166,16 @@ pde.analytic_solutions_1D = { ...
     @(t,p) soln_t(t) 
     };
 
-
 %%
 % Function to set time step
 
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         dims = pde.dimensions;
         
         % for Diffusion equation: dt = C * dx^2
         
         lev = dims{1}.lev;
-        CFL = pde.CFL;
         dx = 1/2^lev;
         dt = CFL*dx^2;
         

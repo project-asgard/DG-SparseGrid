@@ -104,7 +104,7 @@ else
     % dim shortcuts
     
     lev     = dim.lev;
-    deg     = dim.deg;
+    deg     = pde.deg;
     xMin    = dim.domainMin;
     xMax    = dim.domainMax;
     FMWT    = dim.FMWT;

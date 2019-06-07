@@ -1,4 +1,4 @@
-function pde = getCoeffMats (pde, t, TD)
+function pde = get_coeff_mats (pde, t, TD)
 
 %%
 % t : time passed to G function

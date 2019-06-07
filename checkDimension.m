@@ -16,7 +16,6 @@ default_dim.BCR_fList{nDims+1} = @(t,p) 1;
 default_dim.domainMin = 0;
 default_dim.domainMax = 1;
 default_dim.lev = 3;
-default_dim.deg = 2;
 default_dim.FMWT = []; % Gets filled in later
 default_dim.init_cond_fn = @(x,p) x.*0;
 

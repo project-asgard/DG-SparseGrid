@@ -1,7 +1,7 @@
 function [elements,elementsIDX] = element_table(pde,opts)
 
 num_dimensions = numel(pde.dimensions);
-is_sparse_grid = strcmp( opts.gridType, 'SG');
+is_sparse_grid = strcmp( opts.grid_type, 'SG');
 
 %%
 % Setup element table as a collection of sparse vectors to
