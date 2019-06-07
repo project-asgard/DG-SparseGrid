@@ -49,7 +49,6 @@ end
 %%
 % LHS mass matrix 
 
-
 if ~isempty(pde.termsLHS)
     
     nTermsLHS = numel(pde.termsLHS);

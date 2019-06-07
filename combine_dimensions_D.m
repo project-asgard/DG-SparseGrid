@@ -3,7 +3,6 @@ function [fval] = combine_dimensions_D (pde, opts, function_D, time_multiplier, 
 % Combine (via kron product) a set of 1D multiwavelet transforms to form
 % the higher D sparse-grid multiwavelet representation.
 
-
 num_dims = numel(function_D);
 
 if opts.use_oldhash

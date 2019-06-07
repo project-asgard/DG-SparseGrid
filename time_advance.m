@@ -1,4 +1,4 @@
-function f = TimeAdvance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt

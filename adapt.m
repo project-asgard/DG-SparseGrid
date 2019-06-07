@@ -1,10 +1,10 @@
-function [pde,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0)
+function [hash_table,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0)
 
 num_elements    = numel(hash_table.elements_idx);
 num_dimensions  = numel(pde.dimensions);
 deg             = pde.deg; 
 
-elementDOF = deg^num_dimensions;
+element_DOF = deg^num_dimensions;
 
 refine_threshold  = max(abs(fval)) * 1e-2;
 coarsen_threshold = max(abs(fval)) * 1e-4;
@@ -48,8 +48,8 @@ if coarsen
         
         idx = hash_table.elements_idx(n);
         
-        gidx1 = (n-1)*elementDOF+1;
-        gidx2 = gidx1 + elementDOF - 1;
+        gidx1 = (n-1)*element_DOF+1;
+        gidx2 = gidx1 + element_DOF - 1;
         
         element_sum = sum(abs(fval(gidx1:gidx2)),'all');
                 
@@ -116,16 +116,16 @@ if coarsen
         
         nn = remove_list(n);
         
-        i1 = (nn-1)*elementDOF+1; % Get the start and end global row indices of the element
-        i2 = (nn)*elementDOF;
-        assert(i2-i1==elementDOF-1);
+        i1 = (nn-1)*element_DOF+1; % Get the start and end global row indices of the element
+        i2 = (nn)*element_DOF;
+        assert(i2-i1==element_DOF-1);
         
         remove_list2 = [remove_list2,i1:i2];
         
     end
     
     %%
-    % Remove entries from elementsIDX
+    % Remove entries from elements_idx
     
     hash_table.elements_idx(remove_list) = [];
     fval(remove_list2) = [];
@@ -134,7 +134,7 @@ end
 
 fprintf('    Removed %i elements\n', num_remove);
 
-assert(numel(fval)==numel(hash_table.elements_idx)*elementDOF);
+assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 %%
@@ -161,8 +161,8 @@ if refine
         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         
-        gidx1 = (n-1)*elementDOF+1;
-        gidx2 = gidx1 + elementDOF - 1;
+        gidx1 = (n-1)*element_DOF+1;
+        gidx2 = gidx1 + element_DOF - 1;
         
         element_sum = sum(abs(fval(gidx1:gidx2)),'all');
                
@@ -215,9 +215,9 @@ if refine
             add_cnt = add_cnt + 1;
             myIdx = num_elements+add_cnt;
             hash_table.elements_idx(myIdx) = idx; % Extend element list
-            i1 = (myIdx-1)*elementDOF+1; % Get the start and end global row indices of the new element
-            i2 = (myIdx)*elementDOF;
-            assert(i2-i1==elementDOF-1);
+            i1 = (myIdx-1)*element_DOF+1; % Get the start and end global row indices of the new element
+            i2 = (myIdx)*element_DOF;
+            assert(i2-i1==element_DOF-1);
             fval(i1:i2) = newElementVal; % Extend coefficient list with near zero magnitude (ideally would be zero)
             
             hash_table.elements.lev_p1(idx,:) = thisElemLevVec+1; % NOTE : have to start lev  index from 1 for sparse storage
@@ -232,16 +232,15 @@ if refine
         
     end
 end
-assert(numel(fval)==numel(hash_table.elements_idx)*elementDOF);
+assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 fprintf('    Added %i elements\n', add_cnt);
 
 for i=1:numel(hash_table.elements_idx)
-    lev_vec = hash_table.elements.lev_p1(hash_table.elements_idx(i))
+    lev_vec = hash_table.elements.lev_p1(hash_table.elements_idx(i));
     assert(min(lev_vec>0));
 end
-
 
 %%
 % Plot the refined grid (1D only)
@@ -252,7 +251,7 @@ if plot_grid
     plot_adapt_triangle(pde,opts,hash_table,9);
 end
 
-elementsIDX0 = hash_table.elements_idx;
+elements_idx0 = hash_table.elements_idx;
 
 %%
 % Update all the setup outputs which need updating on the new element list
@@ -337,9 +336,9 @@ elseif num_dimensions == 2
     
 end
 
-assert(numel(fval)==numel(hash_table.elements_idx)*elementDOF);
+assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
-assert(sum(hash_table.elements_idx-elementsIDX0)==0);
+assert(sum(hash_table.elements_idx-elements_idx0)==0);
 
 fprintf('Final number of elementss: %i\n', numel(hash_table.elements_idx));
 fprintf('Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);

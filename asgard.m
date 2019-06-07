@@ -164,7 +164,7 @@ for L = 1:num_steps
     write_A_data = 0;
     if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
     
-    fval = TimeAdvance(pde,opts,A_data,fval,time(count),dt,pde.deg,hash_table,[],[]);
+    fval = time_advance(pde,opts,A_data,fval,time(count),dt,pde.deg,hash_table,[],[]);
     
     %%
     % Write the present fval to file.
@@ -217,8 +217,7 @@ for L = 1:num_steps
         fval_analytic = exact_solution_vector(pde,opts,hash_table,L*dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
-        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
-        
+        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);       
         
         %%
         % Check the realspace solution
@@ -266,7 +265,7 @@ for L = 1:num_steps
     
     if opts.adapt
         if ~opts.quiet; disp('Adapt grid ...'); end
-        [pde,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes,fval_realspace);
+        [hash_table,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes,fval_realspace);
     end
     
 end
