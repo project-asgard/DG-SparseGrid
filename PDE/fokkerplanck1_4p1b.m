@@ -5,12 +5,14 @@ function pde = fokkerplanck1_4p1b
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1_4p1b,4,2,0.02,[],[],0,[])
+% asgard(fokkerplanck1_4p1b,4,2,0.02,[],[],0,[])
 %
 % implicit
-% fk6d(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],1.0)
+% asgard(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],0.1)
 
 pde.CFL = 0.01;
+pde.max_lev = 8;
+
 sig = 0.1;
 
 
@@ -36,7 +38,7 @@ dim_z.BCL = 'D'; % dirichlet
 dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(z,p) soln(z,0);
+dim_z.init_cond_fn = @(z,p,t) soln(z,0);
 
 %%
 % Add dimensions to the pde object
@@ -90,10 +92,11 @@ pde.analytic_solutions_1D = { ...
 % Function to set time step
     
     function dt=set_dt(pde)
-        Lmax = pde.dimensions{1}.domainMax;
-        LevX = pde.dimensions{1}.lev;
-        CFL = pde.CFL;
-        dt = Lmax/2^LevX*CFL;
+        x_max = pde.dimensions{1}.domainMax;
+        x_min = pde.dimensions{1}.domainMin;
+        lev   = pde.dimensions{1}.lev;
+        CFL   = pde.CFL;
+        dt    = (x_max - x_min) / 2^lev * CFL;
     end
 
 pde.set_dt = @set_dt;

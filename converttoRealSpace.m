@@ -1,4 +1,4 @@
-function [f_nd_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval_t,Lev_viz)
+function [f_nd_t] = converttoRealSpace(pde,Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval_t,Lev_viz)
 %
 % [f_nd_t] = converttoRealSpace(Dim,Lev_solution,Deg,gridType,Lmin,Lmax,fval,Lev_viz)
 % convert from wavelet coefficient to real space  on grid at level Lev_viz
@@ -40,7 +40,7 @@ LevX = Lev;
 LevV = Lev;
 
 
-[HASH,HASHInv] = HashTable(Lev_solution,Dim,gridType);
+[HASH,HASHInv] = HashTable(pde,Lev_solution,Dim,gridType);
 if (idebug >= 1),
     disp(sprintf('numel(HASH)=%d, numel(HASHInv)=%d', ...
         numel(HASH),    numel(HASHInv) ));
@@ -111,26 +111,45 @@ end;
     time_main = tic();
     
     f_nd_t = zeros( [n^Dim, nsteps]);
-    
-    nHash = numel(HASHInv);
-    for i=1:nHash,
-        ll = HASHInv{i};
-        levels = ll(1:Dim);
-        icells = ll( Dim + (1:Dim) );
         
-           
+    if pde.useHash
+        N = numel(HASHInv);
+    else
+        Ne = numel(pde.elementsIDX);
+        N = Ne;
+    end
+    
+    for i=1:N,
 
+        
+        if pde.useHash
+            ll = HASHInv{i};
+            levels = ll(1:Dim);
+            icells = ll( Dim + (1:Dim) );
+        else         
+            levels_e = pde.elements.lev(pde.elementsIDX(i),:)-1;
+            icells_e = pde.elements.pos(pde.elementsIDX(i),:)-1;    
+            levels = levels_e;
+            icells = icells_e;
+        end
+        
         for k=1:Dim,
-            index_Ik{k} = LevCell2index( levels(k), icells(k));
+            index_Ik{k} = lev_cell_to_singleD_index( levels(k), icells(k));
             index_IkDeg{k} = (index_Ik{k}-1)*Deg + (1:Deg);
         end;
         
         %% 
-        % Check LevCell2index output against approach in other chunks of code. 
+        % Check lev_cell_to_singleD_index output against approach in other chunks of code. 
         
         nDims = Dim;
         for d=1:nDims
-            this_idx1D = ll(nDims*2+d);          
+            if pde.useHash
+                this_idx1D = ll(nDims*2+d);
+            else
+                this_lev = pde.elements.lev(pde.elementsIDX(i),d)-1;
+                this_pos = pde.elements.pos(pde.elementsIDX(i),d)-1;
+                this_idx1D = lev_cell_to_singleD_index(this_lev,this_pos);
+            end
             if (this_idx1D ~= index_Ik{d}),
               disp(sprintf('d=%d,this_idx1d=%d,index_Ik{d}', ...
                             d,   this_idx1d,   index_Ik{d}));

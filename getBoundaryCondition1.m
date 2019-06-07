@@ -16,11 +16,15 @@ terms = pde.terms;
 
 deg = dims{1}.deg; % TODO : assumes deg independent of dim
 
-nHash = numel(HashInv);
+if pde.useHash
+    num_elements = numel(HashInv);
+else
+    num_elements = numel(pde.elementsIDX);
+end
 nTerms = numel(pde.terms);
 nDims = numel(dims);
 
-bcVec = zeros(deg^nDims*nHash,1);
+bcVec = zeros(deg^nDims*num_elements,1);
 
 for tt = 1:nTerms % Construct a BC object for each term
     
@@ -37,8 +41,8 @@ for tt = 1:nTerms % Construct a BC object for each term
         FMWT = dim.FMWT;
         
         lev = dim.lev;
-        N = 2^lev;
-        dof_1D = deg * N;
+        N_1D = 2^lev;
+        dof_1D = deg * N_1D;
         
         %%
         % Here we account for the different types of operators which do
@@ -72,9 +76,10 @@ for tt = 1:nTerms % Construct a BC object for each term
             %%
             % Initialize to zero
             
-            for d2=1:nDims
-                bcL{d1}{d2} = zeros(dof_1D,1);
-                bcR{d1}{d2} = zeros(dof_1D,1);
+            for d2=1:nDims           
+                this_dof_1D = deg * 2^dims{d2}.lev;
+                bcL{d1}{d2} = zeros(this_dof_1D,1);
+                bcR{d1}{d2} = zeros(this_dof_1D,1);
             end
             
             timeFacL = 1;
@@ -92,7 +97,9 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-                    bcL{d1} = ComputeRHS(pde,time,dim,BCL_fList,FMWT); % returns a nDim length list
+                    for d2=1:nDims
+                        bcL{d1}{d2} = forwardMWT(pde,d2,BCR_fList{d2},time);
+                    end
                     
                     %%
                     % Overwrite the trace (boundary) value just for this dim
@@ -121,7 +128,9 @@ for tt = 1:nTerms % Construct a BC object for each term
                     %%
                     % Get boundary functions for all dims
                     
-                    bcR{d1} = ComputeRHS(pde,time,dim,BCR_fList,FMWT); % returns a nDim length list
+                    for d2=1:nDims
+                        bcR{d1}{d2} = forwardMWT(pde,d2,BCR_fList{d2},time);
+                    end                    
                     
                     %%
                     % Overwrite the trace (boundary) value just for this dim

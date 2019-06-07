@@ -1,4 +1,4 @@
-function FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,maxLev)
+function FMWT = OperatorTwoScale_wavelet2(pde,dimIdx,deg,nLev)
 % FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,maxLev)
 %----------------------------------
 % Set-up Two-scale operator       %
@@ -11,13 +11,13 @@ function FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,maxLev)
 % % Load G0 and H0 from file
 idebug = 0;
 
-fileName = ['Two-Scale/two_scale_rel_',num2str(maxDeg),'.mat'];
+fileName = ['Two-Scale/two_scale_rel_',num2str(deg),'.mat'];
 
 if exist(fileName,'file') == 2
     load(fileName);
 else
     disp('Generating two-scale file');
-    [H0,G0,scale_co,phi_co]=MultiwaveletGen(maxDeg);
+    [H0,G0,scale_co,phi_co]=MultiwaveletGen(deg);
     save(fileName,'H0','G0','scale_co','phi_co');
 end
 
@@ -30,29 +30,29 @@ tol = 10^4 * eps;
 H0(find(abs(H0) < tol))=0; 
 G0(find(abs(G0) < tol))=0;
 
-H1 = zeros(maxDeg,maxDeg);
-G1 = zeros(maxDeg,maxDeg);
+H1 = zeros(deg,deg);
+G1 = zeros(deg,deg);
 
-for j_x = 1:maxDeg
-    for j_y = 1:maxDeg
+for j_x = 1:deg
+    for j_y = 1:deg
         % -----------------------------------------
         % note  (-1)^k  is  (is_even(k)) ? 1 : -1,  
 	% where is_even(k) = (mod(k,2) == 0);
         % no need to call std::pow()
         % -----------------------------------------
         H1(j_x,j_y) = ((-1)^(j_x+j_y-2)  )*H0(j_x,j_y);
-        G1(j_x,j_y) = ((-1)^(maxDeg+j_x+j_y-2))*G0(j_x,j_y);
+        G1(j_x,j_y) = ((-1)^(deg+j_x+j_y-2))*G0(j_x,j_y);
     end
 end
 
-nLev = round( log2( maxLev) );
-isok = (2^nLev == maxLev);
-if (~isok),
-   error('Operator_TwoScale_wavelet2: maxLev=%d is not a power of 2', ...
-	                              maxLev );
-   return;
-end;
-n =  maxDeg * 2^(nLev);
+% nLev = round( log2( maxLev) );
+% isok = (2^nLev == maxLev);
+% if (~isok),
+%    error('Operator_TwoScale_wavelet2: maxLev=%d is not a power of 2', ...
+% 	                              maxLev );
+%    return;
+% end;
+n =  deg * 2^(nLev);
 
 % -----------------------------------------------
 % need index space  -1..(nLev-1) so add ioff=2
@@ -62,11 +62,11 @@ ioff = 2;
 
 use_portable = 1;
 if (use_portable),
-   Gmat = zeros(maxDeg, n);
-   Hmat = zeros(maxDeg, n);
-   Hmat(1:maxDeg,1:maxDeg) = eye(maxDeg,maxDeg);
+   Gmat = zeros(deg, n);
+   Hmat = zeros(deg, n);
+   Hmat(1:deg,1:deg) = eye(deg,deg);
 else
-Hmat =  [ eye(maxDeg,maxDeg)];
+Hmat =  [ eye(deg,deg)];
 end;
 
 
@@ -76,23 +76,23 @@ for j=(nLev-1):-1:0,
    isizeh = isize/2;
 
    if (use_portable),
-     Htmp = zeros(maxDeg, isizeh);
-     Htmp(1:maxDeg, 1:isizeh) = Hmat(1:maxDeg,1:isizeh);
+     Htmp = zeros(deg, isizeh);
+     Htmp(1:deg, 1:isizeh) = Hmat(1:deg,1:isizeh);
 
 
-     Gmat(1:maxDeg, 1:isizeh) = G0(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg, 1:isizeh );
-     Gmat(1:maxDeg, isizeh + (1:isizeh)) = G1(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg, 1:isizeh);
+     Gmat(1:deg, 1:isizeh) = G0(1:deg,1:deg) * Htmp(1:deg, 1:isizeh );
+     Gmat(1:deg, isizeh + (1:isizeh)) = G1(1:deg,1:deg) * Htmp(1:deg, 1:isizeh);
 
 
-     Hmat(1:maxDeg, 1:isizeh) = H0(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg,1:isizeh);
-     Hmat(1:maxDeg, isizeh + (1:isizeh)) = H1(1:maxDeg,1:maxDeg) * Htmp(1:maxDeg,1:isizeh);
+     Hmat(1:deg, 1:isizeh) = H0(1:deg,1:deg) * Htmp(1:deg,1:isizeh);
+     Hmat(1:deg, isizeh + (1:isizeh)) = H1(1:deg,1:deg) * Htmp(1:deg,1:isizeh);
    else
      Gmat = [G0 * Hmat, G1 * Hmat];
      Hmat = [H0 * Hmat, H1 * Hmat];
    end;
-   blocks{ioff + j} = Gmat(1:maxDeg,1:isize);
+   blocks{ioff + j} = Gmat(1:deg,1:isize);
 end;
-blocks{ioff + (-1)} = Hmat(1:maxDeg,1:n);
+blocks{ioff + (-1)} = Hmat(1:deg,1:n);
 
 if (idebug >= 1),
    for j=-1:(nLev-1),
@@ -107,13 +107,13 @@ end;
 % ---------------------------------------------------
 % form sparse matrix from small dense blocks stored in blocks{-1..(nLev-1)}
 % ---------------------------------------------------
-nzmax = maxDeg * (nLev)*n;
-FMWT_COMP = sparse( [], [], [], n,n, nzmax );
+nzmax = deg * (nLev)*n;
+FMWT = sparse( [], [], [], n,n, nzmax );
 irow = 1;
 j = -1;
-FMWT_COMP( 1:maxDeg, 1:n) = blocks{ioff+(-1)};
+FMWT( 1:deg, 1:n) = blocks{ioff+(-1)};
 
-irow = 1 + maxDeg;
+irow = 1 + deg;
 for j=0:(nLev-1),
     ncells = 2^j;
     isize = n/ncells;
@@ -121,12 +121,45 @@ for j=0:(nLev-1),
     for icell=1:ncells,
        j1 = (icell-1)*isize  + 1;
        j2 = j1 + isize - 1;
-       i1 = (icell-1)*maxDeg + irow;
-       i2 = i1 + maxDeg-1;
-       FMWT_COMP( i1:i2, j1:j2) = Fmat(1:maxDeg, 1:isize);
+       i1 = (icell-1)*deg + irow;
+       i2 = i1 + deg-1;
+       FMWT( i1:i2, j1:j2) = Fmat(1:deg, 1:isize);
     end;
-    irow = irow + maxDeg * ncells;
+    irow = irow + deg * ncells;
 end;
+
+
+%%
+% Now extract out only the elements we need (i.e., for the case on non-full
+% levels during adativity)
+
+extract = 0;
+if extract
+    N = numel(pde.elementsIDX);
+    NF = numel(FMWT(:,1));
+    keep = zeros(NF,1);
+    
+%     thisDimLev = pde.elements.lev;
+%     thisDimPos = pde.elements.pos;
+    
+    for n=1:N
+        
+        idx = pde.elementsIDX(n);
+        
+%         thisLev = full(thisDimLev(idx)-1);
+%         thisPos = full(thisDimPos(idx)-1);
+        thisLev = full(pde.elements.lev(idx,dimIdx)-1);
+        thisPos = full(pde.elements.pos(idx,dimIdx)-1);
+        
+        idx1D = lev_cell_to_singleD_index(thisLev,thisPos);
+        fprintf('lev: %i, pos: %i, idx: %i\n',thisLev,thisPos,idx1D);
+        keep((idx1D-1)*deg+1:idx1D*deg) = 1;
+    end
+    
+    FMWT = FMWT(find(keep),find(keep));
+end
+
+end
 
 
 

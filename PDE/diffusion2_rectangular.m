@@ -1,4 +1,4 @@
-function pde = diffusion2
+function pde = diffusion2_rectangular
 % Example PDE using the 2D (1x-1y) Heat Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
@@ -23,12 +23,13 @@ function pde = diffusion2
 % Run with
 %
 % explicit
-% asgard(diffusion2,3,2,0.001);
+% asgard(diffusion2_rectangular,[],2,0.001);
 %
 % implicit
-% asgard(diffusion2,4,2,0.05,[],[],1,[],[],1.9);
+%  asgard(diffusion2_rectangular,[],2,0.05,[],[],1,[],[],0.1);
 
 pde.CFL = 0.01;
+pde.max_lev = 6;
 
 %% Setup the dimensions
 % 
@@ -65,6 +66,7 @@ dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
+dim_x.lev = 2;
 
 % The function is defined for the plane
 % y = c and y = d
@@ -88,6 +90,7 @@ dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
 dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
+dim_y.lev = 3;
 
 %%
 % Add dimensions to the pde object
@@ -164,6 +167,10 @@ pde.analytic_solutions_1D = { ...
     @(t,p) soln_t(t) 
     };
 
+
+%%
+% Function to set time step
+
     function dt=set_dt(pde)
         
         dims = pde.dimensions;
@@ -177,10 +184,8 @@ pde.analytic_solutions_1D = { ...
         
     end
 
-pde.set_dt = @set_dt;
+pde.set_dt = @set_dt; % Function which accepts the pde (after being updated with CMD args).
 
 end
 
-%%
-% Function to set time step
 

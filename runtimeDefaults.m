@@ -4,21 +4,23 @@ if ~exist('pde','var') || isempty(pde)
     pde = Vlasov8;
 end
 
-nTerms = numel(pde.terms);
-nDims = numel(pde.dimensions);
+num_terms = numel(pde.terms);
+num_dimensions = numel(pde.dimensions);
 
 %%
 % Simulation end time
 if ~exist('TEND','var') || isempty(TEND)   
     TEND = 0.001;
 end
-runTimeOpts.TEND = TEND;
+opts.TEND = TEND;
 
 %%
 % Number of levels
 if exist('lev','var')
-    for d=1:nDims
-        pde.dimensions{d}.lev = lev;
+    if ~isempty(lev)
+        for d=1:num_dimensions
+            pde.dimensions{d}.lev = lev;
+        end
     end
 end
 
@@ -26,8 +28,7 @@ end
 % Polynomial degree
 % Deg = 2 Means Linear Element
 if exist('deg','var')
-
-    for d=1:nDims
+    for d=1:num_dimensions
         pde.dimensions{d}.deg = deg;
     end
 end
@@ -37,14 +38,14 @@ end
 if ~exist('quiet','var') || isempty(quiet)
     quiet = 0;
 end
-runTimeOpts.quiet = quiet;
+opts.quiet = quiet;
 
 %%
 % Use or not the compression reference version
 if ~exist('compression','var') || isempty(compression)
     compression = 4;
 end
-runTimeOpts.compression = compression;
+opts.compression = compression;
 
 %%
 % Sparse or Full grid
@@ -56,22 +57,22 @@ else
         error("gridType must be set to 'SG' or 'FG'");
     end
 end
-runTimeOpts.gridType = gridType;
+opts.gridType = gridType;
 
 %%
 % Implicit or explicit time advance
 if ~exist('implicit','var') || isempty(implicit)
-    runTimeOpts.implicit = 0;
+    opts.implicit = 0;
 else
-    runTimeOpts.implicit = implicit;
+    opts.implicit = implicit;
 end
 
 %%
 % Use connectivity or not
 if ~exist('useConnectivity','var') || isempty(useConnectivity)
-    runTimeOpts.useConnectivity = 0;
+    opts.useConnectivity = 0;
 else
-    runTimeOpts.useConnectivity = useConnectivity;
+    opts.useConnectivity = useConnectivity;
 end
 
 %%

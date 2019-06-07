@@ -6,7 +6,14 @@ function [A_Data] = GlobalMatrixSG_SlowVersion(pde,runTimeOpts,HASHInv,connectiv
 % with the non-zero elements of that row being the other grid points to
 % which the point is connected.
 
-N = size(HASHInv,2);
+if pde.useHash
+    N = size(HASHInv,2);
+else
+%     N = size(HASHInv,2);
+    Ne = numel(pde.elementsIDX);
+%     assert(N==Ne);
+    N = Ne;
+end
 nDims = numel(pde.dimensions);
 
 useConnectivity = runTimeOpts.useConnectivity;
@@ -49,13 +56,24 @@ elseif runTimeOpts.compression == 4
         % Get the coordinates in the basis function space for myRow (this
         % element). (Lev1,Lev2,Cel1,Cel2,idx1D_1,idx1D_2) Lev1,Lev2,Cel1,Cel2
         % are NOT used here.
-        
-        thisRowBasisCoords = HASHInv{workItem};
+       
+        if pde.useHash
+            thisRowBasisCoords = HASHInv{workItem};
+        else
+        end
         
         % Get the 1D indexes into the [lev,pos] space for this element (row)
         
         for d=1:nDims
-            element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
+            
+            if pde.useHash
+                element_idx1D_D{d} = thisRowBasisCoords(nDims*2+d);
+            else
+                IDlev = pde.elements.lev_p1(pde.elementsIDX(workItem),d)-1;
+                IDpos = pde.elements.pos_p1(pde.elementsIDX(workItem),d)-1;
+                IDe = lev_cell_to_singleD_index(IDlev,IDpos);
+                element_idx1D_D{d} = IDe;
+            end
         end
         
         % Store the element data in arrays

@@ -1,4 +1,5 @@
-function FMWT_COMP = OperatorTwoScale(maxDeg,maxLev)
+function FMWT_COMP = OperatorTwoScale(pde,dimIdx,deg,lev)
+
 %----------------------------------
 % Set-up Two-scale operator       %
 %----------------------------------
@@ -6,7 +7,7 @@ function FMWT_COMP = OperatorTwoScale(maxDeg,maxLev)
 %        Level: Np
 % Output: Convert Matrix: FMWT_COMP
 %**********************************
-global OperatorTwoScale_method;
+% global OperatorTwoScale_method;
 idebug = 0;
 
 % imethod_default = 'nonwavelet';
@@ -21,15 +22,15 @@ imethod = imethod_default;
 % end;
 if (idebug >= 1),
     disp(sprintf('OperatorTwoScale:maxDeg=%d,maxLev=%d,imethod=%s', ...
-                                   maxDeg,   maxLev,   imethod ));
+                                   deg,   lev,   imethod ));
 end;
 
 if (strcmp(imethod, 'nonwavelet')),
-        FMWT_COMP = OperatorTwoScale_nonwavelet(maxDeg,maxLev);
+    FMWT_COMP = OperatorTwoScale_nonwavelet(pde,deg,2^lev);
 elseif (strcmp(imethod,'wavelet2')),
-       FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,maxLev);
+    FMWT_COMP = OperatorTwoScale_wavelet2(pde,dimIdx,deg,lev);
 else
-        FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev);
+    FMWT_COMP = OperatorTwoScale_wavelet(pde,dimIdx,deg,2^lev);
 end;
 
 end

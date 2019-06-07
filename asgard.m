@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace] = fk6d(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity,CFL)
+function [err,fval,fval_realspace] = asgard(pde,lev,deg,TEND,quiet,compression,implicit,gridType,useConnectivity,CFL)
 
 format short e
 folder = fileparts(which(mfilename));
@@ -20,7 +20,7 @@ pde = checkTerms(pde);
 
 %% Shortcuts (some of this will go away soon)
 % Named domain ranges
-if nDims==2
+if num_dimensions==2
     Lmin = pde.dimensions{2}.domainMin;
     Lmax = pde.dimensions{2}.domainMax;
     Vmin = pde.dimensions{1}.domainMin;
@@ -43,21 +43,30 @@ params = pde.params;
 dt = pde.set_dt(pde);
 if ~quiet; disp(sprintf('dt = %g', dt )); end
 
-%% Construct the 1D multi-wavelet transform for each dimension.
-for d=1:nDims
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.dimensions{d}.deg,2^pde.dimensions{d}.lev);
-end
-
 %% Construct the Element (Hash) tables.
 if ~quiet; disp('Constructing hash and inverse hash tables'); end
-%[HASH,HASHInv,index1D] = HashTable2(Lev,Dim); % I dont recall what the index1D information was added here for?
-[HASH,HASHInv] = HashTable(lev,nDims,gridType);
-nHash = numel(HASHInv);
+
+pde.useHash  = 1;
+pde.do_adapt = 0;
+
+[HASH,HASHInv] = HashTable(pde,lev,num_dimensions,gridType); % TODO : move this call inside the if below.
+
+if pde.useHash
+else
+    [elements, elements_idx]    = element_table (pde,opts);
+    pde.elements                = elements;
+    pde.elementsIDX             = elements_idx; % only to get the same order as the hash table
+end
+
+%% Construct the 1D multi-wavelet transform for each dimension.
+for d=1:num_dimensions
+    pde.dimensions{d}.FMWT = OperatorTwoScale(pde,d,deg,pde.dimensions{d}.lev);
+end
 
 %% Construct the connectivity.
-if runTimeOpts.useConnectivity
+if opts.useConnectivity
     if ~quiet; disp('Constructing connectivity table'); end
-    connectivity = ConnectnD(nDims,HASH,HASHInv,lev,lev);
+    connectivity = ConnectnD(num_dimensions,HASH,HASHInv,lev,lev);
 else
     connectivity = [];
 end
@@ -67,18 +76,10 @@ if ~quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
 fval = initial_condition_vector(HASHInv,pde,0);
 
 %% Construct the time-independent coefficient matrices
-% The original way
 if ~quiet; disp('Calculate time independent matrix coefficients'); end
-if nDims==2
-    [vMassV,GradV,GradX,DeltaX,FluxX,FluxV] = matrix_coeff_TI(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
-        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
-end
-%%
-% The generalized PDE spec way
 t = 0;
 TD = 0;
 pde = getCoeffMats(pde,t,TD);
-
 
 %% Construct A_encode / A_data time independent data structures.
 if ~quiet; disp('Generate A_encode data structure for time independent coefficients'); end
@@ -90,7 +91,7 @@ if compression == 3
 else
     % A_data is constructed only once per grid refinement, so can be done
     % on the host side.
-    A_data = GlobalMatrixSG_SlowVersion(pde,runTimeOpts,HASHInv,connectivity,deg);
+    A_data = GlobalMatrixSG_SlowVersion(pde,opts,HASHInv,connectivity,deg);
 end
 
 %% Construct Poisson matrix
@@ -113,56 +114,30 @@ end
 %% Construct RMWT (Reverse Multi Wavelet Transform) in 2D
 % Get the wavelet -> realspace transform matrices and realspace node
 % locations for each dimension.
-for d=1:nDims
+for d=1:num_dimensions
     [Meval{d},nodes{d}] = matrix_plot_D(pde.dimensions{d});
 end
-if nDims==2
-    if ~quiet; disp('Plotting intial condition'); end
-    [Meval_v,v_node,Meval_x,x_node]=matrix_plot(LevX,LevV,deg,Lmin,Lmax,Vmin,Vmax,...
-        pde.dimensions{1}.FMWT,pde.dimensions{2}.FMWT);
-    tol = 1e-15;
-    assert(norm(full(Meval{1}-Meval_v))<tol);
-    assert(norm(nodes{1}-v_node)<tol);
-    assert(norm(full(Meval{2}-Meval_x))<tol);
-    assert(norm(nodes{2}-x_node)<tol);
-end
 
-%%
-% Construct a n-D coordinate array
-% TODO : generalize to dimension better.
-
-if nDims <= 3
-    
-    if nDims ==1
-        [xx1] = ndgrid(nodes{1});
-        coord = {xx1};
-    end
-    if nDims==2
-        [xx1,xx2] = ndgrid(nodes{2},nodes{1});
-        coord = {xx2,xx1};
-    end
-    if nDims==3
-        [xx1,xx2,xx3] = ndgrid(nodes{3},nodes{2},nodes{1});
-        coord = {xx3,xx2,xx1};
-    end
-    if nDims==6
-        [xx1,xx2,xx3,xx4,xx5,xx6] = ndgrid(nodes{6},nodes{5},nodes{4},nodes{3},nodes{2},nodes{1});
-        coord = {xx6,xx5,xx4,xx3,xx2,xx1};
-    end
-    
-end
+%% Construct a n-D coordinate array
+coord = get_realspace_coords(pde,nodes);
 
 %% Plot initial condition
-if nDims <=3
+if num_dimensions <=3
     
     %%
     % Get the real space solution
-    fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
+    fval_realspace = Multi_2D_D(pde,Meval,fval,HASHInv);
     fval_realspace_analytic = getAnalyticSolution_D(coord,0,pde);
 
     if norm(fval_realspace) > 0
         plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
     end
+    
+    if pde.useHash
+    else
+        coordinates = get_sparse_grid_coordinates(pde);
+    end
+%     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
 end
 
@@ -204,7 +179,7 @@ for L = 1:nsteps,
     end
         
     if ~quiet; disp('    Calculate time dependent matrix coeffs'); end
-    if nDims==2
+    if num_dimensions==2
         if (pde.applySpecifiedE || pde.solvePoisson)
             
             %%
@@ -231,7 +206,7 @@ for L = 1:nsteps,
     %%
     % Update A_encode for time-dependent coefficient matricies.
     if ~quiet; disp('    Generate A_encode for time-dependent coeffs'); end
-    if runTimeOpts.compression == 3
+    if opts.compression == 3
         % the new matrix construction is as _newCon, only works for
         % compression= 3
         %         B_encode = GlobalMatrixSG(GradV,EMassX,HASHInv,Con2D,Deg);
@@ -245,18 +220,18 @@ for L = 1:nsteps,
     % Advance in time
     
     if ~quiet; disp('    RK3 time step'); end
-    if runTimeOpts.compression == 3
-        fval = TimeAdvance(pde,runTimeOpts,C_encode,fval,time(count),dt,deg,HASHInv);
+    if opts.compression == 3
+        fval = TimeAdvance(pde,opts,C_encode,fval,time(count),dt,deg,HASHInv);
     else       
         % Write the A_data structure components for use in HPC version.
         write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
         
-        if nDims~=2
+        if num_dimensions~=2
             Vmax = 0;
             Emax = 0; % These are only used in the global LF flux
         end
-        fval = TimeAdvance(pde,runTimeOpts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
+        fval = TimeAdvance(pde,opts,A_data,fval,time(count),dt,deg,HASHInv,Vmax,Emax);
         
     end
     
@@ -270,25 +245,32 @@ for L = 1:nsteps,
     %     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
     %     fclose(fd);
     
-    if nDims <=3
+    if num_dimensions <=3
         
         %%
         % Get the real space solution
-        fval_realspace = Multi_2D_D(Meval,fval,HASHInv,pde);
+        fval_realspace = Multi_2D_D(pde,Meval,fval,HASHInv);
         
         %%
         % Try with function convertToRealSpace
         
-        tryConvertToRealSpace = 1;
+        tryConvertToRealSpace = 0;
         if tryConvertToRealSpace
-            LminB = zeros(1,nDims);
-            LmaxB = zeros(1,nDims);
-            for d=1:nDims
+            LminB = zeros(1,num_dimensions);
+            LmaxB = zeros(1,num_dimensions);
+            for d=1:num_dimensions
                 LminB(d) = pde.dimensions{d}.domainMin;
                 LmaxB(d) = pde.dimensions{d}.domainMax;
             end
-            fval_realspaceB = converttoRealSpace(nDims,lev,deg,gridType,LminB,LmaxB,fval,lev);
+            fval_realspaceB = converttoRealSpace(pde,num_dimensions,lev,deg,gridType,LminB,LmaxB,fval,lev);
+%             fval_realspace = fval_realspaceB;
         end
+        
+        if pde.useHash
+        else
+            coordinates = get_sparse_grid_coordinates(pde);
+        end
+%         fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
         
     end
     
@@ -299,12 +281,12 @@ for L = 1:nsteps,
         %%
         % Check the wavelet space solution with the analytic solution
         
-        fval_analytic = exact_solution_vector(HASHInv,pde,L*dt);
+        fval_analytic = exact_solution_vector(pde,HASHInv,L*dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
         disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         
-        if nDims <= 3
+        if num_dimensions <= 3
             %%
             % Check the realspace solution
             
@@ -325,7 +307,9 @@ for L = 1:nsteps,
         
         figure(1000)
         
-        plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
+        if num_dimensions <= 3
+            plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
+        end
         
     end
     
@@ -340,6 +324,13 @@ for L = 1:nsteps,
         fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
         save(fName,'f2d','fval');
+    end
+    
+    %%
+    % Apply adaptivity
+    if ~quiet; disp('Adapt grid ...'); end
+    if pde.do_adapt
+        [pde,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,HASHInv,connectivity,nodes,fval_realspace);
     end
     
 end
