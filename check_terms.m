@@ -9,7 +9,7 @@ nterms = numel(terms);
 
 for t=1:nterms
     for d=1:ndims
-        terms{t}{d} = checkPartialTerm(ndims,terms{t}{d});
+        terms{t}{d} = check_partial_term(ndims,terms{t}{d});
     end
 end
 
@@ -19,7 +19,7 @@ ntermsLHS = numel(termsLHS);
 
 for t=1:ntermsLHS
     for d=1:ndims
-        termsLHS{t}{d} = checkPartialTerm(ndims,termsLHS{t}{d});
+        termsLHS{t}{d} = check_partial_term(ndims,termsLHS{t}{d});
     end
 end
 

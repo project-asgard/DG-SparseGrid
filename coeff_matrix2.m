@@ -63,11 +63,11 @@ if strcmp(type,'diff')
     termA.type = 'grad';
     termA.LF = term.LF1;
     termA.G = term.G1;
-    termA = checkPartialTerm(nDims,termA);
+    termA = check_partial_term(nDims,termA);
     
     dimA.BCL = term.BCL1;
     dimA.BCR = term.BCR1;
-    dimA = checkDimension(nDims,dimA);
+    dimA = check_dimension(nDims,dimA);
 
     [mat1,~,~,mat10] = coeff_matrix2(pde,t,dimA,termA);
     assert(~isnan(sum(mat1,'all')))
@@ -80,11 +80,11 @@ if strcmp(type,'diff')
     termB.type = 'grad';
     termB.LF = term.LF2;
     termB.G = term.G2;
-    termB = checkPartialTerm(nDims,termB);
+    termB = check_partial_term(nDims,termB);
   
     dimB.BCL = term.BCL2;
     dimB.BCR = term.BCR2;
-    dimB = checkDimension(nDims,dimB);
+    dimB = check_dimension(nDims,dimB);
 
     [mat2,~,~,mat20] = coeff_matrix2(pde,t,dimB,termB);
     assert(~isnan(sum(mat2,'all')))

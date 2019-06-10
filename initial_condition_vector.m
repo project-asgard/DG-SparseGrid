@@ -4,7 +4,7 @@ dims = pde.dimensions;
 nDims = numel(dims);
 
 for d=1:nDims
-    fList{d} = forwardMWT(pde,d,dims{d}.init_cond_fn,time);
+    fList{d} = forward_wavelet_transform(pde,d,dims{d}.init_cond_fn,time);
 end
 
 ft = 1;

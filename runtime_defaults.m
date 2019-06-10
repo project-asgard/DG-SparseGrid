@@ -25,6 +25,30 @@ addOptional(input_parser,'CFL',default_CFL, @isnumeric);
 addOptional(input_parser,'adapt',default_adapt, @islogical);
 addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
 
+if numel(varargin) == 0 && ~exist('pde','var')
+    
+    num_parameters = numel(input_parser.Parameters);
+    
+    disp('ASGarD - Adaptive Sparse Grid Discrization');
+    disp('');
+    disp('Run with ...');
+    disp('');
+    disp("asgard(pde_name,'opt_name',opt_val)");
+    disp('');
+    disp('e.g.,');
+    disp('');
+    disp("asgard(continuity1,'lev',4,'deg',3,'implicit',true,'CFL',0.1,'adapt',true)");
+    disp('');
+    disp('Available options are ...');
+    
+    for p=1:num_parameters
+        disp(input_parser.Parameters(p));
+    end
+    
+    error('Run with no arguments, exiting.');
+    
+end
+
 parse(input_parser,pde,varargin{:})
 
 num_terms       = numel(pde.terms);
@@ -48,7 +72,12 @@ end
 
 pde.deg = input_parser.Results.deg;
 
-opts.CFL = input_parser.Results.CFL;
+if isfield(pde,'CFL')
+    opts.CFL = pde.CFL;
+else
+    opts.CFL = input_parser.Results.CFL;
+end
+
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
 opts.implicit = input_parser.Results.implicit;
@@ -64,6 +93,8 @@ if ~isempty(fieldnames(input_parser.Unmatched))
    disp(input_parser.Unmatched)
    error('Unrecognised input.')
 end
+
+
 
 
 

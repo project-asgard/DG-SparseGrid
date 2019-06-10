@@ -11,12 +11,11 @@ num_sources     = numel(pde.sources);
 fval = 0;
 for s=1:num_sources
     for d=1:num_dimensions
-        fList{d} = forwardMWT(pde,d,pde.sources{s}{d},time);
+        fList{d} = forward_wavelet_transform(pde,d,pde.sources{s}{d},time);
     end
-    fs_d{s}{num_dimensions+1} = pde.sources{s}{num_dimensions+1}(time);
     
-    ft = pde.sources{s}{num_dimensions+1}(time);
-    fval = fval + combine_dimensions_D(pde, opts, fList,ft,hash_table,pde);
+    time_multiplier = pde.sources{s}{num_dimensions+1}(time);
+    fval = fval + combine_dimensions_D(pde, opts, fList, time_multiplier, hash_table);
 end
 
 end

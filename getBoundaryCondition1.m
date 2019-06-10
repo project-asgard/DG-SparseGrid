@@ -105,7 +105,7 @@ for tt = 1:nTerms % Construct a BC object for each term
                     % Overwrite the trace (boundary) value just for this dim
                     % Func*v|_xMin and Func*v|_xMax
                     
-                    bcL_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
+                    bcL_tmp = compute_boundary_condition(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
                     bcL_tmp = FMWT * bcL_tmp;
                     
                     %%
@@ -136,7 +136,7 @@ for tt = 1:nTerms % Construct a BC object for each term
                     % Overwrite the trace (boundary) value just for this dim
                     % Func*v|_xMin and Func*v|_xMax
                     
-                    bcR_tmp = ComputeBC(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
+                    bcR_tmp = compute_boundary_condition(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
                     bcR_tmp = FMWT * bcR_tmp;
                     
                     %%

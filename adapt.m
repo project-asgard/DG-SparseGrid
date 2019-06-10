@@ -1,4 +1,4 @@
-function [hash_table,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0)
+function [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0)
 
 num_elements    = numel(hash_table.elements_idx);
 num_dimensions  = numel(pde.dimensions);
@@ -18,8 +18,10 @@ method  = 1;
 
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
-fprintf('Initial number of elementss: %i\n', numel(hash_table.elements_idx));
-fprintf('Initial number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
+if ~opts.quiet
+    fprintf('Initial number of elementss: %i\n', numel(hash_table.elements_idx));
+    fprintf('Initial number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
+end
 
 %%
 % Store unrefined fval for comparison with refined fval after
@@ -31,7 +33,7 @@ fval0 = fval;
 % Plot the grid (1D only)
 
 plot_grid = 1;
-if plot_grid
+if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,1);
     plot_adapt_triangle(pde,opts,hash_table,7);
 end
@@ -129,10 +131,9 @@ if coarsen
     
     hash_table.elements_idx(remove_list) = [];
     fval(remove_list2) = [];
-    
-end
+    if ~opts.quiet; fprintf('    Coarsen on : removed %i elements\n', num_remove); end
 
-fprintf('    Removed %i elements\n', num_remove);
+end
 
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
@@ -141,7 +142,7 @@ assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 % Plot the refined grid (1D only)
 
 plot_grid = 1;
-if plot_grid
+if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,2);
     plot_adapt_triangle(pde,opts,hash_table,8);
 end
@@ -196,9 +197,9 @@ if refine
     % Now add these elements with (almost) zero coefficient to the
     % elements table and elementsIDX
     
-    num_add = cnt;
-    add_cnt = 0;
-    for i=1:num_add
+    num_try_to_add = cnt;
+    num_add = 0;
+    for i=1:num_try_to_add
         
         thisElemLevVec = newElemLevVecs(i,:);
         thisElemPosVec = newElemPosVecs(i,:);
@@ -212,8 +213,8 @@ if refine
         
         if hash_table.elements.lev_p1(idx,1)==0
             
-            add_cnt = add_cnt + 1;
-            myIdx = num_elements+add_cnt;
+            num_add = num_add + 1;
+            myIdx = num_elements+num_add;
             hash_table.elements_idx(myIdx) = idx; % Extend element list
             i1 = (myIdx-1)*element_DOF+1; % Get the start and end global row indices of the new element
             i2 = (myIdx)*element_DOF;
@@ -231,11 +232,12 @@ if refine
         hash_table.elements.node_type(idx) = 2;
         
     end
+    
+    if ~opts.quiet; fprintf('    Refine on : added %i elements\n', num_add); end
+    
 end
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
-
-fprintf('    Added %i elements\n', add_cnt);
 
 for i=1:numel(hash_table.elements_idx)
     lev_vec = hash_table.elements.lev_p1(hash_table.elements_idx(i));
@@ -246,7 +248,7 @@ end
 % Plot the refined grid (1D only)
 
 plot_grid = 1;
-if plot_grid
+if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,3);
     plot_adapt_triangle(pde,opts,hash_table,9);
 end
@@ -293,54 +295,60 @@ coord = get_realspace_coords(pde,nodes);
 
 fval_realspace_refined = multi_2D_D(pde,opts,Meval,fval,hash_table);
 
-if num_dimensions == 1
-    subplot(2,3,4)
-    plot(fval)
-    hold on
-    plot(fval0)
-    hold off
-    subplot(2,3,5)
-    plot(nodes0{1},fval_realspace0)
-    hold on
-    plot(nodes{1},fval_realspace_refined)
-    hold off
-elseif num_dimensions == 2
-    
-    subplot(3,3,4)
-    deg1=pde0.dimensions{1}.deg;
-    lev1=pde0.dimensions{1}.lev;
-    deg2=pde0.dimensions{2}.deg;
-    lev2=pde0.dimensions{2}.lev;
-    dof1=deg1*2^lev1;
-    dof2=deg2*2^lev2;
-    dofD = dof1*dof2;
-    assert(dofD==numel(fval_realspace0));
-    f2d = reshape(fval_realspace0,dof2,dof1);
-    x = nodes0{1};
-    y = nodes0{2};
-    contour(x,y,f2d);
-    
-    subplot(3,3,5)
-    deg1=pde.dimensions{1}.deg;
-    lev1=pde.dimensions{1}.lev;
-    deg2=pde.dimensions{2}.deg;
-    lev2=pde.dimensions{2}.lev;
-    dof1=deg1*2^lev1;
-    dof2=deg2*2^lev2;
-    dofD = dof1*dof2;
-    assert(dofD==numel(fval_realspace_refined));
-    f2d = reshape(fval_realspace_refined,dof2,dof1);
-    x = nodes{1};
-    y = nodes{2};
-    contour(x,y,f2d);
-    
+if ~opts.quiet
+    if num_dimensions == 1
+        
+        subplot(2,3,4)
+        plot(fval)
+        hold on
+        plot(fval0)
+        hold off
+        subplot(2,3,5)
+        plot(nodes0{1},fval_realspace0)
+        hold on
+        plot(nodes{1},fval_realspace_refined)
+        hold off
+        
+    elseif num_dimensions == 2
+        
+        subplot(3,3,4)
+        deg1=pde0.deg;
+        lev1=pde0.dimensions{1}.lev;
+        deg2=pde0.deg;
+        lev2=pde0.dimensions{2}.lev;
+        dof1=deg1*2^lev1;
+        dof2=deg2*2^lev2;
+        dofD = dof1*dof2;
+        assert(dofD==numel(fval_realspace0));
+        f2d = reshape(fval_realspace0,dof2,dof1);
+        x = nodes0{1};
+        y = nodes0{2};
+        contour(x,y,f2d);
+        
+        subplot(3,3,5)
+        deg1=pde.deg;
+        lev1=pde.dimensions{1}.lev;
+        deg2=pde.deg;
+        lev2=pde.dimensions{2}.lev;
+        dof1=deg1*2^lev1;
+        dof2=deg2*2^lev2;
+        dofD = dof1*dof2;
+        assert(dofD==numel(fval_realspace_refined));
+        f2d = reshape(fval_realspace_refined,dof2,dof1);
+        x = nodes{1};
+        y = nodes{2};
+        contour(x,y,f2d);
+        
+    end
 end
 
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 assert(sum(hash_table.elements_idx-elements_idx0)==0);
 
-fprintf('Final number of elementss: %i\n', numel(hash_table.elements_idx));
-fprintf('Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
+if ~opts.quiet
+    fprintf('Final number of elementss: %i\n', numel(hash_table.elements_idx));
+    fprintf('Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
+end
 
 end

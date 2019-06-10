@@ -10,13 +10,13 @@ addpath(genpath(folder));
 runtime_defaults
 
 %% Check PDE
-pde = checkPDE(pde);
+pde = check_pde(pde);
 
 %% Check dimensions
-pde = checkAllDimensions(pde);
+pde = check_dimensions(pde);
 
 %% Check terms
-pde = checkTerms(pde);
+pde = check_terms(pde);
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
@@ -195,7 +195,7 @@ for L = 1:num_steps
                 LminB(d) = pde.dimensions{d}.domainMin;
                 LmaxB(d) = pde.dimensions{d}.domainMax;
             end
-            fval_realspaceB = converttoRealSpace(pde,num_dimensions,lev,deg,gridType,LminB,LmaxB,fval,lev);
+            fval_realspaceB = convert_to_real_space(pde,num_dimensions,lev,deg,gridType,LminB,LmaxB,fval,lev);
             %             fval_realspace = fval_realspaceB;
         end
         
@@ -216,17 +216,21 @@ for L = 1:num_steps
         
         fval_analytic = exact_solution_vector(pde,opts,hash_table,L*dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
-        disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
-        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);       
+        if ~opts.quiet       
+            disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
+            disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+        end
         
         %%
         % Check the realspace solution
         
         if num_dimensions <= 3
-            fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);       
+            fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
             err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-            disp(['    real space absolute err : ', num2str(err_real)]);
-            disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+            if ~opts.quiet         
+                disp(['    real space absolute err : ', num2str(err_real)]);
+                disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+            end
         end
         
         err = err_wavelet;
@@ -247,7 +251,7 @@ for L = 1:num_steps
     
     count=count+1;
     t1 = toc;
-    disp(['Took ' num2str(t1) ' [s]']);
+    if ~opts.quiet; disp(['Took ' num2str(t1) ' [s]']); end
     
     %%
     % Save output
@@ -265,7 +269,7 @@ for L = 1:num_steps
     
     if opts.adapt
         if ~opts.quiet; disp('Adapt grid ...'); end
-        [hash_table,fval,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes,fval_realspace);
+        [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes,fval_realspace);
     end
     
 end
