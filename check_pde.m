@@ -1,4 +1,4 @@
-function default_pde = checkPDE(pde)
+function default_pde = check_pde(pde)
 
 %% Other workflow options that should perhpas not be in the PDE?
 
@@ -16,6 +16,7 @@ default_pde.sources = {};
 default_pde.termsLHS = {};
 default_pde.max_lev = 8; % This sets the maximum addressable space for the elements, i.e., cannot refine below this.
 default_pde.deg = 2;
+default_pde.lev_vec = [];
 
 % Check to make sure all fields exist.
 % If not, use default.
@@ -36,5 +37,15 @@ for k=1:numel(fn)
         error(strcat('Unrecognized term in PDE: ', fn{k} ));
     end
 end
+
+%%
+% Check the dimensions
+
+default_pde = check_dimensions(default_pde);
+
+%% 
+% Check terms
+
+default_pde = check_terms(default_pde);
 
 end

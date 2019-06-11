@@ -12,21 +12,15 @@ runtime_defaults
 %% Check PDE
 pde = check_pde(pde);
 
-%% Check dimensions
-pde = check_dimensions(pde);
-
-%% Check terms
-pde = check_terms(pde);
-
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
 if ~opts.quiet; disp(sprintf('dt = %g', dt )); end
 
-%% Construct the Element (Hash) tables.
+%% Construct the Element (Hash) table.
 if ~opts.quiet; disp('Constructing hash and inverse hash tables'); end
 
 if opts.use_oldhash
-    [HASH,hash_table] = HashTable(pde,num_dimensions,opts.grid_type);
+    [HASH,hash_table] = create_hash_table(pde.lev_vec, opts.grid_type);
 else
     [elements, elements_idx]    = element_table (pde,opts);
     hash_table.elements         = elements;

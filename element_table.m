@@ -96,7 +96,7 @@ for icase=1:ncase
      %%
      % Store the index into the element table for this element
      
-     element_idx = lev_cell_to_element_index(pde,levels,icells);
+     element_idx = lev_cell_to_element_index(levels,icells,pde.max_lev);
      elementsIDX(i) = element_idx;
      
      %%

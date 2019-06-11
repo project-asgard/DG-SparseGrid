@@ -203,7 +203,7 @@ if refine
         
         thisElemLevVec = newElemLevVecs(i,:);
         thisElemPosVec = newElemPosVecs(i,:);
-        idx = lev_cell_to_element_index(pde,thisElemLevVec,thisElemPosVec);
+        idx = lev_cell_to_element_index(thisElemLevVec,thisElemPosVec,pde.max_lev);
         assert(idx>=0);
         assert(min(thisElemLevVec)>=0);
         assert(min(thisElemPosVec)>=0);
@@ -265,6 +265,11 @@ for d=1:num_dimensions
     pde.dimensions{d}.lev = max(hash_table.elements.lev_p1(:,d)-1);
     pde.dimensions{d}.FMWT = OperatorTwoScale(pde,d,deg,pde.dimensions{d}.lev);
 end
+
+%%
+% Re check the PDE
+
+pde = check_pde(pde);
 
 %%
 % Update the coeff mats to the new size

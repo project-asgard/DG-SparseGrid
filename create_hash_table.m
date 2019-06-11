@@ -1,4 +1,4 @@
-function [forwardHash,inverseHash,elements,elementsIDX] = HashTable(pde,nDims,gridType)
+function [forwardHash, inverseHash] = create_hash_table (lev_vec, grid_type)
 %-------------------------------------------------
 % Generate  multi-dimension Hash Table s.t n1+n2<=Lev
 % Input: Lev:: Level information
@@ -11,40 +11,43 @@ function [forwardHash,inverseHash,elements,elementsIDX] = HashTable(pde,nDims,gr
 % so in 2D the inv = (Lev_1,Lev_2,Cell_1,Cell_2,Index_1,Index_2)
 %              key = [Lev_1,Lev_2,Cell_1,Cell_2]
 %-------------------------------------------------
-idebug = 1;
+idebug = 0;
 
-if ~exist('gridType','var') || isempty(gridType)
-    gridType = 'SG'; % Set default gridType to SG
+if ~exist('grid_type','var') || isempty(grid_type)
+    grid_type = 'SG'; % Set default gridType to SG
 end
-is_sparse_grid = strcmp( gridType, 'SG');
+is_sparse_grid = strcmp( grid_type, 'SG');
 
 %%
 % Setup element table as a collection of 2*nDims many sparse vectors to
 % store the lev and cell info for each dim. 
 
-for d=1:nDims
-    lev_vec(d) = pde.dimensions{d}.lev;
-end
-N_max = double((uint64(2)^max(lev_vec))^nDims); % This number is HUGE
+% for d=1:num_dimensions
+%     lev_vec(d) = pde.dimensions{d}.lev;
+% end
 
-for d=1:nDims
-    elements{d}.lev  = sparse(N_max,1);
-    elements{d}.cell = sparse(N_max,1);
-end
+num_dimensions = numel(lev_vec);
+
+% N_max = double((uint64(2)^max(lev_vec))^num_dimensions); % This number is HUGE
+% 
+% for d=1:num_dimensions
+%     elements{d}.lev  = sparse(N_max,1);
+%     elements{d}.cell = sparse(N_max,1);
+% end
 
 time_perm = tic();
 if (is_sparse_grid)
-   ptable = perm_leq( nDims, lev_vec, max(lev_vec) );
+   ptable = perm_leq( num_dimensions, lev_vec, max(lev_vec) );
 else
-    ptable = perm_max( nDims, max(lev_vec) );
+    ptable = perm_max( num_dimensions, max(lev_vec) );
     %%
     % Remove lev values not allowed due to rectangularity (yes, it is a word)
     % TODO : remove when we have a perm_max_d function.
     
     keep = ones(size(ptable,1),1);
     for i=1:size (ptable, 1)
-        for d=1:nDims
-            if (ptable(i,d) > pde.dimensions{d}.lev)
+        for d=1:num_dimensions
+            if (ptable(i,d) > lev_vec(d))
                 keep(i) = 0;
             end
         end
@@ -56,7 +59,7 @@ end
 elapsed_time_perm = toc( time_perm);
 if (idebug >= 1),
   disp(sprintf('HashTable:Dim=%d,Lev=%d,gridType=%s,time %g, size=%g',...
-        nDims,max(lev_vec),gridType, ...
+        num_dimensions,max(lev_vec),grid_type, ...
         elapsed_time_perm,  size(ptable,1) ));
 end;
 
@@ -83,12 +86,12 @@ inverseHash = {}; % Empty cell array
 ncase = size(ptable,1);
 isize = zeros(1,ncase);
 
-levels = zeros(1,nDims);
-ipow = zeros(1,nDims);
+levels = zeros(1,num_dimensions);
+ipow = zeros(1,num_dimensions);
 
 for icase=1:ncase,
-   levels(1:nDims) = ptable(icase,1:nDims);
-   ipow(1:nDims) = 2.^max(0,levels(1:nDims)-1);
+   levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
+   ipow(1:num_dimensions) = 2.^max(0,levels(1:num_dimensions)-1);
    isize(icase) = prod( max(1,ipow) );
 end;
 total_isize = sum( isize(1:ncase) );
@@ -121,7 +124,7 @@ istartv(2:(ncase+1)) = istartv(2:(ncase+1)) + 1;
 % the "key" has sufficient information to recompute this information
 % ------------------------------------------------------------------
 append_index_k = 1;
-index_k = zeros(1,nDims);
+index_k = zeros(1,num_dimensions);
 
 % ------------------------------
 % pre-allocate temporary storage
@@ -136,8 +139,8 @@ for icase=1:ncase,
   iend   = istartv(icase+1)-1;
 
 
-  levels(1:nDims) = ptable(icase,1:nDims);
-  index_set = lev_cell_to_singleD_index_set( levels(1:nDims) );
+  levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
+  index_set = lev_cell_to_singleD_index_set( levels(1:num_dimensions) );
   for i=istart:iend,
      icells = index_set(i-istart+1,:);
      key = [levels,icells];
@@ -150,7 +153,7 @@ for icase=1:ncase,
 
 
      if (append_index_k),
-       for kdim=1:nDims,
+       for kdim=1:num_dimensions,
          index_k(kdim) = lev_cell_to_singleD_index( levels(kdim), icells(kdim));
        end;
        inverseHash{i} = [key,index_k];
@@ -158,14 +161,14 @@ for icase=1:ncase,
        inverseHash{i} = [key];
      end;
      
-     %%
-     % Element Table (large address space approach)
-     element_idx = lev_cell_to_element_index(pde,levels,icells);
-     elementsIDX(i) = element_idx;
-     for d=1:nDims
-         elements{d}.lev (element_idx) = levels(d)+1; % NOTE : have to start lev  index from 1 for sparse storage
-         elements{d}.cell(element_idx) = icells(d)+1; % NOTE : have to start cell index from 1 for sparse storage
-     end
+%      %%
+%      % Element Table (large address space approach)
+%      element_idx = lev_cell_to_element_index(levels,icells,max_lev);
+%      elementsIDX(i) = element_idx;
+%      for d=1:num_dimensions
+%          elements{d}.lev (element_idx) = levels(d)+1; % NOTE : have to start lev  index from 1 for sparse storage
+%          elements{d}.cell(element_idx) = icells(d)+1; % NOTE : have to start cell index from 1 for sparse storage
+%      end
 
   end;
 end;

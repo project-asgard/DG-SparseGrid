@@ -16,6 +16,11 @@ if strcmp(term.type,'diff')
     term_out = term_diff;
 end
 
+term_out.coeff_mat = [];
+term_out.coeff_mat0 = [];
+term_out.mat1 = [];
+term_out.mat2 = [];
+
 % Check to make sure all fields exist.
 % If not, use default.
 
