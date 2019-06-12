@@ -87,7 +87,7 @@ for icase=1:ncase
   iend   = istartv(icase+1)-1;
 
   levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
-  index_set = lev_cell_to_singleD_index_set( levels(1:num_dimensions) );
+  index_set = lev_cell_to_1D_index_set( levels(1:num_dimensions) );
   
   for i=istart:iend
       

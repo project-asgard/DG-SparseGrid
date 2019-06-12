@@ -48,7 +48,7 @@ for workItem = 1:N
         else
             IDlev = hash_table.elements.lev_p1(hash_table.elements_idx(workItem),d)-1;
             IDpos = hash_table.elements.pos_p1(hash_table.elements_idx(workItem),d)-1;
-            IDe = lev_cell_to_singleD_index(IDlev,IDpos);
+            IDe = lev_cell_to_1D_index(IDlev,IDpos);
             element_idx1D_D{d} = IDe;
         end
     end

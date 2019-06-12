@@ -18,28 +18,17 @@ if ~exist('grid_type','var') || isempty(grid_type)
 end
 is_sparse_grid = strcmp( grid_type, 'SG');
 
-%%
-% Setup element table as a collection of 2*nDims many sparse vectors to
-% store the lev and cell info for each dim. 
-
-% for d=1:num_dimensions
-%     lev_vec(d) = pde.dimensions{d}.lev;
-% end
-
 num_dimensions = numel(lev_vec);
 
-% N_max = double((uint64(2)^max(lev_vec))^num_dimensions); % This number is HUGE
-% 
-% for d=1:num_dimensions
-%     elements{d}.lev  = sparse(N_max,1);
-%     elements{d}.cell = sparse(N_max,1);
-% end
+for d=1:num_dimensions
+    assert(lev_vec(d)==lev_vec(1),'use_oldhash not supported for dimension dependent level');
+end
 
 time_perm = tic();
 if (is_sparse_grid)
-   ptable = perm_leq( num_dimensions, lev_vec, max(lev_vec) );
+    ptable = perm_leq( num_dimensions, lev_vec(1) );
 else
-    ptable = perm_max( num_dimensions, max(lev_vec) );
+    ptable = perm_max( num_dimensions, lev_vec(1) );
     %%
     % Remove lev values not allowed due to rectangularity (yes, it is a word)
     % TODO : remove when we have a perm_max_d function.
@@ -58,11 +47,10 @@ end
 
 elapsed_time_perm = toc( time_perm);
 if (idebug >= 1),
-  disp(sprintf('HashTable:Dim=%d,Lev=%d,gridType=%s,time %g, size=%g',...
+    disp(sprintf('HashTable:Dim=%d,Lev=%d,gridType=%s,time %g, size=%g',...
         num_dimensions,max(lev_vec),grid_type, ...
         elapsed_time_perm,  size(ptable,1) ));
 end;
-
 
 global hash_format
 
@@ -70,7 +58,6 @@ global hash_format
 % If more are needed, i.e., > 99, then change to 'i%3.3i_'.
 
 hash_format =  'i%04.4d';
-
 
 count=1;
 forwardHash = struct(); % Empty struct array
@@ -90,22 +77,22 @@ levels = zeros(1,num_dimensions);
 ipow = zeros(1,num_dimensions);
 
 for icase=1:ncase,
-   levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
-   ipow(1:num_dimensions) = 2.^max(0,levels(1:num_dimensions)-1);
-   isize(icase) = prod( max(1,ipow) );
+    levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
+    ipow(1:num_dimensions) = 2.^max(0,levels(1:num_dimensions)-1);
+    isize(icase) = prod( max(1,ipow) );
 end;
 total_isize = sum( isize(1:ncase) );
 max_isize = max( isize(1:ncase) );
 
 if (idebug >= 1),
-   disp(sprintf('HashTable:total_isize=%g', ...
-                 total_isize ));
+    disp(sprintf('HashTable:total_isize=%g', ...
+        total_isize ));
 end;
 
 % ---------------------------
 % prefix sum or cumulate sum
 % note   matlab
-%   cumsum( [2 3 4 ]) 
+%   cumsum( [2 3 4 ])
 %   returns
 %           [2 5 9 ]
 %
@@ -131,58 +118,37 @@ index_k = zeros(1,num_dimensions);
 % ------------------------------
 index_set = zeros(1, max_isize );
 
-
 time_hash = tic();
-% pragma omp parallel
 for icase=1:ncase,
-  istart = istartv(icase);
-  iend   = istartv(icase+1)-1;
-
-
-  levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
-  index_set = lev_cell_to_singleD_index_set( levels(1:num_dimensions) );
-  for i=istart:iend,
-     icells = index_set(i-istart+1,:);
-     key = [levels,icells];
-
-     % ----------------------------------------------------
-     % TODO: check whether insertion into hash table is thread-safe
-     % ----------------------------------------------------
-     forwardHash.(sprintf(hash_format,key)) = i;
-
-
-
-     if (append_index_k),
-       for kdim=1:num_dimensions,
-         index_k(kdim) = lev_cell_to_singleD_index( levels(kdim), icells(kdim));
-       end;
-       inverseHash{i} = [key,index_k];
-     else
-       inverseHash{i} = [key];
-     end;
-     
-%      %%
-%      % Element Table (large address space approach)
-%      element_idx = lev_cell_to_element_index(levels,icells,max_lev);
-%      elementsIDX(i) = element_idx;
-%      for d=1:num_dimensions
-%          elements{d}.lev (element_idx) = levels(d)+1; % NOTE : have to start lev  index from 1 for sparse storage
-%          elements{d}.cell(element_idx) = icells(d)+1; % NOTE : have to start cell index from 1 for sparse storage
-%      end
-
-  end;
-end;
+    istart = istartv(icase);
+    iend   = istartv(icase+1)-1;
+        
+    levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
+    index_set = lev_cell_to_1D_index_set( levels(1:num_dimensions) );
+    for i=istart:iend,
+        icells = index_set(i-istart+1,:);
+        key = [levels,icells];
+        
+        % ----------------------------------------------------
+        % TODO: check whether insertion into hash table is thread-safe
+        % ----------------------------------------------------
+        forwardHash.(sprintf(hash_format,key)) = i;
+               
+        if (append_index_k),
+            for kdim=1:num_dimensions,
+                index_k(kdim) = lev_cell_to_1D_index( levels(kdim), icells(kdim));
+            end;
+            inverseHash{i} = [key,index_k];
+        else
+            inverseHash{i} = [key];
+        end;
+        
+    end
+end
 elapsed_hash = toc( time_hash );
 if (idebug >= 1),
-        disp(sprintf('HashTable: elapsed time for hashing is %g sec', ...
-                      elapsed_hash ));
-end;
-
-% -----------------------------------------------------------
-% Add some other useful information to the forwardHash struct
-% -----------------------------------------------------------
-
-% forwardHash.Lev = lev;
-% forwardHash.Dim = nDims;
+    disp(sprintf('HashTable: elapsed time for hashing is %g sec', ...
+        elapsed_hash ));
+end
 
 end

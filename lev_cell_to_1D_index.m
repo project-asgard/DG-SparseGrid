@@ -1,4 +1,4 @@
-function index = lev_cell_to_singleD_index(lev,cell)
+function index = lev_cell_to_1D_index(lev,cell)
 
 %%
 % Map lev,cell to index within a single dim

@@ -29,7 +29,7 @@ for i=1:num_elements
         else
             lev = hash_table.elements.lev_p1(hash_table.elements_idx(i),d)-1;
             pos = hash_table.elements.pos_p1(hash_table.elements_idx(i),d)-1;
-            idx_1D = lev_cell_to_singleD_index(lev,pos);
+            idx_1D = lev_cell_to_1D_index(lev,pos);
         end
         
         index_D = [(idx_1D-1)*deg+1 : idx_1D*deg];

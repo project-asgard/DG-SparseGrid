@@ -16,7 +16,7 @@ for d=1:num_dimensions
     
     assert(lev_vec(d) <= max_lev);
 
-    idx_1D  = lev_cell_to_singleD_index(lev_vec(d),pos_vec(d));
+    idx_1D  = lev_cell_to_1D_index(lev_vec(d),pos_vec(d));
     eIdx    = eIdx + (idx_1D-1)*stride;
     stride  = stride * 2^max_lev;
     
