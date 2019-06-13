@@ -5,10 +5,10 @@ function pde = fokkerplanck1_4p1b
 % Run with
 %
 % explicit
-% asgard(fokkerplanck1_4p1b,4,2,0.02,[],[],0,[])
+% asgard(fokkerplanck1_4p1b)
 %
 % implicit
-% asgard(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],0.1)
+% asgard(fokkerplanck1_4p1b,'implicit',true)
 
 pde.max_lev = 8;
 

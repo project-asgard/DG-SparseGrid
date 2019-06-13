@@ -89,4 +89,39 @@ verifyLessThan(testCase,err,1e-4);
 
 end
 
+function asgard_fokkerplanck4p1b_explicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing fokkerplanck4p1b (explicit)');
+
+[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,'lev',4,'quiet',true,'deg',3);
+
+verifyLessThan(testCase,err,7e-4);
+
+end
+
+function asgard_fokkerplanck4p1b_implicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing fokkerplanck4p1b (implicit)');
+
+[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,'lev',4,'quiet',true,'deg',3,'implicit',true);
+
+verifyLessThan(testCase,err,7e-4);
+
+end
+
+function asgard_fokkerplanck4p1b_adapt_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing fokkerplanck4p1b (adapt)');
+
+[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,'lev',4,'quiet',true,'deg',3,'implicit',true,'adapt',true);
+
+verifyLessThan(testCase,err,1.5e-3); % TODO : need to look into why this is larger than the adapt=false approach.
+
+end
 

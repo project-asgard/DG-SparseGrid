@@ -77,7 +77,7 @@ if coarsen
                 newLeafElemLevVec(d) = newLeafElemLevVec(d)-1;
                 newLeafElemPosVec(d) = floor(newLeafElemPosVec(d)/2);
                 
-                idx = lev_cell_to_element_index(pde,newLeafElemLevVec,newLeafElemPosVec);
+                idx = lev_cell_to_element_index(newLeafElemLevVec,newLeafElemPosVec,pde.max_lev);
                 
                 %%
                 % Assert this element exists
