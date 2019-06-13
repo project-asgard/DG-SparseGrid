@@ -32,23 +32,7 @@ elements.node_type  = sparse (num_elements_max, 1);
 if (is_sparse_grid)
    ptable = perm_leq_d (num_dimensions, lev_vec, max(lev_vec) );
 else   
-   ptable = perm_max (num_dimensions, max(lev_vec), max(lev_vec) );
-   
-   %%
-   % Remove lev values not allowed due to rectangularity (yes, it is a word)
-   % TODO : remove this when we have a "perm_max_D" function
-   
-   keep = ones(size(ptable,1),1);
-   for i=1:size (ptable, 1)
-       for d=1:num_dimensions
-           if (ptable(i,d) > pde.dimensions{d}.lev)
-               keep(i) = 0;
-           end
-       end
-   end
-   
-   ptable = ptable(find(keep),:);
-   
+   ptable = perm_max (num_dimensions, lev_vec, max(lev_vec) );
 end
 
 %%

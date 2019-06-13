@@ -29,20 +29,6 @@ if (is_sparse_grid)
     ptable = perm_leq( num_dimensions, lev_vec(1) );
 else
     ptable = perm_max( num_dimensions, lev_vec(1) );
-    %%
-    % Remove lev values not allowed due to rectangularity (yes, it is a word)
-    % TODO : remove when we have a perm_max_d function.
-    
-    keep = ones(size(ptable,1),1);
-    for i=1:size (ptable, 1)
-        for d=1:num_dimensions
-            if (ptable(i,d) > lev_vec(d))
-                keep(i) = 0;
-            end
-        end
-    end
-    
-    ptable = ptable(find(keep),:);
 end
 
 elapsed_time_perm = toc( time_perm);
