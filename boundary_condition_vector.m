@@ -1,4 +1,4 @@
-function bcVec = getBoundaryCondition1(pde, opts, hash_table, time)
+function bcVec = boundary_condition_vector(pde, opts, hash_table, time)
 
 %%
 % If inhomogeneous Dirichlet, add a combined left and right term which

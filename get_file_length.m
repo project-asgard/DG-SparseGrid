@@ -1,4 +1,4 @@
-function fileLength = getFileLength(fd)
+function fileLength = get_file_length(fd)
 % extracts file length in bytes from a file opened by fopen
 % seek must be positioned at beginning on entry
 

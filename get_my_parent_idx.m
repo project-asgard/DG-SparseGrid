@@ -1,4 +1,4 @@
-function [parentIdx] = getMyParentIdx(pde,idx)
+function [parentIdx] = get_my_parent_idx(pde,idx)
 
 nDims = numel(pde.dimensions);
 

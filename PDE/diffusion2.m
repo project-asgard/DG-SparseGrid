@@ -23,10 +23,10 @@ function pde = diffusion2
 % Run with
 %
 % explicit
-% asgard(diffusion2,3,2,0.001);
+% asgard(diffusion2);
 %
 % implicit
-% asgard(diffusion2,4,2,0.05,[],[],1,[],[],1.9);
+% asgard(diffusion2,'implicit',true);
 
 pde.CFL = 0.01;
 

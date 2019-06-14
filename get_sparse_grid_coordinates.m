@@ -16,7 +16,7 @@ num_dims  = numel(pde.dimensions);
 coordinates = zeros(num_elems,num_dims);
 for elem=1:num_elems
     idx = hash_table.elements_idx(elem);
-    coordinates(elem,:) = getMyRealSpaceCoord(pde, opts, hash_table, idx);
+    coordinates(elem,:) = get_my_realspace_coord(pde, opts, hash_table, idx);
 end
 
 %% 

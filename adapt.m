@@ -298,7 +298,7 @@ coord = get_realspace_coords(pde,nodes);
 %%
 % Get the new real space solution and check against unrefined solution
 
-fval_realspace_refined = multi_2D_D(pde,opts,Meval,fval,hash_table);
+fval_realspace_refined = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
 
 if ~opts.quiet
     if num_dimensions == 1

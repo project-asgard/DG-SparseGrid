@@ -1,4 +1,4 @@
-function [f_rSpace]=multi_2D_D(pde, opts, Meval_D, f_wSpace, hash_table)
+function [f_rSpace]=wavelet_to_realspace(pde, opts, Meval_D, f_wSpace, hash_table)
 
 %%
 % Apply dimension many inverse wavelet transforms to the solution vector

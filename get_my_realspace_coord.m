@@ -1,4 +1,4 @@
-function [coord_D, coord_D_L, coord_D_R] = getMyRealSpaceCoord (pde, opts, hash_table, idx)
+function [coord_D, coord_D_L, coord_D_R] = get_my_realspace_coord (pde, opts, hash_table, idx)
 
 %%
 % Get the center, left and right coordinates for this element

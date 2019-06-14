@@ -1,4 +1,4 @@
-function [keystr] = getHashKeyStr(key)
+function [keystr] = get_hash_key_str(key)
 
 hash_format =  'i%04.4d';
 

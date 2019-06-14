@@ -72,10 +72,10 @@ if num_dimensions <=3
     
     %%
     % Get the real space solution
-    fval_realspace = multi_2D_D(pde,opts,Meval,fval,hash_table);
-    fval_realspace_analytic = getAnalyticSolution_D(coord,0,pde);
+    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+    fval_realspace_analytic = get_analytic_realspace_solution_D(coord,0,pde);
     
-    if norm(fval_realspace) > 0
+    if norm(fval_realspace) > 0 && ~opts.quiet
         plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
     end
     
@@ -176,7 +176,7 @@ for L = 1:num_steps
         %%
         % Get the real space solution
         
-        fval_realspace = multi_2D_D(pde,opts,Meval,fval,hash_table);
+        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
         %%
         % Try with function convertToRealSpace
@@ -219,7 +219,7 @@ for L = 1:num_steps
         % Check the realspace solution
         
         if num_dimensions <= 3
-            fval_realspace_analytic = getAnalyticSolution_D(coord,L*dt,pde);
+            fval_realspace_analytic = get_analytic_realspace_solution_D(coord,L*dt,pde);
             err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
             if ~opts.quiet         
                 disp(['    real space absolute err : ', num2str(err_real)]);

@@ -1,4 +1,4 @@
-function f_coef_MWDG = ProjCoef2Wav_v2(Lev,Deg,Lstart,Lend,func)
+function f_coef_MWDG = proj_coef_to_wav2(Lev,Deg,Lstart,Lend,func)
 %f_coef_MWDG = ProjCoef2Wav_v2(Lev,Deg,Lmax,func)
 % projection from a given function to the Multiwavelet functions
 % Pro(func) = sum F_i*phi_i

@@ -30,9 +30,9 @@ source3 = source_vector(pde,opts,hash_table,t+c3*dt);
 
 %%
 % Inhomogeneous dirichlet boundary conditions
-bc1 = getBoundaryCondition1(pde,opts,hash_table,t);
-bc2 = getBoundaryCondition1(pde,opts,hash_table,t+c2*dt);
-bc3 = getBoundaryCondition1(pde,opts,hash_table,t+c3*dt);
+bc1 = boundary_condition_vector(pde,opts,hash_table,t);
+bc2 = boundary_condition_vector(pde,opts,hash_table,t+c2*dt);
+bc3 = boundary_condition_vector(pde,opts,hash_table,t+c3*dt);
 
 % %%
 % Apply any non-identity LHS mass matrix coefficient
@@ -78,7 +78,7 @@ end
 function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 s1 = source_vector(pde,opts,hash_table,t+dt);
-bc1 = getBoundaryCondition1(pde,opts,hash_table,t+dt);
+bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
 % %%
 % Apply any non-identity LHS mass matrix coefficient

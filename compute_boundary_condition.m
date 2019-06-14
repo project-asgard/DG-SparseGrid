@@ -1,4 +1,4 @@
-function bc = ComputeBC(pde,t,Lev,Deg,xMin,xMax,Fun,LorR)
+function bc = compute_boundary_condition(pde,t,Lev,Deg,xMin,xMax,Fun,LorR)
 % function bc = ComputeBC(Lev,Deg,xMin,xMax,Fun,time,LorR)
 % function ComputeBC to compute the bc term
 % This is the evaluation for two points on 1D

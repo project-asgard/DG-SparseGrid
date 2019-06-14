@@ -1,4 +1,4 @@
-function [fnew]=Multi_2D(A,B,f,HASHInv,Lev,Deg)
+function [fnew]=multi_2D(A,B,f,HASHInv,Lev,Deg)
 %====================================================================
 % This code is to compute the product of Kron(A,B)*f
 % Input: Matrix: A (size nA1*nA2)

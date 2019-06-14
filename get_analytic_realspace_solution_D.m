@@ -1,4 +1,4 @@
-function value = getAnalyticSolution_D(x,t,pde)
+function value = get_analytic_realspace_solution_D(x,t,pde)
 
 %%
 % Here x is a D dimensional cell array, i.e,
