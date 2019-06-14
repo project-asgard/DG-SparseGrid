@@ -26,6 +26,6 @@ fclose(fid);
 %%
 % Write data
 
-dlmwrite(file_name, mat, '-append', 'delimiter', ' ','precision',12);
+dlmwrite(file_name, mat, '-append', 'delimiter', ' ','precision',16);
 
 end
