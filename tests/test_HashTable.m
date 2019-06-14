@@ -1,4 +1,4 @@
-more off;
+% more off;
 gridType_table{1} = 'SG';
 gridType_table{2} = 'FG';
 ncase = numel(gridType_table);
@@ -162,4 +162,4 @@ filename = sprintf('test_HashTable_Dim=%d.jpg', Dim);
 print(filename,'-djpg');
 
 
-more on;
+% more on;

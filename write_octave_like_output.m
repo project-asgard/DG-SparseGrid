@@ -13,14 +13,19 @@ created_from_string = [s1 s2];
 fid = fopen(file_name,'w');
 fprintf(fid,created_from_string);
 fprintf(fid,'# name: foo\n');
-fprintf(fid,'# type: matrix\n');
-fprintf(fid,'# rows: %i\n', num_rows);
-fprintf(fid,'# columns: %i\n', num_cols);
+if isscalar(mat)
+    fprintf(fid,'# type: scalar\n');
+else
+    fprintf(fid,'# type: matrix\n');
+    fprintf(fid,'# rows: %i\n', num_rows);
+    fprintf(fid,'# columns: %i\n', num_cols);
+end
+
 fclose(fid);
 
 %%
 % Write data
 
-dlmwrite(file_name, mat, '-append', 'delimiter', ' '); 
+dlmwrite(file_name, mat, '-append', 'delimiter', ' ','precision',12);
 
 end
