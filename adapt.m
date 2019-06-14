@@ -302,7 +302,7 @@ elementsIDX0 = pde.elementsIDX;
 
 for d=1:num_dimensions
     pde.dimensions{d}.lev = max(pde.elements.lev_p1(:,d)-1);
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde,d,deg,pde.dimensions{d}.lev);
+    pde.dimensions{d}.FMWT = OperatorTwoScale(deg,pde.dimensions{d}.lev);
 end
 
 %%

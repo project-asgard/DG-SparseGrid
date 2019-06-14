@@ -60,7 +60,7 @@ end
 
 %% Construct the 1D multi-wavelet transform for each dimension.
 for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde,d,deg,pde.dimensions{d}.lev);
+    pde.dimensions{d}.FMWT = OperatorTwoScale(deg,pde.dimensions{d}.lev);
 end
 
 %% Construct the connectivity.

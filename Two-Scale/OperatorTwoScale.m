@@ -1,4 +1,4 @@
-function FMWT_COMP = OperatorTwoScale(pde,dimIdx,deg,lev)
+function FMWT_COMP = OperatorTwoScale(deg,lev)
 
 %----------------------------------
 % Set-up Two-scale operator       %
@@ -26,11 +26,11 @@ if (idebug >= 1),
 end;
 
 if (strcmp(imethod, 'nonwavelet')),
-    FMWT_COMP = OperatorTwoScale_nonwavelet(pde,deg,2^lev);
+    FMWT_COMP = OperatorTwoScale_nonwavelet(deg,2^lev);
 elseif (strcmp(imethod,'wavelet2')),
-    FMWT_COMP = OperatorTwoScale_wavelet2(pde,dimIdx,deg,lev);
+    FMWT_COMP = OperatorTwoScale_wavelet2(deg,lev);
 else
-    FMWT_COMP = OperatorTwoScale_wavelet(pde,dimIdx,deg,2^lev);
+    FMWT_COMP = OperatorTwoScale_wavelet(deg,2^lev);
 end;
 
 end

@@ -14,7 +14,7 @@ params = pde.params;
 % Get the Forward Multi-Wavelet Transform matrix
 
 % FMWT = OperatorTwoScale(pde,dimIdx,deg,2^lev);\
-FMWT = OperatorTwoScale(pde,dimIdx,deg,lev);
+FMWT = OperatorTwoScale(deg,lev);
 
 
 % Get the Legendre-Gauss nodes (quad_x) and weights (quad_w) on the domain
