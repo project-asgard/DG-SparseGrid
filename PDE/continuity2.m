@@ -6,10 +6,12 @@ function pde = continuity2
 % Run with
 %
 % explicit
-% fk6d(continuity2,4,3,0.02);
+% asgard(continuity2,'lev',3,'deg',3)
 %
 % implicit
-% fk6d(continuity2,4,3,0.2,[],[],1,[],[],1.0);
+% asgard(continuity2,'implicit',true)
+
+pde.CFL = 0.1;
 
 %% Setup the dimensions
 %
@@ -114,13 +116,13 @@ pde.analytic_solutions_1D = { ...
 %%
 % function to set dt
 
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         Lmax = pde.dimensions{1}.domainMax;
         LevX = pde.dimensions{1}.lev;
-        CFL = pde.CFL;   
         dt = Lmax/2^LevX*CFL;
     end
+
 pde.set_dt = @set_dt;
 
 end

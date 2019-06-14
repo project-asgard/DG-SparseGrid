@@ -1,9 +1,13 @@
-function [coordinates] = get_sparse_grid_coordinates(pde)
+function [coordinates] = get_sparse_grid_coordinates(pde, opts, hash_table)
 %%
 % coordinates is a (num_pts x num_dims) array of real space coordinates of
 % the sparse-grid element locations.
 
-num_elems = numel(pde.elementsIDX);
+if opts.use_oldhash
+    num_elems = numel(hash_table);  
+else
+    num_elems = numel(hash_table.elements_idx);
+end
 num_dims  = numel(pde.dimensions);
 
 %%
@@ -11,8 +15,8 @@ num_dims  = numel(pde.dimensions);
 
 coordinates = zeros(num_elems,num_dims);
 for elem=1:num_elems
-    idx = pde.elementsIDX(elem);
-    coordinates(elem,:) = getMyRealSpaceCoord(pde,idx);
+    idx = hash_table.elements_idx(elem);
+    coordinates(elem,:) = get_my_realspace_coord(pde, opts, hash_table, idx);
 end
 
 %% 

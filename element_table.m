@@ -1,7 +1,7 @@
 function [elements,elementsIDX] = element_table(pde,opts)
 
 num_dimensions = numel(pde.dimensions);
-is_sparse_grid = strcmp( opts.gridType, 'SG');
+is_sparse_grid = strcmp( opts.grid_type, 'SG');
 
 %%
 % Setup element table as a collection of sparse vectors to
@@ -32,23 +32,7 @@ elements.node_type  = sparse (num_elements_max, 1);
 if (is_sparse_grid)
    ptable = perm_leq_d (num_dimensions, lev_vec, max(lev_vec) );
 else   
-   ptable = perm_max (num_dimensions, max(lev_vec), max(lev_vec) );
-   
-   %%
-   % Remove lev values not allowed due to rectangularity (yes, it is a word)
-   % TODO : remove this when we have a "perm_max_D" function
-   
-   keep = ones(size(ptable,1),1);
-   for i=1:size (ptable, 1)
-       for d=1:num_dimensions
-           if (ptable(i,d) > pde.dimensions{d}.lev)
-               keep(i) = 0;
-           end
-       end
-   end
-   
-   ptable = ptable(find(keep),:);
-   
+   ptable = perm_max (num_dimensions, lev_vec, max(lev_vec) );
 end
 
 %%
@@ -87,7 +71,7 @@ for icase=1:ncase
   iend   = istartv(icase+1)-1;
 
   levels(1:num_dimensions) = ptable(icase,1:num_dimensions);
-  index_set = lev_cell_to_singleD_index_set( levels(1:num_dimensions) );
+  index_set = lev_cell_to_1D_index_set( levels(1:num_dimensions) );
   
   for i=istart:iend
       
@@ -96,7 +80,7 @@ for icase=1:ncase
      %%
      % Store the index into the element table for this element
      
-     element_idx = lev_cell_to_element_index(pde,levels,icells);
+     element_idx = lev_cell_to_element_index(levels,icells,pde.max_lev);
      elementsIDX(i) = element_idx;
      
      %%

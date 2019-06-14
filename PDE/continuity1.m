@@ -6,10 +6,12 @@ function pde = continuity1
 % Run with
 %
 % explicit
-% fk6d(continuity1,4,2,0.01);
+% asgard(continuity1)
+% asgard(continuity1,'lev',4,'deg',3,'implicit',false)
 %
 % implicit
-% fk6d(continuity1,4,2,0.01,[],[],1,[],[],0.1);
+% asgard(continuity1,'implicit',true)
+% asgard(continuity1,'implicit',true,'CFL',0.1)
 
 %% Setup the dimensions
 % 
@@ -86,7 +88,7 @@ pde.analytic_solutions_1D = {a_x,a_t};
 %%
 % Function to set time step
 
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         dim = pde.dimensions{1};
         lev = dim.lev;
@@ -94,7 +96,6 @@ pde.analytic_solutions_1D = {a_x,a_t};
         xMin = dim.domainMin;
         xRange = xMax-xMin;
         dx = xRange/(2^lev);
-        CFL = 0.01;
         dt = CFL*dx;
     end
 
