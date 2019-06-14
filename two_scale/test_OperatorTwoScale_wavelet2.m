@@ -11,11 +11,11 @@ disp(sprintf('maxDeg=%d, nLev=%d, n = %d', ...
 	      maxDeg,    nLev,    n ));
 
 tic();
-FMWT2 = OperatorTwoScale_wavelet2( k, 2^L );
+FMWT2 = OperatorTwoScale_wavelet2( k, L );
 time_wavelet2 = toc();
 
 tic();
-FMWT  = OperatorTwoScale_wavelet(k, 2^L);
+FMWT  = OperatorTwoScale_wavelet(k, L);
 time_wavelet = toc();
 
 

@@ -5,8 +5,8 @@ L = 4;
 n = k*2^L;
 x = linspace(0,1,n);
 
-FMWTs = OperatorTwoScale_nonwavelet( k, 2^L );
-FMWT  = OperatorTwoScale(k, 2^L);
+FMWTs = OperatorTwoScale_nonwavelet( k, L );
+FMWT  = OperatorTwoScale(k, L);
 
 % -----------------------------------
 % FMWT should be an orthogonal matrix

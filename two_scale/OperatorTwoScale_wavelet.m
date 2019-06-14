@@ -10,6 +10,7 @@ function FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev)
 
 % % Load G0 and H0 from file
 idebug = 0;
+maxCells = 2^maxLev;
 
 fileName = ['Two-Scale/two_scale_rel_',num2str(maxDeg),'.mat'];
 
@@ -35,15 +36,15 @@ for j_x = 1:maxDeg
 end
 
 use_sparsify = 1;
-FMWT = zeros(maxDeg*maxLev);
-FMWT2 = zeros(maxDeg*maxLev);
+FMWT = zeros(maxDeg*maxCells);
+FMWT2 = zeros(maxDeg*maxCells);
 
 
 % Unroll the matlab for easier porting
 porting = 1;
 
 if porting
-    for j=1:maxLev/2
+    for j=1:maxCells/2
         
         %FMWT( maxDeg*(j-1)+1 : maxDeg*j, 2*maxDeg*(j-1)+1 : 2*maxDeg*j )=[H0 H1];
         
@@ -58,9 +59,9 @@ if porting
             end
         end
         
-        %FMWT( maxDeg*(j+maxLev/2-1)+1 : maxDeg*(j+maxLev/2), 2*maxDeg*(j-1)+1 : 2*maxDeg*j) = [G0 G1];
+        %FMWT( maxDeg*(j+maxCells/2-1)+1 : maxDeg*(j+maxCells/2), 2*maxDeg*(j-1)+1 : 2*maxDeg*j) = [G0 G1];
         
-        rs = maxDeg*(j+maxLev/2-1)+1;
+        rs = maxDeg*(j+maxCells/2-1)+1;
         cs = 2*maxDeg*(j-1)+1;
         
         for j_x = 1:maxDeg
@@ -74,17 +75,17 @@ if porting
     
 end
 
-for j=1:maxLev/2
+for j=1:maxCells/2
     % The reverse order from Lin
     FMWT(maxDeg*(j-1)+1:maxDeg*j,2*maxDeg*(j-1)+1:2*maxDeg*j)=[H0 H1];
-    FMWT(maxDeg*(j+maxLev/2-1)+1:maxDeg*(j+maxLev/2),2*maxDeg*(j-1)+1:2*maxDeg*j) = [G0 G1];
+    FMWT(maxDeg*(j+maxCells/2-1)+1:maxDeg*(j+maxCells/2),2*maxDeg*(j-1)+1:2*maxDeg*j) = [G0 G1];
 end
 
 if (idebug >= 1),
    figure();
    spy( FMWT );
-   title(sprintf('line 86:N=%d,maxDeg=%d,maxLev=%d',...
-		 size(FMWT,1),maxDeg,maxLev));
+   title(sprintf('line 86:N=%d,maxDeg=%d,maxCells=%d',...
+		 size(FMWT,1),maxDeg,maxCells));
 end;
 
 
@@ -92,15 +93,15 @@ end;
 if porting; assert(isequal(FMWT,FMWT2)); end
 
 if (use_sparsify),
-  FMWT_COMP = speye(maxDeg*maxLev,maxDeg*maxLev);
-  FMWT_COMP2 = speye(maxDeg*maxLev,maxDeg*maxLev);
+  FMWT_COMP = speye(maxDeg*maxCells,maxDeg*maxCells);
+  FMWT_COMP2 = speye(maxDeg*maxCells,maxDeg*maxCells);
 else
-  FMWT_COMP = eye(maxDeg*maxLev);
-  FMWT_COMP2 = eye(maxDeg*maxLev);
+  FMWT_COMP = eye(maxDeg*maxCells);
+  FMWT_COMP2 = eye(maxDeg*maxCells);
 end;
 
-n = floor( log2(maxLev) );
-% n = maxLev;
+n = floor( log2(maxCells) );
+% n = maxCells;
 
 for j=1:n
     cFMWT = FMWT;
@@ -108,28 +109,28 @@ for j=1:n
     % Reverse the index in matrix from Lin
     if j>1
       if (use_sparsify),
-        nzmax = (maxDeg*maxLev)*maxDeg;
-        cFMWT = sparse([],[],[], maxDeg*maxLev, maxDeg*maxLev,nzmax);
-        cFMWT2 = sparse([],[],[],maxDeg*maxLev, maxDeg*maxLev,nzmax);
+        nzmax = (maxDeg*maxCells)*maxDeg;
+        cFMWT = sparse([],[],[], maxDeg*maxCells, maxDeg*maxCells,nzmax);
+        cFMWT2 = sparse([],[],[],maxDeg*maxCells, maxDeg*maxCells,nzmax);
       else
-        cFMWT = zeros(maxDeg*maxLev);
-        cFMWT2 = zeros(maxDeg*maxLev);
+        cFMWT = zeros(maxDeg*maxCells);
+        cFMWT2 = zeros(maxDeg*maxCells);
       end;
         
         cn = 2^(n-j+1)*maxDeg;
-        cnr=maxLev*maxDeg-cn;
+        cnr=maxCells*maxDeg-cn;
         
         if porting
             
-            % cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=eye(maxLev*maxDeg-cn);
+            % cFMWT(cn+1:maxDeg*maxCells,cn+1:maxDeg*maxCells)=eye(maxCells*maxDeg-cn);
             
             rs = cn+1;
             cs = cn+1;
 
             use_for_loop = 0;
             if (use_for_loop),
-              for ii=0:maxDeg*maxLev - (cn+1)
-                for jj=0:maxDeg*maxLev - (cn+1)
+              for ii=0:maxDeg*maxCells - (cn+1)
+                for jj=0:maxDeg*maxCells - (cn+1)
                     if (ii==jj)
                         cFMWT2(rs+ii,cs+jj) = 1;
                     end
@@ -139,7 +140,7 @@ for j=1:n
               % ---------------------------
               % short-cut loop to assign 1 
               % ---------------------------
-              for ii=0:maxDeg*maxLev - (cn+1)
+              for ii=0:maxDeg*maxCells - (cn+1)
                 jj = ii;
                 cFMWT2(rs+ii,cs+jj) = 1;
               end
@@ -153,9 +154,9 @@ for j=1:n
                 end
             end
             
-            % cFMWT(cn/2+1:cn,1:cn)=FMWT(maxDeg*maxLev/2+1:maxDeg*maxLev/2+cn/2,1:cn);
+            % cFMWT(cn/2+1:cn,1:cn)=FMWT(maxDeg*maxCells/2+1:maxDeg*maxCells/2+cn/2,1:cn);
             
-            rs = maxDeg*maxLev/2+1;
+            rs = maxDeg*maxCells/2+1;
             for ii=0:cn/2-1
                 for jj=1:cn
                     cFMWT2(cn/2+1+ii,jj) = FMWT(rs+ii,jj);
@@ -165,12 +166,12 @@ for j=1:n
         end
         
 	if (use_sparsify),
-          cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=speye(maxLev*maxDeg-cn,maxLev*maxDeg-cn);
+          cFMWT(cn+1:maxDeg*maxCells,cn+1:maxDeg*maxCells)=speye(maxCells*maxDeg-cn,maxCells*maxDeg-cn);
 	else
-          cFMWT(cn+1:maxDeg*maxLev,cn+1:maxDeg*maxLev)=eye(maxLev*maxDeg-cn);
+          cFMWT(cn+1:maxDeg*maxCells,cn+1:maxDeg*maxCells)=eye(maxCells*maxDeg-cn);
 	end;
         cFMWT(1:cn/2,1:cn)=FMWT(1:cn/2,1:cn);
-        cFMWT(cn/2+1:cn,1:cn)=FMWT(maxDeg*maxLev/2+1:maxDeg*maxLev/2+cn/2,1:cn);
+        cFMWT(cn/2+1:cn,1:cn)=FMWT(maxDeg*maxCells/2+1:maxDeg*maxCells/2+cn/2,1:cn);
 
 	if (idebug >= 1),
 	  figure();

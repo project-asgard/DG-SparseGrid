@@ -18,7 +18,7 @@ for icase=1:3,
 				    cmerge(icase==2,'wavelet2', 'nonwavelet'));
 
   tic();
-  FMWT = OperatorTwoScale(kdeg,2^Lev);
+  FMWT = OperatorTwoScale(kdeg,Lev);
   time_fmwt = toc();
   disp('==========');
   if (strcmp(OperatorTwoScale_method,'wavelet')),

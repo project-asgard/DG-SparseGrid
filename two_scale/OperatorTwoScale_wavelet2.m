@@ -1,5 +1,5 @@
 function FMWT = OperatorTwoScale_wavelet2(deg,nLev)
-% FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,maxLev)
+% FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,nLev)
 %----------------------------------
 % Set-up Two-scale operator       %
 %----------------------------------

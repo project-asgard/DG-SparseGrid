@@ -10,13 +10,7 @@ function FMWT = OperatorTwoScale_nonwavelet(maxDeg,maxLev)
 % http://amath.colorado.edu/~beylkin/papers/A-B-C-R-1993.pdf
 %
 k = maxDeg;
-L = round(log2(maxLev));
-isok = (2^L == maxLev);
-if (~isok),
-    error('OperatorTwoScale_nonwavelet: maxLev=%d must be a power of 2', ...
-                                    maxLev);
-    return;
-end;
+L = maxLev;
 
 n = k * 2^L;
 

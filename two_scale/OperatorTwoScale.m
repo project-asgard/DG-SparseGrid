@@ -26,11 +26,11 @@ if (idebug >= 1),
 end;
 
 if (strcmp(imethod, 'nonwavelet')),
-    FMWT_COMP = OperatorTwoScale_nonwavelet(deg,2^lev);
+    FMWT_COMP = OperatorTwoScale_nonwavelet(deg,lev);
 elseif (strcmp(imethod,'wavelet2')),
     FMWT_COMP = OperatorTwoScale_wavelet2(deg,lev);
 else
-    FMWT_COMP = OperatorTwoScale_wavelet(deg,2^lev);
+    FMWT_COMP = OperatorTwoScale_wavelet(deg,lev);
 end;
 
 end
