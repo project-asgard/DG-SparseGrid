@@ -10,8 +10,8 @@ function FMWT_COMP = OperatorTwoScale(deg,lev)
 % global OperatorTwoScale_method;
 idebug = 0;
 
-% imethod_default = 'nonwavelet';
-% imethod_default = 'wavelet';
+%imethod_default = 'nonwavelet';
+%imethod_default = 'wavelet';
 imethod_default = 'wavelet2';
 
 imethod = imethod_default;

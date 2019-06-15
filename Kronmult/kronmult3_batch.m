@@ -27,7 +27,7 @@ end;
 nvec = numel(X)/nrowX;
 
 if (idebug >= 1),
- disp(sprintf('kronmult3_batch: (%d,%d) (%d,%d) (%d,%d), nvec=%d',
+ disp(sprintf('kronmult3_batch: (%d,%d) (%d,%d) (%d,%d), nvec=%d',...
         nrow1,   ncol1,    nrow2,   ncol2,    nrow3,   ncol3,    nvec));
 end;
 

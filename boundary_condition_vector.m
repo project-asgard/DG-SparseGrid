@@ -98,7 +98,9 @@ for tt = 1:nTerms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:nDims
-                        bcL{d1}{d2} = forward_wavelet_transform(pde,d2,BCR_fList{d2},time);
+                        bcL{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                            pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
+                            BCR_fList{d2},pde.params,time);                    
                     end
                     
                     %%
@@ -129,7 +131,9 @@ for tt = 1:nTerms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:nDims
-                        bcR{d1}{d2} = forward_wavelet_transform(pde,d2,BCR_fList{d2},time);
+                        bcR{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                            pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
+                            BCR_fList{d2},pde.params,time);
                     end                    
                     
                     %%

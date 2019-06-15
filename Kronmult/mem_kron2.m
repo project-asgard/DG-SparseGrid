@@ -22,7 +22,7 @@ mem_use = nr2 * nc1 * nvec;
 total_mem_use = mem_use;
 
 if (idebug >= 1),
-  disp(sprintf('mem_kron2: mem_use=%g, total_mem_use=%g',
+  disp(sprintf('mem_kron2: mem_use=%g, total_mem_use=%g',...
                            mem_use,    total_mem_use ));
 end;
 

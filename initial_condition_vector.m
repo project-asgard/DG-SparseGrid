@@ -4,7 +4,9 @@ dims = pde.dimensions;
 nDims = numel(dims);
 
 for d=1:nDims
-    fList{d} = forward_wavelet_transform(pde,d,dims{d}.init_cond_fn,time);
+    fList{d} = forward_wavelet_transform(pde.deg,dims{d}.lev,...
+        dims{d}.domainMin,dims{d}.domainMax,...
+        dims{d}.init_cond_fn,pde.params,time);
 end
 
 ft = 1;

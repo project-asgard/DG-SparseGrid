@@ -12,7 +12,7 @@ function FMWT_COMP = OperatorTwoScale_wavelet(maxDeg,maxLev)
 idebug = 0;
 maxCells = 2^maxLev;
 
-fileName = ['Two-Scale/two_scale_rel_',num2str(maxDeg),'.mat'];
+fileName = ['two_scale/two_scale_rel_',num2str(maxDeg),'.mat'];
 
 if exist(fileName,'file') == 2
     load(fileName);
