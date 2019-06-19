@@ -21,7 +21,7 @@ global hash_format
 % ----------------------
 do_sort = 1;
 
-Con1D = Connect1D(Lev);
+Con1D = connect_1D(Lev);
 nHash = numel(HASHInv);
 
 %% Step 2. All possible combinations for 1D mesh

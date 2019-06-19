@@ -11,7 +11,7 @@ options = '';
 
 for k=1:deg
     
-    [H0,G0,scale_co,phi_co]=MultiwaveletGen(k);
+    [H0,H1,G0,G1,scale_co,phi_co]=MultiwaveletGen(k);
     
     saveStr = ['two_scale_rel_' num2str(k) '.mat'];
     save(saveStr,'H0','G0','scale_co','phi_co',options);

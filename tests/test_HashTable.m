@@ -9,11 +9,14 @@ Dim = 2;
 for icase=1:ncase,
   gridType = gridType_table{icase}; 
   time_2D = tic();
-  [forwardHash2D,inverseHash2D] = HashTable2D(Lev,Dim,gridType);
+%   forwardHash2D,inverseHash2D] = HashTable2D(Lev,Dim,gridType);
+  lev_vec = zeros(Dim,1)+Lev;
+  [forwardHash2D,inverseHash2D] = create_hash_table(lev_vec,gridType);
   elapsed_time_2D = toc( time_2D );
 
   time_nD = tic();
-  [forwardHash, inverseHash] = HashTable(Lev,Dim,gridType);
+%   [forwardHash, inverseHash] = HashTable(Lev,Dim,gridType);
+  [forwardHash, inverseHash] = create_hash_table(lev_vec,gridType);
   elapsed_time_nD = toc( time_nD );
 
   disp(sprintf('Lev=%d,Dim=%d, time for HashTable2D=%g, time for HashTable=%g',...
@@ -21,11 +24,11 @@ for icase=1:ncase,
   
   disp(sprintf('numel(inverseHash)=%g', numel(inverseHash)));
 
-  isok = numfields( forwardHash2D) == numfields(forwardHash) && ...
+  isok = numel(fieldnames( forwardHash2D)) == numel(fieldnames(forwardHash)) && ...
          numel( inverseHash2D) == numel(inverseHash);
   if (~isok),
-     disp(sprintf('numfields(forwardHash2D) = %d numfields(forwardHash) = %d', ...
-                   numfields(forwardHash2D),     numfields(forwardHash) ));
+     disp(sprintf('numel(fieldnames(forwardHash2D)) = %d numel(fieldnames(forwardHash)) = %d', ...
+                   numel(fieldnames(forwardHash2D)),     numel(fieldnames(forwardHash)) ));
   
     
      disp(sprintf('numel(inverseHash2D) = %d numel(inverseHash) = %d', ...
@@ -116,7 +119,9 @@ elapsed_time = zeros(maxLev,1);
 sizes = zeros(maxLev,1);
 for Lev=1:maxLev,
    t1 = tic();
-   [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
+%    [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
+   lev_vec = zeros(Dim,1)+Lev;
+   [forwardHash,inverseHash] = create_hash_table(lev_vec,gridType);
    elapsed_time(Lev) = toc( t1 );
 
    sizes(Lev) = numel(inverseHash);
@@ -130,7 +135,7 @@ subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
 title(sprintf('size of inverseHash, Dim=%d',Dim));
 % print -djpg test_HashTable_Dim=4.jpg
 filename = sprintf('test_HashTable_Dim=%d.jpg', Dim);
-print(filename,'-djpg');
+print(filename,'-djpeg');
 
 
 
@@ -145,7 +150,10 @@ elapsed_time = zeros(maxLev,1);
 sizes = zeros(maxLev,1);
 for Lev=1:maxLev,
    t1 = tic();
-   [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
+%    [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
+    lev_vec = zeros(Dim,1)+Lev;
+    [forwardHash,inverseHash] = create_hash_table(lev_vec,gridType);
+
    elapsed_time(Lev) = toc( t1 );
 
    sizes(Lev) = numel(inverseHash);
@@ -159,7 +167,7 @@ subplot(2,1,2); plot( 1:maxLev, sizes(1:maxLev) );
 title(sprintf('size of inverseHash, Dim=%d',Dim));
 % print -djpg test_HashTable_Dim=6.jpg
 filename = sprintf('test_HashTable_Dim=%d.jpg', Dim);
-print(filename,'-djpg');
+print(filename,'-djpeg');
 
 
 % more on;

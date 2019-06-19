@@ -17,7 +17,7 @@ if exist(fileName,'file') == 2
     load(fileName);
 else
     disp('Generating two-scale file');
-    [H0,G0,scale_co,phi_co]=MultiwaveletGen(deg);
+    [H0,H1,G0,G1,scale_co,phi_co]=MultiwaveletGen(deg);
     save(fileName,'H0','G0','scale_co','phi_co');
 end
 

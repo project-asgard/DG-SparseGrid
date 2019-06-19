@@ -6,7 +6,7 @@ function [f_loc] = EvalWavPoint4(Lmin,Lmax,Lev,Deg,x)
 %----------------------------------------------------------------------
 
 load(['Two-Scale/two_scale_rel_',num2str(Deg),'.mat']);
-%[H0,G0,scale_co,phi_co]=MultiwaveletGen(k)
+%[H0,H1,G0,G1,scale_co,phi_co]=MultiwaveletGen(k)
 
 range = Lmax-Lmin;
 
