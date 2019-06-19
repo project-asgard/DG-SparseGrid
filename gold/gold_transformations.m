@@ -63,13 +63,13 @@ out_base = strcat(transformations_dir, "operator_two_scale_");
 filename = strcat(out_base, "2_2.dat");
 degree = 2;
 level = 2;
-vect = OperatorTwoScale(degree, 2^level);
+vect = OperatorTwoScale(degree, level);
 write_octave_like_output(filename, full(vect));
 
 filename = strcat(out_base, "2_3.dat");
 degree = 2;
 level = 3;
-vect = OperatorTwoScale(degree, 2^level);
+vect = OperatorTwoScale(degree, level);
 write_octave_like_output(filename, full(vect));
 
 filename = strcat(out_base, "4_3.dat");
