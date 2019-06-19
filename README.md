@@ -48,4 +48,10 @@ All the tests (PDE, two_scale, kronmult)
 runtests('IncludeSubfolders',true)
 ```
 
+## Producing the C++ gold testing data
+```
+cd DG-SparseGrid/gold
+make_all_gold
+```
+
 
