@@ -20,7 +20,7 @@ if ~opts.quiet; disp(sprintf('dt = %g', dt )); end
 if ~opts.quiet; disp('Constructing hash and inverse hash tables'); end
 
 if opts.use_oldhash
-    [HASH,hash_table] = create_hash_table(pde.lev_vec, opts.grid_type);
+    [HASH,hash_table] = hash_table_nD(pde.lev_vec, opts.grid_type);
 else
     [elements, elements_idx]    = element_table (pde,opts);
     hash_table.elements         = elements;

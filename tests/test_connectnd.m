@@ -11,7 +11,7 @@ for igrid=1:2,
         end;
 %         [HASH, HASHInv] = HashTable(Lev,Dim,gridType);
         lev_vec = zeros(Dim,1) + Lev;
-        [HASH, HASHInv] = create_hash_table(lev_vec,gridType);
+        [HASH, HASHInv] = hash_table_nD(lev_vec,gridType);
 
         Con2D = connect_2D(Lev,HASH,HASHInv,gridType);
 

@@ -1,4 +1,4 @@
-function [forwardHash, inverseHash] = create_hash_table (lev_vec, grid_type)
+function [forwardHash, inverseHash] = hash_table_nD (lev_vec, grid_type)
 %-------------------------------------------------
 % Generate  multi-dimension Hash Table s.t n1+n2<=Lev
 % Input: Lev:: Level information

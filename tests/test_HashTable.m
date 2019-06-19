@@ -10,13 +10,13 @@ for icase=1:ncase,
   gridType = gridType_table{icase}; 
   time_2D = tic();
 %   forwardHash2D,inverseHash2D] = HashTable2D(Lev,Dim,gridType);
-  lev_vec = zeros(Dim,1)+Lev;
-  [forwardHash2D,inverseHash2D] = create_hash_table(lev_vec,gridType);
+  [forwardHash2D,inverseHash2D] = hash_table_2D(Lev,Dim,gridType);
   elapsed_time_2D = toc( time_2D );
 
   time_nD = tic();
 %   [forwardHash, inverseHash] = HashTable(Lev,Dim,gridType);
-  [forwardHash, inverseHash] = create_hash_table(lev_vec,gridType);
+  lev_vec = zeros(Dim,1)+Lev;
+  [forwardHash, inverseHash] = hash_table_nD(lev_vec,gridType);
   elapsed_time_nD = toc( time_nD );
 
   disp(sprintf('Lev=%d,Dim=%d, time for HashTable2D=%g, time for HashTable=%g',...
@@ -121,7 +121,7 @@ for Lev=1:maxLev,
    t1 = tic();
 %    [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
    lev_vec = zeros(Dim,1)+Lev;
-   [forwardHash,inverseHash] = create_hash_table(lev_vec,gridType);
+   [forwardHash,inverseHash] = hash_table_nD(lev_vec,gridType);
    elapsed_time(Lev) = toc( t1 );
 
    sizes(Lev) = numel(inverseHash);
@@ -152,7 +152,7 @@ for Lev=1:maxLev,
    t1 = tic();
 %    [forwardHash,inverseHash] = HashTable(Lev,Dim,gridType);
     lev_vec = zeros(Dim,1)+Lev;
-    [forwardHash,inverseHash] = create_hash_table(lev_vec,gridType);
+    [forwardHash,inverseHash] = hash_table_nD(lev_vec,gridType);
 
    elapsed_time(Lev) = toc( t1 );
 

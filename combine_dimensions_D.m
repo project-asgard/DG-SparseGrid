@@ -1,17 +1,15 @@
-function [fval] = combine_dimensions_D (pde, opts, function_D, time_multiplier, hash_table)
+function [fval] = combine_dimensions_D (deg, function_D, time_multiplier, hash_table, use_oldhash)
 
 % Combine (via kron product) a set of 1D multiwavelet transforms to form
 % the higher D sparse-grid multiwavelet representation.
 
 num_dims = numel(function_D);
 
-if opts.use_oldhash
+if use_oldhash
     num_elements = numel(hash_table);
 else
     num_elements = numel(hash_table.elements_idx);
 end
-
-deg = pde.deg;
 
 fval = sparse(deg^num_dims * num_elements,1);
 
@@ -23,7 +21,7 @@ for i=1:num_elements
     clear kronMatList;
     for d=1:num_dims
         
-        if opts.use_oldhash
+        if use_oldhash
             ll=hash_table{i};
             idx_1D = ll(num_dims*2+d);
         else
