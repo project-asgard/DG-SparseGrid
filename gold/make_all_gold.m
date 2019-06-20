@@ -3,3 +3,4 @@ gold_hash_table
 gold_matlab
 gold_quadrature
 gold_transformations
+gold_pde
