@@ -119,8 +119,9 @@ pde.analytic_solutions_1D = { ...
     function dt=set_dt(pde,CFL)
         
         Lmax = pde.dimensions{1}.domainMax;
+        Lmin = pde.dimensions{1}.domainMin;
         LevX = pde.dimensions{1}.lev;
-        dt = Lmax/2^LevX*CFL;
+        dt = (Lmax-Lmin)/2^LevX*CFL;
     end
 
 pde.set_dt = @set_dt;

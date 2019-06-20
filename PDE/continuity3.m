@@ -8,10 +8,10 @@ function pde = continuity3
 % Run with 
 %
 % explicit
-% asgard(continuity3,5,3,0.0002);
+% asgard(continuity3);
 %
 % implicit
-% asgard(continuity3,4,4,0.002,[],[],1,[],[],1.0);
+% asgard(continuity3,'implicit',true);
 
 %% Setup the dimensions
 
@@ -151,11 +151,11 @@ pde.analytic_solutions_1D = { ...
 %%
 % Function to set time step
 
-    function dt=set_dt(pde)    
+    function dt=set_dt(pde,CFL)    
         Lmax = pde.dimensions{1}.domainMax;
+        Lmin = pde.dimensions{1}.domainMin;
         LevX = pde.dimensions{1}.lev;
-        CFL = pde.CFL;
-        dt = Lmax/2^LevX*CFL;
+        dt = (Lmax-Lmin)/2^LevX*CFL;
     end
 
 pde.set_dt = @set_dt;
