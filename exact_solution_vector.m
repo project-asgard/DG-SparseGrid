@@ -14,6 +14,6 @@ for d=1:nDims
 end
 
 ft = pde.analytic_solutions_1D{nDims+1}(time);
-fval = combine_dimensions_D(pde,opts,fList,ft,hash_table);
+fval = combine_dimensions_D(pde.deg,fList,ft,hash_table,opts.use_oldhash);
 
 end

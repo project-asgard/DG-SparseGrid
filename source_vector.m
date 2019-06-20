@@ -17,7 +17,7 @@ for s=1:num_sources
     end
     
     time_multiplier = pde.sources{s}{num_dimensions+1}(time);
-    fval = fval + combine_dimensions_D(pde, opts, fList, time_multiplier, hash_table);
+    fval = fval + combine_dimensions_D(pde.deg, fList, time_multiplier, hash_table, opts.use_oldhash);
 end
 
 end

@@ -2,7 +2,7 @@
 
 % transformations testing 
 transformations_dir = strcat(pwd, "/", "generated-inputs", "/", "transformations", "/");
-mkdir (transformations_dir);
+[stat,msg] = mkdir (transformations_dir);
 
 % multiwavelet file generation
 out_base = strcat(transformations_dir, "multiwavelet_1_");
@@ -63,32 +63,32 @@ out_base = strcat(transformations_dir, "operator_two_scale_");
 filename = strcat(out_base, "2_2.dat");
 degree = 2;
 level = 2;
-vect = OperatorTwoScale(degree, level);
+vect = OperatorTwoScale(degree, level, 'wavelet');
 write_octave_like_output(filename, full(vect));
 
 filename = strcat(out_base, "2_3.dat");
 degree = 2;
 level = 3;
-vect = OperatorTwoScale(degree, level);
+vect = OperatorTwoScale(degree, level, 'wavelet');
 write_octave_like_output(filename, full(vect));
 
 filename = strcat(out_base, "4_3.dat");
 degree = 4;
 level = 3;
-vect = OperatorTwoScale(degree, level);
+vect = OperatorTwoScale(degree, level, 'wavelet');
 write_octave_like_output(filename, full(vect));
 
 
 filename = strcat(out_base, "5_5.dat");
 degree = 5;
 level = 5;
-vect = OperatorTwoScale(degree, level);
+vect = OperatorTwoScale(degree, level, 'wavelet');
 write_octave_like_output(filename, full(vect));
 
 filename = strcat(out_base, "2_6.dat");
 degree = 2;
 level = 6;
-vect = OperatorTwoScale(degree, level);
+vect = OperatorTwoScale(degree, level, 'wavelet');
 write_octave_like_output(filename, full(vect));
 
 % forward MWT test generation

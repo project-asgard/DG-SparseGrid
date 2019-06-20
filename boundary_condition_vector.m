@@ -158,8 +158,8 @@ for tt = 1:nTerms % Construct a BC object for each term
             fListL = bcL{d1};
             fListR = bcR{d1};
              
-            bcVec = bcVec + combine_dimensions_D(pde,opts,fListL,timeFacL,hash_table);
-            bcVec = bcVec + combine_dimensions_D(pde,opts,fListR,timeFacR,hash_table);
+            bcVec = bcVec + combine_dimensions_D(pde.deg,fListL,timeFacL,hash_table,opts.use_oldhash);
+            bcVec = bcVec + combine_dimensions_D(pde.deg,fListR,timeFacR,hash_table,opts.use_oldhash);
             
         end
         

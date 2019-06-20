@@ -1,4 +1,4 @@
-function FMWT_COMP = OperatorTwoScale(deg,lev)
+function FMWT_COMP = OperatorTwoScale(deg,lev,user_method)
 
 %----------------------------------
 % Set-up Two-scale operator       %
@@ -10,27 +10,33 @@ function FMWT_COMP = OperatorTwoScale(deg,lev)
 % global OperatorTwoScale_method;
 idebug = 0;
 
-%imethod_default = 'nonwavelet';
-%imethod_default = 'wavelet';
-imethod_default = 'wavelet2';
+%%
+% user_method options
+%
+% user_method_default = 'wavelet';    % Original method which requires zeroing out
+% user_method_default = 'wavelet2';   % Ed's update which only calculates the non-zeros
+% user_method_default = 'nonwavelet'; % The non-wavelet approach 
 
-imethod = imethod_default;
+imethod = 'wavelet2';
 
-% NOTE: this was overwriting the choice above so commented out.
-% if exist('OperatorTwoScale_method','var'), 
-%         imethod = OperatorTwoScale_method;
-% end;
+if exist('user_method','var') && ~isempty(user_method)
+    imethod = user_method;
+end
+
 if (idebug >= 1),
     disp(sprintf('OperatorTwoScale:maxDeg=%d,maxLev=%d,imethod=%s', ...
                                    deg,   lev,   imethod ));
-end;
+end
 
-if (strcmp(imethod, 'nonwavelet')),
+FMWT_COMP = 0;
+if (strcmp(imethod, 'nonwavelet'))
     FMWT_COMP = OperatorTwoScale_nonwavelet(deg,lev);
-elseif (strcmp(imethod,'wavelet2')),
+elseif (strcmp(imethod,'wavelet2'))
     FMWT_COMP = OperatorTwoScale_wavelet2(deg,lev);
-else
+elseif (strcmp(imethod,'wavelet'))
     FMWT_COMP = OperatorTwoScale_wavelet(deg,lev);
-end;
+else
+    error("Invalid method choice in OperatorTwoScale");
+end
 
 end

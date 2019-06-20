@@ -10,6 +10,6 @@ for d=1:nDims
 end
 
 ft = 1;
-fval = combine_dimensions_D(pde, opts, fList, ft, hash_table);
+fval = combine_dimensions_D(pde.deg, fList, ft, hash_table, opts.use_oldhash);
 
 end
