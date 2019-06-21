@@ -4,3 +4,4 @@ gold_matlab
 gold_quadrature
 gold_transformations
 gold_pde
+gold_coefficients

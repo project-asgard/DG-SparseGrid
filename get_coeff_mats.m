@@ -33,7 +33,7 @@ for tt = 1:nTerms
             
             if debug; disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]); end
             
-            [mat,mat1,mat2,mat0] = coeff_matrix2(pde,t,dim,term{d});
+            [mat,mat1,mat2,mat0] = coeff_matrix(pde,t,dim,term{d});
             
             pde.terms{tt}{d}.coeff_mat = mat;
             pde.terms{tt}{d}.coeff_mat0 = mat0;
