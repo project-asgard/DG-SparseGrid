@@ -5,3 +5,4 @@ gold_quadrature
 gold_transformations
 gold_pde
 gold_coefficients
+gold_batch

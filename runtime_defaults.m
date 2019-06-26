@@ -13,6 +13,7 @@ check_grid_type = @(x) any(validatestring(x,valid_grid_types));
 default_CFL = 0.01;
 default_adapt = false;
 default_use_oldhash = false;
+default_use_oldcoeffmat = false;
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -24,6 +25,7 @@ addOptional(input_parser,'grid_type',default_grid_type, check_grid_type);
 addOptional(input_parser,'CFL',default_CFL, @isnumeric);
 addOptional(input_parser,'adapt',default_adapt, @islogical);
 addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
+addOptional(input_parser,'use_oldcoeffmat',default_use_oldcoeffmat, @islogical);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -83,6 +85,7 @@ opts.grid_type = input_parser.Results.grid_type;
 opts.implicit = input_parser.Results.implicit;
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
+opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
 
 if opts.adapt
     opts.use_oldhash = false;

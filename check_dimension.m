@@ -35,7 +35,7 @@ end
 fn = fieldnames(dim);
 for k=1:numel(fn)
     if ~isfield(default_dim,fn{k})
-        error(strcat('Unrecognized field in dim', fn{k} ));
+        error(strcat('Unrecognized field in dim: ', fn{k}));
     end
 end
 

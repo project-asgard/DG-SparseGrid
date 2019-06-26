@@ -1,4 +1,4 @@
-function pde = continuity2
+function pde = continuity2_old
 % 2D test case using continuity equation, i.e.,
 %
 % df/dt == -df/dx - df/dy

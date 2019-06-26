@@ -22,7 +22,7 @@ if ~opts.quiet; disp('Constructing hash and inverse hash tables'); end
 if opts.use_oldhash
     [HASH,hash_table] = hash_table_nD(pde.lev_vec, opts.grid_type);
 else
-    [elements, elements_idx]    = element_table (pde,opts);
+    [elements, elements_idx]    = element_table (pde.lev_vec, pde.max_lev, opts.grid_type);
     hash_table.elements         = elements;
     hash_table.elements_idx     = elements_idx; % only to get the same order as the old hash table
 end

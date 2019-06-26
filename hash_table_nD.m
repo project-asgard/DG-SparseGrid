@@ -13,6 +13,8 @@ function [forwardHash, inverseHash] = hash_table_nD (lev_vec, grid_type)
 %-------------------------------------------------
 idebug = 0;
 
+assert(iscolumn(lev_vec) || isrow(lev_vec));
+
 if ~exist('grid_type','var') || isempty(grid_type)
     grid_type = 'SG'; % Set default gridType to SG
 end

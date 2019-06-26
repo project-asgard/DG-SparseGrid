@@ -5,6 +5,8 @@
 
 function [mat] = coeff_matrix_old(deg,t,dimension,term_1D)
 
+assert(isscalar(deg));
+
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
 % Here we shall choose \hat{u} = AVG(u)+JUMP(u)/2*cval (cval is given)
@@ -329,12 +331,13 @@ Grad = Grad .* (abs(Grad) > tol );
 
 if strcmp(type,'grad')
     mat = Grad;
-end
-if strcmp(type,'mass')
+elseif strcmp(type,'mass')
     mat = Mass;
-end
-if strcmp(type,'diff')
+elseif strcmp(type,'diff')
     mat = Stif;
+else
+    error('Unknown operator type');
 end
+
 
 end

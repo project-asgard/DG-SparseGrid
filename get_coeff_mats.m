@@ -1,4 +1,4 @@
-function pde = get_coeff_mats (pde, t, TD)
+function pde = get_coeff_mats (pde, t, TD, use_oldcoeffmat)
 
 %%
 % t : time passed to G function
@@ -7,6 +7,11 @@ function pde = get_coeff_mats (pde, t, TD)
 
 nTerms = numel(pde.terms);
 nDims = numel(pde.dimensions);
+
+oldcoeff = 0;
+if exist('use_oldcoeffmat','var') && ~isempty(use_oldcoeffmat)
+    oldcoeff = use_oldcoeffmat;
+end
 
 debug = 0;
 
@@ -33,21 +38,28 @@ for tt = 1:nTerms
             
             if debug; disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]); end
             
-            [mat,mat1,mat2,mat0] = coeff_matrix(pde,t,dim,term{d});
-            
-            pde.terms{tt}{d}.coeff_mat = mat;
-            pde.terms{tt}{d}.coeff_mat0 = mat0;
-            if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
-                pde.terms{tt}{d}.mat1 = mat1; 
-                pde.terms{tt}{d}.mat2 = mat2;
+            if oldcoeff
+                mat = coeff_matrix_old(pde.deg,t,dim,term{d});
+                pde.terms{tt}{d}.coeff_mat = mat;
+            else
+                
+                [mat,mat1,mat2,mat0] = coeff_matrix(pde,t,dim,term{d});
+                
+                pde.terms{tt}{d}.coeff_mat = mat;
+                pde.terms{tt}{d}.coeff_mat0 = mat0;
+                if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
+                    pde.terms{tt}{d}.mat1 = mat1;
+                    pde.terms{tt}{d}.mat2 = mat2;
+                end
             end
+            
             
         end
     end
 end
 
 %%
-% LHS mass matrix 
+% LHS mass matrix
 
 if ~isempty(pde.termsLHS)
     
@@ -67,9 +79,13 @@ if ~isempty(pde.termsLHS)
                 
                 assert(strcmp(term{d}.type,'mass'));
                 
-                [mat,~,~,mat0] = coeff_matrix2(pde,t,dim,term{d});
-                pde.termsLHS{tt}{d}.coeff_mat = mat;
-                pde.termsLHS{tt}{d}.coeff_mat0 = mat0;
+                if oldcoeff
+                    error('Non-identity LHS mass matrix not supported by "use_oldcoeffmat=1"');
+                else          
+                    [mat,~,~,mat0] = coeff_matrix(pde,t,dim,term{d});
+                    pde.termsLHS{tt}{d}.coeff_mat = mat;
+                    pde.termsLHS{tt}{d}.coeff_mat0 = mat0;
+                end
                 
             end
             

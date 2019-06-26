@@ -1,4 +1,4 @@
-function [A_Data] = GlobalMatrixSG_SlowVersion(pde, opts, hash_table)
+function [A_Data] = global_matrix (pde, opts, hash_table)
 
 % Global Matrix construction from the coefficient matricies coeffMat1 and
 % coeffMat2 by looping over each grid point (i.e., elements of the hash).

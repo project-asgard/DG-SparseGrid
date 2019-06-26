@@ -1,7 +1,11 @@
-function [elements,elementsIDX] = element_table(pde,opts)
+% function [elements,elementsIDX] = element_table(pde,opts)
+function [elements,elementsIDX] = element_table (lev_vec, max_lev, grid_type)
 
-num_dimensions = numel(pde.dimensions);
-is_sparse_grid = strcmp( opts.grid_type, 'SG');
+assert(iscolumn(lev_vec) || isrow(lev_vec));
+num_dimensions = numel(lev_vec);
+
+% num_dimensions = numel(pde.dimensions);
+is_sparse_grid = strcmp( grid_type, 'SG');
 
 %%
 % Setup element table as a collection of sparse vectors to
@@ -13,9 +17,9 @@ is_sparse_grid = strcmp( opts.grid_type, 'SG');
 num_elements_max = 1;
 
 for d=1:num_dimensions   
-    this_num_elements   = uint64(2)^pde.max_lev;
+    this_num_elements   = uint64(2)^max_lev;
     num_elements_max    = num_elements_max * this_num_elements; 
-    lev_vec(d)          = pde.dimensions{d}.lev;
+%     lev_vec(d)          = pde.dimensions{d}.lev;
 end
 num_elements_max = double(num_elements_max); % This number is HUGE
 
@@ -80,7 +84,7 @@ for icase=1:ncase
      %%
      % Store the index into the element table for this element
      
-     element_idx = lev_cell_to_element_index(levels,icells,pde.max_lev);
+     element_idx = lev_cell_to_element_index(levels,icells,max_lev);
      elementsIDX(i) = element_idx;
      
      %%

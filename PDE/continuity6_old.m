@@ -1,4 +1,4 @@
-function pde = continuity6
+function pde = continuity6_old
 % 3D test case using continuity equation, i.e.,
 %
 % df/dt + b.grad_x(f) + a.grad_v(f)==0 where b={1,1,3}, a={4,3,2}
