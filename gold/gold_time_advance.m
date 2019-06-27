@@ -359,6 +359,51 @@ end
 
 % continuity6
 
+%sg l2d2
+out_format = strcat(batch_dir, 'continuity6_sg_l2_d2_t%d.dat');
+pde = continuity6_old;
+
+level = 2;
+degree = 2;
+grid_type='SG';
+
+for i=1:length(pde.dimensions)
+    pde.dimensions{i}.lev = level;
+    pde.deg = degree;
+    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
+end
+
+pde = check_pde(pde);
+pde = check_terms(pde);
+CFL = .1;
+dt = pde.set_dt(pde,CFL);
+
+opts.compression = 4;
+opts.useConnectivity = 0;
+opts.implicit = 0;
+opts.use_oldhash = 1;
+opts.use_oldcoeffmat = 1;
+
+t = 0;
+TD = 0;
+pde = get_coeff_mats(pde,t,TD);
+pde.CFL=0.1;
+
+lev_vec = zeros(numel(pde.dimensions),1)+level;
+[HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
+
+A_data = global_matrix(pde,opts,HASHInv);
+
+Vmax = 0;
+Emax = 0;
+out = initial_condition_vector(pde,opts,HASHInv,0);
+deg = pde.deg;
+for i=0:4   
+    time = i*dt;
+    out = time_advance(pde,opts,A_data,out,time,dt,deg,HASHInv,Vmax,Emax);  
+    write_octave_like_output(sprintf(out_format,i), out);
+end
+
 %sg l2d3
 out_format = strcat(batch_dir, 'continuity6_sg_l2_d3_t%d.dat');
 pde = continuity6_old;
