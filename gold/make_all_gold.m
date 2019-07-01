@@ -1,3 +1,9 @@
+close all
+clear all
+
+disp('Generating gold data for permute component');
+gold_permute
+
 disp('Generating gold data for connectivity component');
 gold_connect
 
