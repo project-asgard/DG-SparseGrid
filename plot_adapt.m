@@ -1,6 +1,6 @@
-function plot_adapt(pde,pos)
+function plot_adapt(pde,opts,hash_table,pos)
 
-num_elements = numel(pde.elementsIDX);
+num_elements = numel(hash_table.elements_idx);
 num_dims = numel(pde.dimensions);
 xMin = pde.dimensions{1}.domainMin;
 xMax = pde.dimensions{1}.domainMax;
@@ -15,8 +15,8 @@ style       = strings (num_elements, 1);
 
 for i=1:num_elements
     
-    idx = pde.elementsIDX(i);
-    c = pde.elements.node_type(idx);
+    idx = hash_table.elements_idx(i);
+    c = hash_table.elements.node_type(idx);
     
     if c == 1
         style(i) = 'ob';
@@ -24,9 +24,10 @@ for i=1:num_elements
         style(i) = 'or';
     end
     
-    coordinates(i,:) = getMyRealSpaceCoord(pde,idx);
+    coordinates(i,:) = getMyRealSpaceCoord(pde,opts,hash_table,idx);
     
-    levels(i) = sum (pde.elements.lev_p1(idx,:)-1,'all');
+    levels(i) = sum (hash_table.elements.lev_p1(idx,:)-1,'all');
+    assert(levels(i)>=0);
     
 end
 
@@ -38,16 +39,17 @@ if num_dims == 1
     hold on
     for i=1:num_elements
         
-        idx = pde.elementsIDX(i);
-        y = pde.elements.lev_p1(idx,1)-1;
-        c = pde.elements.node_type(idx);
+        idx = hash_table.elements_idx(i);
+        y = hash_table.elements.lev_p1(idx,1)-1;
+        c = hash_table.elements.node_type(idx);
+        style = 'ob';
         if c == 1
             style = 'ob';
         elseif c == 2
             style = 'or';
         end
         
-        coord_D = getMyRealSpaceCoord(pde,idx);
+        coord_D = getMyRealSpaceCoord(pde,opts,hash_table,idx);
         plot(coord_D(1),-y,style);
         
         xlim([xMin,xMax]);

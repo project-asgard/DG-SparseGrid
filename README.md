@@ -1,34 +1,57 @@
-# Reference matlab implementation of FK6D
+# Matlab version of ASGarD
 
-A sparse-grid, Discontinuous Galerkin code for solving the Vlasov-Poisson 
-in the 2D setting (1x1v).
+## Quickstart
 
-### Run after cloning
+1.  Clone repository.
+```
+https://code.ornl.gov/lmm/DG-SparseGrid.git
+```
+2. Add the `DG-SparseGrid` folder (and subfolders) to your matlab path.
+3. Run a PDE, e.g., 
+```
+asgard(diffusion2)
+```
 
-> run fk6D.m
+## Run options
+Run as 
+```
+[err,f_wSpace,f_rSpace] = asgard(PDE,name,value)
+```
+where the `name`,`value` pair options are defined in `runtime_defaults.m` ...
+```
+'lev', 3 | [3,4,5];                 % Scalar or num_dimensions long vector
+'deg' , 2;                          % Globally defined basis function order
+'num_steps', 5;                     % Number of time steps
+'quiet', true | **false**;          % Display output and plots
+'implicit', true | **false**;       % Implicit or explicit time advance
+'grid_type', **'SG'** | 'FG';       % Sparse-grid (SG) or Full-grid (FG)
+'CFL' = 0.01;                       % CFL number
+'adapt' = true | **false**;         % Enable adaptivity
+'use_oldhash' = true | **false**;   % Use original hash table or not
+```
+e.g., 
+```
+asgard(continuity1)
+asgard(continuity1,'lev',4,'deg',3,'implicit',false)
+asgard(continuity1,'implicit',true)
+asgard(continuity1,'implicit',true,'CFL',0.1)
+```
 
-### Run other tests and Modifying the parameters
+## Running the tests
+Only the PDE tests
+```
+cd DG-SparseGrid
+runtests
+```
+All the tests (PDE, two_scale, kronmult)
+```
+runtests('IncludeSubfolders',true)
+```
 
-**Tests can be modified in**
-* ./PDE/Vlasov*.m
-*%which defines the domain Lmax, Vmax, and Initial condition f(x,v,t=0)*
+## Producing the C++ gold testing data
+```
+cd DG-SparseGrid/gold
+make_all_gold
+```
 
-**Parameters can be modifies in**
-* main_Vlasov.m::
- - TEND *%The ending time for test*
- - Lev  *%The mesh's resolution-->with size h=2^(-Lev)*
- - Deg  *%The degree of polynomial--> Deg=2 means linear element*
- - IsSlowVersion *%IsSlowVersion=1 means using the slow version; other values means using the fast version*
- 
-* Note::
- - The Hash Table only contains information from Lev
- - The globa matrix is generated through looping over Hash Table
- - Insert the 1D index mapping to HashTable
- - Slow Version of GlobalMatrix_SG is updated in the slowversion foler
 
-### Construction of matrix_coeff_TI
-* [vMassV,GradV,GradX,DeltaX] = matrix_coeff_TI
-- vMassV 
-- GradV
-- GradX
-- DeltaX

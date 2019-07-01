@@ -5,7 +5,7 @@ nerrors = 0;
 idim = 3;
 LevMax_org = [2,3,4];
 disp(sprintf('max of indices of dimension %d is ',idim));
-LevMax
+% LevMax
 
 idebug = 0;
 for icase=1:3,

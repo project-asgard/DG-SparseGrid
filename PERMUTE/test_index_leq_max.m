@@ -1,5 +1,5 @@
-% simple test for index_leq_max
-more off;
+  % simple test for index_leq_max
+% more off;
 
 Nmat{1} = 2:3;
 Nmat{2} = 0:4;
@@ -133,4 +133,4 @@ end;
                       
 
 
-more on;
+% more on;

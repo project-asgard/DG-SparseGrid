@@ -9,9 +9,11 @@ for igrid=1:2,
         else
                 gridTye = 'FG';
         end;
-        [HASH, HASHInv] = HashTable(Lev,Dim,gridType);
+%         [HASH, HASHInv] = HashTable(Lev,Dim,gridType);
+        lev_vec = zeros(Dim,1) + Lev;
+        [HASH, HASHInv] = hash_table_nD(lev_vec,gridType);
 
-        Con2D = Connect2D(Lev,HASH,HASHInv,gridType);
+        Con2D = connect_2D(Lev,HASH,HASHInv,gridType);
 
         is_sparse_grid =  (strcmp(gridType,'SG'));
         if (is_sparse_grid),
@@ -19,7 +21,7 @@ for igrid=1:2,
         else
                 Levsum = Dim*Lev; Levmax = Lev;
         end;
-        ConnD = ConnectnD(Dim, HASH, HASHInv,Levsum, Levmax);
+        ConnD = connect_nD(Dim, HASH, HASHInv,Levsum, Levmax);
 
         % ------------------------
         % compare Con2D and ConnD

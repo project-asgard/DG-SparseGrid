@@ -5,12 +5,11 @@ function pde = fokkerplanck1_4p1b
 % Run with
 %
 % explicit
-% asgard(fokkerplanck1_4p1b,4,2,0.02,[],[],0,[])
+% asgard(fokkerplanck1_4p1b)
 %
 % implicit
-% asgard(fokkerplanck1_4p1b,6,4,0.5,[],[],1,[],[],0.1)
+% asgard(fokkerplanck1_4p1b,'implicit',true)
 
-pde.CFL = 0.01;
 pde.max_lev = 8;
 
 sig = 0.1;
@@ -91,11 +90,10 @@ pde.analytic_solutions_1D = { ...
 %%
 % Function to set time step
     
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         x_max = pde.dimensions{1}.domainMax;
         x_min = pde.dimensions{1}.domainMin;
         lev   = pde.dimensions{1}.lev;
-        CFL   = pde.CFL;
         dt    = (x_max - x_min) / 2^lev * CFL;
     end
 
