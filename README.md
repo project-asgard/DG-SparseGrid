@@ -45,16 +45,24 @@ asgard(continuity1,'implicit',true,'CFL',0.1)
 Only the PDE tests
 ```
 cd DG-SparseGrid
+addpath(genpath('./'))
+close all; clear all
 runtests
 ```
 All the tests (PDE, two_scale, kronmult)
 ```
+cd DG-SparseGrid
+addpath(genpath('./'))
+close all; clear all
 runtests('IncludeSubfolders',true)
 ```
 
 ## Producing the C++ gold testing data
 ```
-cd DG-SparseGrid/gold
+cd DG-SparseGrid
+addpath(genpath('./'))
+cd gold
+close all; clear all
 make_all_gold
 ```
 
