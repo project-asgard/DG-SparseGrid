@@ -6,7 +6,11 @@
 ```
 https://code.ornl.gov/lmm/DG-SparseGrid.git
 ```
-2. Add the `DG-SparseGrid` folder (and subfolders) to your matlab path.
+2. Add the `DG-SparseGrid` folder (and subfolders) to your matlab path. In Matlab do 
+```
+cd DG-SparseGrid
+addpath(genpath('./'))
+```
 3. Run a PDE, e.g., 
 ```
 asgard(diffusion2)
