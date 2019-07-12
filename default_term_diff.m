@@ -21,22 +21,22 @@ term_diff.G1 = @(x,p,t,dat) x*0+1;
 term_diff.LF1 = -1; % upwind left
 term_diff.BCL1 = 'N';
 term_diff.BCR1 = 'N';
-for d=1:nDims % BC variation in all dimensions
+for d=1:num_dimensions % BC variation in all dimensions
     term_diff.BCL1_fList{d} = @(x,p,t) x.*0;
     term_diff.BCR1_fList{d} = @(x,p,t) x.*0;
 end
-term_diff.BCL1_fList{nDims+1} = @(t,p) 1;  % time variation
-term_diff.BCR1_fList{nDims+1} = @(t,p) 1;
+term_diff.BCL1_fList{num_dimensions+1} = @(t,p) 1;  % time variation
+term_diff.BCR1_fList{num_dimensions+1} = @(t,p) 1;
 
 % eq2 : g2 * df/dx 
 term_diff.G2 = @(x,p,t,dat) x*0+1;
 term_diff.LF2 = +1; % upwind right
 term_diff.BCL2 = 'D';
 term_diff.BCR2 = 'D';
-for d=1:nDims % BC variation in all dimensions
+for d=1:num_dimensions % BC variation in all dimensions
     term_diff.BCL2_fList{d} = @(x,p,t) x.*0;
     term_diff.BCR2_fList{d} = @(x,p,t) x.*0;
 end
-term_diff.BCL2_fList{nDims+1} = @(t,p) 1; % time variation
-term_diff.BCR2_fList{nDims+1} = @(t,p) 1;
+term_diff.BCL2_fList{num_dimensions+1} = @(t,p) 1; % time variation
+term_diff.BCR2_fList{num_dimensions+1} = @(t,p) 1;
 
