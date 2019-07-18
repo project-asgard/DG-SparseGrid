@@ -5,8 +5,8 @@ function pde = get_coeff_mats (pde, t, TD, use_oldcoeffmat)
 % TD == 1 for time dependent
 % TD == 0 for time independent
 
-nTerms = numel(pde.terms);
-nDims = numel(pde.dimensions);
+num_terms = numel(pde.terms);
+num_dimensions = numel(pde.dimensions);
 
 oldcoeff = 0;
 if exist('use_oldcoeffmat','var') && ~isempty(use_oldcoeffmat)
@@ -24,13 +24,13 @@ end
 %%
 % Normal RHS terms
 
-for tt = 1:nTerms
+for tt = 1:num_terms
     
     term = pde.terms{tt};
     
     %%
     % Add dim many operator matrices to each term.
-    for d = 1:nDims
+    for d = 1:num_dimensions
         
         dim = pde.dimensions{d};
         
@@ -43,7 +43,7 @@ for tt = 1:nTerms
                 pde.terms{tt}{d}.coeff_mat = mat;
             else
                 
-                [mat,mat1,mat2,mat0] = coeff_matrix(pde,t,dim,term{d});
+                [mat,mat1,mat2,mat0] = coeff_matrix(num_dimensions,pde.deg,t,dim,term{d},pde.params);
                 
                 pde.terms{tt}{d}.coeff_mat = mat;
                 pde.terms{tt}{d}.coeff_mat0 = mat0;
@@ -69,7 +69,7 @@ if ~isempty(pde.termsLHS)
         
         term = pde.termsLHS{tt};
         
-        for d = 1:nDims
+        for d = 1:num_dimensions
             
             dim = pde.dimensions{d};
             

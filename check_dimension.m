@@ -1,4 +1,4 @@
-function default_dim = checkDimension(nDims,dim)
+function default_dim = check_dimension(num_dimensions,dim)
 
 % Set defaults for dimension
 
@@ -6,12 +6,12 @@ default_dim.name = 'x';
 default_dim.BCL = 'N'; % neumann
 default_dim.BCR = 'N'; % neumann
 
-for d=1:nDims % BC variation in all dimensions
+for d=1:num_dimensions % BC variation in all dimensions
     default_dim.BCL_fList{d} = @(x,p,t) x.*0;
     default_dim.BCR_fList{d} = @(x,p,t) x.*0;
 end
-default_dim.BCL_fList{nDims+1} = @(t,p) 1;  % time variation of BCS
-default_dim.BCR_fList{nDims+1} = @(t,p) 1;
+default_dim.BCL_fList{num_dimensions+1} = @(t,p) 1;  % time variation of BCS
+default_dim.BCR_fList{num_dimensions+1} = @(t,p) 1;
 
 default_dim.domainMin = 0;
 default_dim.domainMax = 1;

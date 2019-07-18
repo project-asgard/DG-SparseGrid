@@ -1,6 +1,6 @@
 %% Generate gold data for C++ testing of time advance component
 
-opts.use_oldcoeffmat = 1;
+opts.use_oldcoeffmat = 0;
 opts.use_oldhash = 1;
 
 % time advance
@@ -11,7 +11,7 @@ batch_dir = strcat(pwd, "/", "generated-inputs", "/", "time_advance", "/");
 
 %sg l2d2
 out_format = strcat(batch_dir, 'continuity1_sg_l2_d2_t%d.dat');
-pde = continuity1_old;
+pde = continuity1;
 level = 2;
 degree = 2;
 grid_type='SG';
@@ -52,7 +52,7 @@ end
 
 %fg l2d2
 out_format = strcat(batch_dir, 'continuity1_fg_l2_d2_t%d.dat');
-pde = continuity1_old;
+pde = continuity1;
 
 level = 2;
 degree = 2;
@@ -72,7 +72,6 @@ dt = pde.set_dt(pde,CFL);
 opts.compression = 4;
 opts.useConnectivity = 0;
 opts.implicit = 0;
-opts.use_oldhash = 1;
 
 lev_vec = zeros(numel(pde.dimensions),1)+level;
 [HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
@@ -97,7 +96,7 @@ end
 
 %sg l4d3
 out_format = strcat(batch_dir, 'continuity1_sg_l4_d3_t%d.dat');
-pde = continuity1_old;
+pde = continuity1;
 
 level = 4;
 degree = 3;
@@ -143,7 +142,7 @@ end
 
 %sg l2d2
 out_format = strcat(batch_dir, 'continuity2_sg_l2_d2_t%d.dat');
-pde = continuity2_old;
+pde = continuity2;
 
 level = 2;
 degree = 2;
@@ -185,7 +184,7 @@ end
 
 %fg l2d2
 out_format = strcat(batch_dir, 'continuity2_fg_l2_d2_t%d.dat');
-pde = continuity2_old;
+pde = continuity2;
 
 level = 2;
 degree = 2;
@@ -229,7 +228,7 @@ end
 
 %sg l4d3
 out_format = strcat(batch_dir, 'continuity2_sg_l4_d3_t%d.dat');
-pde = continuity2_old;
+pde = continuity2;
 level = 4;
 degree = 3;
 grid_type='SG';
@@ -272,7 +271,7 @@ end
 
 %sg l2d2
 out_format = strcat(batch_dir, 'continuity3_sg_l2_d2_t%d.dat');
-pde = continuity3_old;
+pde = continuity3;
 
 level = 2;
 degree = 2;
@@ -314,7 +313,7 @@ end
 
 %sg l4d3
 out_format = strcat(batch_dir, 'continuity3_sg_l4_d3_t%d.dat');
-pde = continuity3_old;
+pde = continuity3;
 level = 4;
 degree = 3;
 grid_type='SG';
@@ -357,7 +356,7 @@ end
 
 %sg l2d2
 out_format = strcat(batch_dir, 'continuity6_sg_l2_d2_t%d.dat');
-pde = continuity6_old;
+pde = continuity6;
 
 level = 2;
 degree = 2;
@@ -400,7 +399,7 @@ end
 
 %sg l2d3
 out_format = strcat(batch_dir, 'continuity6_sg_l2_d3_t%d.dat');
-pde = continuity6_old;
+pde = continuity6;
 
 level = 2;
 degree = 3;

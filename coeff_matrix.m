@@ -3,7 +3,7 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,mat1,mat2,mat0] = coeff_matrix(pde,t,dim,term)
+function [mat,mat1,mat2,mat0] = coeff_matrix(num_dimensions,deg,t,dim,term,params)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -45,9 +45,6 @@ function [mat,mat1,mat2,mat0] = coeff_matrix(pde,t,dim,term)
 %%
 % pde shortcuts
 
-params  = pde.params;
-nDims = numel(pde.dimensions);
-
 type    = term.type;
 
 if strcmp(type,'diff')
@@ -63,13 +60,13 @@ if strcmp(type,'diff')
     termA.type = 'grad';
     termA.LF = term.LF1;
     termA.G = term.G1;
-    termA = check_partial_term(nDims,termA);
+    termA = check_partial_term(num_dimensions,termA);
     
     dimA.BCL = term.BCL1;
     dimA.BCR = term.BCR1;
-    dimA = check_dimension(nDims,dimA);
+    dimA = check_dimension(num_dimensions,dimA);
 
-    [mat1,~,~,mat10] = coeff_matrix(pde,t,dimA,termA);
+    [mat1,~,~,mat10] = coeff_matrix(num_dimensions,deg,t,dimA,termA,params);
     assert(~isnan(sum(mat1,'all')))
     
     %%
@@ -80,13 +77,13 @@ if strcmp(type,'diff')
     termB.type = 'grad';
     termB.LF = term.LF2;
     termB.G = term.G2;
-    termB = check_partial_term(nDims,termB);
+    termB = check_partial_term(num_dimensions,termB);
   
     dimB.BCL = term.BCL2;
     dimB.BCR = term.BCR2;
-    dimB = check_dimension(nDims,dimB);
+    dimB = check_dimension(num_dimensions,dimB);
 
-    [mat2,~,~,mat20] = coeff_matrix(pde,t,dimB,termB);
+    [mat2,~,~,mat20] = coeff_matrix(num_dimensions,deg,t,dimB,termB,params);
     assert(~isnan(sum(mat2,'all')))
     
     %%
@@ -104,7 +101,6 @@ else
     % dim shortcuts
     
     lev     = dim.lev;
-    deg     = pde.deg;
     xMin    = dim.domainMin;
     xMax    = dim.domainMax;
     FMWT    = dim.FMWT;
@@ -182,18 +178,6 @@ else
         c = c1:c2;
         
         %%
-        % Previous element
-        p1 = deg*(i-1)+1;
-        p2 = deg*i;
-        p = p1:p2;
-        
-        %%
-        % Later element
-        l1 = deg*(i+1)+1;
-        l2 = deg*(i+2);
-        l = l1:l2;
-        
-        %%
         % First element
         first1 = deg*(1-1)+1;
         first2 = deg*((1-1)+1);
@@ -243,7 +227,7 @@ else
         % Setup boundary conditions
         
         %%
-        % -<funcCoef*{q},p>
+        % - <funcCoef*{q},p>
         %----------------------------------------------
         % Numerical Flux is defined as
         % Flux = {{f}} + C/2*[[u]]

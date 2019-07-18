@@ -123,7 +123,7 @@ write_octave_like_output(sprintf(out_format,1), out);
 % also when the rest of the tests above do not?
 
 out_format = strcat(batch_dir, 'continuity6_sg_l2_d3_t%d.dat');
-pde = continuity6_old;  
+pde = continuity6;  
 level = 2;
 degree = 3;
 gridType='SG';
@@ -145,7 +145,7 @@ opts.compression = 4;
 opts.useConnectivity = 0;
 opts.implicit = 0;
 opts.use_oldhash = 1;
-opts.use_oldcoeffmat = 1;
+opts.use_oldcoeffmat = 0;
 
 t = 0;
 TD = 0;
