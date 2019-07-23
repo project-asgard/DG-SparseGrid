@@ -70,3 +70,25 @@ for t=1:length(pde.terms)
     write_octave_like_output(sprintf(out_format,level,degree,t,d), full(coeff_mat));
   end
 end
+
+% fokkerplanck1_4p2 terms
+pde = check_pde(fokkerplanck1_4p2);
+level = 3;
+degree = 4;
+for i=1:length(pde.dimensions)
+  pde.dimensions{i}.lev = level;
+  pde.deg = degree;
+  pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
+end
+
+out_format = strcat(coeff_dir, 'fokkerplanck1_4p2_coefficients_l%i_d%i_%d_%d.dat');
+out_format0 = strcat(coeff_dir, 'fokkerplanck1_4p2_coefficients_norotate_l%i_d%i_%d_%d.dat');
+%doesn't matter, the term is time independent...
+time = 1.0;
+for t=1:length(pde.terms)
+  for d=1:length(pde.dimensions)
+    [coeff_mat,~,~,coeff_mat0] = coeff_matrix(numel(pde.dimensions),pde.deg,time,pde.dimensions{d},pde.terms{t}{d},pde.params);
+    write_octave_like_output(sprintf(out_format,level,degree,t,d), full(coeff_mat));
+    write_octave_like_output(sprintf(out_format0,level,degree,t,d), full(coeff_mat0));
+  end
+end
