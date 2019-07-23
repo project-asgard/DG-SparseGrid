@@ -1,4 +1,4 @@
-function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+function [f,A] = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 %-------------------------------------------------
 % Time Advance Method Input: Matrix:: A
 %        Vector:: f Time Step:: dt
@@ -6,7 +6,7 @@ function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 %-------------------------------------------------
 
 if opts.implicit
-    f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    [f,A] = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
     %f = crank_nicolson(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
 else
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -75,7 +75,7 @@ end
 
 %% Backward Euler (first order implicit time advance)
 
-function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+function [f1,A] = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 s1 = source_vector(pde,opts,hash_table,t+dt);
 bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
@@ -107,7 +107,7 @@ end
 
 %% Crank Nicolson (second order implicit time advance)
 
-function f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+function [f1,AMat] = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 s0 = source_vector(pde,opts,hash_table,t);
 s1 = source_vector(pde,opts,hash_table,t+dt);

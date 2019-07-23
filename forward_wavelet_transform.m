@@ -9,8 +9,7 @@ FMWT = OperatorTwoScale(deg,lev);
 % Get the Legendre-Gauss nodes (quad_x) and weights (quad_w) on the domain
 % [-1,+1] for performing quadrature.
 
-quad_num = 10;
-[quad_x,quad_w] = lgwt(quad_num,-1,1);
+[quad_x,quad_w] = lgwt(deg+1,-1,1);
 
 % Get grid spacing.
 

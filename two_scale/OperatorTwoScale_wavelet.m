@@ -22,8 +22,8 @@ else
     save(fileName,'H0','G0','scale_co','phi_co');
 end
 
-H0(find(abs(H0)<1e-5))=0; % Why are we doing this?
-G0(find(abs(G0)<1e-5))=0;
+% H0(find(abs(H0)<1e-5))=0; % Why are we doing this?
+% G0(find(abs(G0)<1e-5))=0;
 
 H1 = zeros(maxDeg);
 G1 = zeros(maxDeg);

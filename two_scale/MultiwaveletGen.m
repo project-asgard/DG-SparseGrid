@@ -5,7 +5,7 @@ function [H0,H1,G0,G1,scale_co,phi_co]=MultiwaveletGen(k)
 % Input: k--Degree
 %--------------------------------------
 
-N = 2^12;
+N = k+1;
 x_cord = (-1:2/N:1)';
 
 p_legendre = zeros(3*k+2);
@@ -127,10 +127,10 @@ for j_x = 1:k
     end
 end
 
-H0(find(abs(H0)<1e-5))=0;
-G0(find(abs(G0)<1e-5))=0;
-H1(find(abs(H1)<1e-5))=0;
-G1(find(abs(G1)<1e-5))=0;
-phi_co(find(abs(phi_co)<1e-5))=0;
-scale_co(find(abs(scale_co)<1e-5))=0;
+% H0(find(abs(H0)<1e-5))=0;
+% G0(find(abs(G0)<1e-5))=0;
+% H1(find(abs(H1)<1e-5))=0;
+% G1(find(abs(G1)<1e-5))=0;
+% phi_co(find(abs(phi_co)<1e-5))=0;
+% scale_co(find(abs(scale_co)<1e-5))=0;
 

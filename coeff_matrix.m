@@ -128,7 +128,7 @@ else
     %  Get quadrature points and weights.
     %  quad_x(:) is quad_num by 1
     %  quad_w(:) is quad_num by 1
-    [quad_x,quad_w] = lgwt(quad_num,-1,1);
+    [quad_x,quad_w] = lgwt(deg+1,-1,1);
     
     %%
     %  Compute the trace values (values at the left and right of each element for all k)
