@@ -53,16 +53,14 @@ end
 for n=0:maxn
     if norm == 0 % unnormalized
         dscale = 1;
-        v(1:nx, 1+n) = v(1:nx,1+n) * dscale;
     elseif norm == 1 % lin normalized (see above)
         dscale = 1/sqrt( norm2(1+n) );
-        v(1:nx, 1+n) = v(1:nx,1+n) * dscale;
     elseif norm == 2 % matlab normalized
-        dscale = lin_legendre2(x,0,0);
-        v(1:nx, 1+n) = v(1:nx,1+n) ./ dscale;
+        dscale = 1/sqrt(2);
     else
         error('norm must be 0, 1 or 2');
     end
+    v(1:nx, 1+n) = v(1:nx,1+n) * dscale;   
 end
 
 % ----------------------------

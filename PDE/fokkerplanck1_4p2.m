@@ -39,9 +39,10 @@ pde.CFL = 0.005;
         for l=1:numel(h)
             
             L = l-1;
-%             P_m = legendre(L,z); % Use matlab rather than Lin's legendre.
-%             P = P_m(1,:)';
+            P_m = legendre(L,z); % Make sure Lin's legendre gives the matlab result.
+            P2 = P_m(1,:)';
             P = P_0(:,l);
+            assert(norm(P-P2)<1e-8); 
             
             ret = ret + h(l) * P * exp(-L*(L+1)*t);
             
