@@ -33,11 +33,15 @@ pde.CFL = 0.005;
         h = [3,0.5,1,0.7,3,0,3];
         
         ret = zeros(size(z));
+        
+        P_0 = lin_legendre2(z,numel(h),2); % get matlab normalized legendres
+        
         for l=1:numel(h)
             
             L = l-1;
-            P_m = legendre(L,z); % Use matlab rather than Lin's legendre.
-            P = P_m(1,:)';
+%             P_m = legendre(L,z); % Use matlab rather than Lin's legendre.
+%             P = P_m(1,:)';
+            P = P_0(:,l);
             
             ret = ret + h(l) * P * exp(-L*(L+1)*t);
             
@@ -49,7 +53,7 @@ dim_z.BCL = 'D'; % dirichlet
 dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(z,p) soln(z,0);
+dim_z.init_cond_fn = @(z,p,t) soln(z,0);
 
 %%
 % Add dimensions to the pde object
@@ -110,14 +114,13 @@ pde.analytic_solutions_1D = { ...
 %%
 % Function to set time step
 
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         dims = pde.dimensions;
         % for Diffusion equation: dt = C * dx^2
         lev = dims{1}.lev;
         xMax = dims{1}.domainMax;
         xMin = dims{1}.domainMin;
         xRange = xMax-xMin;
-        CFL = pde.CFL;
         dx = xRange/2^lev;
         dt = CFL*dx^2;
     end
