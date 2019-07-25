@@ -82,7 +82,7 @@ if ~isempty(pde.termsLHS)
                 if oldcoeff
                     error('Non-identity LHS mass matrix not supported by "use_oldcoeffmat=1"');
                 else          
-                    [mat,~,~,mat0] = coeff_matrix(pde,t,dim,term{d});
+                    [mat,~,~,mat0] = coeff_matrix(num_dimensions,pde.deg,t,dim,term{d},pde.params);
                     pde.termsLHS{tt}{d}.coeff_mat = mat;
                     pde.termsLHS{tt}{d}.coeff_mat0 = mat0;
                 end

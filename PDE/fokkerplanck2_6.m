@@ -108,13 +108,13 @@ dim_p.BCL = 'N';
 dim_p.BCR = 'D';
 dim_p.domainMin = 0.5;
 dim_p.domainMax = +10;
-dim_p.init_cond_fn = @(x,p) soln_p(x,0);
+dim_p.init_cond_fn = @(x,p,t) soln_p(x,0);
 
 dim_z.BCL = 'N';
 dim_z.BCR = 'N';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(x,p) soln_z(x,0);
+dim_z.init_cond_fn = @(x,p,t) soln_z(x,0);
 
 %%
 % Add dimensions to the pde object
@@ -213,12 +213,11 @@ pde.analytic_solutions_1D = { ...
 
 %%
 % Function to set time step
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         dims = pde.dimensions;
         xRange = dims{1}.domainMax-dims{1}.domainMin;
         lev = dims{1}.lev;
-        CFL = pde.CFL;
         dx = xRange/2^lev;
         dt = CFL * dx;
         
