@@ -30,7 +30,8 @@ pde.CFL = 0.01;
         t1 = 1-p.^2;
         t2 = 1-z.^2;
         t3 = f0(p);
-        ret = t1./t2.*t3;
+        f = t1./t2.*t3;
+        ret = f;
     end
 
 dim_z.name = 'z';
@@ -38,7 +39,7 @@ dim_z.BCL = 'N'; % neumann
 dim_z.BCR = 'N'; % not set (equivalent to neumann)
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(z,p) soln(z,0);
+dim_z.init_cond_fn = @(z,p,t) soln(z,0);
 
 %%
 % Add dimensions to the pde object
@@ -91,12 +92,11 @@ pde.analytic_solutions_1D = { ...
 
 %%
 % Function to set time step
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         dims = pde.dimensions;
         xRange = dims{1}.domainMax-dims{1}.domainMin;
         lev = dims{1}.lev;
-        CFL = pde.CFL;
         dx = xRange/2^lev;
         dt = CFL * dx;
         
