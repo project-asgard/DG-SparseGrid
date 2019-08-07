@@ -1,11 +1,12 @@
 %% Generate C++ testing data
 
 % connectivity testing files
-connectivity_dir = strcat(pwd, "/", "generated-inputs", "/", "connectivity", "/");
-mkdir (connectivity_dir);
+data_dir = strcat("generated-inputs", "/", "connectivity", "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
 % 1d indexing
-out_format = strcat(connectivity_dir, "get_1d_%d_%d.dat");
+out_format = strcat(data_dir, "get_1d_%d_%d.dat");
 levs = [0, 0, 5];
 cells = [0, 1, 9];
 for i=1:size(levs,2)
@@ -15,7 +16,7 @@ write_octave_like_output(filename,index);
 end
 
 % 1d connectivity
-out_format = strcat(connectivity_dir, "connect_1_%d.dat");
+out_format = strcat(data_dir, "connect_1_%d.dat");
 levs = [1, 2, 8];
 for i=1:size(levs,2)
 connectivity = full(connect_1D(levs(i)));
@@ -24,7 +25,7 @@ write_octave_like_output(filename,connectivity);
 end
 
 % nd connectivity
-out_format = strcat(connectivity_dir, "connect_n_2_3_FG_%d.dat");
+out_format = strcat(data_dir, "connect_n_2_3_FG_%d.dat");
 dims = 2;
 levs = 3;
 grid = 'FG';
@@ -39,7 +40,7 @@ element = connectivity{i};
 write_octave_like_output(filename,element);
 end
 
-out_format = strcat(connectivity_dir, "connect_n_3_4_SG_%d.dat");
+out_format = strcat(data_dir, "connect_n_3_4_SG_%d.dat");
 dims = 3;
 levs = 4;
 grid = 'SG';

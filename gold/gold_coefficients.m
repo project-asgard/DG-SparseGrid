@@ -1,6 +1,7 @@
 % coefficient testing
-coeff_dir = strcat(pwd, "/", "generated-inputs", "/", "coefficients", "/");
-[stat,msg] = mkdir (coeff_dir);
+coeff_dir = strcat("generated-inputs", "/", "coefficients", "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(coeff_dir)]);
 
 % continuity1 term
 pde = check_pde(continuity1);

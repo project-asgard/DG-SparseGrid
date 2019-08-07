@@ -2,16 +2,17 @@
 
 % permutations testing files
 
-permutations_dir = strcat(pwd, "/", "generated-inputs", "/", "permutations", "/");
-mkdir (permutations_dir);
+data_dir = strcat("generated-inputs", "/", "permutations", "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
 dims = [1, 2, 4, 6];
 ns = [1, 4, 6, 8];
 ords = [0, 1, 0, 1];
 
 % perm leq
-out_format = strcat(permutations_dir, "perm_leq_%d_%d_%d.dat");
-count_out_format = strcat(permutations_dir, "perm_leq_%d_%d_%d_count.dat");
+out_format = strcat(data_dir, "perm_leq_%d_%d_%d.dat");
+count_out_format = strcat(data_dir, "perm_leq_%d_%d_%d_count.dat");
 for i=1:size(dims,2)
   tuples = perm_leq(dims(i), ns(i), ords(i));
   count = perm_leq_count(dims(i), ns(i));
@@ -22,8 +23,8 @@ for i=1:size(dims,2)
 end
 
 %perm eq
-out_format = strcat(permutations_dir, "perm_eq_%d_%d_%d.dat");
-count_out_format = strcat(permutations_dir, "perm_eq_%d_%d_%d_count.dat");
+out_format = strcat(data_dir, "perm_eq_%d_%d_%d.dat");
+count_out_format = strcat(data_dir, "perm_eq_%d_%d_%d_count.dat");
 for i=1:size(dims,2)
   tuples = perm_eq(dims(i), ns(i), ords(i));
   count = perm_eq_count(dims(i), ns(i));
@@ -34,8 +35,8 @@ for i=1:size(dims,2)
 end
 
 %perm max
-out_format = strcat(permutations_dir, "perm_max_%d_%d_%d.dat");
-count_out_format = strcat(permutations_dir, "perm_max_%d_%d_%d_count.dat");
+out_format = strcat(data_dir, "perm_max_%d_%d_%d.dat");
+count_out_format = strcat(data_dir, "perm_max_%d_%d_%d_count.dat");
 for i=1:size(dims,2)
   tuples = perm_max(dims(i), ns(i), ords(i));
   count = perm_max_count(dims(i), ns(i));
@@ -47,8 +48,8 @@ end
 
 %index_leq_max
 
-filename = strcat(permutations_dir, "index_leq_max_4d_10s_4m.dat");
-count_filename = strcat(permutations_dir, "index_leq_max_4d_10s_4m_count.dat");
+filename = strcat(data_dir, "index_leq_max_4d_10s_4m.dat");
+count_filename = strcat(data_dir, "index_leq_max_4d_10s_4m_count.dat");
 
 level_sum = 10;
 level_max = 4;

@@ -3,11 +3,11 @@
 addpath(genpath(pwd));
 
 % element_table testing files
+data_dir = strcat("generated-inputs", "/", "element_table", "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
-element_dir = strcat(pwd, "/", "generated-inputs", "/", "element_table", "/");
-[status,msg] = mkdir (element_dir);
-
-out_format = strcat(element_dir, "element_table_1_1_SG.dat");
+out_format = strcat(data_dir, "element_table_1_1_SG.dat");
 num_dimensions = 1;
 lev_vec = zeros(num_dimensions,1) + 1;
 grid_type = 'SG';
@@ -18,7 +18,7 @@ coord = inv1_mat(:,1:2*num_dimensions);
 filename = out_format;
 write_octave_like_output(filename,coord);
 
-out_format = strcat(element_dir, "element_table_2_3_SG.dat");
+out_format = strcat(data_dir, "element_table_2_3_SG.dat");
 num_dimensions = 2;
 lev_vec = zeros(num_dimensions,1) + 3;
 grid_type = 'SG';
@@ -29,7 +29,7 @@ coord = inv2_mat(:,1:2*num_dimensions);
 filename = out_format;
 write_octave_like_output(filename,coord);
 
-out_format = strcat(element_dir, "element_table_3_4_FG.dat");
+out_format = strcat(data_dir, "element_table_3_4_FG.dat");
 num_dimensions = 3;
 lev_vec = zeros(num_dimensions,1) + 4;
 grid_type = 'FG';

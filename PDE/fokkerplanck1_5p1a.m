@@ -9,11 +9,7 @@ function pde = fokkerplanck1_5p1a
 %
 % Run with
 %
-% explicit
-% fk6d(fokkerplanck1_5p1a,4,2,1)
-%
-% implicit
-% fk6d(fokkerplanck1_5p1a,4,2,100,[],[],1,[],[],5.0)
+% asgard(fokkerplanck1_5p1a,'implicit',true,'lev',3,'num_steps',50,'CFL',1.5)
 
 pde.CFL = 0.01;
 
@@ -69,7 +65,7 @@ dim_x.BCL = 'N'; % neumann
 dim_x.BCR = 'D'; % not set (equivalent to neumann)
 dim_x.domainMin = 0;
 dim_x.domainMax = +10;
-dim_x.init_cond_fn = @(z,p) f0(z);
+dim_x.init_cond_fn = @(z,p,t) f0(z);
 
 %%
 % Add dimensions to the pde object
@@ -150,12 +146,11 @@ pde.analytic_solutions_1D = { ...
 
 %%
 % Function to set time step
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         dims = pde.dimensions;
         xRange = dims{1}.domainMax-dims{1}.domainMin;
         lev = dims{1}.lev;
-        CFL = pde.CFL;
         dx = xRange/2^lev;
         dt = CFL * dx;
         

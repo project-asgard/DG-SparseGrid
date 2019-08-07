@@ -1,10 +1,11 @@
 % pde testing
 
-pde_dir = strcat(pwd, "/", "generated-inputs", "/", "pde", "/");
-mkdir (pde_dir);
+data_dir = strcat("generated-inputs", "/", "pde", "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
 % continuity 1
-out_format = strcat(pde_dir, "continuity_1_");
+out_format = strcat(data_dir, "continuity_1_");
 pde = continuity1;
 pde = check_pde(pde);
 pde.CFL = 1.0;
@@ -28,7 +29,7 @@ write_octave_like_output(strcat(out_format, 'exact_dim0.dat'), y_exact_x);
 write_octave_like_output(strcat(out_format, 'exact_time.dat'), y_exact_time);
 
 % continuity 2
-out_format = strcat(pde_dir, "continuity_2_");
+out_format = strcat(data_dir, "continuity_2_");
 pde = continuity2;
 pde = check_pde(pde);
 x = 2.2;
@@ -54,7 +55,7 @@ dt = pde.set_dt(pde,pde.CFL);
 write_octave_like_output(strcat(out_format, 'dt.dat'), dt);
 
 % continuity 3
-out_format = strcat(pde_dir, "continuity_3_");
+out_format = strcat(data_dir, "continuity_3_");
 pde = continuity3;
 pde = check_pde(pde);
 pde.dimensions{1}.lev = 2;
@@ -84,7 +85,7 @@ dt = pde.set_dt(pde,pde.CFL);
 write_octave_like_output(strcat(out_format, 'dt.dat'), dt);
 
 % continuity 6
-out_format = strcat(pde_dir, "continuity_6_");
+out_format = strcat(data_dir, "continuity_6_");
 pde = check_pde(continuity6);
 x = 6.6;
 for d=1:length(pde.dimensions)

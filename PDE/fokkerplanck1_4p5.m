@@ -1,16 +1,13 @@
 function pde = fokkerplanck1_4p5
-% Problem 4.4 from the RE paper - evolution of the pitch angle dependence
-% of f in the presence of electric field acceleration and collisions 
+% Problem 4.5 from the RE paper - evolution of the pitch angle dependence
+% of f in the presence of electric field acceleration and collisions and
+% radiation damping
 % 
 % df/dt == -E d/dz((1-z^2) f) + C d/dz((1-z^2) df/dz) - R d/dz(z(1-z^2) f)
 %
 % Run with
 %
-% explicit 
-% fk6d(fokkerplanck1_4p5,4,2,0.2,[],[],0,[])
-%
-% implicit 
-% fk6d(fokkerplanck1_4p5,4,4,1.5,[],[],1,[],[],0.2)
+% asgard(fokkerplanck1_4p5,'implicit',true,'lev',3,'CFL',0.5,'num_steps',50)
 
 pde.CFL = 0.01;
 sig = 0.1;
@@ -43,7 +40,7 @@ dim_z.BCL = 'D'; % dirichlet
 dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(z,p) f0(z);
+dim_z.init_cond_fn = @(z,p,t) f0(z);
 
 %%
 % Add dimensions to the pde object
@@ -119,11 +116,10 @@ pde.analytic_solutions_1D = { ...
 
 %%
 % Function to set time step
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         Lmax = pde.dimensions{1}.domainMax;
         LevX = pde.dimensions{1}.lev;
-        CFL = pde.CFL;
         dt = Lmax/2^LevX*CFL;
     end
 

@@ -1,8 +1,9 @@
 %% Generate gold data for C++ testing of batch component
 
 % batch
-batch_dir = strcat(pwd, "/", "generated-inputs", "/", "batch", "/");
-mkdir (batch_dir);
+batch_dir = strcat("generated-inputs", "/", "batch", "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(batch_dir)]);
 
 % continuity2 - sg
 out_format = strcat(batch_dir, 'continuity2_sg_l2_d2_t%d.dat');

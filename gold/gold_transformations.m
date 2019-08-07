@@ -1,11 +1,12 @@
 %% Generate gold data for C++ testing of transformations component
 
 % transformations testing 
-transformations_dir = strcat(pwd, "/", "generated-inputs", "/", "transformations", "/");
-[stat,msg] = mkdir (transformations_dir);
+data_dir = strcat("generated-inputs", "/", "transformations", "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
 % multiwavelet file generation
-out_base = strcat(transformations_dir, "multiwavelet_1_");
+out_base = strcat(data_dir, "multiwavelet_1_");
 [h0,h1,g0,g1,scale_co,phi_co]=MultiwaveletGen(1);
 write_octave_like_output(strcat(out_base, "h0.dat"), h0);
 write_octave_like_output(strcat(out_base, "h1.dat"), h1);
@@ -15,7 +16,7 @@ write_octave_like_output(strcat(out_base, "scale_co.dat"), scale_co);
 write_octave_like_output(strcat(out_base, "phi_co.dat"), phi_co);
 
 
-out_base = strcat(transformations_dir, "multiwavelet_3_");
+out_base = strcat(data_dir, "multiwavelet_3_");
 [h0,h1,g0,g1,scale_co,phi_co]=MultiwaveletGen(3);
 write_octave_like_output(strcat(out_base, "h0.dat"), h0);
 write_octave_like_output(strcat(out_base, "h1.dat"), h1);
@@ -25,7 +26,7 @@ write_octave_like_output(strcat(out_base, "scale_co.dat"), scale_co);
 write_octave_like_output(strcat(out_base, "phi_co.dat"), phi_co);
 
 % combine dimensions file generation
-out_base = strcat(transformations_dir, "combine_dim_");
+out_base = strcat(data_dir, "combine_dim_");
 
 filename = strcat(out_base, "dim2_deg2_lev3_sg.dat");
 lev = 3;
@@ -57,7 +58,7 @@ write_octave_like_output(filename, full(ans));
 
 
 % operator two scale file generation
-out_base = strcat(transformations_dir, "operator_two_scale_");
+out_base = strcat(data_dir, "operator_two_scale_");
 
 
 filename = strcat(out_base, "2_2.dat");
@@ -92,7 +93,7 @@ vect = OperatorTwoScale(degree, level, 'wavelet');
 write_octave_like_output(filename, full(vect));
 
 % forward MWT test generation
-out_base = strcat(transformations_dir, "forward_transform_");
+out_base = strcat(data_dir, "forward_transform_");
 
 filename = strcat(out_base, "2_2_neg1_pos1_double.dat");
 degree = 2;

@@ -74,9 +74,24 @@ end
 
 pde.deg = input_parser.Results.deg;
 
+% CFL priority
+% low : default_CFL
+% med : pde.CFL
+% high: command line CFL
+
+CFL_set = true;
+for c=input_parser.UsingDefaults
+    if strcmp(c{1},'CFL')
+        CFL_set = false;
+    end
+end
+
+opts.CFL = default_CFL;
+
 if isfield(pde,'CFL')
     opts.CFL = pde.CFL;
-else
+end
+if CFL_set
     opts.CFL = input_parser.Results.CFL;
 end
 

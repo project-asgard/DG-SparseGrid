@@ -50,7 +50,7 @@ dim_z.BCL = 'D'; % dirichlet
 dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(z,p) f0(z);
+dim_z.init_cond_fn = @(z,p,t) f0(z);
 
 %%
 % Add dimensions to the pde object
@@ -120,12 +120,12 @@ pde.analytic_solutions_1D = { ...
 %%
 % Function to set time step
 
-    function dt=set_dt(pde)
+    function dt=set_dt(pde,CFL)
         
         Lmax = pde.dimensions{1}.domainMax;
+        Lmin = pde.dimensions{1}.domainMin;
         LevX = pde.dimensions{1}.lev;
-        CFL = pde.CFL;
-        dt = Lmax/2^LevX*CFL;
+        dt = (Lmax-Lmin)/2^LevX*CFL;
     end
 
 pde.set_dt = @set_dt;
