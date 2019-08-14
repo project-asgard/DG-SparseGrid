@@ -1,15 +1,30 @@
-function pde = fokkerplanck1_5p1a
+function pde = fokkerplanck1_5p1a_noLHS
 % Test the momentum dynamics for the RE problem for E = R = 0
 %
-% x^2 * df/dt == d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
-%             == d/dx*x^2*psi(x)/x*df/dx  +  d/dx*x^2*2*psi(x)*f
+% df/dt == 1/x^2 * d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
+%       == 1/x^2 * d/dx*x^2*psi(x)/x*df/dx  +  1/x^2 * d/dx*x^2*2*psi(x)*f
+%          \                              /    \                         /
+%           --------- term1 --------------      -------- term2 ----------
+% split into 
 %
-% (note the x^2 moved to the left side)
+% term1
 %
+% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g(x) p(x)   [grad,g(x)=x^2*psi(x)/x, BCL=D, BCR=N]
+% eq3 :   p(x) == d/dx f(x)        [grad,g(x)=1,            BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2 * mat3
+%
+% term2
+%
+% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g(x) f(x)   [grad,g(x)=x^2*2*psi(x), BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2
 %
 % Run with
 %
-% asgard(fokkerplanck1_5p1a,'imp licit',true,'lev',3,'num_steps',50,'CFL',1.5)
+% asgard(fokkerplanck1_5p1a_noLHS,'implicit',true,'lev',3,'num_steps',50,'CFL',1.5)
 
 pde.CFL = 0.01;
 
@@ -73,52 +88,46 @@ dim_x.init_cond_fn = @(z,p,t) f0(z);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_x};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 
-%%
-% x^2 * df/dt (LHS non-identity coeff requires special treatment)
+% term1
+%
+% eq1 :  df/dt == g1(x) q(x)        [mass,g1(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g2(x) p(x)   [grad,g2(x)=x^2*psi(x)/x, BCL=D, BCR=N]
+% eq3 :   p(x) == d/dx g3(x) f(x)   [grad,g3(x)=1,            BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2 * mat3
 
-termLHS_x.type = 'mass';
-termLHS_x.G = @(x,p,t,dat) x.^2;
+g1 = @(x,p,t,dat) 1./(x.^2);
+g2 = @(x,p,t,dat) x_psi(x);
+g3 = @(x,p,t,dat) x.*0+1;
 
-termLHS = term_fill({termLHS_x});
+pterm1 = mass(g1);
+pterm2 = grad(num_dims,g2,-1,'D','N');
+pterm3 = grad(num_dims,g3,+1,'N','D');
 
-pde.termsLHS = {termLHS};
+term1_x = term_1D({pterm1,pterm2,pterm3});
 
-
-%% 
-% d/dx*x^2*psi(x)/x*df/dx
-
-term1_x.type = 'diff';
-% Eq 1 : d/dx * x*psi(x) * q
-term1_x.G1 = @(x,p,t,dat) x_psi(x);
-term1_x.LF1 = -1; % Upwind
-term1_x.BCL1 = 'D';
-term1_x.BCR1 = 'N';
-% Eq 2 : q = df/dx
-term1_x.G2 = @(x,p,t,dat) x.*0+1;
-term1_x.LF2 = +1; % Downwind
-term1_x.BCL2 = 'N';
-term1_x.BCR2 = 'D';
-
-term1 = term_fill({term1_x});
+term1 = term_nD(num_dims,{term1_x});
 
 
 %%
 % d/dx*x^2*2*psi(x)*f
+% - d/dx * x * 2 * psi(x) * f
 
-term2_x.type = 'grad';
-term2_x.G = @(x,p,t,dat) x*2.*x_psi(x);
-term2_x.LF = -1;
-
-term2 = term_fill({term2_x});
+% term2_x.type = 'grad';
+% term2_x.G = @(x,p,t,dat) -2 * x_psi(x);
+% term2_x.LF = -1;
+% 
+% term2 = term_fill({term2_x});
 
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term1,term2};
+pde.terms = {term1};%,term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

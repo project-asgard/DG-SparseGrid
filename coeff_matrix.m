@@ -3,7 +3,43 @@
 % matrix for a single dimension (1D). Each term in a PDE requires D many coefficient
 % matricies. These operators can only use the supported types below.
 
-function [mat,mat1,mat2,mat0] = coeff_matrix(num_dimensions,deg,t,dim,term,params)
+
+function [term_1D_] = coeff_matrix(num_dimensions,deg,t,dim,term_1D_,params)
+
+%%
+% Get the matrix for each partial terms
+
+for i=1:numel(term_1D_.pterms)
+    
+    pterm = term_1D_.pterms{i};
+    [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,dim,pterm,params);
+    
+    term_1D_.pterms{i}.mat = mat;
+    term_1D_.pterms{i}.mat_unrotated = mat0;
+    
+end
+
+%%
+% Chain together the partial terms
+
+[m,n] = size(mat);
+assert(m==n);
+mat = eye(m);
+mat_unrotated = eye(m);
+for i=1:numel(term_1D_.pterms)
+   
+    mat = mat * term_1D_.pterms{i}.mat;
+    mat_unrotated = mat_unrotated * term_1D_.pterms{i}.mat_unrotated;
+   
+end
+
+term_1D_.mat = mat;
+term_1D_.mat_unrotated = mat_unrotated;
+
+end
+
+
+function [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,dim,pterm,params)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -45,7 +81,7 @@ function [mat,mat1,mat2,mat0] = coeff_matrix(num_dimensions,deg,t,dim,term,param
 %%
 % pde shortcuts
 
-type    = term.type;
+type    = pterm.type;
 
 if strcmp(type,'diff')
     
@@ -58,14 +94,14 @@ if strcmp(type,'diff')
     % Equation 1 of LDG
     
     termA.type = 'grad';
-    termA.LF = term.LF1;
-    termA.G = term.G1;
+    termA.LF = pterm.LF1;
+    termA.G = pterm.G1;
     termA = check_partial_term(num_dimensions,termA);
     
-    dimA.BCL = term.BCL1;
-    dimA.BCR = term.BCR1;
+    dimA.BCL = pterm.BCL1;
+    dimA.BCR = pterm.BCR1;
     dimA = check_dimension(num_dimensions,dimA);
-
+    
     [mat1,~,~,mat10] = coeff_matrix(num_dimensions,deg,t,dimA,termA,params);
     assert(~isnan(sum(mat1,'all')))
     
@@ -75,14 +111,14 @@ if strcmp(type,'diff')
     dimB = dim;
     
     termB.type = 'grad';
-    termB.LF = term.LF2;
-    termB.G = term.G2;
+    termB.LF = pterm.LF2;
+    termB.G = pterm.G2;
     termB = check_partial_term(num_dimensions,termB);
-  
-    dimB.BCL = term.BCL2;
-    dimB.BCR = term.BCR2;
+    
+    dimB.BCL = pterm.BCL2;
+    dimB.BCR = pterm.BCR2;
     dimB = check_dimension(num_dimensions,dimB);
-
+    
     [mat2,~,~,mat20] = coeff_matrix(num_dimensions,deg,t,dimB,termB,params);
     assert(~isnan(sum(mat2,'all')))
     
@@ -110,9 +146,8 @@ else
     %%
     % term shortcuts
     
-    dat_W   = term.dat;
-    FluxVal = term.LF;
-    G       = term.G;
+    dat_W   = pterm.dat;
+    G       = pterm.g;
     
     %%
     % Setup jacobi of variable x and define coeff_mat
@@ -226,127 +261,133 @@ else
         %%
         % Setup boundary conditions
         
-        %%
-        % - <funcCoef*{q},p>
-        %----------------------------------------------
-        % Numerical Flux is defined as
-        % Flux = {{f}} + C/2*[[u]]
-        %      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
-        % [[v]] = v_R - v_L
-        
-        FCL = G(xL,params,t,dat_R_quad);
-        FCR = G(xR,params,t,dat_R_quad);
-        TraVal = [...
-            (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
-            (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
-            ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
-            ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
-            ];
-        
-        %%
-        % If dirichelt
-        % u^-_LEFT = g(LEFT)
-        % u^+_RIGHT = g(RIGHT)
-        
-        if strcmp(BCL,'D') %% left dirichlet
-            if i==0
-                TraVal = [...
-                    (-p_L)' * (p_L-p_L),...
-                    (-p_L)' * (p_L-p_L),...% xL
-                    ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
-                    ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
-                    ];
-            end
-        end
-        
-        if strcmp(BCR,'D') %% right dirichlet
-            if i==N-1
-                TraVal = [...
-                    (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
-                    (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
-                    ( p_R)' * (p_R-p_R),...
-                    ( p_R)' * (p_R-p_R),...% xR
-                    ];
-            end
-        end
-        
-        %%
-        % If neumann
-        % (gradient u)*n = g
-        % by splitting grad u = q by LDG methods, the B.C is changed to
-        % q*n = g (=> q = g for 1D variable)
-        % only work for derivatives greater than 1
-        
-        if strcmp(BCL,'N') %% left neumann
-            if i==0
-                TraVal = [...
-                    (-p_L)' * (p_L-p_L),...,...
-                    (-p_L)' * FCL * p_L,...% xL
-                    ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
-                    ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
-                    ];
-            end
-        end
-        
-        if strcmp(BCR,'N') %% right neumann
-            if i==N-1
-                TraVal = [...
-                    (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
-                    (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
-                    ( p_R)' * FCR * p_R,...
-                    ( p_R)' * (p_R-p_R),...% xR
-                    ];
-            end
-        end
-        
-        
-        %%
-        % Adding trace value to matrix
-        
-        RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-        ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
-        
-        if i == 0
-            Iu = RowInd(:,deg+1:end);
-            Iv = ColInd(:,deg+1:end);
-            Val = TraVal(:,deg+1:end);
-        elseif i == N - 1
-            Iu = RowInd(:,1:3*deg);
-            Iv = ColInd(:,1:3*deg);
-            Val = TraVal(:,1:3*deg);
-        else
-            Iu = RowInd;
-            Iv = ColInd;
-            Val = TraVal;
-        end
-        
-        %%
-        % If periodic (Note: the order of this block relative to above matters)
-        
-        if strcmp(BCL,'P') || strcmp(BCR,'P') %% periodic'
+        if strcmp(type,'grad')
             
-            if i==0
-                RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-                ColInd = [ones(deg,1)*last,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
-            end
-            if i==N-1
-                RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-                ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*first];
+            FluxVal = pterm.LF;
+                        
+            %%
+            % - <funcCoef*{q},p>
+            %----------------------------------------------
+            % Numerical Flux is defined as
+            % Flux = {{f}} + C/2*[[u]]
+            %      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
+            % [[v]] = v_R - v_L
+            
+            FCL = G(xL,params,t,dat_R_quad);
+            FCR = G(xR,params,t,dat_R_quad);
+            TraVal = [...
+                (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
+                (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
+                ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
+                ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
+                ];
+            
+            %%
+            % If dirichelt
+            % u^-_LEFT = g(LEFT)
+            % u^+_RIGHT = g(RIGHT)
+            
+            if strcmp(BCL,'D') %% left dirichlet
+                if i==0
+                    TraVal = [...
+                        (-p_L)' * (p_L-p_L),...
+                        (-p_L)' * (p_L-p_L),...% xL
+                        ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
+                        ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
+                        ];
+                end
             end
             
-            Iu = RowInd;
-            Iv = ColInd;
-            Val = TraVal;
+            if strcmp(BCR,'D') %% right dirichlet
+                if i==N-1
+                    TraVal = [...
+                        (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
+                        (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
+                        ( p_R)' * (p_R-p_R),...
+                        ( p_R)' * (p_R-p_R),...% xR
+                        ];
+                end
+            end
+            
+            %%
+            % If neumann
+            % (gradient u)*n = g
+            % by splitting grad u = q by LDG methods, the B.C is changed to
+            % q*n = g (=> q = g for 1D variable)
+            % only work for derivatives greater than 1
+            
+            if strcmp(BCL,'N') %% left neumann
+                if i==0
+                    TraVal = [...
+                        (-p_L)' * (p_L-p_L),...,...
+                        (-p_L)' * FCL * p_L,...% xL
+                        ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
+                        ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
+                        ];
+                end
+            end
+            
+            if strcmp(BCR,'N') %% right neumann
+                if i==N-1
+                    TraVal = [...
+                        (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
+                        (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
+                        ( p_R)' * FCR * p_R,...
+                        ( p_R)' * (p_R-p_R),...% xR
+                        ];
+                end
+            end
+            
+            
+            %%
+            % Adding trace value to matrix
+            
+            RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+            ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
+            
+            if i == 0
+                Iu = RowInd(:,deg+1:end);
+                Iv = ColInd(:,deg+1:end);
+                Val = TraVal(:,deg+1:end);
+            elseif i == N - 1
+                Iu = RowInd(:,1:3*deg);
+                Iv = ColInd(:,1:3*deg);
+                Val = TraVal(:,1:3*deg);
+            else
+                Iu = RowInd;
+                Iv = ColInd;
+                Val = TraVal;
+            end
+            
+            %%
+            % If periodic (Note: the order of this block relative to above matters)
+            
+            if strcmp(BCL,'P') || strcmp(BCR,'P') %% periodic'
+                
+                if i==0
+                    RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+                    ColInd = [ones(deg,1)*last,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
+                end
+                if i==N-1
+                    RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+                    ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*first];
+                end
+                
+                Iu = RowInd;
+                Iv = ColInd;
+                Val = TraVal;
+                
+            end
+            
+            Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
+            assert(~isnan(sum(Grad,'all')))
             
         end
         
-        Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
-        assert(~isnan(sum(Grad,'all')))
-       
     end
     
     %%
-    % Store non-transformed matrices for convenince 
+    % Store non-transformed matrices for convenince
     
     Mass0 = Mass;
     Grad0 = Grad;

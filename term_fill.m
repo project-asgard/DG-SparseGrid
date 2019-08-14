@@ -1,20 +1,19 @@
-function termOut = term_fill(termIn)
+function term_out = term_fill(term_in)
 
-termOut = termIn;
+term_out = term_in;
 
-default_term_mass
+num_dims = numel(term_in);
 
-nDims = numel(termIn);
-
-for d=1:nDims
+for d=1:num_dims
     
     %%
     % Check if this dim for this term is empty. If so, populate with mass
     % matrix.
     
-    if isempty(termIn{d})
+    if isempty(term_in{d})
         
-        termOut{d} = term_mass;
+        term_out{d} = term_mass;
+        term_out{d} = term_1D({mass()});
         
     end
     

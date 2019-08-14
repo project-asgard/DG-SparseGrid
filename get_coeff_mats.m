@@ -34,23 +34,27 @@ for tt = 1:num_terms
         
         dim = pde.dimensions{d};
         
-        if term{d}.TD == TD
+        if term.terms_1D{d}.time_dependent == TD
             
             if debug; disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]); end
             
+            term_1D_ = term.terms_1D{d};
+            
             if oldcoeff
-                mat = coeff_matrix_old(pde.deg,t,dim,term{d});
+                mat = coeff_matrix_old(pde.deg,t,dim,term_1D_);
                 pde.terms{tt}{d}.coeff_mat = mat;
             else
                 
-                [mat,mat1,mat2,mat0] = coeff_matrix(num_dimensions,pde.deg,t,dim,term{d},pde.params);
+                [term_1D_out] = coeff_matrix(num_dimensions,pde.deg,t,dim,term_1D_,pde.params);
                 
-                pde.terms{tt}{d}.coeff_mat = mat;
-                pde.terms{tt}{d}.coeff_mat0 = mat0;
-                if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
-                    pde.terms{tt}{d}.mat1 = mat1;
-                    pde.terms{tt}{d}.mat2 = mat2;
-                end
+%                 pde.terms{tt}.terms_1D{d}.mat = mat;
+%                 pde.terms{tt}.terms_1D{d}.mat_unrotated = mat0;
+%                 if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
+%                     pde.terms{tt}{d}.mat1 = mat1;
+%                     pde.terms{tt}{d}.mat2 = mat2;
+%                 end
+                pde.terms{tt}.terms_1D{d} = term_1D_out;
+
             end
             
             
