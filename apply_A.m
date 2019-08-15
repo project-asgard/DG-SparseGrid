@@ -86,7 +86,7 @@ for workItem=1:nWork
             for d=1:nDims
                 idx_i = Index_I{d};
                 idx_j = Index_J{d};
-                tmp = pde.terms{t}{d}.coeff_mat;
+                tmp = pde.terms{t}.terms_1D{d}.mat;
                 kronMatList{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
             end
             

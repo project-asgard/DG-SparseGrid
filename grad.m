@@ -1,4 +1,4 @@
-classdef grad < partial_term_1D
+classdef GRAD < PARTIAL_TERM_1D
     
     properties
         LF
@@ -9,7 +9,7 @@ classdef grad < partial_term_1D
     end
     
     methods
-        function obj = grad(num_dims,g_,LF_,BCL_,BCR_,BCL_fList_,BCR_flist_,dat_)
+        function obj = GRAD(num_dims,g_,LF_,BCL_,BCR_,BCL_fList_,BCR_flist_,dat_)
             assert(nargin>=1);
             if nargin<2
                 g_ = @(x,p,t,dat) x.*0+1;
@@ -39,7 +39,7 @@ classdef grad < partial_term_1D
                 dat_ = [];            
             end
             
-            obj@partial_term_1D('grad',g_,dat_)
+            obj@PARTIAL_TERM_1D('grad',g_,dat_)
             
             obj.LF = LF_;
             obj.BCL = BCL_;

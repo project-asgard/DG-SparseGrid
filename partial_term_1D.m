@@ -1,4 +1,4 @@
-classdef partial_term_1D
+classdef PARTIAL_TERM_1D
     
     properties
         type
@@ -10,7 +10,7 @@ classdef partial_term_1D
     
     methods
         
-        function pt = partial_term_1D(type_,g_,dat_)           
+        function pt = PARTIAL_TERM_1D(type_,g_,dat_)           
             if nargin<1
                 type_ = 'mass';
             end

@@ -104,30 +104,32 @@ g1 = @(x,p,t,dat) 1./(x.^2);
 g2 = @(x,p,t,dat) x_psi(x);
 g3 = @(x,p,t,dat) x.*0+1;
 
-pterm1 = mass(g1);
-pterm2 = grad(num_dims,g2,-1,'D','N');
-pterm3 = grad(num_dims,g3,+1,'N','D');
+pterm1 = MASS(g1);
+pterm2 = GRAD(num_dims,g2,-1,'D','N');
+pterm3 = GRAD(num_dims,g3,+1,'N','D');
 
-term1_x = term_1D({pterm1,pterm2,pterm3});
+term1_x = TERM_1D({pterm1,pterm2,pterm3});
+term1   = TERM_ND(num_dims,{term1_x});
 
-term1 = term_nD(num_dims,{term1_x});
+% term2
+%
+% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g(x) f(x)   [grad,g(x)=x^2*2*psi(x), BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2
 
+g1 = @(x,p,t,dat) 2.*x.*x_psi(x);
 
-%%
-% d/dx*x^2*2*psi(x)*f
-% - d/dx * x * 2 * psi(x) * f
+pterm1 = MASS(g1);
+pterm2 = GRAD(num_dims,g1,-1,'N','D');
 
-% term2_x.type = 'grad';
-% term2_x.G = @(x,p,t,dat) -2 * x_psi(x);
-% term2_x.LF = -1;
-% 
-% term2 = term_fill({term2_x});
-
+term2_x = TERM_1D({pterm1,pterm2});
+term2   = TERM_ND(num_dims,{term2_x});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term1};%,term2};
+pde.terms = {term1,term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

@@ -1,4 +1,4 @@
-classdef term_1D
+classdef TERM_1D
     
     properties
         pterms
@@ -8,7 +8,7 @@ classdef term_1D
     end
       
     methods
-        function t = term_1D(pterms_,time_dependent_)
+        function t = TERM_1D(pterms_,time_dependent_)
             if nargin<1
                 pterms_ = {mass()};
             end

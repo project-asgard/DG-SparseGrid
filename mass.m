@@ -1,11 +1,11 @@
-classdef mass < partial_term_1D
+classdef MASS < PARTIAL_TERM_1D
     
     properties
     end
     
     methods
         
-        function m = mass(g_,dat_)
+        function m = MASS(g_,dat_)
             if nargin<1
                 g_ = @(x,p,t,dat) x.*0+1;
             end
@@ -13,7 +13,7 @@ classdef mass < partial_term_1D
                 dat_ = [];
             end
             
-            m@partial_term_1D('mass',g_,dat_);
+            m@PARTIAL_TERM_1D('mass',g_,dat_);
             
             m.g = g_;
             m.dat = dat_;
