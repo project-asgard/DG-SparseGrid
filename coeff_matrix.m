@@ -4,18 +4,18 @@
 % matricies. These operators can only use the supported types below.
 
 
-function [term_1D_] = coeff_matrix(num_dimensions,deg,t,dim,term_1D_,params)
+function [term_1D] = coeff_matrix(num_dimensions,deg,t,dim,term_1D,params)
 
 %%
 % Get the matrix for each partial terms
 
-for i=1:numel(term_1D_.pterms)
+for i=1:numel(term_1D.pterms)
     
-    pterm = term_1D_.pterms{i};
+    pterm = term_1D.pterms{i};
     [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,dim,pterm,params);
     
-    term_1D_.pterms{i}.mat = mat;
-    term_1D_.pterms{i}.mat_unrotated = mat0;
+    term_1D.pterms{i}.mat = mat;
+    term_1D.pterms{i}.mat_unrotated = mat0;
     
 end
 
@@ -26,15 +26,15 @@ end
 assert(m==n);
 mat = eye(m);
 mat_unrotated = eye(m);
-for i=1:numel(term_1D_.pterms)
+for i=1:numel(term_1D.pterms)
    
-    mat = mat * term_1D_.pterms{i}.mat;
-    mat_unrotated = mat_unrotated * term_1D_.pterms{i}.mat_unrotated;
+    mat = mat * term_1D.pterms{i}.mat;
+    mat_unrotated = mat_unrotated * term_1D.pterms{i}.mat_unrotated;
    
 end
 
-term_1D_.mat = mat;
-term_1D_.mat_unrotated = mat_unrotated;
+term_1D.mat = mat;
+term_1D.mat_unrotated = mat_unrotated;
 
 end
 
@@ -140,8 +140,8 @@ else
     xMin    = dim.domainMin;
     xMax    = dim.domainMax;
     FMWT    = dim.FMWT;
-    BCL     = dim.BCL;
-    BCR     = dim.BCR;
+%     BCL     = dim.BCL;
+%     BCR     = dim.BCR;
     
     %%
     % term shortcuts
@@ -262,6 +262,9 @@ else
         % Setup boundary conditions
         
         if strcmp(type,'grad')
+            
+            BCL = pterm.BCL;
+            BCR = pterm.BCR;
             
             FluxVal = pterm.LF;
                         

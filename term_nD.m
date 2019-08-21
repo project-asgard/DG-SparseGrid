@@ -19,7 +19,7 @@ classdef TERM_ND
             % Fill in empty dimensions with identity mass           
             for d=1:num_dims               
                 if isempty(terms_1D_{d})                  
-                    terms_1D_{d} = TERM_1D({mass()});                 
+                    terms_1D_{d} = TERM_1D({MASS()});                 
                 end             
             end
             

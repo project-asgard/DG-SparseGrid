@@ -21,16 +21,16 @@ if opts.use_oldhash
 else
     num_elements = numel(hash_table.elements_idx);
 end
-nTerms = numel(pde.terms);
-nDims = numel(dims);
+num_terms = numel(pde.terms);
+num_dims = numel(dims);
 
-bcVec = zeros(deg^nDims*num_elements,1);
+bcVec = zeros(deg^num_dims*num_elements,1);
 
-for tt = 1:nTerms % Construct a BC object for each term
+for tt = 1:num_terms % Construct a BC object for each term
     
     term_nD = terms{tt};
     
-    for d1 = 1:nDims
+    for d1 = 1:num_dims
         
         dim = dims{d1};
         term_1D = term_nD.terms_1D{d1};
@@ -41,29 +41,6 @@ for tt = 1:nTerms % Construct a BC object for each term
         FMWT = dim.FMWT;
         
         lev = dim.lev;
-        %         N_1D = 2^lev;
-        %         dof_1D = deg * N_1D;
-        
-        %%
-        % Here we account for the different types of operators which do
-        % (grad,diff) or do not (mass) require BCs
-        
-        %         n_parts = 0;
-        %         if strcmp(type,'grad')
-        %             n_parts = 1;
-        %             n_types = {type};
-        %             n_BCLs = {dim.BCL};
-        %             n_BCRs = {dim.BCR};
-        %             n_BCL_fLists = {dim.BCL_fList};
-        %             n_BCR_fLists = {dim.BCR_fList};
-        %         elseif strcmp(type,'diff')  % to allow for diff being composed of two grad pieces
-        %             n_parts = 2;
-        %             n_types = {'grad','grad'};
-        %             n_BCLs = {term_1D_.BCL1,term_1D_.BCL2};
-        %             n_BCRs = {term_1D_.BCR1,term_1D_.BCR2};
-        %             n_BCL_fLists = {term_1D_.BCL1_fList,term_1D_.BCL2_fList};
-        %             n_BCR_fLists = {term_1D_.BCR1_fList,term_1D_.BCR2_fList};
-        %         end
         
         for p=1:numel(term_1D.pterms)
             
@@ -79,7 +56,7 @@ for tt = 1:nTerms % Construct a BC object for each term
                 %%
                 % Initialize to zero
                 
-                for d2=1:nDims
+                for d2=1:num_dims
                     this_dof_1D = deg * 2^dims{d2}.lev;
                     bcL{d1}{d2} = zeros(this_dof_1D,1);
                     bcR{d1}{d2} = zeros(this_dof_1D,1);
@@ -87,85 +64,83 @@ for tt = 1:nTerms % Construct a BC object for each term
                 
                 timeFacL = 1;
                 timeFacR = 1;
-                
-                if strcmp(this_type,'grad')
+                                
+                if strcmp(this_BCL,'D') % Left side
                     
-                    if strcmp(this_BCL,'D') % Left side
-                        
-                        %%
-                        % Get time multiplier
-                        
-                        timeFacL = BCL_fList{nDims+1}(time);
-                        
-                        %%
-                        % Get boundary functions for all dims
-                        
-                        for d2=1:nDims
-                            bcL{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
-                                pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
-                                BCR_fList{d2},pde.params,time);
-                        end
-                        
-                        %%
-                        % Overwrite the trace (boundary) value just for this dim
-                        % Func*v|_xMin and Func*v|_xMax
-                        
-                        bcL_tmp = compute_boundary_condition(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
-                        bcL_tmp = FMWT * bcL_tmp;
-                        
-                        %%
-                        % LDG requires and additional step
-                        
-                        %                         if strcmp(type,'diff')
-                        %                             bcL_tmp = term_1D.mat1*bcL_tmp;  % TODO : is this mat1 always? or mat2 sometimes?
-                        %                         end
-                        
-                        if p > 1
-                            bcL_tmp = term_1D.pterms{p-1}.mat * bcL_tmp;
-                        end
-                        
-                        bcL{d1}{d1} = bcL_tmp;
+                    %%
+                    % Get time multiplier
+                    
+                    timeFacL = BCL_fList{num_dims+1}(time);
+                    
+                    %%
+                    % Get boundary functions for all dims
+                    
+                    for d2=1:num_dims
+                        bcL{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                            pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
+                            BCR_fList{d2},pde.params,time);
                     end
                     
-                    if strcmp(this_BCR,'D') % Right side
-                        
-                        %%
-                        % Get time multiplier
-                        
-                        timeFacR = BCR_fList{nDims+1}(time);
-                        
-                        %%
-                        % Get boundary functions for all dims
-                        
-                        for d2=1:nDims
-                            bcR{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
-                                pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
-                                BCR_fList{d2},pde.params,time);
+                    %%
+                    % Overwrite the trace (boundary) value just for this dim
+                    % Func*v|_xMin and Func*v|_xMax
+                    
+                    bcL_tmp = compute_boundary_condition(pde,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
+                    bcL_tmp = FMWT * bcL_tmp;
+                    
+                    %%
+                    % Apply mats from preceeding pterms when chaining (p>1)
+                    % FIXME : test this for p>2
+                    
+                    if p > 1
+                        preceeding_mat = eye(size(term_1D.pterms{1}.mat));
+                        for nn=1:p-1
+                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
                         end
-                        
-                        %%
-                        % Overwrite the trace (boundary) value just for this dim
-                        % Func*v|_xMin and Func*v|_xMax
-                        
-                        bcR_tmp = compute_boundary_condition(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
-                        bcR_tmp = FMWT * bcR_tmp;
-                        
-                        %%
-                        % LDG requires and additional step
-                        %
-                        %                         if strcmp(type,'diff')
-                        %                             bcR_tmp = term_1D.mat1*bcR_tmp; % TODO : is this mat1 always? or mat2 sometimes?
-                        %                         end
-                        
-                        if p > 1
-                            bcR_tmp = term_1D.pterms{p-1}.mat * bcR_tmp;
-                        end
-                        
-                        bcR{d1}{d1} = bcR_tmp;
+                        bcL_tmp = preceeding_mat * bcL_tmp;
+%                         bcL_tmp = term_1D.pterms{p-1}.mat * bcL_tmp;
                     end
                     
+                    bcL{d1}{d1} = bcL_tmp;
                 end
                 
+                if strcmp(this_BCR,'D') % Right side
+                    
+                    %%
+                    % Get time multiplier
+                    
+                    timeFacR = BCR_fList{num_dims+1}(time);
+                    
+                    %%
+                    % Get boundary functions for all dims
+                    
+                    for d2=1:num_dims
+                        bcR{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                            pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
+                            BCR_fList{d2},pde.params,time);
+                    end
+                    
+                    %%
+                    % Overwrite the trace (boundary) value just for this dim
+                    % Func*v|_xMin and Func*v|_xMax
+                    
+                    bcR_tmp = compute_boundary_condition(pde,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
+                    bcR_tmp = FMWT * bcR_tmp;
+                    
+                    %%
+                    % Apply mats from preceeding terms when chaining (p>1)
+                    
+                    if p > 1
+                        preceeding_mat = eye(size(term_1D.pterms{1}.mat));
+                        for nn=1:p-1
+                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                        end
+                        bcR_tmp = preceeding_mat * bcR_tmp;
+                    end
+                    
+                    bcR{d1}{d1} = bcR_tmp;
+                end
+                                
                 fListL = bcL{d1};
                 fListR = bcR{d1};
                 
