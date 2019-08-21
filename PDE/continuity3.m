@@ -19,24 +19,18 @@ function pde = continuity3
 % Here we setup a 3D problem (x,y,z)
 
 dim_x.name = 'x';
-dim_x.BCL = 'P'; % periodic
-dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.init_cond_fn = @(x,p,t) x.*0;
 dim_x.lev = 5;
 
 dim_y.name = 'y';
-dim_y.BCL = 'P'; % periodic
-dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
 dim_y.init_cond_fn = @(y,p,t) y.*0;
 dim_y.lev = 4;
 
 dim_z.name = 'z';
-dim_z.BCL = 'P'; % periodic
-dim_z.BCR = 'P';
 dim_z.domainMin = -3;
 dim_z.domainMax = +3;
 dim_z.init_cond_fn = @(z,p,t) z.*0;
@@ -48,6 +42,7 @@ dim_z.lev = 3;
 % the remainder of this PDE.
 
 pde.dimensions = {dim_x,dim_y,dim_z};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
@@ -56,34 +51,31 @@ pde.dimensions = {dim_x,dim_y,dim_z};
 %%
 % -df/dx
 
-term2_x.type = 'grad';
-term2_x.G = @(x,p,t,dat) x*0-1; % G function for use in coeff_matrix construction.
-term2_x.LF = 0; % central flux
-
-term2 = term_fill({term2_x,[],[]});
+g1 = @(x,p,t,dat) x.*0-1;
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term1_x = TERM_1D({pterm1});
+term1   = TERM_ND(num_dims,{term1_x,[],[]});
 
 %%
 % -df/fy
 
-term3_y.type = 'grad'; % grad (see coeff_matrix.m for available types)
-term3_y.G = @(y,p,t,dat) y*0-1; % G function for use in coeff_matrix construction.
-term3_y.LF = 0; % central flux
-
-term3 = term_fill({[],term3_y,[]});
+g1 = @(y,p,t,dat) y.*0-1;
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term2_y = TERM_1D({pterm1});
+term2   = TERM_ND(num_dims,{[],term2_y,[]});
 
 %%
 % -df/dz
 
-term4_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
-term4_z.G = @(z,p,t,dat) z*0-1; % G function for use in coeff_matrix construction.
-term4_z.LF = 0; % central flux
-
-term4 = term_fill({[],[],term4_z});
+g1 = @(z,p,t,dat) z*0-1;
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term3_z = TERM_1D({pterm1});
+term3   = TERM_ND(num_dims,{[],[],term3_z});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2,term3,term4};
+pde.terms = {term1,term2,term3};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

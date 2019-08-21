@@ -8,10 +8,10 @@ function pde = fokkerplanck1_4p1a
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1_4p1a,5,3,0.01)
-%
+% asgard(fokkerplanck1_4p1a)
+
 % implicit
-% fk6d(fokkerplanck1_4p1a,5,4,3,[],[],1,'SG',[],1.5)
+% asgard(fokkerplanck1_4p1a,'lev',5,'deg',3,'implicit',true,'CFL',0.1,'num_steps',30)
 
 pde.CFL = 0.01;
 
@@ -35,8 +35,6 @@ pde.CFL = 0.01;
     end
 
 dim_z.name = 'z';
-dim_z.BCL = 'N'; % neumann
-dim_z.BCR = 'N'; % not set (equivalent to neumann)
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.init_cond_fn = @(z,p,t) soln(z,0);
@@ -47,6 +45,7 @@ dim_z.init_cond_fn = @(z,p,t) soln(z,0);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_z};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
@@ -55,17 +54,15 @@ pde.dimensions = {dim_z};
 %% 
 %  -d/dz ( (1-z^2)*f )
 
-term2_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
-term2_z.G = @(z,p,t,dat) -1.*(1-z.^2); % G function for use in coeff_matrix construction.
-term2_z.LF = -1; % Upwind 
-term2_z.name = 'd_dz';
-
-term2 = {term2_z};
+g1 = @(z,p,t,dat) -1.*(1-z.^2);
+pterm1  = GRAD(num_dims,g1,-1,'N','N');
+term1_x = TERM_1D({pterm1});
+term1   = TERM_ND(num_dims,{term1_x});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2};
+pde.terms = {term1};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

@@ -17,8 +17,6 @@ function pde = continuity1
 % 
 % Here we setup a 1D problem (x)
 
-dim_x.BCL = 'P';
-dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.init_cond_fn = @(x,p,t) x.*0;
@@ -29,6 +27,7 @@ dim_x.init_cond_fn = @(x,p,t) x.*0;
 % the remainder of this PDE.
 
 pde.dimensions = {dim_x};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
@@ -37,16 +36,16 @@ pde.dimensions = {dim_x};
 %% 
 % -df/dx
 
-term2_x.type = 'grad';
-term2_x.G = @(x,p,t,dat) x*0-1; % G function for use in coeff_matrix construction.
-term2_x.LF = 0; % Use central flux
+g1 = @(x,p,t,dat) x.*0-1;
+pterm1 = GRAD(num_dims,g1,0,'P','P');
 
-term2 = {term2_x};
+term1_x = TERM_1D({pterm1});
+term1   = TERM_ND(num_dims,{term1_x});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2};
+pde.terms = {term1};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

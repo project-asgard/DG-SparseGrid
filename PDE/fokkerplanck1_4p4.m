@@ -7,10 +7,10 @@ function pde = fokkerplanck1_4p4
 % Run with
 %
 % explicit 
-% fk6d(fokkerplanck1_4p4,4,2,0.2,[],[],0,[])
+% asgard(fokkerplanck1_4p4)
 %
 % implicit 
-% fk6d(fokkerplanck1_4p4,4,4,1.5,[],[],1,[],[],0.2)
+% asgard(fokkerplanck1_4p4,'implicit',true)
 
 pde.CFL = 0.01;
 sig = 0.1;
@@ -46,8 +46,8 @@ C = 1.0;
         ret = A / (2*sinh(A)) * exp(A*z);
     end
 
-dim_z.BCL = 'D'; % dirichlet
-dim_z.BCR = 'D';
+% dim_z.BCL = 'D'; % dirichlet
+% dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.init_cond_fn = @(z,p,t) f0(z);
@@ -58,6 +58,7 @@ dim_z.init_cond_fn = @(z,p,t) f0(z);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_z};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
@@ -65,29 +66,41 @@ pde.dimensions = {dim_z};
 
 %% 
 % -E d/dz((1-z^2) f)
+% 
+% termE_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
+% termE_z.G = @(z,p,t,dat) -E.*(1-z.^2); % G function for use in coeff_matrix construction.
+% termE_z.LF = -1; % Upwind 
+% 
+% termE = term_fill({termE_z});
 
-termE_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
-termE_z.G = @(z,p,t,dat) -E.*(1-z.^2); % G function for use in coeff_matrix construction.
-termE_z.LF = -1; % Upwind 
-
-termE = term_fill({termE_z});
+g1 = @(z,p,t,dat) -E.*(1-z.^2);
+pterm1  = GRAD(num_dims,g1,-1,'D','D');
+termE_z = TERM_1D({pterm1});
+termE   = TERM_ND(num_dims,{termE_z});
 
 %% 
 % +C * d/dz( (1-z^2) df/dz )
 
-termC_z.type = 'diff';
-% eq1 : 1 * d/dx (1-z^2) q
-termC_z.G1 = @(z,p,t,dat) 1-z.^2;
-termC_z.LF1 = -1; % upwind left
-termC_z.BCL1 = 'D';
-termC_z.BCR1 = 'D';
-% eq2 : q = df/dx 
-termC_z.G2 = @(z,p,t,dat) z*0+1;
-termC_z.LF2 = +1; % upwind right
-termC_z.BCL2 = 'N';
-termC_z.BCR2 = 'N';
+% termC_z.type = 'diff';
+% % eq1 : 1 * d/dx (1-z^2) q
+% termC_z.G1 = @(z,p,t,dat) 1-z.^2;
+% termC_z.LF1 = -1; % upwind left
+% termC_z.BCL1 = 'D';
+% termC_z.BCR1 = 'D';
+% % eq2 : q = df/dx 
+% termC_z.G2 = @(z,p,t,dat) z*0+1;
+% termC_z.LF2 = +1; % upwind right
+% termC_z.BCL2 = 'N';
+% termC_z.BCR2 = 'N';
+% 
+% termC = term_fill({termC_z});
 
-termC = term_fill({termC_z});
+g1 = @(z,p,t,dat) 1-z.^2;
+g2 = @(z,p,t,dat) z.*0+1;
+pterm1  = GRAD(num_dims,g1,-1,'D','D');
+pterm2  = GRAD(num_dims,g2,+1,'N','N');
+termC_z = TERM_1D({pterm1,pterm2});
+termC   = TERM_ND(num_dims,{termC_z});
 
 %%
 % Add terms to the pde object

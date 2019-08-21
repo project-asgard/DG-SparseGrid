@@ -8,7 +8,7 @@ function pde = continuity6
 % Run with 
 %
 % explicit
-% asgard(continuity6,'lev',3,'deg',2,'num_steps',1);
+% asgard(continuity6,'lev',2,'deg',3,'num_steps',1);
 
 bx=1;
 by=1;
@@ -22,38 +22,26 @@ az=2;
 %%
 % Here we setup a 6D problem (x,y,z,vx,vy,vz)
 
-dim_x.BCL = 'P'; % periodic
-dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.init_cond_fn = @(x,p,t) x.*0;
 
-dim_y.BCL = 'P'; % periodic
-dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
 dim_y.init_cond_fn = @(y,p,t) y.*0;
 
-dim_z.BCL = 'P'; % periodic
-dim_z.BCR = 'P';
 dim_z.domainMin = -3;
 dim_z.domainMax = +3;
 dim_z.init_cond_fn = @(z,p,t) z.*0;
 
-dim_vx.BCL = 'P'; % periodic
-dim_vx.BCR = 'P';
 dim_vx.domainMin = -10;
 dim_vx.domainMax = +10;
 dim_vx.init_cond_fn = @(x,p,t) x.*0;
 
-dim_vy.BCL = 'P'; % periodic
-dim_vy.BCR = 'P';
 dim_vy.domainMin = -20;
 dim_vy.domainMax = +20;
 dim_vy.init_cond_fn = @(y,p,t) y.*0;
 
-dim_vz.BCL = 'P'; % periodic
-dim_vz.BCR = 'P';
 dim_vz.domainMin = -30;
 dim_vz.domainMax = +30;
 dim_vz.init_cond_fn = @(z,p,t) z.*0;
@@ -64,6 +52,9 @@ dim_vz.init_cond_fn = @(z,p,t) z.*0;
 % the remainder of this PDE.
 
 pde.dimensions = {dim_x,dim_y,dim_z,dim_vx,dim_vy,dim_vz};
+num_dims = numel(pde.dimensions);
+
+pde.max_lev = 4;
 
 %% Setup the terms of the PDE
 %
@@ -72,55 +63,80 @@ pde.dimensions = {dim_x,dim_y,dim_z,dim_vx,dim_vy,dim_vz};
 %%
 % -bx*df/dx
 
-term2_x.type = 'grad';
-term2_x.G = @(x,p,t,dat) x*0-bx; 
+% term2_x.type = 'grad';
+% term2_x.G = @(x,p,t,dat) x*0-bx; 
+% term2 = term_fill({term2_x,[],[],[],[],[]});
 
-term2 = term_fill({term2_x,[],[],[],[],[]});
+g1 = @(x,p,t,dat) x*0-bx; 
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term1_x = TERM_1D({pterm1});
+term1   = TERM_ND(num_dims,{term1_x,[],[],[],[],[]});
+
 
 %%
 % -by*df/dy
 
-term3_y.type = 'grad'; 
-term3_y.G = @(y,p,t,dat) y*0-by; 
+% term3_y.type = 'grad'; 
+% term3_y.G = @(y,p,t,dat) y*0-by; 
+% term3 = term_fill({[],term3_y,[],[],[],[]});
 
-term3 = term_fill({[],term3_y,[],[],[],[]});
+g1 = @(y,p,t,dat) y*0-by; 
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term2_y = TERM_1D({pterm1});
+term2   = TERM_ND(num_dims,{[],term2_y,[],[],[],[]});
 
 %%
 % -bz*df/dz
 
-term4_z.type = 'grad';
-term4_z.G = @(z,p,t,dat) z*0-bz; 
+% term4_z.type = 'grad';
+% term4_z.G = @(z,p,t,dat) z*0-bz; 
+% term4 = term_fill({[],[],term4_z,[],[],[]});
 
-term4 = term_fill({[],[],term4_z,[],[],[]});
+g1 = @(z,p,t,dat) z*0-bz;
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term3_z = TERM_1D({pterm1});
+term3   = TERM_ND(num_dims,{[],[],term3_z,[],[],[]});
 
 %%
 % -ax*df/dvx
 
-term5_vx.type = 'grad'; 
-term5_vx.G = @(x,p,t,dat) x*0-ax; 
+% term5_vx.type = 'grad'; 
+% term5_vx.G = @(x,p,t,dat) x*0-ax; 
+% term5 = term_fill({[],[],[],term5_vx,[],[]});
 
-term5 = term_fill({[],[],[],term5_vx,[],[]});
+g1 = @(x,p,t,dat) x*0-ax;
+pterm1   = GRAD(num_dims,g1,0,'P','P');
+term4_vx = TERM_1D({pterm1});
+term4    = TERM_ND(num_dims,{[],[],[],term4_vx,[],[]});
 
 %%
 % -ay*df/dvy
 
-term6_vy.type = 'grad'; 
-term6_vy.G = @(y,p,t,dat) y*0-ay; 
+% term6_vy.type = 'grad'; 
+% term6_vy.G = @(y,p,t,dat) y*0-ay; 
+% term6 = term_fill({[],[],[],[],term6_vy,[]});
 
-term6 = term_fill({[],[],[],[],term6_vy,[]});
+g1 = @(y,p,t,dat) y*0-ay;
+pterm1   = GRAD(num_dims,g1,0,'P','P');
+term5_vy = TERM_1D({pterm1});
+term5    = TERM_ND(num_dims,{[],[],[],[],term5_vy,[]});
 
 %%
 % -az*df/dvz
 
-term7_vz.type = 'grad'; 
-term7_vz.G = @(z,p,t,dat) z*0-az; 
+% term7_vz.type = 'grad'; 
+% term7_vz.G = @(z,p,t,dat) z*0-az; 
+% term7 = term_fill({[],[],[],[],[],term7_vz});
 
-term7 = term_fill({[],[],[],[],[],term7_vz});
+g1 = @(z,p,t,dat) z*0-az;
+pterm1   = GRAD(num_dims,g1,0,'P','P');
+term6_vz = TERM_1D({pterm1});
+term6    = TERM_ND(num_dims,{[],[],[],[],[],term6_vz});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2,term3,term4,term5,term6,term7};
+pde.terms = {term1,term2,term3,term4,term5,term6};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

@@ -17,14 +17,10 @@ pde.CFL = 0.1;
 %
 % Here we setup a 2D problem (x,y)
 
-dim_x.BCL = 'P'; % periodic
-dim_x.BCR = 'P';
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.init_cond_fn = @(x,p,t) x.*0;
 
-dim_y.BCL = 'P'; % periodic
-dim_y.BCR = 'P';
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
 dim_y.init_cond_fn = @(y,p,t) y.*0;
@@ -35,33 +31,36 @@ dim_y.init_cond_fn = @(y,p,t) y.*0;
 % the remainder of this PDE.
 
 pde.dimensions = {dim_x,dim_y};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
 % Here we have 2 terms, having only nDims=2 (x,y) operators.
 
 %%
-% -df/dx
+% -df/dx which is 
+%
+% d/dx g1(x) f(x,y)          [grad,g1(x)=-1, BCL=P, BCR=P]
 
-term2_x.type = 'grad'; % grad (see coeff_matrix.m for available types)
-term2_x.G = @(x,p,t,dat) x*0-1; % G function for use in coeff_matrix construction.
-term2_x.LF = 0; % central flux
-
-term2 = term_fill({term2_x,[]});
+g1 = @(x,p,t,dat) x*0-1;
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term1_x = TERM_1D({pterm1});
+term1   = TERM_ND(num_dims,{term1_x,[]});
 
 %%
-% -df/dy
+% -df/dy which is
+%
+% d/dy g1(y) f(x,y)          [grad,g1(y)=-1, BCL=P, BCR=P]
 
-term3_y.type = 'grad'; % grad (see coeff_matrix.m for available types)
-term3_y.G = @(y,p,t,dat) y*0-1; % G function for use in coeff_matrix construction.
-term3_y.LF = 0; % central flux
-
-term3 = term_fill({[],term3_y});
+g1 = @(y,p,t,dat) y*0-1;
+pterm1  = GRAD(num_dims,g1,0,'P','P');
+term2_y = TERM_1D({pterm1});
+term2   = TERM_ND(num_dims,{[],term2_y});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2,term3};
+pde.terms = {term1,term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

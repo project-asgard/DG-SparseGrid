@@ -5,10 +5,10 @@ function pde = fokkerplanck1_4p3
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1_4p3,4,2,0.2,[],[],0,[])
+% asgard(fokkerplanck1_4p3)
 %
 % implicit
-% fk6d(fokkerplanck1_4p3,6,4,0.5,[],[],1,[],[],1.0)
+% asgard(fokkerplanck1_4p3,'implicit',true)
 
 pde.CFL = 0.01;
 sig = 0.1;
@@ -22,7 +22,7 @@ sig = 0.1;
     end
     function ret = f0(z)
         
-        caseNumber = 4;
+        caseNumber = 3;
         shift = 0.36;
         
         switch caseNumber
@@ -46,12 +46,9 @@ sig = 0.1;
     end
 
 dim_z.name = 'z';
-dim_z.BCL = 'D'; % dirichlet
-dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.init_cond_fn = @(z,p,t) soln(z,0);
-
 
 %%
 % Add dimensions to the pde object
@@ -59,24 +56,24 @@ dim_z.init_cond_fn = @(z,p,t) soln(z,0);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_z};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% Setup the v.d_dx (v.MassV . GradX) term
+% -d/dz ( z(1-z^2)f )
 
-term2_z.type = 'grad'; % grad (see coeff_matrix.m for available types)
-term2_z.G = @(z,p,t,dat) -z.*(1-z.^2); % G function for use in coeff_matrix construction.
-term2_z.LF = -1; % Upwind 
-
-term2 = {term2_z};
+g1 = @(z,p,t,dat) -z.*(1-z.^2);
+pterm1  = GRAD(num_dims,g1,-1,'D','D');
+term1_z = TERM_1D({pterm1});
+term1   = TERM_ND(num_dims,{term1_z});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term2};
+pde.terms = {term1};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -103,12 +100,10 @@ pde.analytic_solutions_1D = { ...
 
 %%
 % Function to set time step
-    function dt=set_dt(pde,CFL)
-        
+    function dt=set_dt(pde,CFL)      
         Lmax = pde.dimensions{1}.domainMax;
         Lmin = pde.dimensions{1}.domainMin;
         LevX = pde.dimensions{1}.lev;
-        CFL = pde.CFL;
         dt = (Lmax-Lmin)/2^LevX*CFL;
     end
 

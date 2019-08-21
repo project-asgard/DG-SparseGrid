@@ -58,10 +58,6 @@ BCR_fList = { ...
     };
 
 dim_x.name = 'x';
-dim_x.BCL = 'D'; % Dirichlet
-dim_x.BCL_fList = BCL_fList;
-dim_x.BCR = 'D'; % Dirichlet
-dim_x.BCR_fList = BCR_fList;
 dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
@@ -81,10 +77,6 @@ BCR_fList = { ...
     };
 
 dim_y.name = 'y';
-dim_y.BCL = 'D';
-dim_y.BCL_fList = BCL_fList;
-dim_y.BCR = 'D';
-dim_y.BCR_fList = BCR_fList;
 dim_y.domainMin = 0;
 dim_y.domainMax = 1;
 dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
@@ -95,6 +87,7 @@ dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_x, dim_y};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
@@ -103,40 +96,40 @@ pde.dimensions = {dim_x, dim_y};
 %% 
 % Setup the d^2_dx^2 term
 
-term1_x.type = 'diff';
-% eq1 : dq/dx (flux equation)
-term1_x.G1 = @(x,p,t,dat) x*0+1;
-term1_x.LF1 = +1; % upwind right
-term1_x.BCL1 = 'N';
-term1_x.BCR1 = 'N';
-% eq2 : df/dx (actual variable eqn)
-term1_x.G2 = @(x,p,t,dat) x*0+1;
-term1_x.LF2 = -1; % upwind left
-term1_x.BCL2 = 'D';
-term1_x.BCR2 = 'D';
-term1_x.BCL2_fList = BCL_fList;
-term1_x.BCR2_fList = BCR_fList;
+% term1
+%
+% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=2, BCL=N, BCR=N]
+% eq2 :   q(x,y) == d/dx g2(x) f(x,y)   [grad,g2(x)=1, BCL=D, BCR=D]
+%
+% coeff_mat = mat1 * mat2
 
-term1 = term_fill({term1_x,[]});
+g1 = @(x,p,t,dat) x.*0+1;
+g2 = @(x,p,t,dat) x.*0+1;
+
+pterm1 = GRAD(num_dims,g1,+1,'N','N');
+pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
+
+term1_x = TERM_1D({pterm1,pterm2});
+term1   = TERM_ND(num_dims,{term1_x,[]});
 
 %% 
 % Setup the d^2_dy^2 term
 
-term2_y.type = 'diff';
-% eq1 : dq/dy (flux equation)
-term2_y.G1 = @(y,p,t,dat) y*0+1;
-term2_y.LF1 = +1; % upwind right
-term2_y.BCL1 = 'N';
-term2_y.BCR1 = 'N';
-% eq2 : df/dy (actual variable eqn)
-term2_y.G2 = @(y,p,t,dat) y*0+1;
-term2_y.LF2 = -1; % upwind left
-term2_y.BCL2 = 'D';
-term2_y.BCR2 = 'D';
-term2_y.BCL2_fList = BCL_fList;
-term2_y.BCR2_fList = BCR_fList;
+% term2
+%
+% eq1 :  df/dt   == d/dy g1(y) q(x,y)   [grad,g1(y)=2, BCL=N, BCR=N]
+% eq2 :   q(x,y) == d/dy g2(y) f(x,y)   [grad,g2(y)=1, BCL=D, BCR=D]
+%
+% coeff_mat = mat1 * mat2
 
-term2 = term_fill({[],term2_y});
+g1 = @(y,p,t,dat) y.*0+1;
+g2 = @(y,p,t,dat) y.*0+1;
+
+pterm1 = GRAD(num_dims,g1,+1,'N','N');
+pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
+
+term2_y = TERM_1D({pterm1,pterm2});
+term2   = TERM_ND(num_dims,{[],term2_y});
 
 %%
 % Add terms to the pde object

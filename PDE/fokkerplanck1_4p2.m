@@ -5,24 +5,21 @@ function pde = fokkerplanck1_4p2
 % Here we use LDG for this second order system. We impose homogeneous
 % Neumann BCs on f
 %
-% d/dz( (1-z^2) df/dz ) becomes
+% df/dt == d/dz( (1-z^2) df/dz ) becomes
 %
-% d/dz (1-z^2)*q  with free (homogeneous Neumann BC)
+% eq1 : df/dt == d/dz g(z) q(z)       [grad,g(z)=1-z^2,BCL=D,BCR=D]
+% eq2 :  q(z) == d/dz g(z) f(z)       [grad,g(z)=1,BCL=N,BCR=N]
 %
-% and the flux is 
-%
-% q=df/fz  with homogeneous Dirichlet BC
 %
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck1_4p2,4,4,0.01);
+% asgard(fokkerplanck1_4p2);
 %
 % implicit
-% fk6d(fokkerplanck1_4p2,5,4,0.01,[],[],1,[],[],0.5);
+% asgard(fokkerplanck1_4p2,'implicit',true,'num_steps',20,'lev',3,'deg',3);
 
 pde.CFL = 0.005;
-
 
 %% Setup the dimensions
 % 
@@ -50,8 +47,6 @@ pde.CFL = 0.005;
         
     end
 
-dim_z.BCL = 'D'; % dirichlet
-dim_z.BCR = 'D';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
 dim_z.init_cond_fn = @(z,p,t) soln(z,0);
@@ -62,27 +57,23 @@ dim_z.init_cond_fn = @(z,p,t) soln(z,0);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_z};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 %
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
+% termC
+%
 % d/dz( (1-z^2) df/dz )
 
-termC_z.type = 'diff';
-% eq1 : 1 * d/dx (1-z^2) q
-termC_z.G1 = @(z,p,t,dat) 1-z.^2;
-termC_z.LF1 = -1; % upwind left
-termC_z.BCL1 = 'D';
-termC_z.BCR1 = 'D';
-% eq2 : q = df/dx 
-termC_z.G2 = @(z,p,t,dat) z*0+1;
-termC_z.LF2 = +1; % upwind right
-termC_z.BCL2 = 'N';
-termC_z.BCR2 = 'N';
-
-termC = term_fill({termC_z});
+g1 = @(z,p,t,dat) 1-z.^2;
+g2 = @(z,p,t,dat) z.*0+1;
+pterm1  = GRAD(num_dims,g1,-1,'D','D');
+pterm2  = GRAD(num_dims,g2,+1,'N','N');
+termC_z = TERM_1D({pterm1,pterm2});
+termC   = TERM_ND(num_dims,{termC_z});
 
 %%
 % Add terms to the pde object

@@ -120,11 +120,11 @@ if nDims==3
     
     dimensions = pde.dimensions;
     
-    deg1=dimensions{1}.deg;
+    deg1=pde.deg;
     lev1=dimensions{1}.lev;
-    deg2=dimensions{2}.deg;
+    deg2=pde.deg;
     lev2=dimensions{2}.lev;
-    deg3=dimensions{3}.deg;
+    deg3=pde.deg;
     lev3=dimensions{3}.lev;
     
     dof1=deg1*2^lev1;

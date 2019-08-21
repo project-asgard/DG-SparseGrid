@@ -76,8 +76,6 @@ pde.CFL = 0.01;
         ret = 4/sqrt(pi) * exp(-x.^2);
     end
 
-dim_x.BCL = 'N'; % neumann
-dim_x.BCR = 'D'; % not set (equivalent to neumann)
 dim_x.domainMin = 0;
 dim_x.domainMax = +10;
 dim_x.init_cond_fn = @(z,p,t) f0(z);
