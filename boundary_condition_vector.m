@@ -98,7 +98,6 @@ for tt = 1:num_terms % Construct a BC object for each term
                             preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
                         end
                         bcL_tmp = preceeding_mat * bcL_tmp;
-%                         bcL_tmp = term_1D.pterms{p-1}.mat * bcL_tmp;
                     end
                     
                     bcL{d1}{d1} = bcL_tmp;

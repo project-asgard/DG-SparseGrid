@@ -118,10 +118,11 @@ term1   = TERM_ND(num_dims,{term1_x});
 %
 % coeff_mat = mat1 * mat2
 
-g1 = @(x,p,t,dat) 2.*x.*x_psi(x);
+g1 = @(x,p,t,dat) 1./(x.^2);
+g2 = @(x,p,t,dat) 2.*x.*x_psi(x);
 
 pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g1,-1,'N','D');
+pterm2 = GRAD(num_dims,g2,-1,'N','D');
 
 term2_x = TERM_1D({pterm1,pterm2});
 term2   = TERM_ND(num_dims,{term2_x});
