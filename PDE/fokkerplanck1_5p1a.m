@@ -80,10 +80,6 @@ num_dims = numel(pde.dimensions);
 %%
 % x^2 * df/dt (LHS non-identity coeff requires special treatment)
 
-% termLHS_x.type = 'mass';
-% termLHS_x.G = @(x,p,t,dat) x.^2;
-% termLHS = term_fill({termLHS_x});
-
 g1 = @(x,p,t,dat) x.^2;
 pterm1 = MASS(g1);
 
@@ -93,14 +89,10 @@ termLHS   = TERM_ND(num_dims,{termLHS_x});
 pde.termsLHS = {termLHS};
 
 %% 
-% d/dx*x^2*psi(x)/x*df/dx
-
-% term1_x.type = 'diff';
-% % Eq 1 : d/dx * x*psi(x) * q
-% term1_x.G1 = @(x,p,t,dat) x_psi(x);
-% term1_x.LF1 = -1; % Upwind
-% term1_x.BCL1 = 'D';
-% term1_x.BCR1 = 'N';
+% d/dx*x^2*psi(x)/x*df/dx, split as two first order as 
+%
+% df/dt == d/dx g1(x) q(x)   [grad,g1(x)=x^2*psi(x)/x, BCL=D, BCR=N]
+%  q(x) == d/dx g2(x) f(x)   [grad,g2(x)=1, BCL=N, BCR=D]
 
 g1      = @(x,p,t,dat) x_psi(x);
 g2      = @(x,p,t,dat) x.*0+1;
@@ -109,22 +101,8 @@ pterm2  = GRAD(num_dims,g2,+1,'N','D');
 term1_x = TERM_1D({pterm1,pterm2});
 term1   = TERM_ND(num_dims,{term1_x});
 
-% % Eq 2 : q = df/dx
-% term1_x.G2 = @(x,p,t,dat) x.*0+1;
-% term1_x.LF2 = +1; % Downwind
-% term1_x.BCL2 = 'N';
-% term1_x.BCR2 = 'D';
-% 
-% term1 = term_fill({term1_x});
-
 %%
 % d/dx*x^2*2*psi(x)*f
-
-% term2_x.type = 'grad';
-% term2_x.G = @(x,p,t,dat) x*2.*x_psi(x);
-% term2_x.LF = -1;
-% 
-% term2 = term_fill({term2_x});
 
 g1      = @(x,p,t,dat) x*2.*x_psi(x);
 pterm1  = GRAD(num_dims,g1,-1,'N','D');
@@ -158,7 +136,6 @@ pde.analytic_solutions_1D = { ...
     @(z,p,t) soln(z,t), ...
     @(t,p) 1 
     };
-
 
 %%
 % Function to set time step
