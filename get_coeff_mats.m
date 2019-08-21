@@ -33,12 +33,11 @@ for tt = 1:num_terms
     for d = 1:num_dimensions
         
         dim = pde.dimensions{d};
-        
-        if term_nD.terms_1D{d}.time_dependent == TD
+        term_1D = term_nD.terms_1D{d};
+
+        if term_1D.time_dependent == TD
             
-            if debug; disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]); end
-            
-            term_1D = term_nD.terms_1D{d};
+            if debug; disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]); end           
             
             if oldcoeff
                 mat = coeff_matrix_old(pde.deg,t,dim,term_1D);
@@ -46,13 +45,6 @@ for tt = 1:num_terms
             else
                 
                 [term_1D_out] = coeff_matrix(num_dimensions,pde.deg,t,dim,term_1D,pde.params);
-                
-%                 pde.terms{tt}.terms_1D{d}.mat = mat;
-%                 pde.terms{tt}.terms_1D{d}.mat_unrotated = mat0;
-%                 if strcmp(term{d}.type,'diff') % Keep matU and matD from LDG for use in BC application
-%                     pde.terms{tt}{d}.mat1 = mat1;
-%                     pde.terms{tt}{d}.mat2 = mat2;
-%                 end
                 pde.terms{tt}.terms_1D{d} = term_1D_out;
 
             end
@@ -76,19 +68,21 @@ if ~isempty(pde.termsLHS)
         for d = 1:num_dimensions
             
             dim = pde.dimensions{d};
+            term_1D = term_nD.terms_1D{d};
             
-            if term_nD{d}.TD == TD
+            if term_1D.time_dependent == TD
                 
                 if debug; disp([TD_STR ' - LHS term : ' num2str(1) '  d : ' num2str(d) ]); end
                 
-                assert(strcmp(term_nD{d}.type,'mass'));
+                for p=1:numel(term_1D.pterms)
+                    assert(strcmp(term_1D.pterms{p}.type,'mass'));
+                end
                 
                 if oldcoeff
                     error('Non-identity LHS mass matrix not supported by "use_oldcoeffmat=1"');
                 else          
-                    [mat,~,~,mat0] = coeff_matrix(num_dimensions,pde.deg,t,dim,term_nD{d},pde.params);
-                    pde.termsLHS{tt}{d}.coeff_mat = mat;
-                    pde.termsLHS{tt}{d}.coeff_mat0 = mat0;
+                    [term_1D_out] = coeff_matrix(num_dimensions,pde.deg,t,dim,term_1D,pde.params);
+                    pde.termsLHS{tt}.terms_1D{d} = term_1D_out;
                 end
                 
             end

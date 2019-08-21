@@ -73,47 +73,63 @@ dim_x.init_cond_fn = @(z,p,t) f0(z);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_x};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 
 %%
 % x^2 * df/dt (LHS non-identity coeff requires special treatment)
 
-termLHS_x.type = 'mass';
-termLHS_x.G = @(x,p,t,dat) x.^2;
+% termLHS_x.type = 'mass';
+% termLHS_x.G = @(x,p,t,dat) x.^2;
+% termLHS = term_fill({termLHS_x});
 
-termLHS = term_fill({termLHS_x});
+g1 = @(x,p,t,dat) x.^2;
+pterm1 = MASS(g1);
+
+termLHS_x = TERM_1D({pterm1});
+termLHS   = TERM_ND(num_dims,{termLHS_x});
 
 pde.termsLHS = {termLHS};
-
 
 %% 
 % d/dx*x^2*psi(x)/x*df/dx
 
-term1_x.type = 'diff';
-% Eq 1 : d/dx * x*psi(x) * q
-term1_x.G1 = @(x,p,t,dat) x_psi(x);
-term1_x.LF1 = -1; % Upwind
-term1_x.BCL1 = 'D';
-term1_x.BCR1 = 'N';
-% Eq 2 : q = df/dx
-term1_x.G2 = @(x,p,t,dat) x.*0+1;
-term1_x.LF2 = +1; % Downwind
-term1_x.BCL2 = 'N';
-term1_x.BCR2 = 'D';
+% term1_x.type = 'diff';
+% % Eq 1 : d/dx * x*psi(x) * q
+% term1_x.G1 = @(x,p,t,dat) x_psi(x);
+% term1_x.LF1 = -1; % Upwind
+% term1_x.BCL1 = 'D';
+% term1_x.BCR1 = 'N';
 
-term1 = term_fill({term1_x});
+g1      = @(x,p,t,dat) x_psi(x);
+g2      = @(x,p,t,dat) x.*0+1;
+pterm1  = GRAD(num_dims,g1,-1,'D','N');
+pterm2  = GRAD(num_dims,g2,+1,'N','D');
+term1_x = TERM_1D({pterm1,pterm2});
+term1   = TERM_ND(num_dims,{term1_x});
 
+% % Eq 2 : q = df/dx
+% term1_x.G2 = @(x,p,t,dat) x.*0+1;
+% term1_x.LF2 = +1; % Downwind
+% term1_x.BCL2 = 'N';
+% term1_x.BCR2 = 'D';
+% 
+% term1 = term_fill({term1_x});
 
 %%
 % d/dx*x^2*2*psi(x)*f
 
-term2_x.type = 'grad';
-term2_x.G = @(x,p,t,dat) x*2.*x_psi(x);
-term2_x.LF = -1;
+% term2_x.type = 'grad';
+% term2_x.G = @(x,p,t,dat) x*2.*x_psi(x);
+% term2_x.LF = -1;
+% 
+% term2 = term_fill({term2_x});
 
-term2 = term_fill({term2_x});
-
+g1      = @(x,p,t,dat) x*2.*x_psi(x);
+pterm1  = GRAD(num_dims,g1,-1,'N','D');
+term2_x = TERM_1D({pterm1});
+term2   = TERM_ND(num_dims,{term2_x});
 
 %%
 % Add terms to the pde object

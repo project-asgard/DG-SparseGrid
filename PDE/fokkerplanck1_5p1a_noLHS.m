@@ -155,7 +155,6 @@ pde.analytic_solutions_1D = { ...
     @(t,p) 1 
     };
 
-
 %%
 % Function to set time step
     function dt=set_dt(pde,CFL)

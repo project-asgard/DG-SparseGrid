@@ -173,3 +173,27 @@ verifyLessThan(testCase,err,1.5e-5);
 
 end
 
+function asgard_fokkerplanck1_5p1a_noLHS_implicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing fokkerplanck1_5p1a_noLHS (implicit)');
+
+[err,act_f,act_frs] = asgard(fokkerplanck1_5p1a_noLHS,'implicit',true,'lev',3,'num_steps',30,'CFL',1.5,'quiet',true);
+
+verifyLessThan(testCase,err,2.0e-2);
+
+end
+
+function asgard_fokkerplanck1_5p1a_implicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing fokkerplanck1_5p1a (implicit / with LHS)');
+
+[err,act_f,act_frs] = asgard(fokkerplanck1_5p1a,'implicit',true,'lev',3,'num_steps',30,'CFL',1.5,'quiet',true);
+
+verifyLessThan(testCase,err,2.5e-2);
+
+end
+
