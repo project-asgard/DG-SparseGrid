@@ -6,16 +6,16 @@ function pde = fokkerplanck2_6
 % Run with
 %
 % explicit
-% fk6d(fokkerplanck2_6p1,4,2,1)
+% asgard(fokkerplanck2_6)
 %
 % implicit
-% fk6d(fokkerplanck2_6p1,4,2,100,[],[],1,[],[],5.0)
+% asgard(fokkerplanck2_6,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4)
 
 pde.CFL = 0.01;
 
 %%
 % Select 6.1, 6.2, 6.3, etc where it goes as 6.test
-test = 3; 
+test = 2; 
 
 %%
 % Define a few relevant functions
@@ -104,17 +104,13 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.BCL = 'N';
-dim_p.BCR = 'D';
-dim_p.domainMin = 0.5;
+dim_p.domainMin = 0;
 dim_p.domainMax = +10;
-dim_p.init_cond_fn = @(x,p,t) soln_p(x,0);
+dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
-dim_z.BCL = 'N';
-dim_z.BCR = 'N';
 dim_z.domainMin = -1;
 dim_z.domainMax = +1;
-dim_z.init_cond_fn = @(x,p,t) soln_z(x,0);
+dim_z.init_cond_fn = @(x,p,t) f0_z(x);
 
 %%
 % Add dimensions to the pde object
@@ -122,64 +118,66 @@ dim_z.init_cond_fn = @(x,p,t) soln_z(x,0);
 % the remainder of this PDE.
 
 pde.dimensions = {dim_p,dim_z};
+num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 
-%%
-% x^2 * df/dt (LHS non-identity coeff requires special treatment)
-
-termLHS_p.type = 'mass';
-termLHS_p.G = @(x,p,t,dat) x.^2;
-
-termLHS = term_fill({termLHS_p,[]});
-
-pde.termsLHS = {termLHS};
-
 %% 
-% d/dp*p^2*Ca*df/dp
+% df/dt == 1/p^2*d/dp*p^2*Ca*df/dp
+%
+% becomes 
+%
+% df/dt == g1(p) q(p)        [mass, g1(p) = 1/p^2,  BC N/A]
+%  q(p) == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=D,BCR=N]
+%  r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=N,BCR=D]
 
-term1_p.type = 'diff';
-% Eq 1 : d/dp * p^2*Ca * q
-term1_p.G1 = @(x,p,t,dat) x.^2.*Ca(x);
-term1_p.LF1 = +1; % Upwind
-term1_p.BCL1 = 'D';
-term1_p.BCR1 = 'N';
-% Eq 2 : q = df/dx
-term1_p.G2 = @(x,p,t,dat) x.*0+1;
-term1_p.LF2 = -1; % Downwind
-term1_p.BCL2 = 'N';
-term1_p.BCR2 = 'D';
+g1 = @(x,p,t,dat) 1./x.^2;
+g2 = @(x,p,t,dat) x.^2.*Ca(x);
+g3 = @(x,p,t,dat) x.*0+1; 
 
-term1 = term_fill({term1_p,[]});
-
-%%
-% d/dp*p^2*Cf*f
-
-term2_p.type = 'grad';
-term2_p.G = @(x,p,t,dat) x.^2.*Cf(x);
-term2_p.LF = +1;
-
-term2 = term_fill({term2_p,[]});
+pterm1 = MASS(g1);
+pterm2 = GRAD(num_dims,g2,+1,'D','N');
+pterm3 = GRAD(num_dims,g3,-1,'N','D');
+term1_p = TERM_1D({pterm1,pterm2,pterm3});
+term1   = TERM_ND(num_dims,{term1_p,[]});
 
 %%
-% Cb(p)/p^2 * d/dz( (1-z^2) * df/dz )
+% df/dt == 1/p^2*d/dp*p^2*Cf*f
+%
+% becomes
+%
+% df/dt == g1(p) q(p)       [mass, g1(p)=1/p^2,  BC N/A]
+%  q(p) == d/dp g2(p) f(p)  [grad, g2(p)=p^2*Cf, BCL=N,BCR=D]
 
-term3_p.type = 'mass';
-term3_p.G = @(x,p,t,dat) Cb(x)./x.^2;
+g1 = @(x,p,t,dat) 1./x.^2;
+g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
-term3_z.type = 'diff';
-% Eq 1 : d/dz (1-z^2) * q
-term3_z.G1 = @(x,p,t,dat) (1-x.^2);
-term3_z.LF1 = +1; % Upwind
-term3_z.BCL1 = 'D';
-term3_z.BCR1 = 'D';
-% Eq 2 : q = df/dx
-term3_z.G2 = @(x,p,t,dat) x.*0+1;
-term3_z.LF2 = -1; % Downwind
-term3_z.BCL2 = 'N';
-term3_z.BCR2 = 'N';
+pterm1  = MASS(g1);
+pterm2  = GRAD(num_dims,g2,+1,'N','D');
+term2_p = TERM_1D({pterm1,pterm2});
+term2   = TERM_ND(num_dims,{term2_p,[]});
 
-term3 = term_fill({term3_p,term3_z});
+%%
+% df/dt == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
+%
+% becomes
+%
+% d/dt f(p,z) == q(p) r(z)
+%        q(p) == g1(p)            [mass, g1(p) = Cb(p)/p^4, BC N/A]
+%        r(z) == d/dz g2(z) s(z)  [grad, g2(z) = 1-z^2,     BCL=D,BCR=D]
+%        s(z) == d/dz g3(z) f(z)  [grad, g3(z) = 1,         BCL=N,BCR=N]
+
+g1 = @(x,p,t,dat) Cb(x)./x.^4;
+pterm1  = MASS(g1);
+term3_p = TERM_1D({pterm1});
+
+g2 = @(x,p,t,dat) (1-x.^2);
+g3 = @(x,p,t,dat) x.*0+1;
+pterm1  = GRAD(num_dims,g2,+1,'D','D');
+pterm2  = GRAD(num_dims,g3,-1,'N','N');
+term3_z = TERM_1D({pterm1,pterm2});
+
+term3 = TERM_ND(num_dims,{term3_p,term3_z});
 
 %%
 % Add terms to the pde object
