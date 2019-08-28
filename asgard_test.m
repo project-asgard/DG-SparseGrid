@@ -181,7 +181,7 @@ disp('Testing fokkerplanck1_5p1a_noLHS (implicit)');
 
 [err,act_f,act_frs] = asgard(fokkerplanck1_5p1a_noLHS,'implicit',true,'lev',3,'num_steps',30,'CFL',1.5,'quiet',true);
 
-verifyLessThan(testCase,err,2.0e-2);
+verifyLessThan(testCase,err,2.1e-2);
 
 end
 
@@ -191,7 +191,7 @@ addpath(genpath(pwd));
 
 disp('Testing fokkerplanck1_5p1a (implicit / with LHS)');
 
-[err,act_f,act_frs] = asgard(fokkerplanck1_5p1a,'implicit',true,'lev',3,'num_steps',30,'CFL',1.5,'quiet',true);
+[err,act_f,act_frs] = asgard(fokkerplanck1_5p1a,'implicit',true,'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'implicit_method','BE');
 
 verifyLessThan(testCase,err,2.5e-2);
 

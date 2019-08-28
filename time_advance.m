@@ -6,8 +6,13 @@ function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 %-------------------------------------------------
 
 if opts.implicit
-    %f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    if strcmp(opts.implicit_method,'BE')
+        % Backward Euler (BE) first order
+        f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    else
+        % Crank Nicolson (CN) second order
+        f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    end
 else
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 end

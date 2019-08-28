@@ -14,6 +14,9 @@ default_CFL = 0.01;
 default_adapt = false;
 default_use_oldhash = false;
 default_use_oldcoeffmat = false;
+default_implicit_method = 'CN';
+valid_implicit_methods = {'BE','CN'};
+check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -21,6 +24,7 @@ addParameter(input_parser,'deg',default_deg, @isnumeric);
 addOptional(input_parser,'num_steps',default_num_steps, @isnumeric);
 addOptional(input_parser,'quiet',default_quiet,@islogical);
 addOptional(input_parser,'implicit',default_implicit, @islogical);
+addOptional(input_parser,'implicit_method',default_implicit_method, check_implicit_method);
 addOptional(input_parser,'grid_type',default_grid_type, check_grid_type);
 addOptional(input_parser,'CFL',default_CFL, @isnumeric);
 addOptional(input_parser,'adapt',default_adapt, @islogical);
@@ -98,6 +102,7 @@ end
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
 opts.implicit = input_parser.Results.implicit;
+opts.implicit_method = input_parser.Results.implicit_method;
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
