@@ -26,7 +26,7 @@ C = 1.0;
     end
     function ret = f0(z)
         
-        caseNumber = 1;
+        caseNumber = 3;
         shift = 0.36;
         
         switch caseNumber

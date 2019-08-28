@@ -11,7 +11,9 @@ function FMWT = OperatorTwoScale_wavelet2(deg,nLev)
 % % Load G0 and H0 from file
 idebug = 0;
 
-fileName = ['two_scale/two_scale_rel_',num2str(deg),'.mat'];
+asgard_root = get_root_folder();
+
+fileName = [asgard_root,'/two_scale/two_scale_rel_',num2str(deg),'.mat'];
 
 if exist(fileName,'file') == 2
     load(fileName);
