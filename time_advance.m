@@ -6,8 +6,8 @@ function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 %-------------------------------------------------
 
 if opts.implicit
-    f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    %f = crank_nicolson(pde,runTimeOpts,A_data,f,t,dt,deg,HASHInv,Vmax,Emax);
+    %f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 else
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 end
@@ -109,11 +109,17 @@ end
 
 function f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
+applyLHS = ~isempty(pde.termsLHS);
+
+if applyLHS
+    error('LHS operator not supported in crank_nicolson. Please switch to Backward Euler');
+end
+
 s0 = source_vector(pde,opts,hash_table,t);
 s1 = source_vector(pde,opts,hash_table,t+dt);
 
-bc0 = getBoundaryCondition1(pde,opts,hash_table,t);
-bc1 = getBoundaryCondition1(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t);
+bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
 [~,AMat] = apply_A(pde,opts,A_data,f0,deg);
 

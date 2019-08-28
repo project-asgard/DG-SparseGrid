@@ -24,7 +24,7 @@ for i=1:num_elements
         style(i) = 'or';
     end
     
-    coordinates(i,:) = getMyRealSpaceCoord(pde,opts,hash_table,idx);
+    coordinates(i,:) = get_my_realspace_coord(pde,opts,hash_table,idx);
     
     levels(i) = sum (hash_table.elements.lev_p1(idx,:)-1,'all');
     assert(levels(i)>=0);
@@ -49,7 +49,7 @@ if num_dims == 1
             style = 'or';
         end
         
-        coord_D = getMyRealSpaceCoord(pde,opts,hash_table,idx);
+        coord_D = get_my_realspace_coord(pde,opts,hash_table,idx);
         plot(coord_D(1),-y,style);
         
         xlim([xMin,xMax]);

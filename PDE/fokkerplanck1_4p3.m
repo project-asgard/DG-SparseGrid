@@ -22,7 +22,7 @@ sig = 0.1;
     end
     function ret = f0(z)
         
-        caseNumber = 4;
+        caseNumber = 1;
         shift = 0.36;
         
         switch caseNumber

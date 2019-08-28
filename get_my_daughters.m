@@ -180,8 +180,9 @@ if method == 2
     
 end
 
-assert(min(new_elem_lev_vecs(:))>=0);
-assert(min(new_elem_pos_vecs(:))>=0);
-
+if cnt>0
+    assert(min(new_elem_lev_vecs(:))>=0);
+    assert(min(new_elem_pos_vecs(:))>=0);
+end
 
 end
