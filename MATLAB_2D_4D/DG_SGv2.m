@@ -11,7 +11,7 @@ format short e
 %------------------------------------------------
 % Set Parameters
 %------------------------------------------------
-Np = 10;
+Np = 4;
 k=5;
 
 mkdir('Data')
@@ -25,6 +25,10 @@ n = Np;h = 2^(-n-1);
 %% Compute 1D solution
 [Stiff_1D,b,Meval,coef_MW] = LaplacianMatrix2(n,k);
 M_mass=speye(size(Stiff_1D,1),size(Stiff_1D,1));
+
+% Full grids
+M2D = kron(M_mass,Stiff_1D)+kron(Stiff_1D,M_mass);
+
 
 %% 2D sparse-grid
 tic
