@@ -18,11 +18,11 @@ sig = 0.1;
 % Here we setup a 1D problem (x)
 
     function ret = phi(z,t)
-        ret = z.*exp(-t) ./ sqrt(1-(exp(-2*t)-1).*(z.^2));
+        ret = z.*exp(-t) ./ sqrt(1+(exp(-2*t)-1).*(z.^2));
     end
     function ret = f0(z)
         
-        caseNumber = 1;
+        caseNumber = 4;
         shift = 0.36;
         
         switch caseNumber

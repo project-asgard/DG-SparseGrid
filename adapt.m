@@ -44,7 +44,7 @@ end
 if coarsen
     
     num_remove = 0;
-    remove_list = [];
+    remove_elements_list = [];
     
     for n=1:num_elements
         
@@ -92,7 +92,7 @@ if coarsen
             end
             
             num_remove = num_remove + 1;
-            remove_list(num_remove) = n;
+            remove_elements_list(num_remove) = n;
             
         end
     end
@@ -100,37 +100,37 @@ if coarsen
     %%
     % Now remove elements
     
-    assert(numel(remove_list)==num_remove);
+    assert(numel(remove_elements_list)==num_remove);
     
-    remove_list2 = [];
+    remove_DOF_list = [];
     for n=1:num_remove
         
         %%
         % Remove entries from element table (recall sparse storage means =0
         % removes it from the table
         
-        hash_table.elements.lev_p1(hash_table.elements_idx(remove_list(n)),:) = 0;
-        hash_table.elements.pos_p1(hash_table.elements_idx(remove_list(n)),:) = 0;
-        hash_table.elements.node_type(hash_table.elements_idx(remove_list(n)))= 0;
+        hash_table.elements.lev_p1(hash_table.elements_idx(remove_elements_list(n)),:) = 0;
+        hash_table.elements.pos_p1(hash_table.elements_idx(remove_elements_list(n)),:) = 0;
+        hash_table.elements.node_type(hash_table.elements_idx(remove_elements_list(n)))= 0;
         
         %%
         % Remove all deg parts of this element from fval
         
-        nn = remove_list(n);
+        nn = remove_elements_list(n);
         
         i1 = (nn-1)*element_DOF+1; % Get the start and end global row indices of the element
         i2 = (nn)*element_DOF;
         assert(i2-i1==element_DOF-1);
         
-        remove_list2 = [remove_list2,i1:i2];
+        remove_DOF_list = [remove_DOF_list,i1:i2];
         
     end
     
     %%
     % Remove entries from elements_idx
     
-    hash_table.elements_idx(remove_list) = [];
-    fval(remove_list2) = [];
+    hash_table.elements_idx(remove_elements_list) = [];
+    fval(remove_DOF_list) = [];
     if ~opts.quiet; fprintf('    Coarsen on : removed %i elements\n', num_remove); end
 
 end
