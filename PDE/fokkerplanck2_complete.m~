@@ -199,11 +199,8 @@ pterm1   = MASS(g1);
 termE1_z = TERM_1D({pterm1});
 
 pterm1 = MASS(g2); 
-%------------
-% Difference
-%------------
-pterm2 = GRAD(num_dims,g3,-1,'N','D');% David's Setting
-% pterm2 = GRAD(num_dims,g3,1,'N','D');% Lin's Setting
+pterm2 = GRAD(num_dims,g3,-1,'N','D');% by Lin, I set +1% original code
+% pterm2 = GRAD(num_dims,g3,1,'N','D');% by Lin
 termE1_p = TERM_1D({pterm1,pterm2});
 
 termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
@@ -219,11 +216,8 @@ g2 = @(x,p,t,dat) 1-x.^2;
 pterm1   = MASS(g1);
 termE2_p = TERM_1D({pterm1});
 
-%------------
-% Difference
-%------------
-pterm1   = GRAD(num_dims,g2,-1,'N','N');% David's Setting
-% pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+pterm1   = GRAD(num_dims,g2,-1,'N','N');% Lin is usging 0 % Orignal
+% pterm1   = GRAD(num_dims,g2,0,'N','N');% by Lin
 termE2_z = TERM_1D({pterm1});
 
 termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
@@ -240,14 +234,14 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^3 .* gamma(x) ./ tau;
 g3 = @(x,p,t,dat) 1-x.^2;
 
-%pterm1   = MASS(g1);% This is not needed - by Lin
+%pterm1   = MASS(g1);% This is not needed
 
 %------------
 % Difference
 %------------
-pterm2   = GRAD(num_dims,g2,-1,'N','D');% David's Setting
-% pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
-
+pterm2   = GRAD(num_dims,g2,-1,'N','D');% Why I am using +1 for flux %
+% original
+% pterm2   = GRAD(num_dims,g2,1,'N','D');% by Lin
 termR1_p = TERM_1D({pterm1,pterm2});
 
 pterm1   = MASS(g3);
