@@ -91,6 +91,12 @@ end
 write_fval = 0;
 if write_fval; write_fval_to_file(fval,lev,deg,0); end
 
+%% Check to see if initial resolution meets requested accuracy
+if opts.adapt
+    if ~opts.quiet; disp('Coarsening initial grid ...'); end
+    [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,1,0);
+end
+
 %% Time Loop
 count=1;
 plotFreq = 1;

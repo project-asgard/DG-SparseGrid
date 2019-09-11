@@ -1,10 +1,10 @@
-function [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0)
+function [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0,coarsen_,refine_)
 
 num_elements    = numel(hash_table.elements_idx);
-num_dimensions  = numel(pde.dimensions);
+num_dims  = numel(pde.dimensions);
 deg             = pde.deg; 
 
-element_DOF = deg^num_dimensions;
+element_DOF = deg^num_dims;
 
 refine_threshold  = max(abs(fval)) * 1e-2;
 coarsen_threshold = max(abs(fval)) * 1e-4;
@@ -12,15 +12,23 @@ coarsen_threshold = max(abs(fval)) * 1e-4;
 newElementVal = 1e-15;
 
 debug   = 0;
-coarsen = 1;
-refine  = 1;
+coarsen = 0;
+if exist('coarsen_','var') && ~isempty(coarsen_)
+    coarsen = coarsen_;
+end
+
+refine  = 0;
+if exist('refine_','var') && ~isempty(refine_)
+    refine = refine_;
+end
+
 method  = 1;
 
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 if ~opts.quiet
-    fprintf('Initial number of elementss: %i\n', numel(hash_table.elements_idx));
-    fprintf('Initial number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
+    fprintf('Initial number of elements: %i\n', numel(hash_table.elements_idx));
+    fprintf('Initial number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
 end
 
 %%
@@ -58,42 +66,21 @@ if coarsen
         %%
         % Check for coarsening (de-refinement)
         
-        if element_sum <= coarsen_threshold % Check only the deg=0 term for each element
-            
-            if debug; fprintf('leaf node to be REMOVED, fval=%f\n', element_sum); end
-            
-            thisElemLevVec = hash_table.elements.lev_p1(idx,:)-1; % NOTE : remove the 1 per note below
-            thisElemPosVec = hash_table.elements.pos_p1(idx,:)-1; % NOTE : remove the 1 per note below
+        if element_sum <= coarsen_threshold
             
             %%
-            % Generate a list of elements who will become leaves after
-            % removing this element.
+            % Check if my parent is above the threshold
             
-            for d=1:num_dimensions
-                
-                newLeafElemLevVec = thisElemLevVec;
-                newLeafElemPosVec = thisElemPosVec;
-                
-                newLeafElemLevVec(d) = newLeafElemLevVec(d)-1;
-                newLeafElemPosVec(d) = floor(newLeafElemPosVec(d)/2);
-                
-                idx = lev_cell_to_element_index(newLeafElemLevVec,newLeafElemPosVec,pde.max_lev);
-                
-                %%
-                % Assert this element exists
-                
-                %                     assert(hash_table.elements.lev_p1(element_idx,d) ~= 0);
-                
-                %%
-                % Set element type to leaft == 2
-                
-                %                     hash_table.elements.node_type(element_idx) = 2;
-                
-            end
+            parent_idx = get_my_parent_idx(num_dims, hash_table, idx);
             
-            num_remove = num_remove + 1;
-            remove_elements_list(num_remove) = n;
+            parent_gidx1 = hash_table.elements_idx == parent_idx; 
             
+            if debug; fprintf('element to be REMOVED, sum()=%f\n', element_sum); end
+         
+             num_remove = num_remove + 1;
+             remove_elements_list(num_remove) = n;
+            
+%             end
         end
     end
     
@@ -261,7 +248,7 @@ elements_idx0 = hash_table.elements_idx;
 %%
 % Update the FMWT transform matrices
 
-for d=1:num_dimensions
+for d=1:num_dims
     pde.dimensions{d}.lev = max(hash_table.elements.lev_p1(:,d)-1);
     pde.dimensions{d}.FMWT = OperatorTwoScale(deg,pde.dimensions{d}.lev);
 end
@@ -286,7 +273,7 @@ A_data = global_matrix(pde,opts,hash_table);
 %%
 % Update the conversion to realspace matrices
 
-for d=1:num_dimensions
+for d=1:num_dims
     [Meval{d},nodes{d}] = matrix_plot_D(pde,pde.dimensions{d});
 end
 
@@ -301,7 +288,7 @@ coord = get_realspace_coords(pde,nodes);
 fval_realspace_refined = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
 
 if ~opts.quiet
-    if num_dimensions == 1
+    if num_dims == 1
         
         subplot(2,3,4)
         plot(fval)
@@ -314,7 +301,7 @@ if ~opts.quiet
         plot(nodes{1},fval_realspace_refined)
         hold off
         
-    elseif num_dimensions == 2
+    elseif num_dims == 2
         
         subplot(3,3,4)
         deg1=pde0.deg;
@@ -352,8 +339,8 @@ assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 assert(sum(hash_table.elements_idx-elements_idx0)==0);
 
 if ~opts.quiet
-    fprintf('Final number of elementss: %i\n', numel(hash_table.elements_idx));
-    fprintf('Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
+    fprintf('Final number of elements: %i\n', numel(hash_table.elements_idx));
+    fprintf('Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
 end
 
 end
