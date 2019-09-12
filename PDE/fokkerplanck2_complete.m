@@ -3,6 +3,30 @@ function pde = fokkerplanck2_complete
 %
 % Full PDE from the 2D runaway electron paper 
 %
+% d/dt f(p,z) == -div(flux_C + flux_E + flux_R)
+%
+% where 
+%
+% flux_C is flux due to electron-ion collisions
+% flux_E is the flux due to E accleration
+% flux_R is the flux due to radiation damping
+%
+% -div(flux_C) == termC1 + termC2 + termC3
+% 
+% termC1 == 1/p^2*d/dp*p^2*Ca*df/dp
+% termC2 == 1/p^2*d/dp*p^2*Cf*f
+% termC3 == termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
+%
+% -div(flux_E) == termE1 + termE2
+%
+% termE1 == -E*z*f(z) * 1/p^2 (d/dp p^2 f(p))
+% termE2 == -E*p*f(p) * d/dz (1-z^2) f(z)
+%
+% -div(flux_R) == termR1 + termR2
+%
+% termR1 == 1/p^2 d/dp p^2 gamma(p) p / tau f(p) * (1-z^2) * f(z)
+% termR2 == -1/(tau*gam(p)) f(p) * d/dz z(1-z^2) f(z)
+%
 % Run with
 %
 % explicit
