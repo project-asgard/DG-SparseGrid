@@ -202,8 +202,8 @@ pterm1 = MASS(g2);
 %------------
 % Difference
 %------------
-pterm2 = GRAD(num_dims,g3,-1,'N','D');% David's Setting
-% pterm2 = GRAD(num_dims,g3,1,'N','D');% Lin's Setting
+%pterm2 = GRAD(num_dims,g3,-1,'N','D');% David's Setting
+pterm2 = GRAD(num_dims,g3,1,'N','D');% Lin's Setting
 termE1_p = TERM_1D({pterm1,pterm2});
 
 termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
@@ -222,12 +222,12 @@ termE2_p = TERM_1D({pterm1});
 %------------
 % Difference
 %------------
-pterm1   = GRAD(num_dims,g2,-1,'N','N');% David's Setting
-% pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+%pterm1   = GRAD(num_dims,g2,-1,'N','N');% David's Setting
+pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
 termE2_z = TERM_1D({pterm1});
 
 termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
-% by Lin. Where is 1/p^2??
+
 %% -div(flux_R) == termR1 + termR2
 
 % termR1 == 1/p^2 d/dp p^2 gamma(p) p / tau f(p) * (1-z^2) * f(z)
@@ -245,8 +245,8 @@ g3 = @(x,p,t,dat) 1-x.^2;
 %------------
 % Difference
 %------------
-pterm2   = GRAD(num_dims,g2,-1,'N','D');% David's Setting
-% pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
+%pterm2   = GRAD(num_dims,g2,-1,'N','D');% David's Setting
+pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
 
 termR1_p = TERM_1D({pterm1,pterm2});
 
@@ -269,8 +269,8 @@ termR2_p = TERM_1D({pterm1});
 %------------
 % Difference
 %------------
-pterm1   = GRAD(num_dims,g2,+1,'N','N');% David's Setting
-% pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+%pterm1   = GRAD(num_dims,g2,+1,'N','N');% David's Setting
+pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
 termR2_z = TERM_1D({pterm1});
 
 
