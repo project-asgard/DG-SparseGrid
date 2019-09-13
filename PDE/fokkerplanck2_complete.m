@@ -264,7 +264,7 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^3 .* gamma(x) ./ tau;
 g3 = @(x,p,t,dat) 1-x.^2;
 
-%pterm1   = MASS(g1);% This is not needed - by Lin
+pterm1   = MASS(g1);% This is not needed - by Lin
 
 %------------
 % Difference
