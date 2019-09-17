@@ -30,3 +30,6 @@ gold_batch
 
 disp('Generating gold data for time_advance component');
 gold_time_advance
+
+disp('Generating gold data for matrix_plot_D component');
+gold_matrix_plot_D
