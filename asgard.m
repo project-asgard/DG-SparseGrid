@@ -73,6 +73,7 @@ if num_dimensions <=3
     %%
     % Get the real space solution
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+
     fval_realspace_analytic = get_analytic_realspace_solution_D(coord,0,pde);
     
     if norm(fval_realspace) > 0 && ~opts.quiet
