@@ -24,7 +24,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -66,7 +65,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL=.1;
 dt = pde.set_dt(pde,CFL);
 
@@ -110,7 +108,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -156,7 +153,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -198,7 +194,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -241,7 +236,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -285,7 +279,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -326,7 +319,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -370,7 +362,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -413,7 +404,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -456,7 +446,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 
@@ -497,7 +486,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 CFL = .1;
 dt = pde.set_dt(pde,CFL);
 

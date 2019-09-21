@@ -18,7 +18,6 @@ for i=1:length(pde.dimensions)
   pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
 end
 pde = check_pde(pde);
-pde = check_terms(pde);
 
 num_dimensions = length(pde.dimensions);
 lev_vec = zeros(numel(pde.dimensions),1)+level;
@@ -56,7 +55,6 @@ for i=1:length(pde.dimensions)
   pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
 end
 pde = check_pde(pde);
-pde = check_terms(pde);
 
 num_dimensions = length(pde.dimensions);
 lev_vec = zeros(numel(pde.dimensions),1)+level;
@@ -94,7 +92,6 @@ for i=1:length(pde.dimensions)
   pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
 end
 pde = check_pde(pde);
-pde = check_terms(pde);
 
 num_dimensions = length(pde.dimensions);
 lev_vec = zeros(numel(pde.dimensions),1)+level;
@@ -136,7 +133,6 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-pde = check_terms(pde);
 
 num_dimensions = length(pde.dimensions);
 lev_vec = zeros(numel(pde.dimensions),1)+level;
