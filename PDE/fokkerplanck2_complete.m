@@ -111,7 +111,6 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
             case 2 
                 a = 2;
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
-                
             case 3
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
                 
@@ -223,10 +222,6 @@ pterm1   = MASS(g1);
 termE1_z = TERM_1D({pterm1});
 
 pterm1 = MASS(g2); 
-%------------
-% Difference
-%------------
-%pterm2 = GRAD(num_dims,g3,-1,'N','D');% David's Setting
 pterm2 = GRAD(num_dims,g3,1,'N','D');% Lin's Setting
 termE1_p = TERM_1D({pterm1,pterm2});
 
@@ -243,10 +238,6 @@ g2 = @(x,p,t,dat) 1-x.^2;
 pterm1   = MASS(g1);
 termE2_p = TERM_1D({pterm1});
 
-%------------
-% Difference
-%------------
-%pterm1   = GRAD(num_dims,g2,-1,'N','N');% David's Setting
 pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
 termE2_z = TERM_1D({pterm1});
 
@@ -265,11 +256,6 @@ g2 = @(x,p,t,dat) x.^3 .* gamma(x) ./ tau;
 g3 = @(x,p,t,dat) 1-x.^2;
 
 pterm1   = MASS(g1);% This is not needed - by Lin
-
-%------------
-% Difference
-%------------
-%pterm2   = GRAD(num_dims,g2,-1,'N','D');% David's Setting
 pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
 
 termR1_p = TERM_1D({pterm1,pterm2});
@@ -290,10 +276,6 @@ g2 = @(x,p,t,dat) x.*(1-x.^2);
 pterm1   = MASS(g1);
 termR2_p = TERM_1D({pterm1});
 
-%------------
-% Difference
-%------------
-%pterm1   = GRAD(num_dims,g2,+1,'N','N');% David's Setting
 pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
 termR2_z = TERM_1D({pterm1});
 
