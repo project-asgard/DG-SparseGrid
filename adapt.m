@@ -1,4 +1,5 @@
-function [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0,coarsen_,refine_)
+function [pde,fval,hash_table,A_data,Meval,nodes,coord,fval_previous] ...
+    = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0,coarsen_,refine_,fval_previous)
 
 num_elements    = numel(hash_table.elements_idx);
 num_dims  = numel(pde.dimensions);
@@ -6,8 +7,10 @@ deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
-refine_threshold  = max(abs(fval)) * 1e-2;
-coarsen_threshold = max(abs(fval)) * 1e-4;
+relative_threshold = 1e-3;
+
+refine_threshold  = max(abs(fval)) * relative_threshold;
+coarsen_threshold = max(abs(fval)) * relative_threshold * 0.1;
 
 newElementVal = 1e-15;
 
@@ -20,6 +23,12 @@ end
 refine  = 0;
 if exist('refine_','var') && ~isempty(refine_)
     refine = refine_;
+end
+
+refine_previous = 0;
+if exist('fval_previous','var') && ~isempty(fval_previous)
+    refine_previous = 1;
+    assert(numel(fval)==numel(fval_previous));
 end
 
 method  = 1;
@@ -66,21 +75,20 @@ if coarsen
         %%
         % Check for coarsening (de-refinement)
         
-        if element_sum <= coarsen_threshold
+        if element_sum <= coarsen_threshold && min(hash_table.elements.lev_p1(idx,:))>=3
             
             %%
             % Check if my parent is above the threshold
             
-            parent_idx = get_my_parent_idx(num_dims, hash_table, idx);
+            %             parent_idx = get_my_parent_idx(num_dims, hash_table, idx);
             
-            parent_gidx1 = hash_table.elements_idx == parent_idx; 
+            %             parent_gidx1 = hash_table.elements_idx == parent_idx;
             
             if debug; fprintf('element to be REMOVED, sum()=%f\n', element_sum); end
-         
-             num_remove = num_remove + 1;
-             remove_elements_list(num_remove) = n;
             
-%             end
+            num_remove = num_remove + 1;
+            remove_elements_list(num_remove) = n;
+            
         end
     end
     
@@ -207,7 +215,9 @@ if refine
             i2 = (myIdx)*element_DOF;
             assert(i2-i1==element_DOF-1);
             fval(i1:i2) = newElementVal; % Extend coefficient list with near zero magnitude (ideally would be zero)
-            
+            if refine_previous
+                fval_previous(i1:i2) = newElementVal; % Extend coefficient list of previous time step also
+            end
             hash_table.elements.lev_p1(idx,:) = thisElemLevVec+1; % NOTE : have to start lev  index from 1 for sparse storage
             hash_table.elements.pos_p1(idx,:) = thisElemPosVec+1; % NOTE : have to start cell index from 1 for sparse storage
             
@@ -224,6 +234,9 @@ if refine
     
 end
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
+if refine_previous
+    assert(numel(fval_previous)==numel(hash_table.elements_idx)*element_DOF);
+end
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 for i=1:numel(hash_table.elements_idx)
@@ -236,7 +249,7 @@ end
 
 plot_grid = 1;
 if plot_grid && ~opts.quiet
-    plot_adapt(pde,opts,hash_table,3);
+    coordinates = plot_adapt(pde,opts,hash_table,3);
     plot_adapt_triangle(pde,opts,hash_table,9);
 end
 
@@ -299,6 +312,7 @@ if ~opts.quiet
         plot(nodes0{1},fval_realspace0)
         hold on
         plot(nodes{1},fval_realspace_refined)
+        plot(coordinates,coordinates*0,'o');
         hold off
         
     elseif num_dims == 2
@@ -329,8 +343,11 @@ if ~opts.quiet
         f2d = reshape(fval_realspace_refined,dof2,dof1);
         x = nodes{1};
         y = nodes{2};
-        contour(x,y,f2d);
-        
+        contourf(x,y,f2d,'LineColor','none');
+        hold on
+        scatter(coordinates(:,1),coordinates(:,2),'+','MarkerEdgeColor','white')
+        hold off
+              
     end
 end
 

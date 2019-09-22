@@ -1,4 +1,4 @@
-function plot_adapt(pde,opts,hash_table,pos)
+function [coordinates] = plot_adapt(pde,opts,hash_table,pos)
 
 num_elements = numel(hash_table.elements_idx);
 num_dims = numel(pde.dimensions);

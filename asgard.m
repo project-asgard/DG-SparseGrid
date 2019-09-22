@@ -92,9 +92,18 @@ write_fval = 0;
 if write_fval; write_fval_to_file(fval,lev,deg,0); end
 
 %% Check to see if initial resolution meets requested accuracy
-if opts.adapt
-    if ~opts.quiet; disp('Coarsening initial grid ...'); end
-    [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,1,0);
+if opts.adapt    
+    if ~opts.quiet; disp('Checking if initial grid is sufficient for requested accuracy ...'); end
+    
+    % Check to ensure refinement is not required to start
+    pre_refinement_num_DOF = length(fval);
+    [pde,fval,hash_table,A_data,Meval,nodes,coord] ...
+        = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1);
+    if (length(fval)>pre_refinement_num_DOF)
+        error('Initial grid was insifficient for requested accuracy');
+    end
+else
+   disp(['Number of DOF : ', num2str(numel(fval))]); 
 end
 
 %% Time Loop
@@ -110,61 +119,84 @@ for L = 1:num_steps
     
     if ~opts.quiet; disp(timeStr); end
     Emax = 0;
-    
-    if pde.solvePoisson
-        %%
-        % Solve Poisson to get E (from 1-rho=1-int f dv)
-        if ~quiet; disp('    Solve poisson to get E'); end
-        %[E,u] = PoissonSolve2(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
-        [E,u] = PoissonSolve(LevX,deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
-        Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
+   
+    % Coarsen Grid
+    if opts.adapt
+        [pde,fval,hash_table,A_data,Meval,nodes,coord] ...
+            = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,1,0);
     end
     
-    if pde.applySpecifiedE
-        %%
-        % Apply specified E
-        if ~quiet; disp('    Apply specified E'); end
-        E = forwardMWT(LevX,deg,Lmin,Lmax,pde.Ex,pde.params);
-        E = E * pde.Et(time(count),params);
-        Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
-    end
-    
-    if ~opts.quiet; disp('    Calculate time dependent matrix coeffs'); end
-    if num_dimensions==2
-        if (pde.applySpecifiedE || pde.solvePoisson)
-            
+    fval_previous = fval;
+    for adapt_step = 1:2
+        
+        if pde.solvePoisson
             %%
-            % Generate EMassX time dependent coefficient matrix.
-            
-            EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
-            
-            %%
-            % Set the dat portion of the EMassX part of E.d_dv term.
-            
-            pde.terms{2}{2}.dat = E;
-            
+            % Solve Poisson to get E (from 1-rho=1-int f dv)
+            if ~quiet; disp('    Solve poisson to get E'); end
+            %[E,u] = PoissonSolve2(LevX,Deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax,index1D);
+            [E,u] = PoissonSolve(LevX,deg,Lmax,fval,A_Poisson,FMWT_COMP_x,Vmax);
+            Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
         end
+        
+        if pde.applySpecifiedE
+            %%
+            % Apply specified E
+            if ~quiet; disp('    Apply specified E'); end
+            E = forwardMWT(LevX,deg,Lmin,Lmax,pde.Ex,pde.params);
+            E = E * pde.Et(time(count),params);
+            Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
+        end
+        
+        if ~opts.quiet; disp('    Calculate time dependent matrix coeffs'); end
+        if num_dimensions==2
+            if (pde.applySpecifiedE || pde.solvePoisson)
+                
+                %%
+                % Generate EMassX time dependent coefficient matrix.
+                
+                EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
+                
+                %%
+                % Set the dat portion of the EMassX part of E.d_dv term.
+                
+                pde.terms{2}{2}.dat = E;
+                
+            end
+        end
+        
+        
+        %%
+        % Now construct the TD coeff_mats.
+        
+        t = time(count);
+        TD = 1;
+        pde = get_coeff_mats(pde,t,TD);
+        
+        %%
+        % Advance in time
+        
+        if ~opts.quiet; disp('    Time step'); end
+        
+        %%
+        % Write the A_data structure components for use in HPC version.
+        write_A_data = 0;
+        if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
+        
+        fval = time_advance(pde,opts,A_data,fval,time(count),dt,pde.deg,hash_table,[],[]);
+        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+        
+        %%
+        % Refine Grid - determine which elements to add, but reset fval to
+        % fval_previous with those new elements added and time_advance
+        % again
+        
+        if opts.adapt && (adapt_step == 1)
+            if ~opts.quiet; disp('Adapt grid ...'); end
+            [pde,~,hash_table,A_data,Meval,nodes,coord,fval] ...
+                = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1,fval_previous);
+        end
+    
     end
-    
-    
-    %%
-    % Now construct the TD coeff_mats.
-    
-    t = time(count);
-    TD = 1;
-    pde = get_coeff_mats(pde,t,TD);
-    
-    %%
-    % Advance in time
-    
-    if ~opts.quiet; disp('    RK3 time step'); end
-    
-    %%
-    % Write the A_data structure components for use in HPC version.
-    write_A_data = 0;
-    if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
-    
-    fval = time_advance(pde,opts,A_data,fval,time(count),dt,pde.deg,hash_table,[],[]);
     
     %%
     % Write the present fval to file.
@@ -262,14 +294,6 @@ for L = 1:num_steps
         fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
         save(fName,'f2d','fval');
-    end
-    
-    %%
-    % Apply adaptivity
-    
-    if opts.adapt
-        if ~opts.quiet; disp('Adapt grid ...'); end
-        [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes,fval_realspace);
     end
     
 end
