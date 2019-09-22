@@ -1,0 +1,44 @@
+./asgard.m:22:if opts.use_oldhash
+./asgard.m:90:    if opts.use_oldhash
+./asgard.m:204:        if opts.use_oldhash
+./get_sparse_grid_coordinates.m:6:if opts.use_oldhash
+./gold/gold_time_advance.m:4:opts.use_oldhash = 1;
+./gold/gold_time_advance.m:523:        'lev',lev, 'deg',deg, 'CFL', 0.01, 'use_oldhash', true, 'num_steps', i, 'quiet', true);
+./gold/gold_time_advance.m:535:        'lev',lev, 'deg',deg, 'CFL', 0.01, 'use_oldhash', true, 'num_steps', i, 'quiet', true);
+./gold/gold_time_advance.m:547:        'lev',lev, 'deg',deg, 'CFL', 1e-10, 'use_oldhash', true, 'num_steps', i, 'quiet', true);
+./gold/make_opts.m:8:opts.use_oldhash = false;
+./gold/gold_wavelet_to_realspace.m:32:%opts.use_oldhash = false;
+./gold/gold_wavelet_to_realspace.m:61:% done opts - only thing used is use_oldhash or nah. Set it to default and use that. also gridtype
+./gold/gold_transformations.m:41:use_oldhash = true;
+./gold/gold_transformations.m:42:ans = combine_dimensions_D(deg, fd, ft, back, use_oldhash);
+./gold/gold_transformations.m:55:use_oldhash = true;
+./gold/gold_transformations.m:56:ans = combine_dimensions_D(deg, fd, ft, back, use_oldhash);
+./gold/gold_batch.m:29:opts.use_oldhash = 1;
+./gold/gold_batch.m:70:opts.use_oldhash = 1;
+./gold/gold_batch.m:107:opts.use_oldhash = 1;
+./gold/gold_batch.m:144:opts.use_oldhash = 1;
+./get_my_realspace_coord.m:17:    if opts.use_oldhash
+./global_matrix.m:9:if opts.use_oldhash
+./global_matrix.m:37:    if opts.use_oldhash
+./global_matrix.m:46:        if opts.use_oldhash
+./source_vector.m:20:    fval = fval + combine_dimensions_D(pde.deg, fList, time_multiplier, hash_table, opts.use_oldhash);
+./README.md:34:'use_oldhash' = true | **false**;   % Use original hash table or not
+grep: input file ‘./trash.txt’ is also the output
+./wavelet_to_realspace.m:14:if opts.use_oldhash
+./wavelet_to_realspace.m:46:    if opts.use_oldhash
+./wavelet_to_realspace.m:54:        if opts.use_oldhash
+./boundary_condition_vector.m:19:if opts.use_oldhash
+./boundary_condition_vector.m:146:                bcVec = bcVec + combine_dimensions_D(pde.deg,fListL,timeFacL,hash_table,opts.use_oldhash);
+./boundary_condition_vector.m:147:                bcVec = bcVec + combine_dimensions_D(pde.deg,fListR,timeFacR,hash_table,opts.use_oldhash);
+./exact_solution_vector.m:17:fval = combine_dimensions_D(pde.deg,fList,ft,hash_table,opts.use_oldhash);
+./combine_dimensions_D.m:1:function [fval] = combine_dimensions_D (deg, function_D, time_multiplier, hash_table, use_oldhash)
+./combine_dimensions_D.m:8:if use_oldhash
+./combine_dimensions_D.m:24:        if use_oldhash
+./asgard_test.m:50:[err,act_f,act_frs] = asgard(continuity1,'quiet',true,'num_steps',2,'use_oldhash',true);
+./asgard_test.m:158:[err,act_f,act_frs] = asgard(diffusion2,'lev',3,'quiet',true,'deg',3,'implicit',true,'use_oldhash',true);
+./runtime_defaults.m:15:default_use_oldhash = false;
+./runtime_defaults.m:31:addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
+./runtime_defaults.m:107:opts.use_oldhash = input_parser.Results.use_oldhash;
+./runtime_defaults.m:111:    opts.use_oldhash = false;
+./hash_table_nD.m:26:    assert(lev_vec(d)==lev_vec(1),'use_oldhash not supported for dimension dependent level');
+./initial_condition_vector.m:13:fval = combine_dimensions_D(pde.deg, fList, ft, hash_table, opts.use_oldhash);
