@@ -3,7 +3,7 @@ data_dir = strcat("generated-inputs", "/", "matrix_plot_D", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
-pde = check_pde(continuity2) 
+pde = check_pde(continuity2); 
 
 % testing matrix_plot_D
 
