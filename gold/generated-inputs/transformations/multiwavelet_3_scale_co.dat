@@ -1,0 +1,8 @@
+# Created from matlab git hash d4591680ada8fa22940eade8d507cd43dc65ed5c
+# name: foo
+# type: matrix
+# rows: 3
+# columns: 3
+0 0 1
+0 1.732050807568877 0
+3.354101966249685 0 -1.118033988749895

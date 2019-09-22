@@ -109,3 +109,15 @@ pde.CFL=1;
 dt = pde.set_dt(pde,pde.CFL);
 write_octave_like_output(strcat(out_format, 'dt.dat'), dt);
 
+% fokkerplanck2_complete
+out_format = strcat(data_dir, "fokkerplanck2_complete_");
+pde = check_pde(fokkerplanck2_complete);
+x = 0.5;
+for d=1:length(pde.dimensions)
+  y_init = pde.dimensions{d}.init_cond_fn(x);
+  write_octave_like_output(strcat(out_format, sprintf('initial_dim%d.dat', d-1)), y_init);
+end
+
+pde.CFL=1;
+dt = pde.set_dt(pde,pde.CFL);
+write_octave_like_output(strcat(out_format, 'dt.dat'), dt);
