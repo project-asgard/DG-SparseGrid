@@ -16,7 +16,7 @@ style       = strings (num_elements, 1);
 for i=1:num_elements
     
     idx = hash_table.elements_idx(i);
-    c = hash_table.elements.node_type(idx);
+    c = hash_table.elements.type(idx);
     
     if c == 1
         style(i) = 'ob';
@@ -41,7 +41,7 @@ if num_dims == 1
         
         idx = hash_table.elements_idx(i);
         y = hash_table.elements.lev_p1(idx,1)-1;
-        c = hash_table.elements.node_type(idx);
+        c = hash_table.elements.type(idx);
         style = 'ob';
         if c == 1
             style = 'ob';

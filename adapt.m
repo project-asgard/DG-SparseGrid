@@ -24,6 +24,7 @@ refine  = 0;
 if exist('refine_','var') && ~isempty(refine_)
     refine = refine_;
 end
+refine = 0;
 
 refine_previous = 0;
 if exist('fval_previous','var') && ~isempty(fval_previous)
@@ -47,7 +48,7 @@ pde0  = pde;
 fval0 = fval;
 
 %%
-% Plot the grid (1D only)
+% Plot the grid (1 and 2D only)
 
 plot_grid = 1;
 if plot_grid && ~opts.quiet
@@ -68,23 +69,20 @@ if coarsen
         idx = hash_table.elements_idx(n);
         
         gidx1 = (n-1)*element_DOF+1;
-        %         gidx2 = gidx1 + element_DOF - 1;
         gidx2 = n*element_DOF;
         
-        %         element_sum = sum(abs(fval(gidx1:gidx2)),'all');
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
-%         disp(element_sum);
-        %         fval(gidx1:gidx2) %% Why are so many of these sparse zero? / why doesn't the number of DOFs go down with accuracy?
         
         %%
         % Check for coarsening (de-refinement)
         
-        if element_sum <= coarsen_threshold && min(hash_table.elements.lev_p1(idx,:))>=2
+        if element_sum <= coarsen_threshold && min(hash_table.elements.lev_p1(idx,:))>=2 && hash_table.elements.type(idx) == 2
             
             %%
             % Check if my parent is above the threshold
             
-            %             parent_idx = get_my_parent_idx(num_dims, hash_table, idx);
+            parent_idx = get_my_parent_idx(num_dims, hash_table, idx, pde.max_lev);
+            hash_table.elements.type(parent_idx) = 2;
             
             %             parent_gidx1 = hash_table.elements_idx == parent_idx;
             
@@ -138,7 +136,7 @@ assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 %%
-% Plot the refined grid (1D only)
+% Plot the coarsened grid (1 and 2D only)
 
 plot_grid = 1;
 if plot_grid && ~opts.quiet
