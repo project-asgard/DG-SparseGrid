@@ -34,7 +34,9 @@ elementDOF = deg^nDims;
 implicit = opts.implicit;
 
 totalDOF = nWork * elementDOF;
-A = sparse(totalDOF,totalDOF); % Only filled if implicit
+if opts.implicit
+    A = zeros(totalDOF,totalDOF); % Only filled if implicit
+end
 ALHS = sparse(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
 
 for workItem=1:nWork
@@ -82,7 +84,7 @@ for workItem=1:nWork
             %%
             % Construct the list of matrices for the kron_mult for this
             % operator (which has dimension many entries).
-            clear kronMatList;
+            % clear kronMatList;
             for d=1:nDims
                 idx_i = Index_I{d};
                 idx_j = Index_J{d};

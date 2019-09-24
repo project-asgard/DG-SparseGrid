@@ -11,14 +11,13 @@ else
     num_elements = numel(hash_table.elements_idx);
 end
 
-fval = sparse(deg^num_dims * num_elements,1);
+fval = zeros(deg^num_dims * num_elements,1);
 
 for i=1:num_elements
     
     %%
     % Kron product approach
     
-    clear kronMatList;
     for d=1:num_dims
         
         if use_oldhash

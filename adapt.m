@@ -7,10 +7,10 @@ deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
-relative_threshold = 1e-3;
+relative_threshold = 1e-4;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
-coarsen_threshold = max(abs(fval)) * relative_threshold * 0.1;
+coarsen_threshold = refine_threshold * 0.1;
 
 newElementVal = 1e-15;
 
@@ -68,14 +68,18 @@ if coarsen
         idx = hash_table.elements_idx(n);
         
         gidx1 = (n-1)*element_DOF+1;
-        gidx2 = gidx1 + element_DOF - 1;
+        %         gidx2 = gidx1 + element_DOF - 1;
+        gidx2 = n*element_DOF;
         
-        element_sum = sum(abs(fval(gidx1:gidx2)),'all');
-                
+        %         element_sum = sum(abs(fval(gidx1:gidx2)),'all');
+        element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
+%         disp(element_sum);
+        %         fval(gidx1:gidx2) %% Why are so many of these sparse zero? / why doesn't the number of DOFs go down with accuracy?
+        
         %%
         % Check for coarsening (de-refinement)
         
-        if element_sum <= coarsen_threshold && min(hash_table.elements.lev_p1(idx,:))>=3
+        if element_sum <= coarsen_threshold && min(hash_table.elements.lev_p1(idx,:))>=2
             
             %%
             % Check if my parent is above the threshold
@@ -347,6 +351,15 @@ if ~opts.quiet
         hold on
         scatter(coordinates(:,1),coordinates(:,2),'+','MarkerEdgeColor','white')
         hold off
+        
+        subplot(3,3,6)
+        fval_element = zeros(num_elements,1);
+        for i=1:deg^num_dims:num_elements
+            view = fval((i-1)*element_DOF+1:i*element_DOF);
+            fval_element(i) = sqrt(sum(view.^2));
+        end
+        tmp = nonzeros(fval_element);
+        semilogy(tmp);
               
     end
 end
