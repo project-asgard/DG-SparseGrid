@@ -14,7 +14,7 @@ coarsen_threshold = refine_threshold * 0.1;
 
 newElementVal = 1e-15;
 
-debug   = 0;
+debug   = 1;
 coarsen = 0;
 if exist('coarsen_','var') && ~isempty(coarsen_)
     coarsen = coarsen_;
@@ -62,7 +62,10 @@ end
 if coarsen
     
     num_remove = 0;
-    remove_elements_list = [];
+    elements_to_remove = [];
+    
+    num_new_leaf_elements = 0;
+    new_leaf_elements = [];
     
     for n=1:num_elements
         
@@ -77,27 +80,54 @@ if coarsen
         % Check for coarsening (de-refinement)
         
         if element_sum <= coarsen_threshold && min(hash_table.elements.lev_p1(idx,:))>=2 && hash_table.elements.type(idx) == 2
-            
-            %%
-            % Check if my parent is above the threshold
-            
-            parent_idx = get_my_parent_idx(num_dims, hash_table, idx, pde.max_lev);
-            hash_table.elements.type(parent_idx) = 2;
-            
-            %             parent_gidx1 = hash_table.elements_idx == parent_idx;
-            
-            if debug; fprintf('element to be REMOVED, sum()=%f\n', element_sum); end
+                     
+            if debug 
+                disp(['Removing : ',num2str(hash_table.elements.lev_p1(idx,:)-1)]);
+                disp(['    its type is : ', num2str(hash_table.elements.type(idx))]);
+            end
             
             num_remove = num_remove + 1;
-            remove_elements_list(num_remove) = n;
+            elements_to_remove(num_remove) = n;
             
+            %%
+            % determine level above leaf nodes and label them
+            
+            for d=1:num_dims
+                above_lev_vec = hash_table.elements.lev_p1(idx,:)-1;
+                above_lev_vec(d) = above_lev_vec(d)-1;
+                above_pos_vec = hash_table.elements.pos_p1(idx,:)-1;
+                above_pos_vec(d) = floor(above_pos_vec(d)/2);
+                above_idx = lev_cell_to_element_index(above_lev_vec, above_pos_vec, pde.max_lev);
+                
+                if debug
+                    disp(['Setting to leaf : ',num2str(hash_table.elements.lev_p1(above_idx,:)-1)]);
+                    disp(['    its type is : ', num2str(hash_table.elements.type(above_idx))]);
+                end
+                
+                % make sure the element we want to be a leaf is already in
+                % the table and active
+                assert(hash_table.elements.type(above_idx) == 1);
+
+                % update the element label to leaf
+                num_new_leaf_elements = num_new_leaf_elements + 1;
+                new_leaf_elements(num_new_leaf_elements) = above_idx;
+
+            end
+                       
         end
+    end
+    
+    %%
+    % Set new leaf elements
+    for n=1:num_new_leaf_elements
+        idx = new_leaf_elements(n);
+        hash_table.elements.type(idx) = 2;
     end
     
     %%
     % Now remove elements
     
-    assert(numel(remove_elements_list)==num_remove);
+    assert(numel(elements_to_remove)==num_remove);
     
     remove_DOF_list = [];
     for n=1:num_remove
@@ -106,14 +136,14 @@ if coarsen
         % Remove entries from element table (recall sparse storage means =0
         % removes it from the table
         
-        hash_table.elements.lev_p1(hash_table.elements_idx(remove_elements_list(n)),:) = 0;
-        hash_table.elements.pos_p1(hash_table.elements_idx(remove_elements_list(n)),:) = 0;
-        hash_table.elements.node_type(hash_table.elements_idx(remove_elements_list(n)))= 0;
+        hash_table.elements.lev_p1(hash_table.elements_idx(elements_to_remove(n)),:) = 0;
+        hash_table.elements.pos_p1(hash_table.elements_idx(elements_to_remove(n)),:) = 0;
+        hash_table.elements.type(hash_table.elements_idx(elements_to_remove(n)))= 0;
         
         %%
         % Remove all deg parts of this element from fval
         
-        nn = remove_elements_list(n);
+        nn = elements_to_remove(n);
         
         i1 = (nn-1)*element_DOF+1; % Get the start and end global row indices of the element
         i2 = (nn)*element_DOF;
@@ -126,7 +156,7 @@ if coarsen
     %%
     % Remove entries from elements_idx
     
-    hash_table.elements_idx(remove_elements_list) = [];
+    hash_table.elements_idx(elements_to_remove) = [];
     fval(remove_DOF_list) = [];
     if ~opts.quiet; fprintf('    Coarsen on : removed %i elements\n', num_remove); end
 
@@ -134,6 +164,8 @@ end
 
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
+num_elements = numel(hash_table.elements_idx);
+
 
 %%
 % Plot the coarsened grid (1 and 2D only)
@@ -353,7 +385,7 @@ if ~opts.quiet
         subplot(3,3,6)
         fval_element = zeros(num_elements,1);
         for i=1:deg^num_dims:num_elements
-            view = fval((i-1)*element_DOF+1:i*element_DOF);
+            view = fval((i-1).*element_DOF+1:i*element_DOF);
             fval_element(i) = sqrt(sum(view.^2));
         end
         tmp = nonzeros(fval_element);
