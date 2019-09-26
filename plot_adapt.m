@@ -22,6 +22,8 @@ for i=1:num_elements
         style(i) = 'ob';
     elseif c == 2
         style(i) = 'or';
+    else
+        error('why are there elements without a type tag?');
     end
     
     coordinates(i,:) = get_my_realspace_coord(pde,opts,hash_table,idx);
