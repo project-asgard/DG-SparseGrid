@@ -7,7 +7,7 @@ deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
-relative_threshold = 1e-4;
+relative_threshold = 1e-3;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
 coarsen_threshold = refine_threshold * 0.1;
@@ -46,6 +46,10 @@ assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 pde0  = pde;
 fval0 = fval;
+for d=1:num_dims
+    [Meval0{d},nodes0{d}] = matrix_plot_D(pde,pde.dimensions{d});
+end
+fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
 
 %%
 % Plot the grid (1 and 2D only)
@@ -76,49 +80,74 @@ if coarsen
     for n=1:num_elements
         
         idx = hash_table.elements_idx(n);
+        lev_vec = hash_table.elements.lev_p1(idx,:)-1;
+        pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         
         gidx1 = (n-1)*element_DOF+1;
         gidx2 = n*element_DOF;
         
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
-        
-        %%
-        % Check for coarsening (de-refinement)
-        
-        if element_sum <= coarsen_threshold && min(hash_table.elements.lev_p1(idx,:))>=2 && hash_table.elements.type(idx) == 2
-                     
-            if debug 
-                disp(['    Removing : ',num2str(hash_table.elements.lev_p1(idx,:)-1)]);
-                disp(['        its type is : ', num2str(hash_table.elements.type(idx))]);
-            end
-            
-            num_remove = num_remove + 1;
-            elements_to_remove(num_remove) = n;
+                
+        if element_sum <= coarsen_threshold ...
+                && min(hash_table.elements.lev_p1(idx,:))>=2 ...
+                && hash_table.elements.type(idx) == 2
             
             %%
-            % determine level above leaf nodes and label them
+            % get my daughters and check if any are live elements
             
-            for d=1:num_dims
-                above_lev_vec = hash_table.elements.lev_p1(idx,:)-1;
-                above_lev_vec(d) = above_lev_vec(d)-1;
-                above_pos_vec = hash_table.elements.pos_p1(idx,:)-1;
-                above_pos_vec(d) = floor(above_pos_vec(d)/2);
-                above_idx = lev_cell_to_element_index(above_lev_vec, above_pos_vec, pde.max_lev);
+            [daughter_elements_lev_vec, daughter_elements_pos_vec,num_daughters] = ...
+                get_my_daughters(lev_vec, pos_vec, pde.max_lev, method);
+            
+            num_live_daughters = 0;
+            for ii=1:num_daughters
+                this_element_lev_vec = daughter_elements_lev_vec(ii,:);
+                this_element_pos_vec = daughter_elements_pos_vec(ii,:);
+                this_idx = lev_cell_to_element_index(this_element_lev_vec,this_element_pos_vec,pde.max_lev);
+                if(hash_table.elements.type(this_idx) > 0)
+                    num_live_daughters = num_live_daughters + 1;
+                end
+            end
+            
+            at_max_lev = 0;
+            if max(lev_vec) >= pde.max_lev
+                at_max_lev = 1;
+            end
+            
+            if num_live_daughters > 0 || at_max_lev == 1
                 
                 if debug
-                    disp(['    Setting to leaf : ',num2str(hash_table.elements.lev_p1(above_idx,:)-1)]);
-                    disp(['        its type is : ', num2str(hash_table.elements.type(above_idx))]);
+                    disp(['    Removing : ',num2str(hash_table.elements.lev_p1(idx,:)-1)]);
+                    disp(['        its type is : ', num2str(hash_table.elements.type(idx))]);
                 end
                 
-                % make sure the element we want to be a leaf is already in
-                % the table and active
-                hash_table.elements.type(above_idx)
-                assert(hash_table.elements.type(above_idx) == 1);
-
-                % update the element label to leaf
-                num_new_leaf_elements = num_new_leaf_elements + 1;
-                new_leaf_elements(num_new_leaf_elements) = above_idx;
-
+                num_remove = num_remove + 1;
+                elements_to_remove(num_remove) = n;
+                
+                %%
+                % determine level above leaf nodes and label them
+                
+                for d=1:num_dims
+                    above_lev_vec = hash_table.elements.lev_p1(idx,:)-1;
+                    above_lev_vec(d) = above_lev_vec(d)-1;
+                    above_pos_vec = hash_table.elements.pos_p1(idx,:)-1;
+                    above_pos_vec(d) = floor(above_pos_vec(d)/2);
+                    above_idx = lev_cell_to_element_index(above_lev_vec, above_pos_vec, pde.max_lev);
+                    
+                    if debug
+                        disp(['    Setting to leaf : ',num2str(hash_table.elements.lev_p1(above_idx,:)-1)]);
+                        disp(['        its type is : ', num2str(hash_table.elements.type(above_idx))]);
+                    end
+                    
+                    % make sure the element we want to be a leaf is already in
+                    % the table and active
+                    assert(hash_table.elements.type(above_idx) >= 1);
+                    
+                    % update the element label to leaf
+                    num_new_leaf_elements = num_new_leaf_elements + 1;
+                    new_leaf_elements(num_new_leaf_elements) = above_idx;
+                    
+                end
+                
             end
                        
         end
@@ -192,8 +221,7 @@ end
 %%
 % Refine
 
-if refine
-    
+if refine    
         
     if ~opts.quiet
         disp('Refining ...')
@@ -225,28 +253,38 @@ if refine
                     '    refine ? yes, fval = ', num2str(element_sum,'%1.1e'), ...
                     ', type = ', num2str(hash_table.elements.type(idx)), ...
                     ', lev_vec = ', num2str(hash_table.elements.lev_p1(idx,:)-1) ...
-                    ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...                    
+                    ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
                     ]); end
             
             [daughter_elements_lev_vec, daughter_elements_pos_vec,num_daughters] = ...
                 get_my_daughters(lev_vec, pos_vec, pde.max_lev, method);
             
-            new_elements_lev_vec(cnt+1:cnt+num_daughters,:) = daughter_elements_lev_vec;
-            new_elements_pos_vec(cnt+1:cnt+num_daughters,:) = daughter_elements_pos_vec;
-            
             if num_daughters > 0
-                hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.              
-            end
-            
-            cnt = cnt + num_daughters;
-            
-            if debug
-                for ii = 1:numel(daughter_elements_lev_vec(:,1))
-                    disp(['         ', ...
-                        'lev_vec : ', num2str(daughter_elements_lev_vec(ii,:)), ...
-                        '  ', ...
-                        'pos_vec : ', num2str(daughter_elements_pos_vec(ii,:)) ...
-                        ]);
+                
+                new_elements_lev_vec(cnt+1:cnt+num_daughters,:) = daughter_elements_lev_vec;
+                new_elements_pos_vec(cnt+1:cnt+num_daughters,:) = daughter_elements_pos_vec;
+                
+                if num_daughters > 0
+                    hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
+                end
+                
+                cnt = cnt + num_daughters;
+                
+                if debug
+                    for ii = 1:numel(daughter_elements_lev_vec(:,1))
+                        disp(['         ', ...
+                            'lev_vec : ', num2str(daughter_elements_lev_vec(ii,:)), ...
+                            '  ', ...
+                            'pos_vec : ', num2str(daughter_elements_pos_vec(ii,:)) ...
+                            ]);
+                    end
+                end
+                
+            else
+                if debug
+                    disp(['no daughters, reached max_lev = ',...
+                        num2str(pde.max_lev), '  lev_vec = ', ...
+                        num2str(hash_table.elements.lev_p1(idx,:)-1)]);
                 end
             end
             
@@ -414,7 +452,7 @@ if ~opts.quiet
         f2d = reshape(fval_realspace0,dof2,dof1);
         x = nodes0{1};
         y = nodes0{2};
-        contour(x,y,f2d);
+        contourf(x,y,f2d,'LineColor','none');
         
         subplot(3,3,5)
         deg1=pde.deg;
