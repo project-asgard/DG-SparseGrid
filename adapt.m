@@ -257,26 +257,26 @@ if refine
                     ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
                     ]); end
             
-            [daughter_elements_lev_vec, daughter_elements_pos_vec,num_daughters] = ...
-                get_element_children(lev_vec, pos_vec, pde.max_lev, refinement_method);
+            [child_elements_lev_vec, child_elements_pos_vec, num_children] = ...
+                get_child_elements(lev_vec, pos_vec, pde.max_lev, refinement_method);
             
-            if num_daughters > 0
+            if num_children > 0
                 
-                new_elements_lev_vec(cnt+1:cnt+num_daughters,:) = daughter_elements_lev_vec;
-                new_elements_pos_vec(cnt+1:cnt+num_daughters,:) = daughter_elements_pos_vec;
+                new_elements_lev_vec(cnt+1:cnt+num_children,:) = child_elements_lev_vec;
+                new_elements_pos_vec(cnt+1:cnt+num_children,:) = child_elements_pos_vec;
                 
-                if num_daughters > 0
+                if num_children > 0
                     hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
                 end
                 
-                cnt = cnt + num_daughters;
+                cnt = cnt + num_children;
                 
                 if debug
-                    for ii = 1:numel(daughter_elements_lev_vec(:,1))
+                    for ii = 1:numel(child_elements_lev_vec(:,1))
                         disp(['         ', ...
-                            'lev_vec : ', num2str(daughter_elements_lev_vec(ii,:)), ...
+                            'lev_vec : ', num2str(child_elements_lev_vec(ii,:)), ...
                             '  ', ...
-                            'pos_vec : ', num2str(daughter_elements_pos_vec(ii,:)) ...
+                            'pos_vec : ', num2str(child_elements_pos_vec(ii,:)) ...
                             ]);
                     end
                 end
