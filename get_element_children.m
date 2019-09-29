@@ -1,4 +1,5 @@
-function [new_elem_lev_vecs, new_elem_pos_vecs, cnt] = get_my_daughters (lev_vec, pos_vec, max_lev, method)
+function [new_elem_lev_vecs, new_elem_pos_vecs, cnt] = ...
+    get_element_children (lev_vec, pos_vec, max_lev, refinement_method)
 
 %%
 % Takes lev and pos vector as input, returns the same for a list of
@@ -47,12 +48,12 @@ new_elem_pos_vecs = [];
 % (5,d)
 % (5,e)
 
-if ~exist('method','var') || isempty(method)
-    method = 2;
+if ~exist('method','var') || isempty(refinement_method)
+    refinement_method = 2;
 end
 
 cnt = 0;
-if method == 1 || method == 2
+if refinement_method == 1 || refinement_method == 2
     
     for d=1:num_dimensions                   
                     
@@ -113,7 +114,7 @@ if method == 1 || method == 2
     
 end
 
-if method == 2
+if refinement_method == 2
     
     if num_dimensions == 1
         
@@ -122,6 +123,7 @@ if method == 2
         
     end
     
+    % TODO : add max_lev check to method 2
     if num_dimensions == 2
         
         for i=1:numel(new_lev_1D{1})

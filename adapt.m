@@ -3,7 +3,7 @@ function [pde,fval,hash_table,A_data,Meval,nodes,coord,fval_previous] ...
 
 num_elements    = numel(hash_table.elements_idx);
 num_dims  = numel(pde.dimensions);
-deg             = pde.deg; 
+deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
@@ -15,7 +15,7 @@ coarsen_threshold = refine_threshold * 0.1;
 new_element_value = 1e-15;
 
 debug   = 1;
-method  = 1; % 1 = david, 2 = lin; see get_my_daughters for description
+refinement_method  = 1; % 1 = david, 2 = lin; see get_my_daughters for description
 
 coarsen = 0;
 if exist('coarsen_','var') && ~isempty(coarsen_)
@@ -87,33 +87,31 @@ if coarsen
         gidx2 = n*element_DOF;
         
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
-                
+        
+        %%
+        % check if the element needs refining, if it is at least level 1,
+        % and is labeled as a leaf
+        
         if element_sum <= coarsen_threshold ...
                 && min(hash_table.elements.lev_p1(idx,:))>=2 ...
                 && hash_table.elements.type(idx) == 2
             
             %%
-            % get my daughters and check if any are live elements
+            % get element children and check if any are live elements
             
-            [daughter_elements_lev_vec, daughter_elements_pos_vec,num_daughters] = ...
-                get_my_daughters(lev_vec, pos_vec, pde.max_lev, method);
-            
-            num_live_daughters = 0;
-            for ii=1:num_daughters
-                this_element_lev_vec = daughter_elements_lev_vec(ii,:);
-                this_element_pos_vec = daughter_elements_pos_vec(ii,:);
-                this_idx = lev_cell_to_element_index(this_element_lev_vec,this_element_pos_vec,pde.max_lev);
-                if(hash_table.elements.type(this_idx) > 0)
-                    num_live_daughters = num_live_daughters + 1;
-                end
-            end
+            [num_live_children, has_complete_children] = ...
+                number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
             
             at_max_lev = 0;
             if max(lev_vec) >= pde.max_lev
                 at_max_lev = 1;
             end
             
-            if num_live_daughters > 0 || at_max_lev == 1
+            %%
+            % only coarsen (remove) this element if it has no (live)
+            % daughters
+            
+            if num_live_children == 0 %|| at_max_lev == 1
                 
                 if debug
                     disp(['    Removing : ',num2str(hash_table.elements.lev_p1(idx,:)-1)]);
@@ -126,40 +124,26 @@ if coarsen
                 %%
                 % determine level above leaf nodes and label them
                 
-                for d=1:num_dims
-                    above_lev_vec = hash_table.elements.lev_p1(idx,:)-1;
-                    above_lev_vec(d) = above_lev_vec(d)-1;
-                    above_pos_vec = hash_table.elements.pos_p1(idx,:)-1;
-                    above_pos_vec(d) = floor(above_pos_vec(d)/2);
-                    above_idx = lev_cell_to_element_index(above_lev_vec, above_pos_vec, pde.max_lev);
-                    
-                    if debug
-                        disp(['    Setting to leaf : ',num2str(hash_table.elements.lev_p1(above_idx,:)-1)]);
-                        disp(['        its type is : ', num2str(hash_table.elements.type(above_idx))]);
-                    end
+                parent_elements_idx = get_element_parents(lev_vec, pos_vec, pde.max_lev, refinement_method );
+                
+                for ii=1:numel(parent_elements_idx)
                     
                     % make sure the element we want to be a leaf is already in
                     % the table and active
-                    assert(hash_table.elements.type(above_idx) >= 1);
+                    assert(hash_table.elements.type( parent_elements_idx(ii) ) >= 1);
                     
                     % update the element label to leaf
                     num_new_leaf_elements = num_new_leaf_elements + 1;
-                    new_leaf_elements(num_new_leaf_elements) = above_idx;
+                    new_leaf_elements(num_new_leaf_elements) = parent_elements_idx(ii);
                     
                 end
                 
             end
-                       
+            
         end
     end
     
-    %%
-    % Set new leaf elements
     
-    for n=1:num_new_leaf_elements
-        idx = new_leaf_elements(n);
-        hash_table.elements.type(idx) = 2;
-    end
     
     %%
     % Now remove elements
@@ -202,6 +186,23 @@ if coarsen
         fprintf('    Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
     end
     
+    %%
+    % Set new leaf elements
+    
+    for n=1:num_new_leaf_elements
+        idx = new_leaf_elements(n);
+        hash_table.elements.type(idx) = 2;
+        
+        %%
+        % assert that the element we are making a leaf does not have a
+        % complete set of live children
+        lev_vec = hash_table.elements.lev_p1(idx,:)-1;
+        pos_vec = hash_table.elements.pos_p1(idx,:)-1;
+        [num_live_children, has_complete_children] = ...
+            number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+        assert(~has_complete_children);
+    end
+    
 end
 
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
@@ -221,8 +222,8 @@ end
 %%
 % Refine
 
-if refine    
-        
+if refine
+    
     if ~opts.quiet
         disp('Refining ...')
         fprintf('    Initial number of elements: %i\n', numel(hash_table.elements_idx));
@@ -238,12 +239,12 @@ if refine
         idx = hash_table.elements_idx(n);
         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
-                   
+        
         gidx1 = (n-1)*element_DOF+1;
         gidx2 = n*element_DOF;
         
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
-               
+        
         %%
         % Check for refinement
         
@@ -257,7 +258,7 @@ if refine
                     ]); end
             
             [daughter_elements_lev_vec, daughter_elements_pos_vec,num_daughters] = ...
-                get_my_daughters(lev_vec, pos_vec, pde.max_lev, method);
+                get_element_children(lev_vec, pos_vec, pde.max_lev, refinement_method);
             
             if num_daughters > 0
                 
@@ -334,7 +335,7 @@ if refine
             end
             hash_table.elements.lev_p1(idx,:) = this_element_lev_vec+1; % NOTE : have to start lev  index from 1 for sparse storage
             hash_table.elements.pos_p1(idx,:) = this_element_pos_vec+1; % NOTE : have to start cell index from 1 for sparse storage
-
+            
         end
         
         %%
@@ -344,7 +345,7 @@ if refine
         
     end
     
-%     if ~opts.quiet; fprintf('    Refine on : added %i elements\n', num_elements_added); end
+    %     if ~opts.quiet; fprintf('    Refine on : added %i elements\n', num_elements_added); end
     
     if ~opts.quiet
         fprintf('    Final number of elements: %i\n', numel(hash_table.elements_idx));
@@ -479,7 +480,7 @@ if ~opts.quiet
         end
         tmp = nonzeros(fval_element);
         semilogy(tmp);
-              
+        
     end
 end
 

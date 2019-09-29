@@ -1,10 +1,10 @@
-function tests = get_my_daughters_test
+function tests = get_element_children_test
 tests = functiontests(localfunctions);
 end
 
 function two_dimensional_test(testCase)
 
-[lev,pos,cnt] = get_my_daughters ([3,2], [1,0], 6);
+[lev,pos,cnt] = get_element_children ([3,2], [1,0], 6);
 
 gold_lev = [    [4,2]' ...
                 [4,2]' ...
