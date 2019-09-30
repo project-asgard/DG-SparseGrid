@@ -1,4 +1,4 @@
-function [child_elemenst_lev_vec, child_elements_pos_vec, cnt] = ...
+function [child_elements_lev_vec, child_elements_pos_vec, cnt] = ...
     get_child_elements (lev_vec, pos_vec, max_lev, refinement_method)
 
 
@@ -9,10 +9,12 @@ function [child_elemenst_lev_vec, child_elements_pos_vec, cnt] = ...
 num_dimensions = numel(lev_vec);
 
 assert (num_dimensions == numel (pos_vec) );
+assert (min(lev_vec)>=0);
+assert (min(pos_vec)>=0);
 
 debug = 0;
 
-child_elemenst_lev_vec = [];
+child_elements_lev_vec = [];
 child_elements_pos_vec = [];
 
 %%
@@ -69,11 +71,14 @@ if refinement_method == 1 || refinement_method == 2
             new_elem_lev_vec(d) = new_elem_lev_vec(d)+1;
             new_elem_pos_vec(d) = new_elem_pos_vec(d)*2; % Assumes pos starts at 0
             
-            child_elemenst_lev_vec(cnt+1,:) = new_elem_lev_vec;
+            child_elements_lev_vec(cnt+1,:) = new_elem_lev_vec;
             child_elements_pos_vec(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
             
+            if child_elements_lev_vec(cnt+1,d) < 0
+                disp('l');
+            end
             assert(child_elements_pos_vec(cnt+1,d) >= 0);
-            assert(child_elemenst_lev_vec(cnt+1,d) >= 0);
+            assert(child_elements_lev_vec(cnt+1,d) >= 0);
             
             cnt = cnt + 1;
             
@@ -96,11 +101,11 @@ if refinement_method == 1 || refinement_method == 2
                 new_elem_lev_vec(d) = new_elem_lev_vec(d)+1;
                 new_elem_pos_vec(d) = new_elem_pos_vec(d)*2+1; % Assumes pos starts at 0
                 
-                child_elemenst_lev_vec(cnt+1,:) = new_elem_lev_vec;
+                child_elements_lev_vec(cnt+1,:) = new_elem_lev_vec;
                 child_elements_pos_vec(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
                 
                 assert(child_elements_pos_vec(cnt+1,d) >= 0);
-                assert(child_elemenst_lev_vec(cnt+1,d) >= 0);
+                assert(child_elements_lev_vec(cnt+1,d) >= 0);
                 
                 cnt = cnt + 1;
                 
@@ -132,7 +137,7 @@ if refinement_method == 2
                 
                 tmp_lev(1) = new_lev_1D{1}(i);
                 tmp_lev(2) = new_lev_1D{2}(j);
-                child_elemenst_lev_vec(cnt+1,1:2) = tmp_lev;
+                child_elements_lev_vec(cnt+1,1:2) = tmp_lev;
                 
                 tmp_pos(1) = new_pos_1D{1}(i);
                 tmp_pos(2) = new_pos_1D{2}(j);
@@ -156,7 +161,7 @@ if refinement_method == 2
                     tmp_lev(2) = new_lev_1D{2}(j);
                     tmp_lev(3) = new_lev_1D{3}(k);
                     
-                    child_elemenst_lev_vec(cnt+1,1:3) = tmp_lev;
+                    child_elements_lev_vec(cnt+1,1:3) = tmp_lev;
                     
                     tmp_pos(1) = new_pos_1D{1}(i);
                     tmp_pos(2) = new_pos_1D{2}(j);
@@ -184,7 +189,7 @@ if refinement_method == 2
 end
 
 if cnt>0
-    assert(min(child_elemenst_lev_vec(:))>=0);
+    assert(min(child_elements_lev_vec(:))>=0);
     assert(min(child_elements_pos_vec(:))>=0);
 end
 

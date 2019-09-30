@@ -6,13 +6,16 @@ sd_idx = zeros(num_dims,1);
 
 for d=1:num_dims
     
-    sd_idx(d) = mod((idx-1)/stride^(d-1),stride);
+    sd_idx(d) = fix(mod((idx-1)/stride^(d-1),stride));
     
     [lev,pos] = sd_idx_to_lev_pos(sd_idx(d)+1);
     lev_vec(d) = lev;
     pos_vec(d) = pos;
     
 end
+
+assert(min(lev_vec)>=0);
+assert(min(pos_vec)>=0);
 
 end
 

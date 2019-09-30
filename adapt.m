@@ -7,7 +7,7 @@ deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
-relative_threshold = 1e-3;
+relative_threshold = 1e-2;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
 coarsen_threshold = refine_threshold * 0.1;
@@ -236,8 +236,6 @@ if refine
     for n=1:num_elements
         
         idx = hash_table.elements_idx(n);
-        lev_vec = hash_table.elements.lev_p1(idx,:)-1;
-        pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         
         gidx1 = (n-1)*element_DOF+1;
         gidx2 = n*element_DOF;
@@ -256,20 +254,13 @@ if refine
                     ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
                     ]); end
             
-            %             [child_elements_lev_vec, child_elements_pos_vec, num_children] = ...
-            %                 get_child_elements(lev_vec, pos_vec, pde.max_lev, refinement_method);
             [child_elements_idx, num_children] = ...
                 get_child_elements_idx(hash_table, idx, pde.max_lev, refinement_method);
             
             if num_children > 0
                 
-%                 new_elements_lev_vec(cnt+1:cnt+num_children,:) = child_elements_lev_vec;
-%                 new_elements_pos_vec(cnt+1:cnt+num_children,:) = child_elements_pos_vec;
-                
-                new_elements_idx(cnt+1:cnt+num_children) = child_elements_idx;
-                
-                hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
-                
+                new_elements_idx(cnt+1:cnt+num_children) = child_elements_idx;              
+                hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.               
                 cnt = cnt + num_children;
                 
             end
@@ -291,17 +282,12 @@ if refine
     num_elements_added = 0;
     for i=1:num_try_to_add
         
-%         this_element_lev_vec = new_elements_lev_vec(i,:);
-%         this_element_pos_vec = new_elements_pos_vec(i,:);
-%         idx = lev_cell_to_element_index(this_element_lev_vec,this_element_pos_vec,pde.max_lev);
         idx = new_elements_idx(i);
         
         %%
         % Sanity check the new element
         
         assert(idx>=0);
-        assert(min(this_element_lev_vec)>=0);
-        assert(min(this_element_pos_vec)>=0);
         
         %%
         % If element does not exist, add its idx to the list of active elements
@@ -319,8 +305,11 @@ if refine
             if refine_previous
                 fval_previous(i1:i2) = new_element_value; % Extend coefficient list of previous time step also
             end
-            hash_table.elements.lev_p1(idx,:) = this_element_lev_vec+1; % NOTE : have to start lev  index from 1 for sparse storage
-            hash_table.elements.pos_p1(idx,:) = this_element_pos_vec+1; % NOTE : have to start cell index from 1 for sparse storage
+            
+            [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, idx);
+            
+            hash_table.elements.lev_p1(idx,:) = lev_vec+1; % NOTE : have to start lev  index from 1 for sparse storage
+            hash_table.elements.pos_p1(idx,:) = pos_vec+1; % NOTE : have to start cell index from 1 for sparse storage
             
         end
         
@@ -329,7 +318,7 @@ if refine
         
         [num_live_children, has_complete_children] = ...
             number_of_live_children_idx (hash_table, idx, pde.max_lev, refinement_method);
-        
+
         if has_complete_children
             hash_table.elements.type(idx) = 1;           
         else

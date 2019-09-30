@@ -1,6 +1,7 @@
 function [lev,pos] = sd_idx_to_lev_pos (idx)
 
 assert(idx >= 1);
+assert(isinteger(idx));
 
 if idx == 1
     
@@ -15,5 +16,8 @@ else
     pos = double((idx-1)-2^(lev-1));
     
 end
+
+assert(lev>=0);
+assert(pos>=0);
 
 end

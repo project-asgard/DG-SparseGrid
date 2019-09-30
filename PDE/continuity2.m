@@ -10,6 +10,9 @@ function pde = continuity2
 %
 % implicit
 % asgard(continuity2,'implicit',true)
+%
+% with adaptivity
+% asgard(continuity2,'implicit',true, 'adapt', true)
 
 pde.CFL = 0.1;
 

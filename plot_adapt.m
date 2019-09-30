@@ -33,7 +33,7 @@ for i=1:num_elements
     
 end
 
-figure(222);
+% figure(222);
 
 if num_dims == 1
     subplot(2,3,pos)
