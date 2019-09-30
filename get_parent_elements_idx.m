@@ -1,4 +1,4 @@
-function [parent_elements_idx, cnt] = get_parent_elements_idx (hash_table, max_lev, refinement_method)
+function [parent_elements_idx, cnt] = get_parent_elements_idx (hash_table, idx, max_lev, refinement_method)
 
 lev_vec = hash_table.elements.lev_p1(idx,:)-1;
 pos_vec = hash_table.elements.pos_p1(idx,:)-1;

@@ -102,10 +102,10 @@ if coarsen
             [num_live_children, has_complete_children] = ...
                 number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
             
-            at_max_lev = 0;
-            if max(lev_vec) >= pde.max_lev
-                at_max_lev = 1;
-            end
+%             at_max_lev = 0;
+%             if max(lev_vec) >= pde.max_lev
+%                 at_max_lev = 1;
+%             end
             
             %%
             % only coarsen (remove) this element if it has no (live)
@@ -124,7 +124,7 @@ if coarsen
                 %%
                 % determine level above leaf nodes and label them
                 
-                parent_elements_idx = get_element_parents(lev_vec, pos_vec, pde.max_lev, refinement_method );
+                parent_elements_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
                 
                 for ii=1:numel(parent_elements_idx)
                     
@@ -132,8 +132,8 @@ if coarsen
                     % the table and active
                     assert(hash_table.elements.type( parent_elements_idx(ii) ) >= 1);
                     
-                    % update the element label to leaf
-                    num_new_leaf_elements = num_new_leaf_elements + 1;
+                    % store the elements which will become leafs below
+                    num_new_leaf_elements = num_new_leaf_elements + 1;                   
                     new_leaf_elements(num_new_leaf_elements) = parent_elements_idx(ii);
                     
                 end
@@ -162,7 +162,7 @@ if coarsen
         hash_table.elements.type(hash_table.elements_idx(elements_to_remove(n)))= 0;
         
         %%
-        % Remove all deg parts of this element from fval
+        % Add this elements DOF to the list to be removed from fval
         
         nn = elements_to_remove(n);
         
@@ -175,11 +175,10 @@ if coarsen
     end
     
     %%
-    % Remove entries from elements_idx
+    % Remove elements from elements_idx, and DOF from fval
     
     hash_table.elements_idx(elements_to_remove) = [];
     fval(remove_DOF_list) = [];
-    %     if ~opts.quiet; fprintf('    Coarsen on : removed %i elements\n', num_remove); end
     
     if ~opts.quiet
         fprintf('    Final number of elements: %i\n', numel(hash_table.elements_idx));
@@ -187,7 +186,7 @@ if coarsen
     end
     
     %%
-    % Set new leaf elements
+    % Label new leaf elements
     
     for n=1:num_new_leaf_elements
         idx = new_leaf_elements(n);
@@ -257,36 +256,22 @@ if refine
                     ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
                     ]); end
             
-            [child_elements_lev_vec, child_elements_pos_vec, num_children] = ...
-                get_child_elements(lev_vec, pos_vec, pde.max_lev, refinement_method);
+            %             [child_elements_lev_vec, child_elements_pos_vec, num_children] = ...
+            %                 get_child_elements(lev_vec, pos_vec, pde.max_lev, refinement_method);
+            [child_elements_idx, num_children] = ...
+                get_child_elements_idx(hash_table, idx, pde.max_lev, refinement_method);
             
             if num_children > 0
                 
-                new_elements_lev_vec(cnt+1:cnt+num_children,:) = child_elements_lev_vec;
-                new_elements_pos_vec(cnt+1:cnt+num_children,:) = child_elements_pos_vec;
+%                 new_elements_lev_vec(cnt+1:cnt+num_children,:) = child_elements_lev_vec;
+%                 new_elements_pos_vec(cnt+1:cnt+num_children,:) = child_elements_pos_vec;
                 
-                if num_children > 0
-                    hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
-                end
+                new_elements_idx(cnt+1:cnt+num_children) = child_elements_idx;
+                
+                hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.
                 
                 cnt = cnt + num_children;
                 
-                if debug
-                    for ii = 1:numel(child_elements_lev_vec(:,1))
-                        disp(['         ', ...
-                            'lev_vec : ', num2str(child_elements_lev_vec(ii,:)), ...
-                            '  ', ...
-                            'pos_vec : ', num2str(child_elements_pos_vec(ii,:)) ...
-                            ]);
-                    end
-                end
-                
-            else
-                if debug
-                    disp(['no daughters, reached max_lev = ',...
-                        num2str(pde.max_lev), '  lev_vec = ', ...
-                        num2str(hash_table.elements.lev_p1(idx,:)-1)]);
-                end
             end
             
         else
@@ -306,9 +291,10 @@ if refine
     num_elements_added = 0;
     for i=1:num_try_to_add
         
-        this_element_lev_vec = new_elements_lev_vec(i,:);
-        this_element_pos_vec = new_elements_pos_vec(i,:);
-        idx = lev_cell_to_element_index(this_element_lev_vec,this_element_pos_vec,pde.max_lev);
+%         this_element_lev_vec = new_elements_lev_vec(i,:);
+%         this_element_pos_vec = new_elements_pos_vec(i,:);
+%         idx = lev_cell_to_element_index(this_element_lev_vec,this_element_pos_vec,pde.max_lev);
+        idx = new_elements_idx(i);
         
         %%
         % Sanity check the new element
@@ -321,13 +307,13 @@ if refine
         % If element does not exist, add its idx to the list of active elements
         % (hash_table.elements_idx)
         
-        if hash_table.elements.lev_p1(idx,1)==0
+        if hash_table.elements.type(idx) == 0
             
             num_elements_added = num_elements_added + 1;
-            active_element_list_idx = num_elements+num_elements_added;
-            hash_table.elements_idx(active_element_list_idx) = idx; % Extend element list
-            i1 = (active_element_list_idx-1)*element_DOF+1; % Get the start and end global row indices of the new element
-            i2 = (active_element_list_idx)*element_DOF;
+            position_in_elements_idx = num_elements+num_elements_added;
+            hash_table.elements_idx(position_in_elements_idx) = idx; % Extend element list
+            i1 = (position_in_elements_idx-1)*element_DOF+1; % Get the start and end global row indices of the new element
+            i2 = (position_in_elements_idx)*element_DOF;
             assert(i2-i1==element_DOF-1);
             fval(i1:i2) = new_element_value; % Extend coefficient list with near zero magnitude (ideally would be zero)
             if refine_previous
@@ -341,7 +327,14 @@ if refine
         %%
         % Set element to type to leaf
         
-        hash_table.elements.type(idx) = 2;
+        [num_live_children, has_complete_children] = ...
+            number_of_live_children_idx (hash_table, idx, pde.max_lev, refinement_method);
+        
+        if has_complete_children
+            hash_table.elements.type(idx) = 1;           
+        else
+            hash_table.elements.type(idx) = 2;
+        end
         
     end
     

@@ -5,7 +5,7 @@ function [num_live_children, has_complete_children] = ...
 % get list of children
 
 [child_elements_lev_vec, child_elements_pos_vec, num_children] = ...
-    get_element_children(lev_vec, pos_vec, max_lev, refinement_method);
+    get_child_elements(lev_vec, pos_vec, max_lev, refinement_method);
 
 %%
 % check if children are live in the global list of elements
@@ -30,5 +30,6 @@ end
 if num_children == 0
     has_complete_children = false;
 end
+
 
 end
