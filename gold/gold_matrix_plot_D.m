@@ -23,6 +23,6 @@ end
 out_format = strcat(data_dir, "matrix_plot_D");
 
 for d=1:num_dimensions
-write_octave_like_output(strcat(out_format, strcat("matrix_plot_D_", num2str(d), ".dat")), ...
+write_octave_like_output(strcat(out_format, strcat("_", num2str(d - 1), ".dat")), ...
 			 full(Meval{d}));
 end
