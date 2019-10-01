@@ -37,11 +37,11 @@ connectivity = [];
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
-fval = initial_condition_vector(pde, opts, hash_table, 0);
+fval = initial_condition_vector(pde, opts, hash_table, t);
 
 %% Construct the time-independent coefficient matrices
 if ~opts.quiet; disp('Calculate time independent matrix coefficients'); end
-t = 0;
+% t = 0;
 TD = 0;
 pde = get_coeff_mats(pde,t,TD);
 
@@ -73,7 +73,7 @@ if num_dimensions <=3
     %%
     % Get the real space solution
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    fval_realspace_analytic = get_analytic_realspace_solution_D(coord,0,pde);
+    fval_realspace_analytic = get_analytic_realspace_solution_D(coord,t,pde);
     
     if norm(fval_realspace) > 0 && ~opts.quiet
         plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
@@ -103,7 +103,7 @@ if opts.adapt
 %         error('Initial grid was insifficient for requested accuracy');
 %     end
 else
-   disp(['Number of DOF : ', num2str(numel(fval))]); 
+   if ~opts.quiet; disp(['Number of DOF : ', num2str(numel(fval))]); end
 end
 
 %% Time Loop
@@ -114,8 +114,7 @@ if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:num_steps
     
     tic;
-    time(count) = (L-1)*dt;
-    timeStr = sprintf('Step %i of %i at %f seconds',L,num_steps,time(count));
+    timeStr = sprintf('Step %i of %i at %f seconds',L,num_steps,t);
     
     if ~opts.quiet; disp(timeStr); end
     Emax = 0;
@@ -143,7 +142,7 @@ for L = 1:num_steps
             % Apply specified E
             if ~quiet; disp('    Apply specified E'); end
             E = forwardMWT(LevX,deg,Lmin,Lmax,pde.Ex,pde.params);
-            E = E * pde.Et(time(count),params);
+            E = E * pde.Et(t,params);
             Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
         end
         
@@ -168,7 +167,6 @@ for L = 1:num_steps
         %%
         % Now construct the TD coeff_mats.
         
-        t = time(count);
         TD = 1;
         pde = get_coeff_mats(pde,t,TD);
         
@@ -182,7 +180,7 @@ for L = 1:num_steps
         write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
         
-        fval = time_advance(pde,opts,A_data,fval,time(count),dt,pde.deg,hash_table,[],[]);
+        fval = time_advance(pde,opts,A_data,fval,t,dt,pde.deg,hash_table,[],[]);
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
         %%
@@ -194,6 +192,8 @@ for L = 1:num_steps
             if ~opts.quiet; disp('Adapt grid ...'); end
             [pde,~,hash_table,A_data,Meval,nodes,coord,fval] ...
                 = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1,fval_previous);
+        else
+            break
         end
     
     end
@@ -246,7 +246,7 @@ for L = 1:num_steps
         %%
         % Check the wavelet space solution with the analytic solution
         
-        fval_analytic = exact_solution_vector(pde,opts,hash_table,L*dt);
+        fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         if ~opts.quiet       
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
@@ -257,7 +257,7 @@ for L = 1:num_steps
         % Check the realspace solution
         
         if num_dimensions <= 3
-            fval_realspace_analytic = get_analytic_realspace_solution_D(coord,L*dt,pde);
+            fval_realspace_analytic = get_analytic_realspace_solution_D(coord,t+dt,pde);
             err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
             if ~opts.quiet         
                 disp(['    real space absolute err : ', num2str(err_real)]);
@@ -295,6 +295,8 @@ for L = 1:num_steps
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
         save(fName,'f2d','fval');
     end
+    
+    t = t + dt;
     
 end
 

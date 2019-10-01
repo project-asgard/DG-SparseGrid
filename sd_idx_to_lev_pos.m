@@ -1,7 +1,11 @@
 function [lev,pos] = sd_idx_to_lev_pos (idx)
 
+debug = 0;
+
+if debug; disp(idx); end
+
 assert(idx >= 1);
-assert(isinteger(idx));
+assert(fix(idx)==idx);
 
 if idx == 1
     

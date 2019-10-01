@@ -7,15 +7,15 @@ deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
-relative_threshold = 1e-2;
+relative_threshold = 1e-3;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
 coarsen_threshold = refine_threshold * 0.1;
 
 new_element_value = 1e-15;
 
-debug   = 1;
-refinement_method  = 1; % 1 = david, 2 = lin; see get_my_daughters for description
+debug   = 0;
+refinement_method  = 1; % 1 = david, 2 = lin; see get_child_elements for description
 
 coarsen = 0;
 if exist('coarsen_','var') && ~isempty(coarsen_)
@@ -102,16 +102,11 @@ if coarsen
             [num_live_children, has_complete_children] = ...
                 number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
             
-%             at_max_lev = 0;
-%             if max(lev_vec) >= pde.max_lev
-%                 at_max_lev = 1;
-%             end
-            
             %%
             % only coarsen (remove) this element if it has no (live)
             % daughters
             
-            if num_live_children == 0 %|| at_max_lev == 1
+            if num_live_children == 0 
                 
                 if debug
                     disp(['    Removing : ',num2str(hash_table.elements.lev_p1(idx,:)-1)]);
@@ -190,7 +185,6 @@ if coarsen
     
     for n=1:num_new_leaf_elements
         idx = new_leaf_elements(n);
-        hash_table.elements.type(idx) = 2;
         
         %%
         % assert that the element we are making a leaf does not have a
@@ -199,7 +193,9 @@ if coarsen
         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         [num_live_children, has_complete_children] = ...
             number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
-        assert(~has_complete_children);
+        if ~has_complete_children
+            hash_table.elements.type(idx) = 2;
+        end
     end
     
 end
@@ -435,7 +431,9 @@ if ~opts.quiet
         f2d = reshape(fval_realspace0,dof2,dof1);
         x = nodes0{1};
         y = nodes0{2};
-        contourf(x,y,f2d,'LineColor','none');
+        if norm(f2d-f2d(1,1))>0 % catch for zero
+            contourf(x,y,f2d,'LineColor','none');
+        end
         
         subplot(3,3,5)
         deg1=pde.deg;
@@ -449,7 +447,9 @@ if ~opts.quiet
         f2d = reshape(fval_realspace_refined,dof2,dof1);
         x = nodes{1};
         y = nodes{2};
-        contourf(x,y,f2d,'LineColor','none');
+        if norm(f2d-f2d(1,1))>0 % catch for zero
+            contourf(x,y,f2d,'LineColor','none');
+        end
         hold on
         scatter(coordinates(:,1),coordinates(:,2),'+','MarkerEdgeColor','white')
         hold off

@@ -33,7 +33,7 @@ end
 
 if nDims==2
     
-    figure(1000)
+%     figure(1000)
     
     dimensions = pde.dimensions;
     
@@ -106,7 +106,7 @@ if nDims==2
     contourf(x,y,f2d);
     title('numeric 2D solution');
     
-    if pde.checkAnalytic
+    if pde.checkAnalytic && norm(f2d_analytic-f2d_analytic(1,1))>0
         ax2 = subplot(2,2,4);
         contourf(x,y,f2d_analytic);
         title('analytic 2D solution');

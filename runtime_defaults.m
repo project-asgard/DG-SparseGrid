@@ -2,6 +2,7 @@ input_parser = inputParser;
 
 input_parser.KeepUnmatched = true;
 
+default_start_time = 0;
 default_lev = 3;
 default_deg = 2;
 default_num_steps = 5;
@@ -21,6 +22,7 @@ check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
 addParameter(input_parser,'deg',default_deg, @isnumeric);
+addOptional(input_parser,'start_time',default_start_time, @isnumeric);
 addOptional(input_parser,'num_steps',default_num_steps, @isnumeric);
 addOptional(input_parser,'quiet',default_quiet,@islogical);
 addOptional(input_parser,'implicit',default_implicit, @islogical);
@@ -60,6 +62,7 @@ parse(input_parser,pde,varargin{:})
 num_terms       = numel(pde.terms);
 num_dimensions  = numel(pde.dimensions);
 num_steps       = input_parser.Results.num_steps;
+t               = input_parser.Results.start_time;
 
 if numel(input_parser.Results.lev) == num_dimensions
     %%
