@@ -11,6 +11,11 @@ runtime_defaults
 
 %% Check PDE
 pde = check_pde(pde);
+    %Captain! Test code 
+    pde.lev_vec
+    pde.max_lev
+    opts.grid_type
+    %Captain! End test code 
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
@@ -72,7 +77,13 @@ if num_dimensions <=3
     
     %%
     % Get the real space solution
+    % Captain! test code - something is clearly wrong here
+    fval = [ 0:(length(fval)-1) ] .* 2.0;
+    length(fval)
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+    return;
+    % Captain! end test code
+    %fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(coord,0,pde);
     
     if norm(fval_realspace) > 0 && ~opts.quiet
