@@ -16,7 +16,8 @@ style       = strings (num_elements, 1);
 for i=1:num_elements
     
     idx = hash_table.elements_idx(i);
-    c = hash_table.elements.type(idx);
+    %c = hash_table.elements.type(idx);
+    c = 1;
     
     if c == 1
         style(i) = 'ob';
@@ -33,7 +34,7 @@ for i=1:num_elements
     
 end
 
-% figure(222);
+figure(222);
 
 if num_dims == 1
     subplot(2,3,pos)
