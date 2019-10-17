@@ -27,7 +27,7 @@ FullModel2D_C;
 FullModel2D_E;
 FullModel2D_R;
 
-Mat_All = Mat_C + Mat_E;% + Mat_R; %Mat_C;%
+Mat_All = Mat_C;%Mat_C + Mat_E;% + Mat_R; %
 
 Mat_Mass = kron(speye(DoFs,DoFs),Mat_Mass_p);
 Inv = inv(Mat_Mass);
