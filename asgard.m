@@ -14,6 +14,11 @@ pde = check_pde(pde);
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
+if opts.dt_set_at_runtime
+    dt = opts.dt;
+else
+    opts.dt = dt;
+end
 if ~opts.quiet; disp(sprintf('dt = %g', dt )); end
 
 %% Construct the Element (Hash) table.
@@ -173,7 +178,7 @@ for L = 1:num_steps
         %%
         % Advance in time
         
-        if ~opts.quiet; disp('    Time step'); end
+        if ~opts.quiet; disp(['    Time step (dt=',num2str(dt),')']); end
         
         %%
         % Write the A_data structure components for use in HPC version.
@@ -248,7 +253,8 @@ for L = 1:num_steps
         
         fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
-        if ~opts.quiet       
+        if ~opts.quiet  
+            disp(['    num_dof : ', num2str(numel(fval))]);
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
             disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
         end

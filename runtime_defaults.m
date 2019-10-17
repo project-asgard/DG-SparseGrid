@@ -12,6 +12,7 @@ default_grid_type = 'SG';
 valid_grid_types = {'SG','FG'};
 check_grid_type = @(x) any(validatestring(x,valid_grid_types));
 default_CFL = 0.01;
+default_dt = 1.0;
 default_adapt = false;
 default_use_oldhash = false;
 default_use_oldcoeffmat = false;
@@ -29,6 +30,7 @@ addOptional(input_parser,'implicit',default_implicit, @islogical);
 addOptional(input_parser,'implicit_method',default_implicit_method, check_implicit_method);
 addOptional(input_parser,'grid_type',default_grid_type, check_grid_type);
 addOptional(input_parser,'CFL',default_CFL, @isnumeric);
+addOptional(input_parser,'dt',default_dt, @isnumeric);
 addOptional(input_parser,'adapt',default_adapt, @islogical);
 addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
 addOptional(input_parser,'use_oldcoeffmat',default_use_oldcoeffmat, @islogical);
@@ -82,14 +84,19 @@ end
 pde.deg = input_parser.Results.deg;
 
 % CFL priority
-% low : default_CFL
-% med : pde.CFL
-% high: command line CFL
+% low        : default_CFL
+% med        : pde.CFL
+% high       : command line CFL
+% extra high : set dt at command line
 
 CFL_set = true;
+opts.dt_set_at_runtime = true;
 for c=input_parser.UsingDefaults
     if strcmp(c{1},'CFL')
         CFL_set = false;
+    end
+    if strcmp(c{1},'dt')
+        opts.dt_set_at_runtime = false;
     end
 end
 
@@ -102,6 +109,7 @@ if CFL_set
     opts.CFL = input_parser.Results.CFL;
 end
 
+opts.dt = input_parser.Results.dt;
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
 opts.implicit = input_parser.Results.implicit;

@@ -70,7 +70,7 @@ if nDims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    plot(x,f1d,'-o');
+    semilogy(x,f1d,'-o');
     title('1D slice (vertical)');
     
     %%
@@ -103,7 +103,9 @@ if nDims==2
     % Plot 2D
     
     ax1 = subplot(2,2,3);
-    contourf(x,y,f2d);
+    f2d_with_noise = f2d;
+    f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
+    contourf(x,y,f2d_with_noise);
     title('numeric 2D solution');
     
     if pde.checkAnalytic && norm(f2d_analytic-f2d_analytic(1,1))>0

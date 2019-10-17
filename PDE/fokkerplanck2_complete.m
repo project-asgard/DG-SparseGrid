@@ -169,8 +169,6 @@ pterm3  = GRAD(num_dims,g3,-1,'N','D');
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
-pde.terms={termC1};
-
 %%
 % termC2 == 1/p^2*d/dp*p^2*Cf*f
 %
