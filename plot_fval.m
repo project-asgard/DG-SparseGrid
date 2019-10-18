@@ -70,7 +70,7 @@ if nDims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    semilogy(x,f1d,'-o');
+    plot(x,f1d,'-o');
     title('1D slice (vertical)');
     
     %%
