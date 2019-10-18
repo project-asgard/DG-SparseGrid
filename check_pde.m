@@ -43,9 +43,4 @@ end
 
 default_pde = check_dimensions(default_pde);
 
-%% 
-% Check terms
-
-% default_pde = check_terms(default_pde);
-
 end

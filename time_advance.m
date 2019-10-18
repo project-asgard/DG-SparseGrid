@@ -82,8 +82,8 @@ end
 
 function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
-s1 = source_vector(pde,opts,hash_table,t+dt);
-bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
 % %%
 % Apply any non-identity LHS mass matrix coefficient
@@ -98,10 +98,10 @@ if applyLHS
     %     AA = I - dt*inv(ALHS)*A;
     %     b = f0 + dt*inv(ALHS)*(s1 + bc1);
     AA = I - dt*(ALHS \ A);
-    b = f0 + dt*(ALHS \ (s1 + bc1));
+    b = f0 + dt*(ALHS \ (s0 + bc0));
 else
     AA = I - dt*A;
-    b = f0 + dt*(s1 + bc1);
+    b = f0 + dt*(s0 + bc0);
 end
 
 
@@ -114,25 +114,56 @@ end
 
 function f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
-applyLHS = ~isempty(pde.termsLHS);
-
-if applyLHS
-    error('LHS operator not supported in crank_nicolson. Please switch to Backward Euler');
-end
-
 s0 = source_vector(pde,opts,hash_table,t);
 s1 = source_vector(pde,opts,hash_table,t+dt);
 
 bc0 = boundary_condition_vector(pde,opts,hash_table,t);
 bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-[~,AMat] = apply_A(pde,opts,A_data,f0,deg);
+time_independent = 1;
+persistent A;
+persistent AA_inv;
+persistent ALHS_inv;
 
-I = eye(numel(diag(AMat)));
-AA = 2*I - dt*AMat;
-
-b = 2*f0 + dt*AMat*f0 + dt*(s0+s1) + dt*(bc0+bc1);
-
-f1 = AA\b; % Solve at each timestep
+if isempty(AA_inv) || ~time_independent
+    
+    applyLHS = ~isempty(pde.termsLHS);
+        
+    if applyLHS
+        [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+        I = eye(numel(diag(A)));
+        ALHS_inv = inv(ALHS);
+%         AA = 2*I - dt*(ALHS \ A);
+%         b = 2*f0 + dt*(ALHS \ A)*f0 + dt*(ALHS \ (s0+s1+bc0+bc1));
+        AA = 2*I - dt*(ALHS_inv * A);
+        b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
+    else
+        [~,A] = apply_A(pde,opts,A_data,f0,deg);
+        I = eye(numel(diag(A)));
+        AA = 2*I - dt*A;
+        b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
+    end
+    
+    if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcond(AA))]); end
+    
+    AA_inv = inv(AA);
+    
+%     f1 = AA\b; % Solve at each timestep
+    f1 = AA_inv * b;
+else
+    applyLHS = ~isempty(pde.termsLHS);
+    
+    if applyLHS
+        I = eye(numel(diag(A)));
+        AA = 2*I - dt*(ALHS_inv * A);
+        b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
+    else
+        I = eye(numel(diag(A)));
+        AA = 2*I - dt*A;
+        b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
+    end
+    
+    f1 = AA_inv * b;
+end
 
 end
