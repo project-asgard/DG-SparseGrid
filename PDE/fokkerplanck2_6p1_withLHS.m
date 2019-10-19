@@ -32,7 +32,7 @@ E = 0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
-p_min = 0.01;
+p_min = 0.005;
 
 Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 
@@ -110,6 +110,8 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         switch p_min
             case 0
                 Q = 0.5;        % for p_min = 0
+            case 0.005
+                Q = 0.49859;    % for p_min = 0.005
             case 0.01              
                 Q = 0.497179;   % for p_min = 0.01
             case 0.1
