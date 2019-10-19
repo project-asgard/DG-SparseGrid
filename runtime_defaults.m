@@ -19,6 +19,7 @@ default_use_oldcoeffmat = false;
 default_implicit_method = 'CN';
 valid_implicit_methods = {'BE','CN'};
 check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
+default_time_independent_A = false;
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -34,6 +35,8 @@ addOptional(input_parser,'dt',default_dt, @isnumeric);
 addOptional(input_parser,'adapt',default_adapt, @islogical);
 addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
 addOptional(input_parser,'use_oldcoeffmat',default_use_oldcoeffmat, @islogical);
+addOptional(input_parser,'time_independent_A',default_time_independent_A,@islogical);
+
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -117,6 +120,7 @@ opts.implicit_method = input_parser.Results.implicit_method;
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
+opts.time_independent_A = input_parser.Results.time_independent_A;
 
 if opts.adapt
     opts.use_oldhash = false;

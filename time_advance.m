@@ -120,12 +120,13 @@ s1 = source_vector(pde,opts,hash_table,t+dt);
 bc0 = boundary_condition_vector(pde,opts,hash_table,t);
 bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-time_independent = 1;
-persistent A;
-persistent AA_inv;
-persistent ALHS_inv;
+if opts.time_independent_A
+    persistent A;
+    persistent AA_inv;
+    persistent ALHS_inv;
+end
 
-if isempty(AA_inv) || ~time_independent
+if isempty(AA_inv) || ~opts.time_independent_A
     
     applyLHS = ~isempty(pde.termsLHS);
         
