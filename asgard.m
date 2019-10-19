@@ -109,9 +109,9 @@ if opts.adapt
     pre_refinement_num_DOF = length(fval);
     [pde,fval,hash_table,A_data,Meval,nodes,coord] ...
         = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1);
-%     if (length(fval)>pre_refinement_num_DOF)
-%         error('Initial grid was insifficient for requested accuracy');
-%     end
+    if (length(fval)>pre_refinement_num_DOF)
+        error('Initial grid was insifficient for requested accuracy');
+    end
 else
    if ~opts.quiet; disp(['Number of DOF : ', num2str(numel(fval))]); end
 end
@@ -279,7 +279,7 @@ for L = 1:num_steps
         catch_min_error = true;
         if catch_min_error && err < err_wavelet
             disp('Error is now going up?');
-            tmp = [];
+            return
         end
         err = err_wavelet;
     end

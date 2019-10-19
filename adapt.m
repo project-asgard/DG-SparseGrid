@@ -83,6 +83,10 @@ if coarsen
         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         
+        [lev_vec_, pos_vec_] = md_idx_to_lev_pos (num_dims, pde.max_lev, idx);
+        assert(norm(lev_vec-lev_vec_)==0);
+        assert(norm(pos_vec-pos_vec_)==0);
+        
         gidx1 = (n-1)*element_DOF+1;
         gidx2 = n*element_DOF;
         
@@ -93,20 +97,20 @@ if coarsen
         % and is labeled as a leaf
         
         if element_sum <= coarsen_threshold ...
-                && min(hash_table.elements.lev_p1(idx,:))>=2 ...
-                && hash_table.elements.type(idx) == 2
+                && min(hash_table.elements.lev_p1(idx,:))>=2 % ...
+                %&& hash_table.elements.type(idx) == 2
             
             %%
             % get element children and check if any are live elements
             
-            [num_live_children, has_complete_children] = ...
-                number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+            %[num_live_children, has_complete_children] = ...
+            %    number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
             
             %%
             % only coarsen (remove) this element if it has no (live)
             % daughters
             
-            if num_live_children == 0 
+            %if num_live_children == 0 
                 
                 if debug
                     disp(['    Removing : ',num2str(hash_table.elements.lev_p1(idx,:)-1)]);
@@ -119,21 +123,21 @@ if coarsen
                 %%
                 % determine level above leaf nodes and label them
                 
-                parent_elements_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
+%                 parent_elements_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
+%                 
+%                 for ii=1:numel(parent_elements_idx)
+%                     
+%                     % make sure the element we want to be a leaf is already in
+%                     % the table and active
+%                     assert(hash_table.elements.type( parent_elements_idx(ii) ) >= 1);
+%                     
+%                     % store the elements which will become leafs below
+%                     num_new_leaf_elements = num_new_leaf_elements + 1;                   
+%                     new_leaf_elements(num_new_leaf_elements) = parent_elements_idx(ii);
+%                     
+%                 end
                 
-                for ii=1:numel(parent_elements_idx)
-                    
-                    % make sure the element we want to be a leaf is already in
-                    % the table and active
-                    assert(hash_table.elements.type( parent_elements_idx(ii) ) >= 1);
-                    
-                    % store the elements which will become leafs below
-                    num_new_leaf_elements = num_new_leaf_elements + 1;                   
-                    new_leaf_elements(num_new_leaf_elements) = parent_elements_idx(ii);
-                    
-                end
-                
-            end
+            %end
             
         end
     end
@@ -183,20 +187,20 @@ if coarsen
     %%
     % Label new leaf elements
     
-    for n=1:num_new_leaf_elements
-        idx = new_leaf_elements(n);
-        
-        %%
-        % assert that the element we are making a leaf does not have a
-        % complete set of live children
-        lev_vec = hash_table.elements.lev_p1(idx,:)-1;
-        pos_vec = hash_table.elements.pos_p1(idx,:)-1;
-        [num_live_children, has_complete_children] = ...
-            number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
-        if ~has_complete_children
-            hash_table.elements.type(idx) = 2;
-        end
-    end
+%     for n=1:num_new_leaf_elements
+%         idx = new_leaf_elements(n);
+%         
+%         %%
+%         % assert that the element we are making a leaf does not have a
+%         % complete set of live children
+%         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
+%         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
+%         [num_live_children, has_complete_children] = ...
+%             number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+%         if ~has_complete_children
+%             hash_table.elements.type(idx) = 2;
+%         end
+%     end
     
 end
 
@@ -241,7 +245,7 @@ if refine
         %%
         % Check for refinement
         
-        if element_sum >= refine_threshold && hash_table.elements.type(idx) == 2
+        if element_sum >= refine_threshold %&& hash_table.elements.type(idx) == 2
             
             if debug; disp([...
                     '    refine ? yes, fval = ', num2str(element_sum,'%1.1e'), ...
@@ -289,7 +293,7 @@ if refine
         % If element does not exist, add its idx to the list of active elements
         % (hash_table.elements_idx)
         
-        if hash_table.elements.type(idx) == 0
+        if hash_table.elements.type(idx) == 0 % element not already enabled
             
             num_elements_added = num_elements_added + 1;
             position_in_elements_idx = num_elements+num_elements_added;
@@ -306,20 +310,21 @@ if refine
             
             hash_table.elements.lev_p1(idx,:) = lev_vec+1; % NOTE : have to start lev  index from 1 for sparse storage
             hash_table.elements.pos_p1(idx,:) = pos_vec+1; % NOTE : have to start cell index from 1 for sparse storage
-            
-        end
-        
-        %%
-        % Set element to type to leaf
-        
-        [num_live_children, has_complete_children] = ...
-            number_of_live_children_idx (hash_table, idx, pde.max_lev, refinement_method);
-
-        if has_complete_children
             hash_table.elements.type(idx) = 1;           
-        else
-            hash_table.elements.type(idx) = 2;
+
         end
+        
+%         %%
+%         % Set element to type to leaf
+%         
+%         [num_live_children, has_complete_children] = ...
+%             number_of_live_children_idx (hash_table, idx, pde.max_lev, refinement_method);
+% 
+%         if has_complete_children
+%             hash_table.elements.type(idx) = 1;           
+%         else
+%             hash_table.elements.type(idx) = 2;
+%         end
         
     end
     
