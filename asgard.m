@@ -119,7 +119,7 @@ end
 %% Time Loop
 count=1;
 plotFreq = 1;
-err = 0;
+err = 1e9;
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:num_steps
     
@@ -276,6 +276,11 @@ for L = 1:num_steps
             end
         end
         
+        catch_min_error = true;
+        if catch_min_error && err < err_wavelet
+            disp('Error is now going up?');
+            tmp = [];
+        end
         err = err_wavelet;
     end
     

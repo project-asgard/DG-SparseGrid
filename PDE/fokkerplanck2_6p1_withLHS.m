@@ -32,6 +32,7 @@ E = 0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
+p_min = 0.01;
 
 Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 
@@ -103,12 +104,29 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         ret = x.*0+1;
     end
     function ret = soln_p(x,t)
-        ret = 2/sqrt(pi) * exp(-x.^2);
+        % From mathematica ...
+        % a = 2;
+        % Integrate[ 4/(Sqrt[Pi] a^3) Exp[-p^2/a^2], {p, p_min, 10}]
+        switch p_min
+            case 0
+                Q = 0.5;        % for p_min = 0
+            case 0.01              
+                Q = 0.497179;   % for p_min = 0.01
+            case 0.1
+                Q = 0.471814;   % for p_min = 0.1
+            case 0.2
+                Q = 0.443769;   % for p_pim = 0.2
+            case 0.5
+                Q = 0.361837;   % for p_min = 0.5
+            case 1.0
+                Q = 0.23975;     % for p_min = 1.0
+        end
+        ret = Q * 4/sqrt(pi) * exp(-x.^2);
     end
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0.01;
+dim_p.domainMin = p_min;
 dim_p.domainMax = +10;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
