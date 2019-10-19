@@ -124,6 +124,10 @@ if opts.time_independent_A
     persistent A;
     persistent AA_inv;
     persistent ALHS_inv;
+else
+    A = [];
+    AA_inv = [];
+    ALHS_inv = [];
 end
 
 if isempty(AA_inv) || ~opts.time_independent_A
