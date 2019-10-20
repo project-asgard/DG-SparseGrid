@@ -15,7 +15,7 @@ if opts.time_independent_A
 end
 
 %% Check PDE
-pde = check_pde(pde);
+pde = check_pde(pde,opts);
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
@@ -47,11 +47,11 @@ connectivity = [];
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
+t = 0;
 fval = initial_condition_vector(pde, opts, hash_table, t);
 
 %% Construct the time-independent coefficient matrices
 if ~opts.quiet; disp('Calculate time independent matrix coefficients'); end
-% t = 0;
 TD = 0;
 pde = get_coeff_mats(pde,t,TD);
 
@@ -83,7 +83,7 @@ if num_dimensions <=3
     %%
     % Get the real space solution
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    fval_realspace_analytic = get_analytic_realspace_solution_D(coord,t,pde);
+    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     
     if norm(fval_realspace) > 0 && ~opts.quiet
         plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
@@ -257,6 +257,7 @@ for L = 1:num_steps
         % Check the wavelet space solution with the analytic solution
         
         fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
+
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         if ~opts.quiet  
             disp(['    num_dof : ', num2str(numel(fval))]);
@@ -268,7 +269,7 @@ for L = 1:num_steps
         % Check the realspace solution
         
         if num_dimensions <= 3
-            fval_realspace_analytic = get_analytic_realspace_solution_D(coord,t+dt,pde);
+            fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t+dt);
             err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
             if ~opts.quiet         
                 disp(['    real space absolute err : ', num2str(err_real)]);
@@ -278,8 +279,7 @@ for L = 1:num_steps
         
         catch_min_error = true;
         if catch_min_error && err < err_wavelet
-            disp('Error is now going up?');
-            return
+            error('Error is now going up?');
         end
         err = err_wavelet;
     end

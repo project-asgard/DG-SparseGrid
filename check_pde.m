@@ -1,4 +1,4 @@
-function default_pde = check_pde(pde)
+function default_pde = check_pde(pde,opts)
 
 %% Other workflow options that should perhpas not be in the PDE?
 
@@ -11,12 +11,18 @@ default_pde.CFL = 0.01;
 default_pde.dimensions = {};
 default_pde.terms = {};
 default_pde.params = {};
-default_pde.analytic_solutions_1D = {};
 default_pde.sources = {};
 default_pde.termsLHS = {};
 default_pde.max_lev = 8; % This sets the maximum addressable space for the elements, i.e., cannot refine below this.
 default_pde.deg = 2;
 default_pde.lev_vec = [];
+
+if opts.many_solution_capable
+    default_pde.solutions = {};
+    default_pde.initial_conditions = {};
+else
+    default_pde.analytic_solutions_1D = {};
+end
 
 % Check to make sure all fields exist.
 % If not, use default.

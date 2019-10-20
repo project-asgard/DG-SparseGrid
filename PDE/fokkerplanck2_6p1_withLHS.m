@@ -110,6 +110,8 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         switch p_min
             case 0
                 Q = 0.5;        % for p_min = 0
+            case 0.001
+                Q = 0.499718;   % for p_min = 0.001
             case 0.005
                 Q = 0.49859;    % for p_min = 0.005
             case 0.01              

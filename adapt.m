@@ -7,7 +7,7 @@ deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
-relative_threshold = 1e-3;
+relative_threshold = 1e-2;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
 coarsen_threshold = refine_threshold * 0.1;
@@ -82,6 +82,8 @@ if coarsen
         idx = hash_table.elements_idx(n);
         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
+        
+        assert(max(lev_vec)<=pde.max_lev);
         
         [lev_vec_, pos_vec_] = md_idx_to_lev_pos (num_dims, pde.max_lev, idx);
         assert(norm(lev_vec-lev_vec_)==0);

@@ -1,5 +1,7 @@
 function [lev_vec, pos_vec] = md_idx_to_lev_pos (num_dims, max_lev, idx)
 
+% disp(['md_idx_to_lev_pos max_lev : ', num2str(max_lev)]);
+
 stride = 2^max_lev;
 
 sd_idx = zeros(num_dims,1);
