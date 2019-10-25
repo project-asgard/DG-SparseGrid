@@ -4,7 +4,7 @@ end
 
 function testall(testCase)
 
-max_lev = 8;
+max_lev = 9;
 
 %% 1D
 
@@ -53,6 +53,31 @@ idx = lev_cell_to_element_index(gold_lev_vec,gold_pos_vec,max_lev);
 
 assert(norm(lev_vec-gold_lev_vec) == 0);
 assert(norm(pos_vec-gold_pos_vec) == 0);
+
+%% 2D
+
+gold_lev_vec = [8,0];
+gold_pos_vec = [60,0];
+
+idx = lev_cell_to_element_index(gold_lev_vec,gold_pos_vec,max_lev);
+
+[lev_vec, pos_vec] = md_idx_to_lev_pos(2, max_lev, idx);
+
+assert(norm(lev_vec-gold_lev_vec) == 0);
+assert(norm(pos_vec-gold_pos_vec) == 0);
+
+%% 2D
+
+gold_lev_vec = [8,1];
+gold_pos_vec = [60,0];
+
+idx = lev_cell_to_element_index(gold_lev_vec,gold_pos_vec,max_lev);
+
+[lev_vec, pos_vec] = md_idx_to_lev_pos(2, max_lev, idx);
+
+assert(norm(lev_vec-gold_lev_vec) == 0);
+assert(norm(pos_vec-gold_pos_vec) == 0);
+
 
 %% 3D
 

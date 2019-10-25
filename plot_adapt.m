@@ -49,11 +49,28 @@ if num_dims == 1
         if c == 1
             style = 'ob';
         elseif c == 2
-            style = 'or';
+            style = 'ob';
         end
         
         coord_D = get_my_realspace_coord(pde,opts,hash_table,idx);
-        plot(coord_D(1),-y,style);
+        plot(coord_D(1),-y,style,'MarkerSize',10);
+        
+        [child_elements_idx, cnt] ...
+            = get_child_elements_idx (hash_table, idx, pde.max_lev, opts.refinement_method);
+        
+        for child=1:cnt
+            
+            try
+                child_coord_D = get_my_realspace_coord(pde,opts,hash_table,child_elements_idx(child));
+                child_y = hash_table.elements.lev_p1(child_elements_idx(child),1)-1;
+                
+                xx = [coord_D(1),child_coord_D(1)];
+                yy = [-y,-child_y];
+                
+                plot(xx,yy,'Color','black','LineWidth',2);
+            end
+         
+        end
         
         xlim([xMin,xMax]);
     end

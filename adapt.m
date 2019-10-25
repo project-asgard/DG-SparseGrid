@@ -7,7 +7,7 @@ deg             = pde.deg;
 
 element_DOF = deg^num_dims;
 
-relative_threshold = 1e-2;
+relative_threshold = opts.adapt_threshold;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
 coarsen_threshold = refine_threshold * 0.1;
@@ -15,7 +15,7 @@ coarsen_threshold = refine_threshold * 0.1;
 new_element_value = 1e-15;
 
 debug   = 0;
-refinement_method  = 1; % 1 = david, 2 = lin; see get_child_elements for description
+refinement_method  = opts.refinement_method; % 1 = david, 2 = lin; see get_child_elements for description
 
 coarsen = 0;
 if exist('coarsen_','var') && ~isempty(coarsen_)
@@ -28,7 +28,7 @@ if exist('refine_','var') && ~isempty(refine_)
 end
 
 refine_previous = 0;
-if exist('fval_previous','var') && ~isempty(fval_previous)
+if nargin >= 9
     refine_previous = 1;
     assert(numel(fval)==numel(fval_previous));
 end
@@ -98,8 +98,8 @@ if coarsen
         % check if the element needs refining, if it is at least level 1,
         % and is labeled as a leaf
         
-        if element_sum <= coarsen_threshold ...
-                && min(hash_table.elements.lev_p1(idx,:))>=2 % ...
+        if element_sum <= coarsen_threshold %...
+%                 && min(hash_table.elements.lev_p1(idx,:))>=2 % ...
                 %&& hash_table.elements.type(idx) == 2
             
             %%
@@ -254,12 +254,21 @@ if refine
                     ', type = ', num2str(hash_table.elements.type(idx)), ...
                     ', lev_vec = ', num2str(hash_table.elements.lev_p1(idx,:)-1) ...
                     ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
+                    ', idx = ', num2str(idx) ...
                     ]); end
             
             [child_elements_idx, num_children] = ...
-                get_child_elements_idx(hash_table, idx, pde.max_lev, refinement_method);
+                get_child_elements_idx(num_dims, pde.max_lev, idx, refinement_method);
             
             if num_children > 0
+                
+                if debug                 
+                    for nn=1:num_children
+                        [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, child_elements_idx(nn));
+                        disp(['        adding element with lev : ',num2str(lev_vec), ...
+                            ', idx = ', num2str(child_elements_idx(nn))]);
+                    end                   
+                end
                 
                 new_elements_idx(cnt+1:cnt+num_children) = child_elements_idx;              
                 hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.               
@@ -378,7 +387,7 @@ end
 %%
 % Re check the PDE
 
-pde = check_pde(pde);
+pde = check_pde(pde,opts);
 
 %%
 % Update the coeff mats to the new size
@@ -418,10 +427,10 @@ if ~opts.quiet
         plot(fval0)
         hold off
         subplot(2,3,5)
-        plot(nodes0{1},fval_realspace0)
+        plot(nodes0{1},fval_realspace0,'Color','black')
         hold on
-        plot(nodes{1},fval_realspace_refined)
-        plot(coordinates,coordinates*0,'o');
+        plot(nodes{1},fval_realspace_refined,'Color','black','LineWidth',2)
+        plot(coordinates,coordinates*0,'o','MarkerEdgeColor','blue','MarkerSize',10);
         hold off
         
     elseif num_dims == 2
@@ -463,12 +472,15 @@ if ~opts.quiet
         
         subplot(3,3,6)
         fval_element = zeros(num_elements,1);
+        depth = zeros(num_elements,1);
         for i=1:deg^num_dims:num_elements
             view = fval((i-1).*element_DOF+1:i*element_DOF);
             fval_element(i) = sqrt(sum(view.^2));
+            lev_vec = md_idx_to_lev_pos(num_dims,pde.max_lev,hash_table.elements_idx(i));
+            depth(i) = sum(lev_vec);
         end
-        tmp = nonzeros(fval_element);
-        semilogy(tmp);
+        ii = find(fval_element);
+        semilogy(depth(ii),fval_element(ii));
         
     end
 end

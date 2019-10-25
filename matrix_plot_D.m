@@ -20,12 +20,22 @@ n = 2^(lev);
 h = (xMax-xMin)/n;
 dof_1D = deg*n;
 nodes = zeros(dof_1D,1);
-Meval = sparse(dof_1D,dof_1D);
+
 
 %%
 % Quadrature points (quad_x) and weights (quad_w)
 [quad_x,quad_w]=lgwt(deg,-1,1);
+
+%%
+% Uncomment to add end points to plot
+% 
+% quad_x = [-1 quad_x' +1]';
+
+dof = numel(quad_x);
+
 p_val = lin_legendre(quad_x,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
+
+Meval = sparse(dof*n,dof_1D);
 
 for i=0:n-1
     
@@ -35,9 +45,10 @@ for i=0:n-1
     
     %%
     % Coefficients for DG bases
-    Iu = [deg*i+1:deg*(i+1)];
+    Iu = [dof*i+1:dof*(i+1)];
+    Iv = [deg*i+1:deg*(i+1)];
     
-    Meval(Iu,Iu) = p_val;
+    Meval(Iu,Iv) = p_val;
     nodes(Iu) = xi;
     
 end

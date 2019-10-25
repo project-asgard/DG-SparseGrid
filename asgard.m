@@ -86,7 +86,7 @@ if num_dimensions <=3
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     
     if norm(fval_realspace) > 0 && ~opts.quiet
-        plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
+        plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval);
     end
     
     if opts.use_oldhash
@@ -135,9 +135,10 @@ for L = 1:num_steps
             = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,1,0);
     end
     
-    fval_previous = fval;
-    for adapt_step = 1:2
-        
+    needs_adapting = true;
+    while needs_adapting
+        %     for adapt_step = 1:2
+                        
         if pde.solvePoisson
             %%
             % Solve Poisson to get E (from 1-rho=1-int f dv)
@@ -190,6 +191,7 @@ for L = 1:num_steps
         write_A_data = 0;
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
         
+        fval_unstepped = fval;
         fval = time_advance(pde,opts,A_data,fval,t,dt,pde.deg,hash_table,[],[]);
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
@@ -198,14 +200,32 @@ for L = 1:num_steps
         % fval_previous with those new elements added and time_advance
         % again
         
-        if opts.adapt && (adapt_step == 1)
+        %if opts.adapt && (adapt_step == 1)
+        if opts.adapt
             if ~opts.quiet; disp('Adapt grid ...'); end
-            [pde,~,hash_table,A_data,Meval,nodes,coord,fval] ...
-                = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1,fval_previous);
+            
+            num_elements_0 = numel(fval);
+            
+            [pde,~,hash_table,A_data,Meval,nodes,coord,fval_unstepped_adapted] ...
+                = adapt(pde,opts,fval,hash_table,nodes, ...
+                fval_realspace,0,1,fval_unstepped);
+            
+            num_elements_adapted = numel(fval_unstepped_adapted);
+            
+            if num_elements_0 == num_elements_adapted
+                disp(['No more adaption needed - advancing time']);
+                needs_adapting = false;
+                fval = time_advance(pde,opts,A_data,fval_unstepped_adapted,t,dt,pde.deg,hash_table,[],[]);
+                fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+            else
+                disp(['Still needs adaption iterating ... added ', ...
+                    num2str(num_elements_adapted-num_elements_0),' elements']);
+                fval = fval_unstepped_adapted;
+            end
         else
-            break
+            needs_adapting = false;
         end
-    
+        
     end
     
     %%
@@ -279,7 +299,7 @@ for L = 1:num_steps
         
         catch_min_error = true;
         if catch_min_error && err < err_wavelet
-            error('Error is now going up?');
+            disp('Error is now going up?');
         end
         err = err_wavelet;
     end
@@ -292,7 +312,7 @@ for L = 1:num_steps
         figure(1000)
         
         if num_dimensions <= 3
-            plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic);
+            plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates);
         end
         
     end

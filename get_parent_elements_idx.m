@@ -8,7 +8,7 @@ pos_vec = hash_table.elements.pos_p1(idx,:)-1;
 
 for i=1:cnt
     parent_elements_idx(i) = lev_cell_to_element_index(...
-        parent_elements_lev_vec(i), parent_elements_pos_vec(i), max_lev);
+        parent_elements_lev_vec(i,:), parent_elements_pos_vec(i,:), max_lev);
 end
 
 end

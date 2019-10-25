@@ -58,7 +58,7 @@ switch test
     case '6p1b'
         delta = 0.042;
         Z = 1;
-        E = 0.0025;
+        E = 0.25;
         tau = 10^5;
     case '6p1c' 
         delta = 0.042;
@@ -143,7 +143,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0;
+dim_p.domainMin = 0.1;
 dim_p.domainMax = +10;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 

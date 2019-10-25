@@ -21,6 +21,9 @@ valid_implicit_methods = {'BE','CN'};
 check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
 default_time_independent_A = false;
 default_many_solution_capable = false;
+default_max_lev = 8;
+default_adapt_threshold = 1e-1;
+default_refinement_method = 1;
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -38,7 +41,9 @@ addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
 addOptional(input_parser,'use_oldcoeffmat',default_use_oldcoeffmat, @islogical);
 addOptional(input_parser,'time_independent_A',default_time_independent_A,@islogical);
 addOptional(input_parser,'many_solution_capable',default_many_solution_capable,@islogical);
-
+addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
+addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
+addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -124,6 +129,9 @@ opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
 opts.time_independent_A = input_parser.Results.time_independent_A;
 opts.many_solution_capable = input_parser.Results.many_solution_capable;
+opts.max_lev = input_parser.Results.max_lev;
+opts.adapt_threshold = input_parser.Results.adapt_threshold;
+opts.refinement_method = input_parser.Results.refinement_method;
 
 if opts.adapt
     opts.use_oldhash = false;

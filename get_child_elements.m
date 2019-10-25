@@ -51,8 +51,8 @@ child_elements_pos_vec = [];
 % (5,d)
 % (5,e)
 
-if ~exist('method','var') || isempty(refinement_method)
-    refinement_method = 2;
+if ~exist('refinement_method','var') || isempty(refinement_method)
+    refinement_method = 1;
 end
 
 cnt = 0;
@@ -66,7 +66,7 @@ if refinement_method == 1 || refinement_method == 2
         new_elem_lev_vec = lev_vec;
         new_elem_pos_vec = pos_vec;
                 
-        if new_elem_lev_vec(d)+1 <= max_lev
+        if new_elem_lev_vec(d)+1 < max_lev
             
             new_elem_lev_vec(d) = new_elem_lev_vec(d)+1;
             new_elem_pos_vec(d) = new_elem_pos_vec(d)*2; % Assumes pos starts at 0
@@ -96,7 +96,7 @@ if refinement_method == 1 || refinement_method == 2
             new_elem_lev_vec = lev_vec;
             new_elem_pos_vec = pos_vec;
             
-            if new_elem_lev_vec(d)+1 <= max_lev
+            if new_elem_lev_vec(d)+1 < max_lev
                 
                 new_elem_lev_vec(d) = new_elem_lev_vec(d)+1;
                 new_elem_pos_vec(d) = new_elem_pos_vec(d)*2+1; % Assumes pos starts at 0
@@ -129,7 +129,6 @@ if refinement_method == 2
         
     end
     
-    % TODO : add max_lev check to method 2
     if num_dimensions == 2
         
         for i=1:numel(new_lev_1D{1})
@@ -137,11 +136,16 @@ if refinement_method == 2
                 
                 tmp_lev(1) = new_lev_1D{1}(i);
                 tmp_lev(2) = new_lev_1D{2}(j);
-                child_elements_lev_vec(cnt+1,1:2) = tmp_lev;
                 
                 tmp_pos(1) = new_pos_1D{1}(i);
                 tmp_pos(2) = new_pos_1D{2}(j);
-                child_elements_pos_vec(cnt+1,1:2) = tmp_pos;
+                
+                if max(tmp_lev) < max_lev
+                    
+                    child_elements_lev_vec(cnt+1,1:2) = tmp_lev;
+                    child_elements_pos_vec(cnt+1,1:2) = tmp_pos;
+                    
+                end
                 
                 cnt = cnt + 1;
                 
@@ -160,14 +164,15 @@ if refinement_method == 2
                     tmp_lev(1) = new_lev_1D{1}(i);
                     tmp_lev(2) = new_lev_1D{2}(j);
                     tmp_lev(3) = new_lev_1D{3}(k);
-                    
-                    child_elements_lev_vec(cnt+1,1:3) = tmp_lev;
-                    
+                                   
                     tmp_pos(1) = new_pos_1D{1}(i);
                     tmp_pos(2) = new_pos_1D{2}(j);
                     tmp_pos(3) = new_pos_1D{3}(k);
                     
-                    child_elements_pos_vec(cnt+1,1:3) = tmp_pos;
+                    if max(tmp_lev) < max_lev
+                        child_elements_lev_vec(cnt+1,1:3) = tmp_lev;
+                        child_elements_pos_vec(cnt+1,1:3) = tmp_pos;
+                    end
                     
                     cnt = cnt + 1;
                     

@@ -367,13 +367,18 @@ else
             
             if strcmp(BCL,'P') || strcmp(BCR,'P') %% periodic'
                 
-                if i==0
+                if lev>=1
+                    if i==0
+                        RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+                        ColInd = [ones(deg,1)*last,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
+                    end
+                    if i==N-1
+                        RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
+                        ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*first];
+                    end
+                else
                     RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-                    ColInd = [ones(deg,1)*last,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*(c+deg)];
-                end
-                if i==N-1
-                    RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-                    ColInd = [ones(deg,1)*(c-deg),ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*first];
+                    ColInd = [ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*c];                   
                 end
                 
                 Iu = RowInd;

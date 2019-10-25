@@ -85,7 +85,7 @@ for icase=1:ncase
         %%
         % Store the index into the element table for this element
         
-        element_idx = lev_cell_to_element_index(levels,icells,max_lev);
+        element_idx = md_lev_pos_to_idx(levels,icells,max_lev);
         elementsIDX(i) = element_idx;
         
         %%
