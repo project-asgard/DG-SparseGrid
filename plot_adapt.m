@@ -76,7 +76,7 @@ if num_dims == 1
     end
     
 elseif num_dims == 2
-    subplot(3,3,pos)
+    subplot(4,3,pos)
     cla
     hold on
     for i=1:num_elements

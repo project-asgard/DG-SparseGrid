@@ -102,18 +102,62 @@ write_fval = 0;
 if write_fval; write_fval_to_file(fval,lev,deg,0); end
 
 %% Check to see if initial resolution meets requested accuracy
-if opts.adapt    
-    if ~opts.quiet; disp('Checking if initial grid is sufficient for requested accuracy ...'); end
-    
-    % Check to ensure refinement is not required to start
-    pre_refinement_num_DOF = length(fval);
-    [pde,fval,hash_table,A_data,Meval,nodes,coord] ...
-        = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1);
-    if (length(fval)>pre_refinement_num_DOF)
-        error('Initial grid was insifficient for requested accuracy');
+if opts.adapt 
+    if opts.adapt_initial_condition
+        if ~opts.quiet; disp('Adapting initial for requested accuracy ...'); end
+                       
+        keep_adapting_initial_condition = true;
+        while keep_adapting_initial_condition
+            num_pre_adapt = numel(fval);
+            % first refine
+            [pde,fval_tmp,hash_table,A_data,Meval,nodes,coord] ...
+                = adapt(pde,opts,fval,hash_table,nodes, ...
+                fval_realspace,0,1);
+            if num_pre_adapt == numel(fval_tmp)
+                keep_adapting_initial_condition = false;
+            end
+            clear fval_tmp;
+            % reproject initial condition onto refined basis
+            fval = initial_condition_vector(pde, opts, hash_table, t);
+        end
+        
+        % coarsen
+        [pde,~,hash_table,A_data,Meval,nodes,coord] ...
+            = adapt(pde,opts,fval,hash_table,nodes, ...
+            fval_realspace,1,0);
+        % reproject onto coarsend basis
+        fval = initial_condition_vector(pde, opts, hash_table, t);
+
+    else
+        if ~opts.quiet; disp('Checking if initial grid is sufficient for requested accuracy ...'); end
+        
+        % Check to ensure refinement is not required to start
+        pre_refinement_num_DOF = length(fval);
+        [~,fval_check] ...
+            = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1);
+        if (length(fval_check)>pre_refinement_num_DOF)
+%             error('Initial grid was insifficient for requested accuracy');
+        end
+        clear fval_check;
     end
 else
    if ~opts.quiet; disp(['Number of DOF : ', num2str(numel(fval))]); end
+end
+
+fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
+fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+
+err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
+err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
+if ~opts.quiet
+    disp(['    num_dof : ', num2str(numel(fval))]);
+    disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
+    disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+    disp(['    wavelet space absolute err (2-norm) : ', num2str(norm(fval-fval_analytic))]);
+    disp(['    real space absolute err : ', num2str(err_realspace)]);
+    disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+    disp(['    real space absolute err (2-norm) : ', num2str(norm(fval_realspace(:)-fval_realspace_analytic(:)))]);
 end
 
 %% Time Loop
@@ -214,12 +258,14 @@ for L = 1:num_steps
             
             if num_elements_0 == num_elements_adapted
                 disp(['No more adaption needed - advancing time']);
+                disp(['    t = ', num2str(t)]);
                 needs_adapting = false;
                 fval = time_advance(pde,opts,A_data,fval_unstepped_adapted,t,dt,pde.deg,hash_table,[],[]);
                 fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
             else
                 disp(['Still needs adaption iterating ... added ', ...
                     num2str(num_elements_adapted-num_elements_0),' elements']);
+                disp(['    t = ', num2str(t)]);
                 fval = fval_unstepped_adapted;
             end
         else
@@ -277,7 +323,9 @@ for L = 1:num_steps
         % Check the wavelet space solution with the analytic solution
         
         fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
-
+        
+        assert(numel(fval)==numel(fval_analytic));
+        
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         if ~opts.quiet  
             disp(['    num_dof : ', num2str(numel(fval))]);

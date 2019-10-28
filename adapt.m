@@ -5,6 +5,9 @@ num_elements    = numel(hash_table.elements_idx);
 num_dims  = numel(pde.dimensions);
 deg             = pde.deg;
 
+% coarsen_ = 0;
+% refine_ = 0;
+
 element_DOF = deg^num_dims;
 
 relative_threshold = opts.adapt_threshold;
@@ -53,11 +56,14 @@ fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
 
 %%
 % Plot the grid (1 and 2D only)
-
+num_rows = 4;
+num_cols = 3;
 plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,1);
     plot_adapt_triangle(pde,opts,hash_table,7);
+    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,...
+        fval,num_rows,num_cols,10,refine_threshold,coarsen_threshold);
 end
 
 %%
@@ -218,6 +224,8 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,2);
     plot_adapt_triangle(pde,opts,hash_table,8);
+    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+        num_rows,num_cols,11,refine_threshold,coarsen_threshold);
 end
 
 %%
@@ -369,6 +377,8 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     coordinates = plot_adapt(pde,opts,hash_table,3);
     plot_adapt_triangle(pde,opts,hash_table,9);
+    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+        num_rows,num_cols,12,refine_threshold,coarsen_threshold);
 end
 
 elements_idx0 = hash_table.elements_idx;
@@ -435,7 +445,7 @@ if ~opts.quiet
         
     elseif num_dims == 2
         
-        subplot(3,3,4)
+        subplot(4,3,4)
         deg1=pde0.deg;
         lev1=pde0.dimensions{1}.lev;
         deg2=pde0.deg;
@@ -451,7 +461,7 @@ if ~opts.quiet
             contourf(x,y,f2d,'LineColor','none');
         end
         
-        subplot(3,3,5)
+        subplot(4,3,5)
         deg1=pde.deg;
         lev1=pde.dimensions{1}.lev;
         deg2=pde.deg;
@@ -470,17 +480,17 @@ if ~opts.quiet
         scatter(coordinates(:,1),coordinates(:,2),'+','MarkerEdgeColor','white')
         hold off
         
-        subplot(3,3,6)
-        fval_element = zeros(num_elements,1);
-        depth = zeros(num_elements,1);
-        for i=1:deg^num_dims:num_elements
-            view = fval((i-1).*element_DOF+1:i*element_DOF);
-            fval_element(i) = sqrt(sum(view.^2));
-            lev_vec = md_idx_to_lev_pos(num_dims,pde.max_lev,hash_table.elements_idx(i));
-            depth(i) = sum(lev_vec);
-        end
-        ii = find(fval_element);
-        semilogy(depth(ii),fval_element(ii));
+%         subplot(4,3,10)
+%         fval_element = zeros(num_elements,1);
+%         depth = zeros(num_elements,1);
+%         for i=1:deg^num_dims:num_elements
+%             view = fval((i-1).*element_DOF+1:i*element_DOF);
+%             fval_element(i) = sqrt(sum(view.^2));
+%             lev_vec = md_idx_to_lev_pos(num_dims,pde.max_lev,hash_table.elements_idx(i));
+%             depth(i) = sum(lev_vec);
+%         end
+%         ii = find(fval_element);
+%         semilogy(depth(ii),fval_element(ii));
         
     end
 end

@@ -4,7 +4,7 @@ num_dimensions  = numel (pde.dimensions);
 num_elements    = numel (hash_table.elements_idx);
 
 if num_dimensions == 2
-    subplot(3,3,plot_num);
+    subplot(4,3,plot_num);
     cla
     hold on
     
