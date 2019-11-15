@@ -55,7 +55,7 @@ BCR_fList = { ...
 %% 
 % -df/dx
 
-g1 = @(x,p,t,dat) x.*0-1;
+g1 = @(x,p,t,dat) x.*0-2;
 pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
 
 term1_x = TERM_1D({pterm1});
@@ -81,7 +81,7 @@ pde.params = params;
 
 %%
 % Source 1
-s1x = @(x,p,t) -sin(x);
+s1x = @(x,p,t) -2.*sin(x);
 s1t = @(t,p) t.*0 + 1;
 source1 = {s1x,s1t};
 
