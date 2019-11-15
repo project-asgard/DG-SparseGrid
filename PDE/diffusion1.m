@@ -1,5 +1,5 @@
 function pde = diffusion1
-% Example PDE using the 2D (1x-1y) Heat Equation. This example PDE is
+% Example PDE using the 1D Diffusion Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
 % PDE:
@@ -47,13 +47,13 @@ BCFunc_t = @(t) soln_t(t);
 % x = a and x = b
 BCL_fList = { ...
     @(x,p,t) BCFunc(x), ... % replace x by a
-    @(y,p,t) BCFunc(y), ...
+%    @(y,p,t) BCFunc(y), ...
     @(t,p) BCFunc_t(t)
     };
 
 BCR_fList = { ...
     @(x,p,t) BCFunc(x), ... % replace x by b
-    @(y,p,t) BCFunc(y), ...
+%    @(y,p,t) BCFunc(y), ...
     @(t,p) BCFunc_t(t)
     };
 
@@ -62,19 +62,6 @@ dim_x.domainMin = 0;
 dim_x.domainMax = 1;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
 
-% The function is defined for the plane
-% y = c and y = d
-BCL_fList = { ...
-    @(x,p,t) BCFunc(x), ...
-    @(y,p,t) BCFunc(y), ... % replace y by c
-    @(t,p) BCFunc_t(t)
-    };
-
-BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ...
-    @(y,p,t) BCFunc(y), ...  % replace y by d
-    @(t,p) BCFunc_t(t)
-    };
 
 %%
 % Add dimensions to the pde object
