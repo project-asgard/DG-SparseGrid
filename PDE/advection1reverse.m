@@ -19,8 +19,8 @@ function pde = advection1reverse
 % 
 % Here we setup a 1D problem (x) on [a,b]
 
-dim_x.domainMin = -pi/2; %a
-dim_x.domainMax = 0; %b
+dim_x.domainMin = 0; %a
+dim_x.domainMax = pi; %b
 dim_x.init_cond_fn = @(x,p,t) cos(x);
 
 %%
@@ -33,16 +33,17 @@ num_dims = numel(pde.dimensions);
 
 %Inhomogeneous Dirichlet condition on one side of the domain
 
-BC_Func = @(x) x.*0 + 1;
+BC_Func_Left = @(x) x.*0 + 1;
+BC_Func_Right = @(x) x.*0 - 1;
 %BCFunc_t = @(t) soln_t(t);
 
 BCL_fList = { ... 
-     @(x,p,t) x.*0, ... %replace x with a
+     @(x,p,t) BC_Func_Left(x), ... %replace x with a
      @(t,p)  t.*0 + 1 %boundary condition for time, usually 1
      };
 
 BCR_fList = { ... 
-     @(x,p,t) BC_Func(x), ... %replace x with b
+     @(x,p,t) BC_Func_Right(x), ... %replace x with b
      @(t,p)  t.*0 + 1 %boundary condition for time, usually 1
      };
 

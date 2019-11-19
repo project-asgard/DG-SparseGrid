@@ -17,8 +17,8 @@ function pde = advection1
 % 
 % Here we setup a 1D problem (x)
 
-dim_x.domainMin = -pi/2;
-dim_x.domainMax = 0;
+dim_x.domainMin = 0;
+dim_x.domainMax = pi;
 dim_x.init_cond_fn = @(x,p,t) cos(x);
 
 %%
@@ -32,18 +32,17 @@ num_dims = numel(pde.dimensions);
 % Setup boundary conditions of the solution
 % Dirichlet on the right, f(0) = 1
 
-BCFunc = @(x) 1;
+BCFunc_Left = @(x) x.*0 + 1;
+BCFunc_Right = @(x) x.*0 -1;
 %BCFunc_t = @(t) soln_t(t);
 
 BCL_fList = { ...
-    @(x,p,t) x.*0, ... % replace x by b
-%    @(y,p,t) BCFunc(y), ...
+    @(x,p,t) BCFunc_Left(x), ... % replace x by b
     @(t,p) t.*0 + 1
     };
 
 BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by b
-%    @(y,p,t) BCFunc(y), ...
+    @(x,p,t) BCFunc_Right(x), ... % replace x by b
     @(t,p) t.*0 + 1
     };
 
