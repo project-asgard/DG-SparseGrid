@@ -1,10 +1,7 @@
 function pde = advection1reverse
-%1D Test case of the 1D advection equation with
-% the direction of motion reversed from advection1.m.
-% Code designed to test inhomogeneous Dirichlet BC in conjunction with
-% advection1.m
+% 1D advection problem with inhomogeneous Dirichlet BC (flow direction reversed from advection1.m)
 % Equation to be solved is 
-% df/dt = df/dx + source(x)
+% df/dt = 2df/dx + 2sin(x)
 % Run with
 %
 % explicit
@@ -50,8 +47,8 @@ BCR_fList = { ...
 %Setup the terms of the PDE
 % Here the term is df/dx, which is opposite the direction in advection1.m
 
-g1rev = @(x,p,t,dat) x.*0 + 1;
-pterm = GRAD(num_dims,g1rev,-1,'D','D', BCL_fList, BCR_fList); %flux is in opposite direction of advection1.m
+g1 = @(x,p,t,dat) x.*0 + 1;
+pterm = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList); %flux is in opposite direction of advection1.m
 
 term_x = TERM_1D({pterm});
 term1 = TERM_ND(num_dims, {term_x});

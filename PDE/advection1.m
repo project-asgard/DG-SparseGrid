@@ -1,7 +1,7 @@
 function pde = advection1
 % 1D test case using continuity equation, i.e., 
 %
-% df/dt == -df/dx + source(x)
+% df/dt == -2df/dx + 2*sin(x)
 %
 % Run with
 %
@@ -55,7 +55,7 @@ BCR_fList = { ...
 % -df/dx
 
 g1 = @(x,p,t,dat) x.*0-2;
-pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
+pterm1 = GRAD(num_dims,g1,-1,'D','N', BCL_fList, BCR_fList);
 
 term1_x = TERM_1D({pterm1});
 term1   = TERM_ND(num_dims,{term1_x});

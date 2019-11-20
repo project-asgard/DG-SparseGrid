@@ -4,7 +4,7 @@ function pde = diffusion1
 % implies the need for an initial condition. 
 % PDE:
 % 
-% df/dt = d^2 f/dx^2
+% df/dt = 2d^2 f/dx^2
 %
 % Domain is [0,1]
 % Inhomogeneous Dirichlet boundary condition 
@@ -47,13 +47,11 @@ BCFunc_t = @(t) soln_t(t);
 % x = a and x = b
 BCL_fList = { ...
     @(x,p,t) BCFunc(x), ... % replace x by a
-%    @(y,p,t) BCFunc(y), ...
     @(t,p) BCFunc_t(t)
     };
 
 BCR_fList = { ...
     @(x,p,t) BCFunc(x), ... % replace x by b
-%    @(y,p,t) BCFunc(y), ...
     @(t,p) BCFunc_t(t)
     };
 
@@ -80,12 +78,12 @@ num_dims = numel(pde.dimensions);
 
 % term1
 %
-% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=2, BCL=N, BCR=N]
+% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=2, BCL=N, BCR=D]
 % eq2 :   q(x,y) == d/dx g2(x) f(x,y)   [grad,g2(x)=1, BCL=D, BCR=D]
 %
 % coeff_mat = mat1 * mat2
 
-g1 = @(x,p,t,dat) x.*0+1;
+g1 = @(x,p,t,dat) x.*0+2;
 g2 = @(x,p,t,dat) x.*0+1;
 
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
