@@ -1,7 +1,7 @@
 function pde = advection1
 % 1D test case using continuity equation, i.e., 
 %
-% df/dt == -2df/dx + 2*sin(x)
+% df/dt == -2*df/dx - 2*sin(x)
 %
 % Run with
 %
@@ -32,7 +32,7 @@ num_dims = numel(pde.dimensions);
 % Setup boundary conditions of the solution
 % Dirichlet on the right, f(0) = 1
 
-BCFunc_Left = @(x) x.*0 + 1;
+BCFunc_Left  = @(x) x.*0 +1;
 BCFunc_Right = @(x) x.*0 -1;
 %BCFunc_t = @(t) soln_t(t);
 
@@ -52,10 +52,10 @@ BCR_fList = { ...
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% -df/dx
+% -2*df/dx
 
 g1 = @(x,p,t,dat) x.*0-2;
-pterm1 = GRAD(num_dims,g1,-1,'D','N', BCL_fList, BCR_fList);
+pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
 
 term1_x = TERM_1D({pterm1});
 term1   = TERM_ND(num_dims,{term1_x});

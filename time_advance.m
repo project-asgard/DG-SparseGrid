@@ -66,17 +66,11 @@ if applyLHS
     %     k3 = invMatLHS * (k3 + rhs3);
     k3 = ALHS \ (k3 + rhs3);
 else
-     k1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax)   + source1 + bc1;
+     k1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax)  + source1 + bc1;
      y1 = f + dt*a21*k1;
      k2 = apply_A(pde,opts,A_data,y1,deg,Vmax,Emax) + source2 + bc2;
      y2 = f + dt*(a31*k1 + a32*k2);
      k3 = apply_A(pde,opts,A_data,y2,deg,Vmax,Emax) + source3 + bc3;
-
-%    k1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax)   + source1 - bc1;
-%    y1 = f + dt*a21*k1;
-%    k2 = apply_A(pde,opts,A_data,y1,deg,Vmax,Emax) + source2 - bc2;
-%    y2 = f + dt*(a31*k1 + a32*k2);
-%    k3 = apply_A(pde,opts,A_data,y2,deg,Vmax,Emax) + source3 - bc3;
 end
 
 fval = f + dt*(b1*k1 + b2*k2 + b3*k3);

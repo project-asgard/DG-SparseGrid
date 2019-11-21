@@ -1,7 +1,9 @@
-function pde = advection1reverse
-% 1D advection problem with inhomogeneous Dirichlet BC (flow direction reversed from advection1.m)
-% Equation to be solved is 
-% df/dt = 2df/dx + 2sin(x)
+function pde = advection1_reverse_flow
+% 1D advection problem with inhomogeneous Dirichlet BC 
+% (flow direction reversed from advection1.m)
+%  
+% df/dt = 2*df/dx + 2*sin(x)
+%
 % Run with
 %
 % explicit
@@ -13,11 +15,9 @@ function pde = advection1reverse
 % asgard(advection1reverse,'implicit',true,'CFL',0.01)
 
 %% Setup the dimensions
-% 
-% Here we setup a 1D problem (x) on [a,b]
 
-dim_x.domainMin = 0; %a
-dim_x.domainMax = pi; %b
+dim_x.domainMin = 0;
+dim_x.domainMax = pi;
 dim_x.init_cond_fn = @(x,p,t) cos(x);
 
 %%
@@ -30,9 +30,8 @@ num_dims = numel(pde.dimensions);
 
 %Inhomogeneous Dirichlet condition on one side of the domain
 
-BC_Func_Left = @(x) x.*0 + 1;
-BC_Func_Right = @(x) x.*0 - 1;
-%BCFunc_t = @(t) soln_t(t);
+BC_Func_Left  = @(x) x.*0 +1;
+BC_Func_Right = @(x) x.*0 -1;
 
 BCL_fList = { ... 
      @(x,p,t) BC_Func_Left(x), ... %replace x with a
@@ -44,11 +43,11 @@ BCR_fList = { ...
      @(t,p)  t.*0 + 1 %boundary condition for time, usually 1
      };
 
-%Setup the terms of the PDE
+%% Setup the terms of the PDE
 % Here the term is df/dx, which is opposite the direction in advection1.m
 
-g1 = @(x,p,t,dat) x.*0 + 1;
-pterm = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList); %flux is in opposite direction of advection1.m
+g1 = @(x,p,t,dat) x.*0 + 2;
+pterm = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
 
 term_x = TERM_1D({pterm});
 term1 = TERM_ND(num_dims, {term_x});
@@ -64,12 +63,12 @@ params.parameter2 = 1;
 
 pde.params = params;
 
-%Add the source term, making sure to note for the sign difference in the example equation
+% Add the source term, making sure to note for the sign difference in the example equation
 % Each source term must have nDims + 1 (which here is 2+1 / (x,v) + time) functions describing the
 % variation of each source term with each dimension and time.
 
-%Source
-s1x = @(x,p,t) sin(x);
+% Sources
+s1x = @(x,p,t) 2*sin(x);
 s1t = @(t,p) t.*0 + 1;
 source1 = {s1x, s1t};
 

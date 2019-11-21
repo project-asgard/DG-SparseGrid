@@ -4,7 +4,7 @@ function pde = diffusion1
 % implies the need for an initial condition. 
 % PDE:
 % 
-% df/dt = 2d^2 f/dx^2
+% df/dt = d^2 f/dx^2
 %
 % Domain is [0,1]
 % Inhomogeneous Dirichlet boundary condition 
@@ -78,16 +78,16 @@ num_dims = numel(pde.dimensions);
 
 % term1
 %
-% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=2, BCL=N, BCR=D]
+% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=1, BCL=N, BCR=D]
 % eq2 :   q(x,y) == d/dx g2(x) f(x,y)   [grad,g2(x)=1, BCL=D, BCR=D]
 %
 % coeff_mat = mat1 * mat2
 
-g1 = @(x,p,t,dat) x.*0+2;
+g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,1,'D','D',BCL_fList,BCR_fList);
+pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
 
 term1_x = TERM_1D({pterm1,pterm2});
 term1   = TERM_ND(num_dims,{term1_x});
@@ -106,8 +106,13 @@ params.parameter2 = 1;
 pde.params = params;
 
 %%
-% Add sources to the pde data structure
-pde.sources = {};
+% Sources
+
+s1x = @(x,p,t) -pi^2*cos(pi*x);
+s1t = @(t,p) exp(-2*pi^2*t);
+source1 = {s1x, s1t};
+
+pde.sources = {source1};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
