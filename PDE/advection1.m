@@ -1,7 +1,7 @@
 function pde = advection1
 % 1D test case using continuity equation, i.e., 
 %
-% df/dt == -df/dx
+% df/dt == -2*df/dx - 2*sin(x)
 %
 % Run with
 %
@@ -11,15 +11,15 @@ function pde = advection1
 %
 % implicit
 % asgard(advection1,'implicit',true)
-% asgard(advection1,'implicit',true,'CFL',0.1)
+% asgard(advection1,'implicit',true,'CFL',0.01)
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
 
 dim_x.domainMin = 0;
-dim_x.domainMax = pi/2;
-dim_x.init_cond_fn = @(x,p,t) sin(x);
+dim_x.domainMax = pi;
+dim_x.init_cond_fn = @(x,p,t) cos(x);
 
 %%
 % Add dimensions to the pde object
@@ -30,26 +30,32 @@ pde.dimensions = {dim_x};
 num_dims = numel(pde.dimensions);
 
 % Setup boundary conditions of the solution
-% Dirichlet on the right, f(pi/2) = 1
+% Dirichlet on the right, f(0) = 1
 
-BCFunc = @(x) 1;
+BCFunc_Left  = @(x) x.*0 +1;
+BCFunc_Right = @(x) x.*0 -1;
 %BCFunc_t = @(t) soln_t(t);
 
-BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by b
-%    @(y,p,t) BCFunc(y), ...
-    @(t,p) []
+BCL_fList = { ...
+    @(x,p,t) BCFunc_Left(x), ... % replace x by b
+    @(t,p) t.*0 + 1
     };
+
+BCR_fList = { ...
+    @(x,p,t) BCFunc_Right(x), ... % replace x by b
+    @(t,p) t.*0 + 1
+    };
+
 
 %% Setup the terms of the PDE
 %
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% -df/dx
+% -2*df/dx
 
-g1 = @(x,p,t,dat) x.*0-1;
-pterm1 = GRAD(num_dims,g1,+1,'D',BCR_fList);
+g1 = @(x,p,t,dat) x.*0-2;
+pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
 
 term1_x = TERM_1D({pterm1});
 term1   = TERM_ND(num_dims,{term1_x});
@@ -74,8 +80,8 @@ pde.params = params;
 
 %%
 % Source 1
-s1x = @(x,p,t) cos(x);
-s1t = @(t,p) 0;
+s1x = @(x,p,t) -2.*sin(x);
+s1t = @(t,p) t.*0 + 1;
 source1 = {s1x,s1t};
 
 %%
@@ -91,8 +97,8 @@ pde.sources = {source1};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-a_x = @(x,p,t) cos(2*pi*x);
-a_t = @(t,p) sin(t);
+a_x = @(x,p,t) cos(x);
+a_t = @(t,p) t.*0 + 1;
 
 pde.analytic_solutions_1D = {a_x,a_t};
 
