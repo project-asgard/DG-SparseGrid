@@ -6,20 +6,20 @@ function pde = diffusion1
 % 
 % df/dt = d^2 f/dx^2 - pi^2 cos(pi*x)exp(-2*pi^2*t)
 %
-% Domain is [0,1]
-% Inhomogeneous Dirichlet boundary condition 
-% Code is expected to be added to the 1d Advection Equation 
+% Domain is [-0.25,0.75]
+% Inhomogeneous Dirichlet/Neumann boundary condition 
+% entered through pterm1
 %
 % Diffusion terms are dealt with via LDG, i.e., splitting into two first
 % order equations:
 %
 % d^2 f / dx^2 becomes
 %
-% dq/dx with free (homogeneous Neumann BC)
+% dq/dx with inhomogeneous Dirichlet/Neumann BC (aka inhomogeneous Neumann/Dirichlet for f)
 %
 % and
 %
-% q=df/dx with Dirichlet BCs specified by analytic solution
+% q=df/dx with Neumann BC's (free BC's)
 %
 % Run with
 %
@@ -29,7 +29,7 @@ function pde = diffusion1
 % implicit
 % asgard(diffusion1,'implicit',true);
 
-pde.CFL = 0.01;
+pde.CFL = 0.001;
 
 %% Setup the dimensions
 % 
@@ -46,18 +46,18 @@ BCFunc_t = @(t) soln_t(t);
 % The function is defined for the plane
 % x = a and x = b
 BCL_fList = { ...
-    @(x,p,t) soln_x(x), ... % replace x by a
+    @(x,p,t) BCFunc(x), ... % replace x by a
     @(t,p) BCFunc_t(t)
     };
 
 BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by b
+    @(x,p,t) soln_x(x), ... % replace x by b
     @(t,p) BCFunc_t(t)
     };
 
 dim_x.name = 'x';
 dim_x.domainMin = -0.25;
-dim_x.domainMax = 0.25;
+dim_x.domainMax = 0.75;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
 
 
@@ -77,16 +77,16 @@ num_dims = numel(pde.dimensions);
 
 % term1
 %
-% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=1, BCL=N, BCR=D]
-% eq2 :   q(x,y) == d/dx g2(x) f(x,y)   [grad,g2(x)=1, BCL=D, BCR=N]
+% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=1, BCL=D, BCR=N]
+% eq2 :   q(x,y) == d/dx g2(x) f(x,y)   [grad,g2(x)=1, BCL=N, BCR=N]
 %
 % coeff_mat = mat1 * mat2
 
 g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 = GRAD(num_dims,g1,+1,'N','D',BCL_fList,BCR_fList);
-pterm2 = GRAD(num_dims,g2,-1,'N','N');
+pterm1 = GRAD(num_dims,g1,+1,'D','N',BCL_fList,BCR_fList); %left BC is Dirichlet for q (Neumann for f)
+pterm2 = GRAD(num_dims,g2,-1,'N','N'); %must remain as Neumann when pterm1 has BC's
 
 term1_x = TERM_1D({pterm1,pterm2});
 term1   = TERM_ND(num_dims,{term1_x});
