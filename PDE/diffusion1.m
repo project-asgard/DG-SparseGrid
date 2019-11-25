@@ -15,7 +15,7 @@ function pde = diffusion1
 %
 % d^2 f / dx^2 becomes
 %
-% dq/dx with inhomogeneous Dirichlet/Neumann BC (aka inhomogeneous Neumann/Dirichlet for f)
+% dq/dx with inhomogeneous Dirichlet/Neumann BC (aka inhomogeneous Neumann/Dirichlet for g2*f)
 %
 % and
 %
@@ -38,7 +38,7 @@ pde.CFL = 0.001;
 soln_x = @(x) cos(pi*x);
 soln_t = @(t) exp(-2*pi^2*t);
 
-BCFunc = @(x) -pi*sin(pi*x);
+BCFunc = @(x) -2*pi*sin(pi*x); #BC for g2(x)*f(x)
 BCFunc_t = @(t) soln_t(t);
 
 % Domain is (a,b)
@@ -51,7 +51,7 @@ BCL_fList = { ...
     };
 
 BCR_fList = { ...
-    @(x,p,t) soln_x(x), ... % replace x by b
+    @(x,p,t) BCFunc(x), ... % replace x by b
     @(t,p) BCFunc_t(t)
     };
 
@@ -83,9 +83,9 @@ num_dims = numel(pde.dimensions);
 % coeff_mat = mat1 * mat2
 
 g1 = @(x,p,t,dat) x.*0+1;
-g2 = @(x,p,t,dat) x.*0+1;
+g2 = @(x,p,t,dat) x.*0+2;
 
-pterm1 = GRAD(num_dims,g1,+1,'D','N',BCL_fList,BCR_fList); %left BC is Dirichlet for q (Neumann for f)
+pterm1 = GRAD(num_dims,g1,+1,'D','D',BCL_fList,BCR_fList); %left BC is Dirichlet for q (Neumann for g2*f)
 pterm2 = GRAD(num_dims,g2,-1,'N','N'); %must remain as Neumann when pterm1 has BC's
 
 term1_x = TERM_1D({pterm1,pterm2});
@@ -107,7 +107,7 @@ pde.params = params;
 %%
 % Sources
 
-s1x = @(x,p,t) -pi^2*cos(pi*x);
+s1x = @(x,p,t) 0;
 s1t = @(t,p) exp(-2*pi^2*t);
 source1 = {s1x, s1t};
 
