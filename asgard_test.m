@@ -5,7 +5,80 @@ tests = functiontests(fh);
 
 end
 
-function asgard_continuity1_explicit_test(testCase)
+function asgard_advection1_explicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing advection1 (explicit)');
+
+[err, act_f, act_frs] = asgard(advection1, 'quiet', true, 'num_steps', 5);
+
+verifyLessThan(testCase, err, 9e-4);
+
+end
+
+function asgard_advection1reverse_explicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing advection1_reverse_flow (explicit)');
+
+[err, act_f, act_frs] = asgard(advection1_reverse_flow, 'quiet', true, 'num_steps', 5);
+
+verifyLessThan(testCase, err, 9e-4);
+
+end
+
+function asgard_advection1_implicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing advection1 (implicit)');
+
+[err, act_f, act_frs] = asgard(advection1, 'quiet',true,'implicit',true,'lev',4,'deg',3,'num_steps',5);
+
+verifyLessThan(testCase, err, 3e-6);
+
+end
+
+function asgard_advection1reverse_implicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing advection1_reverse_flow (implicit)');
+
+[err, act_f, act_frs] = asgard(advection1_reverse_flow, 'quiet',true,'implicit',true,'lev',4,'deg',3,'num_steps',5);
+
+verifyLessThan(testCase, err, 3e-6);
+
+end
+
+function asgard_diffusion1_explicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing diffusion1 (explicit)');
+
+[err,act_f,act_frs] = asgard(diffusion1,'lev',3,'quiet',true,'deg',3);
+
+verifyLessThan(testCase,err,2.8e-5);
+
+end
+
+function asgard_diffusion1_implicit_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing diffusion1 (implicit)');
+
+[err,act_f,act_frs] = asgard(diffusion1,'lev',3,'quiet',true,'deg',3,'implicit',true);
+
+verifyLessThan(testCase,err,2.8e-5);
+
+end
+
+
+function asgard_continuity1_ex_test(testCase)
 
 addpath(genpath(pwd));
 
@@ -17,17 +90,6 @@ verifyLessThan(testCase,err,1e-4);
 
 end
 
-function asgard_continuity1_implicit_test(testCase)
-
-addpath(genpath(pwd));
-
-disp('Testing continuity1 (implicit)');
-
-[err,act_f,act_frs] = asgard(continuity1,'quiet',true,'implicit',true,'num_steps',2);
-
-verifyLessThan(testCase,err,1e-4);
-
-end
 
 function asgard_continuity1_adapt_test(testCase)
 
