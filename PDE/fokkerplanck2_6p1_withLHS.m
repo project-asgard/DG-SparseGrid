@@ -15,7 +15,7 @@ function pde = fokkerplanck2_6p1_withLHS
 % asgard(fokkerplanck2_6p1_withLHS)
 %
 % implicit
-% asgard(fokkerplanck2_6p1_withLHS,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4)
+% asgard(fokkerplanck2_6p1_withLHS, 'implicit', true,'CFL', 'num_steps', 50, 1.0, 'lev', 4, 'deg', 4)
 
 pde.CFL = 0.01;
 
@@ -32,7 +32,7 @@ E = 0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
-p_min = 0.005;
+p_min = 0.001;
 
 Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 
@@ -123,7 +123,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
             case 0.5
                 Q = 0.361837;   % for p_min = 0.5
             case 1.0
-                Q = 0.23975;     % for p_min = 1.0
+                Q = 0.23975;    % for p_min = 1.0
         end
         ret = Q * 4/sqrt(pi) * exp(-x.^2);
     end
@@ -146,6 +146,19 @@ dim_z.init_cond_fn = @(x,p,t) f0_z(x);
 pde.dimensions = {dim_p,dim_z};
 num_dims = numel(pde.dimensions);
 
+%Inhomogeneous BC's set to analytical solution
+BCL_fList = { ...
+    @(x,p,t) soln_p(x,t), ... %replace x with p_min
+    @(x,p,t) soln_z(x,t), ...
+    @(t,p) 1
+    };
+
+BCR_fList = { ...
+    @(x,p,t) soln_p(x,t), ... %replace x with 10
+    @(x,p,t) soln_z(x,t), ...
+    @(t,p) 1
+    };
+
 %% Setup the terms of the PDE
 
 %%
@@ -164,14 +177,16 @@ pde.termsLHS = {termLHS};
 %
 % becomes 
 %
-% termC1 == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=D,BCR=N]        
-%   r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=N,BCR=D]
+% termC1 == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=N,BCR=N]        
+%   r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=D,BCR=D]
+
+% Inhomogenous Dirichlet BC's for f(p_min)
 
 g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
-pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3  = GRAD(num_dims,g3,-1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'N','N');
+pterm3  = GRAD(num_dims,g3,-1,'D','D', BCL_fList, BCR_fList);
 term1_p = TERM_1D({pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -184,7 +199,7 @@ termC1  = TERM_ND(num_dims,{term1_p,[]});
 
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
-pterm2  = GRAD(num_dims,g2,+1,'N','D');
+pterm2  = GRAD(num_dims,g2,-1,'N','D');
 term2_p = TERM_1D({pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
