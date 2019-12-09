@@ -17,7 +17,7 @@ end
 
 % 1d connectivity
 out_format = strcat(data_dir, "connect_1_%d.dat");
-levs = [1, 2, 8];
+levs = [2, 3, 8];
 for i=1:size(levs,2)
 connectivity = full(connect_1D(levs(i)));
 filename = sprintf(out_format, levs(i));
