@@ -15,7 +15,7 @@ function pde = fokkerplanck2_6p1_withLHS
 % asgard(fokkerplanck2_6p1_withLHS)
 %
 % implicit
-% asgard(fokkerplanck2_6p1_withLHS, 'implicit', true,'CFL', 'num_steps', 50, 1.0, 'lev', 4, 'deg', 4)
+% asgard(fokkerplanck2_6p1_withLHS, 'implicit', true,'CFL', 1.0, 'num_steps', 50, 'lev', 4, 'deg', 4)
 
 pde.CFL = 0.01;
 
@@ -32,7 +32,7 @@ E = 0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
-p_min = 0.001;
+p_min = 0.1;
 
 Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 
@@ -43,7 +43,6 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
     function ret = phi(x)
         ret = erf(x);
     end
-
     function ret = psi(x,t)     
         dphi_dx = 2./sqrt(pi) * exp(-x.^2);
         ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);   
@@ -131,7 +130,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 %% Setup the dimensions 
 
 dim_p.domainMin = p_min;
-dim_p.domainMax = +10;
+dim_p.domainMax = 10;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
@@ -159,9 +158,20 @@ BCR_fList = { ...
     @(t,p) 1
     };
 
+%BCL_rList = { ...
+%    @(x,p,t) -2*x.*soln_p(x,t), ... %replace x with p_min
+%    @(x,p,t) soln_z(x,t), ...
+%    @(t,p) 1
+%    };
+%BCR_rList = { ...
+%    @(x,p,t) -2*x.*soln_p(x,t), ... %replace x with 10
+%    @(x,p,t) soln_z(x,t), ...
+%    @(t,p) 1
+%    };
+
 %% Setup the terms of the PDE
 
-%%
+%%r
 % termLHS == p^2 d/dt f(p,z,t)
 
 g1 = @(x,p,t,dat) x.^2;
@@ -177,16 +187,16 @@ pde.termsLHS = {termLHS};
 %
 % becomes 
 %
-% termC1 == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=N,BCR=N]        
-%   r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=D,BCR=D]
+% termC1 == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=D,BCR=N]        
+%   r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=N,BCR=D]
 
 % Inhomogenous Dirichlet BC's for f(p_min)
 
 g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
-pterm2  = GRAD(num_dims,g2,+1,'N','N');
-pterm3  = GRAD(num_dims,g3,-1,'D','D', BCL_fList, BCR_fList);
+pterm2  = GRAD(num_dims,g2,+1,'D','N');
+pterm3  = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
 term1_p = TERM_1D({pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -199,7 +209,7 @@ termC1  = TERM_ND(num_dims,{term1_p,[]});
 
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
-pterm2  = GRAD(num_dims,g2,-1,'N','D');
+pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
 term2_p = TERM_1D({pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
@@ -219,8 +229,8 @@ term3_p = TERM_1D({pterm1});
 
 g2 = @(x,p,t,dat) (1-x.^2);
 g3 = @(x,p,t,dat) x.*0+1;
-pterm1  = GRAD(num_dims,g2,+1,'D','D');
-pterm2  = GRAD(num_dims,g3,-1,'N','N');
+pterm1  = GRAD(num_dims,g2,+1,'D','N');
+pterm2  = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
 term3_z = TERM_1D({pterm1,pterm2});
 
 termC3 = TERM_ND(num_dims,{term3_p,term3_z});

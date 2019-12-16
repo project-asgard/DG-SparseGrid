@@ -48,7 +48,7 @@ a21 = 1/2; a31 = -1; a32 = 2;
 b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
 if applyLHS
-    [k1,A1,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+    [k1,~,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
     rhs1 = source1 + bc1;
     %     invMatLHS = inv(ALHS); % NOTE : assume time independent for now for speed.
     %     k1 = invMatLHS * (k1 + rhs1);

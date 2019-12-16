@@ -166,7 +166,7 @@ plotFreq = 1;
 err = 1e9;
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:num_steps
-    
+    fval_prev = fval;
     tic;
     timeStr = sprintf('Step %i of %i at %f seconds',L,num_steps,t);
     
@@ -323,7 +323,6 @@ for L = 1:num_steps
         % Check the wavelet space solution with the analytic solution
         
         fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
-        
         assert(numel(fval)==numel(fval_analytic));
         
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
@@ -331,6 +330,10 @@ for L = 1:num_steps
             disp(['    num_dof : ', num2str(numel(fval))]);
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
             disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+        if norm(fval_prev(:) - fval(:)) < 1e-6
+            disp(['Converged']);
+            
+        end
         end
         
         %%
@@ -371,9 +374,11 @@ for L = 1:num_steps
     
     %%
     % Save output
-    
+    deg = pde.deg;
+%    LevX = pde.lev_vec(1);
+%    LevV = pde.lev_vec(2);
     saveOutput = 0;
-    if saveOutput
+    if saveOutput && t > num_steps-2
         stat = mkdir('output');
         fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
