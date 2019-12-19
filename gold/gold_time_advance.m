@@ -24,7 +24,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -65,7 +65,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL=.1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -84,7 +84,7 @@ A_data = global_matrix(pde,opts,HASHInv);
 Vmax = 0;
 Emax = 0;
 out = initial_condition_vector(pde,opts,HASHInv,0);
-CFL = 0.1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 deg = pde.deg;
 for i=0:4
@@ -108,7 +108,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -127,7 +127,7 @@ A_data = global_matrix(pde,opts,HASHInv);
 Vmax = 0;
 Emax = 0;
 out = initial_condition_vector(pde,opts,HASHInv,0);
-CFL = 0.1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 deg = pde.deg;
 for i=0:4
@@ -153,7 +153,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -194,7 +194,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -213,7 +213,7 @@ A_data = global_matrix(pde,opts,HASHInv);
 Vmax = 0;
 Emax = 0;
 out = initial_condition_vector(pde,opts,HASHInv,0);
-CFL = 0.1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 deg = pde.deg;
 for i=0:4
@@ -236,7 +236,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -279,7 +279,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -319,7 +319,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -362,7 +362,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -404,7 +404,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -446,7 +446,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
@@ -486,7 +486,7 @@ for i=1:length(pde.dimensions)
 end
 
 pde = check_pde(pde);
-CFL = .1;
+CFL = 0.01;
 dt = pde.set_dt(pde,CFL);
 
 opts.compression = 4;
