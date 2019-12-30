@@ -574,7 +574,7 @@ dt = pde.set_dt(pde,CFL);
 opts.compression = 4;
 opts.useConnectivity = 0;
 opts.implicit = 1;
-opts.implicit_method="CN";
+opts.implicit_method="BE";
 lev_vec = zeros(numel(pde.dimensions),1)+level;
 [HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
 
@@ -614,7 +614,7 @@ dt = pde.set_dt(pde,CFL);
 opts.compression = 4;
 opts.useConnectivity = 0;
 opts.implicit = 1;
-opts.implicit_method="CN";
+opts.implicit_method="BE";
 lev_vec = zeros(numel(pde.dimensions),1)+level;
 [HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
 
@@ -656,7 +656,7 @@ dt = pde.set_dt(pde,CFL);
 opts.compression = 4;
 opts.useConnectivity = 0;
 opts.implicit = 1;
-opts.implicit_method="CN";
+opts.implicit_method="BE";
 
 lev_vec = zeros(numel(pde.dimensions),1)+level;
 [HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
@@ -697,7 +697,7 @@ dt = pde.set_dt(pde,CFL);
 opts.compression = 4;
 opts.useConnectivity = 0;
 opts.implicit = 1;
-opts.implicit_method="CN";
+opts.implicit_method="BE";
 
 lev_vec = zeros(numel(pde.dimensions),1)+level;
 [HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
