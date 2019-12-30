@@ -33,3 +33,6 @@ gold_time_advance
 
 disp('Generating gold data for matrix_plot_D component');
 gold_matrix_plot_D
+
+disp('Generating gold data for wavelet_to_realspace component');
+gold_wavelet_to_realspace
