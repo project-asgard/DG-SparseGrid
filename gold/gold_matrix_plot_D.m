@@ -6,7 +6,7 @@ gen_realspace_transform( continuity6, 'continuity_6', 'lev', 2, 'deg', 3);
 % Generate gold data for C++ testing of matrix_plot_D component
 function [real_space] = gen_realspace_transform(pde, output_prefix, varargin)
 
-data_dir = strcat("generated-inputs", "/", "matrix_plot_D", "/", output_prefix, "/");
+data_dir = strcat("generated-inputs", "/transformations/", "matrix_plot_D", "/", output_prefix, "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
