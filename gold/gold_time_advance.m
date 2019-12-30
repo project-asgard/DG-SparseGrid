@@ -549,3 +549,173 @@ for i=1:5
     write_octave_like_output(sprintf(out_format,lev,deg,i-1), full(fval));
 end
 
+
+%% implicit
+
+% continuity1
+
+%sg l2d2
+out_format = strcat(data_dir, 'continuity1_implicit_l2_d2_t%d.dat');
+pde = continuity1;
+level = 2;
+degree = 2;
+grid_type='SG';
+
+for i=1:length(pde.dimensions)
+    pde.dimensions{i}.lev = level;
+    pde.deg = degree;
+    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
+end
+
+pde = check_pde(pde);
+CFL = 0.01;
+dt = pde.set_dt(pde,CFL);
+
+opts.compression = 4;
+opts.useConnectivity = 0;
+opts.implicit = 1;
+opts.implicit_method="BE";
+lev_vec = zeros(numel(pde.dimensions),1)+level;
+[HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
+
+t = 0;
+TD = 0;
+pde = get_coeff_mats(pde,t,TD,opts.use_oldcoeffmat);
+
+A_data = global_matrix(pde,opts,HASHInv);
+
+Vmax = 0;
+Emax = 0;
+out = initial_condition_vector(pde,opts,HASHInv,0);
+deg = pde.deg;
+for i=0:4
+    time = i*dt;
+    out = time_advance(pde,opts,A_data,out,time,dt,deg,HASHInv,Vmax,Emax);
+    write_octave_like_output(sprintf(out_format,i), out);
+end
+
+%sg l4d3
+out_format = strcat(data_dir, 'continuity1_implicit_l4_d3_t%d.dat');
+pde = continuity1;
+level = 4;
+degree = 3;
+grid_type='SG';
+
+for i=1:length(pde.dimensions)
+    pde.dimensions{i}.lev = level;
+    pde.deg = degree;
+    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
+end
+
+pde = check_pde(pde);
+CFL = 0.01;
+dt = pde.set_dt(pde,CFL);
+
+opts.compression = 4;
+opts.useConnectivity = 0;
+opts.implicit = 1;
+opts.implicit_method="BE";
+lev_vec = zeros(numel(pde.dimensions),1)+level;
+[HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
+
+t = 0;
+TD = 0;
+pde = get_coeff_mats(pde,t,TD,opts.use_oldcoeffmat);
+
+A_data = global_matrix(pde,opts,HASHInv);
+
+Vmax = 0;
+Emax = 0;
+out = initial_condition_vector(pde,opts,HASHInv,0);
+deg = pde.deg;
+for i=0:4
+    time = i*dt;
+    out = time_advance(pde,opts,A_data,out,time,dt,deg,HASHInv,Vmax,Emax);
+    write_octave_like_output(sprintf(out_format,i), out);
+end
+
+% continuity2
+
+%sg l2d2
+out_format = strcat(data_dir, 'continuity2_implicit_l2_d2_t%d.dat');
+pde = continuity2;
+level = 2;
+degree = 2;
+grid_type='SG';
+
+for i=1:length(pde.dimensions)
+    pde.dimensions{i}.lev = level;
+    pde.deg = degree;
+    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
+end
+
+pde = check_pde(pde);
+CFL = 0.01;
+dt = pde.set_dt(pde,CFL);
+
+opts.compression = 4;
+opts.useConnectivity = 0;
+opts.implicit = 1;
+opts.implicit_method="BE";
+
+lev_vec = zeros(numel(pde.dimensions),1)+level;
+[HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
+
+t = 0;
+TD = 0;
+pde = get_coeff_mats(pde,t,TD,opts.use_oldcoeffmat);
+
+A_data = global_matrix(pde,opts,HASHInv);
+
+Vmax = 0;
+Emax = 0;
+out = initial_condition_vector(pde,opts,HASHInv,0);
+deg = pde.deg;
+for i=0:4
+    time = i*dt;
+    out = time_advance(pde,opts,A_data,out,time,dt,deg,HASHInv,Vmax,Emax);
+    write_octave_like_output(sprintf(out_format,i), out);
+end
+
+%sg l4d3
+out_format = strcat(data_dir, 'continuity2_implicit_l4_d3_t%d.dat');
+pde = continuity2;
+level = 4;
+degree = 3;
+grid_type='SG';
+
+for i=1:length(pde.dimensions)
+    pde.dimensions{i}.lev = level;
+    pde.deg = degree;
+    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
+end
+
+pde = check_pde(pde);
+CFL = 0.01;
+dt = pde.set_dt(pde,CFL);
+
+opts.compression = 4;
+opts.useConnectivity = 0;
+opts.implicit = 1;
+opts.implicit_method="BE";
+
+lev_vec = zeros(numel(pde.dimensions),1)+level;
+[HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
+
+t = 0;
+TD = 0;
+pde = get_coeff_mats(pde,t,TD,opts.use_oldcoeffmat);
+
+A_data = global_matrix(pde,opts,HASHInv);
+
+Vmax = 0;
+Emax = 0;
+out = initial_condition_vector(pde,opts,HASHInv,0);
+deg = pde.deg;
+for i=0:4
+    time = i*dt;
+    out = time_advance(pde,opts,A_data,out,time,dt,deg,HASHInv,Vmax,Emax);
+    write_octave_like_output(sprintf(out_format,i), out);
+end
+
+
