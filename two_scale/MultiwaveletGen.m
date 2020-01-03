@@ -5,8 +5,6 @@ function [H0,H1,G0,G1,scale_co,phi_co]=MultiwaveletGen(k)
 % Input: k--Degree
 %--------------------------------------
 
-N = 2^12;
-x_cord = (-1:2/N:1)';
 
 p_legendre = zeros(3*k+2);
 
@@ -24,7 +22,7 @@ end
 %p_legendre_weights =(1-p_legendre_roots.^2)./((3*k+1)^2*polyval(p_legendre(3*k+2,:),p_legendre_roots).^2);
 
 % define Gaussian quadrature
-[p_legendre_roots,p_legendre_weights]=lgwt(N,-1,1);
+[p_legendre_roots,p_legendre_weights]=lgwt(default_quad_number(k),-1,1);
 p_legendre_weights = p_legendre_weights/2;
 
 for l = 1:size(p_legendre,1)
@@ -100,14 +98,6 @@ for j_x = 1:k
             sum(polyval(phi_co(j_x+k,:),(p_legendre_roots+1)/2).*polyval(norm_co(j_y,:),(p_legendre_roots+1)/2).*p_legendre_weights)/2;
     end
 end
-
-phi_pic = zeros(N+1,k);
-
-for j = 1:k
-    phi_pic(find(x_cord<0),j) = polyval(phi_co(j,:),x_cord(find(x_cord<0)));
-    phi_pic(find(x_cord>=0),j) = polyval(phi_co(j+k,:),x_cord(find(x_cord>=0)));
-end
-
 
 
 %% Determine the Two Scale Coeffecients %%%

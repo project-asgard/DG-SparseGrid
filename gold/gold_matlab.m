@@ -19,8 +19,9 @@ write_octave_like_output(strcat(out_format,'neg1_1_8.dat'), w3);
 out_format = strcat(data_dir, "read_vector_bin_");
 w = linspace(-1,1);
 wT = w';
-write_to_file(strcat(out_format, 'neg1_1_100.dat'), w);
-write_to_file(strcat(out_format, 'neg1_1_100T.dat'), wT);
+% linux requires full path here...
+write_to_file(strcat(get_root_folder(), "/gold/", out_format, 'neg1_1_100.dat'), w);
+write_to_file(strcat(get_root_folder(), "/gold/", out_format, 'neg1_1_100T.dat'), wT);
 
 % these are used to test read_vector_from_txt_file()
 
