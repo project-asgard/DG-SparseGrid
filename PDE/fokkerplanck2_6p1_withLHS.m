@@ -227,10 +227,10 @@ g1 = @(x,p,t,dat) Cb(x)./x.^2;
 pterm1  = MASS(g1);
 term3_p = TERM_1D({pterm1});
 
-g2 = @(x,p,t,dat) (1-x.^2);
-g3 = @(x,p,t,dat) x.*0+1;
+g2 = @(x,p,t,dat) 1-x.^2;
+g3 = @(x,p,t,dat) x.*0 + 1;
 pterm1  = GRAD(num_dims,g2,+1,'D','N');
-pterm2  = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
+pterm2  = GRAD(num_dims,g3,-1,'N','D');
 term3_z = TERM_1D({pterm1,pterm2});
 
 termC3 = TERM_ND(num_dims,{term3_p,term3_z});
