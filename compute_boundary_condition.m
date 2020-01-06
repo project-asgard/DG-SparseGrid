@@ -10,7 +10,7 @@ p = pde.params;
 L = xMax-xMin;
 Tol_Cel_Num = 2^(Lev);
 h = L  / Tol_Cel_Num;
-small_dx = h*1e-7; %Parameter to fix problem with Inhomogeneous BC
+small_dx = h*1e-6; %Parameter to fix problem with Inhomogeneous BC
 DoF = Deg * Tol_Cel_Num;
 
 bc = sparse(DoF,1);

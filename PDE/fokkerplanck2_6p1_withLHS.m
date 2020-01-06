@@ -196,7 +196,7 @@ g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3  = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
+pterm3  = GRAD(num_dims,g3,-1,'N','D');
 term1_p = TERM_1D({pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -209,7 +209,7 @@ termC1  = TERM_ND(num_dims,{term1_p,[]});
 
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
-pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
+pterm2  = GRAD(num_dims,g2,-1,'N','D');
 term2_p = TERM_1D({pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
