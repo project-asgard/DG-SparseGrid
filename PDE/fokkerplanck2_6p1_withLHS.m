@@ -32,7 +32,7 @@ E = 0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
-p_min = 0.1;
+p_min = 0.01;
 
 Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 
@@ -130,7 +130,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 %% Setup the dimensions 
 
 dim_p.domainMin = p_min;
-dim_p.domainMax = 10;
+dim_p.domainMax = 2.4;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
@@ -190,13 +190,13 @@ pde.termsLHS = {termLHS};
 % termC1 == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=D,BCR=N]        
 %   r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=N,BCR=D]
 
-% Inhomogenous Dirichlet BC's for f(p_min)
+% Inhomogenous Dirichlet BC's for f(p_max)
 
 g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3  = GRAD(num_dims,g3,-1,'N','D');
+pterm3  = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
 term1_p = TERM_1D({pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -209,7 +209,7 @@ termC1  = TERM_ND(num_dims,{term1_p,[]});
 
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
-pterm2  = GRAD(num_dims,g2,-1,'N','D');
+pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
 term2_p = TERM_1D({pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
@@ -229,8 +229,8 @@ term3_p = TERM_1D({pterm1});
 
 g2 = @(x,p,t,dat) 1-x.^2;
 g3 = @(x,p,t,dat) x.*0 + 1;
-pterm1  = GRAD(num_dims,g2,+1,'D','N');
-pterm2  = GRAD(num_dims,g3,-1,'N','D');
+pterm1  = GRAD(num_dims,g2,+1,'D','D');
+pterm2  = GRAD(num_dims,g3,-1,'N','N');
 term3_z = TERM_1D({pterm1,pterm2});
 
 termC3 = TERM_ND(num_dims,{term3_p,term3_z});
