@@ -115,6 +115,11 @@ if nDims==2
     f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
     contourf(x,y,f2d_with_noise,'LineColor','none');
     title('numeric 2D solution');
+    if nargin >= 5
+        hold on
+        plot(coordinates(:,1),coordinates(:,2),'Color','none','Marker','o','MarkerEdgeColor','w');
+        hold off
+    end
     
     if nargin >= 6
         hold on
