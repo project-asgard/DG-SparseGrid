@@ -9,6 +9,9 @@ function pde = fokkerplanck1_4p1b
 %
 % implicit
 % asgard(fokkerplanck1_4p1b,'implicit',true,'num_steps',30,'lev',4)
+%
+% with adaptivity
+% asgard(fokkerplanck1_4p1b,'implicit',true,'num_steps',300,'lev',5,'deg',3,'adapt',true,'CFL',0.1)
 
 pde.max_lev = 8;
 

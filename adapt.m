@@ -1,41 +1,69 @@
-function [pde,fval,hash_table,A_data,Meval,nodes,coord] = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0)
+function [pde,fval,hash_table,A_data,Meval,nodes,coord,fval_previous] ...
+    = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0,coarsen_,refine_,fval_previous)
 
 num_elements    = numel(hash_table.elements_idx);
-num_dimensions  = numel(pde.dimensions);
-deg             = pde.deg; 
+num_dims  = numel(pde.dimensions);
+deg             = pde.deg;
 
-element_DOF = deg^num_dimensions;
+% coarsen_ = 0;
+% refine_ = 0;
 
-refine_threshold  = max(abs(fval)) * 1e-2;
-coarsen_threshold = max(abs(fval)) * 1e-4;
+element_DOF = deg^num_dims;
 
-newElementVal = 1e-15;
+relative_threshold = opts.adapt_threshold;
+
+refine_threshold  = max(abs(fval)) * relative_threshold;
+coarsen_threshold = refine_threshold * 0.1;
+
+new_element_value = 1e-15;
 
 debug   = 0;
-coarsen = 1;
-refine  = 1;
-method  = 1;
+refinement_method  = opts.refinement_method; % 1 = david, 2 = lin; see get_child_elements for description
+
+coarsen = 0;
+if exist('coarsen_','var') && ~isempty(coarsen_)
+    coarsen = coarsen_;
+end
+
+refine  = 0;
+if exist('refine_','var') && ~isempty(refine_)
+    refine = refine_;
+end
+
+refine_previous = 0;
+if nargin >= 9
+    refine_previous = 1;
+    assert(numel(fval)==numel(fval_previous));
+end
+
+if refine_threshold <= 0 % just don't do anything for zero valued functions
+    coarsen = 0;
+    refine = 0;
+    refine_previous = 0;
+end
 
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
-
-if ~opts.quiet
-    fprintf('Initial number of elementss: %i\n', numel(hash_table.elements_idx));
-    fprintf('Initial number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
-end
 
 %%
 % Store unrefined fval for comparison with refined fval after
 
 pde0  = pde;
 fval0 = fval;
+for d=1:num_dims
+    [Meval0{d},nodes0{d}] = matrix_plot_D(pde,pde.dimensions{d});
+end
+fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
 
 %%
-% Plot the grid (1D only)
-
+% Plot the grid (1 and 2D only)
+num_rows = 4;
+num_cols = 3;
 plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,1);
     plot_adapt_triangle(pde,opts,hash_table,7);
+    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,...
+        fval,num_rows,num_cols,10,refine_threshold,coarsen_threshold);
 end
 
 %%
@@ -43,64 +71,91 @@ end
 
 if coarsen
     
+    if ~opts.quiet
+        disp('Coarsening ...')
+        fprintf('    Initial number of elements: %i\n', numel(hash_table.elements_idx));
+        fprintf('    Initial number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
+    end
+    
     num_remove = 0;
-    remove_elements_list = [];
+    elements_to_remove = [];
+    
+    num_new_leaf_elements = 0;
+    new_leaf_elements = [];
     
     for n=1:num_elements
         
         idx = hash_table.elements_idx(n);
+        lev_vec = hash_table.elements.lev_p1(idx,:)-1;
+        pos_vec = hash_table.elements.pos_p1(idx,:)-1;
+        
+        assert(max(lev_vec)<=pde.max_lev);
+        
+        [lev_vec_, pos_vec_] = md_idx_to_lev_pos (num_dims, pde.max_lev, idx);
+        assert(norm(lev_vec-lev_vec_)==0);
+        assert(norm(pos_vec-pos_vec_)==0);
         
         gidx1 = (n-1)*element_DOF+1;
-        gidx2 = gidx1 + element_DOF - 1;
+        gidx2 = n*element_DOF;
         
-        element_sum = sum(abs(fval(gidx1:gidx2)),'all');
-                
+        element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
+        
         %%
-        % Check for coarsening (de-refinement)
+        % check if the element needs refining, if it is at least level 1,
+        % and is labeled as a leaf
         
-        if element_sum <= coarsen_threshold % Check only the deg=0 term for each element
-            
-            if debug; fprintf('leaf node to be REMOVED, fval=%f\n', element_sum); end
-            
-            thisElemLevVec = hash_table.elements.lev_p1(idx,:)-1; % NOTE : remove the 1 per note below
-            thisElemPosVec = hash_table.elements.pos_p1(idx,:)-1; % NOTE : remove the 1 per note below
+        if element_sum <= coarsen_threshold %...
+%                 && min(hash_table.elements.lev_p1(idx,:))>=2 % ...
+                %&& hash_table.elements.type(idx) == 2
             
             %%
-            % Generate a list of elements who will become leaves after
-            % removing this element.
+            % get element children and check if any are live elements
             
-            for d=1:num_dimensions
+            %[num_live_children, has_complete_children] = ...
+            %    number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+            
+            %%
+            % only coarsen (remove) this element if it has no (live)
+            % daughters
+            
+            %if num_live_children == 0 
                 
-                newLeafElemLevVec = thisElemLevVec;
-                newLeafElemPosVec = thisElemPosVec;
+                if debug
+                    disp(['    Removing : ',num2str(hash_table.elements.lev_p1(idx,:)-1)]);
+                    disp(['        its type is : ', num2str(hash_table.elements.type(idx))]);
+                end
                 
-                newLeafElemLevVec(d) = newLeafElemLevVec(d)-1;
-                newLeafElemPosVec(d) = floor(newLeafElemPosVec(d)/2);
-                
-                idx = lev_cell_to_element_index(newLeafElemLevVec,newLeafElemPosVec,pde.max_lev);
+                num_remove = num_remove + 1;
+                elements_to_remove(num_remove) = n;
                 
                 %%
-                % Assert this element exists
+                % determine level above leaf nodes and label them
                 
-                %                     assert(hash_table.elements.lev_p1(element_idx,d) ~= 0);
+%                 parent_elements_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
+%                 
+%                 for ii=1:numel(parent_elements_idx)
+%                     
+%                     % make sure the element we want to be a leaf is already in
+%                     % the table and active
+%                     assert(hash_table.elements.type( parent_elements_idx(ii) ) >= 1);
+%                     
+%                     % store the elements which will become leafs below
+%                     num_new_leaf_elements = num_new_leaf_elements + 1;                   
+%                     new_leaf_elements(num_new_leaf_elements) = parent_elements_idx(ii);
+%                     
+%                 end
                 
-                %%
-                % Set element type to leaft == 2
-                
-                %                     hash_table.elements.node_type(element_idx) = 2;
-                
-            end
-            
-            num_remove = num_remove + 1;
-            remove_elements_list(num_remove) = n;
+            %end
             
         end
     end
     
+    
+    
     %%
     % Now remove elements
     
-    assert(numel(remove_elements_list)==num_remove);
+    assert(numel(elements_to_remove)==num_remove);
     
     remove_DOF_list = [];
     for n=1:num_remove
@@ -109,14 +164,14 @@ if coarsen
         % Remove entries from element table (recall sparse storage means =0
         % removes it from the table
         
-        hash_table.elements.lev_p1(hash_table.elements_idx(remove_elements_list(n)),:) = 0;
-        hash_table.elements.pos_p1(hash_table.elements_idx(remove_elements_list(n)),:) = 0;
-        hash_table.elements.node_type(hash_table.elements_idx(remove_elements_list(n)))= 0;
+        hash_table.elements.lev_p1(hash_table.elements_idx(elements_to_remove(n)),:) = 0;
+        hash_table.elements.pos_p1(hash_table.elements_idx(elements_to_remove(n)),:) = 0;
+        hash_table.elements.type(hash_table.elements_idx(elements_to_remove(n)))= 0;
         
         %%
-        % Remove all deg parts of this element from fval
+        % Add this elements DOF to the list to be removed from fval
         
-        nn = remove_elements_list(n);
+        nn = elements_to_remove(n);
         
         i1 = (nn-1)*element_DOF+1; % Get the start and end global row indices of the element
         i2 = (nn)*element_DOF;
@@ -127,24 +182,50 @@ if coarsen
     end
     
     %%
-    % Remove entries from elements_idx
+    % Remove elements from elements_idx, and DOF from fval
     
-    hash_table.elements_idx(remove_elements_list) = [];
+    hash_table.elements_idx(elements_to_remove) = [];
     fval(remove_DOF_list) = [];
-    if ~opts.quiet; fprintf('    Coarsen on : removed %i elements\n', num_remove); end
-
+    
+    if ~opts.quiet
+        fprintf('    Final number of elements: %i\n', numel(hash_table.elements_idx));
+        fprintf('    Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
+    end
+    
+    %%
+    % Label new leaf elements
+    
+%     for n=1:num_new_leaf_elements
+%         idx = new_leaf_elements(n);
+%         
+%         %%
+%         % assert that the element we are making a leaf does not have a
+%         % complete set of live children
+%         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
+%         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
+%         [num_live_children, has_complete_children] = ...
+%             number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+%         if ~has_complete_children
+%             hash_table.elements.type(idx) = 2;
+%         end
+%     end
+    
 end
 
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
+num_elements = numel(hash_table.elements_idx);
+
 
 %%
-% Plot the refined grid (1D only)
+% Plot the coarsened grid (1 and 2D only)
 
 plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,2);
     plot_adapt_triangle(pde,opts,hash_table,8);
+    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+        num_rows,num_cols,11,refine_threshold,coarsen_threshold);
 end
 
 %%
@@ -152,42 +233,61 @@ end
 
 if refine
     
+    if ~opts.quiet
+        disp('Refining ...')
+        fprintf('    Initial number of elements: %i\n', numel(hash_table.elements_idx));
+        fprintf('    Initial number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
+    end
+    
     num_elements = numel(hash_table.elements_idx);
     cnt = 0;
-    clear newElemLevVecs;
-    clear newElemPosVecs;
+    clear new_elements_lev_vec;
+    clear new_elements_pos_vec;
     for n=1:num_elements
         
         idx = hash_table.elements_idx(n);
-        lev_vec = hash_table.elements.lev_p1(idx,:)-1;
-        pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         
         gidx1 = (n-1)*element_DOF+1;
-        gidx2 = gidx1 + element_DOF - 1;
+        gidx2 = n*element_DOF;
         
-        element_sum = sum(abs(fval(gidx1:gidx2)),'all');
-               
+        element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
+        
         %%
         % Check for refinement
         
-        if element_sum >= refine_threshold
+        if element_sum >= refine_threshold %&& hash_table.elements.type(idx) == 2
             
-            if debug; fprintf('leaf node to be refined, fval=%f\n', element_sum); end
+            if debug; disp([...
+                    '    refine ? yes, fval = ', num2str(element_sum,'%1.1e'), ...
+                    ', type = ', num2str(hash_table.elements.type(idx)), ...
+                    ', lev_vec = ', num2str(hash_table.elements.lev_p1(idx,:)-1) ...
+                    ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
+                    ', idx = ', num2str(idx) ...
+                    ]); end
             
-            [daughterElemLevVecs,daughterElemPosVecs,nDaughters] = get_my_daughters(lev_vec, pos_vec, pde.max_lev, method);
+            [child_elements_idx, num_children] = ...
+                get_child_elements_idx(num_dims, pde.max_lev, idx, refinement_method);
             
-            newElemLevVecs(cnt+1:cnt+nDaughters,:) = daughterElemLevVecs;
-            newElemPosVecs(cnt+1:cnt+nDaughters,:) = daughterElemPosVecs;
-            
-            if nDaughters > 0
-                hash_table.elements.node_type(idx) = 1; % Now that this element has been refined it is no longer a leaf.              
+            if num_children > 0
+                
+                if debug                 
+                    for nn=1:num_children
+                        [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, child_elements_idx(nn));
+                        disp(['        adding element with lev : ',num2str(lev_vec), ...
+                            ', idx = ', num2str(child_elements_idx(nn))]);
+                    end                   
+                end
+                
+                new_elements_idx(cnt+1:cnt+num_children) = child_elements_idx;              
+                hash_table.elements.type(idx) = 1; % Now that this element has been refined it is no longer a leaf.               
+                cnt = cnt + num_children;
+                
             end
-            
-            cnt = cnt + nDaughters;
             
         else
             
-            if debug; fprintf('leaf node but no refinement, fval=%f\n', element_sum); end
+            if debug; disp(['    refine ?  no, fval = ', num2str(element_sum,'%1.1e'), ...
+                    ' type = ', num2str(hash_table.elements.type(idx))]); end
             
         end
         
@@ -198,45 +298,71 @@ if refine
     % elements table and elementsIDX
     
     num_try_to_add = cnt;
-    num_add = 0;
+    num_elements_added = 0;
     for i=1:num_try_to_add
         
-        thisElemLevVec = newElemLevVecs(i,:);
-        thisElemPosVec = newElemPosVecs(i,:);
-        idx = lev_cell_to_element_index(thisElemLevVec,thisElemPosVec,pde.max_lev);
-        assert(idx>=0);
-        assert(min(thisElemLevVec)>=0);
-        assert(min(thisElemPosVec)>=0);
+        idx = new_elements_idx(i);
         
         %%
-        % If element does not exist, add it
+        % Sanity check the new element
         
-        if hash_table.elements.lev_p1(idx,1)==0
+        assert(idx>=0);
+        
+        %%
+        % If element does not exist, add its idx to the list of active elements
+        % (hash_table.elements_idx)
+        
+        if hash_table.elements.type(idx) == 0 % element not already enabled
             
-            num_add = num_add + 1;
-            myIdx = num_elements+num_add;
-            hash_table.elements_idx(myIdx) = idx; % Extend element list
-            i1 = (myIdx-1)*element_DOF+1; % Get the start and end global row indices of the new element
-            i2 = (myIdx)*element_DOF;
+            num_elements_added = num_elements_added + 1;
+            position_in_elements_idx = num_elements+num_elements_added;
+            hash_table.elements_idx(position_in_elements_idx) = idx; % Extend element list
+            i1 = (position_in_elements_idx-1)*element_DOF+1; % Get the start and end global row indices of the new element
+            i2 = (position_in_elements_idx)*element_DOF;
             assert(i2-i1==element_DOF-1);
-            fval(i1:i2) = newElementVal; % Extend coefficient list with near zero magnitude (ideally would be zero)
+            fval(i1:i2) = new_element_value; % Extend coefficient list with near zero magnitude (ideally would be zero)
+            if refine_previous
+                fval_previous(i1:i2) = new_element_value; % Extend coefficient list of previous time step also
+            end
             
-            hash_table.elements.lev_p1(idx,:) = thisElemLevVec+1; % NOTE : have to start lev  index from 1 for sparse storage
-            hash_table.elements.pos_p1(idx,:) = thisElemPosVec+1; % NOTE : have to start cell index from 1 for sparse storage
+            [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, idx);
             
+            hash_table.elements.lev_p1(idx,:) = lev_vec+1; % NOTE : have to start lev  index from 1 for sparse storage
+            hash_table.elements.pos_p1(idx,:) = pos_vec+1; % NOTE : have to start cell index from 1 for sparse storage
+            hash_table.elements.type(idx) = 1;           
+
         end
         
-        %%
-        % Set element to type to leaf
-        
-        hash_table.elements.node_type(idx) = 2;
+%         %%
+%         % Set element to type to leaf
+%         
+%         [num_live_children, has_complete_children] = ...
+%             number_of_live_children_idx (hash_table, idx, pde.max_lev, refinement_method);
+% 
+%         if has_complete_children
+%             hash_table.elements.type(idx) = 1;           
+%         else
+%             hash_table.elements.type(idx) = 2;
+%         end
         
     end
     
-    if ~opts.quiet; fprintf('    Refine on : added %i elements\n', num_add); end
+    %     if ~opts.quiet; fprintf('    Refine on : added %i elements\n', num_elements_added); end
+    
+    if ~opts.quiet
+        fprintf('    Final number of elements: %i\n', numel(hash_table.elements_idx));
+        fprintf('    Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
+    end
     
 end
+
+%%
+% Some more sanity checking on the refined element list / fval
+
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
+if refine_previous
+    assert(numel(fval_previous)==numel(hash_table.elements_idx)*element_DOF);
+end
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 for i=1:numel(hash_table.elements_idx)
@@ -249,8 +375,10 @@ end
 
 plot_grid = 1;
 if plot_grid && ~opts.quiet
-    plot_adapt(pde,opts,hash_table,3);
+    coordinates = plot_adapt(pde,opts,hash_table,3);
     plot_adapt_triangle(pde,opts,hash_table,9);
+    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+        num_rows,num_cols,12,refine_threshold,coarsen_threshold);
 end
 
 elements_idx0 = hash_table.elements_idx;
@@ -261,7 +389,7 @@ elements_idx0 = hash_table.elements_idx;
 %%
 % Update the FMWT transform matrices
 
-for d=1:num_dimensions
+for d=1:num_dims
     pde.dimensions{d}.lev = max(hash_table.elements.lev_p1(:,d)-1);
     pde.dimensions{d}.FMWT = OperatorTwoScale(deg,pde.dimensions{d}.lev);
 end
@@ -269,7 +397,7 @@ end
 %%
 % Re check the PDE
 
-pde = check_pde(pde);
+pde = check_pde(pde,opts);
 
 %%
 % Update the coeff mats to the new size
@@ -286,7 +414,7 @@ A_data = global_matrix(pde,opts,hash_table);
 %%
 % Update the conversion to realspace matrices
 
-for d=1:num_dimensions
+for d=1:num_dims
     [Meval{d},nodes{d}] = matrix_plot_D(pde,pde.dimensions{d});
 end
 
@@ -301,7 +429,7 @@ coord = get_realspace_coords(pde,nodes);
 fval_realspace_refined = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
 
 if ~opts.quiet
-    if num_dimensions == 1
+    if num_dims == 1
         
         subplot(2,3,4)
         plot(fval)
@@ -309,14 +437,15 @@ if ~opts.quiet
         plot(fval0)
         hold off
         subplot(2,3,5)
-        plot(nodes0{1},fval_realspace0)
+        plot(nodes0{1},fval_realspace0,'Color','black')
         hold on
-        plot(nodes{1},fval_realspace_refined)
+        plot(nodes{1},fval_realspace_refined,'Color','black','LineWidth',2)
+        plot(coordinates,coordinates*0,'o','MarkerEdgeColor','blue','MarkerSize',10);
         hold off
         
-    elseif num_dimensions == 2
+    elseif num_dims == 2
         
-        subplot(3,3,4)
+        subplot(4,3,4)
         deg1=pde0.deg;
         lev1=pde0.dimensions{1}.lev;
         deg2=pde0.deg;
@@ -328,9 +457,11 @@ if ~opts.quiet
         f2d = reshape(fval_realspace0,dof2,dof1);
         x = nodes0{1};
         y = nodes0{2};
-        contour(x,y,f2d);
+        if norm(f2d-f2d(1,1))>0 % catch for zero
+            contourf(x,y,f2d,'LineColor','none');
+        end
         
-        subplot(3,3,5)
+        subplot(4,3,5)
         deg1=pde.deg;
         lev1=pde.dimensions{1}.lev;
         deg2=pde.deg;
@@ -342,7 +473,24 @@ if ~opts.quiet
         f2d = reshape(fval_realspace_refined,dof2,dof1);
         x = nodes{1};
         y = nodes{2};
-        contour(x,y,f2d);
+        if norm(f2d-f2d(1,1))>0 % catch for zero
+            contourf(x,y,f2d,'LineColor','none');
+        end
+        hold on
+        scatter(coordinates(:,1),coordinates(:,2),'+','MarkerEdgeColor','white')
+        hold off
+        
+%         subplot(4,3,10)
+%         fval_element = zeros(num_elements,1);
+%         depth = zeros(num_elements,1);
+%         for i=1:deg^num_dims:num_elements
+%             view = fval((i-1).*element_DOF+1:i*element_DOF);
+%             fval_element(i) = sqrt(sum(view.^2));
+%             lev_vec = md_idx_to_lev_pos(num_dims,pde.max_lev,hash_table.elements_idx(i));
+%             depth(i) = sum(lev_vec);
+%         end
+%         ii = find(fval_element);
+%         semilogy(depth(ii),fval_element(ii));
         
     end
 end
@@ -350,10 +498,5 @@ end
 assert(numel(fval)==numel(hash_table.elements_idx)*element_DOF);
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 assert(sum(hash_table.elements_idx-elements_idx0)==0);
-
-if ~opts.quiet
-    fprintf('Final number of elementss: %i\n', numel(hash_table.elements_idx));
-    fprintf('Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dimensions);
-end
 
 end

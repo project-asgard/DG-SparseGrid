@@ -1,6 +1,6 @@
 function [result] = perm_max(idim,LevMax_in, last_index_decreasing_in)
 %
-% return tuples where max of indices  in i-th dimension <= LevMax(i)
+% return tuples where max of indices in i-th dimension <= LevMax(i)
 %
 % for example idim = 1, LevMax(1) = 2
 %

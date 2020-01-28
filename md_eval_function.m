@@ -1,4 +1,4 @@
-function fval = md_eval_function(opts, dims, params, md_funcs, hash_table, t)
+function fval = md_eval_function(opts, deg, dims, params, md_funcs, hash_table, t)
 
 % Returns a multi-D wavelet space function defined by "md_funcs"
 

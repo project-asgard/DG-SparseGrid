@@ -1,4 +1,6 @@
-function [new_elem_lev_vecs, new_elem_pos_vecs, cnt] = get_my_daughters (lev_vec, pos_vec, max_lev, method)
+function [child_elements_lev_vec, child_elements_pos_vec, cnt] = ...
+    get_child_elements (lev_vec, pos_vec, max_lev, refinement_method)
+
 
 %%
 % Takes lev and pos vector as input, returns the same for a list of
@@ -7,11 +9,13 @@ function [new_elem_lev_vecs, new_elem_pos_vecs, cnt] = get_my_daughters (lev_vec
 num_dimensions = numel(lev_vec);
 
 assert (num_dimensions == numel (pos_vec) );
+assert (min(lev_vec)>=0);
+assert (min(pos_vec)>=0);
 
 debug = 0;
 
-new_elem_lev_vecs = [];
-new_elem_pos_vecs = [];
+child_elements_lev_vec = [];
+child_elements_pos_vec = [];
 
 %%
 % Available refinement methods
@@ -47,12 +51,12 @@ new_elem_pos_vecs = [];
 % (5,d)
 % (5,e)
 
-if ~exist('method','var') || isempty(method)
-    method = 2;
+if ~exist('refinement_method','var') || isempty(refinement_method)
+    refinement_method = 1;
 end
 
 cnt = 0;
-if method == 1 || method == 2
+if refinement_method == 1 || refinement_method == 2
     
     for d=1:num_dimensions                   
                     
@@ -62,16 +66,19 @@ if method == 1 || method == 2
         new_elem_lev_vec = lev_vec;
         new_elem_pos_vec = pos_vec;
                 
-        if new_elem_lev_vec(d)+1 <= max_lev
+        if new_elem_lev_vec(d)+1 < max_lev
             
             new_elem_lev_vec(d) = new_elem_lev_vec(d)+1;
             new_elem_pos_vec(d) = new_elem_pos_vec(d)*2; % Assumes pos starts at 0
             
-            new_elem_lev_vecs(cnt+1,:) = new_elem_lev_vec;
-            new_elem_pos_vecs(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
+            child_elements_lev_vec(cnt+1,:) = new_elem_lev_vec;
+            child_elements_pos_vec(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
             
-            assert(new_elem_pos_vecs(cnt+1,d) >= 0);
-            assert(new_elem_lev_vecs(cnt+1,d) >= 0);
+            if child_elements_lev_vec(cnt+1,d) < 0
+                disp('l');
+            end
+            assert(child_elements_pos_vec(cnt+1,d) >= 0);
+            assert(child_elements_lev_vec(cnt+1,d) >= 0);
             
             cnt = cnt + 1;
             
@@ -89,16 +96,16 @@ if method == 1 || method == 2
             new_elem_lev_vec = lev_vec;
             new_elem_pos_vec = pos_vec;
             
-            if new_elem_lev_vec(d)+1 <= max_lev
+            if new_elem_lev_vec(d)+1 < max_lev
                 
                 new_elem_lev_vec(d) = new_elem_lev_vec(d)+1;
                 new_elem_pos_vec(d) = new_elem_pos_vec(d)*2+1; % Assumes pos starts at 0
                 
-                new_elem_lev_vecs(cnt+1,:) = new_elem_lev_vec;
-                new_elem_pos_vecs(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
+                child_elements_lev_vec(cnt+1,:) = new_elem_lev_vec;
+                child_elements_pos_vec(cnt+1,:) = new_elem_pos_vec; % Assumes pos starts at 0
                 
-                assert(new_elem_pos_vecs(cnt+1,d) >= 0);
-                assert(new_elem_lev_vecs(cnt+1,d) >= 0);
+                assert(child_elements_pos_vec(cnt+1,d) >= 0);
+                assert(child_elements_lev_vec(cnt+1,d) >= 0);
                 
                 cnt = cnt + 1;
                 
@@ -113,7 +120,7 @@ if method == 1 || method == 2
     
 end
 
-if method == 2
+if refinement_method == 2
     
     if num_dimensions == 1
         
@@ -129,11 +136,16 @@ if method == 2
                 
                 tmp_lev(1) = new_lev_1D{1}(i);
                 tmp_lev(2) = new_lev_1D{2}(j);
-                new_elem_lev_vecs(cnt+1,1:2) = tmp_lev;
                 
                 tmp_pos(1) = new_pos_1D{1}(i);
                 tmp_pos(2) = new_pos_1D{2}(j);
-                new_elem_pos_vecs(cnt+1,1:2) = tmp_pos;
+                
+                if max(tmp_lev) < max_lev
+                    
+                    child_elements_lev_vec(cnt+1,1:2) = tmp_lev;
+                    child_elements_pos_vec(cnt+1,1:2) = tmp_pos;
+                    
+                end
                 
                 cnt = cnt + 1;
                 
@@ -152,14 +164,15 @@ if method == 2
                     tmp_lev(1) = new_lev_1D{1}(i);
                     tmp_lev(2) = new_lev_1D{2}(j);
                     tmp_lev(3) = new_lev_1D{3}(k);
-                    
-                    new_elem_lev_vecs(cnt+1,1:3) = tmp_lev;
-                    
+                                   
                     tmp_pos(1) = new_pos_1D{1}(i);
                     tmp_pos(2) = new_pos_1D{2}(j);
                     tmp_pos(3) = new_pos_1D{3}(k);
                     
-                    new_elem_pos_vecs(cnt+1,1:3) = tmp_pos;
+                    if max(tmp_lev) < max_lev
+                        child_elements_lev_vec(cnt+1,1:3) = tmp_lev;
+                        child_elements_pos_vec(cnt+1,1:3) = tmp_pos;
+                    end
                     
                     cnt = cnt + 1;
                     
@@ -181,8 +194,8 @@ if method == 2
 end
 
 if cnt>0
-    assert(min(new_elem_lev_vecs(:))>=0);
-    assert(min(new_elem_pos_vecs(:))>=0);
+    assert(min(child_elements_lev_vec(:))>=0);
+    assert(min(child_elements_pos_vec(:))>=0);
 end
 
 end

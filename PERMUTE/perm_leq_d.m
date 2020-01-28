@@ -4,7 +4,7 @@ function [result] = perm_leq_d( idim, LevMax_in, SumMax, ...
 %                        [, increasing_sum_order_in] )
 %
 % return tuples where sum of indices is less than or
-% equal to SumMax and  i-th index in [0,LevMax(i)]
+% equal to SumMax and i-th index in [0,LevMax(i)]
 %
 
 LevMax = LevMax_in;

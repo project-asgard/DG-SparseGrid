@@ -1,7 +1,13 @@
-function pde = fokkerplanck2_6
+function pde = fokkerplanck2_6p1
 % Combining momentum and pitch angle dynamics
 %
 % Problems 6.1, 6.2, and 6.3 from the RE paper.
+%
+% d/dt f(p,z,t) == termC1 + termC2 + termC3
+%
+% termC1 == 1/p^2*d/dp*p^2*Ca*df/dp
+% termC2 == 1/p^2*d/dp*p^2*Cf*f
+% termC2 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
 %
 % Run with
 %
@@ -15,7 +21,7 @@ pde.CFL = 0.01;
 
 %%
 % Select 6.1, 6.2, 6.3, etc where it goes as 6.test
-test = 2; 
+test = '6p1b'; 
 
 %%
 % Define a few relevant functions
@@ -51,11 +57,11 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         
         ret = zeros(size(x));
         switch test
-            case 1
+            case '6p1a'
                 ret = x.*0+1;
-            case 2
+            case '6p1b'
                 ret = x.*0+1;
-            case 3
+            case '6p1c'
                 h = [3,0.5,1,0.7,3,0,3];
                 
                 for l=1:numel(h)
@@ -75,7 +81,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         ret = zeros(size(x));
         switch test
             
-            case 1
+            case '6p1a'
                 for i=1:numel(x)
                     if x(i) <= 5
                         ret(i) = 3/(2*5^3);
@@ -84,11 +90,11 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     end
                 end
                 
-            case 2 
+            case '6p1b' 
                 a = 2;
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
                 
-            case 3
+            case '6p1c'
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
                 
         end
@@ -123,31 +129,31 @@ num_dims = numel(pde.dimensions);
 %% Setup the terms of the PDE
 
 %% 
-% df/dt == 1/p^2*d/dp*p^2*Ca*df/dp
+% termC1 == 1/p^2*d/dp*p^2*Ca*df/dp
 %
 % becomes 
 %
-% df/dt == g1(p) q(p)        [mass, g1(p) = 1/p^2,  BC N/A]
-%  q(p) == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=D,BCR=N]
-%  r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=N,BCR=D]
+% termC1 == g1(p) q(p)        [mass, g1(p) = 1/p^2,  BC N/A]
+%   q(p) == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=D,BCR=N]
+%   r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=N,BCR=D]
 
 g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
-pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,+1,'D','N');
-pterm3 = GRAD(num_dims,g3,-1,'N','D');
+pterm1  = MASS(g1);
+pterm2  = GRAD(num_dims,g2,+1,'D','N');
+pterm3  = GRAD(num_dims,g3,-1,'N','D');
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
-term1   = TERM_ND(num_dims,{term1_p,[]});
+termC1  = TERM_ND(num_dims,{term1_p,[]});
 
 %%
-% df/dt == 1/p^2*d/dp*p^2*Cf*f
+% termC2 == 1/p^2*d/dp*p^2*Cf*f
 %
 % becomes
 %
-% df/dt == g1(p) q(p)       [mass, g1(p)=1/p^2,  BC N/A]
-%  q(p) == d/dp g2(p) f(p)  [grad, g2(p)=p^2*Cf, BCL=N,BCR=D]
+% termC2 == g1(p) q(p)       [mass, g1(p)=1/p^2,  BC N/A]
+%   q(p) == d/dp g2(p) f(p)  [grad, g2(p)=p^2*Cf, BCL=N,BCR=D]
 
 g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
@@ -155,17 +161,17 @@ g2 = @(x,p,t,dat) x.^2.*Cf(x);
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,+1,'N','D');
 term2_p = TERM_1D({pterm1,pterm2});
-term2   = TERM_ND(num_dims,{term2_p,[]});
+termC2   = TERM_ND(num_dims,{term2_p,[]});
 
 %%
-% df/dt == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
+% termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
 %
 % becomes
 %
-% d/dt f(p,z) == q(p) r(z)
-%        q(p) == g1(p)            [mass, g1(p) = Cb(p)/p^4, BC N/A]
-%        r(z) == d/dz g2(z) s(z)  [grad, g2(z) = 1-z^2,     BCL=D,BCR=D]
-%        s(z) == d/dz g3(z) f(z)  [grad, g3(z) = 1,         BCL=N,BCR=N]
+% termC3 == q(p) r(z)
+%   q(p) == g1(p)            [mass, g1(p) = Cb(p)/p^4, BC N/A]
+%   r(z) == d/dz g2(z) s(z)  [grad, g2(z) = 1-z^2,     BCL=D,BCR=D]
+%   s(z) == d/dz g3(z) f(z)  [grad, g3(z) = 1,         BCL=N,BCR=N]
 
 g1 = @(x,p,t,dat) Cb(x)./x.^4;
 pterm1  = MASS(g1);
@@ -177,13 +183,12 @@ pterm1  = GRAD(num_dims,g2,+1,'D','D');
 pterm2  = GRAD(num_dims,g3,-1,'N','N');
 term3_z = TERM_1D({pterm1,pterm2});
 
-term3 = TERM_ND(num_dims,{term3_p,term3_z});
+termC3 = TERM_ND(num_dims,{term3_p,term3_z});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {term1,term2,term3};
-% pde.terms = {term1,term3};
+pde.terms = {termC1,termC2,termC3};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

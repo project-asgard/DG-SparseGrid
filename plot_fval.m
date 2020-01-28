@@ -1,4 +1,4 @@
-function plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic)
+function plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates)
 
 nDims = numel(pde.dimensions);
 
@@ -33,7 +33,7 @@ end
 
 if nDims==2
     
-    figure(1000)
+%     figure(1000)
     
     dimensions = pde.dimensions;
     
@@ -42,8 +42,10 @@ if nDims==2
     deg2=pde.deg;
     lev2=dimensions{2}.lev;
     
-    dof1=deg1*2^lev1;
-    dof2=deg2*2^lev2;
+%     dof1=deg1*2^lev1;
+%     dof2=deg2*2^lev2;
+    dof1=numel(Meval{1}(:,1));
+    dof2=numel(Meval{2}(:,1));
     
     dofD = dof1*dof2;
     assert(dofD==numel(fval_realspace));
@@ -64,7 +66,10 @@ if nDims==2
     %%
     % Plot a 1D line through the solution
     
-    sy = ny/2;
+    sy = max(1,floor(ny/2));
+    if ny > 2
+        sy = sy+2; % just to get off the exact middle
+    end
     
     f1d = f2d(sy,:);
     x = nodes{1};
@@ -83,7 +88,10 @@ if nDims==2
         hold off;
     end
     
-    sx = nx/2;
+    sx = max(1,floor(nx/2));
+    if nx > 2
+        sx = sx+2; % just to get off the exact middle
+    end
     
     f1d = f2d(:,sx);
     x = nodes{1};
@@ -103,10 +111,18 @@ if nDims==2
     % Plot 2D
     
     ax1 = subplot(2,2,3);
-    contourf(x,y,f2d);
+    f2d_with_noise = f2d;
+    f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
+    contourf(x,y,f2d_with_noise,'LineColor','none');
     title('numeric 2D solution');
     
-    if pde.checkAnalytic
+    if nargin >= 6
+        hold on
+        scatter(coordinates(:,1),coordinates(:,2),60,'+','MarkerEdgeColor','white')
+        hold off
+    end
+    
+    if pde.checkAnalytic && norm(f2d_analytic-f2d_analytic(1,1))>0
         ax2 = subplot(2,2,4);
         contourf(x,y,f2d_analytic);
         title('analytic 2D solution');

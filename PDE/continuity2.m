@@ -10,8 +10,15 @@ function pde = continuity2
 %
 % implicit
 % asgard(continuity2,'implicit',true)
+%
+% with adaptivity
+% asgard(continuity2,'implicit',true, 'adapt', true)
 
 pde.CFL = 0.1;
+
+soln_x = @(x,p,t)  cos(pi*x);
+soln_y = @(y,p,t)  sin(2*pi*y);
+soln_t = @(t)      sin(2*t);
 
 %% Setup the dimensions
 %
@@ -19,11 +26,11 @@ pde.CFL = 0.1;
 
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
-dim_x.init_cond_fn = @(x,p,t) x.*0;
+dim_x.init_cond_fn = @(x,p,t) soln_x(x,p,t) * soln_t(t);
 
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
-dim_y.init_cond_fn = @(y,p,t) y.*0;
+dim_y.init_cond_fn = @(y,p,t) soln_y(y,p,t);
 
 %%
 % Add dimensions to the pde object
@@ -107,9 +114,9 @@ pde.sources = {source1,source2,source3};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...
-    @(x,p,t)  cos(pi*x),   ... % a_x
-    @(y,p,t)  sin(2*pi*y), ... % a_y
-    @(t)    sin(2*t)     ... % a_t
+    soln_x,    ... % a_x
+    soln_y,    ... % a_y
+    soln_t     ... % a_t
     };
 
 %%

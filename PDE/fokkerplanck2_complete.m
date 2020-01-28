@@ -34,22 +34,38 @@ function pde = fokkerplanck2_complete
 %
 % implicit
 % asgard(fokkerplanck2_complete,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4)
+%
+% with adaptivity
+% asgard(fokkerplanck2_complete,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
 
 pde.CFL = 0.01;
 
 %%
 % Select 6.1, 6.2, 6.3, etc where it goes as 6.test
-test = 2; 
+test = '6p1b'; 
 
 %%
 % Define a few relevant functions
 
 nuEE = 1;
 vT = 1;
-delta = 0.042;
-Z = 1;
-E = 0.0025;
-tau = 10^5;
+switch test
+    case '6p1a'
+        delta = 0.042;
+        Z = 1;
+        E = 0.0025;
+        tau = 10^5;
+    case '6p1b'
+        delta = 0.042;
+        Z = 1;
+        E = 0.25;
+        tau = 10^5;
+    case '6p1c' 
+        delta = 0.042;
+        Z = 1;
+        E = 0.0025;
+        tau = 10^5;
+end
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
 
@@ -75,11 +91,11 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         
         ret = zeros(size(x));
         switch test
-            case 1
+            case '6p1a'
                 ret = x.*0+1;
-            case 2
+            case '6p1b'
                 ret = x.*0+1;
-            case 3
+            case '6p1c'
                 h = [3,0.5,1,0.7,3,0,3];
                 
                 for l=1:numel(h)
@@ -99,7 +115,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         ret = zeros(size(x));
         switch test
             
-            case 1
+            case '6p1a'
                 for i=1:numel(x)
                     if x(i) <= 5
                         ret(i) = 3/(2*5^3);
@@ -108,10 +124,10 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     end
                 end
                 
-            case 2 
+            case '6p1b' 
                 a = 2;
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
-            case 3
+            case '6p1c'
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
                 
         end
@@ -127,7 +143,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0;
+dim_p.domainMin = 0.1;
 dim_p.domainMax = +10;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
@@ -165,8 +181,6 @@ pterm2  = GRAD(num_dims,g2,+1,'D','N');
 pterm3  = GRAD(num_dims,g3,-1,'N','D');
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
-
-pde.terms={termC1};
 
 %%
 % termC2 == 1/p^2*d/dp*p^2*Cf*f

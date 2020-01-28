@@ -5,25 +5,18 @@ function pde = seperable_adapt_test_2d
 %
 % Run with
 %
-% explicit
-% asgard(continuity2,'lev',3,'deg',3)
-%
-% implicit
-% asgard(continuity2,'implicit',true)
-%
-% with adaptivity
-% asgard(continuity2,'implicit',true, 'adapt', true)
+% asgard(seperable_adapt_test_2d,'implicit',true,'adapt',true,'many_solution_capable',true)
 
 pde.CFL = 0.1;
 
-w = 0.1;
-C = 0;
+w = 1.0;
+C = 1.0;
 
     function ret = offset(t)
         ret = sin(t);
     end
     function ret = expf(x,t)
-        ret = exp( -( x - offset(t) )^2 / w );
+        ret = exp( -( x - offset(t) ).^2 ./ w );
     end
 
 
@@ -38,7 +31,7 @@ solution1 = { ...
 
 solution2 = { ...
     @(x,p,t)  expf(x,t), ...
-    @(y,p,t)  -C.*y, ...
+    @(y,p,t)  -C.*sin(2*pi*y), ...
     @(t)      1 ...
     };
 
@@ -53,13 +46,11 @@ pde.initial_conditions = {solution1,solution2};
 %
 % Here we setup a 2D problem (x,y)
 
-dim_x.domainMin = -1;
-dim_x.domainMax = +1;
-% dim_x.init_cond_fn = @(x,p,t) solution1_x(x,p,t) * solution1_t(t);
+dim_x.domainMin = -10;
+dim_x.domainMax = +10;
 
-dim_y.domainMin = -2;
-dim_y.domainMax = +2;
-% dim_y.init_cond_fn = @(y,p,t) solution1_y(y,p,t);
+dim_y.domainMin = -1;
+dim_y.domainMax = +1;
 
 %%
 % Add dimensions to the pde object
@@ -79,24 +70,14 @@ num_dims = numel(pde.dimensions);
 % d/dx g1(x) f(x,y)          [grad,g1(x)=-1, BCL=P, BCR=P]
 
 g1 = @(x,p,t,dat) x*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  = GRAD(num_dims,g1,0,'D','D');
 term1_x = TERM_1D({pterm1});
 term1   = TERM_ND(num_dims,{term1_x,[]});
 
 %%
-% -df/dy which is
-%
-% d/dy g1(y) f(x,y)          [grad,g1(y)=-1, BCL=P, BCR=P]
-
-g1 = @(y,p,t,dat) y*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
-term2_y = TERM_1D({pterm1});
-term2   = TERM_ND(num_dims,{[],term2_y});
-
-%%
 % Add terms to the pde object
 
-pde.terms = {term1,term2};
+pde.terms = {term1};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -111,33 +92,66 @@ pde.params = params;
 % variation of each source term with each dimension and time.
 % Here we define 3 source terms.
 
-%%
-% Source term 1
-source1 = { ...
-    @(x,p,t) cos(pi*x),   ...   % s1x
-    @(y,p,t) sin(2*pi*y), ...   % s1y
-    @(t)   2*cos(2*t)   ...   % s1t
+source1_t1p1 = { ...
+    @(x,p,t) 2./w.*expf(x,t).*x.^2*cos(t), ... 
+    @(y,p,t) y.*0+1, ...
+    @(t)     1 ...
     };
 
-%%
-% Source term 2
-source2 = { ...
-    @(x,p,t)  cos(pi*x),    ...   % s2x
-    @(y,p,t)  cos(2*pi*y),  ...   % s2y
-    @(t)    2*pi*sin(2*t) ...   % s2t
+source1_t1p2 = { ...
+    @(x,p,t)  -2/w.*expf(x,t).*x*cos(t)*sin(t), ...
+    @(y,p,t)  y.*0+1, ...
+    @(t)      1 ...
     };
 
-%%
-% Source term 3
-source3 = { ...
-    @(x,p,t)  sin(pi*x),   ...  % s3x
-    @(y,p,t)  sin(2*pi*y), ...  % s3y
-    @(t)    -pi*sin(2*t) ...  % s3t
+source1_t2p1 = { ...
+    @(x,p,t)  expf(x,t), ...
+    @(y,p,t)  y.*0+1, ...
+    @(t)      1 ...
+    };
+
+source1_t2p2 = { ...
+    @(x,p,t)  -2/w.*x.^2.*expf(x,t), ...
+    @(y,p,t)  y.*0+1, ...
+    @(t)      1 ...
+    };
+
+source1_t2p3 = { ...
+    @(x,p,t)  2/w.*x.*expf(x,t).*sin(t), ...
+    @(y,p,t)  y.*0+1, ...
+    @(t)      1 ...
+    };
+
+source2_t1p1 = { ...
+    @(x,p,t)  -2*C/w.*expf(x,t).*x.*cos(t), ...
+    @(y,p,t)  sin(2*pi*y), ...
+    @(t)      1 ...
+    };
+
+source2_t1p2 = { ...
+    @(x,p,t)  2*C/w.*expf(x,t).*cos(t).*sin(t), ...
+    @(y,p,t)  sin(2*pi*y), ...
+    @(t)      1 ...
+    };
+
+source2_t2p1 = { ...
+    @(x,p,t)  2*C/w.*expf(x,t).*x, ...
+    @(y,p,t)  sin(2*pi*y), ...
+    @(t)      1 ...
+    };
+
+source2_t2p2 = { ...
+    @(x,p,t)  -2*C/w.*expf(x,t).*sin(t), ...
+    @(y,p,t)  sin(2*pi*y), ...
+    @(t)      1 ...
     };
 
 %%
 % Add sources to the pde data structure
-pde.sources = {source1,source2,source3};
+pde.sources = {source1_t1p1,source1_t1p2,...
+    source1_t2p1,source1_t2p2,source1_t2p3...
+    source2_t1p1,source2_t1p2,...
+    source2_t2p1,source2_t2p2};
 
 %%
 % function to set dt
