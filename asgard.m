@@ -162,7 +162,7 @@ end
 
 %% Time Loop
 count=1;
-plotFreq = 1;
+plotFreq = 50;
 err = 1e9;
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:num_steps
@@ -358,7 +358,7 @@ for L = 1:num_steps
     %%
     % Plot results
     
-    if mod(L,plotFreq)==0 && ~opts.quiet
+    if mod(L-1,plotFreq)==0 && ~opts.quiet
         
         figure(1000)
         

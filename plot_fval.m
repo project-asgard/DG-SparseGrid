@@ -76,18 +76,22 @@ if nDims==2
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    semilogy(x,f1d, '-o');
+    hold on
+    semilogy(x,f1d,'-','LineWidth',3);
+    hold off
     title('1D slice (vertical)');
+    set(gca,'FontSize',20)
+    legend
     
     %%
     % Overplot analytic solution
     
-    if pde.checkAnalytic
-        f1d_analytic = f2d_analytic(sy,:);
-        hold on;
-        plot(x,f1d_analytic,'-');
-        hold off;
-    end
+%     if pde.checkAnalytic
+%         f1d_analytic = f2d_analytic(sy,:);
+%         hold on;
+%         plot(x,f1d_analytic,'--','LineWidth',4);
+%         hold off;
+%     end
     
     sx = max(1,floor(nx/2));
     if nx > 2
@@ -104,7 +108,7 @@ if nDims==2
     if pde.checkAnalytic
         f1d_analytic = f2d_analytic(:,sx);
         hold on;
-        plot(y,f1d_analytic,'-');
+        semilogy(y,f1d_analytic,'-');
         hold off;
     end
     
