@@ -172,7 +172,7 @@ for L = 1:num_steps
     
     if ~opts.quiet; disp(timeStr); end
     Emax = 0;
-   
+    
     % Coarsen Grid
     if opts.adapt
         [pde,fval,hash_table,A_data,Meval,nodes,coord] ...
@@ -182,7 +182,7 @@ for L = 1:num_steps
     needs_adapting = true;
     while needs_adapting
         %     for adapt_step = 1:2
-                        
+        
         if pde.solvePoisson
             %%
             % Solve Poisson to get E (from 1-rho=1-int f dv)
@@ -244,7 +244,6 @@ for L = 1:num_steps
         % fval_previous with those new elements added and time_advance
         % again
         
-        %if opts.adapt && (adapt_step == 1)
         if opts.adapt
             if ~opts.quiet; disp('Adapt grid ...'); end
             
@@ -257,15 +256,19 @@ for L = 1:num_steps
             num_elements_adapted = numel(fval_unstepped_adapted);
             
             if num_elements_0 == num_elements_adapted
-                disp(['No more adaption needed - advancing time']);
-                disp(['    t = ', num2str(t)]);
+                if ~opts.quiet
+                    disp(['No more adaption needed - advancing time']);
+                    disp(['    t = ', num2str(t)]);
+                end
                 needs_adapting = false;
                 fval = time_advance(pde,opts,A_data,fval_unstepped_adapted,t,dt,pde.deg,hash_table,[],[]);
                 fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
             else
-                disp(['Still needs adaption iterating ... added ', ...
-                    num2str(num_elements_adapted-num_elements_0),' elements']);
-                disp(['    t = ', num2str(t)]);
+                if ~opts.quiet
+                    disp(['Still needs adaption iterating ... added ', ...
+                        num2str(num_elements_adapted-num_elements_0),' elements'])
+                    disp(['    t = ', num2str(t)]);
+                end
                 fval = fval_unstepped_adapted;
             end
         else
@@ -345,7 +348,7 @@ for L = 1:num_steps
             end
         end
         
-        catch_min_error = true;
+        catch_min_error = false;
         if catch_min_error && err < err_wavelet
             disp('Error is now going up?');
         end

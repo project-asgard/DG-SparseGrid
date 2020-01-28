@@ -7,9 +7,9 @@ data_dir = strcat("generated-inputs", "/", "element_table", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
-out_format = strcat(data_dir, "element_table_1_1_SG.dat");
+out_format = strcat(data_dir, "element_table_1_2_SG.dat");
 num_dimensions = 1;
-lev_vec = zeros(num_dimensions,1) + 1;
+lev_vec = zeros(num_dimensions,1) + 2;
 grid_type = 'SG';
 [fwd1, inv1] = hash_table_nD(lev_vec, grid_type);
 inv1_mat = cell2mat(inv1);

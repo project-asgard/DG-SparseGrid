@@ -59,6 +59,7 @@ for i=1:num_elements
             IDpos = hash_table.elements.pos_p1(hash_table.elements_idx(i),d)-1;
             ID = lev_cell_to_1D_index(IDlev,IDpos);
         end
+
         index_D = [(ID-1)*deg+1 : ID*deg];
         
         thisMat = Meval_D{d};
