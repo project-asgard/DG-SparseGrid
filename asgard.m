@@ -17,6 +17,8 @@ end
 %% Check PDE
 pde = check_pde(pde,opts);
 
+%pde.quad_x_in = linspace(-1, 1, pde.deg); %quadrature points are a linear space to include left and right ends
+
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
 if opts.dt_set_at_runtime
@@ -143,14 +145,25 @@ if opts.adapt
 else
    if ~opts.quiet; disp(['Number of DOF : ', num2str(numel(fval))]); end
 end
-
 fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
 fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
 fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
 
+ test_moment_matrix = 1; %test matrix for moment_integral
+% for j = 1:length(nodes{1,2})
+     for i = 1:length(nodes{1,1})
+        test_func(i,1) = exp(-0.5*((nodes{1,1}(i))^2))/sqrt(2*pi);
+     end
+% end
+test_moment = moment_integral(pde,fval_realspace_analytic,test_moment_matrix); 
+
+%Option to calculate moment of some key function
+
+
 err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
 err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
 if ~opts.quiet
+    disp(['test_moment :', num2str(test_moment)]);
     disp(['    num_dof : ', num2str(numel(fval))]);
     disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
     disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
@@ -330,9 +343,9 @@ for L = 1:num_steps
             disp(['    num_dof : ', num2str(numel(fval))]);
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
             disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
-        if norm(fval_prev(:) - fval(:)) < 1e-6
+        if norm(fval_prev(:) - fval(:)) < 1e-10
             disp(['Converged']);
-            
+            break
         end
         end
         

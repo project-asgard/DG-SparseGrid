@@ -72,20 +72,28 @@ if nDims==2
     end
     
     f1d = f2d(sy,:);
+    f1d_SG_lev5 = f1d;
     x = nodes{1};
+    x_SG_lev5 = x;
+    save('f1d_SG_lev5', 'f1d_SG_lev5', 'x_SG_lev5');
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    semilogy(x,f1d, '-o');
-    title('1D slice (vertical)');
-    
+    load('f1d_SG_lev5', 'f1d_SG_lev5', 'x_SG_lev5');
+    load('f1d_FG_lev4', 'f1d_FG_lev4', 'x_FG_lev4');
+%    load('f1d_lev5_deg4', 'f1d_lev5', 'x_lev5');
+    semilogy(x_SG_lev5,f1d_SG_lev5, '-b', 'LineWidth', 2);
+    hold on;
+    semilogy(x_FG_lev4,f1d_FG_lev4, '-m', 'LineWidth', 2);
+%    semilogy(x_lev5,f1d_lev5, '-k', 'LineWidth', 2);
+    hold off;
     %%
     % Overplot analytic solution
     
     if pde.checkAnalytic
         f1d_analytic = f2d_analytic(sy,:);
         hold on;
-        plot(x,f1d_analytic,'-');
+        plot(x,f1d_analytic,'-r');
         hold off;
     end
     

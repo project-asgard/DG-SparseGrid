@@ -24,11 +24,11 @@ Meval = sparse(dof_1D,dof_1D);
 
 %%
 % Quadrature points (quad_x) and weights (quad_w)
-if (nargin >= 3)
+if (nargin >= 3),
         quad_x = quad_x_in;
 else
   [quad_x,quad_w]=lgwt(deg,-1,1);
-end
+end;
 
 p_val = lin_legendre(quad_x,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
 

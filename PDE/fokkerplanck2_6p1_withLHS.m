@@ -114,7 +114,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
             case 0.005
                 Q = 0.49859;    % for p_min = 0.005
             case 0.01              
-                Q = 0.497179;   % for p_min = 0.01
+                Q = 0.502844;  % for p_min = 0.01
             case 0.1
                 Q = 0.471814;   % for p_min = 0.1
             case 0.2
@@ -129,18 +129,20 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = p_min;
-dim_p.domainMax = 2.4;
+dim_p.domainMin = 0;
+dim_p.domainMax = 40;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
-dim_z.domainMin = -1;
-dim_z.domainMax = +1;
+dim_z.domainMin = -10;
+dim_z.domainMax = +10;
 dim_z.init_cond_fn = @(x,p,t) f0_z(x);
 
 %%
 % Add dimensions to the pde object
 % Note that the order of the dimensions must be consistent with this across
 % the remainder of this PDE.
+
+
 
 pde.dimensions = {dim_p,dim_z};
 num_dims = numel(pde.dimensions);
@@ -209,7 +211,7 @@ termC1  = TERM_ND(num_dims,{term1_p,[]});
 
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
-pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
+pterm2  = GRAD(num_dims,g2, +1,'N','D', BCL_fList, BCR_fList);
 term2_p = TERM_1D({pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
@@ -237,6 +239,7 @@ termC3 = TERM_ND(num_dims,{term3_p,term3_z});
 
 %%
 % Add terms to the pde object
+
 
 pde.terms = {termC1,termC2,termC3};
 
