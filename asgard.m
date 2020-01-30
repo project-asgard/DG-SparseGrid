@@ -148,6 +148,13 @@ fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
 fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
 fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
 
+%test_func = 1; %test function 
+
+%Taking the moment of test_func with respect to the numerical distribution
+%function
+
+%test_moment = moment_integral(pde, fval_realspace, test_func); 
+
 err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
 err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
 if ~opts.quiet
