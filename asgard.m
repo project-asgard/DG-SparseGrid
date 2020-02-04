@@ -149,13 +149,13 @@ fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
 fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
 fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
 
- test_moment_matrix = 1; %test matrix for moment_integral
+% test_moment_matrix = 1; %test matrix for moment_integral
 % for j = 1:length(nodes{1,2})
      for i = 1:length(nodes{1,1})
         test_func(i,1) = exp(-0.5*((nodes{1,1}(i))^2))/sqrt(2*pi);
      end
 % end
-test_moment = moment_integral(pde,fval_realspace_analytic,test_moment_matrix); 
+%test_moment = moment_integral(pde,fval_realspace_analytic,test_moment_matrix); 
 
 %Option to calculate moment of some key function
 
@@ -163,7 +163,7 @@ test_moment = moment_integral(pde,fval_realspace_analytic,test_moment_matrix);
 err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
 err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
 if ~opts.quiet
-    disp(['test_moment :', num2str(test_moment)]);
+%    disp(['test_moment :', num2str(test_moment)]);
     disp(['    num_dof : ', num2str(numel(fval))]);
     disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
     disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);

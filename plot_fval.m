@@ -72,20 +72,26 @@ if nDims==2
     end
     
     f1d = f2d(sy,:);
-    f1d_SG_lev5 = f1d;
+    f1d_SG_lev2 = f1d;
     x = nodes{1};
-    x_SG_lev5 = x;
-    save('f1d_SG_lev5', 'f1d_SG_lev5', 'x_SG_lev5');
+    x_SG_lev2 = x;
+    %save('f1d_SG_lev2_deg3', 'f1d_SG_lev2', 'x_SG_lev2');
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    load('f1d_SG_lev5', 'f1d_SG_lev5', 'x_SG_lev5');
-    load('f1d_FG_lev4', 'f1d_FG_lev4', 'x_FG_lev4');
-%    load('f1d_lev5_deg4', 'f1d_lev5', 'x_lev5');
-    semilogy(x_SG_lev5,f1d_SG_lev5, '-b', 'LineWidth', 2);
+    load('f1d_FG_lev2_deg3', 'f1d_FG_lev2', 'x_FG_lev2');
+    load('f1d_FG_lev3_deg3', 'f1d_FG_lev3', 'x_FG_lev3');
+    load('f1d_FG_lev4_deg3', 'f1d_FG_lev4', 'x_FG_lev4');
+    load('f1d_SG_lev2_deg3', 'f1d_SG_lev2', 'x_SG_lev2');
+    load('f1d_SG_lev3_deg3', 'f1d_SG_lev3', 'x_SG_lev3');
+    load('f1d_SG_lev4_deg3', 'f1d_SG_lev4', 'x_SG_lev4');
+    %semilogy(x_FG_lev2,f1d_FG_lev2, 'b--o', 'LineWidth', 2);
     hold on;
-    semilogy(x_FG_lev4,f1d_FG_lev4, '-m', 'LineWidth', 2);
-%    semilogy(x_lev5,f1d_lev5, '-k', 'LineWidth', 2);
+    %semilogy(x_FG_lev3,f1d_FG_lev3, 'm--o', 'LineWidth', 2);
+    %semilogy(x_FG_lev4,f1d_FG_lev4, 'k--o', 'LineWidth', 2);
+    %semilogy(x_SG_lev2,f1d_SG_lev2, '-b', 'LineWidth',2);
+    %semilogy(x_SG_lev3,f1d_SG_lev3, '-m', 'LineWidth',2);
+    %semilogy(x_SG_lev4,f1d_SG_lev4, '-k', 'LineWidth',2);
     hold off;
     %%
     % Overplot analytic solution
@@ -94,6 +100,7 @@ if nDims==2
         f1d_analytic = f2d_analytic(sy,:);
         hold on;
         plot(x,f1d_analytic,'-r');
+%        save('f1d_analytic','f1d_analytic','x');
         hold off;
     end
     

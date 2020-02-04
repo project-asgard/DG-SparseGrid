@@ -29,7 +29,7 @@ points = [];
 %num = 2^Lev*deg;
 
 
-for i = 0:2^Lev-1
+for i = 0:2^Lev(1)-1
     points = [points; xmin + x + i*h];
 end
 
