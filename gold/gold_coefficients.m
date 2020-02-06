@@ -3,17 +3,23 @@ generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 5, 'deg'
 generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 3, 'deg', 3 );
 
 % coefficient testing
+
+%diffusion1
+generate_data( diffusion1, 'diffusion1', 'lev', 2, 'deg', 2 );
+generate_data( diffusion1, 'diffusion1', 'lev', 4, 'deg', 4 );
+generate_data( diffusion1, 'diffusion1', 'lev', 5, 'deg', 5 );
+
+%diffusion2
+generate_data( diffusion2, 'diffusion2', 'lev', 2, 'deg', 2 );
+generate_data( diffusion2, 'diffusion2', 'lev', 4, 'deg', 4 );
+generate_data( diffusion2, 'diffusion2', 'lev', 5, 'deg', 5 );
+
+%continuity1
+generate_data( continuity1, 'continuity1', 'lev', 2, 'deg', 2 );
+
 coeff_dir = strcat("generated-inputs", "/", "coefficients", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(coeff_dir)]);
-
-% continuity1 term
-pde = check_pde(continuity1);
-pde.dimensions{1}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{1}.lev,'wavelet');
-time = 0;
-sd_term = pde.terms{1}.terms_1D{1};
-sd_term_out = coeff_matrix(1,pde.deg, time, pde.dimensions{1}, sd_term, pde.params);
-write_octave_like_output(strcat(coeff_dir,'continuity1_coefficients.dat'), full(sd_term_out.mat));
 
 % continuity2 terms
 pde = check_pde(continuity2);

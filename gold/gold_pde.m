@@ -16,6 +16,9 @@ t = 0;
 %Captain
 run_pde( fokkerplanck2_complete, out_format, domain, t, 'lev', 5, 'deg', 4, 'CFL', 1 )
 
+out_format = strcat( data_dir, "diffusion_2_" );
+run_pde( diffusion2, out_format, 4.2, 0, 'lev', 3, 'deg', 2);
+
 % continuity 1
 out_format = strcat(data_dir, "continuity_1_");
 pde = continuity1;
