@@ -1,5 +1,77 @@
 %% Generate gold data for C++ testing of time advance component
 
+% fokkerplanck2_complete l3d3
+out_format = strcat(data_dir, 'fokkerplanck2_complete_sg_l%i_d%i_t%d.dat');
+fokkerplanck2_complete_cfl = 1e-10;
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete',...
+                  'CFL', fokkerplanck2_complete_cfl, 'use_oldhash', true, 'lev', 2, 'deg', 3,...
+               'timestep_method', 'RK3' );
+
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete',...
+                  'CFL', fokkerplanck2_complete_cfl, 'use_oldhash', true, 'lev', 3, 'deg', 4,...
+               'timestep_method', 'RK3' );
+
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete',...
+                  'CFL', fokkerplanck2_complete_cfl, 'use_oldhash', true, 'lev', 4, 'deg', 3,...
+               'timestep_method', 'RK3' );
+
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete',...
+                  'CFL', fokkerplanck2_complete_cfl, 'use_oldhash', true, 'lev', 2, 'deg', 3,...
+               'timestep_method', 'BE' );
+
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete',...
+                  'CFL', fokkerplanck2_complete_cfl, 'use_oldhash', true, 'lev', 3, 'deg', 4,...
+               'timestep_method', 'BE' );
+
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete',...
+                  'CFL', fokkerplanck2_complete_cfl, 'use_oldhash', true, 'lev', 4, 'deg', 3,...
+               'timestep_method', 'BE' );
+
+%Temporarily cut off data generation below this line - needs updating
+return;
+
+%diffusion1 implicit
+diffusion_cfl = 0.003;
+generate_data( diffusion1, 'diffusion1', ...
+               'lev', 2, 'deg', 2, 'grid_type', 'SG', 'timestep_method', 'BE',...
+               'CFL', diffusion_cfl );
+generate_data( diffusion1, 'diffusion1', ...
+               'lev', 3, 'deg', 3, 'grid_type', 'SG', 'timestep_method', 'BE',...
+               'CFL', diffusion_cfl );
+generate_data( diffusion1, 'diffusion1', ...
+               'lev', 4, 'deg', 4, 'grid_type', 'SG', 'timestep_method', 'BE',...
+               'CFL', diffusion_cfl );
+
+%diffusion1 explicit
+generate_data( diffusion1, 'diffusion1', 'lev', 2, 'deg', 2, 'grid_type', 'SG',...
+               'CFL', diffusion_cfl );
+generate_data( diffusion1, 'diffusion1', 'lev', 3, 'deg', 3, 'grid_type', 'SG',...
+               'CFL', diffusion_cfl );
+generate_data( diffusion1, 'diffusion1', 'lev', 4, 'deg', 4, 'grid_type', 'SG',...
+               'CFL', diffusion_cfl );
+
+%diffusion2 implicit
+generate_data( diffusion2, 'diffusion2', ...
+               'lev', 2, 'deg', 2, 'grid_type', 'SG', 'timestep_method', 'BE',...
+               'CFL', diffusion_cfl );
+
+generate_data( diffusion2, 'diffusion2', ...
+               'lev', 3, 'deg', 3, 'grid_type', 'SG', 'timestep_method', 'BE',...
+               'CFL', diffusion_cfl );
+
+generate_data( diffusion2, 'diffusion2', ...
+               'lev', 4, 'deg', 4, 'grid_type', 'SG', 'timestep_method', 'BE',...
+               'CFL', diffusion_cfl );
+
+%diffusion2 explicit
+generate_data( diffusion2, 'diffusion2', 'lev', 2, 'deg', 2, 'grid_type', 'SG',...
+               'CFL', diffusion_cfl );
+generate_data( diffusion2, 'diffusion2', 'lev', 3, 'deg', 3, 'grid_type', 'SG',...
+               'CFL', diffusion_cfl );
+generate_data( diffusion2, 'diffusion2', 'lev', 4, 'deg', 4, 'grid_type', 'SG',...
+               'CFL', diffusion_cfl );
+
+
 opts.use_oldcoeffmat = 0;
 opts.use_oldhash = 1;
 
@@ -763,4 +835,66 @@ function run_time_advance( pde, out_format, varargin )
       out = time_advance(pde,opts,A_data,out,time,dt,pde.deg,HASHInv,Vmax,Emax);
       write_octave_like_output(sprintf(out_format,i), out);
   end
+end
+
+function generate_data(pde, output_prefix, varargin)
+
+runtime_defaults
+
+opts.use_oldcoeffmat = 0;
+opts.use_oldhash = 1;
+opts.compression = 4;
+opts.useConnectivity = 0;
+
+pde = check_pde(pde, opts);
+
+dt = pde.set_dt(pde, opts.CFL); 
+
+% time advance
+data_dir = strcat("generated-inputs/time_advance/", output_prefix, "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/', char(data_dir)]);
+
+level = pde.dimensions{1}.lev;
+degree = pde.deg;
+grid_type= opts.grid_type;
+
+% order of sprintf args: output_prefix, implicit, grid_type.to_lower(), level, degree, time
+out_format = strcat(data_dir, '%s_%s_%s_l%d_d%d_t%d.dat');
+
+if( strcmp(opts.timestep_method, 'RK3') )
+  implicit_string = 'e';
+else
+  implicit_string = 'i';
+end
+
+for i=1:length(pde.dimensions)
+    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
+end
+
+for i=1:numel(pde.dimensions)
+  lev_vec( i ) = pde.dimensions{i}.lev;
+end
+
+%lev_vec = zeros(numel(pde.dimensions),1)+level;
+[HASH,HASHInv] = hash_table_nD(lev_vec,grid_type);
+
+t = 0;
+TD = 0;
+pde = get_coeff_mats(pde,t,TD,opts.use_oldcoeffmat);
+
+A_data = global_matrix(pde,opts,HASHInv);
+
+Vmax = 0;
+Emax = 0;
+out = initial_condition_vector(pde,opts,HASHInv,0);
+deg = pde.deg;
+for i=0:4
+    time = i*dt;
+    out = time_advance(pde,opts,A_data,out,time,dt,deg,HASHInv,Vmax,Emax);
+    write_octave_like_output(...
+    sprintf(out_format, output_prefix, implicit_string, lower(grid_type), level, degree, i),...
+    out);
+end
+
 end

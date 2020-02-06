@@ -11,7 +11,7 @@ function bcVec = boundary_condition_vector(pde, opts, hash_table, time)
 dims = pde.dimensions;
 terms = pde.terms;
 
-%%
+%%  
 % dim shortcuts
 
 deg = pde.deg;

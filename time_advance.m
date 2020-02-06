@@ -167,6 +167,15 @@ bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
 applyLHS = ~isempty(pde.termsLHS);
 
+%Ignore ALHS iff ALHS not needed
+if applyLHS
+  [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+else
+  [~,A] = apply_A(pde,opts,A_data,f0,deg);
+end
+
+I = eye(numel(diag(A)));
+
 if applyLHS
     error('apply LHS not implemented for FE');
 else

@@ -163,7 +163,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
     function ret = soln_z(x,~)
         ret = x.*0+1;
     end
-    function ret = soln_p(x,t)
+    function ret = soln_p(x,~)
         ret = 2/sqrt(pi) * exp(-x.^2);
     end
 

@@ -36,3 +36,9 @@ gold_matrix_plot_D
 
 disp('Generating gold data for wavelet_to_realspace component');
 gold_wavelet_to_realspace
+
+disp('Generating gold data for boundary_condition_vector component');
+gold_boundary_condition_vector
+
+disp('Generating gold data for boundary_condition_vector component');
+gold_compute_boundary_condition

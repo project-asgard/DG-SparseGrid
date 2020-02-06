@@ -1,7 +1,26 @@
 % coefficient testing
+
+%diffusion1
+generate_data( diffusion1, 'diffusion1', 'lev', 2, 'deg', 2 );
+generate_data( diffusion1, 'diffusion1', 'lev', 4, 'deg', 4 );
+generate_data( diffusion1, 'diffusion1', 'lev', 5, 'deg', 5 );
+
+%diffusion2
+generate_data( diffusion2, 'diffusion2', 'lev', 2, 'deg', 2 );
+generate_data( diffusion2, 'diffusion2', 'lev', 4, 'deg', 4 );
+generate_data( diffusion2, 'diffusion2', 'lev', 5, 'deg', 5 );
+
+%continuity1
+generate_data( continuity1, 'continuity1', 'lev', 2, 'deg', 2 );
+
 coeff_dir = strcat("generated-inputs", "/", "coefficients", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(coeff_dir)]);
+
+%fokkerplanck2_complete
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 2, 'deg', 2 );
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 5, 'deg', 5 );
 
 % continuity1 term
 pde = check_pde(continuity1);
@@ -128,4 +147,44 @@ for t=1:length(pde.terms)
         write_octave_like_output(sprintf(out_format,level,degree,t,d), full(mat));
         write_octave_like_output(sprintf(out_format0,level,degree,t,d), full(mat0));
     end
+end
+
+function generate_data(pde, output_prefix, varargin)
+
+runtime_defaults
+
+opts.use_oldcoeffmat = 0;
+opts.use_oldhash = 1;
+opts.compression = 4;
+opts.useConnectivity = 0;
+
+pde = check_pde(pde, opts);
+
+CFL = 0.01;
+dt = pde.set_dt(pde,CFL);
+
+% coefficient testing
+coeff_dir = strcat("generated-inputs/coefficients/", output_prefix, "/");
+root = get_root_folder();
+[stat,msg] = mkdir ([root,'/gold/',char(coeff_dir)]);
+
+% diffusion1 terms
+for i=1:length(pde.dimensions)
+  pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
+end
+
+out_format = strcat(coeff_dir, 'coefficients_l%i_d%i_%d_%d.dat');
+%doesn't matter, the term is time independent...
+time = 1.0;
+level = pde.dimensions{1}.lev;
+degree = pde.deg;
+for t=1:length(pde.terms)
+    for d=1:length(pde.dimensions)
+        sd_term = pde.terms{t}.terms_1D{d};
+        sd_term_out = ...
+        coeff_matrix(numel(pde.dimensions),pde.deg,time,pde.dimensions{d},sd_term,pde.params);
+        coeff_mat = sd_term_out.mat;
+        write_octave_like_output(sprintf(out_format,level,degree,t,d), full(coeff_mat));
+    end
+end
 end
