@@ -113,18 +113,18 @@ if opts.analyze_matrix && ~analysis_done
     analysis_done = true;
 end
 
-if opts.solve_choice == 'DIRECT'
+if strcmpi(opts.solve_choice, 'DIRECT')
     f1 = AA\b; % Solve at each timestep
-elseif opts.solve_choice == 'GMRES'
+elseif strcmpi(opts.solve_choice, 'GMRES')
     [f1,flag,relres,iter] = gmres(AA, b);
-    if flag == 0; fprintf('GMRES converged in %d iters\n', iter);
+    if flag == 0; fprintf('GMRES converged w iters'); disp(iter);
     else; fprintf('GMRES failed with flag %d\n', flag); end
     semilogy(0:iter(2),relres/norm(b),'-o');
     xlabel('Iteration number');
     ylabel('Relative residual');
-elseif opts.solve_choice == 'BICGSTAB'
+elseif strcmpi(opts.solve_choice, 'BICGSTAB')
     [f1,flag,relres,iter] = bicgstab(AA,b);
-    if flag == 0; fprintf('BICGSTAB converged in %d iters\n', iter);
+    if flag == 0; fprintf('BIGCGSTAB converged w iters'); disp(iter);
     else; fprintf('BICGSTAB failed with flag %d\n', flag); end
     semilogy(0:iter(2),relres/norm(b),'-o');
     xlabel('Iteration number');
