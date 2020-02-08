@@ -34,6 +34,7 @@ totalDOF = nWork * elementDOF;
 if opts.implicit
     A = zeros(totalDOF,totalDOF); % Only filled if implicit
 end
+ALHS = 0;
 if num_terms_LHS > 0
     ALHS = zeros(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
 end
