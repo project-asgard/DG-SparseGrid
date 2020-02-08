@@ -81,6 +81,11 @@ end
 %% Backward Euler (first order implicit time advance)
 
 function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+persistent analysis_done;
+if isempty(analysis_done)
+    analysis_done = false;
+end
+
 
 s1 = source_vector(pde,opts,hash_table,t+dt);
 bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
@@ -104,7 +109,10 @@ else
     b = f0 + dt*(s1 + bc1);
 end
 
-
+if opts.analyze_matrix && ~analysis_done
+    analyze_matrix(AA);
+    analysis_done = true;
+end
 f1 = AA\b; % Solve at each timestep
 
 end
@@ -113,6 +121,10 @@ end
 %% Crank Nicolson (second order implicit time advance)
 
 function f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+persistent analysis_done;
+if isempty(analysis_done)
+    analysis_done = false;
+end
 
 applyLHS = ~isempty(pde.termsLHS);
 
@@ -132,6 +144,11 @@ I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;
 
 b = 2*f0 + dt*AMat*f0 + dt*(s0+s1) + dt*(bc0+bc1);
+
+if opts.analyze_matrix && ~analysis_done
+    analyze_matrix(AA);
+    analysis_done = true;
+end
 
 f1 = AA\b; % Solve at each timestep
 

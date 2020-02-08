@@ -17,6 +17,10 @@ default_use_oldcoeffmat = false;
 default_implicit_method = 'CN';
 valid_implicit_methods = {'BE','CN'};
 check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
+default_solve_choice = 'DIRECT';
+valid_solve_choices = {'DIRECT', 'GMRES', 'BICGSTAB'};
+check_solve_choice = @(x) any(validatestring(x,valid_solve_choices));
+default_do_analysis = false;
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -25,11 +29,13 @@ addOptional(input_parser,'num_steps',default_num_steps, @isnumeric);
 addOptional(input_parser,'quiet',default_quiet,@islogical);
 addOptional(input_parser,'implicit',default_implicit, @islogical);
 addOptional(input_parser,'implicit_method',default_implicit_method, check_implicit_method);
+addOptional(input_parser,'solve_choice',default_solve_choice, check_solve_choice);
 addOptional(input_parser,'grid_type',default_grid_type, check_grid_type);
 addOptional(input_parser,'CFL',default_CFL, @isnumeric);
 addOptional(input_parser,'adapt',default_adapt, @islogical);
 addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
 addOptional(input_parser,'use_oldcoeffmat',default_use_oldcoeffmat, @islogical);
+addOptional(input_parser,'analyze_matrix',default_do_analysis, @islogical);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -106,6 +112,12 @@ opts.implicit_method = input_parser.Results.implicit_method;
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
+opts.analyze_matrix = input_parser.Results.analyze_matrix;
+opts.solve_choice = input_parser.Results.solve_choice;
+
+if opts.analyze_matrix && ~opts.implicit
+    error('cannot analyze matrix if not build for implicit stepping');
+end
 
 if opts.adapt
     opts.use_oldhash = false;
