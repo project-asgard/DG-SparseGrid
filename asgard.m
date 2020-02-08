@@ -387,5 +387,7 @@ for L = 1:num_steps
     
 end
 
+clear time_advance
+
 end
 
