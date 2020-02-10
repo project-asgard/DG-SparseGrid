@@ -151,9 +151,9 @@ fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
 
 % test_moment_matrix = 1; %test matrix for moment_integral
 % for j = 1:length(nodes{1,2})
-     for i = 1:length(nodes{1,1})
-        test_func(i,1) = exp(-0.5*((nodes{1,1}(i))^2))/sqrt(2*pi);
-     end
+%     for i = 1:length(nodes{1,1})
+%        test_func(i,1) = exp(-0.5*((nodes{1,1}(i))^2))/sqrt(2*pi);
+%     end
 % end
 %test_moment = moment_integral(pde,fval_realspace_analytic,test_moment_matrix); 
 
@@ -304,6 +304,11 @@ for L = 1:num_steps
         % Get the real space solution
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+        for i = 1:length(fval_realspace)
+           if fval_realspace(i) < 1e-15
+               fval_realspace(i) = 1e-15;
+           end
+        end
         
         %%
         % Try with function convertToRealSpace
@@ -397,10 +402,9 @@ for L = 1:num_steps
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
         save(fName,'f2d','fval');
     end
-    
+    f2d(:,L) = fval_realspace;
     t = t + dt;
     
 end
-
 end
 

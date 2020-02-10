@@ -66,32 +66,32 @@ if nDims==2
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(ny/2));
+    sy = max(1, floor(7*ny/8));
     if ny > 2
         sy = sy+2; % just to get off the exact middle
     end
     
     f1d = f2d(sy,:);
-    f1d_SG_lev2 = f1d;
+    f1d_SG_upper = f1d;
     x = nodes{1};
-    x_SG_lev2 = x;
-    %save('f1d_SG_lev2_deg3', 'f1d_SG_lev2', 'x_SG_lev2');
+    x_SG_upper = x;
+    save('f1d_SG_lev5_deg4_complete_upper', 'f1d_SG_upper', 'x_SG_upper');
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    load('f1d_FG_lev2_deg3', 'f1d_FG_lev2', 'x_FG_lev2');
-    load('f1d_FG_lev3_deg3', 'f1d_FG_lev3', 'x_FG_lev3');
-    load('f1d_FG_lev4_deg3', 'f1d_FG_lev4', 'x_FG_lev4');
-    load('f1d_SG_lev2_deg3', 'f1d_SG_lev2', 'x_SG_lev2');
-    load('f1d_SG_lev3_deg3', 'f1d_SG_lev3', 'x_SG_lev3');
-    load('f1d_SG_lev4_deg3', 'f1d_SG_lev4', 'x_SG_lev4');
-    %semilogy(x_FG_lev2,f1d_FG_lev2, 'b--o', 'LineWidth', 2);
+     load('f1d_FG_lev4_deg4_complete_upper', 'f1d_FG_upper', 'x_FG_upper');
+     load('f1d_FG_lev4_deg4_complete_mid', 'f1d_FG_mid', 'x_FG_mid');
+     load('f1d_SG_lev5_deg4_complete_mid', 'f1d_SG_mid', 'x_SG_mid');
+     load('f1d_SG_lev5_deg4_complete_upper', 'f1d_SG_upper', 'x_SG_upper');
+%     load('f1d_SG_lev6_deg4_complete', 'f1d_SG_lev6', 'x_SG_lev6');
+%     load('f1d_SG_lev4_deg3', 'f1d_SG_lev4', 'x_SG_lev4');
+    %semilogy(x,f1d, '-b', 'LineWidth', 2);
+    semilogy(x_FG_upper,f1d_FG_upper, '-b', 'LineWidth', 2);
     hold on;
-    %semilogy(x_FG_lev3,f1d_FG_lev3, 'm--o', 'LineWidth', 2);
-    %semilogy(x_FG_lev4,f1d_FG_lev4, 'k--o', 'LineWidth', 2);
-    %semilogy(x_SG_lev2,f1d_SG_lev2, '-b', 'LineWidth',2);
-    %semilogy(x_SG_lev3,f1d_SG_lev3, '-m', 'LineWidth',2);
-    %semilogy(x_SG_lev4,f1d_SG_lev4, '-k', 'LineWidth',2);
+    semilogy(x_SG_mid,f1d_SG_mid, '-r', 'LineWidth', 2);
+    semilogy(x_FG_mid,f1d_FG_mid, '-m', 'LineWidth',2);
+    semilogy(x_SG_upper, f1d_SG_upper, '-k', 'LineWidth',2);
+%    semilogy(x_SG_eighthdt,f1d_SG_eighthdt, '-k', 'LineWidth',2);
     hold off;
     %%
     % Overplot analytic solution
@@ -130,6 +130,7 @@ if nDims==2
     f2d_with_noise = f2d;
     f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
     contourf(x,y,f2d_with_noise,'LineColor','none');
+    yline(y(sy), 'LineWidth', 2);
     title('numeric 2D solution');
     
     if nargin >= 6
