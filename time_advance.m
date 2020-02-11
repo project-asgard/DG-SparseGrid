@@ -114,25 +114,44 @@ if opts.analyze_matrix && ~analysis_done
 end
 
 max_iter = size(AA, 1);
-restart = [];
+restart = 100;
+tol = 1e-6;
+M = diag(diag(AA));
+%M = [];
+
+blk_n = pde.deg^size(pde.dimensions,1);
+nblks    = size(AA,1) / blk_n; 
+      
+kmap     = kron(eye(nblks), ones(blk_n, blk_n));
+blk_list = AA(kmap ~= 0);
+blocks = reshape(blk_list,blk_n,blk_n,size(AA,1)/blk_n);
+M = num2cell(blocks, [1,2]);
+M = reshape(M, 1, size(M, 3));
+M = blkdiag(M{:});
 
 if strcmpi(opts.solve_choice, 'DIRECT')
     f1 = AA\b; % Solve at each timestep
 elseif strcmpi(opts.solve_choice, 'GMRES')
-    [f1,flag,relres,iter, relres_hist] = gmres(AA, b, restart, [], max_iter);
+    [f1,flag,relres,iter, relres_hist] = gmres(AA, b, restart, tol, max_iter, M);
     if flag == 0; fprintf('GMRES converged w iters'); disp(iter);
     else; fprintf('GMRES failed with flag %d\n', flag); end
-    disp(size(relres_hist))
+    figure(2000);
     semilogy(1:size(relres_hist,1),relres_hist/norm(b),'-o');
     xlabel('Iteration number');
     ylabel('Relative residual');
+    figure(1000);
+
+    
 elseif strcmpi(opts.solve_choice, 'BICGSTAB')
-    [f1,flag,relres,iter, relres_hist] = bicgstab(AA,b, restart, [], max_iter);
+    [f1,flag,relres,iter, relres_hist] = bicgstab(AA, b, tol, max_iter, M);
     if flag == 0; fprintf('BIGCGSTAB converged w iters'); disp(iter);
     else; fprintf('BICGSTAB failed with flag %d\n', flag); end
+    figure(2000);
     semilogy(1:size(relres_hist,1),relres_hist/norm(b),'-o');
     xlabel('Iteration number');
     ylabel('Relative residual');
+    figure(1000);
+    
 else
     error('solver choice not recongized!');
 end
