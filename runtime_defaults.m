@@ -30,7 +30,7 @@ valid_solve_choices = {'DIRECT', 'GMRES', 'BICGSTAB'};
 check_solve_choice = @(x) any(validatestring(x,valid_solve_choices));
 default_do_analysis = false;
 default_preconditioner_choice = 'JACOBI';
-valid_preconditioner_choices = {'JACOBI, BLK_JACOBI, CUSTOM, NONE'};
+valid_preconditioner_choices = {'JACOBI', 'BLK_JACOBI', 'CUSTOM', 'NONE'};
 check_preconditioner_choice = @(x) any(validatestring(x,valid_preconditioner_choices));
 
 
