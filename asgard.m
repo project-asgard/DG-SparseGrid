@@ -402,7 +402,6 @@ for L = 1:num_steps
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
         save(fName,'f2d','fval');
     end
-    f2d(:,L) = fval_realspace;
     t = t + dt;
     
 end
