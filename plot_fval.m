@@ -7,6 +7,12 @@ if nargin == 4
     overPlotAnalytic = 1;
 end
 
+for i=1:length(fval_realspace)
+    if fval_realspace(i,1) < 1e-14
+        fval_realspace(i,1) = 1e-14;
+    end
+end
+
 if nDims==1
     
     %%
@@ -71,11 +77,13 @@ if nDims==2
         sy = sy+2; % just to get off the exact middle
     end
     
-    f1d = f2d(sy,:);
-    x = nodes{1};
+    f1d_FG = f2d(sy,:);
+    x_FG = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    plot(x,f1d,'-o');
+    %plot(x,f1d,'-o');
+    save('f1d_FG', 'x_FG', 'f1d_FG');
+    semilogy(x_FG, f1d_FG, '-b', 'LineWidth', 2);
     title('1D slice (vertical)');
     
     %%
@@ -115,6 +123,7 @@ if nDims==2
     f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
     contourf(x,y,f2d_with_noise,'LineColor','none');
     title('numeric 2D solution');
+    yline(y(sy));
     
     if nargin >= 6
         hold on
