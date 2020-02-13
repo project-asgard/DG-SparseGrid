@@ -7,12 +7,6 @@ if nargin == 4
     overPlotAnalytic = 1;
 end
 
-for i=1:length(fval_realspace)
-    if fval_realspace(i,1) < 1e-14
-        fval_realspace(i,1) = 1e-14;
-    end
-end
-
 if nDims==1
     
     %%
@@ -77,13 +71,25 @@ if nDims==2
         sy = sy+2; % just to get off the exact middle
     end
     
-    f1d_FG = f2d(sy,:);
-    x_FG = nodes{1};
+    f1d = f2d(sy,:);
+    f1d_SG_mid = f1d;
+    x = nodes{1};
+    x_SG_mid = x;
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    save('f1d_FG', 'x_FG', 'f1d_FG');
+    save('f1d_SG_mid', 'x_SG_mid', 'f1d_SG_mid');
+    
+    load('f1d_SG', 'x_SG', 'f1d_SG');
+    load('f1d_SG_mid', 'x_SG_mid','f1d_SG_mid');
+    load('f1d_FG', 'x_FG', 'f1d_FG');
+    load('f1d_FG_mid', 'x_FG_mid', 'f1d_FG_mid');
     semilogy(x_FG, f1d_FG, '-b', 'LineWidth', 2);
+    hold on;
+    semilogy(x_SG, f1d_SG, 'b--', 'LineWidth', 2);
+    semilogy(x_FG_mid, f1d_FG_mid, '-m', 'LineWidth', 2);
+    semilogy(x_SG_mid, f1d_SG_mid, 'm--', 'LineWidth', 2);
+    hold off;
     title('1D slice (vertical)');
     
     %%
@@ -123,7 +129,7 @@ if nDims==2
     f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
     contourf(x,y,f2d_with_noise,'LineColor','none');
     title('numeric 2D solution');
-    yline(y(sy));
+    yline(y(sy), 'LineWidth', 2);
     
     if nargin >= 6
         hold on

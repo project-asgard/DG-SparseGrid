@@ -295,6 +295,12 @@ for L = 1:num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
+        for i = 1:length(fval_realspace)
+           if fval_realspace(i) < 1e-15
+               fval_realspace(i) = 1e-15;
+           end
+        end
+        
         %%
         % Try with function convertToRealSpace
         

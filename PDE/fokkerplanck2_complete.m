@@ -58,7 +58,7 @@ switch test
     case '6p1b'
         delta = 0.042;
         Z = 1;
-        E = 0.25;
+        E = 0.1;
         tau = 10^5;
     case '6p1c' 
         delta = 0.042;
