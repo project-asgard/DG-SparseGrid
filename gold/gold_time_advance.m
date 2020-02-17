@@ -8,6 +8,16 @@ data_dir = strcat("generated-inputs", "/", "time_advance", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
+% diffusion1 l4d4
+out_format = strcat( data_dir, 'diffusion1_sg_l4_d4_t%d.dat' );
+run_time_advance(diffusion1, out_format, ...
+'CFL', 0.01, 'lev', 4, 'deg', 4, 'grid_type', 'SG', 'implicit', false, 'use_oldhash', true);
+
+% advection1 l4d4
+out_format = strcat( data_dir, 'advection1_sg_l4_d4_t%d.dat');
+run_time_advance( advection1, out_format, ...
+'CFL', 0.01, 'lev', 4, 'deg', 4, 'grid_type', 'SG', 'implicit', false, 'use_oldhash', true);
+
 % continuity1
 
 %sg l2d2
@@ -718,4 +728,39 @@ for i=0:4
     write_octave_like_output(sprintf(out_format,i), out);
 end
 
+function run_time_advance( pde, out_format, varargin )
 
+  runtime_defaults
+  pde = check_pde( pde, opts );
+  dt = pde.set_dt(pde, pde.CFL );
+
+  opts.compression = 4;
+  opts.useConnectivity = 0;
+  opts.implicit_method="BE";
+
+  lev_vec = zeros(numel(pde.dimensions),1);
+  for d = 1 : numel(pde.dimensions)
+    lev_vec(d) = pde.dimensions{d}.lev
+  end
+  [HASH,HASHInv] = hash_table_nD(lev_vec, opts.grid_type);
+
+  for i=1:length(pde.dimensions)
+      pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev);
+  end
+
+  t = 0;
+  TD = 0;
+  pde = get_coeff_mats(pde,t,TD,opts.use_oldcoeffmat);
+
+  A_data = global_matrix(pde,opts,HASHInv);
+
+  Vmax = 0;
+  Emax = 0;
+  out = initial_condition_vector(pde,opts,HASHInv,0);
+
+  for i=0:4
+      time = i*dt;
+      out = time_advance(pde,opts,A_data,out,time,dt,pde.deg,HASHInv,Vmax,Emax);
+      write_octave_like_output(sprintf(out_format,i), out);
+  end
+end

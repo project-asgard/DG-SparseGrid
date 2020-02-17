@@ -4,6 +4,12 @@ data_dir = strcat("generated-inputs", "/", "pde", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
+out_format = strcat( data_dir, "diffusion_1_");
+run_pde(diffusion1, out_format, 4.2, 0, 'lev', 3, 'deg', 2);
+
+out_format = strcat( data_dir, "advection_1_");
+run_pde(advection1, out_format, 4.2, 0, 'lev', 3, 'deg', 2);
+
 % continuity 1
 out_format = strcat(data_dir, "continuity_1_");
 pde = continuity1;
@@ -121,3 +127,29 @@ end
 pde.CFL=1;
 dt = pde.set_dt(pde,pde.CFL);
 write_octave_like_output(strcat(out_format, 'dt.dat'), dt);
+
+function run_pde(pde, out_format, x, t, varargin)
+
+  runtime_defaults;
+  pde = check_pde( pde, opts );
+  pde.CFL = 1.0;
+  dt = pde.set_dt(pde,pde.CFL);
+  write_octave_like_output(strcat(out_format, 'dt.dat'), dt);
+  for d=1:length(pde.dimensions)
+    y_init = pde.dimensions{d}.init_cond_fn(x, 0, t);
+    write_octave_like_output(strcat(out_format, sprintf('initial_dim%d.dat', d-1)), y_init);
+    y_exact = pde.analytic_solutions_1D{d}(x);
+    write_octave_like_output(strcat(out_format, sprintf('exact_dim%d.dat', d-1)), y_exact);
+  end
+  y_exact_time = pde.analytic_solutions_1D{length(pde.analytic_solutions_1D)}(x);
+  write_octave_like_output(strcat(out_format, 'exact_time.dat'), y_exact_time);
+  for s=1:length(pde.sources)
+    for d=1:length(pde.dimensions)
+      y_source = pde.sources{s}{d}(x);
+      write_octave_like_output(strcat(out_format, sprintf('source%d_dim%d.dat',s-1,d-1)), ...
+                               y_source);
+      y_source_t = pde.sources{s}{length(pde.sources{s})}(x);
+      write_octave_like_output(strcat(out_format, sprintf('source%d_time.dat',s-1)), y_source_t);
+    end
+  end
+end

@@ -145,8 +145,3 @@ if ~isempty(fieldnames(input_parser.Unmatched))
    disp(input_parser.Unmatched)
    error('Unrecognised input.')
 end
-
-
-
-
-
