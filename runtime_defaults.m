@@ -25,6 +25,14 @@ default_max_lev = 8;
 default_adapt_threshold = 1e-1;
 default_refinement_method = 1;
 default_adapt_initial_condition = false;
+default_solve_choice = 'DIRECT';
+valid_solve_choices = {'DIRECT', 'GMRES', 'BICGSTAB'};
+check_solve_choice = @(x) any(validatestring(x,valid_solve_choices));
+default_do_analysis = false;
+default_preconditioner_choice = 'JACOBI';
+valid_preconditioner_choices = {'JACOBI', 'BLK_JACOBI', 'CUSTOM', 'NONE'};
+check_preconditioner_choice = @(x) any(validatestring(x,valid_preconditioner_choices));
+
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -46,6 +54,9 @@ addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
 addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
+addOptional(input_parser,'analyze_matrix',default_do_analysis, @islogical);
+addOptional(input_parser,'solve_choice',default_solve_choice, check_solve_choice);
+addOptional(input_parser,'preconditioner',default_preconditioner_choice, check_preconditioner_choice);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -135,6 +146,13 @@ opts.max_lev = input_parser.Results.max_lev;
 opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
+opts.analyze_matrix = input_parser.Results.analyze_matrix;
+opts.solve_choice = input_parser.Results.solve_choice;
+opts.preconditioner = input_parser.Results.preconditioner;
+
+if opts.analyze_matrix && ~opts.implicit
+    error('cannot analyze matrix if not build for implicit stepping');
+end
 
 if opts.adapt
     opts.use_oldhash = false;

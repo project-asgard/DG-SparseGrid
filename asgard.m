@@ -10,10 +10,8 @@ addpath(genpath(folder));
 runtime_defaults
 
 %% Reset any persistent variables
-if opts.time_independent_A
-    clear time_advance
-end
-
+clear time_advance
+figure(1000);
 %% Check PDE
 pde = check_pde(pde,opts);
 
