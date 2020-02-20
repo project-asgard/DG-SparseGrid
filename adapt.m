@@ -104,8 +104,8 @@ if coarsen
         % check if the element needs refining, if it is at least level 1,
         % and is labeled as a leaf
         
-        if element_sum <= coarsen_threshold %...
-%                 && min(hash_table.elements.lev_p1(idx,:))>=2 % ...
+        if element_sum <= coarsen_threshold ...
+                 && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
                 %&& hash_table.elements.type(idx) == 2
             
             %%

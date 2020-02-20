@@ -27,10 +27,10 @@ assert(m==n);
 mat = eye(m);
 mat_unrotated = eye(m);
 for i=1:numel(term_1D.pterms)
-   
+    
     mat = mat * term_1D.pterms{i}.mat;
     mat_unrotated = mat_unrotated * term_1D.pterms{i}.mat_unrotated;
-   
+    
 end
 
 term_1D.mat = mat;
@@ -140,8 +140,8 @@ else
     xMin    = dim.domainMin;
     xMax    = dim.domainMax;
     FMWT    = dim.FMWT;
-%     BCL     = dim.BCL;
-%     BCR     = dim.BCR;
+    %     BCL     = dim.BCL;
+    %     BCR     = dim.BCR;
     
     %%
     % term shortcuts
@@ -250,6 +250,16 @@ else
         Mass = Mass + sparse(Iu',Iu,val_mass,dof_1D,dof_1D);
         Grad = Grad + sparse(Iu',Iu,val_grad,dof_1D,dof_1D);
         
+        % this is just here demonstrate a more intuituve way to do this
+        % += operation across an aribtray set on indices
+        Mass0 = full(Mass);
+        linear_idx = sub2ind(size(Mass0),Iu',Iu);
+        Mass0(linear_idx) = val_mass;
+        
+        Grad0 = full(Mass);
+        linear_idx = sub2ind(size(Grad0),Iu',Iu);
+        Grad0(linear_idx) = val_grad;
+        
         assert(~isnan(sum(Mass,'all')))
         assert(~isnan(sum(Grad,'all')))
         
@@ -263,7 +273,7 @@ else
             BCR = pterm.BCR;
             
             FluxVal = pterm.LF;
-                        
+            
             %%
             % - <funcCoef*{q},p>
             %----------------------------------------------
@@ -374,7 +384,7 @@ else
                     end
                 else
                     RowInd = [c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg) c'*ones(1,deg)];
-                    ColInd = [ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*c];                   
+                    ColInd = [ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*c,ones(deg,1)*c];
                 end
                 
                 Iu = RowInd;
@@ -382,6 +392,11 @@ else
                 Val = TraVal;
                 
             end
+            
+            % this is just here demonstrate a more intuituve way to do this
+            % += operation across an aribtray set on indices
+            linear_idx = sub2ind(size(Grad0),Iu,Iv);
+            Grad0(linear_idx) = Grad0(linear_idx) + Val;
             
             Grad = Grad + sparse(Iu,Iv,Val,dof_1D,dof_1D);
             assert(~isnan(sum(Grad,'all')))

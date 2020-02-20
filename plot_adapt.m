@@ -56,8 +56,8 @@ if num_dims == 1
         plot(coord_D(1),-y,style,'MarkerSize',10);
         
         [child_elements_idx, cnt] ...
-            = get_child_elements_idx (hash_table, idx, pde.max_lev, opts.refinement_method);
-        
+            = get_child_elements_idx (num_dims, pde.max_lev, idx, opts.refinement_method);
+
         for child=1:cnt
             
             try
