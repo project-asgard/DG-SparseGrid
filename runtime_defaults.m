@@ -22,7 +22,7 @@ check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
 default_time_independent_A = false;
 default_many_solution_capable = false;
 default_max_lev = 8;
-default_adapt_threshold = 1e-1;
+default_adapt_threshold = 1e-3;
 default_refinement_method = 1;
 default_adapt_initial_condition = false;
 
@@ -145,8 +145,3 @@ if ~isempty(fieldnames(input_parser.Unmatched))
    disp(input_parser.Unmatched)
    error('Unrecognised input.')
 end
-
-
-
-
-
