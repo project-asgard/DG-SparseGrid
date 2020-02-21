@@ -72,13 +72,13 @@ if nDims==2
     end
     
     f1d = f2d(sy,:);
-    f1d_SG_mid = f1d;
+    f1d_FG_mid = f1d;
     x = nodes{1};
-    x_SG_mid = x;
+    x_FG_mid = x;
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    save('f1d_SG_mid', 'x_SG_mid', 'f1d_SG_mid');
+    save('f1d_FG_mid', 'x_FG_mid', 'f1d_FG_mid');
     
     load('f1d_SG', 'x_SG', 'f1d_SG');
     load('f1d_SG_mid', 'x_SG_mid','f1d_SG_mid');
