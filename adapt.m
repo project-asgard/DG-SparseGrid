@@ -11,6 +11,8 @@ deg             = pde.deg;
 element_DOF = deg^num_dims;
 
 relative_threshold = opts.adapt_threshold;
+diff_refine_threshold = 0.5;
+diff_coarsen_threshold = 0.05;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
 coarsen_threshold = refine_threshold * 0.1;
@@ -105,19 +107,26 @@ if coarsen
         
         % get mean parent value
         parent_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
-        for p = 1,numel(parent_idx)
+        for p = 1:numel(parent_idx)
             parent_n = find(hash_table.elements_idx == parent_idx(p));  
             parent_gidx1 = (parent_n-1)*element_DOF+1;
             parent_gidx2 = parent_n*element_DOF;
             parent_element_sum(p) = sqrt(sum(fval(parent_gidx1:parent_gidx2).^2));
         end
         parent_element_sum = mean(parent_element_sum);
-        disp(['parent: ', num2str(parent_element_sum),' me: ', num2str(element_sum)]);
+        relative_diff = abs(element_sum)/abs(parent_element_sum);
         
-        if element_sum <= coarsen_threshold ...
-                 && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
-                %&& hash_table.elements.type(idx) == 2
+        if (element_sum <= coarsen_threshold || relative_diff < diff_coarsen_threshold) ...
+                && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
+            %&& hash_table.elements.type(idx) == 2
             
+            if element_sum > coarsen_threshold
+                disp(['coarsen_threshold: ', num2str(coarsen_threshold)]);
+                disp([ ...
+                    'parent: ', num2str(parent_element_sum),...
+                    ' me: ', num2str(element_sum), ...
+                    ' relative: ', num2str(relative_diff) ]);
+            end
             %%
             % get element children and check if any are live elements
             
@@ -265,7 +274,26 @@ if refine
         %%
         % Check for refinement
         
-        if element_sum >= refine_threshold %&& hash_table.elements.type(idx) == 2
+        % get mean parent value
+        parent_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
+        for p = 1:numel(parent_idx)
+            parent_n = find(hash_table.elements_idx == parent_idx(p));  
+            parent_gidx1 = (parent_n-1)*element_DOF+1;
+            parent_gidx2 = parent_n*element_DOF;
+            parent_element_sum(p) = sqrt(sum(fval(parent_gidx1:parent_gidx2).^2));
+        end
+        parent_element_sum = mean(parent_element_sum);
+        relative_diff = abs(element_sum)/abs(parent_element_sum);
+        
+        if element_sum >= refine_threshold || relative_diff > diff_refine_threshold %&& hash_table.elements.type(idx) == 2
+            
+            if element_sum < refine_threshold
+                disp(['refine_threshold: ', num2str(refine_threshold)]);
+                disp([ ...
+                    'parent: ', num2str(parent_element_sum),...
+                    ' me: ', num2str(element_sum), ...
+                    ' relative: ', num2str(relative_diff) ]);
+            end
             
             if debug; disp([...
                     '    refine ? yes, fval = ', num2str(element_sum,'%1.1e'), ...

@@ -136,7 +136,7 @@ if opts.adapt
         [~,fval_check] ...
             = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1);
         if (length(fval_check)>pre_refinement_num_DOF)
-%             error('Initial grid was insifficient for requested accuracy');
+             error('Initial grid was insifficient for requested accuracy');
         end
         clear fval_check;
     end
