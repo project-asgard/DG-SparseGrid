@@ -101,8 +101,18 @@ if coarsen
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
         
         %%
-        % check if the element needs refining, if it is at least level 1,
-        % and is labeled as a leaf
+        % check if the element needs refining, if it is at least level
+        
+        % get mean parent value
+        parent_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
+        for p = 1,numel(parent_idx)
+            parent_n = find(hash_table.elements_idx == parent_idx(p));  
+            parent_gidx1 = (parent_n-1)*element_DOF+1;
+            parent_gidx2 = parent_n*element_DOF;
+            parent_element_sum(p) = sqrt(sum(fval(parent_gidx1:parent_gidx2).^2));
+        end
+        parent_element_sum = mean(parent_element_sum);
+        disp(['parent: ', num2str(parent_element_sum),' me: ', num2str(element_sum)]);
         
         if element_sum <= coarsen_threshold ...
                  && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
@@ -162,7 +172,7 @@ if coarsen
         
         %%
         % Remove entries from element table (recall sparse storage means =0
-        % removes it from the table
+        % removes it from the table)
         
         hash_table.elements.lev_p1(hash_table.elements_idx(elements_to_remove(n)),:) = 0;
         hash_table.elements.pos_p1(hash_table.elements_idx(elements_to_remove(n)),:) = 0;

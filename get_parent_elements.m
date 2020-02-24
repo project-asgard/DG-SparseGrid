@@ -1,4 +1,4 @@
-function [parent_elements_lev_vec, parent_elements_pos_vec, cnt] = ...
+function [parent_elements_lev_vec, parent_elements_pos_vec, num_parents] = ...
     get_parent_elements (lev_vec, pos_vec, max_lev, refinement_method)
 
 num_dims = numel(lev_vec);
@@ -16,10 +16,12 @@ if refinement_method == 1
         %
         %         parent_elements_idx(d) = above_idx;
         
-        parent_elements_lev_vec(d,:) = parent_lev_vec;
-        parent_elements_pos_vec(d,:) = parent_pos_vec;
-        
-        
+        if min(parent_lev_vec) >=0 % do not add parents above lev=0
+            
+            parent_elements_lev_vec(d,:) = parent_lev_vec;
+            parent_elements_pos_vec(d,:) = parent_pos_vec;
+            
+        end
     end
     
 else
@@ -28,6 +30,7 @@ else
     
 end
 
-cnt = numel(parent_elements_lev_vec);
+[num_parents,num_dims2] = size(parent_elements_lev_vec);
+assert(num_dims == num_dims2);
 
 end
