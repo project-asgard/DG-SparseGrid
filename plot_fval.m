@@ -1,9 +1,9 @@
-function plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates)
+function plot_fval(pde,nodes,fval_realspace,Meval,coordinates,fval_realspace_analytic)
 
 nDims = numel(pde.dimensions);
 
 overPlotAnalytic = 0;
-if nargin == 4
+if nargin == 6
     overPlotAnalytic = 1;
 end
 
@@ -12,17 +12,27 @@ if nDims==1
     %%
     % Plot solution
     
+    
     f1d = fval_realspace;
     x = nodes{1};
+    figure(1)
     plot(x,f1d,'-o');
     
     %%
     % Overplot analytic solution
+
+    hold on;
+    if overPlotAnalytic
+        plot(x,fval_realspace_analytic,'-');
+    end
+    hold off;
     
-    if pde.checkAnalytic
+    plot_on_log_scale = true;
+    if plot_on_log_scale
+        figure(2)
+        semilogy(x,f1d,'-o');
+        ylim([1e-7,1]);
         hold on;
-        coord = {x};
-        %         f1d_analytic = getAnalyticSolution_D(coord,time,pde);
         if overPlotAnalytic
             plot(x,fval_realspace_analytic,'-');
         end
@@ -32,9 +42,7 @@ if nDims==1
 end
 
 if nDims==2
-    
-%     figure(1000)
-    
+      
     dimensions = pde.dimensions;
     
     deg1=pde.deg;
@@ -42,8 +50,6 @@ if nDims==2
     deg2=pde.deg;
     lev2=dimensions{2}.lev;
     
-%     dof1=deg1*2^lev1;
-%     dof2=deg2*2^lev2;
     dof1=numel(Meval{1}(:,1));
     dof2=numel(Meval{2}(:,1));
     
@@ -74,9 +80,13 @@ if nDims==2
     f1d = f2d(sy,:);
     x = nodes{1};
     y = nodes{2};
-    ax1 = subplot(2,2,1);
+    ax1 = subplot(3,2,1);
     plot(x,f1d,'-o');
     title('1D slice (vertical)');
+    
+    ax1 = subplot(3,2,3);
+    semilogy(x,f1d,'-o');
+    ylim([1e-8,10]);
     
     %%
     % Overplot analytic solution
@@ -96,7 +106,7 @@ if nDims==2
     f1d = f2d(:,sx);
     x = nodes{1};
     y = nodes{2};
-    ax1 = subplot(2,2,2);
+    ax1 = subplot(3,2,2);
     plot(y,f1d,'-o');
     title('1D slice (horizontal)');
     
@@ -110,20 +120,20 @@ if nDims==2
     %%
     % Plot 2D
     
-    ax1 = subplot(2,2,3);
+    ax1 = subplot(3,2,5);
     f2d_with_noise = f2d;
     f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
     contourf(x,y,f2d_with_noise,'LineColor','none');
     title('numeric 2D solution');
     
-    if nargin >= 6
+    if nargin >= 5
         hold on
         scatter(coordinates(:,1),coordinates(:,2),60,'+','MarkerEdgeColor','white')
         hold off
     end
     
     if pde.checkAnalytic && norm(f2d_analytic-f2d_analytic(1,1))>0
-        ax2 = subplot(2,2,4);
+        ax2 = subplot(3,2,6);
         contourf(x,y,f2d_analytic);
         title('analytic 2D solution');
     end
@@ -131,9 +141,7 @@ if nDims==2
 end
 
 if nDims==3
-    
-    figure(1000);
-    
+        
     dimensions = pde.dimensions;
     
     deg1=pde.deg;

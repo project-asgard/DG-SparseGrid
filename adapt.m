@@ -11,7 +11,9 @@ deg             = pde.deg;
 element_DOF = deg^num_dims;
 
 relative_threshold = opts.adapt_threshold;
-diff_refine_threshold = 0.5;
+
+use_smoothness_criteria = false;
+diff_refine_threshold = 1.0;
 diff_coarsen_threshold = 0.05;
 
 refine_threshold  = max(abs(fval)) * relative_threshold;
@@ -103,7 +105,7 @@ if coarsen
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
         
         %%
-        % check if the element needs refining, if it is at least level
+        % check if the element needs coarsening
         
         % get mean parent value
         parent_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
@@ -116,9 +118,14 @@ if coarsen
         parent_element_sum = mean(parent_element_sum);
         relative_diff = abs(element_sum)/abs(parent_element_sum);
         
-        if (element_sum <= coarsen_threshold || relative_diff < diff_coarsen_threshold) ...
-                && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
-            %&& hash_table.elements.type(idx) == 2
+        if use_smoothness_criteria
+            do_coarsen = relative_diff < diff_coarsen_threshold ...
+                && min(hash_table.elements.lev_p1(idx,:))>=2;
+        else
+            do_coarsen = element_sum <= coarsen_threshold ...
+                && min(hash_table.elements.lev_p1(idx,:))>=2;
+        end
+        if do_coarsen
             
             if element_sum > coarsen_threshold
                 disp(['coarsen_threshold: ', num2str(coarsen_threshold)]);
@@ -285,7 +292,14 @@ if refine
         parent_element_sum = mean(parent_element_sum);
         relative_diff = abs(element_sum)/abs(parent_element_sum);
         
-        if element_sum >= refine_threshold || relative_diff > diff_refine_threshold %&& hash_table.elements.type(idx) == 2
+        if use_smoothness_criteria
+            do_refine = element_sum >= refine_threshold ...
+                || relative_diff > diff_refine_threshold;
+        else
+            do_refine = element_sum >= refine_threshold;
+        end
+        
+        if do_refine
             
             if element_sum < refine_threshold
                 disp(['refine_threshold: ', num2str(refine_threshold)]);

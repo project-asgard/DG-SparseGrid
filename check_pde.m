@@ -44,6 +44,15 @@ for k=1:numel(fn)
     end
 end
 
+if opts.many_solution_capable
+    if isempty(default_pde.solutions)
+        default_pde.checkAnalytic = false;
+    end
+else
+    if isempty(default_pde.analytic_solutions_1D)
+        default_pde.checkAnalytic = false;
+    end
+end
 %%
 % Check the dimensions
 

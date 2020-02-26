@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_complete
+function pde = fokkerplanck1_p_complete
 % Combining momentum and pitch angle dynamics
 %
 % Full PDE from the 2D runaway electron paper 
@@ -30,13 +30,14 @@ function pde = fokkerplanck2_complete
 % Run with
 %
 % explicit
-% asgard(fokkerplanck2_complete)
+% asgard(fokkerplanck1_p_complete)
 %
 % implicit
-% asgard(fokkerplanck2_complete,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4)
+% asgard(fokkerplanck1_p_complete,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4)
 %
 % with adaptivity
-% asgard(fokkerplanck2_complete,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
+% asgard(fokkerplanck1_p_complete,'implicit',true,'num_steps',50,'CFL',0.05,'deg',3,'lev',5,'adapt',true,'adapt_initial_condition',true,'adapt_threshold',1e-7,'max_lev',10)
+
 
 pde.CFL = 0.01;
 
@@ -58,7 +59,7 @@ switch test
     case '6p1b'
         delta = 0.042;
         Z = 1;
-        E = 0.25;
+        E = 0.5;
         tau = 10^5;
     case '6p1c' 
         delta = 0.042;
@@ -144,7 +145,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 %% Setup the dimensions 
 
 dim_p.domainMin = 0.1;
-dim_p.domainMax = +10;
+dim_p.domainMax = +7;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
@@ -156,7 +157,7 @@ dim_z.init_cond_fn = @(x,p,t) f0_z(x);
 % Note that the order of the dimensions must be consistent with this across
 % the remainder of this PDE.
 
-pde.dimensions = {dim_p,dim_z};
+pde.dimensions = {dim_p};
 num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
@@ -177,10 +178,10 @@ g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3  = GRAD(num_dims,g3,-1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'D','D');
+pterm3  = GRAD(num_dims,g3,-1,'N','N');
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
-termC1  = TERM_ND(num_dims,{term1_p,[]});
+termC1  = TERM_ND(num_dims,{term1_p});
 
 %%
 % termC2 == 1/p^2*d/dp*p^2*Cf*f
@@ -194,9 +195,9 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'N','N');
 term2_p = TERM_1D({pterm1,pterm2});
-termC2   = TERM_ND(num_dims,{term2_p,[]});
+termC2   = TERM_ND(num_dims,{term2_p});
 
 %%
 % termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
@@ -208,17 +209,17 @@ termC2   = TERM_ND(num_dims,{term2_p,[]});
 %   r(z) == d/dz g2(z) s(z)  [grad, g2(z) = 1-z^2,     BCL=D,BCR=D]
 %   s(z) == d/dz g3(z) f(z)  [grad, g3(z) = 1,         BCL=N,BCR=N]
 
-g1 = @(x,p,t,dat) Cb(x)./x.^4;
-pterm1  = MASS(g1);
-term3_p = TERM_1D({pterm1});
-
-g2 = @(x,p,t,dat) (1-x.^2);
-g3 = @(x,p,t,dat) x.*0+1;
-pterm1  = GRAD(num_dims,g2,+1,'D','D');
-pterm2  = GRAD(num_dims,g3,-1,'N','N');
-term3_z = TERM_1D({pterm1,pterm2});
-
-termC3 = TERM_ND(num_dims,{term3_p,term3_z});
+% g1 = @(x,p,t,dat) Cb(x)./x.^4;
+% pterm1  = MASS(g1);
+% term3_p = TERM_1D({pterm1});
+% 
+% g2 = @(x,p,t,dat) (1-x.^2);
+% g3 = @(x,p,t,dat) x.*0+1;
+% pterm1  = GRAD(num_dims,g2,+1,'D','D');
+% pterm2  = GRAD(num_dims,g3,-1,'N','N');
+% term3_z = TERM_1D({pterm1,pterm2});
+% 
+% termC3 = TERM_ND(num_dims,{term3_p,term3_z});
 
 %% -div(flux_E) == termE1 + termE2
 
@@ -228,34 +229,34 @@ termC3 = TERM_ND(num_dims,{term3_p,term3_z});
 %   q(p) == g2(p) u(p)       [mass, g2(p) = 1/p^2, BC N/A]
 %   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
 
-g1 = @(x,p,t,dat) -E.*x;
-g2 = @(x,p,t,dat) 1./x.^2;
+% termE1 == -E/p^2 (d/dp p^2 f(p))
+%        == g2(p) u(p)       [mass, g2(p) = -E/p^2, BC N/A]
+%   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
+
+g2 = @(x,p,t,dat) -E./x.^2;
 g3 = @(x,p,t,dat) x.^2;
 
-pterm1   = MASS(g1);
-termE1_z = TERM_1D({pterm1});
-
 pterm1 = MASS(g2); 
-pterm2 = GRAD(num_dims,g3,1,'N','D');% Lin's Setting
+pterm2 = GRAD(num_dims,g3,1,'N','N');% Lin's Setting
 termE1_p = TERM_1D({pterm1,pterm2});
 
-termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
+termE1 = TERM_ND(num_dims,{termE1_p});
 
 % termE2 == -E*p*f(p) * d/dz (1-z^2) f(z)
 %        == q(p) * r(z)
 %   q(p) == g1(p) f(p)       [mass, g1(p) = -E*p,  BC N/A]
 %   r(z) == d/dz g2(z) f(z)  [grad, g2(z) = 1-z^2, BCL=N,BCR=N]
 
-g1 = @(x,p,t,dat) -E.*x;
-g2 = @(x,p,t,dat) 1-x.^2;
-
-pterm1   = MASS(g1);
-termE2_p = TERM_1D({pterm1});
-
-pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
-termE2_z = TERM_1D({pterm1});
-
-termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
+% g1 = @(x,p,t,dat) -E.*x;
+% g2 = @(x,p,t,dat) 1-x.^2;
+% 
+% pterm1   = MASS(g1);
+% termE2_p = TERM_1D({pterm1});
+% 
+% pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+% termE2_z = TERM_1D({pterm1});
+% 
+% termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
 
 %% -div(flux_R) == termR1 + termR2
 
@@ -265,42 +266,41 @@ termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
 %   u(p) == d/dp g2(p) f(p)  [grad, g2(p) = p^3 * gamma(p) / tau, BCL=N,BCR=D]
 %   r(z) == g3(z) f(z)       [mass, g3(z) = 1-z^2,                BC N/A]
 
+% termR1 == 1/p^2 d/dp p^2 gamma(p) p / tau f(p)
+%        == g1(p) u(p)       [mass, g1(p) = 1/p^2,                BC N/A]
+%   u(p) == d/dp g2(p) f(p)  [grad, g2(p) = p^3 * gamma(p) / tau, BCL=N,BCR=D]
+
 g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^3 .* gamma(x) ./ tau;
-g3 = @(x,p,t,dat) 1-x.^2;
 
 pterm1   = MASS(g1);% This is not needed - by Lin
-pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
+pterm2   = GRAD(num_dims,g2,1,'N','N');% Lin's Setting
 
 termR1_p = TERM_1D({pterm1,pterm2});
 
-pterm1   = MASS(g3);
-termR1_z = TERM_1D({pterm1});
-
-termR1   = TERM_ND(num_dims,{termR1_p,termR1_z});
+termR1   = TERM_ND(num_dims,{termR1_p});
 
 % termR2 == -1/(tau*gam(p)) f(p) * d/dz z(1-z^2) f(z)
 %        == q(p) * r(z)
 %   q(p) == g1(p) f(p)       [mass, g1(p) = -1/(tau*gamma(p)),    BC N/A]
 %   r(z) == d/dz g2(z) f(z)  [grad, g2(z) = z(1-z^2),             BCL=N,BCR=N]
-
-g1 = @(x,p,t,dat) -1./(tau.*gamma(x));
-g2 = @(x,p,t,dat) x.*(1-x.^2);
-
-pterm1   = MASS(g1);
-termR2_p = TERM_1D({pterm1});
-
-pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
-termR2_z = TERM_1D({pterm1});
-
-
-termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
+% 
+% g1 = @(x,p,t,dat) -1./(tau.*gamma(x));
+% g2 = @(x,p,t,dat) x.*(1-x.^2);
+% 
+% pterm1   = MASS(g1);
+% termR2_p = TERM_1D({pterm1});
+% 
+% pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+% termR2_z = TERM_1D({pterm1});
+% 
+% termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
 
 
 %%
 % Add terms to the pde object
 
-pde.terms = {termC1,termC2,termC3,termE1,termE2,termR1,termR2};
+pde.terms = {termC1,termC2,termE1,termR1};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -320,11 +320,7 @@ pde.sources = {};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
-    @(x,p,t) soln_p(x,t), ...
-    @(x,p,t) soln_z(x,t), ...
-    @(t,p) 1
-    };
+pde.analytic_solutions_1D = {};
 
 %%
 % Function to set time step

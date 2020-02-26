@@ -83,16 +83,23 @@ if num_dimensions <=3
     %%
     % Get the real space solution
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
-    
-    if norm(fval_realspace) > 0 && ~opts.quiet
-        plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval);
+    if pde.checkAnalytic
+        fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     end
-    
+       
     if opts.use_oldhash
     else
         coordinates = get_sparse_grid_coordinates(pde, opts, hash_table);
     end
+    
+    if norm(fval_realspace) > 0 && ~opts.quiet
+        if pde.checkAnalytic
+            plot_fval(pde,nodes,fval_realspace,Meval,coordinates,fval_realspace_analytic);
+        else
+            plot_fval(pde,nodes,fval_realspace,Meval,coordinates);         
+        end
+    end
+    
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
 end
@@ -144,20 +151,21 @@ else
    if ~opts.quiet; disp(['Number of DOF : ', num2str(numel(fval))]); end
 end
 
-fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
 fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
-
-err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
-err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-if ~opts.quiet
-    disp(['    num_dof : ', num2str(numel(fval))]);
-    disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
-    disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
-    disp(['    wavelet space absolute err (2-norm) : ', num2str(norm(fval-fval_analytic))]);
-    disp(['    real space absolute err : ', num2str(err_realspace)]);
-    disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-    disp(['    real space absolute err (2-norm) : ', num2str(norm(fval_realspace(:)-fval_realspace_analytic(:)))]);
+if pde.checkAnalytic
+    fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
+    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+    err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
+    err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
+    if ~opts.quiet
+        disp(['    num_dof : ', num2str(numel(fval))]);
+        disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
+        disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+        disp(['    wavelet space absolute err (2-norm) : ', num2str(norm(fval-fval_analytic))]);
+        disp(['    real space absolute err : ', num2str(err_realspace)]);
+        disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+        disp(['    real space absolute err (2-norm) : ', num2str(norm(fval_realspace(:)-fval_realspace_analytic(:)))]);
+    end
 end
 
 %% Time Loop
@@ -359,11 +367,13 @@ for L = 1:num_steps
     % Plot results
     
     if mod(L,plotFreq)==0 && ~opts.quiet
-        
-        figure(1000)
-        
+                
         if num_dimensions <= 3
-            plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates);
+            if pde.checkAnalytic
+                plot_fval(pde,nodes,fval_realspace,Meval,coordinates,fval_realspace_analytic);
+            else
+                plot_fval(pde,nodes,fval_realspace,Meval,coordinates);
+            end
         end
         
     end
