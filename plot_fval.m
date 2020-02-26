@@ -72,23 +72,24 @@ if nDims==2
     end
     
     f1d = f2d(sy,:);
-    f1d_FG_mid = f1d;
+    f1d_SG_mid_neu = f1d;
     x = nodes{1};
-    x_FG_mid = x;
+    x_SG_mid_neu = x;
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    save('f1d_FG_mid', 'x_FG_mid', 'f1d_FG_mid');
+  %  save('f1d_FG_mid_neu', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
     
-    load('f1d_SG', 'x_SG', 'f1d_SG');
-    load('f1d_SG_mid', 'x_SG_mid','f1d_SG_mid');
-    load('f1d_FG', 'x_FG', 'f1d_FG');
-    load('f1d_FG_mid', 'x_FG_mid', 'f1d_FG_mid');
-    semilogy(x_FG, f1d_FG, '-b', 'LineWidth', 2);
+   % load('f1d_SG', 'x_SG', 'f1d_SG');
+   % load('f1d_SG_mid', 'x_SG_mid','f1d_SG_mid');
+   % load('f1d_FG', 'x_FG', 'f1d_FG');
+    load('f1d_FG_mid_neu', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
+   semilogy(x_SG_mid_neu, f1d_SG_mid_neu, 'm--', 'LineWidth', 2);
+    ylim([10^-10, 10^0]);
     hold on;
-    semilogy(x_SG, f1d_SG, 'b--', 'LineWidth', 2);
-    semilogy(x_FG_mid, f1d_FG_mid, '-m', 'LineWidth', 2);
-    semilogy(x_SG_mid, f1d_SG_mid, 'm--', 'LineWidth', 2);
+   % semilogy(x_SG, f1d_SG, 'b--', 'LineWidth', 2);
+    semilogy(x_FG_mid_neu, f1d_FG_mid_neu, '-m', 'LineWidth', 2);
+   % semilogy(x_SG_mid, f1d_SG_mid, 'm--', 'LineWidth', 2);
     hold off;
     title('1D slice (vertical)');
     

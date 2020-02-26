@@ -58,7 +58,7 @@ switch test
     case '6p1b'
         delta = 0.042;
         Z = 1;
-        E = 0.1;
+        E = 0.25;
         tau = 10^5;
     case '6p1c' 
         delta = 0.042;
@@ -143,7 +143,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0.01;
+dim_p.domainMin = 0.1;
 dim_p.domainMax = +5;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
@@ -177,8 +177,8 @@ g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3  = GRAD(num_dims,g3,-1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'D','D');
+pterm3  = GRAD(num_dims,g3,-1,'N','N');
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -194,7 +194,7 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'N','N');
 term2_p = TERM_1D({pterm1,pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
@@ -236,7 +236,7 @@ pterm1   = MASS(g1);
 termE1_z = TERM_1D({pterm1});
 
 pterm1 = MASS(g2); 
-pterm2 = GRAD(num_dims,g3,1,'N','D');% Lin's Setting
+pterm2 = GRAD(num_dims,g3,1,'N','N');% Lin's Setting
 termE1_p = TERM_1D({pterm1,pterm2});
 
 termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
@@ -270,7 +270,7 @@ g2 = @(x,p,t,dat) x.^3 .* gamma(x) ./ tau;
 g3 = @(x,p,t,dat) 1-x.^2;
 
 pterm1   = MASS(g1);% This is not needed - by Lin
-pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
+pterm2   = GRAD(num_dims,g2,1,'N','N');% Lin's Setting
 
 termR1_p = TERM_1D({pterm1,pterm2});
 
