@@ -66,7 +66,7 @@ if nDims==2
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(7*ny/8));
+    sy = max(1,floor(ny/2));
     if ny > 2
         sy = sy+2; % just to get off the exact middle
     end
@@ -78,18 +78,17 @@ if nDims==2
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-  %  save('f1d_FG_mid_neu', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
+   % save('f1d_FG_mid_neu_minusE2', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
     
    % load('f1d_SG', 'x_SG', 'f1d_SG');
    % load('f1d_SG_mid', 'x_SG_mid','f1d_SG_mid');
    % load('f1d_FG', 'x_FG', 'f1d_FG');
-    load('f1d_FG_mid_neu', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
-   semilogy(x_SG_mid_neu, f1d_SG_mid_neu, 'm--', 'LineWidth', 2);
+    load('f1d_FG_mid_neu_minusE2', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
+    semilogy(x_FG_mid_neu, f1d_FG_mid_neu, '-m', 'LineWidth', 2);
     ylim([10^-10, 10^0]);
     hold on;
    % semilogy(x_SG, f1d_SG, 'b--', 'LineWidth', 2);
-    semilogy(x_FG_mid_neu, f1d_FG_mid_neu, '-m', 'LineWidth', 2);
-   % semilogy(x_SG_mid, f1d_SG_mid, 'm--', 'LineWidth', 2);
+    semilogy(x_SG_mid_neu, f1d_SG_mid_neu, 'm--', 'LineWidth', 2);
     hold off;
     title('1D slice (vertical)');
     
