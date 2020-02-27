@@ -66,7 +66,7 @@ if nDims==2
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(ny/2));
+    sy = max(1,floor(7*ny/8));
     if ny > 2
         sy = sy+2; % just to get off the exact middle
     end

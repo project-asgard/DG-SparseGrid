@@ -300,7 +300,7 @@ termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
 %%
 % Add terms to the pde object
 
-pde.terms = {termC1,termC2,termC3,termE1,termE2,termR1,termR2};
+pde.terms = {termC1,termC2,termC3,termE1, termR1, termR2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
