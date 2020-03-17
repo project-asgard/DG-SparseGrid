@@ -144,7 +144,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 %% Setup the dimensions 
 
 dim_p.domainMin = 0.1;
-dim_p.domainMax = +7;
+dim_p.domainMax = +5;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
@@ -300,7 +300,7 @@ termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
 %%
 % Add terms to the pde object
 
-pde.terms = {termE2};
+pde.terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
