@@ -82,7 +82,7 @@ if nDims==2
     load('f1d_SG_upper_1,5s_unadapted', 'x_SG_unadapt', 'f1d_SG_unadapt');
     load('f1d_SG_upper_1,5s_ref2', 'x_SG_ref2', 'f1d_SG_ref2');
     load('f1d_FG_upper_1,5_coarse', 'x_FG_coarse', 'f1d_FG_coarse');
-    %load('f1d_SG_upper_1,8s_ref1', 'x_SG_ref1', 'f1d_SG_ref1');
+    load('f1d_SG_upper_1,8s_ref1', 'x_SG_ref1', 'f1d_SG_ref1');
     load('f1d_SG_upper_1,8s_ref', 'x_SG_ref', 'f1d_SG_ref');
     load('f1d_FG_upper_1,8s', 'x_FG', 'f1d_FG');
     load('f1d_SG_upper_1,8s', 'x_SG', 'f1d_SG');
@@ -98,7 +98,7 @@ if nDims==2
     semilogy(x_FG_ref, f1d_FG_ref, '-k', 'LineWidth', 2);
     semilogy(x_FG_coarse, f1d_FG_coarse, '-g', 'LineWidth', 2);
     semilogy(x_SG_ref, f1d_SG_ref, 'b--', 'LineWidth', 2);
-    %semilogy(x_SG_ref1, f1d_SG_ref1, 'r--', 'LineWidth', 2);
+    semilogy(x_SG_ref1, f1d_SG_ref1, 'r--', 'LineWidth', 2);
     semilogy(x_SG_ref2, f1d_SG_ref2, 'k--', 'LineWidth', 2);
     semilogy(x_SG_unadapt, f1d_SG_unadapt, 'c--', 'LineWidth',2);
     hold off;
