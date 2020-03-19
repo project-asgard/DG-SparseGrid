@@ -66,4 +66,13 @@ close all; clear all
 make_all_gold
 ```
 
+## Running with -nodesktop
+This will enable running with no GUI for say running within a `screen` session.
+```
+matlab -nodesktop -nosplash -noFigureWindows
+cd DG-SparseGrid
+addpath(genpath('./'))
+asgard(continuity1,'lev',4,'deg',3,'implicit',false)
+```
+
 
