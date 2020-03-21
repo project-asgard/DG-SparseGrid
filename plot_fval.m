@@ -72,35 +72,38 @@ if nDims==2
    % end
     
     f1d = f2d(sy,:);
-    f1d_FG_ref = f1d;
+    f1d_FG_deg4 = f1d;
     x = nodes{1};
-    x_FG_ref = x;
+    x_FG_deg4 = x;
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    save('f1d_FG_upper_1,5_ref', 'x_FG_ref', 'f1d_FG_ref');
-    load('f1d_SG_upper_1,5s_unadapted', 'x_SG_unadapt', 'f1d_SG_unadapt');
-    load('f1d_SG_upper_1,5s_ref2', 'x_SG_ref2', 'f1d_SG_ref2');
+    save('f1d_FG_upper_1,5_deg4', 'x_FG_deg4', 'f1d_FG_deg4');
+    load('f1d_FG_upper_1,5_ref', 'x_FG_ref', 'f1d_FG_ref');
+    %load('f1d_SG_upper_1,5s_unadapted', 'x_SG_unadapt', 'f1d_SG_unadapt');
+    %load('f1d_SG_upper_1,5s_ref2', 'x_SG_ref2', 'f1d_SG_ref2');
     load('f1d_FG_upper_1,5_coarse', 'x_FG_coarse', 'f1d_FG_coarse');
-    load('f1d_SG_upper_1,8s_ref1', 'x_SG_ref1', 'f1d_SG_ref1');
-    load('f1d_SG_upper_1,8s_ref', 'x_SG_ref', 'f1d_SG_ref');
+   % load('f1d_SG_upper_1,8s_ref1', 'x_SG_ref1', 'f1d_SG_ref1');
+    %load('f1d_SG_upper_1,8s_ref', 'x_SG_ref', 'f1d_SG_ref');
     load('f1d_FG_upper_1,8s', 'x_FG', 'f1d_FG');
-    load('f1d_SG_upper_1,8s', 'x_SG', 'f1d_SG');
+    %load('f1d_SG_upper_1,8s', 'x_SG', 'f1d_SG');
     
    % load('f1d_SG', 'x_SG', 'f1d_SG');
    % load('f1d_SG_mid', 'x_SG_mid','f1d_SG_mid');
    % load('f1d_FG', 'x_FG', 'f1d_FG');
    % load('f1d_FG_mid_neu_minusE2', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
-    semilogy(x_SG, f1d_SG, '--m', 'LineWidth', 2);
+   % semilogy(x_SG, f1d_SG, '--m', 'LineWidth', 2);
     ylim([10^-4, 10^0]);
-    hold on;
     semilogy(x_FG, f1d_FG, '-m', 'LineWidth', 2);
+    hold on;
     semilogy(x_FG_ref, f1d_FG_ref, '-k', 'LineWidth', 2);
+    semilogy(x_FG_deg4, f1d_FG_deg4, '-r', 'LineWidth', 2);
     semilogy(x_FG_coarse, f1d_FG_coarse, '-g', 'LineWidth', 2);
-    semilogy(x_SG_ref, f1d_SG_ref, 'b--', 'LineWidth', 2);
-    semilogy(x_SG_ref1, f1d_SG_ref1, 'r--', 'LineWidth', 2);
-    semilogy(x_SG_ref2, f1d_SG_ref2, 'k--', 'LineWidth', 2);
-    semilogy(x_SG_unadapt, f1d_SG_unadapt, 'c--', 'LineWidth',2);
+    semilogy(x_FG_deg5, f1d_FG_deg5, '-b', 'LineWidth', 2);
+   % semilogy(x_SG_ref, f1d_SG_ref, 'b--', 'LineWidth', 2);
+   % semilogy(x_SG_ref1, f1d_SG_ref1, 'r--', 'LineWidth', 2);
+   % semilogy(x_SG_ref2, f1d_SG_ref2, 'k--', 'LineWidth', 2);
+   % semilogy(x_SG_unadapt, f1d_SG_unadapt, 'c--', 'LineWidth',2);
     hold off;
     title('1D slice (vertical)');
     
