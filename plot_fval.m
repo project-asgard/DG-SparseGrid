@@ -72,13 +72,16 @@ if nDims==2
    % end
     
     f1d = f2d(sy,:);
-    f1d_FG_deg4 = f1d;
+    f1d_FG_deg7 = f1d;
     x = nodes{1};
-    x_FG_deg4 = x;
+    x_FG_deg7 = x;
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    save('f1d_FG_upper_1,5_deg4', 'x_FG_deg4', 'f1d_FG_deg4');
+    save('f1d_FG_upper_1,5_deg7', 'x_FG_deg7', 'f1d_FG_deg7');
+    load('f1d_FG_upper_1,5_deg6', 'x_FG_deg6', 'f1d_FG_deg6');
+    load('f1d_FG_upper_1,5_deg5', 'x_FG_deg5', 'f1d_FG_deg5');
+    load('f1d_FG_upper_1,5_deg4', 'x_FG_deg4', 'f1d_FG_deg4');
     load('f1d_FG_upper_1,5_ref', 'x_FG_ref', 'f1d_FG_ref');
     %load('f1d_SG_upper_1,5s_unadapted', 'x_SG_unadapt', 'f1d_SG_unadapt');
     %load('f1d_SG_upper_1,5s_ref2', 'x_SG_ref2', 'f1d_SG_ref2');
@@ -100,6 +103,8 @@ if nDims==2
     semilogy(x_FG_deg4, f1d_FG_deg4, '-r', 'LineWidth', 2);
     semilogy(x_FG_coarse, f1d_FG_coarse, '-g', 'LineWidth', 2);
     semilogy(x_FG_deg5, f1d_FG_deg5, '-b', 'LineWidth', 2);
+    semilogy(x_FG_deg6, f1d_FG_deg6, '-or');
+    semilogy(x_FG_deg7, f1d_FG_deg7, '-og');
    % semilogy(x_SG_ref, f1d_SG_ref, 'b--', 'LineWidth', 2);
    % semilogy(x_SG_ref1, f1d_SG_ref1, 'r--', 'LineWidth', 2);
    % semilogy(x_SG_ref2, f1d_SG_ref2, 'k--', 'LineWidth', 2);
