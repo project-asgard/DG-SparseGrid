@@ -153,8 +153,8 @@ if isempty(AA_inv) || ~opts.time_independent_A
     
 %    AA_inv = inv(AA);
     
-%     f1 = AA\b; % Solve at each timestep
-    f1 = gmres(AA, b, 1000);
+    f1 = AA\b; % Solve at each timestep
+%    f1 = gmres(AA, b, 1000);
 else
     applyLHS = ~isempty(pde.termsLHS);
     
@@ -167,8 +167,8 @@ else
         AA = 2*I - dt*A;
         b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
     end
-    %f1 = AA_inv*b;
-    f1 = gmres(AA, b, 1000);
+    f1 = AA_inv*b;
+   % f1 = gmres(AA, b, 1000);
 end
 
 end
