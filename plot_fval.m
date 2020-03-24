@@ -72,23 +72,23 @@ if nDims==2
    % end
     
     f1d = f2d(sy,:);
-    f1d_FG_deg7 = f1d;
+    f1d_FG_deg6 = f1d;
     x = nodes{1};
-    x_FG_deg7 = x;
+    x_FG_deg6 = x;
     y = nodes{2};
     ax1 = subplot(2,2,1);
     %plot(x,f1d,'-o');
-    save('f1d_FG_upper_1,5_deg7', 'x_FG_deg7', 'f1d_FG_deg7');
-    load('f1d_FG_upper_1,5_deg6', 'x_FG_deg6', 'f1d_FG_deg6');
-    load('f1d_FG_upper_1,5_deg5', 'x_FG_deg5', 'f1d_FG_deg5');
     load('f1d_FG_upper_1,5_deg4', 'x_FG_deg4', 'f1d_FG_deg4');
-    load('f1d_FG_upper_1,5_ref', 'x_FG_ref', 'f1d_FG_ref');
+    load('f1d_FG_upper_1,5_deg7', 'x_FG_deg7', 'f1d_FG_deg7');
+    save('f1d_FG_upper_1,5_deg6', 'x_FG_deg6', 'f1d_FG_deg6');
+    load('f1d_FG_upper_1,5_deg5', 'x_FG_deg5', 'f1d_FG_deg5');
+    %load('f1d_FG_upper_1,5_ref', 'x_FG_ref', 'f1d_FG_ref');
     %load('f1d_SG_upper_1,5s_unadapted', 'x_SG_unadapt', 'f1d_SG_unadapt');
     %load('f1d_SG_upper_1,5s_ref2', 'x_SG_ref2', 'f1d_SG_ref2');
-    load('f1d_FG_upper_1,5_coarse', 'x_FG_coarse', 'f1d_FG_coarse');
+    %load('f1d_FG_upper_1,5_coarse', 'x_FG_coarse', 'f1d_FG_coarse');
    % load('f1d_SG_upper_1,8s_ref1', 'x_SG_ref1', 'f1d_SG_ref1');
     %load('f1d_SG_upper_1,8s_ref', 'x_SG_ref', 'f1d_SG_ref');
-    load('f1d_FG_upper_1,8s', 'x_FG', 'f1d_FG');
+    %load('f1d_FG_upper_1,8s', 'x_FG', 'f1d_FG');
     %load('f1d_SG_upper_1,8s', 'x_SG', 'f1d_SG');
     
    % load('f1d_SG', 'x_SG', 'f1d_SG');
@@ -102,8 +102,8 @@ if nDims==2
     semilogy(x_FG_deg4, f1d_FG_deg4, '-r', 'LineWidth', 2);
     hold on;
  %   semilogy(x_FG_coarse, f1d_FG_coarse, '-g', 'LineWidth', 2);
-    semilogy(x_FG_deg5, f1d_FG_deg5, '-b', 'LineWidth', 2);
-    semilogy(x_FG_deg6, f1d_FG_deg6, '-or');
+    semilogy(x_FG_deg5, f1d_FG_deg5, '-m', 'LineWidth', 2);
+    semilogy(x_FG_deg6, f1d_FG_deg6, '-k', 'LineWidth', 2);
     semilogy(x_FG_deg7, f1d_FG_deg7, '-ob');
    % semilogy(x_FG_deg7, f1d_FG_deg7, '-og');
    % semilogy(x_SG_ref, f1d_SG_ref, 'b--', 'LineWidth', 2);
@@ -129,10 +129,19 @@ if nDims==2
     end
     
     f1d = f2d(:,sx);
+    f1d_FG_deg6_vert = f1d;
     x = nodes{1};
     y = nodes{2};
+    y_FG_deg6_vert = y;
+    save('f1d_FG_deg6_Vert', 'y_FG_deg6_vert', 'f1d_FG_deg6_vert');
+    load('f1d_FG_deg5_Vert', 'y_FG_deg5_vert', 'f1d_FG_deg5_vert');
+    load('f1d_FG_deg4_Vert', 'y_FG_deg4_vert', 'f1d_FG_deg4_vert');
     ax1 = subplot(2,2,2);
-    plot(y,f1d,'-o');
+    plot(y_FG_deg4_vert,f1d_FG_deg4_vert,'-r', 'LineWidth', 2);
+    hold on;
+    plot(y_FG_deg5_vert,f1d_FG_deg5_vert,'-m', 'LineWidth', 2);
+    plot(y_FG_deg6_vert,f1d_FG_deg6_vert, '-k', 'LineWidth', 2);
+    hold off;
     title('1D slice (horizontal)');
     
     if pde.checkAnalytic
