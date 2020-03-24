@@ -1,5 +1,9 @@
 #!/bin/bash
 MATLAB=/Applications/MATLAB_R2019a.app/bin/matlab
-$MATLAB -noFigureWindows -batch "addpath(genpath('./'));asgard(continuity1,'lev',3,'deg',1,'implicit',false);" &
-$MATLAB -noFigureWindows -batch "addpath(genpath('./'));asgard(continuity1,'lev',3,'deg',2,'implicit',false);" &
-$MATLAB -noFigureWindows -batch "addpath(genpath('./'));asgard(continuity1,'lev',3,'deg',3,'implicit',false);" 
+for lev in {3..3}
+do
+for deg in {1..4}
+do
+$MATLAB -noFigureWindows -batch "addpath(genpath('./'));asgard(continuity1,'lev',$lev,'deg',$deg,'implicit',false);" &
+done
+done
