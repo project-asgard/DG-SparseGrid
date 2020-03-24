@@ -136,7 +136,7 @@ if opts.adapt
         [~,fval_check] ...
             = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1);
         if (length(fval_check)>pre_refinement_num_DOF)
-%             error('Initial grid was insifficient for requested accuracy');
+            error('Initial grid was insifficient for requested accuracy');
         end
         clear fval_check;
     end
@@ -294,6 +294,12 @@ for L = 1:num_steps
         % Get the real space solution
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+        
+        for i = 1:length(fval_realspace)
+           if fval_realspace(i) < 1e-15
+               fval_realspace(i) = 1e-15;
+           end
+        end
         
         %%
         % Try with function convertToRealSpace

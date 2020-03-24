@@ -66,16 +66,51 @@ if nDims==2
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(ny/2));
-    if ny > 2
-        sy = sy+2; % just to get off the exact middle
-    end
+    sy = max(1,ceil(ny-1));
+   % if ny > 2
+   % sy = sy+2; % just to get off the exact middle
+   % end
     
     f1d = f2d(sy,:);
+    f1d_FG_deg6 = f1d;
     x = nodes{1};
+    x_FG_deg6 = x;
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    plot(x,f1d,'-o');
+    %plot(x,f1d,'-o');
+    load('f1d_FG_upper_1,5_deg4', 'x_FG_deg4', 'f1d_FG_deg4');
+    load('f1d_FG_upper_1,5_deg7', 'x_FG_deg7', 'f1d_FG_deg7');
+    save('f1d_FG_upper_1,5_deg6', 'x_FG_deg6', 'f1d_FG_deg6');
+    load('f1d_FG_upper_1,5_deg5', 'x_FG_deg5', 'f1d_FG_deg5');
+    %load('f1d_FG_upper_1,5_ref', 'x_FG_ref', 'f1d_FG_ref');
+    %load('f1d_SG_upper_1,5s_unadapted', 'x_SG_unadapt', 'f1d_SG_unadapt');
+    %load('f1d_SG_upper_1,5s_ref2', 'x_SG_ref2', 'f1d_SG_ref2');
+    %load('f1d_FG_upper_1,5_coarse', 'x_FG_coarse', 'f1d_FG_coarse');
+   % load('f1d_SG_upper_1,8s_ref1', 'x_SG_ref1', 'f1d_SG_ref1');
+    %load('f1d_SG_upper_1,8s_ref', 'x_SG_ref', 'f1d_SG_ref');
+    %load('f1d_FG_upper_1,8s', 'x_FG', 'f1d_FG');
+    %load('f1d_SG_upper_1,8s', 'x_SG', 'f1d_SG');
+    
+   % load('f1d_SG', 'x_SG', 'f1d_SG');
+   % load('f1d_SG_mid', 'x_SG_mid','f1d_SG_mid');
+   % load('f1d_FG', 'x_FG', 'f1d_FG');
+   % load('f1d_FG_mid_neu_minusE2', 'x_FG_mid_neu', 'f1d_FG_mid_neu');
+   % semilogy(x_SG, f1d_SG, '--m', 'LineWidth', 2);
+    ylim([10^-4, 10^0]);
+  %  semilogy(x_FG, f1d_FG, '-m', 'LineWidth', 2);
+  %  semilogy(x_FG_ref, f1d_FG_ref, '-k', 'LineWidth', 2);
+    semilogy(x_FG_deg4, f1d_FG_deg4, '-r', 'LineWidth', 2);
+    hold on;
+ %   semilogy(x_FG_coarse, f1d_FG_coarse, '-g', 'LineWidth', 2);
+    semilogy(x_FG_deg5, f1d_FG_deg5, '-m', 'LineWidth', 2);
+    semilogy(x_FG_deg6, f1d_FG_deg6, '-k', 'LineWidth', 2);
+    semilogy(x_FG_deg7, f1d_FG_deg7, '-ob');
+   % semilogy(x_FG_deg7, f1d_FG_deg7, '-og');
+   % semilogy(x_SG_ref, f1d_SG_ref, 'b--', 'LineWidth', 2);
+   % semilogy(x_SG_ref1, f1d_SG_ref1, 'r--', 'LineWidth', 2);
+   % semilogy(x_SG_ref2, f1d_SG_ref2, 'k--', 'LineWidth', 2);
+   % semilogy(x_SG_unadapt, f1d_SG_unadapt, 'c--', 'LineWidth',2);
+    hold off;
     title('1D slice (vertical)');
     
     %%
@@ -94,10 +129,19 @@ if nDims==2
     end
     
     f1d = f2d(:,sx);
+    f1d_FG_deg6_vert = f1d;
     x = nodes{1};
     y = nodes{2};
+    y_FG_deg6_vert = y;
+    save('f1d_FG_deg6_Vert', 'y_FG_deg6_vert', 'f1d_FG_deg6_vert');
+    load('f1d_FG_deg5_Vert', 'y_FG_deg5_vert', 'f1d_FG_deg5_vert');
+    load('f1d_FG_deg4_Vert', 'y_FG_deg4_vert', 'f1d_FG_deg4_vert');
     ax1 = subplot(2,2,2);
-    plot(y,f1d,'-o');
+    plot(y_FG_deg4_vert,f1d_FG_deg4_vert,'-r', 'LineWidth', 2);
+    hold on;
+    plot(y_FG_deg5_vert,f1d_FG_deg5_vert,'-m', 'LineWidth', 2);
+    plot(y_FG_deg6_vert,f1d_FG_deg6_vert, '-k', 'LineWidth', 2);
+    hold off;
     title('1D slice (horizontal)');
     
     if pde.checkAnalytic
@@ -115,6 +159,7 @@ if nDims==2
     f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
     contourf(x,y,f2d_with_noise,'LineColor','none');
     title('numeric 2D solution');
+    yline(y(sy), 'LineWidth', 2);
     
     if nargin >= 6
         hold on
