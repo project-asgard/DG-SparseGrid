@@ -381,10 +381,13 @@ for L = 1:num_steps
     %%
     % Save output
     
-    saveOutput = 0;
+    saveOutput = 1;
+    deg = pde.deg;
+    LevX = pde.lev_vec(1);
+    LevV = pde.lev_vec(2);
     if saveOutput
         stat = mkdir('output');
-        fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
+        fName = ['output/f2d-' sprintf('deg_%d_lev_%d',deg, LevX) '.mat'];
         f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
         save(fName,'f2d','fval');
     end
