@@ -1,6 +1,6 @@
 #!/bin/bash
 MATLAB=/usr/local/bin/matlab
-for lev in {3..3}
+for lev in {4..4}
 do
 for deg in {3..7}
 do
