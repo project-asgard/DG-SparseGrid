@@ -381,7 +381,7 @@ for L = 1:num_steps
     %%
     % Save output
     
-    saveOutput = 1;
+    saveOutput = 0;
     deg = pde.deg;
     LevX = pde.lev_vec(1);
     LevV = pde.lev_vec(2);
