@@ -9,12 +9,17 @@
 % Term 3
 % 1/p^2*d/dp [q] + 1/p^2 d/dp [Cf*p^2*f] + 1/p^4 d/dx[r]
 % => 
+% This code implements the sparse grids simulation
+% 10/06/2019
 
 addpath(genpath(pwd))
 
-Lev = 5;
+Lev = 4;
 Deg = 2;
 num_plot = 2;
+
+% Two Scale Matrix
+FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
 
 DoFs = (2^Lev*Deg);
 
@@ -23,14 +28,14 @@ LInt = -1;
 LEnd = 1;
 
 pInt = 0;
-pEnd = 20;
+pEnd = 10;
 
 Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
 CFL = 0.001;
-dt = 1e-1;%CFL*(dx)^3;
-MaxT = ceil(100/dt);
+dt = 1e-1;%2e-9;%CFL*(dx)^3;
+MaxT = ceil(1000/dt);
 
 
 % FullModel;
@@ -41,6 +46,8 @@ f_bcL = 1; f_bcR = 0;
 q_bcL = 0; q_bcR = 1;
 
 Mat_Mass_p = MatrixMass(Lev,Deg,pInt,pEnd,@(x)(x.^2));
+% convert to wavelet-like basis
+Mat_Mass_p = FMWT_COMP*Mat_Mass_p*FMWT_COMP;
 
 % Term 1
 % q = Ca * p^2 * df/dp
@@ -66,9 +73,6 @@ Mat_Term2 = kron(Mat_Term2_p,speye(DoFs,DoFs));
 % Here we should use BC for x variable
 f_bcL = 1; f_bcR = 1;
 q_bcL = 0; q_bcR = 0;
-% Mat1 = MatrixGrad(Lev,Deg,LInt,LEnd, 1,@(x)(1-x.^2),@(x)0,f_bcL,f_bcR); % equation for q
-% Mat2 = MatrixGrad(Lev,Deg,LInt,LEnd,-1,@(x)1,@(x)0,q_bcL,q_bcR); % equation for f
-% Mat_Term3_x = Mat2*Mat1;
 [Mat_Term3_x,Mat1,Mat2] = MatrixDiff_Momentum(Lev,Deg,LInt,LEnd,@(x)(1-x.^2),q_bcL,q_bcR,f_bcL,f_bcR);
 
 Mat_Term3_p = MatrixMass(Lev,Deg,pInt,pEnd,@(x)(Cb(x)./x.^2));
@@ -111,13 +115,6 @@ for T = 1 : MaxT
     
     rhs = F0-F0;%ComputRHS2D(Lev,Deg,LInt,LEnd,Source2D);
     
-%     F1 = F0 + dt*(Mat)*F0 + dt*(Inv*rhs);
-    
-    % RK3
-%     F1 = F0 + dt*(  Mat*F0 );
-%     F2 = 3/4*F0+1/4*F1+1/4*dt*(Mat*F1);
-%     Fn = 1/3*F0+2/3*F2+2/3*dt*(Mat*F2);
-%     F0 = Fn;
     
     Fn = InvMat*F0;
     F0 = Fn;

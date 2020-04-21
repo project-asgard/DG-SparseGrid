@@ -1,7 +1,7 @@
 addpath(genpath(pwd))
 
-Lev = 4;
-Deg = 5;
+Lev = 5;
+Deg = 2;
 num_plot = 2;
 
 DoFs = (2^Lev*Deg);
@@ -11,13 +11,13 @@ LInt = -1;
 LEnd = 1;
 
 pInt = 0;
-pEnd = 10; %10
+pEnd = 20; %10
 
 Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
 CFL = 0.001;
-dt = .001;%CFL*(dx)^3;
+dt = .01;%CFL*(dx)^3;
 MaxT = ceil(1e3/dt);
 
 
@@ -139,7 +139,7 @@ for T = 1 : MaxT
     
     val = MM*F0;
     TolTime(T) = time;
-    TolMass(T) = sum(ww.*val(:).*y_2D_plot(:).^2);
+        TolMass(T) = sum(ww.*val(:).*y_2D_plot(:).^2);
 %     TolMass(T) = sum(ww.*val(:).*p_pen(:));
 end
 

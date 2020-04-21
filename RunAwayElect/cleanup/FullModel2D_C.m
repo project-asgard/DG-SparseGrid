@@ -1,3 +1,4 @@
+
 % Gamma^C term
 
 Mat_Mass_p = MatrixMass(Lev,Deg,pInt,pEnd,@(x)(x.^2));
@@ -13,7 +14,7 @@ Mat_Term1 = kron(Mat_Term1_x,Mat_Term1_p);
 % r = 1/p^2 * d/dp*[p^2*Cf*f]
 % R = (Gp * I ) * F
 % Here we should use BC for x variable
-Mat_Term2_p = MatrixGrad(Lev,Deg,pInt,pEnd,0,@(x)x.^2.*Cf(x),@(x)0,fp_bcL,fp_bcR); 
+Mat_Term2_p = MatrixGrad(Lev,Deg,pInt,pEnd,1,@(x)x.^2.*Cf(x),@(x)0,fp_bcL,fp_bcR); 
 Mat_Term2_x = speye(DoFs,DoFs);
 Mat_Term2 = kron(Mat_Term2_x,Mat_Term2_p);
 % Term 3

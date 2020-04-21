@@ -1,8 +1,8 @@
 nuEE = 1;
 vT = 1;
-delta = 0.3;%0.1;%0.042;
-Z = 5;%1;
-E = 0.4;%.01;%0.0025;
+delta = .3;%0.042;
+Z = 5;
+E = .4;%.01;%0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
@@ -14,7 +14,21 @@ Cb = @(p)1/2*nuEE*vT^2*1./vx(p).*(Z+FunPhi(vx(p))-FunPsi(vx(p))+delta^4*vx(p).^2
 Cf = @(p)2*nuEE*vT*FunPsi(vx(p));
 
 Q = 1;
-Exa0 = @(xi,p,t)2/sqrt(pi)*exp(-p.^2);%.*Exa(xi)/3;
+
+% Exa0 = @(xi,p,t) exp(-2/delta^2*sqrt(1+delta^2*p.^2))/8.5318e-02;
+N = 1000;
+h = 20/N;
+Q = 0;
+Fun = @(p)exp(-2/delta^2*sqrt(1+delta^2*p.^2));
+for i = 1:N
+    x0 = (i-1)*h;
+    x1 = i*h;
+    [xi,w] = lgwt(20,x0,x1);
+    Q = Q+sum(w.*Fun(xi).*xi.^2);
+end
+
+Exa0 = @(xi,p,t) exp(-2/delta^2*sqrt(1+delta^2*p.^2))/(2*Q);
+Exa1 = @(xi,p,t)2/sqrt(pi)*exp(-p.^2);
 
 a = 2;
 % Exa0 = @(xi,p,t)exp(-(p).^2/a^2)*2/(sqrt(pi)*a^3);
@@ -22,7 +36,11 @@ a = 2;
 %  Exa0 = @(xi,p,t)(ExactF2(p,t));
 
 fp_bcL = 1; fp_bcR = 0;
+fp_bcR = 1;% bR for p
 qp_bcL = 0; qp_bcR = 1;
+qp_bcR = 0;
+
+
 
 fx_bcL = 1; fx_bcR = 1;
 qx_bcL = 0; qx_bcR = 0;
