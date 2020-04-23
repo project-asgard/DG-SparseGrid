@@ -29,7 +29,8 @@ dt = 1;%1e-3;
 % MaxT = ceil(3e2/dt);
 MaxT = ceil(2e2/dt);
 
-FullModel2_v2;
+% FullModel2_v2;
+Test11_1b;
 FullModel2D_C;
 FullModel2D_E;
 FullModel2D_R;
