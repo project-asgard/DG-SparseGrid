@@ -1,8 +1,8 @@
 nuEE = 1;
 vT = 1;
-delta = .3;%0.042;
-Z = 5;%
-E = .4;%.01;%0.0025;
+delta = 0.042;
+Z = 1;
+E = 0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
@@ -28,8 +28,8 @@ for i = 1:N
 end
 
 
-Exa0 = @(xi,p,t) exp(-2/delta^2*sqrt(1+delta^2*p.^2))/(2*Q);
-Exa1 = @(xi,p,t)2/sqrt(pi)*exp(-p.^2);
+% Exa0 = @(xi,p,t) exp(-2/delta^2*sqrt(1+delta^2*p.^2))/(2*Q);
+% Exa1 = @(xi,p,t)2/sqrt(pi)*exp(-p.^2);
 
 a = 2;
 Exa0 = @(xi,p,t)exp(-(p).^2/a^2)*2/(sqrt(pi)*a^3);
