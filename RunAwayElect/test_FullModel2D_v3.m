@@ -25,7 +25,7 @@ Lmax = LEnd-LInt;
 dx = Lmax/2^Lev;
 
 CFL = 0.001;
-dt = 1e-3;%1e-3;
+dt = 1e-3;
 % MaxT = ceil(3e2/dt);
 MaxT = ceil(2e2/dt);
 
@@ -65,6 +65,8 @@ nz = size(x_2D_plot,1);
 val_plot = reshape(MM*(F0),nz,nz);
 tmp0 = reshape(val_plot,num_plot*2^Lev,num_plot*2^Lev);
 valval0 = val_plot;
+
+figure(1)
 subplot(3,1,1)
 surf(x_2D_plot,y_2D_plot,val_plot,val_plot)
 shading interp
@@ -161,6 +163,7 @@ for T = 1 : MaxT
     semilogy(p_node,abs(tmp*w_x),'b-','LineWidth',2);hold on
     semilogy(p_node,abs(tmp0*w_x),'r-','LineWidth',2);hold off
     axis([0 pEnd 1e-7 3])
+    
     
     pause(0.1)
     
