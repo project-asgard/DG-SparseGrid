@@ -42,7 +42,7 @@ pde.CFL = 0.01;
 
 %%
 % Select 6.1, 6.2, 6.3, etc where it goes as 6.test
-test = '6p1b'; 
+test = 'full'; 
 
 %%
 % Define a few relevant functions
@@ -64,6 +64,11 @@ switch test
         delta = 0.042;
         Z = 1;
         E = 0.0025;
+        tau = 10^5;
+    case 'full'
+        delta = 0.3;
+        Z = 5;
+        E = 0.4;
         tau = 10^5;
 end
 gamma = @(p)sqrt(1+(delta*p).^2);
@@ -107,6 +112,8 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     ret = ret + h(l) * P;
                     
                 end
+            case 'full'
+                ret = x.*0 + 1;
         end
     end
 
@@ -129,12 +136,23 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
             case '6p1c'
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
-                
+            case 'full'
+                N = 1000;
+                h = 20/N;
+                Q = 0;
+                Fun = @(p)exp(-2/delta^2*sqrt(1+delta^2*p.^2));
+                for i = 1:N
+                    x0 = (i-1)*h;
+                    x1 = i*h;
+                    [xi,w] = lgwt(20,x0,x1);
+                    Q = Q+sum(w.*Fun(xi).*xi.^2);
+                 end
+                ret = Q * exp( -2*sqrt(1 + delta^2*x.^2)/delta^2);
         end
     end
 
 
-    function ret = soln_z(x,t)
+    function ret = soln_z(x,~)
         ret = x.*0+1;
     end
     function ret = soln_p(x,t)
@@ -144,7 +162,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 %% Setup the dimensions 
 
 dim_p.domainMin = 0.1;
-dim_p.domainMax = +7;
+dim_p.domainMax = +20;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
