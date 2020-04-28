@@ -138,16 +138,16 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
             case 'full'
                 N = 1000;
-                h = 20/N;
+                h = 7/N;
                 Q = 0;
                 Fun = @(p)exp(-2/delta^2*sqrt(1+delta^2*p.^2));
                 for i = 1:N
                     x0 = (i-1)*h;
                     x1 = i*h;
-                    [xi,w] = lgwt(20,x0,x1);
+                    [xi,w] = lgwt(7,x0,x1);
                     Q = Q+sum(w.*Fun(xi).*xi.^2);
                  end
-                ret = Q * exp( -2*sqrt(1 + delta^2*x.^2)/delta^2);
+                ret = exp(-2/delta^2*sqrt(1+delta^2*x.^2))/(2*Q);
         end
     end
 
@@ -162,7 +162,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 %% Setup the dimensions 
 
 dim_p.domainMin = 0.1;
-dim_p.domainMax = +20;
+dim_p.domainMax = +7;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
