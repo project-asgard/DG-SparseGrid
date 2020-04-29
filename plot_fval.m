@@ -82,7 +82,7 @@ if nDims==2
     %load('f1d_FG_upper_1,5_deg4', 'x_FG_deg4', 'f1d_FG_deg4');
     %load('f1d_FG_upper_1,5_deg7', 'x_FG_deg7', 'f1d_FG_deg7');
     fNamex = ['output_adapt/f1d_x-' sprintf('deg_%d',deg1) '.mat'];
-    %save(fNamex, 'x', 'f1d');
+    save(fNamex, 'x', 'f1d');
     %load('f1d_FG_upper_1,5_deg5', 'x_FG_deg5', 'f1d_FG_deg5');
     %load('f1d_FG_upper_1,5_ref', 'x_FG_ref', 'f1d_FG_ref');
     %load('f1d_SG_upper_1,5s_unadapted', 'x_SG_unadapt', 'f1d_SG_unadapt');
@@ -134,7 +134,7 @@ if nDims==2
     x = nodes{1};
     y = nodes{2};
     fNamey = ['output_adapt/f1d_y_adapt-' sprintf('deg_%d',deg1) '.mat'];
-    %save(fNamey, 'y', 'f1d');
+    save(fNamey, 'y', 'f1d');
     %load('f1d_FG_deg5_Vert', 'y_FG_deg5_vert', 'f1d_FG_deg5_vert');
     %load('f1d_FG_deg4_Vert', 'y_FG_deg4_vert', 'f1d_FG_deg4_vert');
     ax1 = subplot(2,2,2);

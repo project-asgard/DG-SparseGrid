@@ -138,13 +138,13 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
             case 'full'
                 N = 1000;
-                h = 7/N;
+                h = 20/N;
                 Q = 0;
                 Fun = @(p)exp(-2/delta^2*sqrt(1+delta^2*p.^2));
                 for i = 1:N
                     x0 = (i-1)*h;
                     x1 = i*h;
-                    [xi,w] = lgwt(7,x0,x1);
+                    [xi,w] = lgwt(20,x0,x1);
                     Q = Q+sum(w.*Fun(xi).*xi.^2);
                  end
                 ret = exp(-2/delta^2*sqrt(1+delta^2*x.^2))/(2*Q);
@@ -161,8 +161,8 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0.1;
-dim_p.domainMax = +7;
+dim_p.domainMin = 0;
+dim_p.domainMax = +20;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
@@ -195,8 +195,8 @@ g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'D','D');
-pterm3  = GRAD(num_dims,g3,-1,'N','N');
+pterm2  = GRAD(num_dims,g2,+1,'D','N');
+pterm3  = GRAD(num_dims,g3,-1,'N','D');
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -212,7 +212,7 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'N','N');
+pterm2  = GRAD(num_dims,g2,+1,'N','D');
 term2_p = TERM_1D({pterm1,pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
