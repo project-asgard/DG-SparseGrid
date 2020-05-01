@@ -64,6 +64,12 @@ for d=1:num_dimensions
     [Meval{d},nodes{d}] = matrix_plot_D(pde,pde.dimensions{d});
 end
 
+%%%%%%%%%
+save('Meval','Meval')
+save('nodes','nodes')
+%%%%%%%%%
+
+
 %% Construct a n-D coordinate array
 coord = get_realspace_coords(pde,nodes);
 

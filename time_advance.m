@@ -49,6 +49,8 @@ b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
 if applyLHS
     [k1,A1,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+    %save inv(ALHS)*A1
+    
     rhs1 = source1 + bc1;
     %     invMatLHS = inv(ALHS); % NOTE : assume time independent for now for speed.
     %     k1 = invMatLHS * (k1 + rhs1);
@@ -92,6 +94,8 @@ applyLHS = ~isempty(pde.termsLHS);
 
 [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
 
+
+
 I = eye(numel(diag(A)));
 
 if applyLHS
@@ -126,7 +130,20 @@ s1 = source_vector(pde,opts,hash_table,t+dt);
 bc0 = boundary_condition_vector(pde,opts,hash_table,t);
 bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-[~,AMat] = apply_A(pde,opts,A_data,f0,deg);
+
+[~,AMat,~] = apply_A(pde,opts,A_data,f0,deg);
+
+%%%%%%%%%%%%
+save('bc0','bc0') %save boundary condition
+save('solve_term','s0') %save solve term
+save('initial_vec000','f0') %save initial vector
+A = AMat;
+save('matrix_iter000','A') %save matrix)
+
+save('hash_table','hash_table')
+save('pde','pde')
+save('opts','opts')
+%%%%%%%%%%%%
 
 I = eye(numel(diag(AMat)));
 AA = 2*I - dt*AMat;

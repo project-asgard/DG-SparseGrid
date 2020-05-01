@@ -35,8 +35,15 @@ pde.CFL = 0.01;
 % 
 % Here we setup a 1D problem (x,y)
 
-soln_x = @(x) cos(pi*x);
-soln_t = @(t) exp(-2*pi^2*t);
+%soln_x = @(x) cos(pi*x);
+%soln_t = @(t) exp(-2*pi^2*t);
+
+%soln_x = @(x) sin(pi*x);
+%soln_t = @(t) exp(-2*pi^2*t);
+
+soln_x = @(x) sin(x);
+soln_t = @(t) exp(-2*t);
+
 
 BCFunc = @(x) soln_x(x);
 BCFunc_t = @(t) soln_t(t);
@@ -57,7 +64,7 @@ BCR_fList = { ...
 
 dim_x.name = 'x';
 dim_x.domainMin = 0;
-dim_x.domainMax = 1;
+dim_x.domainMax = pi;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
 
 
@@ -89,6 +96,9 @@ g2 = @(x,p,t,dat) x.*0+1;
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
 pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
 
+%pterm1 = GRAD(num_dims,g1,0,'N','N');
+%pterm2 = GRAD(num_dims,g2,0,'D','D',BCL_fList,BCR_fList);
+
 term1_x = TERM_1D({pterm1,pterm2});
 term1   = TERM_ND(num_dims,{term1_x});
 
@@ -108,8 +118,15 @@ pde.params = params;
 %%
 % Sources
 
-s1x = @(x,p,t) -pi^2*cos(pi*x);
-s1t = @(t,p) exp(-2*pi^2*t);
+% s1x = @(x,p,t) -pi^2*cos(pi*x);
+% s1t = @(t,p) exp(-2*pi^2*t);
+
+% s1x = @(x,p,t) -pi^2*sin(pi*x);
+% s1t = @(t,p) exp(-2*pi^2*t);
+
+s1x = @(x,p,t) -sin(x);
+s1t = @(t,p) exp(-2*t);
+
 source1 = {s1x, s1t};
 
 pde.sources = {source1};
