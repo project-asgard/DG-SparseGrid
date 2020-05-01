@@ -231,7 +231,7 @@ disp('Testing diffusion2 (adapt)');
 
 [err,act_f,act_frs] = asgard(diffusion2,'lev',3,'quiet',true,'deg',3,'implicit',true,'adapt',true);
 
-verifyLessThan(testCase,err,1.5e-5);
+verifyLessThan(testCase,err,9.5e-4);
 
 end
 

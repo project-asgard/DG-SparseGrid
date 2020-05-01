@@ -35,7 +35,8 @@ lev = dimensions{1}.lev; % TODO : generalize to lev_D
 % routine? i.e., the grid upon which we decide to evaluate the solution?
 
 for d=1:nDims
-    dof_1D_FG(d) = deg*2^(dimensions{d}.lev);
+%     dof_1D_FG(d) = deg*2^(dimensions{d}.lev);
+    dof_1D_FG(d) = numel(Meval_D(:,1));
 end
 num_pts = prod(dof_1D_FG);
 

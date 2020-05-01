@@ -1,15 +1,13 @@
-function [parentIdx] = get_my_parent_idx(pde,idx)
+function [parentIdx] = get_my_parent_idx(num_dims, hash_table, idx, max_lev)
 
-nDims = numel(pde.dimensions);
+thisElemLevVec = hash_table.elements.lev_p1(idx,:)-1;
+thisElemPosVec = hash_table.elements.pos_p1(idx,:)-1;
 
-thisElemLevVec = pde.elements.lev_p1(idx,:)-1;
-thisElemPosVec = pde.elements.pos_p1(idx,:)-1;
-
-for d=1:nDims
+for d=1:num_dims
     parentElemLevVec(d) = thisElemLevVec(d)-1;
     parentElemPosVec(d) = floor(thisElemPosVec(d)/2);  
 end
 
-parentIdx = lev_cell_to_element_index(pde,parentElemLevVec,parentElemPosVec);
+parentIdx = lev_cell_to_element_index(parentElemLevVec,parentElemPosVec, max_lev);
 
 end

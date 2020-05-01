@@ -5,19 +5,16 @@ function [ftmp, A, ALHS] = apply_A (pde, opts, A_data, f, deg, Vmax, Emax)
 %-----------------------------------
 dof = size(f,1);
 use_sparse_ftmp = 0;
-if (use_sparse_ftmp),
+if (use_sparse_ftmp)
     ftmp=sparse(dof,1);
 else
     ftmp = zeros(dof,1);
-end;
+end
 use_kronmultd = 1;
 
-nTerms = numel(pde.terms);
-nTermsLHS = numel(pde.termsLHS);
-nDims = numel(pde.dimensions);
-
-dimensions = pde.dimensions;
-
+num_terms     = numel(pde.terms);
+num_terms_LHS = numel(pde.termsLHS);
+num_dims      = numel(pde.dimensions);
 
 %%
 % Tensor product encoding over DOF within an element, i.e., over "deg" (A_Data),
@@ -29,19 +26,23 @@ conCnt = 1;
 
 ftmpA = ftmp;
 
-elementDOF = deg^nDims;
+elementDOF = deg^num_dims;
 
 implicit = opts.implicit;
 
 totalDOF = nWork * elementDOF;
-A = sparse(totalDOF,totalDOF); % Only filled if implicit
-ALHS = sparse(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
+if opts.implicit
+    A = zeros(totalDOF,totalDOF); % Only filled if implicit
+end
+if num_terms_LHS > 0
+    ALHS = zeros(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
+end
 
 for workItem=1:nWork
           
     nConnected = nWork; % Simply assume all are connected. 
     
-    for d=1:nDims
+    for d=1:num_dims
         element_idx1D_D{d} = A_data.element_local_index_D{d}(workItem);
     end
     
@@ -49,14 +50,14 @@ for workItem=1:nWork
     
     globalRow = elementDOF*(workItem-1) + [1:elementDOF]';
     
-    for d=1:nDims
+    for d=1:num_dims
         myDeg = pde.deg;
         Index_I{d} = (element_idx1D_D{d}-1)*myDeg + [1:myDeg]';
     end
     
     for j=1:nConnected
         
-        for d=1:nDims
+        for d=1:num_dims
             connected_idx1D_D{d} = A_data.element_local_index_D{d}(j);
         end
         
@@ -67,7 +68,7 @@ for workItem=1:nWork
         
         globalCol = elementDOF*(connectedCol-1) + [1:elementDOF]';
         
-        for d=1:nDims
+        for d=1:num_dims
             myDeg = pde.deg;
             Index_J{d} = (connected_idx1D_D{d}-1)*myDeg + [1:myDeg]';
         end
@@ -77,13 +78,12 @@ for workItem=1:nWork
         % Y = A * X
         % where A is tensor product encoded.
         
-        for t=1:nTerms
+        for t=1:num_terms
             
             %%
             % Construct the list of matrices for the kron_mult for this
             % operator (which has dimension many entries).
-            clear kronMatList;
-            for d=1:nDims
+            for d=1:num_dims
                 idx_i = Index_I{d};
                 idx_j = Index_J{d};
                 tmp = pde.terms{t}.terms_1D{d}.mat;
@@ -95,7 +95,7 @@ for workItem=1:nWork
                 %%
                 % Apply krond to return A (implicit time advance)
                 
-                A(globalRow,globalCol) = A(globalRow,globalCol) + krond(nDims,kronMatList);
+                A(globalRow,globalCol) = A(globalRow,globalCol) + krond(num_dims,kronMatList);
                 
             else
                 
@@ -103,13 +103,13 @@ for workItem=1:nWork
                 % Apply kron_mult to return A*Y (explicit time advance)
                 X = f(globalCol);
                 if use_kronmultd
-                    Y = kron_multd(nDims,kronMatList,X);
+                    Y = kron_multd(num_dims,kronMatList,X);
                 else
-                    Y = kron_multd_full(nDims,kronMatList,X);
+                    Y = kron_multd_full(num_dims,kronMatList,X);
                 end
                 
                 use_globalRow = 0;
-                if (use_globalRow),
+                if (use_globalRow)
                     ftmpA(globalRow) = ftmpA(globalRow) + Y;
                 else
                     % ------------------------------------------------------
@@ -118,7 +118,7 @@ for workItem=1:nWork
                     i1 = elementDOF*(workItem-1) + 1;
                     i2 = elementDOF*(workItem-1) + elementDOF;
                     ftmpA(i1:i2) = ftmpA(i1:i2) + Y;
-                end;
+                end
                 
             end
             
@@ -126,9 +126,8 @@ for workItem=1:nWork
         
         %%
         % Construct the mat list for a non-identity LHS mass matrix
-        for t=1:nTermsLHS
-            clear kronMatListLHS;
-            for d=1:nDims
+        for t=1:num_terms_LHS
+            for d=1:num_dims
                 idx_i = Index_I{d};
                 idx_j = Index_J{d};
                 tmp = pde.termsLHS{t}.terms_1D{d}.mat;
@@ -138,7 +137,7 @@ for workItem=1:nWork
             %%
             % Apply krond to return A (recall this term requires inversion)
             
-            ALHS(globalRow,globalCol) = ALHS(globalRow,globalCol) + krond(nDims,kronMatListLHS);
+            ALHS(globalRow,globalCol) = ALHS(globalRow,globalCol) + krond(num_dims,kronMatListLHS);
             
         end
         
