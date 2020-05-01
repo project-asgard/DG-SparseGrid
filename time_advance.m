@@ -49,6 +49,8 @@ b1 = 1/6; b2 = 2/3; b3 = 1/6;
 
 if applyLHS
     [k1,A1,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+    %save inv(ALHS)*A1
+    
     rhs1 = source1 + bc1;
     %     invMatLHS = inv(ALHS); % NOTE : assume time independent for now for speed.
     %     k1 = invMatLHS * (k1 + rhs1);
@@ -91,6 +93,8 @@ bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 applyLHS = ~isempty(pde.termsLHS);
 
 [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+
+
 
 I = eye(numel(diag(A)));
 
