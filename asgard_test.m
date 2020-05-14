@@ -259,3 +259,31 @@ verifyLessThan(testCase,err,2.5e-2);
 
 end
 
+
+function asgard_advection1_implicit_BDF2_test(testCase)
+
+addpath(genpath(pwd));
+
+disp('Testing advection1 (implicit) BDF2');
+
+[err, act_f, act_frs] = asgard(fokkerplanck1_4p1a, 'quiet',true,'implicit',true,'lev',5,'deg',3,'num_steps',1, 'dt', 0.01, 'implicit_method', 'BDF2');
+
+[err1, acf_f1, act_frs1] = asgard(fokkerplanck1_4p1a, 'quiet',true,'implicit',true,'lev',5,'deg',3,'num_steps',2, 'dt', 0.005, 'implicit_method', 'BDF2');
+
+[err2, act_f2, act_frs2] = asgard(fokkerplanck1_4p1a, 'quiet',true,'implicit',true,'lev',5,'deg',3,'num_steps',4, 'dt', 0.0025, 'implicit_method', 'BDF2');
+
+logslope1 = (log10(err1) - log10(err))/(log10(1/0.01) - log10(1/0.005));
+
+logslope2 = (log10(err2) - log10(err1))/(log10(1/0.005) - log10(1/0.0025));
+
+%slope_err1 = abs(logslope1 - 2.000);
+slope_err2 = abs(logslope2 - 2.000);
+
+%verifyLessThan(testCase,slope_err1, 1e-5);
+
+verifyLessThan(testCase,slope_err2, 1e-6);
+
+
+end
+
+

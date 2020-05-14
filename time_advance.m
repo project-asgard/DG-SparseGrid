@@ -9,9 +9,12 @@ if opts.implicit
     if strcmp(opts.implicit_method,'BE')
         % Backward Euler (BE) first order
         f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    else
+    elseif strcmp(opts.implicit_method, 'CN')
         % Crank Nicolson (CN) second order
         f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    else 
+	%Backward Differential 2 (BDF2) second order
+        f = backward_diff_2(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
     end
 else
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -92,18 +95,19 @@ bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
 applyLHS = ~isempty(pde.termsLHS);
 
-[~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
 
-
-
-I = eye(numel(diag(A)));
 
 if applyLHS
     %     AA = I - dt*inv(ALHS)*A;
     %     b = f0 + dt*inv(ALHS)*(s1 + bc1);
+    [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+    
+    I = eye(numel(diag(A)));
     AA = I - dt*(ALHS \ A);
     b = f0 + dt*(ALHS \ (s0 + bc0));
 else
+    [~,A] = apply_A(pde,opts,A_data,f0,deg);
+    I = eye(numel(diag(A)));
     AA = I - dt*A;
     b = f0 + dt*(s0 + bc0);
 end
@@ -182,5 +186,54 @@ else
     
     f1 = AA_inv * b;
 end
+
+end
+
+function f2 = backward_diff_2(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+s1 = source_vector(pde,opts,hash_table,t+2*dt);
+
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+bc1 = boundary_condition_vector(pde,opts,hash_table,t+2*dt);
+% %%
+% Apply any non-identity LHS mass matrix coefficient
+
+applyLHS = ~isempty(pde.termsLHS);
+
+
+%Obtain f1 through same process as Backward Euler
+if applyLHS
+    AA = I - dt*inv(ALHS)*A;
+    %     b = f0 + dt*inv(ALHS)*(s1 + bc1);
+    [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+    
+    I = eye(numel(diag(A)));
+    AA = I - dt*(ALHS \ A);
+    b = f0 + dt*(ALHS \ (s0 + bc0));
+else
+    [~,A] = apply_A(pde,opts,A_data,f0,deg);
+    I = eye(numel(diag(A)));
+    AA = I - dt*A;
+    b = f0 + dt*(s0 + bc0);
+end
+f1 = AA \ b; % Solve at each timestep
+%f1 = RungeKutta3(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
+%Apply second step for BDF2
+
+if applyLHS
+    %Obtain updated A and ALHS matrices
+    [~,A2,ALHS2] = apply_A(pde,opts,A_data,f1,deg);
+    I = eye(numel(diag(A2)));
+    AA2 = I - 2/3*dt*(ALHS2 \ A2);
+    b2 = 4*f1/3 - f0/3 + 2/3*dt*(ALHS2 \ (bc1 + s1));
+else
+    [~,A2] = apply_A(pde,opts,A_data,f1,deg);
+    I = eye(numel(diag(A2)));
+    AA2 = I - 2/3*dt*A2;
+    b2 = 4*f1/3 - f0/3 + 2/3*dt*(bc1 + s1);
+end
+
+f2 = AA2 \ b2;
 
 end
