@@ -5,17 +5,57 @@ function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 % Output: Vector:: f
 %-------------------------------------------------
 
-if opts.implicit
-    if strcmp(opts.implicit_method,'BE')
+    if strcmp(opts.timestep_method,'BE')
         % Backward Euler (BE) first order
         f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    else
+    elseif strcmp(opts.timestep_method,'BDFm')
+        % Variable order BDF matlab ODE integrator.
+        f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    elseif strcmp(opts.timestep_method,'CN')
         % Crank Nicolson (CN) second order
         f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    elseif strcmp(opts.timestep_method,'RK45m')
+        % Variable order RK matlab ODE integrator
+        f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    else
+        % RK3 TVD 
+        f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
     end
-else
-    f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+
 end
+
+%% Use Matlab ODE solvers
+
+function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
+
+    function dfdt = explicit_ode(t,f)
+        bc = boundary_condition_vector(pde,opts,hash_table,t);
+        source = source_vector(pde,opts,hash_table,t);
+        f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+        dfdt = f1 + source + bc;
+    end
+
+    function res = implicit_ode(t,f,dfdt)
+        bc = boundary_condition_vector(pde,opts,hash_table,t);
+        source = source_vector(pde,opts,hash_table,t);
+        f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+        res = dfdt - (f1 + source + bc);
+    end
+
+if strcmp(opts.timestep_method,'RK45m')
+    
+    disp('Using ode45');
+    [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0);
+    
+elseif strcmp(opts.timestep_method,'BDFm')
+    
+    dfdt0 = f0.*0;
+    [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
+    [tout,fout] = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
+    
+end
+
+fval = reshape(fout(end,:),size(f0));
 
 end
 

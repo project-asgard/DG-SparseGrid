@@ -16,9 +16,9 @@ default_dt = 1.0;
 default_adapt = false;
 default_use_oldhash = false;
 default_use_oldcoeffmat = false;
-default_implicit_method = 'CN';
-valid_implicit_methods = {'BE','CN'};
-check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
+default_timestep_method = 'RK3';
+valid_timestep_methods = {'BE','CN','BDFm','RK45m','RK3'};
+check_timestep_method = @(x) any(validatestring(x,valid_timestep_methods));
 default_time_independent_A = false;
 default_many_solution_capable = false;
 default_max_lev = 8;
@@ -33,7 +33,7 @@ addOptional(input_parser,'start_time',default_start_time, @isnumeric);
 addOptional(input_parser,'num_steps',default_num_steps, @isnumeric);
 addOptional(input_parser,'quiet',default_quiet,@islogical);
 addOptional(input_parser,'implicit',default_implicit, @islogical);
-addOptional(input_parser,'implicit_method',default_implicit_method, check_implicit_method);
+addOptional(input_parser,'timestep_method',default_timestep_method, check_timestep_method);
 addOptional(input_parser,'grid_type',default_grid_type, check_grid_type);
 addOptional(input_parser,'CFL',default_CFL, @isnumeric);
 addOptional(input_parser,'dt',default_dt, @isnumeric);
@@ -124,8 +124,12 @@ end
 opts.dt = input_parser.Results.dt;
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
-opts.implicit = input_parser.Results.implicit;
-opts.implicit_method = input_parser.Results.implicit_method;
+opts.timestep_method = input_parser.Results.timestep_method;
+opts.implicit = false;
+if sum(strcmp(opts.timestep_method,{'BE','CN','BDFm'}))
+    opts.implicit = true;
+end
+
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;

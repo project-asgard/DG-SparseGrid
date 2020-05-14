@@ -31,6 +31,7 @@ elementDOF = deg^num_dims;
 implicit = opts.implicit;
 
 totalDOF = nWork * elementDOF;
+ALHS = 0;
 if opts.implicit
     A = zeros(totalDOF,totalDOF); % Only filled if implicit
 end
