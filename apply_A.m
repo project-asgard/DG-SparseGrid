@@ -28,12 +28,10 @@ ftmpA = ftmp;
 
 elementDOF = deg^num_dims;
 
-implicit = opts.implicit;
-
 totalDOF = nWork * elementDOF;
 ALHS = 0;
-if opts.implicit
-    A = zeros(totalDOF,totalDOF); % Only filled if implicit
+if opts.build_A
+    A = zeros(totalDOF,totalDOF); % Only filled if using hand coded implicit methods
 end
 if num_terms_LHS > 0
     ALHS = zeros(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
@@ -91,10 +89,10 @@ for workItem=1:nWork
                 kronMatList{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
             end
             
-            if implicit
+            if opts.build_A
                 
                 %%
-                % Apply krond to return A (implicit time advance)
+                % Apply krond to return A (for hand coded implicit time advance)
                 
                 A(globalRow,globalCol) = A(globalRow,globalCol) + krond(num_dims,kronMatList);
                 

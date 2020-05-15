@@ -1,26 +1,18 @@
 function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
-%-------------------------------------------------
-% Time Advance Method Input: Matrix:: A
-%        Vector:: f Time Step:: dt
-% Output: Vector:: f
-%-------------------------------------------------
 
-    if strcmp(opts.timestep_method,'BE')
-        % Backward Euler (BE) first order
-        f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    elseif strcmp(opts.timestep_method,'BDFm')
-        % Variable order BDF matlab ODE integrator.
-        f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    elseif strcmp(opts.timestep_method,'CN')
-        % Crank Nicolson (CN) second order
-        f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    elseif strcmp(opts.timestep_method,'RK45m')
-        % Variable order RK matlab ODE integrator
-        f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    else
-        % RK3 TVD 
-        f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    end
+if strcmp(opts.timestep_method,'BE')
+    % Backward Euler (BE) first order
+    f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'CN')
+    % Crank Nicolson (CN) second order
+    f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45'}))>0
+    % One of the atlab ODE integrators.
+    f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);  
+else
+    % RK3 TVD
+    f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+end
 
 end
 
@@ -42,15 +34,25 @@ function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
         res = dfdt - (f1 + source + bc);
     end
 
-if strcmp(opts.timestep_method,'RK45m')
+if strcmp(opts.timestep_method,'ode45')
     
     disp('Using ode45');
-    [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0);
+    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats','on');
+    [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
     
-elseif strcmp(opts.timestep_method,'BDFm')
+elseif strcmp(opts.timestep_method,'ode15s')
+    
+    S = eye(numel(f0));
+    disp('Using ode15s');
+    options = odeset('RelTol',1e-3,'AbsTol',1e-6,...
+        'Stats','on','OutputFcn',@odetpbar,'Refine',20);%,'JPattern',S);
+    [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+    
+elseif strcmp(opts.timestep_method,'ode15i')
     
     dfdt0 = f0.*0;
     [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
+    disp('Using ode15i');
     [tout,fout] = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
     
 end
