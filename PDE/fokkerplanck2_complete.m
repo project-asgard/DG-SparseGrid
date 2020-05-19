@@ -33,10 +33,10 @@ function pde = fokkerplanck2_complete
 % asgard(fokkerplanck2_complete)
 %
 % implicit
-% asgard(fokkerplanck2_complete,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4)
+% asgard(fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4)
 %
 % with adaptivity
-% asgard(fokkerplanck2_complete,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
+% asgard(fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
 
 pde.CFL = 0.01;
 

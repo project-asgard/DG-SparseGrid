@@ -9,10 +9,10 @@ function pde = continuity2
 % asgard(continuity2,'lev',3,'deg',3)
 %
 % implicit
-% asgard(continuity2,'implicit',true)
+% asgard(continuity2,'timestep_method','CN')
 %
 % with adaptivity
-% asgard(continuity2,'implicit',true, 'adapt', true)
+% asgard(continuity2,'timestep_method','CN','adapt',true)
 
 pde.CFL = 0.1;
 

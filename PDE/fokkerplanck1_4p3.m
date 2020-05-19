@@ -8,7 +8,7 @@ function pde = fokkerplanck1_4p3
 % asgard(fokkerplanck1_4p3)
 %
 % implicit
-% asgard(fokkerplanck1_4p3,'implicit',true)
+% asgard(fokkerplanck1_4p3,'timestep_method','CN')
 
 pde.CFL = 0.01;
 sig = 0.1;

@@ -27,7 +27,7 @@ function pde = diffusion1
 % asgard(diffusion1);
 %
 % implicit
-% asgard(diffusion1,'implicit',true);
+% asgard(diffusion1,'timestep_method','CN');
 
 pde.CFL = 0.01;
 

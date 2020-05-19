@@ -11,7 +11,7 @@ function pde = continuity3_old
 % asgard(continuity3);
 %
 % implicit
-% asgard(continuity3,'implicit',true);
+% asgard(continuity3,'timestep_method','CN');
 
 %% Setup the dimensions
 

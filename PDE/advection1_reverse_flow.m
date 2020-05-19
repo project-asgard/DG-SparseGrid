@@ -8,11 +8,11 @@ function pde = advection1_reverse_flow
 %
 % explicit
 % asgard(advection1reverse)
-% asgard(advection1reverse,'lev',4,'deg',3,'implicit',false)
+% asgard(advection1reverse,'lev',4,'deg',3)
 %
 % implicit
-% asgard(advection1reverse,'implicit',true)
-% asgard(advection1reverse,'implicit',true,'CFL',0.01)
+% asgard(advection1reverse,'timestep_method', 'CN')
+% asgard(advection1reverse,'timestep_method', 'CN','CFL',0.01)
 
 %% Setup the dimensions
 
