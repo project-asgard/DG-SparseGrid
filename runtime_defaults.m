@@ -7,7 +7,6 @@ default_lev = 3;
 default_deg = 2;
 default_num_steps = 5;
 default_quiet = false;
-default_implicit = false;
 default_grid_type = 'SG';
 valid_grid_types = {'SG','FG'};
 check_grid_type = @(x) any(validatestring(x,valid_grid_types));
@@ -16,9 +15,9 @@ default_dt = 1.0;
 default_adapt = false;
 default_use_oldhash = false;
 default_use_oldcoeffmat = false;
-default_implicit_method = 'CN';
-valid_implicit_methods = {'BE','CN'};
-check_implicit_method = @(x) any(validatestring(x,valid_implicit_methods));
+default_timestep_method = 'RK3';
+valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3'};
+check_timestep_method = @(x) any(validatestring(x,valid_timestep_methods));
 default_time_independent_A = false;
 default_many_solution_capable = false;
 default_max_lev = 8;
@@ -32,8 +31,7 @@ addParameter(input_parser,'deg',default_deg, @isnumeric);
 addOptional(input_parser,'start_time',default_start_time, @isnumeric);
 addOptional(input_parser,'num_steps',default_num_steps, @isnumeric);
 addOptional(input_parser,'quiet',default_quiet,@islogical);
-addOptional(input_parser,'implicit',default_implicit, @islogical);
-addOptional(input_parser,'implicit_method',default_implicit_method, check_implicit_method);
+addOptional(input_parser,'timestep_method',default_timestep_method, check_timestep_method);
 addOptional(input_parser,'grid_type',default_grid_type, check_grid_type);
 addOptional(input_parser,'CFL',default_CFL, @isnumeric);
 addOptional(input_parser,'dt',default_dt, @isnumeric);
@@ -59,7 +57,7 @@ if numel(varargin) == 0 && ~exist('pde','var')
     disp('');
     disp('e.g.,');
     disp('');
-    disp("asgard(continuity1,'lev',4,'deg',3,'implicit',true,'CFL',0.1,'adapt',true)");
+    disp("asgard(continuity1,'lev',4,'deg',3,'timestep_method','BE','CFL',0.1,'adapt',true)");
     disp('');
     disp('Available options are ...');
     
@@ -124,8 +122,13 @@ end
 opts.dt = input_parser.Results.dt;
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
-opts.implicit = input_parser.Results.implicit;
-opts.implicit_method = input_parser.Results.implicit_method;
+
+opts.timestep_method = input_parser.Results.timestep_method;
+opts.build_A = false;
+if sum(strcmp(opts.timestep_method,{'BE','CN'}))>0
+    opts.build_A = true;
+end
+
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;

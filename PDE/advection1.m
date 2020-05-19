@@ -7,11 +7,11 @@ function pde = advection1
 %
 % explicit
 % asgard(advection1)
-% asgard(advection1,'lev',4,'deg',3,'implicit',false)
+% asgard(advection1,'lev',4,'deg',3)
 %
 % implicit
-% asgard(advection1,'implicit',true)
-% asgard(advection1,'implicit',true,'CFL',0.01)
+% asgard(advection1,'timestep_method','CN')
+% asgard(advection1,'timestep_method','CN','CFL',0.01)
 
 %% Setup the dimensions
 % 

@@ -9,7 +9,7 @@ function pde = continuity2_old
 % asgard(continuity2,'lev',3,'deg',3)
 %
 % implicit
-% asgard(continuity2,'implicit',true)
+% asgard(continuity2,'timestep_method','CN')
 
 pde.CFL = 0.1;
 

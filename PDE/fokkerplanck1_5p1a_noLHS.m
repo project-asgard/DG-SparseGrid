@@ -24,7 +24,7 @@ function pde = fokkerplanck1_5p1a_noLHS
 %
 % Run with
 %
-% asgard(fokkerplanck1_5p1a_noLHS,'implicit',true,'lev',3,'num_steps',50,'CFL',1.5)
+% asgard(fokkerplanck1_5p1a_noLHS,'timestep_method','CN','lev',3,'num_steps',50,'CFL',1.5)
 
 pde.CFL = 0.01;
 

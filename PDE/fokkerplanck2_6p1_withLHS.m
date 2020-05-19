@@ -15,7 +15,7 @@ function pde = fokkerplanck2_6p1_withLHS
 % asgard(fokkerplanck2_6p1_withLHS)
 %
 % implicit
-% asgard(fokkerplanck2_6p1_withLHS,'implicit',true,'num_steps',20,'CFL',1.0,'deg',3,'lev',4)
+% asgard(fokkerplanck2_6p1_withLHS,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4)
 
 pde.CFL = 0.01;
 

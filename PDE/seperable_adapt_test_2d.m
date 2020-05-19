@@ -5,7 +5,7 @@ function pde = seperable_adapt_test_2d
 %
 % Run with
 %
-% asgard(seperable_adapt_test_2d,'implicit',true,'adapt',true,'many_solution_capable',true)
+% asgard(seperable_adapt_test_2d,'timestep_method','CN','adapt',true,'many_solution_capable',true)
 
 pde.CFL = 0.1;
 

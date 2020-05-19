@@ -1,27 +1,70 @@
 function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
-%-------------------------------------------------
-% Time Advance Method Input: Matrix:: A
-%        Vector:: f Time Step:: dt
-% Output: Vector:: f
-%-------------------------------------------------
 
-if opts.implicit
-    if strcmp(opts.implicit_method,'BE')
-        % Backward Euler (BE) first order
-        f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    else
-        % Crank Nicolson (CN) second order
-        f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-    end
+if strcmp(opts.timestep_method,'BE')
+    % Backward Euler (BE) first order
+    f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'CN')
+    % Crank Nicolson (CN) second order
+    f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45'}))>0
+    % One of the atlab ODE integrators.
+    f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);  
 else
+    % RK3 TVD
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 end
 
 end
 
+%% Use Matlab ODE solvers
+
+function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
+
+applyLHS = ~isempty(pde.termsLHS);
+if applyLHS
+    error('ERROR: Matlab ODE integrators not yet implemented for LHS=true');
+end
+
+    function dfdt = explicit_ode(t,f)
+        bc = boundary_condition_vector(pde,opts,hash_table,t);
+        source = source_vector(pde,opts,hash_table,t);
+        f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+        dfdt = f1 + source + bc;
+    end
+
+    function res = implicit_ode(t,f,dfdt)
+        bc = boundary_condition_vector(pde,opts,hash_table,t);
+        source = source_vector(pde,opts,hash_table,t);
+        f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+        res = dfdt - (f1 + source + bc);
+    end
+
+if strcmp(opts.timestep_method,'ode45')
+    
+    if(~opts.quiet);disp('Using ode45');end
+    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats','off');
+    [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
+    
+elseif strcmp(opts.timestep_method,'ode15s')
+    
+    S = eye(numel(f0));
+    if(~opts.quiet);disp('Using ode15s');end
+    options = odeset('RelTol',1e-3,'AbsTol',1e-6,...
+        'Stats','off','OutputFcn',@odetpbar,'Refine',20);%,'JPattern',S);
+    [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+    
+elseif strcmp(opts.timestep_method,'ode15i')
+    
+    dfdt0 = f0.*0;
+    [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
+    if(~opts.quiet);disp('Using ode15i');end
+    [tout,fout] = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
+    
+end
+
+end
 
 %% 3-rd Order Kutta Method (explicit time advance)
-
 function fval = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 
 dims = pde.dimensions;
@@ -79,7 +122,6 @@ end
 
 
 %% Backward Euler (first order implicit time advance)
-
 function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 s0 = source_vector(pde,opts,hash_table,t+dt);
@@ -104,14 +146,12 @@ else
     b = f0 + dt*(s0 + bc0);
 end
 
-
 f1 = AA\b; % Solve at each timestep
 
 end
 
 
 %% Crank Nicolson (second order implicit time advance)
-
 function f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 s0 = source_vector(pde,opts,hash_table,t);

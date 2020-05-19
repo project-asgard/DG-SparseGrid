@@ -7,7 +7,7 @@ function pde = fokkerplanck1_4p5
 %
 % Run with
 %
-% asgard(fokkerplanck1_4p5,'implicit',true,'lev',3,'CFL',0.5,'num_steps',50)
+% asgard(fokkerplanck1_4p5,'timestep_method','CN','lev',3,'CFL',0.5,'num_steps',50)
 
 pde.CFL = 0.01;
 sig = 0.1;
