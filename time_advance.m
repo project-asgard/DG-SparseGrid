@@ -62,6 +62,8 @@ elseif strcmp(opts.timestep_method,'ode15i')
     
 end
 
+fval = reshape(fout(end,:),size(f0));
+
 end
 
 %% 3-rd Order Kutta Method (explicit time advance)
