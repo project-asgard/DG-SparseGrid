@@ -20,6 +20,11 @@ end
 
 function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
 
+applyLHS = ~isempty(pde.termsLHS);
+if applyLHS
+    error('ERROR: Matlab ODE integrators not yet implemented for LHS=true');
+end
+
     function dfdt = explicit_ode(t,f)
         bc = boundary_condition_vector(pde,opts,hash_table,t);
         source = source_vector(pde,opts,hash_table,t);
@@ -36,23 +41,23 @@ function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
 
 if strcmp(opts.timestep_method,'ode45')
     
-    disp('Using ode45');
-    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats','on');
+    if(~opts.quiet);disp('Using ode45');end
+    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats','off');
     [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15s')
     
     S = eye(numel(f0));
-    disp('Using ode15s');
+    if(~opts.quiet);disp('Using ode15s');end
     options = odeset('RelTol',1e-3,'AbsTol',1e-6,...
-        'Stats','on','OutputFcn',@odetpbar,'Refine',20);%,'JPattern',S);
+        'Stats','off','OutputFcn',@odetpbar,'Refine',20);%,'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15i')
     
     dfdt0 = f0.*0;
     [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
-    disp('Using ode15i');
+    if(~opts.quiet);disp('Using ode15i');end
     [tout,fout] = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
     
 end
