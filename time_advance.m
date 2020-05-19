@@ -20,10 +20,17 @@ end
 
 function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
 
+clear strCR;
+
 applyLHS = ~isempty(pde.termsLHS);
 if applyLHS
     error('ERROR: Matlab ODE integrators not yet implemented for LHS=true');
 end
+
+%     function res = fun_for_jacobianest(x) 
+%     res = explicit_ode(t0,x);
+%     disp('calling ode');
+%     end
 
     function dfdt = explicit_ode(t,f)
         bc = boundary_condition_vector(pde,opts,hash_table,t);
@@ -46,11 +53,27 @@ if strcmp(opts.timestep_method,'ode45')
     [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15s')
+        
+%     % estimate Jacobian
+%     numjacopts.diffvar = 2;
+%     numjacopts.vectvars = [];
+%     numjacopts.thresh = 1e-10;
+%     numjacopts.fac = [];
     
-    S = eye(numel(f0));
+%     disp('running odenumjac')
+%     rhs = feval(@explicit_ode,t0,f0);
+%     J = odenumjac(@explicit_ode,{t0 f0},rhs,numjacopts);
+%     S = sparse(J~=0.0);
+%     disp('done')
+    
+%     disp('running jacobianest')
+%     [J2,err] = jacobianest(@fun_for_jacobianest,f0);
+%     disp('done');
+    
+    % call ode15s
     if(~opts.quiet);disp('Using ode15s');end
     options = odeset('RelTol',1e-3,'AbsTol',1e-6,...
-        'Stats','off','OutputFcn',@odetpbar,'Refine',20);%,'JPattern',S);
+        'Stats','off','OutputFcn',@odetpbar,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15i')

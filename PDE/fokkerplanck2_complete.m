@@ -39,7 +39,7 @@ function pde = fokkerplanck2_complete
 % asgard(fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
 
 % For Lin's case the command that should reproduce her results
-% asgard(fokkerplanck2_complete, 'implicit', true, 'lev', 6, 'deg', 5, 'implicit_method', 'BE', 'dt', 0.01, 'num_steps', 3000)
+% asgard(fokkerplanck2_complete,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000)
 
 pde.CFL = 0.01;
 
