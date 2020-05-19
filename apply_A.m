@@ -30,6 +30,7 @@ elementDOF = deg^num_dims;
 
 totalDOF = nWork * elementDOF;
 ALHS = 0;
+A = 0;
 if opts.build_A
     A = zeros(totalDOF,totalDOF); % Only filled if using hand coded implicit methods
 end

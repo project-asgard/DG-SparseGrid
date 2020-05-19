@@ -38,11 +38,14 @@ function pde = fokkerplanck2_complete
 % with adaptivity
 % asgard(fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
 
+% For Lin's case the command that should reproduce her results
+% asgard(fokkerplanck2_complete, 'implicit', true, 'lev', 6, 'deg', 5, 'implicit_method', 'BE', 'dt', 0.01, 'num_steps', 3000)
+
 pde.CFL = 0.01;
 
 %%
 % Select 6.1, 6.2, 6.3, etc where it goes as 6.test
-test = '6p1b'; 
+test = 'full'; 
 
 %%
 % Define a few relevant functions
@@ -65,6 +68,11 @@ switch test
         Z = 1;
         E = 0.0025;
         tau = 10^5;
+    case 'full'
+        delta = 0.3;
+        Z = 5;
+        E = 0.4;
+        tau = 10^5;
 end
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
@@ -74,6 +82,8 @@ Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 Cb = @(p)1/2*nuEE*vT^2*1./vx(p).*(Z+phi(vx(p))-psi(vx(p))+delta^4*vx(p).^2/2);
 
 Cf = @(p)2*nuEE*vT*psi(vx(p));
+
+
 
     function ret = phi(x)
         ret = erf(x);
@@ -107,6 +117,8 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     ret = ret + h(l) * P;
                     
                 end
+            case 'full'
+                ret = x.*0 + 1;
         end
     end
 
@@ -129,12 +141,23 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
             case '6p1c'
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
-                
+            case 'full'
+                N = 1000;
+                h = 20/N;
+                Q = 0;
+                Fun = @(p)exp(-2/delta^2*sqrt(1+delta^2*p.^2));
+                for i = 1:N
+                    x0 = (i-1)*h;
+                    x1 = i*h;
+                    [xi,w] = lgwt(20,x0,x1);
+                    Q = Q+sum(w.*Fun(xi).*xi.^2);
+                 end
+                ret = exp(-2/delta^2*sqrt(1+delta^2*x.^2))/(2*Q);
         end
     end
 
 
-    function ret = soln_z(x,t)
+    function ret = soln_z(x,~)
         ret = x.*0+1;
     end
     function ret = soln_p(x,t)
@@ -143,8 +166,8 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0.1;
-dim_p.domainMax = +10;
+dim_p.domainMin = 0;
+dim_p.domainMax = +20;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
 dim_z.domainMin = -1;
@@ -177,8 +200,8 @@ g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3  = GRAD(num_dims,g3,-1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'D','D');
+pterm3  = GRAD(num_dims,g3,-1,'N','N');
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -194,7 +217,7 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'N','N');
 term2_p = TERM_1D({pterm1,pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
@@ -236,7 +259,7 @@ pterm1   = MASS(g1);
 termE1_z = TERM_1D({pterm1});
 
 pterm1 = MASS(g2); 
-pterm2 = GRAD(num_dims,g3,1,'N','D');% Lin's Setting
+pterm2 = GRAD(num_dims,g3,1,'N','N');% Lin's Setting
 termE1_p = TERM_1D({pterm1,pterm2});
 
 termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
@@ -270,7 +293,7 @@ g2 = @(x,p,t,dat) x.^3 .* gamma(x) ./ tau;
 g3 = @(x,p,t,dat) 1-x.^2;
 
 pterm1   = MASS(g1);% This is not needed - by Lin
-pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
+pterm2   = GRAD(num_dims,g2,1,'N','N');% Lin's Setting
 
 termR1_p = TERM_1D({pterm1,pterm2});
 
@@ -300,7 +323,7 @@ termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
 %%
 % Add terms to the pde object
 
-pde.terms = {termC1,termC2,termC3,termE1,termE2,termR1,termR2};
+pde.terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

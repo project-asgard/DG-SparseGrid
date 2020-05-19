@@ -62,13 +62,9 @@ elseif strcmp(opts.timestep_method,'ode15i')
     
 end
 
-fval = reshape(fout(end,:),size(f0));
-
 end
 
-
 %% 3-rd Order Kutta Method (explicit time advance)
-
 function fval = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 
 dims = pde.dimensions;
@@ -126,7 +122,6 @@ end
 
 
 %% Backward Euler (first order implicit time advance)
-
 function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 s0 = source_vector(pde,opts,hash_table,t+dt);
@@ -151,14 +146,12 @@ else
     b = f0 + dt*(s0 + bc0);
 end
 
-
 f1 = AA\b; % Solve at each timestep
 
 end
 
 
 %% Crank Nicolson (second order implicit time advance)
-
 function f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 s0 = source_vector(pde,opts,hash_table,t);

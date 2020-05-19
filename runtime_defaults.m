@@ -122,9 +122,10 @@ end
 opts.dt = input_parser.Results.dt;
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
+
 opts.timestep_method = input_parser.Results.timestep_method;
 opts.build_A = false;
-if sum(strcmp(opts.timestep_method,{'BE','CN'}))
+if sum(strcmp(opts.timestep_method,{'BE','CN'}))>0
     opts.build_A = true;
 end
 
