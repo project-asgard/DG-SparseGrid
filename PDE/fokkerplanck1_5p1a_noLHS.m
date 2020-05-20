@@ -128,7 +128,8 @@ term2   = TERM_ND(num_dims,{term2_x});
 %%
 % Add terms to the pde object
 
-pde.terms = {term1,term2};
+% pde.terms = {term1,term2};
+pde.terms = {term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

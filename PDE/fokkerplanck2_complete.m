@@ -15,7 +15,7 @@ function pde = fokkerplanck2_complete
 % 
 % termC1 == 1/p^2*d/dp*p^2*Ca*df/dp
 % termC2 == 1/p^2*d/dp*p^2*Cf*f
-% termC3 == termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
+% termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
 %
 % -div(flux_E) == termE1 + termE2
 %
@@ -82,8 +82,6 @@ Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 Cb = @(p)1/2*nuEE*vT^2*1./vx(p).*(Z+phi(vx(p))-psi(vx(p))+delta^4*vx(p).^2/2);
 
 Cf = @(p)2*nuEE*vT*psi(vx(p));
-
-
 
     function ret = phi(x)
         ret = erf(x);
@@ -217,7 +215,7 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'N','N');
+pterm2  = GRAD(num_dims,g2,-1,'N','N');
 term2_p = TERM_1D({pterm1,pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
 
@@ -259,7 +257,7 @@ pterm1   = MASS(g1);
 termE1_z = TERM_1D({pterm1});
 
 pterm1 = MASS(g2); 
-pterm2 = GRAD(num_dims,g3,1,'N','N');% Lin's Setting
+pterm2 = GRAD(num_dims,g3,0,'N','N');% Lin's Setting
 termE1_p = TERM_1D({pterm1,pterm2});
 
 termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
@@ -275,7 +273,7 @@ g2 = @(x,p,t,dat) 1-x.^2;
 pterm1   = MASS(g1);
 termE2_p = TERM_1D({pterm1});
 
-pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+pterm1   = GRAD(num_dims,g2,+1,'N','N');% Lin's Setting
 termE2_z = TERM_1D({pterm1});
 
 termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
@@ -316,13 +314,10 @@ termR2_p = TERM_1D({pterm1});
 pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
 termR2_z = TERM_1D({pterm1});
 
-
 termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
-
 
 %%
 % Add terms to the pde object
-
 pde.terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
 
 %% Construct some parameters and add to pde object.
