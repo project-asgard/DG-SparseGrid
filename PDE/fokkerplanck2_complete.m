@@ -37,9 +37,14 @@ function pde = fokkerplanck2_complete
 %
 % with adaptivity
 % asgard(fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
-
+%
 % For Lin's case the command that should reproduce her results
 % asgard(fokkerplanck2_complete,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000)
+%
+% David's adjustment can be run as follows ...
+% asgard(fokkerplanck2_complete,'timestep_method','BE','lev',3,'deg',6,'dt',1,'num_steps',50,'grid_type','FG')
+% or, run with the high order time integrator ...
+% asgard(fokkerplanck2_complete,'timestep_method','ode15s','lev',3,'deg',5,'dt',50,'num_steps',1,'grid_type','SG')
 
 pde.CFL = 0.01;
 
