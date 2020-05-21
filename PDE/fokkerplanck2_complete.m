@@ -203,11 +203,9 @@ g2 = @(x,p,t,dat) x.^2.*Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm1  = MASS(g1);
-% pterm2  = GRAD(num_dims,g2,+1,'D','D');
-% pterm3  = GRAD(num_dims,g3,-1,'N','N');
-% By Lin
-pterm2  = GRAD(num_dims,g2,-1,'D','N');
-pterm3  = GRAD(num_dims,g3,+1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'D','D');
+pterm3  = GRAD(num_dims,g3,-1,'N','N');
+
 
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
@@ -224,9 +222,9 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
 pterm1  = MASS(g1);
-% pterm2  = GRAD(num_dims,g2,-1,'N','N');
-% By Lin
-pterm2  = GRAD(num_dims,g2,1,'N','D');
+pterm2  = GRAD(num_dims,g2,-1,'N','N');
+
+
 
 term2_p = TERM_1D({pterm1,pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
@@ -247,11 +245,10 @@ term3_p = TERM_1D({pterm1});
 
 g2 = @(x,p,t,dat) (1-x.^2);
 g3 = @(x,p,t,dat) x.*0+1;
-% pterm1  = GRAD(num_dims,g2,+1,'D','D');
-% pterm2  = GRAD(num_dims,g3,-1,'N','N');
-% By Lin
-pterm1  = GRAD(num_dims,g2,-1,'D','D');
-pterm2  = GRAD(num_dims,g3,+1,'N','N');
+pterm1  = GRAD(num_dims,g2,+1,'D','D');
+pterm2  = GRAD(num_dims,g3,-1,'N','N');
+
+
 
 term3_z = TERM_1D({pterm1,pterm2});
 
@@ -265,17 +262,19 @@ termC3 = TERM_ND(num_dims,{term3_p,term3_z});
 %   q(p) == g2(p) u(p)       [mass, g2(p) = 1/p^2, BC N/A]
 %   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
 
-g1 = @(x,p,t,dat) -E.*x;
+% g1 = @(x,p,t,dat) -E.*x;
+% g2 = @(x,p,t,dat) 1./x.^2;
+% g3 = @(x,p,t,dat) x.^2;
+
+g1 = @(x,p,t,dat) -x;
 g2 = @(x,p,t,dat) 1./x.^2;
-g3 = @(x,p,t,dat) x.^2;
+g3 = @(x,p,t,dat) E*x.^2;
 
 pterm1   = MASS(g1);
 termE1_z = TERM_1D({pterm1});
 
 pterm1 = MASS(g2); 
-% pterm2 = GRAD(num_dims,g3,0,'N','N');% Lin's Setting
-% By Lin
-pterm2   = GRAD(num_dims,g3,1,'N','D');
+pterm2 = GRAD(num_dims,g3,0,'N','N');% Lin's Setting
 
 termE1_p = TERM_1D({pterm1,pterm2});
 
@@ -287,15 +286,16 @@ termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
 %   q(p) == g1(p) f(p)       [mass, g1(p) = -E*p,  BC N/A]
 %   r(z) == d/dz g2(z) f(z)  [grad, g2(z) = 1-z^2, BCL=N,BCR=N]
 
-g1 = @(x,p,t,dat) -E.*x;
-g2 = @(x,p,t,dat) 1-x.^2;
+% g1 = @(x,p,t,dat) -E.*x;
+% g2 = @(x,p,t,dat) 1-x.^2;
+g1 = @(x,p,t,dat) -1./x;
+g2 = @(x,p,t,dat) E*(1-x.^2);
 
 pterm1   = MASS(g1);
 termE2_p = TERM_1D({pterm1});
 
-% pterm1   = GRAD(num_dims,g2,+1,'N','N');% Lin's Setting
-% By Lin
-pterm1   = GRAD(num_dims,g2,0,'N','N');
+pterm1   = GRAD(num_dims,g2,+1,'N','N');% Lin's Setting
+
 
 termE2_z = TERM_1D({pterm1});
 
@@ -314,9 +314,8 @@ g2 = @(x,p,t,dat) x.^3 .* gamma(x) ./ tau;
 g3 = @(x,p,t,dat) 1-x.^2;
 
 pterm1   = MASS(g1);% This is not needed - by Lin
-% pterm2   = GRAD(num_dims,g2,1,'N','N');% Lin's Setting
-% By Lin
-pterm2   = GRAD(num_dims,g2,1,'N','D');% Lin's Setting
+pterm2   = GRAD(num_dims,g2,1,'N','N');% Lin's Setting
+
 
 termR1_p = TERM_1D({pterm1,pterm2});
 
@@ -336,9 +335,8 @@ g2 = @(x,p,t,dat) x.*(1-x.^2);
 pterm1   = MASS(g1);
 termR2_p = TERM_1D({pterm1});
 
-% pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
-% By Lin
-pterm1   = GRAD(num_dims,g2,0,'D','D');% Lin's Setting
+pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+
 termR2_z = TERM_1D({pterm1});
 
 termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
