@@ -129,10 +129,9 @@ if nDims==2
     end
     
     figure(9)
-    clf
     [xx,yy] = meshgrid(x,y);
     p_par = xx.*yy;
-    p_pen = (abs(1-yy.^2)).^(1/2).*xx;
+    p_pen = (1-xx.^2).^(1/2).*yy;
     f2d = f2d_with_noise;
     contour(p_par,p_pen,f2d,10,'LineWidth',2)
 end
