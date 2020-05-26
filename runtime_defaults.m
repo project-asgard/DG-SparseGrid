@@ -16,7 +16,7 @@ default_adapt = false;
 default_use_oldhash = false;
 default_use_oldcoeffmat = false;
 default_timestep_method = 'RK3';
-valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3'};
+valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','BDF2'};
 check_timestep_method = @(x) any(validatestring(x,valid_timestep_methods));
 default_time_independent_A = false;
 default_many_solution_capable = false;
@@ -125,7 +125,7 @@ opts.grid_type = input_parser.Results.grid_type;
 
 opts.timestep_method = input_parser.Results.timestep_method;
 opts.build_A = false;
-if sum(strcmp(opts.timestep_method,{'BE','CN'}))>0
+if sum(strcmp(opts.timestep_method,{'BE','CN','BDF2'}))>0
     opts.build_A = true;
 end
 

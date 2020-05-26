@@ -1,17 +1,20 @@
-function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+function f1 = time_advance(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 if strcmp(opts.timestep_method,'BE')
     % Backward Euler (BE) first order
-    f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
-    f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'BDF2')
+    % Backward Difference Forumla (BDF) second order
+    f1 = bdf2(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
 elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45'}))>0
     % One of the atlab ODE integrators.
-    f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);  
+    f1 = ODEm(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);  
 else
     % RK3 TVD
-    f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    f1 = RungeKutta3(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
 end
 
 end
@@ -49,7 +52,7 @@ end
 if strcmp(opts.timestep_method,'ode45')
     
     if(~opts.quiet);disp('Using ode45');end
-    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats','off');
+    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats','on');
     [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15s')
@@ -72,7 +75,7 @@ elseif strcmp(opts.timestep_method,'ode15s')
     
     % call ode15s
     if(~opts.quiet);disp('Using ode15s');end
-    options = odeset('RelTol',1e-4,'AbsTol',1e-3,...
+    options = odeset('RelTol',1e-4,'AbsTol',1e-6,...
         'Stats','on','OutputFcn',@odetpbar,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
     
@@ -235,5 +238,52 @@ else
     
     f1 = AA_inv * b;
 end
+
+end
+
+
+function f2 = bdf2(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+s1 = source_vector(pde,opts,hash_table,t+dt);
+s2 = source_vector(pde,opts,hash_table,t+2*dt);
+
+bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+bc2 = boundary_condition_vector(pde,opts,hash_table,t+2*dt);
+
+% %%
+% Apply any non-identity LHS mass matrix coefficient
+
+applyLHS = ~isempty(pde.termsLHS);
+
+%Obtain f1 through same process as Backward Euler
+if t == 0 
+    %opts.timestep_method = 'ode15s';
+    %f1 = ODEm(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
+    fac = 100;
+    for n=1:fac
+        f0 = backward_euler(pde,opts,A_data,f0,t,dt/fac,deg,hash_table,Vmax,Emax);
+        t = t + dt/fac;
+    end
+    f1 = f0;
+    save('f1.mat', 'f1');
+else
+    load('f1.mat', 'f1'); %Need to update this at the end
+end
+
+if applyLHS %Now we only need BDF2
+    %Obtain updated A and ALHS matrices
+    [~,A2,ALHS2] = apply_A(pde,opts,A_data,f1,deg);
+    I = eye(numel(diag(A2)));
+    AA2 = I - 2/3*dt*(ALHS2 \ A2);
+    b2 = 4*f1/3 - f0/3 + 2/3*dt*(ALHS2 \ (bc2 + s2));
+else
+    [~,A2] = apply_A(pde,opts,A_data,f1,deg);
+    I = eye(numel(diag(A2)));
+    AA2 = I -2/3*dt*A2;
+    b2 = 4*f1/3 - f0/3 + 2/3*dt*(bc2 + s2);
+end
+f2 = AA2 \ b2;
+f1 = f2; %Updated initial guess for f1
+save('f1', 'f1');
 
 end
