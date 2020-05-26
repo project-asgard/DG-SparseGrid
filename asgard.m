@@ -366,7 +366,7 @@ for L = 1:num_steps
             plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates);
            
             % this is just for the RE paper
-            plot_fval_in_cyl = true;
+            plot_fval_in_cyl = false;
             if plot_fval_in_cyl
                 p = nodes{1};
                 z = nodes{2};
@@ -377,7 +377,7 @@ for L = 1:num_steps
                 p2dA = sqrt(ppar2d.^2+pper2d.^2);
                 z2dA = cos(atan2(pper2d,ppar2d));
                 f2d = interp2(p,z,f,p2dA,z2dA,'spline',0);
-                levs = linspace(1,20,20)./20.*max(f(:));
+                levs = linspace(1,10,10)./10.*max(f(:));
                 figure(87)
                 contour(ppar,pper,f2d,levs)
             end
