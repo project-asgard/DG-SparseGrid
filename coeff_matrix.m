@@ -290,7 +290,7 @@ else
                 ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
                 ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
                 ];
-            
+            FCL(isnan(FCL))=0;
             %%
             % If dirichelt
             % u^-_LEFT = g(LEFT)
@@ -333,6 +333,7 @@ else
                         ( p_R)' * FCR * p_R/2 + FluxVal * abs(FCR)/2 * ( p_R)' *   p_R,...
                         ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
                         ];
+
                 end
             end
             
@@ -344,6 +345,7 @@ else
                         ( p_R)' * FCR * p_R,...
                         ( p_R)' * (p_R-p_R),...% xR
                         ];
+
                 end
             end
             

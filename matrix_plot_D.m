@@ -31,6 +31,10 @@ nodes = zeros(dof_1D,1);
 quad_x_left_element  = [-1 quad_x_interior_element']';
 quad_x_right_element = [quad_x_interior_element' +1]';
 
+
+% quad_x_left_element  = [quad_x_interior_element']';
+% quad_x_right_element = [quad_x_interior_element']';
+
 dof = numel(quad_x_interior_element);
 
 p_val       = lin_legendre(quad_x_interior_element,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
@@ -38,6 +42,7 @@ p_val_left  = lin_legendre(quad_x_left_element,deg)    *sqrt(1/h);
 p_val_right = lin_legendre(quad_x_right_element,deg)   *sqrt(1/h);
 
 Meval = sparse(dof*(n-2)+(dof+1)*2,dof_1D);
+% Meval = sparse(dof*(n-2)+(dof)*2,dof_1D);
 
 for i=0:n-1
     
@@ -58,12 +63,15 @@ for i=0:n-1
     Iv = [deg*i+1:deg*(i+1)];
     if i==0
         Iu = [1:dof+1];
+%         Iu = [1:dof];
         Meval(Iu,Iv) = p_val_left;       
     elseif i==n-1
         Iu = [dof*i+1+1:dof*(i+1)+2];
+%         Iu = [dof*i+1:dof*(i+1)];
         Meval(Iu,Iv) = p_val_right;       
     else
         Iu = [dof*i+1:dof*(i+1)]+1;
+%         Iu = [dof*i+1:dof*(i+1)];
         Meval(Iu,Iv) = p_val;       
     end
     

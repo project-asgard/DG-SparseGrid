@@ -380,6 +380,8 @@ for L = 1:num_steps
                 levs = linspace(1,10,10)./10.*max(f(:));
                 figure(87)
                 contour(ppar,pper,f2d,levs)
+                
+                
             end
         end
         
