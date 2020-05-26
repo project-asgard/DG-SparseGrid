@@ -72,8 +72,8 @@ elseif strcmp(opts.timestep_method,'ode15s')
     
     % call ode15s
     if(~opts.quiet);disp('Using ode15s');end
-    options = odeset('RelTol',1e-3,'AbsTol',1e-6,...
-        'Stats','off','OutputFcn',@odetpbar,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
+    options = odeset('RelTol',1e-4,'AbsTol',1e-3,...
+        'Stats','on','OutputFcn',@odetpbar,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15i')
