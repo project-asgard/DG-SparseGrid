@@ -256,13 +256,14 @@ bc2 = boundary_condition_vector(pde,opts,hash_table,t+2*dt);
 applyLHS = ~isempty(pde.termsLHS);
 
 %Obtain f1 through same process as Backward Euler
-if t == 0 
-    %opts.timestep_method = 'ode15s';
-    %f1 = ODEm(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
-    fac = 100;
+if t <= dt 
+%    opts.timestep_method = 'ode45';
+%    f1 = ODEm(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
+    fac = 200;
     for n=1:fac
         f0 = backward_euler(pde,opts,A_data,f0,t,dt/fac,deg,hash_table,Vmax,Emax);
-        t = t + dt/fac;
+        %f0 = RungeKutta3(pde,opts,A_data,f0,t,dt/fac,deg,hash_table,Vmax,Emax);
+       t = t + dt/fac;
     end
     f1 = f0;
     save('f1.mat', 'f1');
@@ -283,7 +284,7 @@ else
     b2 = 4*f1/3 - f0/3 + 2/3*dt*(bc2 + s2);
 end
 f2 = AA2 \ b2;
-f1 = f2; %Updated initial guess for f1
-save('f1', 'f1');
+f1 = f2 ;
+save('f1.mat', 'f1');
 
 end

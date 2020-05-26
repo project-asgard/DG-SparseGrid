@@ -265,3 +265,17 @@ disp('Testing fokkerplanck1_5p1a (BE / with LHS)');
 verifyLessThan(testCase,err,2.5e-2);
 end
 
+function asgard_BDF2_test(testCase)
+addpath(genpath(pwd));
+disp('Testing BDF2');
+[err,act_f,act_frs] = asgard(diffusion1,'timestep_method','BDF2',...
+    'lev',3,'num_steps',2,'dt',0.001,'quiet',true);
+[err1,act_f,act_frs] = asgard(diffusion1,'timestep_method','BDF2',...
+    'lev',3,'num_steps',4,'dt',0.0005,'quiet',true);
+[err2,act_f,act_frs] = asgard(diffusion1,'timestep_method','BDF2',...
+    'lev',3,'num_steps',8,'dt',0.00025,'quiet',true);
+logslope = (log(err1) - log(err))/(log(1/0.001) - log(1/0.0005));
+slopeerr = abs(logslope - 2.000);
+verifyLessThan(testCase,slopeerr,1e-3);
+end
+
