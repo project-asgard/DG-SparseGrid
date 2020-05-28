@@ -23,7 +23,10 @@ function pde = projecti_diff1
 % asgard(projecti_diff1);
 %
 % implicit
-% asgard(projecti_diff1,'lev',3,'deg',3,'timestep_method','BE', 'dt',0.05,'num_steps',100)
+% asgard(projecti_diff1,'timestep_method','CN');
+%
+% FE
+% asgard(projecti_diff1,'lev',4,'deg',4,'timestep_method','FE', 'dt',0.01,'num_steps',16)
 
 pde.CFL = 0.01;
 

@@ -3,6 +3,9 @@ function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 if strcmp(opts.timestep_method,'BE')
     % Backward Euler (BE) first order
     f = backward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'FE')
+    % Forward Euler (FE) first order
+    f = forward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -72,7 +75,7 @@ elseif strcmp(opts.timestep_method,'ode15s')
     
     % call ode15s
     if(~opts.quiet);disp('Using ode15s');end
-    options = odeset('RelTol',1e-4,'AbsTol',1e-3,...
+    options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
         'Stats','on','OutputFcn',@odetpbar,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
     
@@ -145,7 +148,6 @@ fval = f + dt*(b1*k1 + b2*k2 + b3*k3);
 
 end
 
-
 %% Backward Euler (first order implicit time advance)
 function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
@@ -172,6 +174,22 @@ else
 end
 
 f1 = AA\b; % Solve at each timestep
+
+end
+
+%% Forward Euler
+function f1 = forward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+
+applyLHS = ~isempty(pde.termsLHS);
+
+if applyLHS
+    error('apply LHS not implemented for FE');
+else
+    f1 = f0 + dt * (apply_A(pde,opts,A_data,f0,deg) + s0 + bc0);
+end
 
 end
 
