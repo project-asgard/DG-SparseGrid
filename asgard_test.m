@@ -268,14 +268,11 @@ end
 function asgard_BDF2_test(testCase)
 addpath(genpath(pwd));
 disp('Testing BDF2');
-[err,act_f,act_frs] = asgard(advection1,'timestep_method','BDF2',...
-    'lev',3, 'deg', 4,'num_steps',2,'dt',0.0001,'quiet',true);
-[err1,act_f,act_frs] = asgard(advection1,'timestep_method','BDF2',...
-    'lev',3, 'deg', 4,'num_steps',4,'dt',0.00005,'quiet',true);
-[err2,act_f,act_frs] = asgard(advection1,'timestep_method','BDF2',...
-    'lev',3, 'deg', 4,'num_steps',8,'dt',0.000025,'quiet',true);
-logslope = (log(err1) - log(err))/(log(1/0.0001) - log(1/0.00005));
+[err,act_f,act_frs] = asgard(fokkerplanck1_4p1a,'lev',4,'deg',5,'timestep_method','BDF2', 'dt',0.01,'num_steps',1, 'quiet', true);
+[err1,act_f,act_frs] = asgard(fokkerplanck1_4p1a,'lev',4,'deg',5,'timestep_method','BDF2', 'dt',0.005,'num_steps',2,'quiet', true);
+[err2,act_f,act_frs] = asgard(fokkerplanck1_4p1a,'lev',4,'deg',5,'timestep_method','BDF2', 'dt',0.0025,'num_steps',4,'quiet', true);
+logslope = (log(err1) - log(err))/(log(1/0.1) - log(1/0.05));
 slopeerr = abs(logslope - 2.000);
-verifyLessThan(testCase,slopeerr,1e-3);
+verifyLessThan(testCase,slopeerr,2.5e-2);
 end
 

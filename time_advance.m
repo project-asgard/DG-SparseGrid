@@ -244,11 +244,11 @@ end
 
 function f2 = bdf2(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
-s1 = source_vector(pde,opts,hash_table,t+dt);
-s2 = source_vector(pde,opts,hash_table,t+2*dt);
+s1 = source_vector(pde,opts,hash_table,t+dt/2);
+s2 = source_vector(pde,opts,hash_table,t+dt);
 
-bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
-bc2 = boundary_condition_vector(pde,opts,hash_table,t+2*dt);
+bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt/2);
+bc2 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
 % %%
 % Apply any non-identity LHS mass matrix coefficient
@@ -256,7 +256,7 @@ bc2 = boundary_condition_vector(pde,opts,hash_table,t+2*dt);
 applyLHS = ~isempty(pde.termsLHS);
 
 %Obtain f1 through same process as Backward Euler
-if t <= dt 
+if t == 0
 %    opts.timestep_method = 'ode45';
 %    f1 = ODEm(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax);
     fac = 200;
