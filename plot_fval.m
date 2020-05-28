@@ -41,20 +41,28 @@ if num_dims==2
     
     nx = numel(x);
     ny = numel(y);
+
+    stat = mkdir('output'); %directory for SG output 
+    fName = ['output/f2d-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+    save(fName, 'x', 'y', 'f2d');
     
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(ny/2));
-    if ny > 2
-        sy = sy+2; % just to get off the exact middle
-    end
+    sy = max(1,floor(ny-1));
+%    if ny > 2
+%        sy = sy+2; % just to get off the exact middle
+%    end
     
     f1d = f2d(sy,:);
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    plot(x,f1d,'-o');
+    fName = ['output/f1d_x-' sprintf('deg_%d',deg1) '.mat'];
+    save(fName, 'x', 'f1d');
+%    plot(x,f1d,'-o');
+    semilogy(x,f1d,'LineWidth', 2); %semilog for SG output
+    ylim([10^-10, 10^0]);
     title('1D slice (vertical)');
     
     %%
@@ -76,7 +84,10 @@ if num_dims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,2);
-    plot(y,f1d,'-o');
+    fName = ['output/f1d_y-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+    save(fName, 'y', 'f1d');
+ %   plot(y,f1d,'-o');
+    semilogy(y,f1d,'LineWidth',2); %semilog for SG output
     title('1D slice (horizontal)');
     
     if pde.checkAnalytic
@@ -94,7 +105,8 @@ if num_dims==2
     f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
     contourf(x,y,f2d_with_noise,'LineColor','none');
     title('numeric 2D solution');
-    
+    xline(x(sx), 'LineWidth', 2);
+    yline(y(sy), 'LineWidth', 2);
     if nargin >= 6
         hold on
         scatter(coordinates(:,1),coordinates(:,2),60,'+','MarkerEdgeColor','white')
@@ -107,13 +119,15 @@ if num_dims==2
         title('analytic 2D solution');
     end
     
-%     figure(9)
-%     clf
-%     [xx,yy] = meshgrid(x,y);
-%     p_par = xx.*yy;
-%     p_pen = (abs(1-yy.^2)).^(1/2).*xx;
-%     f2d = f2d_with_noise;
-%     contour(p_par,p_pen,f2d,10,'LineWidth',2)
+    figure(9)
+    clf
+    [xx,yy] = meshgrid(x,y);
+    p_par = xx.*yy;
+    p_pen = (abs(1-yy.^2)).^(1/2).*xx;
+    f2d = f2d_with_noise;
+    fName = ['output/f2d_coords-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+    save(fName, 'p_par', 'p_pen', 'f2d');
+    contour(p_par,p_pen,f2d,10,'LineWidth',2)
 end
 
 if num_dims==3
