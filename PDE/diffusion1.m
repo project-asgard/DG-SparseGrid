@@ -28,15 +28,17 @@ function pde = diffusion1
 %
 % implicit
 % asgard(diffusion1,'timestep_method','CN');
-
+%
+%Louis: With small nu, stability is maintained for longer times
+% asgard(diffusion1,'lev',3,'deg',4,'timestep_method','BE', 'dt',0.05,'num_steps',20)
 pde.CFL = 0.01;
 
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x,y)
-
-soln_x = @(x) cos(pi*x);
-soln_t = @(t) exp(-2*pi^2*t);
+nu = 0.01; %coefficient set to be very small to allow for stability
+soln_x = @(x) cos(nu*x);
+soln_t = @(t) exp(-2*nu^2*t);
 
 BCFunc = @(x) soln_x(x);
 BCFunc_t = @(t) soln_t(t);
@@ -108,8 +110,8 @@ pde.params = params;
 %%
 % Sources
 
-s1x = @(x,p,t) -pi^2*cos(pi*x);
-s1t = @(t,p) exp(-2*pi^2*t);
+s1x = @(x,p,t) -nu^2*cos(nu*x);
+s1t = @(t,p) exp(-2*nu^2*t);
 source1 = {s1x, s1t};
 
 pde.sources = {source1};
