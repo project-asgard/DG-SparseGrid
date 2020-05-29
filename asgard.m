@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace] = asgard (pde, varargin)
+function [err,fval,fval_realspace,nodes] = asgard (pde, varargin)
 
 format short e
 folder = fileparts(which(mfilename));
