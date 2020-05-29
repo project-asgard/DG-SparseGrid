@@ -58,7 +58,7 @@ if num_dims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    fName = ['output/f1d_x-' sprintf('deg_%d',deg1) '.mat'];
+    fName = ['output/f1d_x-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
     save(fName, 'x', 'f1d');
 %    plot(x,f1d,'-o');
     semilogy(x,f1d,'LineWidth', 2); %semilog for SG output
