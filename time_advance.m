@@ -11,7 +11,7 @@ elseif strcmp(opts.timestep_method,'CN')
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45'}))>0
     % One of the atlab ODE integrators.
-    f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);  
+    f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 else
     % RK3 TVD
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -30,7 +30,7 @@ if applyLHS
     error('ERROR: Matlab ODE integrators not yet implemented for LHS=true');
 end
 
-%     function res = fun_for_jacobianest(x) 
+%     function res = fun_for_jacobianest(x)
 %     res = explicit_ode(t0,x);
 %     disp('calling ode');
 %     end
@@ -56,22 +56,22 @@ if strcmp(opts.timestep_method,'ode45')
     [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15s')
-        
-%     % estimate Jacobian
-%     numjacopts.diffvar = 2;
-%     numjacopts.vectvars = [];
-%     numjacopts.thresh = 1e-10;
-%     numjacopts.fac = [];
     
-%     disp('running odenumjac')
-%     rhs = feval(@explicit_ode,t0,f0);
-%     J = odenumjac(@explicit_ode,{t0 f0},rhs,numjacopts);
-%     S = sparse(J~=0.0);
-%     disp('done')
+    %     % estimate Jacobian
+    %     numjacopts.diffvar = 2;
+    %     numjacopts.vectvars = [];
+    %     numjacopts.thresh = 1e-10;
+    %     numjacopts.fac = [];
     
-%     disp('running jacobianest')
-%     [J2,err] = jacobianest(@fun_for_jacobianest,f0);
-%     disp('done');
+    %     disp('running odenumjac')
+    %     rhs = feval(@explicit_ode,t0,f0);
+    %     J = odenumjac(@explicit_ode,{t0 f0},rhs,numjacopts);
+    %     S = sparse(J~=0.0);
+    %     disp('done')
+    
+    %     disp('running jacobianest')
+    %     [J2,err] = jacobianest(@fun_for_jacobianest,f0);
+    %     disp('done');
     
     % call ode15s
     if(~opts.quiet);disp('Using ode15s');end
@@ -137,45 +137,17 @@ if applyLHS
     %     k3 = invMatLHS * (k3 + rhs3);
     k3 = ALHS \ (k3 + rhs3);
 else
-     k1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax)  + source1 + bc1;
-     y1 = f + dt*a21*k1;
-     k2 = apply_A(pde,opts,A_data,y1,deg,Vmax,Emax) + source2 + bc2;
-     y2 = f + dt*(a31*k1 + a32*k2);
-     k3 = apply_A(pde,opts,A_data,y2,deg,Vmax,Emax) + source3 + bc3;
+    k1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax)  + source1 + bc1;
+    y1 = f + dt*a21*k1;
+    k2 = apply_A(pde,opts,A_data,y1,deg,Vmax,Emax) + source2 + bc2;
+    y2 = f + dt*(a31*k1 + a32*k2);
+    k3 = apply_A(pde,opts,A_data,y2,deg,Vmax,Emax) + source3 + bc3;
 end
 
 fval = f + dt*(b1*k1 + b2*k2 + b3*k3);
 
 end
 
-%% Backward Euler (first order implicit time advance)
-function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
-
-s0 = source_vector(pde,opts,hash_table,t+dt);
-bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
-
-% %%
-% Apply any non-identity LHS mass matrix coefficient
-
-applyLHS = ~isempty(pde.termsLHS);
-
-[~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-
-I = eye(numel(diag(A)));
-
-if applyLHS
-    %     AA = I - dt*inv(ALHS)*A;
-    %     b = f0 + dt*inv(ALHS)*(s1 + bc1);
-    AA = I - dt*(ALHS \ A);
-    b = f0 + dt*(ALHS \ (s0 + bc0));
-else
-    AA = I - dt*A;
-    b = f0 + dt*(s0 + bc0);
-end
-
-f1 = AA\b; % Solve at each timestep
-
-end
 
 %% Forward Euler
 function f1 = forward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
@@ -191,6 +163,56 @@ else
     f1 = f0 + dt * (apply_A(pde,opts,A_data,f0,deg) + s0 + bc0);
 end
 
+end
+
+%% Backward Euler (first order implicit time advance)
+function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+
+if opts.time_independent_A
+    persistent A;
+    persistent AA_inv;
+    persistent ALHS_inv;
+else
+    A = [];
+    AA_inv = [];
+    ALHS_inv = [];
+end
+
+if isempty(AA_inv) || ~opts.time_independent_A
+    applyLHS = ~isempty(pde.termsLHS);  
+    if applyLHS
+        [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+        I = eye(numel(diag(A)));
+        ALHS_inv = inv(ALHS);
+        AA = I - dt*(ALHS_inv * A);
+        b = f0 + dt*(ALHS_inv * (s0 + bc0));
+    else
+        [~,A] = apply_A(pde,opts,A_data,f0,deg);
+        I = eye(numel(diag(A)));
+        AA = I - dt*A;
+        b = f0 + dt*(s0 + bc0);
+    end   
+      
+    if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcond(AA))]); end
+    
+    AA_inv = inv(AA);
+    f1 = AA_inv * b;
+else   
+    applyLHS = ~isempty(pde.termsLHS);        
+    if applyLHS
+        I = eye(numel(diag(A)));    
+        AA = I - dt*(ALHS_inv * A);
+        b = f0 + dt*(ALHS_inv * (s0 + bc0));
+    else
+        I = eye(numel(diag(A)));      
+        AA = I - dt*A;
+        b = f0 + dt*(s0 + bc0);
+    end
+    f1 = AA_inv * b;
+end
 end
 
 
@@ -216,13 +238,11 @@ end
 if isempty(AA_inv) || ~opts.time_independent_A
     
     applyLHS = ~isempty(pde.termsLHS);
-        
+    
     if applyLHS
         [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
         I = eye(numel(diag(A)));
         ALHS_inv = inv(ALHS);
-%         AA = 2*I - dt*(ALHS \ A);
-%         b = 2*f0 + dt*(ALHS \ A)*f0 + dt*(ALHS \ (s0+s1+bc0+bc1));
         AA = 2*I - dt*(ALHS_inv * A);
         b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
     else
@@ -235,8 +255,6 @@ if isempty(AA_inv) || ~opts.time_independent_A
     if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcond(AA))]); end
     
     AA_inv = inv(AA);
-    
-%     f1 = AA\b; % Solve at each timestep
     f1 = AA_inv * b;
 else
     applyLHS = ~isempty(pde.termsLHS);
