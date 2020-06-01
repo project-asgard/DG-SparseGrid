@@ -92,6 +92,8 @@ num_dims = numel(pde.dimensions);
 
 % term1
 %
+% 1/x^2 * d/dx*x^2*psi(x)/x*df/dx
+%
 % eq1 :  df/dt == g1(x) q(x)        [mass,g1(x)=1/x^2,        BC N/A for mass]
 % eq2 :   q(x) == d/dx g2(x) p(x)   [grad,g2(x)=x^2*psi(x)/x, BCL=D, BCR=N]
 % eq3 :   p(x) == d/dx g3(x) f(x)   [grad,g3(x)=1,            BCL=N, BCR=D]
@@ -111,6 +113,8 @@ term1   = TERM_ND(num_dims,{term1_x});
 
 % term2
 %
+% 1/x^2 * d/dx*x^2*2*psi(x)*f
+%
 % eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
 % eq2 :   q(x) == d/dx g(x) f(x)   [grad,g(x)=x^2*2*psi(x), BCL=N, BCR=D]
 %
@@ -128,8 +132,7 @@ term2   = TERM_ND(num_dims,{term2_x});
 %%
 % Add terms to the pde object
 
-% pde.terms = {term1,term2};
-pde.terms = {term2};
+pde.terms = {term1,term2};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.

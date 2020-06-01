@@ -51,8 +51,12 @@ end
 
 if strcmp(opts.timestep_method,'ode45')
     
-    if(~opts.quiet);disp('Using ode45');end
-    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats','off');
+    stats = 'off';
+    if(~opts.quiet)
+        disp('Using ode45');
+        stats = 'on';
+    end
+    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats',stats);
     [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15s')
@@ -74,9 +78,13 @@ elseif strcmp(opts.timestep_method,'ode15s')
     %     disp('done');
     
     % call ode15s
-    if(~opts.quiet);disp('Using ode15s');end
+    stats = 'off';
+    if(~opts.quiet)
+        disp('Using ode15s');
+        stats = 'on';
+    end
     options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
-        'Stats','on','OutputFcn',@odetpbar,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
+        'Stats',stats,'OutputFcn',@odetpbar,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15i')
@@ -168,50 +176,62 @@ end
 %% Backward Euler (first order implicit time advance)
 function f1 = backward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
+applyLHS = ~isempty(pde.termsLHS);
+
 s0 = source_vector(pde,opts,hash_table,t+dt);
 bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-if opts.time_independent_A
+if opts.time_independent_A % relies on inv() so is no good for poorly conditioned problems
     persistent A;
     persistent AA_inv;
     persistent ALHS_inv;
-else
-    A = [];
-    AA_inv = [];
-    ALHS_inv = [];
-end
-
-if isempty(AA_inv) || ~opts.time_independent_A
-    applyLHS = ~isempty(pde.termsLHS);  
+    
+    if isempty(AA_inv)
+        if applyLHS
+            [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+            I = eye(numel(diag(A)));
+            ALHS_inv = inv(ALHS);
+            AA = I - dt*(ALHS_inv * A);
+            b = f0 + dt*(ALHS_inv * (s0 + bc0));
+        else
+            [~,A] = apply_A(pde,opts,A_data,f0,deg);
+            I = eye(numel(diag(A)));
+            AA = I - dt*A;
+            b = f0 + dt*(s0 + bc0);
+        end
+        
+        rcondAA = rcond(AA);
+        if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcondAA)]); end
+        
+        if 1/rcondAA > 1e6
+            disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
+            disp(['WARNING: cond(A) = ', num2str(rcondAA)]);
+        end
+        
+        AA_inv = inv(AA);
+        f1 = AA_inv * b;
+    else
+        if applyLHS
+            b = f0 + dt*(ALHS_inv * (s0 + bc0));
+        else
+            b = f0 + dt*(s0 + bc0);
+        end
+        f1 = AA_inv * b;
+    end
+    
+else % use the backslash operator instead
     if applyLHS
         [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
         I = eye(numel(diag(A)));
-        ALHS_inv = inv(ALHS);
-        AA = I - dt*(ALHS_inv * A);
-        b = f0 + dt*(ALHS_inv * (s0 + bc0));
+        AA = I - dt*(ALHS \ A);
+        b = f0 + dt*(ALHS \ (s0 + bc0));
     else
         [~,A] = apply_A(pde,opts,A_data,f0,deg);
         I = eye(numel(diag(A)));
         AA = I - dt*A;
         b = f0 + dt*(s0 + bc0);
-    end   
-      
-    if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcond(AA))]); end
-    
-    AA_inv = inv(AA);
-    f1 = AA_inv * b;
-else   
-    applyLHS = ~isempty(pde.termsLHS);        
-    if applyLHS
-        I = eye(numel(diag(A)));    
-        AA = I - dt*(ALHS_inv * A);
-        b = f0 + dt*(ALHS_inv * (s0 + bc0));
-    else
-        I = eye(numel(diag(A)));      
-        AA = I - dt*A;
-        b = f0 + dt*(s0 + bc0);
     end
-    f1 = AA_inv * b;
+    f1 = AA \ b;
 end
 end
 
@@ -219,57 +239,65 @@ end
 %% Crank Nicolson (second order implicit time advance)
 function f1 = crank_nicolson(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
+applyLHS = ~isempty(pde.termsLHS);
+
 s0 = source_vector(pde,opts,hash_table,t);
 s1 = source_vector(pde,opts,hash_table,t+dt);
 
 bc0 = boundary_condition_vector(pde,opts,hash_table,t);
 bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-if opts.time_independent_A
+if opts.time_independent_A % uses inv() so no good for poorly conditioned systems
     persistent A;
     persistent AA_inv;
     persistent ALHS_inv;
-else
-    A = [];
-    AA_inv = [];
-    ALHS_inv = [];
-end
-
-if isempty(AA_inv) || ~opts.time_independent_A
     
-    applyLHS = ~isempty(pde.termsLHS);
+    if isempty(AA_inv)
+        if applyLHS
+            [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+            I = eye(numel(diag(A)));
+            ALHS_inv = inv(ALHS);
+            AA = 2*I - dt*(ALHS_inv * A);
+            b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
+        else
+            [~,A] = apply_A(pde,opts,A_data,f0,deg);
+            I = eye(numel(diag(A)));
+            AA = 2*I - dt*A;
+            b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
+        end
+        
+        rcondAA = rcond(AA);
+        if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcondAA)]); end
+        
+        if 1/rcondAA > 1e6
+            disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
+            disp(['WARNING: cond(A) = ', num2str(rcondAA)]);
+        end
+        
+        AA_inv = inv(AA);
+        f1 = AA_inv * b;
+    else        
+        if applyLHS
+            b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
+        else
+            b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
+        end    
+        f1 = AA_inv * b;
+    end
     
+else % use the backslash operator for time_indepent_A = false
     if applyLHS
         [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
         I = eye(numel(diag(A)));
-        ALHS_inv = inv(ALHS);
-        AA = 2*I - dt*(ALHS_inv * A);
-        b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
+        AA = 2*I - dt*(ALHS \ A);
+        b = 2*f0 + dt*(ALHS \ A)*f0 + dt*(ALHS \ (s0+s1+bc0+bc1));
     else
         [~,A] = apply_A(pde,opts,A_data,f0,deg);
         I = eye(numel(diag(A)));
         AA = 2*I - dt*A;
         b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
     end
-    
-    if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcond(AA))]); end
-    
-    AA_inv = inv(AA);
-    f1 = AA_inv * b;
-else
-    applyLHS = ~isempty(pde.termsLHS);
-    
-    if applyLHS
-        I = eye(numel(diag(A)));
-        AA = 2*I - dt*(ALHS_inv * A);
-        b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
-    else
-        I = eye(numel(diag(A)));
-        AA = 2*I - dt*A;
-        b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
-    end
-    
-    f1 = AA_inv * b;
+    f1 = AA \ b;
 end
 
 end

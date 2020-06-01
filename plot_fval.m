@@ -3,7 +3,7 @@ function plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordi
 nDims = numel(pde.dimensions);
 
 overPlotAnalytic = 0;
-if nargin == 4
+if nargin >= 4
     overPlotAnalytic = 1;
 end
 
