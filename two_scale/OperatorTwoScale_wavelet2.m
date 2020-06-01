@@ -1,4 +1,4 @@
-function FMWT = OperatorTwoScale_wavelet2(deg,nLev)
+function [FMWT, blocks] = OperatorTwoScale_wavelet2(deg,nLev)
 % FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,nLev)
 %----------------------------------
 % Set-up Two-scale operator       %
@@ -6,6 +6,7 @@ function FMWT = OperatorTwoScale_wavelet2(deg,nLev)
 % Input: Degree: maxDeg
 %        Level: Np
 % Output: Convert Matrix: FMWT_COMP
+%         Dense blocks also output for testing
 %**********************************
 
 % % Load G0 and H0 from file
