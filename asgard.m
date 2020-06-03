@@ -71,11 +71,16 @@ end
 
 %% Construct transforms back to realspace for plotting
 for d=1:num_dimensions
-    [Meval{d},nodes{d}] = matrix_plot_D(pde,pde.dimensions{d});
+    [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
 end
 
 %% Construct a n-D coordinate array
 coord = get_realspace_coords(pde,nodes);
+if opts.uniform_output
+    for d=1:num_dimensions
+        assert(norm(coord{d}-nodes{d})==0);
+    end
+end
 
 %% Plot initial condition
 if num_dimensions <=3
@@ -284,13 +289,6 @@ for L = 1:num_steps
     %%
     % Write the present fval to file.
     if write_fval; write_fval_to_file(fval,lev,deg,L); end
-    
-    %%% Write data for FK6D test
-    
-    %     fname = ['tests/vlasov4_time_5_3/fval_',num2str(L,'%3.3i'),'.dat'];
-    %     fd = fopen(fname,'w'); % where file.dat is the name you want to save to
-    %     fwrite(fd,full(fval),'double'); % where U is the vector/matrix you want to store, double is the typename
-    %     fclose(fd);
     
     if num_dimensions <=3
         

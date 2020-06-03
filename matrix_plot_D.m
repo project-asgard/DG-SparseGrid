@@ -1,4 +1,4 @@
-function [Meval,nodes] = matrix_plot_D(pde,dimension)
+function [Meval,nodes] = matrix_plot_D(pde,opts,dimension)
 
 %%
 % Generate the evaluation matrix and plotting points
@@ -21,32 +21,32 @@ h = (xMax-xMin)/n;
 dof_1D = deg*n;
 nodes = zeros(dof_1D,1);
 
-%%
-% Quadrature points (quad_x) and weights (quad_w)
-[quad_x_interior_element,quad_w]=lgwt(deg,-1,1);
-
-%%
-% Add end points to plot
-
-quad_x_left_element  = [-1 quad_x_interior_element']';
-quad_x_right_element = [quad_x_interior_element' +1]';
-
-
-% quad_x_left_element  = [quad_x_interior_element']';
-% quad_x_right_element = [quad_x_interior_element']';
-
-dof = numel(quad_x_interior_element);
+if opts.uniform_output
+    % output on uniformly spaced grid
+    % note that this uses the left of the dual value options
+    delta = 2/n;
+    quad_x_interior_element = linspace(-1,1-delta,n)';
+    quad_x_left_element  = quad_x_interior_element;
+    quad_x_right_element = [quad_x_interior_element' +1]';
+    dof = numel(quad_x_interior_element);
+    Meval = sparse(dof*(n-1)+(dof+1)*1,dof_1D);
+else
+    % output on quadrature points (quad_x)
+    [quad_x_interior_element,~]=lgwt(deg,-1,1);
+    % add end points
+    quad_x_left_element  = [-1 quad_x_interior_element']';
+    quad_x_right_element = [quad_x_interior_element' +1]';
+    dof = numel(quad_x_interior_element);
+    Meval = sparse(dof*(n-2)+(dof+1)*2,dof_1D);
+end
 
 p_val       = lin_legendre(quad_x_interior_element,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
 p_val_left  = lin_legendre(quad_x_left_element,deg)    *sqrt(1/h);
 p_val_right = lin_legendre(quad_x_right_element,deg)   *sqrt(1/h);
 
-Meval = sparse(dof*(n-2)+(dof+1)*2,dof_1D);
-% Meval = sparse(dof*(n-2)+(dof)*2,dof_1D);
-
 for i=0:n-1
     
-    if i==0 
+    if i==0
         quad_x = quad_x_left_element;
     elseif i==n-1
         quad_x = quad_x_right_element;
@@ -61,18 +61,28 @@ for i=0:n-1
     %%
     % Coefficients for DG bases
     Iv = [deg*i+1:deg*(i+1)];
-    if i==0
-        Iu = [1:dof+1];
-%         Iu = [1:dof];
-        Meval(Iu,Iv) = p_val_left;       
-    elseif i==n-1
-        Iu = [dof*i+1+1:dof*(i+1)+2];
-%         Iu = [dof*i+1:dof*(i+1)];
-        Meval(Iu,Iv) = p_val_right;       
+    if opts.uniform_output
+        if i==0
+            Iu = [1:dof];
+            Meval(Iu,Iv) = p_val_left;
+        elseif i==n-1
+            Iu = [dof*i+1:dof*(i+1)+1];
+            Meval(Iu,Iv) = p_val_right;
+        else
+            Iu = [dof*i+1:dof*(i+1)];
+            Meval(Iu,Iv) = p_val;
+        end
     else
-        Iu = [dof*i+1:dof*(i+1)]+1;
-%         Iu = [dof*i+1:dof*(i+1)];
-        Meval(Iu,Iv) = p_val;       
+        if i==0
+            Iu = [1:dof+1];
+            Meval(Iu,Iv) = p_val_left;
+        elseif i==n-1
+            Iu = [dof*i+1+1:dof*(i+1)+2];
+            Meval(Iu,Iv) = p_val_right;
+        else
+            Iu = [dof*i+1:dof*(i+1)]+1;
+            Meval(Iu,Iv) = p_val;
+        end
     end
     
     nodes(Iu) = xi;
@@ -83,9 +93,4 @@ end
 % Transform back to real space from wavelet space
 
 Meval = Meval*FMWT';
-
-
-    
-
-
 

@@ -24,6 +24,7 @@ default_max_lev = 8;
 default_adapt_threshold = 1e-3;
 default_refinement_method = 1;
 default_adapt_initial_condition = false;
+default_uniform_output = false;
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -44,6 +45,8 @@ addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
 addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
+addOptional(input_parser,'uniform_output',default_uniform_output,@islogical);
+
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -138,6 +141,7 @@ opts.max_lev = input_parser.Results.max_lev;
 opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
+opts.uniform_output = input_parser.Results.uniform_output;
 
 if opts.adapt
     opts.use_oldhash = false;
