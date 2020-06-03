@@ -5,25 +5,14 @@ data_dir = strcat("generated-inputs", "/", "transformations", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
-% multiwavelet file generation
-out_base = strcat(data_dir, "multiwavelet_1_");
-[h0,h1,g0,g1,scale_co,phi_co]=MultiwaveletGen(1);
-write_octave_like_output(strcat(out_base, "h0.dat"), h0);
-write_octave_like_output(strcat(out_base, "h1.dat"), h1);
-write_octave_like_output(strcat(out_base, "g0.dat"), g0);
-write_octave_like_output(strcat(out_base, "g1.dat"), g1);
-write_octave_like_output(strcat(out_base, "scale_co.dat"), scale_co);
-write_octave_like_output(strcat(out_base, "phi_co.dat"), phi_co);
-
-
-out_base = strcat(data_dir, "multiwavelet_3_");
-[h0,h1,g0,g1,scale_co,phi_co]=MultiwaveletGen(3);
-write_octave_like_output(strcat(out_base, "h0.dat"), h0);
-write_octave_like_output(strcat(out_base, "h1.dat"), h1);
-write_octave_like_output(strcat(out_base, "g0.dat"), g0);
-write_octave_like_output(strcat(out_base, "g1.dat"), g1);
-write_octave_like_output(strcat(out_base, "scale_co.dat"), scale_co);
-write_octave_like_output(strcat(out_base, "phi_co.dat"), phi_co);
+degree = 1;
+generate_multiwavelet_data( data_dir, degree );
+degree = 2;
+generate_multiwavelet_data( data_dir, degree );
+degree = 3;
+generate_multiwavelet_data( data_dir, degree );
+degree = 4;
+generate_multiwavelet_data( data_dir, degree );
 
 % combine dimensions file generation
 out_base = strcat(data_dir, "combine_dim_");
@@ -113,3 +102,17 @@ l_max = 2.0;
 double_plus = @(x,p,t) (x + x*2);
 vect = forward_wavelet_transform(degree, level, l_min, l_max, double_plus, [], 0);
 write_octave_like_output(filename, full(vect));
+
+% multiwavelet file generation
+function generate_multiwavelet_data( output_prefix, degree )
+
+out_base = sprintf('%smultiwavelet_%d_', output_prefix, degree);
+[h0,h1,g0,g1,scale_co,phi_co]=MultiwaveletGen(degree);
+write_octave_like_output(strcat(out_base, "h0.dat"), h0);
+write_octave_like_output(strcat(out_base, "h1.dat"), h1);
+write_octave_like_output(strcat(out_base, "g0.dat"), g0);
+write_octave_like_output(strcat(out_base, "g1.dat"), g1);
+write_octave_like_output(strcat(out_base, "scale_co.dat"), scale_co);
+write_octave_like_output(strcat(out_base, "phi_co.dat"), phi_co);
+
+end
