@@ -24,12 +24,13 @@ nodes = zeros(dof_1D,1);
 if opts.uniform_output
     % output on uniformly spaced grid
     % note that this uses the left of the dual value options
-    delta = 2/n;
-    quad_x_interior_element = linspace(-1,1-delta,n)';
+    N = deg+2;
+    delta = 2/N;
+    quad_x_interior_element = linspace(-1,1-delta,N)';
     quad_x_left_element  = quad_x_interior_element;
     quad_x_right_element = [quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
-    Meval = sparse(dof*(n-1)+(dof+1)*1,dof_1D);
+    Meval = sparse(dof*(N-1)+(dof+1)*1,dof_1D);
 else
     % output on quadrature points (quad_x)
     [quad_x_interior_element,~]=lgwt(deg,-1,1);
