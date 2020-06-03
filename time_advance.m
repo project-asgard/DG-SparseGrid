@@ -206,7 +206,6 @@ applyLHS = ~isempty(pde.termsLHS);
 if t == 0 
     dt = 1e-6; %Very small timestep to initiate accurate guess for f1
     if applyLHS %Start off with BDF1 to get initial values for f2 and f1_init
-        AA = I - dt*inv(ALHS)*A;
         %     b = f0 + dt*inv(ALHS)*(s1 + bc1);
         [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
     
