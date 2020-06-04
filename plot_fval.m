@@ -64,7 +64,11 @@ if nDims==2
     ny = numel(y);
 
     stat = mkdir('output'); %directory for SG output 
+<<<<<<< HEAD
     fName = ['output/f2d_FG-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+=======
+    fName = ['output/f2d-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+>>>>>>> 187aabc00617d0e839210c168e43b2041b0802e6
     save(fName, 'x', 'y', 'f2d');
     
     %%
@@ -79,7 +83,11 @@ if nDims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
+<<<<<<< HEAD
     fName = ['output/f1d_x_FG-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+=======
+    fName = ['output/f1d_x-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+>>>>>>> 187aabc00617d0e839210c168e43b2041b0802e6
     save(fName, 'x', 'f1d');
 %    plot(x,f1d,'-o');
     semilogy(x,f1d,'LineWidth', 2); %semilog for SG output
@@ -105,7 +113,11 @@ if nDims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,2);
+<<<<<<< HEAD
     fName = ['output/f1d_y_FG-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+=======
+    fName = ['output/f1d_y-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+>>>>>>> 187aabc00617d0e839210c168e43b2041b0802e6
     save(fName, 'y', 'f1d');
  %   plot(y,f1d,'-o');
     semilogy(y,f1d,'LineWidth',2); %semilog for SG output
@@ -146,7 +158,11 @@ if nDims==2
     p_par = xx.*yy;
     p_pen = (abs(1-yy.^2)).^(1/2).*xx;
     f2d = f2d_with_noise;
+<<<<<<< HEAD
     fName = ['output/f2d_FG_coords-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+=======
+    fName = ['output/f2d_coords-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
+>>>>>>> 187aabc00617d0e839210c168e43b2041b0802e6
     save(fName, 'p_par', 'p_pen', 'f2d');
     contour(p_par,p_pen,f2d,10,'LineWidth',2)
 end
