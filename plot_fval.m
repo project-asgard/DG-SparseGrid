@@ -1,13 +1,13 @@
 function plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates)
 
-nDims = numel(pde.dimensions);
+num_dims = numel(pde.dimensions);
 
 overPlotAnalytic = 0;
 if nargin >= 4
     overPlotAnalytic = 1;
 end
 
-if nDims==1
+if num_dims==1
     
     %%
     % Plot solution
@@ -31,32 +31,11 @@ if nDims==1
         
 end
 
-if nDims==2
-    
-%     figure(1000)
-    
-    dimensions = pde.dimensions;
-    
-    deg1=pde.deg;
-    lev1=dimensions{1}.lev;
-    deg2=pde.deg;
-    lev2=dimensions{2}.lev;
-    
-%     dof1=deg1*2^lev1;
-%     dof2=deg2*2^lev2;
-    dof1=numel(Meval{1}(:,1));
-    dof2=numel(Meval{2}(:,1));
-    
-    dofD = dof1*dof2;
-    assert(dofD==numel(fval_realspace));
-    
-    %%
-    % Reshape dimension ordering is likely a result of kron product dimension
-    % ordering. 
-    
-    f2d = reshape(fval_realspace,dof2,dof1);
-    f2d_analytic = reshape(fval_realspace_analytic,dof2,dof1);
-    
+if num_dims==2
+            
+    f2d = singleD_to_multiD(num_dims,fval_realspace,nodes);
+    f2d_analytic = singleD_to_multiD(num_dims,fval_realspace_analytic,nodes);
+   
     x = nodes{1};
     y = nodes{2};
     
@@ -137,28 +116,14 @@ if nDims==2
 %     contour(p_par,p_pen,f2d,10,'LineWidth',2)
 end
 
-if nDims==3
+if num_dims==3
     
     figure(1000);
     
     dimensions = pde.dimensions;
     
-    deg1=pde.deg;
-    lev1=dimensions{1}.lev;
-    deg2=pde.deg;
-    lev2=dimensions{2}.lev;
-    deg3=pde.deg;
-    lev3=dimensions{3}.lev;
-    
-    dof1=deg1*2^lev1;
-    dof2=deg2*2^lev2;
-    dof3=deg3*2^lev3;
-    
-    dofD = dof1*dof2*dof3;
-    assert(dofD==numel(fval_realspace));
-    
-    f3d = reshape(fval_realspace,dof3,dof2,dof1);
-    f3d_analytic = reshape(fval_realspace_analytic,dof3,dof2,dof1);
+    f3d = singleD_to_multiD(num_dims,fval_realspace,nodes);
+    f3d_analytic = singleD_to_multiD(num_dims,fval_realspace_analytic,nodes);
     
     %%
     % Plot a 1D line through the solution

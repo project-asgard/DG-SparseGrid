@@ -50,7 +50,7 @@ assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 pde0  = pde;
 fval0 = fval;
 for d=1:num_dims
-    [Meval0{d},nodes0{d}] = matrix_plot_D(pde,pde.dimensions{d});
+    [Meval0{d},nodes0{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
 end
 fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
 
@@ -415,7 +415,7 @@ A_data = global_matrix(pde,opts,hash_table);
 % Update the conversion to realspace matrices
 
 for d=1:num_dims
-    [Meval{d},nodes{d}] = matrix_plot_D(pde,pde.dimensions{d});
+    [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
 end
 
 %%
@@ -446,15 +446,7 @@ if ~opts.quiet
     elseif num_dims == 2
         
         subplot(4,3,4)
-        deg1=pde0.deg;
-        lev1=pde0.dimensions{1}.lev;
-        deg2=pde0.deg;
-        lev2=pde0.dimensions{2}.lev;
-        dof1=deg1*2^lev1;
-        dof2=deg2*2^lev2;
-        dofD = dof1*dof2;
-        assert(dofD==numel(fval_realspace0));
-        f2d = reshape(fval_realspace0,dof2,dof1);
+        f2d = singleD_to_multiD(num_dims,fval_realspace0,nodes0);
         x = nodes0{1};
         y = nodes0{2};
         if norm(f2d-f2d(1,1))>0 % catch for zero
@@ -462,15 +454,7 @@ if ~opts.quiet
         end
         
         subplot(4,3,5)
-        deg1=pde.deg;
-        lev1=pde.dimensions{1}.lev;
-        deg2=pde.deg;
-        lev2=pde.dimensions{2}.lev;
-        dof1=deg1*2^lev1;
-        dof2=deg2*2^lev2;
-        dofD = dof1*dof2;
-        assert(dofD==numel(fval_realspace_refined));
-        f2d = reshape(fval_realspace_refined,dof2,dof1);
+        f2d = singleD_to_multiD(num_dims,fval_realspace_refined,nodes);
         x = nodes{1};
         y = nodes{2};
         if norm(f2d-f2d(1,1))>0 % catch for zero

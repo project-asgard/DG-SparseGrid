@@ -49,6 +49,7 @@ connectivity = [];
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
 t = 0;
 fval = initial_condition_vector(pde, opts, hash_table, t);
+if opts.save_output; fval_t(:,1) = fval; end
 
 %% Construct the time-independent coefficient matrices
 if ~opts.quiet; disp('Calculate time independent matrix coefficients'); end
@@ -76,11 +77,6 @@ end
 
 %% Construct a n-D coordinate array
 coord = get_realspace_coords(pde,nodes);
-if opts.uniform_output
-    for d=1:num_dimensions
-        assert(norm(coord{d}-nodes{d})==0);
-    end
-end
 
 %% Plot initial condition
 if num_dimensions <=3
@@ -89,6 +85,19 @@ if num_dimensions <=3
     % Get the real space solution
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+    
+    if opts.save_output
+        f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
+        if num_dimensions == 1
+            f_realspace_nD_t(:,1) = f_realspace_nD;
+        elseif num_dimensions == 2
+            f_realspace_nD_t(:,:,1) = f_realspace_nD;
+        elseif num_dimensions == 3
+            f_realspace_nD_t(:,:,:,1) = f_realspace_nD;
+        else
+            error('Save output for num_dimensions >3 not yet implemented');
+        end
+    end
     
     if norm(fval_realspace) > 0 && ~opts.quiet
         plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval);
@@ -381,9 +390,7 @@ for L = 1:num_steps
                 f2d = interp2(p,z,f,p2dA,z2dA,'spline',0);
                 levs = linspace(1,10,10)./10.*max(f(:));
                 figure(87)
-                contour(ppar,pper,f2d,levs)
-                
-                
+                contour(ppar,pper,f2d,levs)            
             end
         end
         
@@ -396,12 +403,23 @@ for L = 1:num_steps
     %%
     % Save output
     
-    saveOutput = 0;
-    if saveOutput
-        stat = mkdir('output');
-        fName = ['output/f2d-' sprintf('%04.4d',L) '.mat'];
-        f2d = reshape(fval_realspace,deg*2^LevX,deg*2^LevV)';
-        save(fName,'f2d','fval');
+    if opts.save_output
+        [status, msg, msgID] = mkdir('output');
+        fName = append('output/asgard-out',opts.output_filename_id,'.mat');
+        
+        f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
+        if num_dimensions == 1
+            f_realspace_nD_t(:,L+1) = f_realspace_nD;
+        elseif num_dimensions == 2
+            f_realspace_nD_t(:,:,L+1) = f_realspace_nD;           
+        elseif num_dimensions == 3
+            f_realspace_nD_t(:,:,:,L+1) = f_realspace_nD;           
+        else
+            error('Save output for num_dimensions >3 not yet implemented');
+        end
+        fval_t(:,L+1) = fval;
+        time_array(L+1) = t+dt;
+        save(fName,'pde','opts','dt','f_realspace_nD_t','fval_t','nodes','time_array');
     end
     
     t = t + dt;

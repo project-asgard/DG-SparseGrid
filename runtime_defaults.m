@@ -25,6 +25,8 @@ default_adapt_threshold = 1e-3;
 default_refinement_method = 1;
 default_adapt_initial_condition = false;
 default_uniform_output = false;
+default_save_output = false;
+default_output_filename_id = '';
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -46,7 +48,8 @@ addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
 addOptional(input_parser,'uniform_output',default_uniform_output,@islogical);
-
+addOptional(input_parser,'save_output',default_save_output,@islogical);
+addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -142,6 +145,8 @@ opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
 opts.uniform_output = input_parser.Results.uniform_output;
+opts.save_output = input_parser.Results.save_output;
+opts.output_filename_id = input_parser.Results.output_filename_id;
 
 if opts.adapt
     opts.use_oldhash = false;

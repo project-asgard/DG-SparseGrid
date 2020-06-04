@@ -289,7 +289,7 @@ end
 
 function asgard_fokkerplanck1_5p1a_noLHS_CN_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a_noLHS (CN)');
+disp('Testing fokkerplanck1_5p1a_noLHS (CN / TIA)');
 [err,act_f,act_frs] = asgard(fokkerplanck1_5p1a_noLHS,...
     'timestep_method','CN','lev',3,'num_steps',30,'dt',1.875,...
     'quiet',true,'time_independent_A',true);
@@ -306,7 +306,7 @@ end
 
 function asgard_fokkerplanck1_5p1a_noLHS_BE_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a_noLHS (BE)');
+disp('Testing fokkerplanck1_5p1a_noLHS (BE / TIA)');
 [err,act_f,act_frs] = asgard(fokkerplanck1_5p1a_noLHS,...
     'timestep_method','BE','lev',3,'num_steps',30,'dt',1.875,...
     'quiet',true,'time_independent_A',true);
@@ -323,7 +323,7 @@ end
 
 function asgard_fokkerplanck1_5p1a_implicit_BE_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (BE / with LHS)');
+disp('Testing fokkerplanck1_5p1a (BE / with LHS / TIA)');
 [err,act_f,act_frs] = asgard(fokkerplanck1_5p1a,'timestep_method','BE', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_A',true);
 verifyLessThan(testCase,err,2.5e-2);
@@ -339,7 +339,7 @@ end
 
 function asgard_fokkerplanck1_5p1a_implicit_CN_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (CN / with LHS)');
+disp('Testing fokkerplanck1_5p1a (CN / with LHS / TIA)');
 [err,act_f,act_frs] = asgard(fokkerplanck1_5p1a,'timestep_method','CN', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_A',true);
 verifyLessThan(testCase,err,2.5e-2);
