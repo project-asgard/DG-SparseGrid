@@ -41,10 +41,6 @@ if num_dims==2
     
     nx = numel(x);
     ny = numel(y);
-
-    stat = mkdir('output'); %directory for SG output 
-    fName = ['output/f2d-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-    save(fName, 'x', 'y', 'f2d');
     
     %%
     % Plot a 1D line through the solution
@@ -58,13 +54,7 @@ if num_dims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-<<<<<<< HEAD
-    fName = ['output/f1d_x-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-=======
-    fName = ['output/f1d_x-' sprintf('deg_%d',deg1) '.mat'];
->>>>>>> plot_fval modified to get appropriate Sparse Grid plots. Scan.sh modified to run full 2D case quickly
-    save(fName, 'x', 'f1d');
-%    plot(x,f1d,'-o');
+    plot(x,f1d,'-o');
     semilogy(x,f1d,'LineWidth', 2); %semilog for SG output
     ylim([10^-10, 10^0]);
     title('1D slice (vertical)');
@@ -88,9 +78,7 @@ if num_dims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,2);
-    fName = ['output/f1d_y-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-    save(fName, 'y', 'f1d');
- %   plot(y,f1d,'-o');
+    plot(y,f1d,'-o');
     semilogy(y,f1d,'LineWidth',2); %semilog for SG output
     title('1D slice (horizontal)');
     
@@ -129,8 +117,6 @@ if num_dims==2
     p_par = xx.*yy;
     p_pen = (abs(1-yy.^2)).^(1/2).*xx;
     f2d = f2d_with_noise;
-    fName = ['output/f2d_coords-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-    save(fName, 'p_par', 'p_pen', 'f2d');
     contour(p_par,p_pen,f2d,10,'LineWidth',2)
 end
 
