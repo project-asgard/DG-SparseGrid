@@ -405,7 +405,7 @@ for L = 1:num_steps
     
     if opts.save_output
         [status, msg, msgID] = mkdir('output');
-        fName = append('output/asgard-out',opts.output_filename_id,'.mat');
+        fName = append("output/asgard-out",string(opts.output_filename_id),".mat");
         
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
         if num_dimensions == 1
