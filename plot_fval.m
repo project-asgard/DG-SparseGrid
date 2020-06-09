@@ -42,9 +42,6 @@ if num_dims==2
     nx = numel(x);
     ny = numel(y);
 
-    stat = mkdir('output'); %directory for SG output 
-    fName = ['output/f2d_FG-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-    save(fName, 'x', 'y', 'f2d');
     
     %%
     % Plot a 1D line through the solution
@@ -58,14 +55,7 @@ if num_dims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-<<<<<<< HEAD
     plot(x,f1d,'-o');
-=======
-    fName = ['output/f1d_x_FG-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-    save(fName, 'x', 'f1d');
-%    plot(x,f1d,'-o');
->>>>>>> bdbfe7c86722d7397ea9677bc55ad3b8b1a354bb
-    semilogy(x,f1d,'LineWidth', 2); %semilog for SG output
     ylim([10^-10, 10^0]);
     title('1D slice (vertical)');
     
@@ -88,14 +78,7 @@ if num_dims==2
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,2);
-<<<<<<< HEAD
     plot(y,f1d,'-o');
-=======
-    fName = ['output/f1d_y_FG-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-    save(fName, 'y', 'f1d');
- %   plot(y,f1d,'-o');
->>>>>>> bdbfe7c86722d7397ea9677bc55ad3b8b1a354bb
-    semilogy(y,f1d,'LineWidth',2); %semilog for SG output
     title('1D slice (horizontal)');
     
     if pde.checkAnalytic
@@ -133,11 +116,6 @@ if num_dims==2
     p_par = xx.*yy;
     p_pen = (abs(1-yy.^2)).^(1/2).*xx;
     f2d = f2d_with_noise;
-<<<<<<< HEAD
-=======
-    fName = ['output/f2d_FG_coords-' sprintf('deg_%d_lev_%d',deg1,lev1) '.mat'];
-    save(fName, 'p_par', 'p_pen', 'f2d');
->>>>>>> bdbfe7c86722d7397ea9677bc55ad3b8b1a354bb
     contour(p_par,p_pen,f2d,10,'LineWidth',2)
 end
 
