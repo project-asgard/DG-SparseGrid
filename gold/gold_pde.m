@@ -5,10 +5,16 @@ root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
 out_format = strcat( data_dir, "diffusion_1_");
-run_pde(diffusion1, out_format, 4.2, 0, 'lev', 3, 'deg', 2);
+run_pde(diffusion1, out_format, 4.2, 0, 'lev', 3, 'deg', 2, 'CFL', 1);
 
 out_format = strcat( data_dir, "advection_1_");
-run_pde(advection1, out_format, 4.2, 0, 'lev', 3, 'deg', 2);
+run_pde(advection1, out_format, 4.2, 0, 'lev', 3, 'deg', 2, 'CFL', 1);
+
+out_format = strcat( data_dir, "fokkerplanck2_complete_" )
+domain = [ 0.1, 0.2, 0.3, 0.4, 0.5 ];
+t = 0;
+%Captain
+run_pde( fokkerplanck2_complete, out_format, domain, t, 'lev', 5, 'deg', 4, 'CFL', 1 )
 
 % continuity 1
 out_format = strcat(data_dir, "continuity_1_");
@@ -132,13 +138,13 @@ function run_pde(pde, out_format, x, t, varargin)
 
   runtime_defaults;
   pde = check_pde( pde, opts );
-  pde.CFL = 1.0;
+  pde.CFL=1;
   dt = pde.set_dt(pde,pde.CFL);
   write_octave_like_output(strcat(out_format, 'dt.dat'), dt);
   for d=1:length(pde.dimensions)
     y_init = pde.dimensions{d}.init_cond_fn(x, 0, t);
     write_octave_like_output(strcat(out_format, sprintf('initial_dim%d.dat', d-1)), y_init);
-    y_exact = pde.analytic_solutions_1D{d}(x);
+    y_exact = pde.analytic_solutions_1D{d}(x, 0, 0);
     write_octave_like_output(strcat(out_format, sprintf('exact_dim%d.dat', d-1)), y_exact);
   end
   y_exact_time = pde.analytic_solutions_1D{length(pde.analytic_solutions_1D)}(x);
