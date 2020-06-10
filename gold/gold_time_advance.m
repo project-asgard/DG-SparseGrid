@@ -77,13 +77,26 @@ out_format = strcat(data_dir,'fokkerplanck1_4p3_sg_l2_d2_t%d.dat');
 run_time_advance(fokkerplanck1_4p3,out_format,...
     'CFL',0.01,'lev',2,'deg',2,'grid_type','SG','use_oldhash',true,'timestep_method','RK3');
 
-% fokkerplanck2_complete sg l3d3
-out_format = strcat(data_dir,'fokkerplanck2_complete_sg_l3_d3_t%d.dat');
-run_time_advance(fokkerplanck2_complete,out_format,...
-    'CFL',1e-10,'lev',3,'deg',3,'grid_type','SG','use_oldhash',true,'timestep_method','RK3');
-
 
 %% implicit
+
+% fokkerplanck2_complete sg l3d3
+
+out_format = strcat(data_dir,'fokkerplanck2_complete_implicit_sg_l3_d3_t%d.dat');
+% any other timestep method will give diverging results
+run_time_advance(fokkerplanck2_complete,out_format,...
+    'CFL',0.01,'lev',3,'deg',3,'grid_type','SG','use_oldhash',true,...
+    'timestep_method', 'BE');
+
+out_format = strcat(data_dir,'fokkerplanck2_complete_implicit_sg_l4_d3_t%d.dat');
+run_time_advance(fokkerplanck2_complete,out_format,...
+    'CFL',0.01,'lev',4,'deg',3,'grid_type','SG','use_oldhash',true,...
+    'timestep_method', 'BE');
+
+out_format = strcat(data_dir,'fokkerplanck2_complete_implicit_sg_l5_d3_t%d.dat');
+run_time_advance(fokkerplanck2_complete,out_format,...
+    'CFL',0.01,'lev',5,'deg',3,'grid_type','SG','use_oldhash',true,...
+    'timestep_method', 'BE');
 
 % continuity1 sg l2d2
 out_format = strcat(data_dir,'continuity1_implicit_l2_d2_t%d.dat');
