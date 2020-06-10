@@ -404,7 +404,7 @@ for L = 1:num_steps
     % Save output
     
     if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
-        [status, msg, msgID] = mkdir([root_directory,'output']);
+        [status, msg, msgID] = mkdir([root_directory,'/output']);
         fName = append(root_directory,"/output/asgard-out",string(opts.output_filename_id),".mat");
         
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
