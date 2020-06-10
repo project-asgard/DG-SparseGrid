@@ -5,15 +5,6 @@ data_dir = strcat("generated-inputs", "/", "time_advance", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
-% diffusion1 l4d4
-out_format = strcat(data_dir,'diffusion1_sg_l4_d4_t%d.dat');
-run_time_advance(diffusion1,out_format,...
-    'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','use_oldhash',true,'timestep_method','BE');
-% advection1 l4d4
-out_format = strcat(data_dir,'advection1_sg_l4_d4_t%d.dat');
-run_time_advance(advection1,out_format,...
-    'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','use_oldhash',true,'timestep_method','BE');
-
 % continuity1 sg l2d2
 out_format = strcat(data_dir, 'continuity1_sg_l2_d2_t%d.dat');
 run_time_advance(continuity1,out_format,...
@@ -79,6 +70,22 @@ run_time_advance(fokkerplanck1_4p3,out_format,...
 
 
 %% implicit
+
+% advection1 l4d4
+out_format = strcat(data_dir,'advection1_implicit_sg_l4_d4_t%d.dat');
+run_time_advance(advection1,out_format,...
+    'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','use_oldhash',true,'timestep_method','BE');
+
+% diffusion1 l4d4
+out_format = strcat(data_dir,'diffusion1_implicit_sg_l4_d4_t%d.dat');
+run_time_advance(diffusion1,out_format,...
+    'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','use_oldhash',true,'timestep_method','BE');
+
+% diffusion1 l4d4
+out_format = strcat(data_dir,'diffusion2_implicit_sg_l4_d4_t%d.dat');
+run_time_advance(diffusion2,out_format,...
+    'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','use_oldhash',true,'timestep_method','BE');
+
 
 % fokkerplanck2_complete sg l3d3
 
