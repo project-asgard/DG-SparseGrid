@@ -21,6 +21,7 @@ default_timestep_method = opts.timestep_method;
 valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE'};
 check_timestep_method = @(x) any(validatestring(x,valid_timestep_methods));
 default_time_independent_A = opts.time_independent_A;
+default_time_independent_build_A = opts.time_independent_build_A;
 default_many_solution_capable = opts.many_solution_capable;
 default_max_lev = opts.max_lev;
 default_adapt_threshold = opts.adapt_threshold;
@@ -44,6 +45,7 @@ addOptional(input_parser,'adapt',default_adapt, @islogical);
 addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
 addOptional(input_parser,'use_oldcoeffmat',default_use_oldcoeffmat, @islogical);
 addOptional(input_parser,'time_independent_A',default_time_independent_A,@islogical);
+addOptional(input_parser,'time_independent_build_A',default_time_independent_build_A,@islogical);
 addOptional(input_parser,'many_solution_capable',default_many_solution_capable,@islogical);
 addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
 addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
@@ -52,6 +54,8 @@ addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_conditi
 addOptional(input_parser,'uniform_output',default_uniform_output,@islogical);
 addOptional(input_parser,'save_output',default_save_output,@islogical);
 addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
+addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
+addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -141,6 +145,7 @@ opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
 opts.time_independent_A = input_parser.Results.time_independent_A;
+opts.time_independent_build_A = input_parser.Results.time_independent_build_A;
 opts.many_solution_capable = input_parser.Results.many_solution_capable;
 opts.max_lev = input_parser.Results.max_lev;
 opts.adapt_threshold = input_parser.Results.adapt_threshold;
@@ -149,6 +154,8 @@ opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
 opts.uniform_output = input_parser.Results.uniform_output;
 opts.save_output = input_parser.Results.save_output;
 opts.output_filename_id = input_parser.Results.output_filename_id;
+opts.plot_freq = input_parser.Results.plot_freq;
+opts.save_freq = input_parser.Results.save_freq;
 
 if opts.adapt
     opts.use_oldhash = false;

@@ -13,6 +13,7 @@ classdef OPTS
         use_oldhash = false;
         use_oldcoeffmat = false;
         time_independent_A = false;
+        time_independent_build_A = false;
         many_solution_capable = false;
         max_lev = 8;
         adapt_threshold = 1e-3;
@@ -21,6 +22,8 @@ classdef OPTS
         uniform_output = false;
         save_output = false;
         output_filename_id = '';
+        plot_freq = 1;
+        save_freq = 1;
 
     end
     
