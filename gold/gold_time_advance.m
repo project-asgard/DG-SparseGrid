@@ -89,6 +89,7 @@ run_time_advance(diffusion2,out_format,...
 
 % fokkerplanck2_complete sg l3d3
 
+%Captain!
 out_format = strcat(data_dir,'fokkerplanck2_complete_implicit_sg_l3_d3_t%d.dat');
 % any other timestep method will give diverging results
 run_time_advance(fokkerplanck2_complete,out_format,...
@@ -128,7 +129,7 @@ function run_time_advance(pde,out_format,varargin)
   runtime_defaults
     
   pde = check_pde( pde, opts );
-  dt = pde.set_dt(pde, pde.CFL );
+  dt = pde.set_dt(pde, opts.CFL );
 
   lev_vec = zeros(numel(pde.dimensions),1);
   for d = 1 : numel(pde.dimensions)

@@ -1,0 +1,627 @@
+gold_time_advance
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0013
+
+
+time =
+
+    0.0025
+
+
+time =
+
+    0.0037
+
+
+time =
+
+    0.0050
+
+
+time =
+
+     0
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l2_d2_t0.dat
+
+time =
+
+    0.0500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l2_d2_t1.dat
+
+time =
+
+    0.1000
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l2_d2_t2.dat
+
+time =
+
+    0.1500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l2_d2_t3.dat
+
+time =
+
+    0.2000
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l2_d2_t4.dat
+
+time =
+
+     0
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_fg_l2_d2_t0.dat
+
+time =
+
+    0.0500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_fg_l2_d2_t1.dat
+
+time =
+
+    0.1000
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_fg_l2_d2_t2.dat
+
+time =
+
+    0.1500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_fg_l2_d2_t3.dat
+
+time =
+
+    0.2000
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_fg_l2_d2_t4.dat
+
+time =
+
+     0
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l4_d3_t0.dat
+
+time =
+
+    0.0125
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l4_d3_t1.dat
+
+time =
+
+    0.0250
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l4_d3_t2.dat
+
+time =
+
+    0.0375
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l4_d3_t3.dat
+
+time =
+
+    0.0500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_sg_l4_d3_t4.dat
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0013
+
+
+time =
+
+    0.0025
+
+
+time =
+
+    0.0037
+
+
+time =
+
+    0.0050
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0013
+
+
+time =
+
+    0.0025
+
+
+time =
+
+    0.0037
+
+
+time =
+
+    0.0050
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0013
+
+
+time =
+
+    0.0025
+
+
+time =
+
+    0.0037
+
+
+time =
+
+    0.0050
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0020
+
+
+time =
+
+    0.0039
+
+
+time =
+
+    0.0059
+
+
+time =
+
+    0.0079
+
+
+time =
+
+     0
+
+
+time =
+
+   3.9063e-05
+
+
+time =
+
+   7.8125e-05
+
+
+time =
+
+   1.1719e-04
+
+
+time =
+
+   1.5625e-04
+
+
+time =
+
+     0
+
+
+time =
+
+   3.9063e-05
+
+
+time =
+
+   7.8125e-05
+
+
+time =
+
+   1.1719e-04
+
+
+time =
+
+   1.5625e-04
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0249
+
+
+time =
+
+    0.0497
+
+
+time =
+
+    0.0746
+
+
+time =
+
+    0.0995
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0124
+
+
+time =
+
+    0.0249
+
+
+time =
+
+    0.0373
+
+
+time =
+
+    0.0497
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0062
+
+
+time =
+
+    0.0124
+
+
+time =
+
+    0.0187
+
+
+time =
+
+    0.0249
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0050
+
+
+time =
+
+    0.0100
+
+
+time =
+
+    0.0150
+
+
+time =
+
+    0.0200
+
+
+time =
+
+     0
+
+
+time =
+
+    0.0013
+
+
+time =
+
+    0.0025
+
+
+time =
+
+    0.0037
+
+
+time =
+
+    0.0050
+
+
+time =
+
+     0
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l2_d2_t0.dat
+
+time =
+
+    0.0500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l2_d2_t1.dat
+
+time =
+
+    0.1000
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l2_d2_t2.dat
+
+time =
+
+    0.1500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l2_d2_t3.dat
+
+time =
+
+    0.2000
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l2_d2_t4.dat
+
+time =
+
+     0
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l4_d3_t0.dat
+
+time =
+
+    0.0125
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l4_d3_t1.dat
+
+time =
+
+    0.0250
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l4_d3_t2.dat
+
+time =
+
+    0.0375
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l4_d3_t3.dat
+
+time =
+
+    0.0500
+
+Updating gold data file /home/4hh/DG-SparseGrid/gold/generated-inputs/time_advance/continuity2_implicit_l4_d3_t4.dat
+diary off
