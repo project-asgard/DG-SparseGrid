@@ -1,6 +1,11 @@
-generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
-generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 5, 'deg', 5 );
-generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 3, 'deg', 3 );
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4, ...
+               'CFL', 0.01 );
+
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 5, 'deg', 5,...
+               'CFL', 0.01 );
+
+generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 3, 'deg', 3,...
+               'CFL', 0.01 );
 
 % coefficient testing
 
@@ -149,11 +154,10 @@ opts.use_oldhash = 1;
 
 pde = check_pde(pde, opts);
 
-CFL = 0.01;
-dt = pde.set_dt(pde,CFL);
+dt = pde.set_dt(pde, opts.CFL );
 
 % coefficient testing
-coeff_dir = strcat("generated-inputs/coefficients/", output_prefix, "/");
+coeff_dir = "generated-inputs/coefficients/";
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(coeff_dir)]);
 
@@ -163,6 +167,7 @@ for i=1:length(pde.dimensions)
 end
 
 out_format = strcat(coeff_dir, output_prefix, '_coefficients_l%i_d%i_%d_%d.dat');
+
 %doesn't matter, the term is time independent...
 time = 1.0;
 level = pde.dimensions{1}.lev;
