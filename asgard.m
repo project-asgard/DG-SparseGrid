@@ -73,7 +73,10 @@ end
 
 %% Construct transforms back to realspace for plotting
 for d=1:num_dimensions
+    num_fixed_grid = 51;
+    nodes_fixed_grid_nodups{d} = linspace(pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,num_fixed_grid);
     [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+    [Meval_fixed_grid{d},nodes_fixed_grid{d},nodes_count{d}] = matrix_plot_D(pde,opts,pde.dimensions{d},nodes_fixed_grid_nodups{d});
 end
 
 %% Construct a n-D coordinate array
@@ -85,6 +88,8 @@ if num_dimensions <=3
     %%
     % Get the real space solution
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+    fval_realspace_fixed_grid = wavelet_to_realspace(pde,opts,Meval_fixed_grid,fval,hash_table);
+
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     
     if opts.save_output
@@ -305,7 +310,8 @@ for L = 1:num_steps
         % Get the real space solution
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-        
+        fval_realspace_fixed_grid = wavelet_to_realspace(pde,opts,Meval_fixed_grid,fval,hash_table);
+
         %%
         % Try with function convertToRealSpace
         
@@ -408,18 +414,30 @@ for L = 1:num_steps
         fName = append(root_directory,"/output/asgard-out",string(opts.output_filename_id),".mat");
         
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
+        
+        f_realspace_nD_fixed_grid = singleD_to_multiD(num_dimensions,fval_realspace_fixed_grid,nodes_fixed_grid);
+        f_realspace_nD_fixed_grid_nodups = ...
+            remove_duplicates(num_dimensions,f_realspace_nD_fixed_grid,nodes_fixed_grid_nodups,nodes_count);
+        
+        contourf(nodes_fixed_grid_nodups{1},nodes_fixed_grid_nodups{2},f_realspace_nD_fixed_grid_nodups);
+            
         if num_dimensions == 1
             f_realspace_nD_t(:,L+1) = f_realspace_nD;
+            f_realspace_nD_fixed_grid_nodups_t(:,L+1) = f_realspace_nD_fixed_grid_nodups;
         elseif num_dimensions == 2
-            f_realspace_nD_t(:,:,L+1) = f_realspace_nD;           
+            f_realspace_nD_t(:,:,L+1) = f_realspace_nD; 
+            f_realspace_nD_fixed_grid_nodups_t(:,:,L+1) = f_realspace_nD_fixed_grid_nodups;
         elseif num_dimensions == 3
-            f_realspace_nD_t(:,:,:,L+1) = f_realspace_nD;           
+            f_realspace_nD_t(:,:,:,L+1) = f_realspace_nD;
+            f_realspace_nD_fixed_grid_nodups_t(:,:,:,L+1) = f_realspace_nD_fixed_grid_nodups;
         else
             error('Save output for num_dimensions >3 not yet implemented');
         end
         fval_t(:,L+1) = fval;
         time_array(L+1) = t+dt;
-        save(fName,'pde','opts','dt','f_realspace_nD_t','fval_t','nodes','time_array');
+       
+        save(fName,'pde','opts','dt','f_realspace_nD_t','f_realspace_nD_fixed_grid_nodups_t','fval_t','nodes','nodes_fixed_grid_nodups','time_array');
+
     end
     
     t = t + dt;
