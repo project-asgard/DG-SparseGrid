@@ -18,24 +18,12 @@ else
 end
 
 deg = pde.deg; % TODO : generalize to deg_D
-lev = dimensions{1}.lev; % TODO : generalize to lev_D
-
-%%
-% Catch for TODO
-
-% if nDims>1
-%     for d=2:nDims
-%         assert(dimensions{d}.lev==lev);
-%         assert(dimensions{d}.deg==deg);
-%     end
-% end
 
 %%
 % TODO : surely this size depends on the parameters in the matrix_plot_D
 % routine? i.e., the grid upon which we decide to evaluate the solution?
 
 for d=1:nDims
-%     dof_1D_FG(d) = deg*2^(dimensions{d}.lev);
     dof_1D_FG(d) = numel(Meval_D(:,1));
 end
 num_pts = prod(dof_1D_FG);

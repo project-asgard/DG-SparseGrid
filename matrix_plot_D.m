@@ -32,7 +32,7 @@ if user_provided_nodes
     nodes_count = input_nodes .* 0;
     dof = num_nodes*deg;
     Meval = sparse(num_nodes,dof_1D);
-elseif opts.uniform_output
+elseif strcmp(opts.output_grid,'uniform')
     % output on uniformly spaced grid
     % note that this uses the left of the dual value options
     N = deg+2;
@@ -89,7 +89,7 @@ for i=0:n-1
         if user_provided_nodes
             Iu = [cnt+1:cnt+numel(quad_x)];
             cnt = cnt + numel(quad_x);
-        elseif opts.uniform_output
+        elseif strcmp(opts.output_grid,'uniform')
             if i==0
                 Iu = [1:dof];
             elseif i==n-1

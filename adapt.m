@@ -1,5 +1,5 @@
-function [pde,fval,hash_table,A_data,Meval,nodes,coord,fval_previous] ...
-    = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0,coarsen_,refine_,fval_previous)
+function [pde,fval,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,fval_previous] ...
+    = adapt(pde,opts,fval,hash_table,Meval0,nodes0,nodes_nodups0,nodes_count0,fval_realspace0,coarsen_,refine_,fval_previous)
 
 num_elements    = numel(hash_table.elements_idx);
 num_dims  = numel(pde.dimensions);
@@ -31,7 +31,7 @@ if exist('refine_','var') && ~isempty(refine_)
 end
 
 refine_previous = 0;
-if nargin >= 9
+if nargin >= 12
     refine_previous = 1;
     assert(numel(fval)==numel(fval_previous));
 end
@@ -49,10 +49,10 @@ assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 pde0  = pde;
 fval0 = fval;
-for d=1:num_dims
-    [Meval0{d},nodes0{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
-end
-fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
+% for d=1:num_dims
+%     [Meval0{d},nodes0{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+% end
+% fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
 
 %%
 % Plot the grid (1 and 2D only)
@@ -415,13 +415,24 @@ A_data = global_matrix(pde,opts,hash_table);
 % Update the conversion to realspace matrices
 
 for d=1:num_dims
-    [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+    if strcmp(opts.output_grid,'fixed')
+        num_fixed_grid = 51;
+        nodes_nodups{d} = ...
+            linspace(pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,num_fixed_grid);
+        [Meval{d},nodes{d},nodes_count{d}] = ...
+            matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
+    else
+        [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+        nodes_nodups{d} = nodes{d};
+        nodes_count{d} = nodes{d}.*0+1;
+    end
 end
 
 %%
 % Update the coordinates for realspace evaluation
 
 coord = get_realspace_coords(pde,nodes);
+coord_nodups = get_realspace_coords(pde,nodes_nodups);
 
 %%
 % Get the new real space solution and check against unrefined solution
@@ -447,16 +458,22 @@ if ~opts.quiet
         
         subplot(4,3,4)
         f2d = singleD_to_multiD(num_dims,fval_realspace0,nodes0);
-        x = nodes0{1};
-        y = nodes0{2};
+        if strcmp(opts.output_grid,'fixed')
+            f2d = remove_duplicates(num_dims,f2d,nodes_nodups,nodes_count);
+        end
+        x = nodes_nodups0{1};
+        y = nodes_nodups0{2};
         if norm(f2d-f2d(1,1))>0 % catch for zero
             contourf(x,y,f2d,'LineColor','none');
         end
         
         subplot(4,3,5)
         f2d = singleD_to_multiD(num_dims,fval_realspace_refined,nodes);
-        x = nodes{1};
-        y = nodes{2};
+        if strcmp(opts.output_grid,'fixed')
+            f2d = remove_duplicates(num_dims,f2d,nodes_nodups,nodes_count);
+        end
+        x = nodes_nodups{1};
+        y = nodes_nodups{2};
         if norm(f2d-f2d(1,1))>0 % catch for zero
             contourf(x,y,f2d,'LineColor','none');
         end

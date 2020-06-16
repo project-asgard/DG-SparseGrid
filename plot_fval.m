@@ -1,4 +1,4 @@
-function plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates)
+function plot_fval(pde,nodes,f_nD,f_nD_analytic)
 
 num_dims = numel(pde.dimensions);
 
@@ -12,9 +12,8 @@ if num_dims==1
     %%
     % Plot solution
     
-    f1d = fval_realspace;
     x = nodes{1};
-    plot(x,f1d,'-o');
+    plot(x,f_nD,'-o');
     
     %%
     % Overplot analytic solution
@@ -22,9 +21,8 @@ if num_dims==1
     if pde.checkAnalytic
         hold on;
         coord = {x};
-        %         f1d_analytic = getAnalyticSolution_D(coord,time,pde);
         if overPlotAnalytic
-            plot(x,fval_realspace_analytic,'-');
+            plot(x,f_nD_analytic,'-');
         end
         hold off;
     end
@@ -32,9 +30,6 @@ if num_dims==1
 end
 
 if num_dims==2
-            
-    f2d = singleD_to_multiD(num_dims,fval_realspace,nodes);
-    f2d_analytic = singleD_to_multiD(num_dims,fval_realspace_analytic,nodes);
    
     x = nodes{1};
     y = nodes{2};
@@ -50,20 +45,20 @@ if num_dims==2
         sy = sy+2; % just to get off the exact middle
     end
     
-    f1d = f2d(sy,:);
+    f_slice = f_nD(sy,:);
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    plot(x,f1d,'-o');
+    plot(x,f_slice,'-o');
     title('1D slice (vertical)');
     
     %%
     % Overplot analytic solution
     
     if pde.checkAnalytic
-        f1d_analytic = f2d_analytic(sy,:);
+        f_slice_analytic = f_nD_analytic(sy,:);
         hold on;
-        plot(x,f1d_analytic,'-');
+        plot(x,f_slice_analytic,'-');
         hold off;
     end
     
@@ -72,17 +67,17 @@ if num_dims==2
         sx = sx+2; % just to get off the exact middle
     end
     
-    f1d = f2d(:,sx);
+    f_slice = f_nD(:,sx);
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,2);
-    plot(y,f1d,'-o');
+    plot(y,f_slice,'-o');
     title('1D slice (horizontal)');
     
     if pde.checkAnalytic
-        f1d_analytic = f2d_analytic(:,sx);
+        f_slice_analytic = f_nD_analytic(:,sx);
         hold on;
-        plot(y,f1d_analytic,'-');
+        plot(y,f_slice_analytic,'-');
         hold off;
     end
     
@@ -90,20 +85,21 @@ if num_dims==2
     % Plot 2D
     
     ax1 = subplot(2,2,3);
-    f2d_with_noise = f2d;
-    f2d_with_noise(1,1) = f2d_with_noise(1,1)*1.0001;
-    contourf(x,y,f2d_with_noise,'LineColor','none');
+    f_nD_with_noise = f_nD;
+    f_nD_with_noise(1,1) = f_nD_with_noise(1,1)*1.0001;
+    contourf(x,y,f_nD_with_noise,'LineColor','none');
     title('numeric 2D solution');
     
+    coordinates = get_realspace_coords(pde,nodes);
     if nargin >= 6
         hold on
         scatter(coordinates(:,1),coordinates(:,2),60,'+','MarkerEdgeColor','white')
         hold off
     end
     
-    if pde.checkAnalytic && norm(f2d_analytic-f2d_analytic(1,1))>0
+    if pde.checkAnalytic && norm(f_nD_analytic-f_nD_analytic(1,1))>0
         ax2 = subplot(2,2,4);
-        contourf(x,y,f2d_analytic);
+        contourf(x,y,f_nD_analytic);
         title('analytic 2D solution');
     end
     
@@ -112,39 +108,34 @@ if num_dims==2
 %     [xx,yy] = meshgrid(x,y);
 %     p_par = xx.*yy;
 %     p_pen = (abs(1-yy.^2)).^(1/2).*xx;
-%     f2d = f2d_with_noise;
-%     contour(p_par,p_pen,f2d,10,'LineWidth',2)
+%     f_nD = f_nD_with_noise;
+%     contour(p_par,p_pen,f_nD,10,'LineWidth',2)
 end
 
 if num_dims==3
     
     figure(1000);
     
-    dimensions = pde.dimensions;
-    
-    f3d = singleD_to_multiD(num_dims,fval_realspace,nodes);
-    f3d_analytic = singleD_to_multiD(num_dims,fval_realspace_analytic,nodes);
-    
     %%
     % Plot a 1D line through the solution
     
-    sz = numel(f3d(:,1,1))/2;
-    sy = numel(f3d(1,:,1))/2;
-    sx = numel(f3d(1,1,:))/2;
+    sz = numel(f_nD(:,1,1))/2;
+    sy = numel(f_nD(1,:,1))/2;
+    sx = numel(f_nD(1,1,:))/2;
     
-    f1d = f3d(:,sy,sx);
+    f_slice = f_nD(:,sy,sx);
     x = nodes{1};
     y = nodes{2};
     z = nodes{3};
     ax1 = subplot(3,3,1);
-    plot(z,f1d,'-o');
+    plot(z,f_slice,'-o');
     title('1D slice through 3D');
     
     %%
     % Overplot analytic solution
     
     if pde.checkAnalytic
-        f1d_analytic = f3d_analytic(:,sy,sx);
+        f_slice_analytic = f_nD_analytic(:,sy,sx);
         hold on;
         plot(z,f1d_analytic,'-');
         hold off;
@@ -154,12 +145,12 @@ if num_dims==3
     % Plot a 2D xy plane
     
     ax1 = subplot(3,3,4);
-    contourf(z,y,f3d(:,:,sx)');
+    contourf(z,y,f_nD(:,:,sx)');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
         ax2 = subplot(3,3,7);
-        contourf(z,y,f3d_analytic(:,:,sx)');
+        contourf(z,y,f_nD_analytic(:,:,sx)');
         title('2D slice through 3D analytic');
     end
     
@@ -167,12 +158,12 @@ if num_dims==3
     % Plot a 2D xz plane
     
     ax3 = subplot(3,3,5);
-    contourf(z,x,squeeze(f3d(:,sy,:))');
+    contourf(z,x,squeeze(f_nD(:,sy,:))');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
         ax3 = subplot(3,3,8);
-        contourf(z,x,squeeze(f3d_analytic(:,sy,:))');
+        contourf(z,x,squeeze(f_nD_analytic(:,sy,:))');
         title('2D slice through 3D analytic');
     end
     
@@ -180,12 +171,12 @@ if num_dims==3
     % Plot a 2D yz plane
     
     ax3 = subplot(3,3,6);
-    contourf(y,x,squeeze(f3d(sz,:,:))');
+    contourf(y,x,squeeze(f_nD(sz,:,:))');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
         ax3 = subplot(3,3,9);
-        contourf(y,x,squeeze(f3d_analytic(sz,:,:))');
+        contourf(y,x,squeeze(f_nD_analytic(sz,:,:))');
         title('2D slice through 3D analytic');
     end
     

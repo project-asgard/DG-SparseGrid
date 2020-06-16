@@ -345,3 +345,39 @@ disp('Testing fokkerplanck1_5p1a (CN / with LHS / TIA)');
 verifyLessThan(testCase,err,2.5e-2);
 end
 
+function fixed_grid_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fixed_grid routine');
+[err1,~,~,~,err_rsq]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsf]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','fixed');
+relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));
+verifyLessThan(testCase,relErr,0.1);
+end
+
+function uniform_grid_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fixed_grid routine');
+[err1,~,~,~,err_rsq]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsu]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','uniform');
+relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
+verifyLessThan(testCase,relErr,0.35);
+end
+
+function fixed_grid_2D_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fixed_grid routine');
+[err1,~,~,~,err_rsq]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsf]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','fixed');
+relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));
+verifyLessThan(testCase,relErr,0.17);
+end
+
+function uniform_grid_2D_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fixed_grid routine');
+[err1,~,~,~,err_rsq]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsu]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','uniform');
+relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
+verifyLessThan(testCase,relErr,0.18);
+end
+

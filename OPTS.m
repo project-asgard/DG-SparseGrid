@@ -6,8 +6,8 @@ classdef OPTS
         CFL = 0.01;
         dt = 0;
         quiet = false;
-        grid_type = 'SG';        
-        timestep_method = 'RK3';
+        grid_type = 'SG'; % 'SG', 'FG'        
+        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45'
         build_A = false;
         adapt = false;
         use_oldhash = false;
@@ -19,7 +19,7 @@ classdef OPTS
         adapt_threshold = 1e-3;
         refinement_method = 1;
         adapt_initial_condition = false;
-        uniform_output = false;
+        output_grid = 'quadrature'; % 'quadrature', 'fixed', 'uniform'
         save_output = false;
         output_filename_id = '';
         plot_freq = 1;

@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace,nodes] = asgard (pde, varargin)
+function [err,fval,fval_realspace,nodes,err_realspace] = asgard (pde, varargin)
 
 format short e
 folder = fileparts(which(mfilename));
@@ -50,7 +50,7 @@ connectivity = [];
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
 t = 0;
 fval = initial_condition_vector(pde, opts, hash_table, t);
-if opts.save_output; fval_t(:,1) = fval; end
+if opts.save_output; fval_t{1} = fval; end
 
 %% Construct the time-independent coefficient matrices
 if ~opts.quiet; disp('Calculate time independent matrix coefficients'); end
@@ -73,45 +73,53 @@ end
 
 %% Construct transforms back to realspace for plotting
 for d=1:num_dimensions
-    num_fixed_grid = 51;
-    nodes_fixed_grid_nodups{d} = linspace(pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,num_fixed_grid);
-    [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
-    [Meval_fixed_grid{d},nodes_fixed_grid{d},nodes_count{d}] = matrix_plot_D(pde,opts,pde.dimensions{d},nodes_fixed_grid_nodups{d});
+    if strcmp(opts.output_grid,'fixed')
+        num_fixed_grid = 51;
+        nodes_nodups{d} = ...
+            linspace(pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,num_fixed_grid);
+        [Meval{d},nodes{d},nodes_count{d}] = ...
+            matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
+    else
+        [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+        nodes_nodups{d} = nodes{d};
+        nodes_count{d} = nodes{d}.*0+1;
+    end
 end
 
 %% Construct a n-D coordinate array
 coord = get_realspace_coords(pde,nodes);
+coord_nodups = get_realspace_coords(pde,nodes_nodups);
+
 
 %% Plot initial condition
 if num_dimensions <=3
     
     %%
     % Get the real space solution
-    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    fval_realspace_fixed_grid = wavelet_to_realspace(pde,opts,Meval_fixed_grid,fval,hash_table);
-
-    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);    
+    f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);   
+    if strcmp(opts.output_grid,'fixed')
+        f_realspace_nD = ...
+            remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
+    end
     
+    f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
+
     if opts.save_output
-        f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
-        if num_dimensions == 1
-            f_realspace_nD_t(:,1) = f_realspace_nD;
-        elseif num_dimensions == 2
-            f_realspace_nD_t(:,:,1) = f_realspace_nD;
-        elseif num_dimensions == 3
-            f_realspace_nD_t(:,:,:,1) = f_realspace_nD;
+        if num_dimensions <= 3
+            f_realspace_nD_t{1} = f_realspace_nD;
         else
             error('Save output for num_dimensions >3 not yet implemented');
         end
     end
     
     if norm(fval_realspace) > 0 && ~opts.quiet
-        plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval);
+        plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
     end
     
     if opts.use_oldhash
     else
-        coordinates = get_sparse_grid_coordinates(pde, opts, hash_table);
+        coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
     end
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
@@ -130,8 +138,8 @@ if opts.adapt
         while keep_adapting_initial_condition
             num_pre_adapt = numel(fval);
             % first refine
-            [pde,fval_tmp,hash_table,A_data,Meval,nodes,coord] ...
-                = adapt(pde,opts,fval,hash_table,nodes, ...
+            [pde,fval_tmp,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord] ...
+                = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
                 fval_realspace,0,1);
             if num_pre_adapt == numel(fval_tmp)
                 keep_adapting_initial_condition = false;
@@ -142,8 +150,8 @@ if opts.adapt
         end
         
         % coarsen
-        [pde,~,hash_table,A_data,Meval,nodes,coord] ...
-            = adapt(pde,opts,fval,hash_table,nodes, ...
+        [pde,~,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord] ...
+            = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
             fval_realspace,1,0);
         % reproject onto coarsend basis
         fval = initial_condition_vector(pde, opts, hash_table, t);
@@ -154,7 +162,7 @@ if opts.adapt
         % Check to ensure refinement is not required to start
         pre_refinement_num_DOF = length(fval);
         [~,fval_check] ...
-            = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,0,1);
+            = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,0,1);
         if (length(fval_check)>pre_refinement_num_DOF)
 %             error('Initial grid was insifficient for requested accuracy');
         end
@@ -198,8 +206,8 @@ for L = 1:num_steps
     
     % Coarsen Grid
     if opts.adapt
-        [pde,fval,hash_table,A_data,Meval,nodes,coord] ...
-            = adapt(pde,opts,fval,hash_table,nodes,fval_realspace,1,0);
+        [pde,fval,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord] ...
+            = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,1,0);
     end
     
     needs_adapting = true;
@@ -240,8 +248,7 @@ for L = 1:num_steps
                 
             end
         end
-        
-        
+                
         %%
         % Now construct the TD coeff_mats.
         
@@ -272,8 +279,8 @@ for L = 1:num_steps
             
             num_elements_0 = numel(fval);
             
-            [pde,~,hash_table,A_data,Meval,nodes,coord,fval_unstepped_adapted] ...
-                = adapt(pde,opts,fval,hash_table,nodes, ...
+            [pde,~,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,fval_unstepped_adapted] ...
+                = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
                 fval_realspace,0,1,fval_unstepped);
             
             num_elements_adapted = numel(fval_unstepped_adapted);
@@ -310,7 +317,6 @@ for L = 1:num_steps
         % Get the real space solution
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-        fval_realspace_fixed_grid = wavelet_to_realspace(pde,opts,Meval_fixed_grid,fval,hash_table);
 
         %%
         % Try with function convertToRealSpace
@@ -324,14 +330,14 @@ for L = 1:num_steps
                 LmaxB(d) = pde.dimensions{d}.domainMax;
             end
             fval_realspaceB = convert_to_real_space(pde,num_dimensions,lev,deg,gridType,LminB,LmaxB,fval,lev);
-            %             fval_realspace = fval_realspaceB;
+            % fval_realspace = fval_realspaceB;
         end
         
         if opts.use_oldhash
         else
             coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
         end
-        %         fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
+        % fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
         
     end
     
@@ -358,10 +364,10 @@ for L = 1:num_steps
         
         if num_dimensions <= 3
             fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t+dt);
-            err_real = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
+            err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
             if ~opts.quiet         
-                disp(['    real space absolute err : ', num2str(err_real)]);
-                disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+                disp(['    real space absolute err : ', num2str(err_realspace)]);
+                disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
             end
         end
         
@@ -380,7 +386,16 @@ for L = 1:num_steps
         figure(1000)
         
         if num_dimensions <= 3
-            plot_fval(pde,nodes,fval_realspace,fval_realspace_analytic,Meval,coordinates);
+            
+            f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
+            if strcmp(opts.output_grid,'fixed')
+                f_realspace_nD = ...
+                    remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
+            end
+
+            f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
+            
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
            
             % this is just for the RE paper
             plot_fval_in_cyl = false;
@@ -412,31 +427,22 @@ for L = 1:num_steps
     if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
         [status, msg, msgID] = mkdir([root_directory,'/output']);
         fName = append(root_directory,"/output/asgard-out",string(opts.output_filename_id),".mat");
+ 
+        f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes); 
+        if strcmp(opts.output_grid,'fixed')
+            f_realspace_nD = ...
+                remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
+        end
         
-        f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
-        
-        f_realspace_nD_fixed_grid = singleD_to_multiD(num_dimensions,fval_realspace_fixed_grid,nodes_fixed_grid);
-        f_realspace_nD_fixed_grid_nodups = ...
-            remove_duplicates(num_dimensions,f_realspace_nD_fixed_grid,nodes_fixed_grid_nodups,nodes_count);
-        
-        contourf(nodes_fixed_grid_nodups{1},nodes_fixed_grid_nodups{2},f_realspace_nD_fixed_grid_nodups);
-            
-        if num_dimensions == 1
-            f_realspace_nD_t(:,L+1) = f_realspace_nD;
-            f_realspace_nD_fixed_grid_nodups_t(:,L+1) = f_realspace_nD_fixed_grid_nodups;
-        elseif num_dimensions == 2
-            f_realspace_nD_t(:,:,L+1) = f_realspace_nD; 
-            f_realspace_nD_fixed_grid_nodups_t(:,:,L+1) = f_realspace_nD_fixed_grid_nodups;
-        elseif num_dimensions == 3
-            f_realspace_nD_t(:,:,:,L+1) = f_realspace_nD;
-            f_realspace_nD_fixed_grid_nodups_t(:,:,:,L+1) = f_realspace_nD_fixed_grid_nodups;
+        if num_dimensions >= 1
+            f_realspace_nD_t{L+1} = f_realspace_nD;
         else
             error('Save output for num_dimensions >3 not yet implemented');
         end
-        fval_t(:,L+1) = fval;
+        fval_t{L+1} = fval;
         time_array(L+1) = t+dt;
        
-        save(fName,'pde','opts','dt','f_realspace_nD_t','f_realspace_nD_fixed_grid_nodups_t','fval_t','nodes','nodes_fixed_grid_nodups','time_array');
+        save(fName,'pde','opts','dt','f_realspace_nD_t','fval_t','nodes','time_array','hash_table');
 
     end
     

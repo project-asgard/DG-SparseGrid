@@ -19,7 +19,7 @@ default_use_oldhash = opts.use_oldhash;
 default_use_oldcoeffmat = opts.use_oldcoeffmat;
 default_timestep_method = opts.timestep_method;
 valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE'};
-check_timestep_method = @(x) any(validatestring(x,valid_timestep_methods));
+check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
 default_time_independent_A = opts.time_independent_A;
 default_time_independent_build_A = opts.time_independent_build_A;
 default_many_solution_capable = opts.many_solution_capable;
@@ -27,7 +27,8 @@ default_max_lev = opts.max_lev;
 default_adapt_threshold = opts.adapt_threshold;
 default_refinement_method = opts.refinement_method;
 default_adapt_initial_condition = opts.adapt_initial_condition;
-default_uniform_output = opts.uniform_output;
+valid_output_grids = {'quadrature','fixed','uniform'};
+check_output_grid = @(x) any(strcmp(x,valid_output_grids));
 default_save_output = opts.save_output;
 default_output_filename_id = opts.output_filename_id;
 
@@ -51,11 +52,11 @@ addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
 addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
-addOptional(input_parser,'uniform_output',default_uniform_output,@islogical);
 addOptional(input_parser,'save_output',default_save_output,@islogical);
 addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
 addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
 addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
+addOptional(input_parser,'output_grid',opts.output_grid,check_output_grid);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -151,7 +152,7 @@ opts.max_lev = input_parser.Results.max_lev;
 opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
-opts.uniform_output = input_parser.Results.uniform_output;
+opts.output_grid = input_parser.Results.output_grid;
 opts.save_output = input_parser.Results.save_output;
 opts.output_filename_id = input_parser.Results.output_filename_id;
 opts.plot_freq = input_parser.Results.plot_freq;
