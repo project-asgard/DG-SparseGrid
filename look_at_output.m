@@ -25,7 +25,7 @@ for f=1:num_files
     if contains(files(f).name,'FG')
         grid_str = 'FG';
         p=semilogy(x,y,'LineWidth',5,'Color','black');
-        p.Color(4)=min([dof./50000 1]);
+        p.Color(4)=max([min([dof./50000 1]) 0.1]);
     else
         grid_str = 'SG';
         p=semilogy(x,y,'--','LineWidth',2);%,'Color','black');
@@ -60,7 +60,7 @@ for f=1:num_files
     if contains(files(f).name,'FG')
         grid_str = 'FG';
         p=semilogy(x,y,'LineWidth',5,'Color','black');
-        p.Color(4)=min([dof./50000 1]);
+        p.Color(4)=max([min([dof./50000 1]) 0.1]);
     else
         grid_str = 'SG';
         p=semilogy(x,y,'--','LineWidth',2);%,'Color','black');
