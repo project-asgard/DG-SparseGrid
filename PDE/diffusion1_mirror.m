@@ -53,7 +53,7 @@ Gamma_a = ln_Delt*e^4*z_a^2/m_a^2;
 
 %Initial parameters for target specie
 n_o = 0.5*n_b; %initial number density for specie at specific velocity
-v_o = 0.002*v_b; %initial known velocity
+v_o = 0.5*v_b; %initial known velocity
 
 function y = dd1(n)
 % Our default value is 0
@@ -65,7 +65,7 @@ if n == 0
 end
 
 end
-soln_v = @(x) x.*0 + n_o.*dd1(v_o - x);
+soln_v = @(x) x.*0 + n_o.*exp(-(x-v_o).^2/(0.1*v_o).^2);
 soln_t = @(t) t.*0 + 1;
 
 %BCFunc = @(x) soln_x(x);
@@ -113,7 +113,8 @@ num_dims = numel(pde.dimensions);
 % coeff_mat = mat1 * mat2
 
 g1 = @(x,p,t,dat) x.*0 + 1;
-g2 = @(x,p,t,dat) -Gamma_a*n_b*(z_b)^2.*psi(abs(x)/v_b,t)./abs(x);
+% g2 = @(x,p,t,dat) -Gamma_a*n_b*(z_b)^2.*psi(abs(x)/v_b,t)./abs(x);
+g2 = @(x,p,t,dat) +1e14;
 
 pterm1 = GRAD(num_dims,g1,+1,'D','D');
 pterm2 = GRAD(num_dims,g2,-1,'N','N');
