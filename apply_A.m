@@ -33,11 +33,12 @@ ALHS = 0;
 A = 0;
 if opts.build_A
     A = zeros(totalDOF,totalDOF); % Only filled if using hand coded implicit methods
+    A_linear = zeros(totalDOF*totalDOF,1);
 end
 if num_terms_LHS > 0
     ALHS = zeros(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
 end
-
+if opts.build_A; disp('Building A ...'); end
 for workItem=1:nWork
           
     nConnected = nWork; % Simply assume all are connected. 
@@ -95,8 +96,9 @@ for workItem=1:nWork
                 %%
                 % Apply krond to return A (for hand coded implicit time advance)
                 
-                A(globalRow,globalCol) = A(globalRow,globalCol) + krond(num_dims,kronMatList);
-                
+                view = krond(num_dims,kronMatList);
+                A(globalRow,globalCol) = A(globalRow,globalCol) + view;
+
             else
                 
                 %%
@@ -153,5 +155,6 @@ for workItem=1:nWork
     assert(workItem==workItem);
     
 end
+if opts.build_A; disp('DONE'); end
 
 end

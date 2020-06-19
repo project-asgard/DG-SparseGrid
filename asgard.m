@@ -2,6 +2,8 @@
 
 function [err,fval,fval_realspace,nodes,err_realspace] = asgard (pde, varargin)
 
+tic
+
 format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
@@ -441,8 +443,9 @@ for L = 1:num_steps
         end
         fval_t{L+1} = fval;
         time_array(L+1) = t+dt;
+        wall_clock_time(L+1) = toc;
        
-        save(fName,'pde','opts','dt','f_realspace_nD_t','fval_t','nodes','time_array','hash_table');
+        save(fName,'pde','opts','dt','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time');
 
     end
     
