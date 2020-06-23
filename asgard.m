@@ -34,6 +34,7 @@ if ~opts.quiet; disp('Constructing hash and inverse hash tables'); end
 
 if opts.use_oldhash
     [HASH,hash_table] = hash_table_nD(pde.lev_vec, opts.grid_type);
+    pde.hash_table = hash_table;
 else
     [elements, elements_idx]    = hash_table_sparse_nD (pde.lev_vec, pde.max_lev, opts.grid_type);
     hash_table.elements         = elements;
@@ -46,7 +47,12 @@ for d=1:num_dimensions
 end
 
 %% (Do not) Construct the connectivity.
-connectivity = [];
+if opts.use_connectivity
+    pde.connectivity = connect_nD(num_dimensions,HASH,hash_table,max(pde.lev_vec),max(pde.lev_vec),opts.grid_type);
+else
+    connectivity = [];
+end
+
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end

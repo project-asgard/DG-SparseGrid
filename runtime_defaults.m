@@ -57,6 +57,8 @@ addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
 addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
 addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
 addOptional(input_parser,'output_grid',opts.output_grid,check_output_grid);
+addOptional(input_parser,'use_connectivity',opts.use_connectivity,@islogical);
+
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -157,6 +159,7 @@ opts.save_output = input_parser.Results.save_output;
 opts.output_filename_id = input_parser.Results.output_filename_id;
 opts.plot_freq = input_parser.Results.plot_freq;
 opts.save_freq = input_parser.Results.save_freq;
+opts.use_connectivity = input_parser.Results.use_connectivity;
 
 if opts.adapt
     opts.use_oldhash = false;

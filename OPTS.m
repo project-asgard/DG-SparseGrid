@@ -10,6 +10,7 @@ classdef OPTS
         timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45'
         build_A = false;
         adapt = false;
+        use_connectivity = false;
         use_oldhash = false;
         use_oldcoeffmat = false;
         time_independent_A = false;
