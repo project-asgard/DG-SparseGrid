@@ -116,7 +116,7 @@ if make_fully_connected
 end
 
 % Plot connectivity matrix
-do_plot = 1;
+do_plot = 0;
 if do_plot
     conn_nD_full=sparse(size(HASHInv,2));
     for i=1:size(conn_nD,2)

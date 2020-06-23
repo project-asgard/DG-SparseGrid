@@ -246,16 +246,25 @@ verifyLessThan(testCase,err,1.5e-5);
 end
 
 function asgard_diffusion2_oldhash_test(testCase)
-
 addpath(genpath(pwd));
-
 disp('Testing diffusion2 (CN/oldhash)');
-
 [err,act_f,act_frs] = asgard(diffusion2, ...
     'lev',3,'quiet',true,'deg',3,'timestep_method', 'CN','use_oldhash',true);
-
 verifyLessThan(testCase,err,1.5e-5);
+end
 
+function asgard_diffusion2_oldhash_connectivity_SG_test(testCase)
+addpath(genpath(pwd));
+disp('Testing diffusion2 (CN/oldhash/connectivity/SG)');
+[err,act_f,act_frs] = asgard(diffusion2,'lev',3,'quiet',true,'deg',3,'timestep_method','BE','use_oldhash',true,'use_connectivity',true);
+verifyLessThan(testCase,err,1.4e-5);
+end
+
+function asgard_diffusion2_oldhash_connectivity_FG_test(testCase)
+addpath(genpath(pwd));
+disp('Testing diffusion2 (CN/oldhash/connectivity/FG)');
+[err,act_f,act_frs] = asgard(diffusion2,'lev',3,'quiet',true,'deg',3,'timestep_method','BE','use_oldhash',true,'use_connectivity',true,'grid_type','FG');
+verifyLessThan(testCase,err,1.4e-5);
 end
 
 function asgard_diffusion2_adapt_test(testCase)

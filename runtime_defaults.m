@@ -161,6 +161,15 @@ opts.plot_freq = input_parser.Results.plot_freq;
 opts.save_freq = input_parser.Results.save_freq;
 opts.use_connectivity = input_parser.Results.use_connectivity;
 
+if opts.use_connectivity
+    if ~opts.use_oldhash
+        error("ERROR - must set 'use_oldhash' to use connectivity"); 
+    end
+    if opts.adapt
+        error("ERROR - cannot use adaptivity with use_connectivity==true");
+    end
+end
+
 if opts.adapt
     opts.use_oldhash = false;
 end
