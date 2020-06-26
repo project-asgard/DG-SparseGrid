@@ -2,8 +2,8 @@
 format short e
 addpath(genpath(pwd))
 
-Lev = 4;
-Deg = 2;
+Lev = 2;
+Deg = 1;
 Lmax = 1;
 
 %--Quadrature
