@@ -44,7 +44,7 @@ ww = repmat(quad_w,2^Lev,1)*dx/2;
 
 b = [1,1];
 
-FMWT_COMP = OperatorTwoScale(Deg,Lev);
+FMWT_COMP = OperatorTwoScale(Deg,2^Lev);
 
 % Term 1: d/dt[f]
 % DG basis
@@ -52,7 +52,18 @@ Mat_Term1_t = MatrixGrad(Lev,Deg,tInt,tEnd,1,@(x)1, @(x)0,t_bcL,t_bcR);
 % Wavelet basis
 Mat_Term1_t = FMWT_COMP*Mat_Term1_t*FMWT_COMP';
 Mat_Term1_x = speye(DoFs,DoFs);
-% Assemble Term1 to Matrix
+% Assemble Term1 to Sparse Grids Matrix
+
+% for i = 1:DoF_SG
+%     for j = 1:DoF_SG
+%         I1 = Inv.x1(i);
+%         I2 = Inv.x2(i);
+%         Ind1 = Inv.x1(j);
+%         Ind2 = Inv.x2(j);
+%         val = Mat_Term1_t(I1,Ind1)*Mat_Term1_t(I2,Ind2);
+%         Mat_SG(i,j) = Mat_SG(i,j)+val;
+%     end
+% end
 
 
 % Full grids
