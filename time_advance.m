@@ -169,7 +169,7 @@ bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
 [~,A] = apply_A(pde,opts,A_data,f0,deg);
 
-f1 = A \ (s0+bc0);
+f1 = -A \ (s0+bc0);
 
 end
 
