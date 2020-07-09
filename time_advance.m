@@ -6,6 +6,9 @@ if strcmp(opts.timestep_method,'BE')
 elseif strcmp(opts.timestep_method,'FE')
     % Forward Euler (FE) first order
     f = forward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'time_independent')
+    % time independent d/dt==0
+    f = time_independent(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -158,6 +161,17 @@ fval = f + dt*(b1*k1 + b2*k2 + b3*k3);
 
 end
 
+%% Time independent solve d/dt==0
+function f1 = time_independent(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+
+[~,A] = apply_A(pde,opts,A_data,f0,deg);
+
+f1 = A \ (s0+bc0);
+
+end
 
 %% Forward Euler
 function f1 = forward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
@@ -194,23 +208,25 @@ if opts.time_independent_A % relies on inv() so is no good for poorly conditione
     if isempty(AA_inv)
         if applyLHS
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             ALHS_inv = inv(ALHS);
             AA = I - dt*(ALHS_inv * A);
             b = f0 + dt*(ALHS_inv * (s0 + bc0));
         else
             [~,A] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             AA = I - dt*A;
             b = f0 + dt*(s0 + bc0);
         end
         
-        rcondAA = rcond(AA);
-        if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcondAA)]); end
-        
-        if 1/rcondAA > 1e6
-            disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
-            disp(['WARNING: cond(A) = ', num2str(rcondAA)]);
+        if numel(AA(:,1)) <= 4096
+            condAA = condest(AA);
+            if ~opts.quiet; disp(['    condest(AA) : ', num2str(condAA,'%.1e')]); end
+            
+            if condAA > 1e6
+                disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
+                disp(['WARNING: cond(A) = ', num2str(condAA,'%.1e')]);
+            end
         end
         
         AA_inv = inv(AA);
@@ -231,7 +247,7 @@ else % use the backslash operator instead
         else
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
         end
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = I - dt*(ALHS \ A);
         b = f0 + dt*(ALHS \ (s0 + bc0));
     else
@@ -240,7 +256,7 @@ else % use the backslash operator instead
         else
             [~,A] = apply_A(pde,opts,A_data,f0,deg);
         end
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = I - dt*A;
         b = f0 + dt*(s0 + bc0);
     end
@@ -268,13 +284,13 @@ if opts.time_independent_A % uses inv() so no good for poorly conditioned system
     if isempty(AA_inv)
         if applyLHS
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             ALHS_inv = inv(ALHS);
             AA = 2*I - dt*(ALHS_inv * A);
             b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
         else
             [~,A] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             AA = 2*I - dt*A;
             b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
         end
@@ -301,12 +317,12 @@ if opts.time_independent_A % uses inv() so no good for poorly conditioned system
 else % use the backslash operator for time_indepent_A = false
     if applyLHS
         [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = 2*I - dt*(ALHS \ A);
         b = 2*f0 + dt*(ALHS \ A)*f0 + dt*(ALHS \ (s0+s1+bc0+bc1));
     else
         [~,A] = apply_A(pde,opts,A_data,f0,deg);
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = 2*I - dt*A;
         b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
     end

@@ -1,4 +1,4 @@
-function plot_fval(pde,nodes,f_nD,f_nD_analytic)
+function plot_fval(pde,nodes,f_nD,f_nD_analytic,element_coordinates)
 
 num_dims = numel(pde.dimensions);
 
@@ -90,10 +90,9 @@ if num_dims==2
     contourf(x,y,f_nD_with_noise,'LineColor','none');
     title('numeric 2D solution');
     
-    coordinates = get_realspace_coords(pde,nodes);
-    if nargin >= 6
+    if nargin >= 5
         hold on
-        scatter(coordinates(:,1),coordinates(:,2),60,'+','MarkerEdgeColor','white')
+        scatter(element_coordinates(:,1),element_coordinates(:,2),60,'+','MarkerEdgeColor','black')
         hold off
     end
     
@@ -103,6 +102,69 @@ if num_dims==2
         title('analytic 2D solution');
     end
     
+%     figure(11)
+%     levs = [-9,-8,-7,-6,-5,-4,-3,-2,-1,0];
+%     f_nD(f_nD<1e-12)=1e-12;
+%     [M,c]=contourf(x,y,log10(f_nD),levs,'LineColor','none');
+%     xlabel('p');
+%     ylabel('\zeta');
+%     clabel(M,c,levs,'Color','w');
+%     colormap(flipud(pink));
+%     set(gca,'FontSize',16)
+%     g=100;
+%     yy=yline(0.984,'Color','b','LineWidth',1);
+%     xx=xline(5.01,'Color','b','LineWidth',1);
+%     hold on
+%     scatter(element_coordinates(:,1),element_coordinates(:,2),60,'+','MarkerEdgeColor','r')
+%     hold off
+    
+    plot_fval_in_cyl = false;
+    if plot_fval_in_cyl
+        p = x;
+        z = y;
+        f = f_nD;
+        pper = linspace(0,max(p),31);
+        ppar = linspace(-max(p),+max(p),51);
+        [ppar2d,pper2d] = meshgrid(ppar,pper);
+        p2dA = sqrt(ppar2d.^2+pper2d.^2);
+        z2dA = cos(atan2(pper2d,ppar2d));
+        f2d = interp2(p,z,f,p2dA,z2dA,'linear',1e-12);
+        figure(87)
+        f2d(f2d<1e-12)=1e-12;
+        contourf(ppar,pper,log10(f2d),levs,'LineColor','none')
+        colormap(flipud(pink));
+        sg_th = acos(element_coordinates(:,2));
+        sg_pper = element_coordinates(:,1).*sin(sg_th);
+        sg_ppar = element_coordinates(:,1).*cos(sg_th);
+        hold on
+        scatter(sg_ppar,sg_pper,60,'+','MarkerEdgeColor','k','LineWidth',2);
+        nL = 100;
+        pL1 = linspace(0,1,nL)*(max(x)-min(x))+min(x);
+        zL1 = zeros(1,nL)+0.984;
+        pperL1 = pL1.*sin(acos(zL1));
+        pparL1 = pL1.*cos(acos(zL1));
+        plot(pparL1,pperL1,'-r','LineWidth',1);
+        pL2 = zeros(1,nL)+5.01;
+        zL2 = linspace(0,1,nL)*(max(y)-min(y))+min(y);
+        pperL2 = pL2.*sin(acos(zL2));
+        pparL2 = pL2.*cos(acos(zL2));
+        plot(pparL2,pperL2,'-b','LineWidth',1);
+        
+        pL2 = zeros(1,nL)+max(x);
+        zL2 = linspace(0,1,nL)*(max(y)-min(y))+min(y);
+        pperL2 = pL2.*sin(acos(zL2));
+        pparL2 = pL2.*cos(acos(zL2));
+        plot(pparL2,pperL2,'-k','LineWidth',0.5);
+        pL2 = zeros(1,nL)+min(x);
+        zL2 = linspace(0,1,nL)*(max(y)-min(y))+min(y);
+        pperL2 = pL2.*sin(acos(zL2));
+        pparL2 = pL2.*cos(acos(zL2));
+        plot(pparL2,pperL2,'-k','LineWidth',0.5);
+        hold off
+
+    end
+
+   
 %     figure(9)
 %     clf
 %     [xx,yy] = meshgrid(x,y);

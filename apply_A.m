@@ -1,9 +1,5 @@
 function [ftmp, A, ALHS] = apply_A (pde,opts,A_data,f,deg,Vmax,Emax)
 
-if opts.use_connectivity
-    connectivity = pde.connectivity;
-end
-
 %-----------------------------------
 % Multiply Matrix A by Vector f
 %-----------------------------------
@@ -28,17 +24,37 @@ num_elem = numel(A_data.element_global_row_index);
 
 ftmpA = ftmp;
 
-elementDOF = deg^num_dims;
+element_DOF = deg^num_dims;
 
-totalDOF = num_elem * elementDOF;
+total_DOF = num_elem * element_DOF;
+
+if opts.use_connectivity
+    connectivity = pde.connectivity;
+    num_A = 0;
+    for i=1:num_elem
+        num_A = num_A + numel(pde.connectivity{i});
+    end
+    num_A = num_A * element_DOF^2;
+else
+    num_A = total_DOF * total_DOF; 
+end
+
 ALHS = 0;
 A = 0;
 if opts.build_A
-    A = zeros(totalDOF,totalDOF); % Only filled if using hand coded implicit methods
+    if opts.use_sparse_A
+        A_s1 = zeros(num_A,1); 
+        A_s2 = zeros(num_A,1);
+        A_s3 = zeros(num_A,1);
+    else
+        A = zeros(total_DOF,total_DOF); % Only filled if using hand coded implicit methods
+    end
 end
 if num_terms_LHS > 0
-    ALHS = zeros(totalDOF,totalDOF); % Only filled if non-identity LHS mass matrix
+    ALHS = zeros(total_DOF,total_DOF); % Only filled if non-identity LHS mass matrix
 end
+
+cnt = 1;
 
 if opts.build_A && ~opts.quiet; disp('Building A ...'); end
 for elem=1:num_elem
@@ -55,7 +71,7 @@ for elem=1:num_elem
     
     % Expand out the local and global indicies for this compressed item
     
-    global_row = elementDOF*(elem-1) + [1:elementDOF]';
+    global_row = element_DOF*(elem-1) + [1:element_DOF]';
     
     for d=1:num_dims
         myDeg = pde.deg;
@@ -77,7 +93,7 @@ for elem=1:num_elem
         % Expand out the global col indicies for this compressed
         % connected item.
         
-        global_col = elementDOF*(connected_col_j-1) + [1:elementDOF]';
+        global_col = element_DOF*(connected_col_j-1) + [1:element_DOF]';
         
         for d=1:num_dims
             myDeg = pde.deg;
@@ -88,6 +104,13 @@ for elem=1:num_elem
         % Apply operator matrices to present state using the pde spec
         % Y = A * X
         % where A is tensor product encoded.
+ 
+        if opts.build_A && opts.use_sparse_A
+            num_view = element_DOF * element_DOF;
+            [gr,gc] = meshgrid(global_col,global_row);
+            A_s1(cnt:cnt+num_view-1) = gr(:);
+            A_s2(cnt:cnt+num_view-1) = gc(:);
+        end
         
         for t=1:num_terms
             
@@ -107,8 +130,11 @@ for elem=1:num_elem
                 % Apply krond to return A (for hand coded implicit time advance)
                 
                 view = krond(num_dims,kronMatList);
-                A(global_row,global_col) = A(global_row,global_col) + view;
-
+                if opts.use_sparse_A
+                    A_s3(cnt:cnt+num_view-1) = A_s3(cnt:cnt+num_view-1) + view(:);                  
+                else
+                    A(global_row,global_col) = A(global_row,global_col) + view;
+                end
             else
                 
                 %%
@@ -127,8 +153,8 @@ for elem=1:num_elem
                     % ------------------------------------------------------
                     % globalRow = elementDOF*(workItem-1) + [1:elementDOF]';
                     % ------------------------------------------------------
-                    i1 = elementDOF*(elem-1) + 1;
-                    i2 = elementDOF*(elem-1) + elementDOF;
+                    i1 = element_DOF*(elem-1) + 1;
+                    i2 = element_DOF*(elem-1) + element_DOF;
                     ftmpA(i1:i2) = ftmpA(i1:i2) + Y;
                 end
                 
@@ -157,12 +183,19 @@ for elem=1:num_elem
         %%
         % Overwrite previous approach with PDE spec approch
         ftmp = ftmpA;
+        
+        if opts.use_sparse_A; cnt = cnt + num_view; end
                 
     end
     
     assert(elem==elem);
     
 end
+
+if opts.build_A && opts.use_sparse_A
+    A = sparse(A_s2,A_s1,A_s3,total_DOF,total_DOF);
+end
+
 if opts.build_A && ~opts.quiet; disp('DONE'); end
 
 end

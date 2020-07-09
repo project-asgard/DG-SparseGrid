@@ -18,7 +18,7 @@ default_adapt = opts.adapt;
 default_use_oldhash = opts.use_oldhash;
 default_use_oldcoeffmat = opts.use_oldcoeffmat;
 default_timestep_method = opts.timestep_method;
-valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE'};
+valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE','time_independent'};
 check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
 default_time_independent_A = opts.time_independent_A;
 default_time_independent_build_A = opts.time_independent_build_A;
@@ -58,7 +58,7 @@ addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
 addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
 addOptional(input_parser,'output_grid',opts.output_grid,check_output_grid);
 addOptional(input_parser,'use_connectivity',opts.use_connectivity,@islogical);
-
+addOptional(input_parser,'use_sparse_A',opts.use_sparse_A,@islogical);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -127,9 +127,9 @@ end
 
 opts.CFL = default_CFL;
 
-if isfield(pde,'CFL')
-    opts.CFL = pde.CFL;
-end
+% if isfield(pde,'CFL')
+%     opts.CFL = pde.CFL;
+% end
 if CFL_set
     opts.CFL = input_parser.Results.CFL;
 end
@@ -137,13 +137,7 @@ end
 opts.dt = input_parser.Results.dt;
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
-
 opts.timestep_method = input_parser.Results.timestep_method;
-opts.build_A = false;
-if sum(strcmp(opts.timestep_method,{'BE','CN'}))>0
-    opts.build_A = true;
-end
-
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
@@ -160,6 +154,12 @@ opts.output_filename_id = input_parser.Results.output_filename_id;
 opts.plot_freq = input_parser.Results.plot_freq;
 opts.save_freq = input_parser.Results.save_freq;
 opts.use_connectivity = input_parser.Results.use_connectivity;
+opts.use_sparse_A = input_parser.Results.use_sparse_A;
+
+opts.build_A = false;
+if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0
+    opts.build_A = true;
+end
 
 if opts.use_connectivity
     if ~opts.use_oldhash

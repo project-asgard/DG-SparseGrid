@@ -7,12 +7,13 @@ classdef OPTS
         dt = 0;
         quiet = false;
         grid_type = 'SG'; % 'SG', 'FG'        
-        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45'
+        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent'
         build_A = false;
         adapt = false;
         use_connectivity = false;
         use_oldhash = false;
         use_oldcoeffmat = false;
+        use_sparse_A = false;
         time_independent_A = false;
         time_independent_build_A = false;
         many_solution_capable = false;

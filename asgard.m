@@ -120,15 +120,20 @@ if num_dimensions <=3
             error('Save output for num_dimensions >3 not yet implemented');
         end
     end
-    
-    if norm(fval_realspace) > 0 && ~opts.quiet
-        plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
-    end
-    
+   
     if opts.use_oldhash
     else
-        coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+        element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
     end
+    
+    if norm(fval_realspace) > 0 && ~opts.quiet
+        if opts.use_oldhash
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
+        else
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
+        end
+    end
+    
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
 end
@@ -343,7 +348,7 @@ for L = 1:num_steps
         
         if opts.use_oldhash
         else
-            coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+            element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
         end
         % fval_realspace_SG = real_space_solution_at_coordinates(pde,fval,coordinates);
         
@@ -371,6 +376,9 @@ for L = 1:num_steps
         % Check the realspace solution
         
         if num_dimensions <= 3
+            disp(['t: ',num2str(t)]);
+            disp(['dt: ',num2str(dt)]);
+
             fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t+dt);
             err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
             if ~opts.quiet         
@@ -401,9 +409,14 @@ for L = 1:num_steps
                     remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
             end
 
-            f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
+            f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t+dt);
             
-            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
+            element_coordinates = [];
+            if opts.use_oldhash
+            else
+                element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+            end
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
            
             % this is just for the RE paper
             plot_fval_in_cyl = false;

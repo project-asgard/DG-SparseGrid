@@ -79,7 +79,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     for d2=1:num_dims
                         bcL{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
-                            BCR_fList{d2},pde.params,time);
+                            BCL_fList{d2},pde.params,time);
                     end
                     
                     %%
