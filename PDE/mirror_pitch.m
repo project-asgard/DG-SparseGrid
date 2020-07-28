@@ -25,7 +25,7 @@ function pde = mirror_pitch
 % asgard(mirror_pitch,'timestep_method','CN', 'deg', 3, 'lev', 3);
 %
 
-pde.CFL = 0.01;
+pde.CFL = 0.0001;
 
 %% Setup the dimensions
 % 
@@ -69,29 +69,29 @@ v_o = 0.5*v_b; %initial known velocity
 %end
 
 %end
-soln_z = @(z) n_b.*cos(z);
-soln_t = @(t) t.*0 + 1;
+soln_z = @(z) n_o.*cos(z);
+soln_t = @(t) exp(-nu_D*t);
 
-%BCFunc = @(x) soln_x(x);
-%BCFunc_t = @(t) soln_t(t);
+BCFunc = @(z) soln_z(z);
+BCFunc_t = @(t) soln_t(t);
 
 % Domain is (a,b)
 
 % The function is defined for the plane
 % x = a and x = b
-%BCL_fList = { ...
-%    @(x,p,t) BCFunc(x), ... % replace x by a
-%    @(t,p) BCFunc_t(t)
-%    };
+BCL_fList = { ...
+    @(x,p,t) BCFunc(x), ... % replace x by a
+    @(t,p) BCFunc_t(t)
+    };
 
-%BCR_fList = { ...
-%    @(x,p,t) BCFunc(x), ... % replace x by b
-%    @(t,p) BCFunc_t(t)
-%    };
+BCR_fList = { ...
+    @(x,p,t) BCFunc(x), ... % replace x by b
+    @(t,p) BCFunc_t(t)
+    };
 
 dim_z.name = 'z';
-dim_z.domainMin = -pi;
-dim_z.domainMax = pi;
+dim_z.domainMin = 1;
+dim_z.domainMax = pi/2;
 dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
 
 
@@ -113,16 +113,16 @@ num_dims = numel(pde.dimensions);
 % becomes 
 %
 % termC == g1(z) q(z)        [mass, g1(p) = nu_D/(2*sin(z)),  BC N/A]
-%   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=D,BCR=N]
-%   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=N,BCR=D]
+%   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
+%   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
 
 g1 = @(z,p,t,dat) nu_D./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'N','N');
-pterm3 = GRAD(num_dims,g3,-1,'D','D');
+pterm2  = GRAD(num_dims,g2,-1,'N','N');
+pterm3 = GRAD(num_dims,g3,+1,'D','D', BCL_fList, BCR_fList);
 termC_z = TERM_1D({pterm1,pterm2,pterm3});
 termC   = TERM_ND(num_dims,{termC_z});
 
