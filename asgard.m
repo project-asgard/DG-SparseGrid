@@ -33,22 +33,22 @@ if ~opts.quiet; disp(sprintf('dt = %g', dt )); end
 if ~opts.quiet; disp('Constructing hash and inverse hash tables'); end
 
 if opts.use_oldhash
-    [HASH,hash_table] = hash_table_nD(pde.lev_vec, opts.grid_type);
+    [HASH,hash_table] = hash_table_nD(opts.lev_vec, opts.grid_type);
     pde.hash_table = hash_table;
 else
-    [elements, elements_idx]    = hash_table_sparse_nD (pde.lev_vec, pde.max_lev, opts.grid_type);
+    [elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, opts.max_lev, opts.grid_type);
     hash_table.elements         = elements;
     hash_table.elements_idx     = elements_idx; % only to get the same order as the old hash table
 end
 
 %% Construct the 1D multi-wavelet transform for each dimension.
 for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{d}.lev);
+    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
 end
 
 %% (Do not) Construct the connectivity.
 if opts.use_connectivity
-    pde.connectivity = connect_nD(num_dimensions,HASH,hash_table,max(pde.lev_vec),max(pde.lev_vec),opts.grid_type);
+    pde.connectivity = connect_nD(num_dimensions,HASH,hash_table,max(opts.lev_vec),max(opts.lev_vec),opts.grid_type);
 else
     connectivity = [];
 end
@@ -63,7 +63,7 @@ if opts.save_output; fval_t{1} = fval; end
 %% Construct the time-independent coefficient matrices
 if ~opts.quiet; disp('Calculate time independent matrix coefficients'); end
 TD = 0;
-pde = get_coeff_mats(pde,t,TD);
+pde = get_coeff_mats(pde,opts,t,TD);
 
 %% Construct A_encode / A_data time independent data structures.
 if ~opts.quiet; disp('Generate A_encode data structure for time independent coefficients'); end
@@ -266,7 +266,7 @@ for L = 1:num_steps
         % Now construct the TD coeff_mats.
         
         TD = 1;
-        pde = get_coeff_mats(pde,t,TD);
+        pde = get_coeff_mats(pde,opts,t,TD);
         
         %%
         % Advance in time
@@ -279,7 +279,7 @@ for L = 1:num_steps
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
         
         fval_unstepped = fval;
-        fval = time_advance(pde,opts,A_data,fval,t,dt,pde.deg,hash_table,[],[]);
+        fval = time_advance(pde,opts,A_data,fval,t,dt,opts.deg,hash_table,[],[]);
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
         %%
@@ -304,7 +304,7 @@ for L = 1:num_steps
                     disp(['    t = ', num2str(t)]);
                 end
                 needs_adapting = false;
-                fval = time_advance(pde,opts,A_data,fval_unstepped_adapted,t,dt,pde.deg,hash_table,[],[]);
+                fval = time_advance(pde,opts,A_data,fval_unstepped_adapted,t,dt,opts.deg,hash_table,[],[]);
                 fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
             else
                 if ~opts.quiet
@@ -376,8 +376,10 @@ for L = 1:num_steps
         % Check the realspace solution
         
         if num_dimensions <= 3
-            disp(['t: ',num2str(t)]);
-            disp(['dt: ',num2str(dt)]);
+            if ~opts.quiet
+                disp(['t: ',num2str(t)]);
+                disp(['dt: ',num2str(dt)]);
+            end
 
             fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t+dt);
             err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
@@ -447,7 +449,16 @@ for L = 1:num_steps
     
     if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
         [status, msg, msgID] = mkdir([root_directory,'/output']);
-        fName = append(root_directory,"/output/asgard-out",string(opts.output_filename_id),".mat");
+        if isempty(opts.output_filename_id)
+            adapt_str = 'n';
+            if opts.adapt; adapt_str=num2str(opts.adapt_threshold,'%1.1e'); end
+            filename_str = ['-l',replace(num2str(opts.lev),' ','') ...
+                '-d',num2str(opts.deg),'-',opts.grid_type,'-dt',num2str(dt),...
+                '-adapt-',adapt_str];
+        else           
+            filename_str = opts.output_filename_id;           
+        end
+        fName = append(root_directory,"/output/asgard-out",filename_str,".mat");
  
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes); 
         if strcmp(opts.output_grid,'fixed')

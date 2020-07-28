@@ -206,7 +206,6 @@ pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,+1,'D','D');
 pterm3  = GRAD(num_dims,g3,-1,'N','N');
 
-
 term1_p = TERM_1D({pterm1,pterm2,pterm3});
 termC1  = TERM_ND(num_dims,{term1_p,[]});
 
@@ -223,8 +222,6 @@ g2 = @(x,p,t,dat) x.^2.*Cf(x);
 
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','N');
-
-
 
 term2_p = TERM_1D({pterm1,pterm2});
 termC2   = TERM_ND(num_dims,{term2_p,[]});
@@ -247,8 +244,6 @@ g2 = @(x,p,t,dat) (1-x.^2);
 g3 = @(x,p,t,dat) x.*0+1;
 pterm1  = GRAD(num_dims,g2,+1,'D','D');
 pterm2  = GRAD(num_dims,g3,-1,'N','N');
-
-
 
 term3_z = TERM_1D({pterm1,pterm2});
 
@@ -278,7 +273,6 @@ pterm2 = GRAD(num_dims,g3,0,'N','N');% Lin's Setting
 
 termE1_p = TERM_1D({pterm1,pterm2});
 
-% termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
 termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
 
 % termE2 == -E*p*f(p) * d/dz (1-z^2) f(z)

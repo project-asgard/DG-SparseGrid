@@ -101,22 +101,25 @@ if num_dims==2
         contourf(x,y,f_nD_analytic);
         title('analytic 2D solution');
     end
-    
-%     figure(11)
-%     levs = [-9,-8,-7,-6,-5,-4,-3,-2,-1,0];
-%     f_nD(f_nD<1e-12)=1e-12;
-%     [M,c]=contourf(x,y,log10(f_nD),levs,'LineColor','none');
-%     xlabel('p');
-%     ylabel('\zeta');
-%     clabel(M,c,levs,'Color','w');
-%     colormap(flipud(pink));
-%     set(gca,'FontSize',16)
-%     g=100;
-%     yy=yline(0.984,'Color','b','LineWidth',1);
-%     xx=xline(5.01,'Color','b','LineWidth',1);
-%     hold on
-%     scatter(element_coordinates(:,1),element_coordinates(:,2),60,'+','MarkerEdgeColor','r')
-%     hold off
+ 
+    do_RE_paper_plots = true;
+    if do_RE_paper_plots
+        figure(11)
+        levs = [-9,-8,-7,-6,-5,-4,-3,-2,-1,0];
+        f_nD(f_nD<1e-12)=1e-12;
+        [M,c]=contourf(x,y,log10(f_nD),levs,'LineColor','none');
+        xlabel('p');
+        ylabel('\zeta');
+        clabel(M,c,levs,'Color','w');
+        colormap(flipud(pink));
+        set(gca,'FontSize',16)
+        g=100;
+        yy=yline(0.984,'Color','b','LineWidth',1);
+        xx=xline(5.01,'Color','b','LineWidth',1);
+        hold on
+        scatter(element_coordinates(:,1),element_coordinates(:,2),60,'+','MarkerEdgeColor','r')
+        hold off
+    end
     
     plot_fval_in_cyl = false;
     if plot_fval_in_cyl

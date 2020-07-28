@@ -1,4 +1,4 @@
-function pde = get_coeff_mats (pde, t, TD, use_oldcoeffmat)
+function pde = get_coeff_mats (pde,opts,t,TD,use_oldcoeffmat)
 
 %%
 % t : time passed to G function
@@ -40,11 +40,11 @@ for tt = 1:num_terms
             if debug; disp([TD_STR ' - term : ' num2str(tt) '  d : ' num2str(d) ]); end           
             
             if oldcoeff
-                mat = coeff_matrix_old(pde.deg,t,dim,term_1D);
+                mat = coeff_matrix_old(opts.deg,t,dim,term_1D);
                 pde.terms{tt}{d}.coeff_mat = mat;
             else
                 
-                [term_1D_out] = coeff_matrix(num_dimensions,pde.deg,t,dim,term_1D,pde.params);
+                [term_1D_out] = coeff_matrix(num_dimensions,opts.deg,t,dim,term_1D,pde.params);
                 pde.terms{tt}.terms_1D{d} = term_1D_out;
 
             end
@@ -81,7 +81,7 @@ if ~isempty(pde.termsLHS)
                 if oldcoeff
                     error('Non-identity LHS mass matrix not supported by "use_oldcoeffmat=1"');
                 else          
-                    [term_1D_out] = coeff_matrix(num_dimensions,pde.deg,t,dim,term_1D,pde.params);
+                    [term_1D_out] = coeff_matrix(num_dimensions,opts.deg,t,dim,term_1D,pde.params);
                     pde.termsLHS{tt}.terms_1D{d} = term_1D_out;
                 end
                 

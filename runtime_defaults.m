@@ -5,8 +5,6 @@ input_parser.KeepUnmatched = true;
 opts = OPTS();
 
 default_start_time = 0;
-default_lev = 3;
-default_deg = 2;
 default_num_steps = 5;
 default_quiet = false;
 default_grid_type = opts.grid_type;
@@ -24,7 +22,6 @@ default_time_independent_A = opts.time_independent_A;
 default_time_independent_build_A = opts.time_independent_build_A;
 default_many_solution_capable = opts.many_solution_capable;
 default_max_lev = opts.max_lev;
-default_adapt_threshold = opts.adapt_threshold;
 default_refinement_method = opts.refinement_method;
 default_adapt_initial_condition = opts.adapt_initial_condition;
 valid_output_grids = {'quadrature','fixed','uniform'};
@@ -33,8 +30,8 @@ default_save_output = opts.save_output;
 default_output_filename_id = opts.output_filename_id;
 
 addRequired(input_parser, 'pde', @isstruct);
-addParameter(input_parser,'lev',default_lev, @isnumeric);
-addParameter(input_parser,'deg',default_deg, @isnumeric);
+addParameter(input_parser,'lev',opts.lev, @isnumeric);
+addParameter(input_parser,'deg',opts.deg, @isnumeric);
 addOptional(input_parser,'start_time',default_start_time, @isnumeric);
 addOptional(input_parser,'num_steps',default_num_steps, @isnumeric);
 addOptional(input_parser,'quiet',default_quiet,@islogical);
@@ -49,11 +46,11 @@ addOptional(input_parser,'time_independent_A',default_time_independent_A,@islogi
 addOptional(input_parser,'time_independent_build_A',default_time_independent_build_A,@islogical);
 addOptional(input_parser,'many_solution_capable',default_many_solution_capable,@islogical);
 addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
-addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
+addOptional(input_parser,'adapt_threshold',opts.adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
 addOptional(input_parser,'save_output',default_save_output,@islogical);
-addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
+addOptional(input_parser,'output_filename_id',default_output_filename_id,@ischar);
 addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
 addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
 addOptional(input_parser,'output_grid',opts.output_grid,check_output_grid);
@@ -96,6 +93,7 @@ if numel(input_parser.Results.lev) == num_dimensions
     % Specify lev_vec at runtime to have dimension dependent lev
     for d=1:num_dimensions
         pde.dimensions{d}.lev = input_parser.Results.lev(d);
+        opts.lev_vec(d) = input_parser.Results.lev(d);
     end
 else
     %%
@@ -103,10 +101,9 @@ else
     assert(numel(input_parser.Results.lev)==1);
     for d=1:num_dimensions
         pde.dimensions{d}.lev = input_parser.Results.lev;
+        opts.lev_vec(d) = input_parser.Results.lev;
     end
 end
-
-pde.deg = input_parser.Results.deg;
 
 % CFL priority
 % low        : default_CFL
@@ -134,6 +131,8 @@ if CFL_set
     opts.CFL = input_parser.Results.CFL;
 end
 
+opts.lev = input_parser.Results.lev;
+opts.deg = input_parser.Results.deg;
 opts.dt = input_parser.Results.dt;
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
@@ -159,6 +158,17 @@ opts.use_sparse_A = input_parser.Results.use_sparse_A;
 opts.build_A = false;
 if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0
     opts.build_A = true;
+end
+
+if opts.adapt
+    if opts.time_independent_build_A
+        disp("WARNING: setting 'time_independent_build_A',false to be compatible with 'adapt',true"); 
+    end
+    opts.time_independent_build_A = false;
+    if opts.time_independent_A
+        disp("WARNING: setting 'time_independent_A',false to be compatible with 'adapt',true"); 
+    end
+    opts.time_independent_A = false;
 end
 
 if opts.use_connectivity

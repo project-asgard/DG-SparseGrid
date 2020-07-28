@@ -182,7 +182,7 @@ addpath(genpath(pwd));
 
 disp('Testing fokkerplanck4p1b (RK3)');
 
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,'lev',4,'quiet',true,'deg',3);
+[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,'lev',4,'quiet',true,'deg',3,'max_lev',8);
 
 verifyLessThan(testCase,err,7e-4);
 
@@ -192,7 +192,7 @@ function asgard_fokkerplanck4p1b_implicit_CN_test(testCase)
 addpath(genpath(pwd));
 disp('Testing fokkerplanck4p1b (CN)');
 [err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
-    'lev',4,'quiet',true,'deg',3,'timestep_method', 'CN');
+    'lev',4,'quiet',true,'deg',3,'timestep_method','CN','max_lev',8);
 verifyLessThan(testCase,err,7e-4);
 end
 
@@ -200,7 +200,7 @@ function asgard_fokkerplanck4p1b_implicit_BE_test(testCase)
 addpath(genpath(pwd));
 disp('Testing fokkerplanck4p1b (BE)');
 [err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
-    'lev',4,'quiet',true,'deg',3,'timestep_method', 'BE');
+    'lev',4,'quiet',true,'deg',3,'timestep_method','BE','max_lev',8);
 verifyLessThan(testCase,err,7e-4);
 end
 
@@ -211,7 +211,7 @@ addpath(genpath(pwd));
 disp('Testing fokkerplanck4p1b (CN/adapt)');
 
 [err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
-    'lev',4,'quiet',true,'deg',3,'timestep_method', 'CN','adapt',true);
+    'lev',4,'quiet',true,'deg',3,'timestep_method','CN','adapt',true,'max_lev',8);
 
 verifyLessThan(testCase,err,1.5e-3); % TODO : need to look into why this is larger than the adapt=false approach.
 
@@ -365,7 +365,7 @@ end
 
 function uniform_grid_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fixed_grid routine');
+disp('Testing uniform_grid routine on projecti_diff1');
 [err1,~,~,~,err_rsq]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
 [err2,~,~,~,err_rsu]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','uniform');
 relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
@@ -374,7 +374,7 @@ end
 
 function fixed_grid_2D_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fixed_grid routine');
+disp('Testing fixed_grid routine on diffusion2');
 [err1,~,~,~,err_rsq]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
 [err2,~,~,~,err_rsf]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','fixed');
 relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));

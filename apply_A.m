@@ -74,7 +74,7 @@ for elem=1:num_elem
     global_row = element_DOF*(elem-1) + [1:element_DOF]';
     
     for d=1:num_dims
-        myDeg = pde.deg;
+        myDeg = opts.deg;
         Index_I{d} = (element_idx1D_D{d}-1)*myDeg + [1:myDeg]';
     end
     
@@ -96,7 +96,7 @@ for elem=1:num_elem
         global_col = element_DOF*(connected_col_j-1) + [1:element_DOF]';
         
         for d=1:num_dims
-            myDeg = pde.deg;
+            myDeg = opts.deg;
             Index_J{d} = (connected_idx1D_D{d}-1)*myDeg + [1:myDeg]';
         end
         

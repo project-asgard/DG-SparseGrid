@@ -13,7 +13,7 @@ end
 % Setup a few shortcuts
 
 lev = dimension.lev;
-deg = pde.deg;
+deg = opts.deg;
 xMin = dimension.domainMin;
 xMax = dimension.domainMax;
 FMWT = dimension.FMWT;

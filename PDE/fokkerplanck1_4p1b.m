@@ -13,7 +13,7 @@ function pde = fokkerplanck1_4p1b
 % with adaptivity
 % asgard(fokkerplanck1_4p1b,'timestep_method','CN','num_steps',300,'lev',5,'deg',3,'adapt',true,'CFL',0.1)
 
-pde.max_lev = 8;
+% pde.max_lev = 8;
 
 sig = 0.1;
 

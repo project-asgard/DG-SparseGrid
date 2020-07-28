@@ -14,7 +14,7 @@ terms = pde.terms;
 %%
 % dim shortcuts
 
-deg = pde.deg;
+deg = opts.deg;
 
 if opts.use_oldhash
     num_elements = numel(hash_table);
@@ -77,7 +77,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:num_dims
-                        bcL{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                        bcL{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
                             BCL_fList{d2},pde.params,time);
                     end
@@ -115,7 +115,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:num_dims
-                        bcR{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                        bcR{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
                             BCR_fList{d2},pde.params,time);
                     end
@@ -144,8 +144,8 @@ for tt = 1:num_terms % Construct a BC object for each term
                 fListL = bcL{d1};
                 fListR = bcR{d1};
                 
-                bcVec = bcVec + combine_dimensions_D(pde.deg,fListL,timeFacL,hash_table,opts.use_oldhash);
-                bcVec = bcVec + combine_dimensions_D(pde.deg,fListR,timeFacR,hash_table,opts.use_oldhash);
+                bcVec = bcVec + combine_dimensions_D(opts.deg,fListL,timeFacL,hash_table,opts.use_oldhash);
+                bcVec = bcVec + combine_dimensions_D(opts.deg,fListR,timeFacR,hash_table,opts.use_oldhash);
                 
             end
             

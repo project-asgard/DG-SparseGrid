@@ -17,7 +17,7 @@ else
     num_elements = numel(hash_table.elements_idx);
 end
 
-deg = pde.deg; % TODO : generalize to deg_D
+deg = opts.deg; % TODO : generalize to deg_D
 
 %%
 % TODO : surely this size depends on the parameters in the matrix_plot_D

@@ -2,6 +2,9 @@ classdef OPTS
     
     properties
         
+        lev = 3;
+        lev_vec = [];
+        deg = 2;
         dt_set_at_runtime = true;
         CFL = 0.01;
         dt = 0;

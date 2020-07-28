@@ -3,7 +3,7 @@ function [pde,fval,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,
 
 num_elements    = numel(hash_table.elements_idx);
 num_dims  = numel(pde.dimensions);
-deg             = pde.deg;
+deg             = opts.deg;
 
 % coarsen_ = 0;
 % refine_ = 0;
@@ -62,7 +62,7 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,1);
     plot_adapt_triangle(pde,opts,hash_table,7);
-    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,...
+    plot_coeffs(num_dims,opts.max_lev,hash_table,deg,...
         fval,num_rows,num_cols,10,refine_threshold,coarsen_threshold);
 end
 
@@ -89,9 +89,9 @@ if coarsen
         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         
-        assert(max(lev_vec)<=pde.max_lev);
+        assert(max(lev_vec)<=opts.max_lev);
         
-        [lev_vec_, pos_vec_] = md_idx_to_lev_pos (num_dims, pde.max_lev, idx);
+        [lev_vec_, pos_vec_] = md_idx_to_lev_pos (num_dims, opts.max_lev, idx);
         assert(norm(lev_vec-lev_vec_)==0);
         assert(norm(pos_vec-pos_vec_)==0);
         
@@ -112,7 +112,7 @@ if coarsen
             % get element children and check if any are live elements
             
             %[num_live_children, has_complete_children] = ...
-            %    number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+            %    number_of_live_children (hash_table, lev_vec, pos_vec, opts.max_lev, refinement_method);
             
             %%
             % only coarsen (remove) this element if it has no (live)
@@ -131,7 +131,7 @@ if coarsen
                 %%
                 % determine level above leaf nodes and label them
                 
-%                 parent_elements_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
+%                 parent_elements_idx = get_parent_elements_idx(hash_table, idx, opts.max_lev, refinement_method );
 %                 
 %                 for ii=1:numel(parent_elements_idx)
 %                     
@@ -204,7 +204,7 @@ if coarsen
 %         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
 %         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
 %         [num_live_children, has_complete_children] = ...
-%             number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+%             number_of_live_children (hash_table, lev_vec, pos_vec, opts.max_lev, refinement_method);
 %         if ~has_complete_children
 %             hash_table.elements.type(idx) = 2;
 %         end
@@ -224,7 +224,7 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,2);
     plot_adapt_triangle(pde,opts,hash_table,8);
-    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+    plot_coeffs(num_dims,opts.max_lev,hash_table,deg,fval,...
         num_rows,num_cols,11,refine_threshold,coarsen_threshold);
 end
 
@@ -266,13 +266,13 @@ if refine
                     ]); end
             
             [child_elements_idx, num_children] = ...
-                get_child_elements_idx(num_dims, pde.max_lev, idx, refinement_method);
+                get_child_elements_idx(num_dims, opts.max_lev, idx, refinement_method);
             
             if num_children > 0
                 
                 if debug                 
                     for nn=1:num_children
-                        [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, child_elements_idx(nn));
+                        [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, opts.max_lev, child_elements_idx(nn));
                         disp(['        adding element with lev : ',num2str(lev_vec), ...
                             ', idx = ', num2str(child_elements_idx(nn))]);
                     end                   
@@ -325,7 +325,7 @@ if refine
                 fval_previous(i1:i2) = new_element_value; % Extend coefficient list of previous time step also
             end
             
-            [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, idx);
+            [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, opts.max_lev, idx);
             
             hash_table.elements.lev_p1(idx,:) = lev_vec+1; % NOTE : have to start lev  index from 1 for sparse storage
             hash_table.elements.pos_p1(idx,:) = pos_vec+1; % NOTE : have to start cell index from 1 for sparse storage
@@ -337,7 +337,7 @@ if refine
 %         % Set element to type to leaf
 %         
 %         [num_live_children, has_complete_children] = ...
-%             number_of_live_children_idx (hash_table, idx, pde.max_lev, refinement_method);
+%             number_of_live_children_idx (hash_table, idx, opts.max_lev, refinement_method);
 % 
 %         if has_complete_children
 %             hash_table.elements.type(idx) = 1;           
@@ -377,7 +377,7 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     coordinates = plot_adapt(pde,opts,hash_table,3);
     plot_adapt_triangle(pde,opts,hash_table,9);
-    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+    plot_coeffs(num_dims,opts.max_lev,hash_table,deg,fval,...
         num_rows,num_cols,12,refine_threshold,coarsen_threshold);
 end
 
@@ -404,7 +404,7 @@ pde = check_pde(pde,opts);
 
 t = 0;
 TD = 0;
-pde = get_coeff_mats(pde,t,TD);
+pde = get_coeff_mats(pde,opts,t,TD);
 
 %%
 % Update A_data
@@ -487,7 +487,7 @@ if ~opts.quiet
 %         for i=1:deg^num_dims:num_elements
 %             view = fval((i-1).*element_DOF+1:i*element_DOF);
 %             fval_element(i) = sqrt(sum(view.^2));
-%             lev_vec = md_idx_to_lev_pos(num_dims,pde.max_lev,hash_table.elements_idx(i));
+%             lev_vec = md_idx_to_lev_pos(num_dims,opts.max_lev,hash_table.elements_idx(i));
 %             depth(i) = sum(lev_vec);
 %         end
 %         ii = find(fval_element);
