@@ -90,7 +90,7 @@ BCR_fList = { ...
     };
 
 dim_z.name = 'z';
-dim_z.domainMin = 0;
+dim_z.domainMin = -pi;
 dim_z.domainMax = pi;
 dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
 
@@ -121,8 +121,8 @@ g1 = @(z,p,t,dat) nu_D./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,1,'D','D');
-pterm3 = GRAD(num_dims,g3,-1,'N', 'N');
+pterm2  = GRAD(num_dims,g2,+1,'D','D');
+pterm3 = GRAD(num_dims,g3,0,'N', 'N');
 termC_z = TERM_1D({pterm1,pterm2,pterm3});
 termC   = TERM_ND(num_dims,{termC_z});
 
