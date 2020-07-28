@@ -22,7 +22,7 @@ function pde = mirror_pitch
 % asgard(mirror_pitch);
 %
 % implicit
-% asgard(mirror_pitch,'timestep_method','CN', 'deg', 3, 'lev', 3);
+% asgard(mirror_pitch,'timestep_method','BE', 'dt', 1e-8);
 %
 
 pde.CFL = 0.0001;
@@ -53,7 +53,7 @@ e = 1.602*10^-19; %charge in Coulombs
 ln_Delt = 10; %Coulomb logarithm
 m_a = 1.6726*10^-27; %target mass in kg
 L_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
-nu_D = 10^9; %deflection frequency in s^-1 for v approximately equatl to v_b
+nu_D = 10^6; %deflection frequency in s^-1
 
 %Initial parameters for target specie
 n_o = 0.5*n_b; %initial number density for specie at specific velocity
@@ -90,8 +90,8 @@ BCR_fList = { ...
     };
 
 dim_z.name = 'z';
-dim_z.domainMin = 1;
-dim_z.domainMax = pi/2;
+dim_z.domainMin = 0;
+dim_z.domainMax = pi;
 dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
 
 
@@ -121,8 +121,8 @@ g1 = @(z,p,t,dat) nu_D./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','N');
-pterm3 = GRAD(num_dims,g3,+1,'D','D', BCL_fList, BCR_fList);
+pterm2  = GRAD(num_dims,g2,1,'D','D');
+pterm3 = GRAD(num_dims,g3,-1,'N', 'N');
 termC_z = TERM_1D({pterm1,pterm2,pterm3});
 termC   = TERM_ND(num_dims,{termC_z});
 
