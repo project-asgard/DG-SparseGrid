@@ -3,7 +3,7 @@ function pde = mirror_velocity
 % of f in the presence of electric field acceleration and collisions 
 % 
 % df/dt == -(Z_a E/m_a)d/dv(f) + 1/v^2 (d/dv(flux_v))
-%
+%a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
 % Run with
@@ -17,8 +17,9 @@ n_b = 10^19; %background density in SI units (particles/m.^3)
 T_b = 116050; %background temperature in Kelvin
 z_b = 1; %atomic number of background specie
 m_b = 9.109*10^-31; %background mass in kg 
-v_b = sqrt(2*k_b*T_b/m_b); %background velocity in m/s
+v_b = 10^7; %(2*T_b/m_b)^0.5; %background velocity in m/s
 eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
+n_o = 2*n_b;
 
 %Target Specie Parameters
 z_a = 1;
@@ -26,8 +27,8 @@ e = 1.602*10^-19; %charge in Coulombs
 ln_Delt = 10; %Coulomb logarithm
 m_a = 1.6726*10^-27; %target mass in kg
 L_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
-nu_s = 10^6; %Slowing down frequency in s^-1
-nu_par = 10^5; %parallel diffusion frequency
+nu_s = 10^7; %Slowing down frequency in s^-1
+nu_par = 10^4; %parallel diffusion frequency
 
 
 %E = 1.0; %parallel Electric field
@@ -39,14 +40,14 @@ function y = dd1(n)
 y = 0; 
 
 % The function is 1 only if the input is 0
-if n == 0
+if n == 10^7
     y = 1;
 end
 
 end
 dim_v.domainMin = 0.1;
-dim_v.domainMax = 2*v_b;
-dim_v.init_cond_fn = @(v,p,t) dd1(v-v_b);
+dim_v.domainMax = 10^8;
+dim_v.init_cond_fn = @(v,p,t) n_o.*dd1(v);
 
 %%
 % Add dimensions to the pde object
