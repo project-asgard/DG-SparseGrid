@@ -8,7 +8,7 @@ function pde = mirror_velocity
 %
 % Run with
 %
-% asgard(mirror_velocity,'timestep_method','BE', 'dt', 1e-8);
+% asgard(mirror_velocity,'timestep_method','BE', 'dt', 1e-3, 'num_steps', 100, 'lev', 6, 'deg', 5)
 
 pde.CFL = 0.01;
 %Background Parameters
