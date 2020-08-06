@@ -17,9 +17,9 @@ n_b = 10^19; %background density in SI units (particles/m.^3)
 T_b = 116050; %background temperature in Kelvin
 z_b = 1; %atomic number of background specie
 m_b = 9.109*10^-31; %background mass in kg 
-v_b = 10^7; %(2*T_b/m_b)^0.5; %background velocity in m/s
+v_b = (2*k_b*T_b/m_b)^0.5; %background velocity in m/s
 eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
-n_o = 2*n_b;
+n_o = n_b;
 
 %Target Specie Parameters
 z_a = 1;
@@ -27,8 +27,8 @@ e = 1.602*10^-19; %charge in Coulombs
 ln_Delt = 10; %Coulomb logarithm
 m_a = 1.6726*10^-27; %target mass in kg
 L_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
-nu_s = 10^7; %Slowing down frequency in s^-1
-nu_par = 10^4; %parallel diffusion frequency
+nu_s = 10^5; %Slowing down frequency in s^-1
+nu_par = 10^3; %parallel diffusion frequency
 
 
 %E = 1.0; %parallel Electric field
@@ -40,14 +40,14 @@ function y = dd1(n)
 y = 0; 
 
 % The function is 1 only if the input is 0
-if n == 10^7
+if n == 0.1
     y = 1;
 end
 
 end
 dim_v.domainMin = 0.1;
 dim_v.domainMax = 10^8;
-dim_v.init_cond_fn = @(v,p,t) n_o.*dd1(v);
+dim_v.init_cond_fn = @(x,p,t) n_o;%.*(x == v_b);
 
 %%
 % Add dimensions to the pde object
@@ -68,23 +68,33 @@ num_dims = numel(pde.dimensions);
 %termE   = TERM_ND(num_dims,{termE_v});
 
 %% 
-% d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 
-g1 = @(v,p,t,dat) v.^3*m_a*nu_s/(m_a + m_b);
-pterm1  = GRAD(num_dims,g1,-1,'N','N');
-termV_s = TERM_1D({pterm1});
+% term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
+% term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
+% q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
+
+g1 = @(v,p,t,dat) 1./v.^2;
+g2 = @(v,p,t,dat) v.^3*m_a*nu_s/(m_a + m_b);
+
+pterm1 = MASS(g1);
+pterm2  = GRAD(num_dims,g2,-1,'N','N');
+termV_s = TERM_1D({pterm1,pterm2});
 termV1   = TERM_ND(num_dims,{termV_s});
 
 %%
-% d/dv(v^4*0.5*nu_par*d/dv(f))
-% d/dv(g(v)r(v))
-% r(v) = d/dv(f)
+% term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
+% term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
+% q(v) == d/dv(g2(v)r(v))   [grad, g2(v) = v^4*0.5*nu_par, BCL= D, BCR=D]
+% r(v) = d/dv(g3(v)f)       [grad, g3(v) = 1, BCL=N, BCR=N]
 
-g1 = @(v,p,t,dat) v.^4.*0.5*nu_par;
-g2 = @(v,p,t,dat) v.*0 + 1;
-pterm1 = GRAD(num_dims,g1,-1,'D','D');
-pterm2 = GRAD(num_dims,g2,+1,'N','N');
-termV_par = TERM_1D({pterm1,pterm2});
+g1 = @(v,p,t,dat) 1./v.^2
+g2 = @(v,p,t,dat) v.^4.*0.5*nu_par;
+g3 = @(v,p,t,dat) v.*0 + 1;
+
+pterm1 = MASS(g1);
+pterm2 = GRAD(num_dims,g2,-1,'D','D');
+pterm3 = GRAD(num_dims,g3,+1,'N','N');
+termV_par = TERM_1D({pterm1,pterm2,pterm3});
 termV2   = TERM_ND(num_dims,{termV_par});
 
 %%
