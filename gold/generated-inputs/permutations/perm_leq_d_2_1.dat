@@ -1,0 +1,15 @@
+# Created from matlab git hash f0b5e20aa54da6d0eb71e79117aff0ebdd6f4724
+# name: foo
+# type: matrix
+# rows: 10
+# columns: 2
+0 0
+1 0
+0 1
+2 0
+1 1
+0 2
+3 0
+2 1
+1 2
+0 3
