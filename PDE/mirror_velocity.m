@@ -22,15 +22,15 @@ eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
 n_o = 2*n_b; %initial number density in m^-3
 
 %Target Specie Parameters
-T_a = 1.1*T_b; %Target temperature in Kelvin
+T_a = 10*T_b; %Target temperature in Kelvin
 z_a = 1;
 e = 1.602*10^-19; %charge in Coulombs
 ln_Delt = 10; %Coulomb logarithm
 m_a = 1.6726*10^-27; %target mass in kg
 v_a = (2*k_b*T_a/m_a)^0.5; %target thermal velocity in m/s
-L_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
-nu_s = @(v) psi(v/v_b)*n_b*L_ab*(1 + m_a/m_b)./(2*pi.*v.^3); %Slowing down frequency in s^-1
-nu_par = @(v) psi(v/v_b)*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
+L_ab = e^4/(2*pi*(m_a*eps_o)^2*v_b^3); %Coefficient accounting for Coluomb force
+nu_s = @(v) psi(v/v_b)*n_b*L_ab*(1 + m_a/m_b)./(v/v_b); %Slowing down frequency in s^-1
+nu_par = @(v) psi(v/v_b)*n_b*L_ab./((v/v_b).^3); %parallel diffusion frequency
 
 
 %E = 1.0; %parallel Electric field
@@ -123,7 +123,7 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(x,p,t) (n_b/(pi^3/2*v_b^3)).*exp(-(x./v_b).^2), ...
+    @(v,p,t) (n_b/(pi^3/2*v_b^3)).*exp(-(v./v_b).^2), ...
     @(t,p) 1 
     };
 
