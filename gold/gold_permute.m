@@ -81,11 +81,8 @@ for i=1:size(levels, 2)
    sort = mod(i, 2);
 
    count = perm_leq_d_count(size(levels{i}, 2),levels{i}, max(levels{i}));
-   result = perm_leq_d(size(levels{i}, 2),levels{i},max(levels{i}),sort);
+   result = perm_leq_d(size(levels{i}, 2),levels{i}, max(levels{i}),sort);
    
-   disp(levels{i});
-   disp(size(levels{i}, 2));
-   disp(sum(levels{i}));
    e_count = perm_eq_d_count(size(levels{i}, 2), levels{i}, max(levels{i}));
    e_result = perm_eq_d(size(levels{i}, 2),levels{i}, max(levels{i}),sort);
    
