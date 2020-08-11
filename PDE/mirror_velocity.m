@@ -11,31 +11,35 @@ function pde = mirror_velocity
 % asgard(mirror_velocity,'timestep_method','BE', 'dt', 1e-9, 'num_steps', 100, 'lev', 6, 'deg', 7)
 
 pde.CFL = 0.01;
-%Background Parameters
-k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
-n_b = 10^19; %background density in SI units (particles/m.^3)
-T_b = 10; %background temperature in eV
-T_b = T_b*11606; %converting to Kelvin
-z_b = 1; %atomic number of background specie
-m_b = 9.109*10^-31; %background mass in kg 
-v_b = (2*k_b*T_b/m_b)^0.5; %background thermal velocity in m/s
-eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
 
-%Target Specie Parameters
-T_a = 1500*T_b; %Target temperature in Kelvin
-z_a = 1;
+m_e = 9.109*10^-31; %electron mass in kg
+m_H = 1.6726*10^-27; %hydrogen mass in kgs
+eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
+k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
 e = 1.602*10^-19; %charge in Coulombs
 ln_delt = 10; %Coulomb logarithm
-m_a = 1.6726*10^-27; %target mass in kg
-v_a = (2*k_b*T_a/m_a)^0.5; %target thermal velocity in m/s
-const = (v_a/v_b)^3; %value for normalizing the distribution
-n_o = const*n_b; %initial number density in m^-3
+
+%Background Species parameter
+n_b = 10^19; %background density in SI units (particles/m.^3)
+T_eV_b = 1000; %background temperature in eV
+z_b = 1; %atomic number of background
+m_b = m_e; %background mass
+
+%Target Specie Parameters
+n_a = n_b;
+T_eV_a = 0.01*T_eV_b; %Target temperature in Kelvin
+z_a = 1;
+m_a = m_H;%target species
+
+T_a = T_eV_a*11606; %converting to Kelvin
+T_b = T_eV_b*11606; %converting to Kelvin
+
+v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
-nu_s = @(v) psi(v/v_b)*n_b*L_ab*(1 + m_b/m_a)./(2*pi*v_b^3.*v/v_b); %Slowing down frequency in s^-1
-nu_par = @(v) psi(v/v_b)*n_b*L_ab./(2*pi*v_b^3.*(v/v_b).^3); %parallel diffusion frequency
+nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
+nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
 domain_max = 10^7;
-targ_maxwell = @(v) n_o/(pi^3/2*v_a^3).*exp(-(v/v_a).^2);%*(v == v_a);
-back_maxwell = @(v) n_b/(pi^3/2*v_b^3).*exp(-(v/v_b).^2); %background Maxwellian and Initial Condition
+maxwell_func = @(v,T,m) n_b/(pi^3/2.*v_th(T,m).^3).*exp(-(v./v_th(T,m)).^2);%*(v == v_a);
 
 
 %E = 1.0; %parallel Electric field
@@ -54,7 +58,7 @@ function ret = psi(x)
  end
 dim_v.domainMin = 0.01;
 dim_v.domainMax = domain_max;
-dim_v.init_cond_fn = @(v,p,t) targ_maxwell(v);%.*(x == v_b);
+dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);%.*(x == v_b);
 
 %%
 % Add dimensions to the pde object
@@ -128,7 +132,7 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) back_maxwell(v), ...
+    @(v,p,t) maxwell_func(v, T_b, m_a), ...
     @(t,p) 1 
     };
 
