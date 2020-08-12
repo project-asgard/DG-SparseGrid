@@ -2,6 +2,8 @@
 
 addpath(genpath(pwd));
 
+
+
 % element_table testing files
 data_dir = strcat("generated-inputs", "/", "element_table", "/");
 root = get_root_folder();
@@ -39,4 +41,43 @@ inv3_mat = reshape(inv3_mat,[3*num_dimensions,size(inv3,2)])';
 coord = inv3_mat(:,1:2*num_dimensions);
 filename = out_format;
 write_octave_like_output(filename,coord);
+
+% mapping function tests
+
+levels{1} = [9];
+levels{2} = [5, 1];
+levels{3} = [3, 2, 3];
+
+out_format = strcat(data_dir, "table_%dd_%s.dat");
+for i=1:size(levels, 2)
+    
+    [sparse_elements, sparse_elementsIDX] = hash_table_sparse_nD (levels{i}, max(levels{i}), 'SG');
+    [level_row,level_col,level_val] = find(sparse_elements.lev_p1);
+    [cell_row, cell_col, cell_val] = find(sparse_elements.pos_p1);
+    num_entries = size(cell_val,1) / size(levels{i}, 2); 
+    table = zeros(num_entries, size(levels{i},2) * 2);
+    for j=1:num_entries
+       id = sparse_elementsIDX(j);
+       table(j, :) = horzcat(full(sparse_elements.lev_p1(id,:)), full(sparse_elements.pos_p1(id,:)));
+    end
+    
+    
+    [full_elements, full_elementsIDX] = hash_table_sparse_nD (levels{i}, max(levels{i}), 'FG');
+    [cell_row, cell_col, cell_val] = find(full_elements.pos_p1);
+    num_entries = size(cell_val,1) / size(levels{i}, 2); 
+    full_table = zeros(num_entries, size(levels{i},2) * 2);
+    for j=1:num_entries
+        id = full_elementsIDX(j);
+        full_table(j, :) = horzcat(full(full_elements.lev_p1(id,:)), full(full_elements.pos_p1(id,:)));
+    end
+        
+    filename = sprintf(out_format, size(levels{i}, 2), "FG");
+    write_octave_like_output(filename,full_table);
+        
+    filename = sprintf(out_format, size(levels{i}, 2), "SG");
+    write_octave_like_output(filename,table);
+    
+
+    
+end
 
