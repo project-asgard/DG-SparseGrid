@@ -1,14 +1,14 @@
 function pde = mirror_velocity
-% One-dimensional magnetic mirror from the FP paper - evolution of the velocity dependence
-% of f in the presence of electric field acceleration and collisions 
+% One-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
+% of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == -(Z_a E/m_a)d/dv(f) + 1/v^2 (d/dv(flux_v))
+% df/dt == 1/v^2 (d/dv(flux_v))
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
 % Run with
 %
-% asgard(mirror_velocity,'timestep_method','BE', 'dt', 1e-9, 'num_steps', 100, 'lev', 6, 'deg', 7)
+% asgard(mirror_velocity,'timestep_method','BE')
 
 pde.CFL = 0.01;
 
@@ -27,7 +27,7 @@ m_b = m_e; %background mass
 
 %Target Specie Parameters
 n_a = n_b;
-T_eV_a = 0.01*T_eV_b; %Target temperature in Kelvin
+T_eV_a = T_eV_b; %Target temperature in Kelvin
 z_a = 1;
 m_a = m_H;%target species
 
@@ -39,8 +39,8 @@ L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
 nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
 domain_max = 10^7;
-maxwell_func = @(v,T,m) n_b/(pi^3/2.*v_th(T,m).^3).*exp(-(v./v_th(T,m)).^2);%*(v == v_a);
-
+offset = 10^6;
+maxwell_func = @(v,T,m) n_b/(pi^3/2.*v_th(T,m).^3).*exp(-(v./v_th(T,m)).^2);
 
 %E = 1.0; %parallel Electric field
 
