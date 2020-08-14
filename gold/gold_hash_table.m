@@ -88,3 +88,21 @@ for i=1:size(levels, 2)
     
 end
 
+% 1d indexing tests
+pairs{1} = [0, 0];
+pairs{2} = [1, 0];
+pairs{3} = [0, 1];
+pairs{4} = [12, 5];
+pairs{5} = [7, 0];
+pairs{6} = [4, 6];
+pairs{7} = [9, 3];
+pairs{8} = [30, 20];
+out_format = strcat(data_dir, "1d_index_%d_%d.dat");
+for i=1:size(pairs, 2)
+    id = lev_cell_to_1D_index(pairs{i}(1), pairs{i}(2));
+    filename = sprintf(out_format, pairs{i}(1), pairs{i}(2));
+    write_octave_like_output(filename, id);
+end
+
+
+
