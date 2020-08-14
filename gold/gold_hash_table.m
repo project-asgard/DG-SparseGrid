@@ -91,7 +91,7 @@ end
 % 1d indexing tests
 pairs{1} = [0, 0];
 pairs{2} = [1, 0];
-pairs{3} = [0, 1];
+pairs{3} = [2, 1];
 pairs{4} = [12, 5];
 pairs{5} = [7, 0];
 pairs{6} = [4, 6];
