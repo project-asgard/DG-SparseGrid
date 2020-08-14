@@ -50,6 +50,8 @@ levels{2} = [5, 2];
 levels{3} = [3, 2, 3];
 
 out_format = strcat(data_dir, "table_%dd_%s.dat");
+id_out_format = strcat(data_dir, "ids_%dd_%s.dat");
+
 for i=1:size(levels, 2)
     
     [sparse_elements, sparse_elementsIDX] = hash_table_sparse_nD (levels{i}, max(levels{i}), 'SG');
@@ -77,6 +79,12 @@ for i=1:size(levels, 2)
         
     filename = sprintf(out_format, size(levels{i}, 2), "SG");
     write_octave_like_output(filename,table);
+    
+    filename = sprintf(id_out_format, size(levels{i}, 2), "FG");
+    write_octave_like_output(filename,full_elementsIDX');
+    
+    filename = sprintf(id_out_format, size(levels{i}, 2), "SG");
+    write_octave_like_output(filename,sparse_elementsIDX');
     
 end
 
