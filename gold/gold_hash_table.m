@@ -42,10 +42,11 @@ coord = inv3_mat(:,1:2*num_dimensions);
 filename = out_format;
 write_octave_like_output(filename,coord);
 
-% mapping function tests
+%FIXME delete above
+% element table tests
 
 levels{1} = [9];
-levels{2} = [5, 1];
+levels{2} = [5, 2];
 levels{3} = [3, 2, 3];
 
 out_format = strcat(data_dir, "table_%dd_%s.dat");
@@ -76,8 +77,6 @@ for i=1:size(levels, 2)
         
     filename = sprintf(out_format, size(levels{i}, 2), "SG");
     write_octave_like_output(filename,table);
-    
-
     
 end
 
