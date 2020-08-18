@@ -29,7 +29,7 @@ Lp=zeros(N1,N2);
 
 % Compute the zeros of the N+1 Legendre Polynomial
 % using the recursion relation and the Newton-Raphson method
-do 
+
 y0=2;
 
 % Iterate until new points are uniformly within epsilon of old points
