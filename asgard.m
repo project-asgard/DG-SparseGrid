@@ -309,12 +309,12 @@ for L = 1:num_steps
         
     % Louis addition: Taking a moment with respect to some test function 
     % using moment_integral.m
-    test_func = 1; %test function 
+    test_func = @(x,p,t) x.^2/(4*pi); %test function 
 
     %Taking the moment of test_func with respect to the numerical distribution
     %function
 
-    test_moment = moment_integral(pde, fval_realspace, test_func);
+    test_moment = moment_integral(pde, fval_realspace, test_func, t);
         %%
         % Try with function convertToRealSpace
         

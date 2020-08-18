@@ -1,4 +1,4 @@
-function MomentValue = moment_integral(pde, fval_realspace, gfunc)
+function MomentValue = moment_integral(pde, fval_realspace, gfunc, t)
 
 xmin = pde.dimensions{1,1}.domainMin;
 xmax = pde.dimensions{1,1}.domainMax;
@@ -6,6 +6,7 @@ Lev = pde.lev_vec;
 h = (xmax - xmin)/2^(Lev(1));
 deg = pde.deg;
 num_dimensions = length(pde.dimensions);
+p = pde.params;
 
 [quad_xx, quad_ww] = lgwt(deg, -1, 1);
 
@@ -23,20 +24,20 @@ end
 
 ww = ww.*(xmax - xmin);
 
-%[x, w] = lgwt(deg, 0, h);
+[x, w] = lgwt(deg, 0, h);
 
-%points = [];
-%num = 2^Lev*deg;
+points = [];
+num = 2^Lev*deg;
 
 
-%for i = 0:2^Lev(i)-1
-%    points = [points; xmin + x + i*h];
-%end
+for i = 0:2^Lev-1
+    points = [points; xmin + x + i*h];
+end
 
-%points2 = repmat(points, [num 1]);
+points2 = repmat(points, [num 1]);
 
 %points2 = reshape(reshape(points2,num,num)',num*num,1);
 mag = length(fval_realspace);
-MomentValue = sum(ww.*fval_realspace(2:mag-1).*gfunc);
+MomentValue = sum(ww.*fval_realspace(2:mag-1).*gfunc(points,p,t));
 
 end
