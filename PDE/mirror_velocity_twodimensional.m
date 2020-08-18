@@ -1,14 +1,14 @@
-function pde = mirror_velocity
-% One-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
+function pde = mirror_velocity_twodimensional
+% Two-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == 1/v^2 (d/dv(flux_v))
+% df/dt == nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
 % Run with
 %
-% asgard(mirror_velocity,'timestep_method','BE')
+% asgard(mirror_velocity_twodimensional,'timestep_method','BE')
 
 pde.CFL = 0.01;
 
@@ -30,6 +30,7 @@ n_a = n_b;
 T_eV_a = T_eV_b; %Target temperature in Kelvin
 z_a = 1;
 m_a = m_H;%target species
+nu_D = 10^6; %deflection frequency in s^-1
 
 T_a = T_eV_a*11606; %converting to Kelvin
 T_b = T_eV_b*11606; %converting to Kelvin
@@ -40,7 +41,9 @@ nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
 domain_max = 10^7;
 offset = 10^6;
-maxwell_func = @(v,T,m) n_b/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
+maxwell_func = @(v,T,m) n_b/(pi^3/2.*v_th(T,m).^3).*exp(-(v./v_th(T,m)).^2);
+pitch_z = @(z) n_a.*cos(z);
+pitch_t = @(t) exp(-nu_D*t);
 
 %E = 1.0; %parallel Electric field
 
@@ -55,30 +58,46 @@ function ret = psi(x)
         ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);   
         ix = find(abs(x)<1e-5); % catch singularity at boundary
         ret(ix) = 0;
- end
+end
+
+dim_v.name = 'v';
 dim_v.domainMin = 0.01;
 dim_v.domainMax = domain_max;
 dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);%.*(x == v_b);
+
+dim_z.name = 'z';
+dim_z.domainMin = -pi;
+dim_z.domainMax = pi;
+dim_z.init_cond_fn = @(z,p,t) pitch_z(z)*pitch_t(t);
 
 %%
 % Add dimensions to the pde object
 % Note that the order of the dimensions must be consistent with this across
 % the remainder of this PDE.
 
-pde.dimensions = {dim_v};
+pde.dimensions = {dim_v, dim_z};
 num_dims = numel(pde.dimensions);
 
 %% Setup the terms of the PDE
 
 %% 
-% -E*Z_a/m_a d/dz(f)
+% termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
+%
+% becomes 
+%
+% termC == g1(z) q(z)        [mass, g1(p) = nu_D/(2*sin(z)),  BC N/A]
+%   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
+%   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
-%g1 = @(v,p,t,dat) -E.*Z_a/m_a;
-%pterm1  = GRAD(num_dims,g1,-1,'N','N');
-%termE_v = TERM_1D({pterm1});
-%termE   = TERM_ND(num_dims,{termE_v});
 
-%% 
+g1 = @(z,p,t,dat) nu_D./(2*sin(z));
+g2 = @(z,p,t,dat) sin(z);
+g3 = @(z,p,t,dat) z.*0 + 1;
+pterm1  = MASS(g1);
+pterm2  = GRAD(num_dims,g2,+1,'D','D');
+pterm3 = GRAD(num_dims,g3,0,'N', 'N');
+termC_z = TERM_1D({pterm1,pterm2,pterm3});
+termC   = TERM_ND(num_dims,{termC_z,[]});
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
@@ -90,7 +109,7 @@ g2 = @(v,p,t,dat) v.^3*m_a.*nu_s(v)./(m_a + m_b);
 pterm1 = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','N');
 termV_s = TERM_1D({pterm1,pterm2});
-termV1   = TERM_ND(num_dims,{termV_s});
+termV1   = TERM_ND(num_dims,{termV_s,[]});
 
 %%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
@@ -106,12 +125,12 @@ pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,-1,'D','D');
 pterm3 = GRAD(num_dims,g3,+1,'N','N');
 termV_par = TERM_1D({pterm1,pterm2,pterm3});
-termV2   = TERM_ND(num_dims,{termV_par});
+termV2   = TERM_ND(num_dims,{termV_par,[]});
 
 %%
 % Add terms to the pde object
 
-pde.terms = {termV1,termV2};
+pde.terms = {termV1,termV2, termC};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -133,7 +152,8 @@ pde.sources = {};
 
 pde.analytic_solutions_1D = { ...    
     @(v,p,t) maxwell_func(v, T_b, m_a), ...
-    @(t,p) 1 
+    @(v,p,t) pitch_z(v), ...
+    @(t,p) pitch_t(t)
     };
 
 %%
