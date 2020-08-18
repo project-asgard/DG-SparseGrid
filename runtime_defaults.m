@@ -52,6 +52,7 @@ addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
 addOptional(input_parser,'uniform_output',default_uniform_output,@islogical);
+addOptional(input_parser,'add_end_points',opts.add_end_points,@islogical);
 addOptional(input_parser,'save_output',default_save_output,@islogical);
 addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
 addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
@@ -152,6 +153,7 @@ opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
 opts.uniform_output = input_parser.Results.uniform_output;
+opts.add_end_points = input_parser.Results.add_end_points;
 opts.save_output = input_parser.Results.save_output;
 opts.output_filename_id = input_parser.Results.output_filename_id;
 opts.plot_freq = input_parser.Results.plot_freq;
@@ -159,6 +161,10 @@ opts.save_freq = input_parser.Results.save_freq;
 
 if opts.adapt
     opts.use_oldhash = false;
+end
+
+if sum([opts.add_end_points,opts.uniform_output]) > 1
+    error('Please set only one grid output option, thanks.');
 end
 
 if ~isempty(fieldnames(input_parser.Unmatched))

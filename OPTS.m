@@ -20,6 +20,7 @@ classdef OPTS
         refinement_method = 1;
         adapt_initial_condition = false;
         uniform_output = false;
+        add_end_points = false;
         save_output = false;
         output_filename_id = '';
         plot_freq = 1;
