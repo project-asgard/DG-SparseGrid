@@ -5,13 +5,12 @@ function [err,fval,fval_realspace,nodes] = asgard (pde, varargin)
 format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
-root_directory = get_root_folder();
 
 %% Load PDE and runtime defaults
 runtime_defaults
 
 %% Reset any persistent variables
-if opts.time_independent_A | opts.time_independent_build_A
+if opts.time_independent_A
     clear time_advance
 end
 
@@ -172,7 +171,7 @@ if num_dimensions <=3
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-    if ~opts.quiet     
+    if ~opts.quiet 
         disp(['    real space absolute err : ', num2str(err_realspace)]);
         disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
         disp(['    real space absolute err (2-norm) : ', num2str(norm(fval_realspace(:)-fval_realspace_analytic(:)))]);
@@ -181,6 +180,7 @@ end
 
 %% Time Loop
 count=1;
+plotFreq = 1;
 err = 1e9;
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:num_steps
@@ -306,6 +306,15 @@ for L = 1:num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
+        
+    % Louis addition: Taking a moment with respect to some test function 
+    % using moment_integral.m
+    test_func = @(x,p,t) x.^2/(4*pi); %test function 
+
+    %Taking the moment of test_func with respect to the numerical distribution
+    %function
+
+    test_moment = moment_integral(pde, fval_realspace, test_func, t);
         %%
         % Try with function convertToRealSpace
         
@@ -345,6 +354,7 @@ for L = 1:num_steps
             disp(['    num_dof : ', num2str(numel(fval))]);
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
             disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+            disp(['    test moment integral : ', num2str(test_moment)]);
         end
         
         %%
@@ -369,7 +379,7 @@ for L = 1:num_steps
     %%
     % Plot results
     
-    if mod(L,opts.plot_freq)==0 && ~opts.quiet
+    if mod(L,plotFreq)==0 && ~opts.quiet
         
         figure(1000)
         
@@ -403,9 +413,9 @@ for L = 1:num_steps
     %%
     % Save output
     
-    if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
-        [status, msg, msgID] = mkdir([root_directory,'/output']);
-        fName = append(root_directory,"/output/asgard-out",string(opts.output_filename_id),".mat");
+    if opts.save_output
+        [status, msg, msgID] = mkdir('output');
+        fName = append('output/asgard-out',opts.output_filename_id,'.mat');
         
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
         if num_dimensions == 1
