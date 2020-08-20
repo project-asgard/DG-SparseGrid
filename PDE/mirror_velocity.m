@@ -38,7 +38,6 @@ v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
 nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
-domain_max = 10^7;
 offset = 10^5;
 maxwell_func = @(v,T,m) 2.78*n_b/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
 
@@ -57,7 +56,7 @@ function ret = psi(x)
         ret(ix) = 0;
  end
 dim_v.domainMin = 0.01;
-dim_v.domainMax = domain_max;
+dim_v.domainMax = 10^7;
 dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);%.*(x == v_b);
 
 %%

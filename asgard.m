@@ -306,15 +306,6 @@ for L = 1:num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
-        
-    % Louis addition: Taking a moment with respect to some test function 
-    % using moment_integral.m
-    test_func = @(x,p,t) x.^2/(4*pi); %test function 
-
-    %Taking the moment of test_func with respect to the numerical distribution
-    %function
-
-    test_moment = moment_integral(pde, fval_realspace, test_func, t);
         %%
         % Try with function convertToRealSpace
         
@@ -354,7 +345,6 @@ for L = 1:num_steps
             disp(['    num_dof : ', num2str(numel(fval))]);
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
             disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
-            disp(['    test moment integral : ', num2str(test_moment)]);
         end
         
         %%

@@ -21,7 +21,7 @@ ln_delt = 10; %Coulomb logarithm
 
 %Background Species parameter
 n_b = 10^19; %background density in SI units (particles/m.^3)
-T_eV_b = 1000; %background temperature in eV
+T_eV_b = 10; %background temperature in eV
 z_b = 1; %atomic number of background
 m_b = m_e; %background mass
 
@@ -30,7 +30,6 @@ n_a = n_b;
 T_eV_a = T_eV_b; %Target temperature in Kelvin
 z_a = 1;
 m_a = m_H;%target species
-nu_D = 10^6; %deflection frequency in s^-1
 
 T_a = T_eV_a*11606; %converting to Kelvin
 T_b = T_eV_b*11606; %converting to Kelvin
@@ -39,7 +38,7 @@ v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
 nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
-domain_max = 10^7;
+nu_D = 10^4; % @(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
 offset = 10^6;
 maxwell_func = @(v,T,m) n_b/(pi^3/2.*v_th(T,m).^3).*exp(-(v./v_th(T,m)).^2);
 pitch_z = @(z) n_a.*cos(z);
@@ -47,12 +46,12 @@ pitch_t = @(t) exp(-nu_D*t);
 
 %E = 1.0; %parallel Electric field
 
-%% Setup the dimensions
-% 
 function ret = phi(x)
         ret = erf(x);
 end
-
+function ret = phi_f(x)
+        ret = (x + 1./(2*x)).*erf(x) + exp(-x.^2)./sqrt(pi);     
+end
 function ret = psi(x)     
         dphi_dx = 2./sqrt(pi) * exp(-x.^2);
         ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);   
@@ -60,10 +59,12 @@ function ret = psi(x)
         ret(ix) = 0;
 end
 
+%% Setup the dimensions
+% 
 dim_v.name = 'v';
 dim_v.domainMin = 0.01;
-dim_v.domainMax = domain_max;
-dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);%.*(x == v_b);
+dim_v.domainMax = 10^7;
+dim_v.init_cond_fn = @(v,p,t) n_b/(pi^3/2.*v_th(T_b,m_b).^3).*(v == v_th(T_b,m_a));
 
 dim_z.name = 'z';
 dim_z.domainMin = -pi;
@@ -152,8 +153,8 @@ pde.sources = {};
 
 pde.analytic_solutions_1D = { ...    
     @(v,p,t) maxwell_func(v, T_b, m_a), ...
-    @(v,p,t) pitch_z(v), ...
-    @(t,p) pitch_t(t)
+    @(z,p,t) pitch_z(z)*pitch_t(t), ...
+    @(t,p) t.*0 + 1
     };
 
 %%
