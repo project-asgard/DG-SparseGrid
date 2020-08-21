@@ -1,4 +1,4 @@
-function pde = mirror_velocity_twodimensional
+function pde = mirror_velocity2
 % Two-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 

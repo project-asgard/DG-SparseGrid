@@ -27,7 +27,7 @@ m_b = m_e; %background mass
 
 %Target Specie Parameters
 n_a = n_b;
-T_eV_a = T_eV_b; %Target temperature in Kelvin
+T_eV_a = 2*T_eV_b; %Target temperature in Kelvin
 z_a = 1;
 m_a = m_H;%target species
 
@@ -36,9 +36,9 @@ T_b = T_eV_b*11606; %converting to Kelvin
 
 v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
-nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
+nu_s = 5; %psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
-offset = 10^5;
+offset = 0;
 maxwell_func = @(v,T,m) 2.78*n_b/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
 
 %E = 1.0; %parallel Electric field
@@ -54,10 +54,14 @@ function ret = psi(x)
         ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);   
         ix = find(abs(x)<1e-5); % catch singularity at boundary
         ret(ix) = 0;
- end
+end
+%case of advection only
+soln_v = @(v,p,t) v;
+soln_t = @(t) exp(-m_a*nu_s.*t/(m_a + m_b));
+
 dim_v.domainMin = 0.01;
 dim_v.domainMax = 10^7;
-dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);%.*(x == v_b);
+dim_v.init_cond_fn = @(v,p,t) soln_v(v,p,t) * soln_t(t);%.*(x == v_b);
 
 %%
 % Add dimensions to the pde object
@@ -84,10 +88,10 @@ num_dims = numel(pde.dimensions);
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*m_a.*nu_s(v)./(m_a + m_b);
+g2 = @(v,p,t,dat) v.^3*nu_s;
 
 pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','N');
+pterm2  = GRAD(num_dims,g2,-1,'D','D');
 termV_s = TERM_1D({pterm1,pterm2});
 termV1   = TERM_ND(num_dims,{termV_s});
 
@@ -110,7 +114,7 @@ termV2   = TERM_ND(num_dims,{termV_par});
 %%
 % Add terms to the pde object
 
-pde.terms = {termV1,termV2};
+pde.terms = {termV1};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -123,16 +127,21 @@ pde.params = params;
 %% Add an arbitrary number of sources to the RHS of the PDE
 % Each source term must have nDims + 1
 
+source = { ...
+    @(v,p,t) -5*m_a.*nu_s.*v./(m_a + m_b),   ...   % s1v
+    @(t,p) soln_t(t) ...   % s1t
+    };
+
 %%
 % Add sources to the pde data structure
-pde.sources = {};
+pde.sources = {source};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) maxwell_func(v, T_b, m_a), ...
-    @(t,p) 1 
+    @(v,p,t) soln_v(v), ...
+    @(t,p) soln_t(t) 
     };
 
 %%
