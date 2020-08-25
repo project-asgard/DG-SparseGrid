@@ -10,10 +10,17 @@ function pde = advection1_velocity
 
 pde.CFL = 0.01;
 
-soln = @(v,t) v+t;
+%target properties
+nu_s = 5; %slow down frequency in s^-1
+m_a = 1.6726*10^-27; %mass of target in kg
+
+%background properties
+m_b = 9.109*10^-31; %mass of background in kg
+
+soln = @(v,t) (m_a*nu_s/(m_a + m_b))*(v+t);
 
 dim_v.domainMin = 0.01;
-dim_v.domainMax = 10;
+dim_v.domainMax = 10^2;
 dim_v.init_cond_fn = @(v,p,t) soln(v,t);
 
 BCFunc = @(v,t) soln(v,t);
@@ -49,7 +56,7 @@ num_dims = numel(pde.dimensions);
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3;
+g2 = @(v,p,t,dat) (m_a*nu_s/(m_a + m_b))*v.^3;
 
 pterm1 = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'D','D', BCL_fList, BCR_fList);
@@ -72,7 +79,7 @@ pde.params = params;
 %% Add an arbitrary number of sources to the RHS of the PDE
 % Each source term must have nDims + 1
 source = { ...
-    @(v,p,t) 1 - 4*v - 3*t,   ...   % s1v
+    @(v,p,t) (m_a.*nu_s/(m_a+m_b))*(1-m_a*nu_s/(m_a + m_b)*(4*v+3*t)),   ...   % s1v
     @(t,p) t.*0 + 1 ...   % s1t
     };
 

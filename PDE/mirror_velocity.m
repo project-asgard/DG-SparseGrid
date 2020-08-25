@@ -16,7 +16,34 @@ m_e = 9.109*10^-31; %electron mass in kg
 m_H = 1.6726*10^-27; %hydrogen mass in kgs
 eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
 k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
+e = 1.602*10^-19; %charge in Coulombsm_e = 9.109*10^-31; %electron mass in kg
+m_H = 1.6726*10^-27; %hydrogen mass in kgs
+eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
+k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
 e = 1.602*10^-19; %charge in Coulombs
+ln_delt = 10; %Coulomb logarithm
+
+%Background Species parameter
+n_b = 10^19; %background density in SI units (particles/m.^3)
+T_eV_b = 1000; %background temperature in eV
+z_b = 1; %atomic number of background
+m_b = m_e; %background mass
+
+%Target Specie Parameters
+n_a = n_b;
+T_eV_a = 2*T_eV_b; %Target temperature in Kelvin
+z_a = 1;
+m_a = m_H;%target species
+
+T_a = T_eV_a*11606; %converting to Kelvin
+T_b = T_eV_b*11606; %converting to Kelvin
+
+v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
+L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
+nu_s = 5; %psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
+nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
+offset = 0;
+maxwell_func = @(v,T,m) 2.78*n_b/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
 ln_delt = 10; %Coulomb logarithm
 
 %Background Species parameter
@@ -59,7 +86,7 @@ end
 soln_v = @(v,t) m_a*nu_s.*(v+t)./(m_a + m_b);
 %soln_t = @(t) exp(-m_a*nu_s.*t/(m_a + m_b));
 
-dim_v.domainMin = 1e-5;
+dim_v.domainMin = 1e-6;
 dim_v.domainMax = 10^7;
 dim_v.init_cond_fn = @(v,p,t) soln_v(v,t);%.*(x == v_b);
 
