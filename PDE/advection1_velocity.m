@@ -6,7 +6,7 @@ function pde = advection1_velocity
 %
 % Run with
 %
-% asgard(advection1_velocity,'timestep_method','BE')
+%  asgard(advection1_velocity,'timestep_method','BE', 'dt', 1, 'num_steps', 50, 'lev', 3, 'deg', 4)
 
 pde.CFL = 0.01;
 
@@ -23,19 +23,20 @@ dim_v.domainMin = 0.01;
 dim_v.domainMax = 10^2;
 dim_v.init_cond_fn = @(v,p,t) soln(v,t);
 
-BCFunc = @(v,t) soln(v,t);
+BCFunc_R = @(v,t) soln(v,t);
+BCFunc_L = @(v,t) m_a*nu_s/(m_a + m_b);
 
 % Domain is (a,b)
 
 % The function is defined for the plane
 % x = a and x = b
 BCL_fList = { ...
-    @(v,p,t) BCFunc(v,t), ... 
+    @(v,p,t) BCFunc_L(v,t), ... 
     @(t,p) t.*0 + 1
     };
 
 BCR_fList = { ...
-    @(v,p,t) BCFunc(v,t), ... % 
+    @(v,p,t) BCFunc_R(v,t), ... % 
     @(t,p) t.*0 + 1
     };
 
@@ -59,7 +60,7 @@ g1 = @(v,p,t,dat) 1./v.^2;
 g2 = @(v,p,t,dat) (m_a*nu_s/(m_a + m_b))*v.^3;
 
 pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'D','D', BCL_fList, BCR_fList);
+pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
 termV_s = TERM_1D({pterm1,pterm2});
 termV1   = TERM_ND(num_dims,{termV_s});
 
