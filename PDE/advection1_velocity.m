@@ -72,7 +72,7 @@ pde.params = params;
 %% Add an arbitrary number of sources to the RHS of the PDE
 % Each source term must have nDims + 1
 source = { ...
-    @(v,p,t) 1 - 4*v + 3*t,   ...   % s1v
+    @(v,p,t) 1 - 4*v - 3*t,   ...   % s1v
     @(t,p) t.*0 + 1 ...   % s1t
     };
 

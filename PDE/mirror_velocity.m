@@ -56,12 +56,28 @@ function ret = psi(x)
         ret(ix) = 0;
 end
 %case of advection only
-soln_v = @(v,p,t) v;
-soln_t = @(t) exp(-m_a*nu_s.*t/(m_a + m_b));
+soln_v = @(v,t) m_a*nu_s.*(v+t)./(m_a + m_b);
+%soln_t = @(t) exp(-m_a*nu_s.*t/(m_a + m_b));
 
-dim_v.domainMin = 0.01;
+dim_v.domainMin = 1e-5;
 dim_v.domainMax = 10^7;
-dim_v.init_cond_fn = @(v,p,t) soln_v(v,p,t) * soln_t(t);%.*(x == v_b);
+dim_v.init_cond_fn = @(v,p,t) soln_v(v,t);%.*(x == v_b);
+
+BCFunc = @(v,t) soln_v(v,t);
+
+% Domain is (a,b)
+
+% The function is defined for the plane
+% x = a and x = b
+BCL_fList = { ...
+    @(v,p,t) BCFunc(v,t), ... 
+    @(t,p) t.*0 + 1
+    };
+
+BCR_fList = { ...
+    @(v,p,t) BCFunc(v,t), ... % 
+    @(t,p) t.*0 + 1
+    };
 
 %%
 % Add dimensions to the pde object
@@ -88,10 +104,10 @@ num_dims = numel(pde.dimensions);
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*nu_s;
+g2 = @(v,p,t,dat) v.^3*nu_s*m_a/(m_a + m_b);
 
 pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'D','D');
+pterm2  = GRAD(num_dims,g2,-1,'D','D', BCL_fList, BCR_fList);
 termV_s = TERM_1D({pterm1,pterm2});
 termV1   = TERM_ND(num_dims,{termV_s});
 
@@ -128,8 +144,8 @@ pde.params = params;
 % Each source term must have nDims + 1
 
 source = { ...
-    @(v,p,t) -5*m_a.*nu_s.*v./(m_a + m_b),   ...   % s1v
-    @(t,p) soln_t(t) ...   % s1t
+    @(v,p,t) (m_a.*nu_s/(m_a+m_b))*(1-m_a*nu_s/(m_a + m_b)*(4*v+3*t)),   ...   % s1v
+    @(t,p) t.*0 + 1 ...   % s1t
     };
 
 %%
@@ -140,8 +156,8 @@ pde.sources = {source};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) soln_v(v), ...
-    @(t,p) soln_t(t) 
+    @(v,p,t) soln_v(v,t), ...
+    @(t,p) t.*0 + 1; 
     };
 
 %%
