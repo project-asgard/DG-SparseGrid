@@ -261,64 +261,68 @@ else % use the backslash operator instead
         b = f0 + dt*(s0 + bc0);
     end
     
+    [AA_rescaled,diag_scaling] = rescale2(AA);
+%     AA_thresholded = sparsify(AA_rescaled,1e-5);
+%     [P,R,C] = equilibrate(AA); 
+%     AA_rescaled = R*P*AA*C;
+    
     % Direct solve
     tic;
-    f1 = AA \ b;
+    f1 = AA_rescaled \ b;
     t_direct = toc;
     
-    % Iterative solve
-    restart = [];
-    tol=1e-6;
-    maxit=1000;
-    tic;
-    [f10,flag,relres,iter,resvec] = gmres(AA,b,restart,tol,maxit);
-    t_gmres = toc;
-    figure(67)
-    semilogy(resvec);
-  
-    % Direct solve - LU approach to reducing repeated work   
-    [L,U,P] = lu(AA);
-    n=size(AA,1);
-    ip = P*reshape(1:n,n,1); % generate permutation vector
-    err = norm(AA(ip,:)-L*U,1); % err should be small
-    tol = 1e-9;
-    isok = (err <= tol * norm(AA,1) ); % just a check
-    disp(['isok for LU: ', num2str(isok)]);
-    % to solve   a linear system    A * x = b, we have   P * A * x = P*b
-    % then from LU factorization, we have (L * U) * x = (P*b),  so    x  = U \ (L \ ( P*b))
-    f1_LU =   U \ (L \  (P*b));
-    
-    % Direct solve - QR reduced rank
-    [Q,R,P] = qr(AA); % A*P = Q*R
-    % where R is upper triangular,   Q is orthogonal, Q’*Q is identity, P is column permutation
-    err = norm( AA*P - Q*R,1);
-    isok = (err <= tol * norm(AA,1));  % just a check
-    disp(['isok for QR: ', num2str(isok)]);
-    % to solve   A * x = b,   we have A * P * (P’*x) = b, (Q*R) * (P’*x) = b
-    % y =   R\(Q’*b),   P*y = x
-    tol=1e-9;
-    is_illcond = abs(R(n,n)) <= tol * abs(R(1,1));
-    if(is_illcond)
-        disp('is_illcond == true');
-        bhat = Q'*b;
-        y = zeros(n,1);
-        yhat =  R(1:(n-1), 1:(n-1)) \ bhat(1:(n-1));  % solve with smaller system
-        y(1:(n-1)) = yhat(1:(n-1));
-        y(n) = 0;  % force last component to be zero
-        f1_QR = P * y;
-    else
-        disp('is_illcond == false');
-        f1_QR = P * (R \ (Q'*b));
-    end
-    
-    
-    disp(['f1-f10:  ',num2str(norm(f1-f10)/norm(f1))]);
-    disp(['f1-f1_LU:  ',num2str(norm(f1-f1_LU)/norm(f1))]);
-    disp(['f1-f1_QR:  ',num2str(norm(f1-f1_QR)/norm(f1))]);
-    disp(['direct runtime: ', num2str(t_direct)]);
-    disp(['gmres runtime: ', num2str(t_gmres)]);
-    
-    f1 = f1_QR;
+%     % Iterative solve
+%     restart = [];
+%     tol=1e-6;
+%     maxit=1000;
+%     tic;
+%     [f10,flag,relres,iter,resvec] = gmres(AA,b,restart,tol,maxit);
+%     t_gmres = toc;
+%     figure(67)
+%     semilogy(resvec);
+%   
+%     % Direct solve - LU approach to reducing repeated work   
+%     [L,U,P] = lu(AA);
+%     n=size(AA,1);
+%     ip = P*reshape(1:n,n,1); % generate permutation vector
+%     err = norm(AA(ip,:)-L*U,1); % err should be small
+%     tol = 1e-9;
+%     isok = (err <= tol * norm(AA,1) ); % just a check
+%     disp(['isok for LU: ', num2str(isok)]);
+%     % to solve   a linear system    A * x = b, we have   P * A * x = P*b
+%     % then from LU factorization, we have (L * U) * x = (P*b),  so    x  = U \ (L \ ( P*b))
+%     f1_LU =   U \ (L \  (P*b));
+%     
+%     % Direct solve - QR reduced rank
+%     [Q,R,P] = qr(AA); % A*P = Q*R
+%     % where R is upper triangular,   Q is orthogonal, Q’*Q is identity, P is column permutation
+%     err = norm( AA*P - Q*R,1);
+%     isok = (err <= tol * norm(AA,1));  % just a check
+%     disp(['isok for QR: ', num2str(isok)]);
+%     % to solve   A * x = b,   we have A * P * (P’*x) = b, (Q*R) * (P’*x) = b
+%     % y =   R\(Q’*b),   P*y = x
+%     tol=1e-9;
+%     is_illcond = abs(R(n,n)) <= tol * abs(R(1,1));
+%     if(is_illcond)
+%         disp('is_illcond == true');
+%         bhat = Q'*b;
+%         y = zeros(n,1);
+%         yhat =  R(1:(n-1), 1:(n-1)) \ bhat(1:(n-1));  % solve with smaller system
+%         y(1:(n-1)) = yhat(1:(n-1));
+%         y(n) = 0;  % force last component to be zero
+%         f1_QR = P * y;
+%     else
+%         disp('is_illcond == false');
+%         f1_QR = P * (R \ (Q'*b));
+%     end
+%       
+%     disp(['f1-f10:  ',num2str(norm(f1-f10)/norm(f1))]);
+%     disp(['f1-f1_LU:  ',num2str(norm(f1-f1_LU)/norm(f1))]);
+%     disp(['f1-f1_QR:  ',num2str(norm(f1-f1_QR)/norm(f1))]);
+%     disp(['direct runtime: ', num2str(t_direct)]);
+%     disp(['gmres runtime: ', num2str(t_gmres)]);
+%     
+%     f1 = f1_QR;
     
 end
 end
