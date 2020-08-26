@@ -261,15 +261,19 @@ else % use the backslash operator instead
         b = f0 + dt*(s0 + bc0);
     end
     
-    [AA_rescaled,diag_scaling] = rescale2(AA);
-%     AA_thresholded = sparsify(AA_rescaled,1e-5);
-%     [P,R,C] = equilibrate(AA); 
-%     AA_rescaled = R*P*AA*C;
-    
     % Direct solve
-    tic;
-    f1 = AA_rescaled \ b;
-    t_direct = toc;
+    rescale = false;
+    if rescale
+        %     [AA_rescaled,diag_scaling] = rescale2(AA);
+        %     AA_thresholded = sparsify(AA_rescaled,1e-5);
+        [P,R,C] = equilibrate(AA);
+        AA_rescaled = R*P*AA*C;
+        b_rescaled = R*P*b;
+        f1 = AA_rescaled \ b_rescaled;
+        f1 = C*f1;
+    else
+        f1 = AA \ b;
+    end
     
 %     % Iterative solve
 %     restart = [];
