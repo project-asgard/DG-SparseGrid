@@ -1,19 +1,18 @@
 %for testing sourceless diffusion equation with homogeneous boundary condition.
 %df/dt = d^2 f/dx^2 + d^2 f/dy^2 + s
 
-T = 0.6; %end time
-lev = 7; %level
-deg = 3; %degree
+T = 2; %end time
+lev = 5; %level
+deg = 2; %degree
 
-%dt = 1/2^(lev); %time step
-dt = 0.6;
+dt = 1/2^(lev); %time step
 %dt = 5e-06;
 
 n = ceil(T/dt); %Number of time steps
 
-asgard(diffusion2hombc,'lev',lev,'deg',deg,'implicit',true,'num_steps',1)
+asgard(diffusion2_hombc,'lev',lev,'deg',deg,'implicit',true,'num_steps',1)
 
-M = 5; %krylov subspace approximation
+M = 25; %krylov subspace approximation
 
 load('pde.mat','pde')
 load('opts.mat','opts')
@@ -58,7 +57,7 @@ f1 = wavelet_to_realspace(pde,opts,Meval,f,hash_table); %Krylov 2nd Order
 shape = sqrt(size(f1,1));
 
 F = reshape(f1,shape,shape); %Krylov 2nd Order
-format long e
+%format long e
 rms(an(:)-F(:))
 
 clf
@@ -97,9 +96,9 @@ h1 = wavelet_to_realspace(pde,opts,Meval,h,hash_table); %Backward Euler
 G = reshape(g1,shape,shape); %Forward Euler
 H = reshape(h1,shape,shape); %Backward Euler
 
-rms(an(:)-H(:))
+%rms(an(:)-H(:))
 
-surf(XX,YY,F)
+%surf(XX,YY,F)
 %surf(XX,YY,P)
 %surf(XX,YY,G)
 %surf(XX,YY,H)

@@ -154,7 +154,7 @@ if isempty(AA_inv) || ~opts.time_independent_A
     end
    
     save('bc0','bc0') %save boundary condition
-    save('solve_term','s0') %save solve term
+    save('source_term','s0') %save source term
     save('initial_vec000','f0') %save initial vector
     save('matrix_iter000','A') %save matrix)
     save('hash_table','hash_table')

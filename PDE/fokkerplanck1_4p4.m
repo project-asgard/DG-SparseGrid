@@ -26,14 +26,14 @@ C = 1.0;
     end
     function ret = f0(z)
         
-        caseNumber = 3;
+        caseNumber = 1;
         shift = 0.36;
         
         switch caseNumber
             case 1
-                f = exp(-z.^2/sig^2);
+                f = exp(-z.^2/sig^2)/0.177245;
             case 2
-                f = exp(-(z-shift).^2/sig^2);
+                f = exp(-(z-shift).^2/sig^2); 
             case 3
                 f = exp(-(z+shift).^2/sig^2);
             case 4
