@@ -21,7 +21,7 @@ ln_delt = 10; %Coulomb logarithm
 
 %Background Species parameter
 n_b = 10^19; %background density in SI units (particles/m.^3)
-T_eV_b = 10; %background temperature in eV
+T_eV_b = 1000; %background temperature in eV
 z_b = 1; %atomic number of background
 m_b = m_e; %background mass
 
@@ -36,13 +36,33 @@ T_b = T_eV_b*11606; %converting to Kelvin
 
 v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
-nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
+nu_s = 5;%@(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
-nu_D = 10^4; % @(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
-offset = 10^6;
-maxwell_func = @(v,T,m) n_b/(pi^3/2.*v_th(T,m).^3).*exp(-(v./v_th(T,m)).^2);
+nu_D =  10^6;%@(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
+offset = 0;
+maxwell_func = @(v,T,m) n_a/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
+norm = v_th(T_b,m_a)*(sqrt(pi)*(v_th(T_a,m_a)^2 + 2*offset^2)*phi((offset - 0.01)/v_th(T_a,m_a)) + 2*v_th(T_a,m_a)*(0.01 + offset)*exp(-(0.01 - offset)^2/v_th(T_a,m_a)^2) + sqrt(pi)*(v_th(T_a,m_a)^2 +2*offset^2)*phi((10^7 - offset)/v_th(T_a,m_a)) - 2*v_th(T_a,m_a)*(10^7 + offset)*exp(-(10^7 - offset)^2/v_th(T_a,m_a)^2))/(v_th(T_a,m_a)^2*(2*0.01*exp(-0.01^2/v_th(T_b,m_a)^2) - 2*10^7*exp(-10^14/v_th(T_b,m_a)^2) + sqrt(pi)*v_th(T_b,m_a)*(phi(10^7/v_th(T_b,m_a)) - phi(0.01/v_th(T_b,m_a)))));
 pitch_z = @(z) n_a.*cos(z);
 pitch_t = @(t) exp(-nu_D*t);
+
+BCFunc = @(v) maxwell_func(v,T_b,m_a);
+
+
+% Domain is (a,b)
+
+% The function is defined for the plane
+% x = a and x = b
+BCL_fList = { ...
+    @(v,p,t) v.*0, ... 
+    @(z,p,t) pitch_z(z), ...
+    @(t,p) pitch_t(t)
+    };
+
+BCR_fList = { ...
+    @(v,p,t) BCFunc(v), ... % 
+    @(z,p,t) pitch_z(z), ...
+    @(t,p) pitch_t(t)
+    };
 
 %E = 1.0; %parallel Electric field
 
@@ -64,7 +84,7 @@ end
 dim_v.name = 'v';
 dim_v.domainMin = 0.01;
 dim_v.domainMax = 10^7;
-dim_v.init_cond_fn = @(v,p,t) n_b/(pi^3/2.*v_th(T_b,m_b).^3).*(v == v_th(T_b,m_a));
+dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);
 
 dim_z.name = 'z';
 dim_z.domainMin = -pi;
@@ -105,10 +125,10 @@ termC   = TERM_ND(num_dims,{termC_z,[]});
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*m_a.*nu_s(v)./(m_a + m_b);
+g2 = @(v,p,t,dat) v.^3*m_a*nu_s/(m_a + m_b);
 
 pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','N');
+pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
 termV_s = TERM_1D({pterm1,pterm2});
 termV1   = TERM_ND(num_dims,{termV_s,[]});
 
@@ -123,8 +143,8 @@ g2 = @(v,p,t,dat) v.^4.*0.5.*nu_par(v);
 g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,-1,'D','D');
-pterm3 = GRAD(num_dims,g3,+1,'N','N');
+pterm2 = GRAD(num_dims,g2,-1,'D','N');
+pterm3 = GRAD(num_dims,g3,+1,'N','D', BCL_fList, BCR_fList);
 termV_par = TERM_1D({pterm1,pterm2,pterm3});
 termV2   = TERM_ND(num_dims,{termV_par,[]});
 
@@ -152,9 +172,9 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) maxwell_func(v, T_b, m_a), ...
-    @(z,p,t) pitch_z(z)*pitch_t(t), ...
-    @(t,p) t.*0 + 1
+    @(v,p,t) norm*n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
+    @(z,p,t) pitch_z(z), ...
+    @(t,p) pitch_t(t)
     };
 
 %%
