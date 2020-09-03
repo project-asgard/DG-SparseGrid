@@ -10,6 +10,7 @@ function pde = mirror_velocity2
 %
 % asgard(mirror_velocity_twodimensional,'timestep_method','BE')
 
+test = 'c';
 pde.CFL = 0.01;
 
 m_e = 9.109*10^-31; %electron mass in kg
@@ -27,19 +28,27 @@ m_b = m_e; %background mass
 
 %Target Specie Parameters
 n_a = n_b;
-T_eV_a = T_eV_b; %Target temperature in Kelvin
 z_a = 1;
 m_a = m_H;%target species
 
-T_a = T_eV_a*11606; %converting to Kelvin
-T_b = T_eV_b*11606; %converting to Kelvin
-
 v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
-nu_s = 5;%@(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1
+switch test
+    case 'a'
+        T_eV_a = 0.05*T_eV_b; %Target temperature in Kelvin\
+        offset = 10^6; %case with offset and change in Temperature
+    case 'b'
+        T_eV_a = 0.05*T_eV_b;
+        offset = 0; %case with no offset but change in Temperature
+    case 'c'
+        T_eV_a = T_eV_b;
+        offset = 10^6; %case with offset and no change in Temperature
+end 
+T_a = T_eV_a*11606; %converting to Kelvin
+T_b = T_eV_b*11606; %converting to Kelvin
+nu_s = 5;%@(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
 nu_D =  10^6;%@(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
-offset = 0;
 maxwell_func = @(v,T,m) n_a/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
 norm = v_th(T_b,m_a)*(sqrt(pi)*(v_th(T_a,m_a)^2 + 2*offset^2)*phi((offset - 0.01)/v_th(T_a,m_a)) + 2*v_th(T_a,m_a)*(0.01 + offset)*exp(-(0.01 - offset)^2/v_th(T_a,m_a)^2) + sqrt(pi)*(v_th(T_a,m_a)^2 +2*offset^2)*phi((10^7 - offset)/v_th(T_a,m_a)) - 2*v_th(T_a,m_a)*(10^7 + offset)*exp(-(10^7 - offset)^2/v_th(T_a,m_a)^2))/(v_th(T_a,m_a)^2*(2*0.01*exp(-0.01^2/v_th(T_b,m_a)^2) - 2*10^7*exp(-10^14/v_th(T_b,m_a)^2) + sqrt(pi)*v_th(T_b,m_a)*(phi(10^7/v_th(T_b,m_a)) - phi(0.01/v_th(T_b,m_a)))));
 pitch_z = @(z) n_a.*cos(z);
@@ -174,7 +183,7 @@ pde.sources = {};
 pde.analytic_solutions_1D = { ...    
     @(v,p,t) norm*n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
     @(z,p,t) pitch_z(z), ...
-    @(t,p) pitch_t(t)
+    @(t,p) t.*0 + 1; %pitch_t(t)
     };
 
 %%
