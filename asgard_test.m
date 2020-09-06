@@ -354,6 +354,15 @@ disp('Testing fokkerplanck1_5p1a (CN / with LHS / TIA)');
 verifyLessThan(testCase,err,2.5e-2);
 end
 
+function end_points_grid_test(testCase)
+addpath(genpath(pwd));
+disp('Testing quadrature_with_end_points');
+[err1,~,~,~,err_rsq]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsf]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature_with_end_points');
+relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));
+verifyLessThan(testCase,relErr,0.1);
+end
+
 function fixed_grid_test(testCase)
 addpath(genpath(pwd));
 disp('Testing fixed_grid routine');

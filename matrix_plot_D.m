@@ -42,14 +42,19 @@ elseif strcmp(opts.output_grid,'uniform')
     quad_x_right_element = [quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
     Meval = sparse(dof*(N-1)+(dof+1)*1,dof_1D);
-else
-    % output on quadrature points (quad_x)
+elseif strcmp(opts.output_grid,'quadrature_with_end_points')
+    % output on quadrature points (quad_x) with end points
+    % note that this will produce dual valued output
     [quad_x_interior_element,~]=lgwt(deg,-1,1);
-    % add end points
     quad_x_left_element  = [-1 quad_x_interior_element']';
     quad_x_right_element = [quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
     Meval = sparse(dof*(n-2)+(dof+1)*2,dof_1D);
+else
+    % output on quadrature points (quad_x) without end points
+    [quad_x_interior_element,~]=lgwt(deg,-1,1);
+    dof = numel(quad_x_interior_element);
+    Meval = sparse(dof_1D,dof_1D);
 end
 
 cnt = 0;
@@ -62,18 +67,19 @@ for i=0:n-1
         nodes_count(in_this_node) = nodes_count(in_this_node)+1; % for averaging dual values later
         quad_x = quad_x(in_this_node);
     else
-        if i==0
-            quad_x = quad_x_left_element;
-        elseif i==n-1
-            quad_x = quad_x_right_element;
-        else
-            quad_x = quad_x_interior_element;
+        quad_x = quad_x_interior_element;
+        if strcmp(opts.output_grid,'quadrature_with_end_points') || strcmp(opts.output_grid,'uniform')
+            if i==0
+                quad_x = quad_x_left_element;
+            elseif i==n-1
+                quad_x = quad_x_right_element;
+            end
         end
     end
     
     if ~isempty(quad_x)
         
-        p_val = lin_legendre(quad_x,deg)*sqrt(1/h);
+        p_val = lin_legendre(quad_x,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
         
         %%
         % Mapping from [-1,1] to physical domain
@@ -97,7 +103,7 @@ for i=0:n-1
             else
                 Iu = [dof*i+1:dof*(i+1)];
             end
-        else
+        elseif strcmp(opts.output_grid,'quadrature_with_end_points')
             if i==0
                 Iu = [1:dof+1];
             elseif i==n-1
@@ -105,15 +111,16 @@ for i=0:n-1
             else
                 Iu = [dof*i+1:dof*(i+1)]+1;
             end
+        else
+            Iu = [dof*i+1:dof*(i+1)];
         end
         
         Meval(Iu,Iv) = p_val;
-        
         nodes(Iu) = xi;
         
     else
+        error('ERROR : quad_x is empty');
     end
-    
 end
 
 %%

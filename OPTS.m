@@ -24,7 +24,7 @@ classdef OPTS
         adapt_threshold = 1e-3;
         refinement_method = 1;
         adapt_initial_condition = false;
-        output_grid = 'quadrature'; % 'quadrature', 'fixed', 'uniform'
+        output_grid = 'quadrature'; % 'quadrature', 'fixed', 'uniform', 'quadrature_with_end_points'
         save_output = false;
         output_filename_id = '';
         plot_freq = 1;
