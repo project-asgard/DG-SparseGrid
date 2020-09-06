@@ -320,9 +320,11 @@ else % use the backslash operator instead
 %     f1_LU =   U \ (L \  (P*b));
 %     
 %     % Direct solve - QR reduced rank
+%     n=size(AA,1);
 %     [Q,R,P] = qr(AA); % A*P = Q*R
 %     % where R is upper triangular,   Q is orthogonal, Q’*Q is identity, P is column permutation
 %     err = norm( AA*P - Q*R,1);
+%     tol=1e-9;
 %     isok = (err <= tol * norm(AA,1));  % just a check
 %     disp(['isok for QR: ', num2str(isok)]);
 %     % to solve   A * x = b,   we have A * P * (P’*x) = b, (Q*R) * (P’*x) = b

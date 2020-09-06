@@ -1,5 +1,5 @@
-function [pde,fval,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,fval_previous] ...
-    = adapt(pde,opts,fval,hash_table,Meval0,nodes0,nodes_nodups0,nodes_count0,fval_realspace0,coarsen_,refine_,fval_previous)
+function [pde,fval,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,coord_nodups,fval_previous,fval_realspace_refined] ...
+    = adapt(pde,opts,fval,hash_table,Meval0,nodes0,nodes_nodups0,nodes_count0,fval_realspace0,coarsen_,refine_,fval_previous_)
 
 num_elements    = numel(hash_table.elements_idx);
 num_dims  = numel(pde.dimensions);
@@ -31,8 +31,10 @@ if exist('refine_','var') && ~isempty(refine_)
 end
 
 refine_previous = 0;
+fval_previous=0;
 if nargin >= 12
     refine_previous = 1;
+    fval_previous = fval_previous_;
     assert(numel(fval)==numel(fval_previous));
 end
 
