@@ -275,6 +275,28 @@ else % use the backslash operator instead
         f1 = AA \ b;
     end
     
+%     % Pre-kron solve
+%     num_terms = numel(pde.terms);
+%     num_dims = numel(pde.dimensions);
+%     for d=1:num_dims
+%         dim_mat_list{d} = zeros(size(pde.terms{1}.terms_1D{1}.mat));
+%         for t=1:num_terms           
+%             dim_mat_list{d} = dim_mat_list{d} + pde.terms{t}.terms_1D{d}.mat;
+%         end
+%     end
+%     for d=1:num_dims
+%         A = dim_mat_list{d};
+%         I = speye(numel(diag(A)));
+%         AA_d =  I - dt*A;
+%         dim_mat_inv_list{d} = inv(AA_d);
+%     end
+%     use_kronmultd = true;
+%     if use_kronmultd
+%         f1a = kron_multd(num_dims,dim_mat_inv_list,b);
+%     else
+%         f1a = kron_multd_full(num_dims,dim_mat_inv_list,b);
+%     end
+    
 %     % Iterative solve
 %     restart = [];
 %     tol=1e-6;

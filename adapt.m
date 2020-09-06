@@ -99,12 +99,13 @@ if coarsen
         gidx2 = n*element_DOF;
         
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
+        element_max = max(abs(fval(gidx1:gidx2)));
         
         %%
         % check if the element needs refining, if it is at least level 1,
         % and is labeled as a leaf
         
-        if element_sum <= coarsen_threshold ...
+        if element_max <= coarsen_threshold ...
                  && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
                 %&& hash_table.elements.type(idx) == 2
             
@@ -251,14 +252,15 @@ if refine
         gidx2 = n*element_DOF;
         
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
+        element_max = max(abs(fval(gidx1:gidx2)));
         
         %%
         % Check for refinement
         
-        if element_sum >= refine_threshold %&& hash_table.elements.type(idx) == 2
+        if element_max >= refine_threshold %&& hash_table.elements.type(idx) == 2
             
             if debug; disp([...
-                    '    refine ? yes, fval = ', num2str(element_sum,'%1.1e'), ...
+                    '    refine ? yes, fval = ', num2str(element_max,'%1.1e'), ...
                     ', type = ', num2str(hash_table.elements.type(idx)), ...
                     ', lev_vec = ', num2str(hash_table.elements.lev_p1(idx,:)-1) ...
                     ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
@@ -286,7 +288,7 @@ if refine
             
         else
             
-            if debug; disp(['    refine ?  no, fval = ', num2str(element_sum,'%1.1e'), ...
+            if debug; disp(['    refine ?  no, fval = ', num2str(element_max,'%1.1e'), ...
                     ' type = ', num2str(hash_table.elements.type(idx))]); end
             
         end

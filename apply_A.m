@@ -72,6 +72,7 @@ for elem=1:num_elem
     % Expand out the local and global indicies for this compressed item
     
     global_row = element_DOF*(elem-1) + [1:element_DOF]';
+%     global_1D_row = deg*(elem-1) + [1:deg]';
     
     for d=1:num_dims
         myDeg = opts.deg;
@@ -94,6 +95,7 @@ for elem=1:num_elem
         % connected item.
         
         global_col = element_DOF*(connected_col_j-1) + [1:element_DOF]';
+%         global_1D_col = deg*(connecte
         
         for d=1:num_dims
             myDeg = opts.deg;
@@ -121,7 +123,7 @@ for elem=1:num_elem
                 idx_i = Index_I{d};
                 idx_j = Index_J{d};
                 tmp = pde.terms{t}.terms_1D{d}.mat;
-                kronMatList{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
+                kron_mat_list{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
             end
             
             if opts.build_A
@@ -129,7 +131,7 @@ for elem=1:num_elem
                 %%
                 % Apply krond to return A (for hand coded implicit time advance)
                 
-                view = krond(num_dims,kronMatList);
+                view = krond(num_dims,kron_mat_list);
                 if opts.use_sparse_A
                     A_s3(cnt:cnt+num_view-1) = A_s3(cnt:cnt+num_view-1) + view(:);                  
                 else
@@ -141,9 +143,9 @@ for elem=1:num_elem
                 % Apply kron_mult to return A*Y (explicit time advance)
                 X = f(global_col);
                 if use_kronmultd
-                    Y = kron_multd(num_dims,kronMatList,X);
+                    Y = kron_multd(num_dims,kron_mat_list,X);
                 else
-                    Y = kron_multd_full(num_dims,kronMatList,X);
+                    Y = kron_multd_full(num_dims,kron_mat_list,X);
                 end
                 
                 use_globalRow = 0;
