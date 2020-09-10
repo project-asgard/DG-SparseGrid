@@ -27,6 +27,18 @@ levels = [3];
 generate_data( fokkerplanck1_4p5, levels, 'fokkerplanck1_4p5', 'deg', 5 );
 
 % non-uniform level
+levels = [2, 3];
+generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
+levels = [4, 2];
+generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+levels = [4, 5];
+generate_data( continuity2, levels, 'continuity2', 'deg', 3 );
+levels = [2, 3, 2];
+generate_data( continuity3, levels, 'continuity3', 'deg', 4 );
+levels = [2, 3, 3, 3, 2, 4];
+generate_data( continuity6, levels, 'continuity6', 'deg', 4 );
+levels = [2, 3];
+generate_data( diffusion2, levels, 'diffusion2', 'deg', 5 );
 
 function generate_data(pde, lev_vec, pde_name, varargin)
 coeff_dir = "generated-inputs/coefficients/";
