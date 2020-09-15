@@ -16,19 +16,23 @@ generate_multiwavelet_data( data_dir, degree );
 
 % combine dimensions file generation
 out_base = strcat(data_dir, "combine_dim_");
-
+max_lev = 8;
 filename = strcat(out_base, "dim2_deg2_lev3_sg.dat");
+
+
 lev = 3;
 dim = 2;
 deg = 2;
-
 lev_vec = zeros(dim,1)+lev;
-[fwd, back] = hash_table_nD(lev_vec, 'SG');
+grid_type = 'SG';
+[elements, elements_idx]    = hash_table_sparse_nD (lev_vec, max_lev, grid_type);
+hash_table.elements         = elements;
+hash_table.elements_idx     = elements_idx;
+
 fd = {[1:16], [17:32]};
 ft = 2.0;
-
-use_oldhash = true;
-ans = combine_dimensions_D(deg, fd, ft, back, use_oldhash);
+use_oldhash = false;
+ans = combine_dimensions_D(deg, fd, ft, hash_table, use_oldhash);
 write_octave_like_output(filename, full(ans));
 
 filename = strcat(out_base, "dim3_deg3_lev2_fg.dat");
@@ -37,12 +41,15 @@ dim = 3;
 deg = 3;
 
 lev_vec = zeros(dim,1)+lev;
-[fwd, back] = hash_table_nD(lev_vec, 'FG');
+grid_type = 'FG';
+[elements, elements_idx]    = hash_table_sparse_nD (lev_vec, max_lev, grid_type);
+hash_table.elements         = elements;
+hash_table.elements_idx     = elements_idx;
+
 fd = {[1:12], [13:24], [25:36]};
 ft = 2.5;
-
-use_oldhash = true;
-ans = combine_dimensions_D(deg, fd, ft, back, use_oldhash);
+use_oldhash = false;
+ans = combine_dimensions_D(deg, fd, ft, hash_table, use_oldhash);
 write_octave_like_output(filename, full(ans));
 
 
@@ -116,3 +123,8 @@ write_octave_like_output(strcat(out_base, "scale_co.dat"), scale_co);
 write_octave_like_output(strcat(out_base, "phi_co.dat"), phi_co);
 
 end
+
+
+
+
+

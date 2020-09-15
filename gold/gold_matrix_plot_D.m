@@ -12,7 +12,7 @@ root = get_root_folder();
 
 runtime_defaults
 
-pde = check_pde(pde); 
+pde = check_pde(pde, opts); 
 
 num_dimensions = numel(pde.dimensions);
 
@@ -23,7 +23,7 @@ end
 
 for d=1:num_dimensions
 
-  [Meval{d}, node{d}] = matrix_plot_D( pde, pde.dimensions{d});
+  [Meval{d}, node{d}] = matrix_plot_D( pde, opts, pde.dimensions{d});
 
 end
 

@@ -35,7 +35,7 @@ elements.type       = sparse (num_elements_max, 1);
 if (is_sparse_grid)
     ptable = perm_leq_d (num_dimensions, lev_vec, max(lev_vec) );
 else
-    ptable = perm_max (num_dimensions, lev_vec, max(lev_vec) );
+    ptable = perm_max (num_dimensions, lev_vec);
 end
 
 %%
