@@ -36,3 +36,6 @@ gold_matrix_plot_D
 
 disp('Generating gold data for wavelet_to_realspace component');
 gold_wavelet_to_realspace
+
+disp('Generating gold data for basis component');
+gold_basis
