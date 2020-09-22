@@ -52,8 +52,6 @@ opts.use_oldhash = 0;
 
 pde = check_pde(pde, opts);
 
-CFL = 0.01;
-
 for i=1:length(pde.dimensions)
   pde.dimensions{i}.lev = lev_vec(i);
   pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
