@@ -15,21 +15,22 @@ pde.CFL = 0.01;
 
 m_e = 9.109*10^-31; %electron mass in kg
 m_H = 1.6726*10^-27; %hydrogen mass in kgs
+m_D = 3.3443*10^-27; %deuterium mass in kgs
 eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
 k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
 e = 1.602*10^-19; %charge in Coulombs
 ln_delt = 10; %Coulomb logarithm
 
 %Background Species parameter
-n_b = 10^19; %background density in SI units (particles/m.^3)
-T_eV_b = 1000; %background temperature in eV
+n_b = 4*10^19; %background density in SI units (particles/m.^3)
+T_eV_b = 4; %background temperature in eV
 z_b = 1; %atomic number of background
-m_b = m_e; %background mass
+m_b = m_D; %background mass
 
 %Target Specie Parameters
 n_a = n_b;
 z_a = 1;
-m_a = m_H;%target species
+m_a = m_e;%target species
 
 v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
@@ -41,20 +42,20 @@ switch test
         T_eV_a = 0.05*T_eV_b;
         offset = 0; %case with no offset but change in Temperature
     case 'c'
-        T_eV_a = T_eV_b;
-        offset = 10^6; %case with offset and no change in Temperature
+        T_eV_a = 1000;
+        offset = v_th(T_eV_a*11606,m_a); %case with offset and no change in Temperature
 end 
 T_a = T_eV_a*11606; %converting to Kelvin
 T_b = T_eV_b*11606; %converting to Kelvin
-nu_s = 5;%@(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
+nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
 nu_D =  10^6;%@(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
-maxwell_func = @(v,T,m) n_a/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
-norm = v_th(T_b,m_a)*(sqrt(pi)*(v_th(T_a,m_a)^2 + 2*offset^2)*phi((offset - 0.01)/v_th(T_a,m_a)) + 2*v_th(T_a,m_a)*(0.01 + offset)*exp(-(0.01 - offset)^2/v_th(T_a,m_a)^2) + sqrt(pi)*(v_th(T_a,m_a)^2 +2*offset^2)*phi((10^7 - offset)/v_th(T_a,m_a)) - 2*v_th(T_a,m_a)*(10^7 + offset)*exp(-(10^7 - offset)^2/v_th(T_a,m_a)^2))/(v_th(T_a,m_a)^2*(2*0.01*exp(-0.01^2/v_th(T_b,m_a)^2) - 2*10^7*exp(-10^14/v_th(T_b,m_a)^2) + sqrt(pi)*v_th(T_b,m_a)*(phi(10^7/v_th(T_b,m_a)) - phi(0.01/v_th(T_b,m_a)))));
-pitch_z = @(z) n_a.*cos(z);
+gauss_func = @(v,T,m) n_a/(10^6*sqrt(2*pi)).*exp(-0.5*(v-offset).^2/(10^12));
+norm = 2.4017*10^19/450542;
+pitch_z = @(z) z.*0 + 1;
 pitch_t = @(t) exp(-nu_D*t);
 
-BCFunc = @(v) maxwell_func(v,T_b,m_a);
+BCFunc = @(v) gauss_func(v,T_b,m_a);
 
 
 % Domain is (a,b)
@@ -92,8 +93,8 @@ end
 % 
 dim_v.name = 'v';
 dim_v.domainMin = 0.01;
-dim_v.domainMax = 10^7;
-dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);
+dim_v.domainMax = 3*10^7;
+dim_v.init_cond_fn = @(v,p,t) gauss_func(v,T_a,m_a);
 
 dim_z.name = 'z';
 dim_z.domainMin = -pi;
@@ -134,7 +135,7 @@ termC   = TERM_ND(num_dims,{termC_z,[]});
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*m_a*nu_s/(m_a + m_b);
+g2 = @(v,p,t,dat) v.^3*m_a.*nu_s(v)./(m_a + m_b);
 
 pterm1 = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
@@ -181,7 +182,7 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) norm*n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
+    @(v,p,t) n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
     @(z,p,t) pitch_z(z), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };

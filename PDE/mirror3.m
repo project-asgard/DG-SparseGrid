@@ -129,18 +129,38 @@ num_dims = numel(pde.dimensions);
 
 %% 
 %% Advection  term
-% -vcosz*df/ds
-g1 = @(s,p,t,dat) s.*0 - A;
-pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
+% termS1 == -vcos(z)*df/ds
+% termS1 == q(v)*r(z)*w(s)
+% q(v) == g1(v)  [mass, g1(p) = v,  BC N/A]
+% r(z) == g2(z) [mass, g2(z) = cos(z),  BC N/A]
+% w(s) == d/ds g3(s) f [grad, g3(s) = -1, BCL= D, BCR=D]
+g1 = @(v,p,t,dat) v;
+g2 = @(z,p,t,dat) cos(z);
+g3 = @(s,p,t,dat) s.*0 - 1;
 
-term1_s = TERM_1D({pterm1});
+pterm1 = MASS(g1);
+pterm2 = MASS(g2);
+pterm3 = GRAD(num_dims,g3,-1,'D','D', BCL_fList, BCR_fList);
+
+term1_s = TERM_1D({pterm1,pterm2,pterm3});
 termS1   = TERM_ND(num_dims,{term1_s,[],[]});
 
 %%Mass term
-%(vcosz/B)dB/ds f
-g2 = @(s,p,t,dat) -A.*(dB_ds(s)./B_func(s));
-pterm1   = MASS(g2);
-termB1 = TERM_1D({pterm1});
+%termS2 == -vcos(z)dB/ds f
+% termS1 == q(v)*r(z)*w(s)
+% q(v) == g1(v)  [mass, g1(p) = v,  BC N/A]
+% r(z) == g2(z) [mass, g2(z) = cos(z),  BC N/A]
+% w(s) == g3(s) f [mass, g3(s) = -dB/ds/B, BCL= D, BCR=D]
+
+g1 = @(v,p,t,dat) v;
+g2 = @(z,p,t,dat) cos(z);
+g3 = @(s,p,t,dat) -dB_ds(s)./B_func(s);
+
+pterm1 = MASS(g1);
+pterm2 = MASS(g2);
+pterm3 = MASS(g3);
+
+termB1 = TERM_1D({pterm1,pterm2,pterm3});
 
 termS2 = TERM_ND(num_dims,{termB1,[],[]});
 
@@ -164,7 +184,7 @@ termC   = TERM_ND(num_dims,{termC_z,[],[]});
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
-% q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
+% q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=D]
 
 g1 = @(v,p,t,dat) 1./v.^2;
 g2 = @(v,p,t,dat) v.^3*m_a*nu_s/(m_a + m_b);
