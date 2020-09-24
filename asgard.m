@@ -306,6 +306,15 @@ for L = 1:num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
+        
+       % Louis addition: Taking a moment with respect to some test function 
+        % using moment_integral.m
+        test_func = @(x,p,t) x.*0 + 1; %test function 
+
+        %Taking the moment of test_func with respect to the numerical distribution
+        %function
+
+        test_moment = moment_integral(pde, fval_realspace, test_func, t);
         %%
         % Try with function convertToRealSpace
         
