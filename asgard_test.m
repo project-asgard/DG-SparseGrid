@@ -176,41 +176,41 @@ disp('Testing continuity2 (CN/adapt)');
 verifyLessThan(testCase,err,1e-4);
 end
 
-function asgard_fokkerplanck4p1b_explicit_test(testCase)
+function asgard_fokkerplanck1_pitch_E_explicit_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing fokkerplanck4p1b (RK3)');
+disp('Testing fokkerplanck1_pitch_E (RK3)');
 
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,'lev',4,'quiet',true,'deg',3,'max_lev',8);
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),'lev',4,'quiet',true,'deg',3,'max_lev',8);
 
 verifyLessThan(testCase,err,7e-4);
 
 end
 
-function asgard_fokkerplanck4p1b_implicit_CN_test(testCase)
+function asgard_fokkerplanck1_pitch_E_implicit_CN_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck4p1b (CN)');
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
+disp('Testing fokkerplanck1_pitch_E (CN)');
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),...
     'lev',4,'quiet',true,'deg',3,'timestep_method','CN','max_lev',8);
 verifyLessThan(testCase,err,7e-4);
 end
 
-function asgard_fokkerplanck4p1b_implicit_BE_test(testCase)
+function asgard_fokkerplanck1_pitch_E_implicit_BE_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck4p1b (BE)');
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
+disp('Testing fokkerplanck1_pitch_E (BE)');
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),...
     'lev',4,'quiet',true,'deg',3,'timestep_method','BE','max_lev',8);
 verifyLessThan(testCase,err,7e-4);
 end
 
-function asgard_fokkerplanck4p1b_adapt_test(testCase)
+function asgard_fokkerplanck1_pitch_E_adapt_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing fokkerplanck4p1b (CN/adapt)');
+disp('Testing fokkerplanck1_pitch_E (CN/adapt)');
 
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),...
     'lev',4,'quiet',true,'deg',3,'timestep_method','CN','adapt',true,'max_lev',8);
 
 verifyLessThan(testCase,err,1.5e-3); % TODO : need to look into why this is larger than the adapt=false approach.

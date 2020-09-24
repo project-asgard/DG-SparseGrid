@@ -56,6 +56,8 @@ addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
 addOptional(input_parser,'output_grid',opts.output_grid,check_output_grid);
 addOptional(input_parser,'use_connectivity',opts.use_connectivity,@islogical);
 addOptional(input_parser,'use_sparse_A',opts.use_sparse_A,@islogical);
+addOptional(input_parser,'case',opts.case_,@isnumeric);
+
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -154,6 +156,7 @@ opts.plot_freq = input_parser.Results.plot_freq;
 opts.save_freq = input_parser.Results.save_freq;
 opts.use_connectivity = input_parser.Results.use_connectivity;
 opts.use_sparse_A = input_parser.Results.use_sparse_A;
+opts.case_ = input_parser.Results.case;
 
 opts.build_A = false;
 if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0

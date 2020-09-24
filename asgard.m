@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace,nodes,err_realspace] = asgard (pde, varargin)
+function [err,fval,fval_realspace,nodes,err_realspace] = asgard(pde,varargin)
 
 tic
 

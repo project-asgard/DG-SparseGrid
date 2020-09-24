@@ -29,6 +29,7 @@ classdef OPTS
         output_filename_id = '';
         plot_freq = 1;
         save_freq = 1;
+        case_ = 1;
 
     end
     
