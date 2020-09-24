@@ -309,7 +309,7 @@ for L = 1:num_steps
         
     % Louis addition: Taking a moment with respect to some test function 
     % using moment_integral.m
-    test_func = @(x,p,t) x.^2/(4*pi); %test function 
+    test_func = @(x,p,t) x.*0 + 1; %test function 
 
     %Taking the moment of test_func with respect to the numerical distribution
     %function
