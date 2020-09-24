@@ -21,7 +21,7 @@ gold_transformations
 
 disp('Generating gold data for pde component');
 gold_pde
-
+git add
 disp('Generating gold data for coefficients component');
 gold_coefficients
 
@@ -31,8 +31,17 @@ gold_batch
 disp('Generating gold data for time_advance component');
 gold_time_advance
 
-disp('Generating gold data for matrix_plot_D component');
+disp('Generating gold data for matrix_plot_D');
 gold_matrix_plot_D
 
-disp('Generating gold data for wavelet_to_realspace component');
+disp('Generating gold data for wavelet_to_realspace');
 gold_wavelet_to_realspace
+
+disp('Generating gold data for basis component');
+
+disp('Generating gold data for boundary condition vector');
+gold_boundary_condition_vector
+
+disp('Generating gold data for boundary condition computation');
+gold_boundary_compute_boundary
+
