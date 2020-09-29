@@ -4,7 +4,7 @@
 % dictates (enables/disables elements that increase/decrease level for some 
 %dimension(s)), we re-chain the stored partial term coefficients for new level(s).
 
-function pde = get_coeff_mats_rechain(pde, new_levels)
+function pde = get_coeff_mats_rechain(pde, deg, new_levels)
 
 num_terms = numel(pde.terms);
 num_dims = numel(pde.dimensions);
@@ -14,17 +14,25 @@ assert(size(new_levels, 1) == num_dims);
 
 for dim = 1:num_dims
     % if the new level is different than old level, we will need to rechain
-    if pde.dimensions{d}.lev ~= new_levels(d)
+    if pde.dimensions{dim}.lev ~= new_levels(dim)
         for term = 1:num_terms
-            [pde.terms{term, dim}.mat, ...
-             pde.terms{term, dim}.mat_unrotated] = rechain(pde.terms{term}{dim}, new_levels(d), pde.deg);
+            if ~pde.terms{term}.terms_1D{dim}.time_dependent 
+                %TD terms will be regenerated anyway
+            [pde.terms{term}.terms_1D{dim}.mat, ...
+             pde.terms{term}.terms_1D{dim}.mat_unrotated] = ...
+               rechain(pde.terms{term}.terms_1D{dim}, new_levels(dim), deg);
+            
+            end
         end
         
         if ~isempty(pde.termsLHS)    
             num_terms_left = numel(pde.termsLHS);
             for term = 1:num_terms_left
-                [pde.termsLHS{term, dim}.mat, ...
-                 pde.termsLHS{term, dim}.mat_unrotated] = rechain(pde.termsLHS{term}{dim}, new_levels(d), pde.deg);
+            if ~pde.termsLHS{term}.terms_1D{dim}.time_dependent.time_dependent
+                [pde.termsLHS{term}.terms_1D{dim}.mat, ...
+                 pde.termsLHS{term}.terms_1D{dim}.mat_unrotated] = ...
+                    rechain(pde.termsLHS{term}.terms_1D{dim}, new_levels(dim), deg);
+            end
             end
         end
     end
