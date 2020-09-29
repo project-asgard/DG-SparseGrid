@@ -21,6 +21,8 @@ classdef OPTS
         time_independent_build_A = false;
         many_solution_capable = false;
         max_lev = 8;
+        max_lev_coeffs = false; % when enabled, build partial term coeff matrices for some max level,
+                                  % and rechain 1d term matrices as adaptivity dictates
         adapt_threshold = 1e-3;
         refinement_method = 1;
         adapt_initial_condition = false;

@@ -4,7 +4,12 @@
 % matricies. These operators can only use the supported types below.
 
 
-function [term_1D] = coeff_matrix(num_dimensions,deg,t,dim,term_1D,params)
+function [term_1D] = coeff_matrix(num_dimensions,deg,t,dim,term_1D,params, FMWT_blocks, coeff_level)
+
+if ~exist('coeff_level','var') || isempty(coeff_level)
+  coeff_level = dim.lev;
+end
+
 
 %%
 % Get the matrix for each partial terms
@@ -12,7 +17,7 @@ function [term_1D] = coeff_matrix(num_dimensions,deg,t,dim,term_1D,params)
 for i=1:numel(term_1D.pterms)
     
     pterm = term_1D.pterms{i};
-    [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,dim,pterm,params);
+    [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,dim,pterm,params, FMWT_blocks, coeff_level);
     
     term_1D.pterms{i}.mat = mat;
     term_1D.pterms{i}.mat_unrotated = mat0;
@@ -21,15 +26,16 @@ end
 
 %%
 % Chain together the partial terms
-
+dof = deg * 2^dim.lev;
 [m,n] = size(mat);
 assert(m==n);
-mat = eye(m);
-mat_unrotated = eye(m);
+assert(m >= dof);
+mat = eye(dof);
+mat_unrotated = eye(dof);
 for i=1:numel(term_1D.pterms)
     
-    mat = mat * term_1D.pterms{i}.mat;
-    mat_unrotated = mat_unrotated * term_1D.pterms{i}.mat_unrotated;
+    mat = mat * term_1D.pterms{i}.mat(1:dof, 1:dof);
+    mat_unrotated = mat_unrotated * term_1D.pterms{i}.mat_unrotated(1:dof, 1:dof);
     
 end
 
@@ -39,7 +45,8 @@ term_1D.mat_unrotated = mat_unrotated;
 end
 
 
-function [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,dim,pterm,params)
+function [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,dim,pterm,params, ...
+                                                          FMWT_blocks, coeff_level)
 
 % Grad
 %   \int_T u'v dT = \hat{u}v|_{\partial T} - \int_T uv' dT
@@ -81,9 +88,14 @@ function [mat,mat1,mat2,mat0] = coeff_matrix_mass_or_grad(num_dimensions,deg,t,d
 %%
 % pde shortcuts
 
+assert(coeff_level >= dim.lev);
+
 type    = pterm.type;
 
 if strcmp(type,'diff')
+    
+    assert(false); % I don't know if the rechaining methods work with this type...
+                   % but it appears to be unused
     
     % Use LDG method, i.e., split into two first order equations, then
     % recombine
@@ -102,7 +114,8 @@ if strcmp(type,'diff')
     dimA.BCR = pterm.BCR1;
     dimA = check_dimension(num_dimensions,dimA);
     
-    [mat1,~,~,mat10] = coeff_matrix(num_dimensions,deg,t,dimA,termA,params);
+    [mat1,~,~,mat10] = coeff_matrix(num_dimensions,deg,t,dimA,termA,params,...
+                                    FMWT_blocks, coeff_level);
     assert(~isnan(sum(mat1,'all')))
     
     %%
@@ -119,7 +132,8 @@ if strcmp(type,'diff')
     dimB.BCR = pterm.BCR2;
     dimB = check_dimension(num_dimensions,dimB);
     
-    [mat2,~,~,mat20] = coeff_matrix(num_dimensions,deg,t,dimB,termB,params);
+    [mat2,~,~,mat20] = coeff_matrix(num_dimensions,deg,t,dimB,termB,params,... 
+                                    FMWT_blocks, coeff_level);
     assert(~isnan(sum(mat2,'all')))
     
     %%
@@ -128,7 +142,6 @@ if strcmp(type,'diff')
     % mat1 = matD
     % mat2 = matU
     Diff = mat1*mat2;
-    
     Diff0 = mat10*mat20;
     
 else
@@ -136,7 +149,7 @@ else
     %%
     % dim shortcuts
     
-    lev     = dim.lev;
+    lev     = coeff_level;
     xMin    = dim.domainMin;
     xMax    = dim.domainMax;
     FMWT    = dim.FMWT;
@@ -189,7 +202,10 @@ else
     if isempty(dat_W)
         dat_W = ones(dof_1D,1);
     end
-    dat_R = FMWT' * dat_W;
+    %dat_R = FMWT' * dat_W;
+    trans_side = 'LT';
+    dat_R = apply_FMWT_blocks(coeff_level, FMWT_blocks, dat_W, trans_side);
+
     
     %% Loop over all elements in this D
     %  Here we construct the 1D coeff_mat in realspace, then transform to
@@ -414,8 +430,16 @@ else
     Grad0 = Grad;
     
     %% Transform coeff_mat to wavelet space
-    Mass = FMWT * Mass * FMWT';
-    Grad = FMWT * Grad * FMWT';
+    
+    left_notrans = 'LN';
+    right_trans = 'RT';
+    %Mass = FMWT * Mass * FMWT';
+    Mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, Mass, left_notrans);
+    Mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, Mass, right_trans);
+    
+    %Grad = FMWT * Grad * FMWT';
+    Grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, Grad, left_notrans);
+    Grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, Grad, right_trans);
     
     assert(~isnan(sum(Mass,'all')))
     assert(~isnan(sum(Grad,'all')))
