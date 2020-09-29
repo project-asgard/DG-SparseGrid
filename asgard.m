@@ -41,12 +41,9 @@ else
     hash_table.elements_idx     = elements_idx; % only to get the same order as the old hash table
 end
 
-%% Construct the 1D multi-wavelet transform for each dimension.
-for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
-end
-% if we update all downstream code, we can avoid storing FMWT matrices at
-% all, and instead store just one set of max level dense blocks
+%% Construct the 1D multi-wavelet transform (stored as dense matrix blocks)
+[~, pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
+
 
 %% (Do not) Construct the connectivity.
 if opts.use_connectivity
@@ -254,7 +251,7 @@ for L = 1:num_steps
                 %%
                 % Generate EMassX time dependent coefficient matrix.
                 
-                EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
+                EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.transform_blocks);
                 
                 %%
                 % Set the dat portion of the EMassX part of E.d_dv term.

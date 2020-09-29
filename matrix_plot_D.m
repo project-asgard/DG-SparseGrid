@@ -16,7 +16,7 @@ lev = dimension.lev;
 deg = opts.deg;
 xMin = dimension.domainMin;
 xMax = dimension.domainMax;
-FMWT = dimension.FMWT;
+% FMWT = dimension.FMWT;
 
 %%
 % Jacobi of variable
@@ -126,5 +126,7 @@ end
 %%
 % Transform back to real space from wavelet space
 
-Meval = Meval*FMWT';
+%Meval = Meval*FMWT';
+trans_side = 'RT';
+Meval = apply_FMWT_blocks(lev, pde.transform_blocks, Meval, trans_side); 
 

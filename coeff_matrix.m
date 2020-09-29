@@ -152,7 +152,7 @@ else
     lev     = coeff_level;
     xMin    = dim.domainMin;
     xMax    = dim.domainMax;
-    FMWT    = dim.FMWT;
+    %     FMWT    = dim.FMWT;
     %     BCL     = dim.BCL;
     %     BCR     = dim.BCR;
     

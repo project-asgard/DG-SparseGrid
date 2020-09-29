@@ -1,4 +1,4 @@
-function EMassX=matrix_coeff_TD(Lev_x,k,Lmin,Lmax,EE,FMWT_COMP_x)
+function EMassX=matrix_coeff_TD(Lev_x,k,Lmin,Lmax,EE,FMWT_blocks)
 %=============================================================
 % Generate time-dependent coefficient matrix
 % Vlasolv Solver:
@@ -93,8 +93,9 @@ end
 % EMassX = kron( FMWT_COMP_x, FMWT_COMP_x) * EMassX
 % ------------------------------------------------
 
-EMassX=FMWT_COMP_x*EMassX*FMWT_COMP_x';
-
+%EMassX=FMWT_COMP_x*EMassX*FMWT_COMP_x';
+EMassX = apply_FMWT_blocks(Lev_x, FMWT_blocks, EMassX, left_notrans);
+EMassX = apply_FMWT_blocks(Lev_x, FMWT_blocks, EMassX, right_trans);
 disp('');
 
 

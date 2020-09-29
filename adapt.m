@@ -398,7 +398,7 @@ for d=1:num_dims
     lev_vec(d) = max(hash_table.elements.lev_p1(:,d)-1);
 end
 
-if opts.max_level_coeffs
+if opts.max_lev_coeffs
     pde = get_coeff_mats_rechain(pde, deg, lev_vec);
 end
 
@@ -407,7 +407,7 @@ for d=1:num_dims
 end
 
 % If we don't want to store the max lev coeffs, regen them
-if ~opts.max_level_coeffs
+if ~opts.max_lev_coeffs
     t = 0;
     TD = 0;
     pde = get_coeff_mats(pde,opts,t,TD);
