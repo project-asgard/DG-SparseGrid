@@ -1,12 +1,11 @@
-function momentValue = moment_integral(pde, fval_realspace, gfunc, t)
+function momentValue = moment_integral(lev_vec, deg, fval_realspace, gfunc, dimensions)
 
-xmin = pde.dimensions{1,1}.domainMin;
-xmax = pde.dimensions{1,1}.domainMax;
-Lev = pde.lev_vec(1);
+xmin = dimensions{1,1}.domainMin;
+xmax = dimensions{1,1}.domainMax;
+num_dimensions = length(dimensions);
+Lev = lev_vec(1);
 h = (xmax - xmin)/2^(Lev(1));
-deg = pde.deg;
-num_dimensions = length(pde.dimensions);
-p = pde.params;
+
 
 [quad_xx, quad_ww] = lgwt(deg, -1, 1);
 
@@ -19,8 +18,8 @@ ww = [0;ww;0];
 
 if num_dimensions >= 2
     for i = 2:num_dimensions
-         domainMin = pde.dimensions{1,i}.domainMin;
-         domainMax = pde.dimensions{1,i}.domainMax;
+         domainMin = dimensions{1,i}.domainMin;
+         domainMax = dimensions{1,i}.domainMax;
          ww = kron(ww,ww)*(domainMax - domainMin);
     end
 end

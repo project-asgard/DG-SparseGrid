@@ -25,7 +25,7 @@ ln_delt = 10; %Coulomb logarithm
 n_b = 4*10^19; %background density in SI units (particles/m.^3)
 T_eV_b = 4; %background temperature in eV
 z_b = 1; %atomic number of background
-m_b = m_e + m_D; %background mass
+m_b = m_D; %background mass
 
 %Target Specie Parameters
 n_a = n_b;
@@ -49,9 +49,9 @@ T_a = T_eV_a*11606; %converting to Kelvin
 T_b = T_eV_b*11606; %converting to Kelvin
 nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
-nu_D =  10^6;%@(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
+nu_D =  10^6; %@(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
 gauss_func = @(v,T,m) n_a/(10^6*sqrt(2*pi)).*exp(-0.5*(v-offset).^2/(10^12));
-norm = 2.07*10^19/(8.31*10^9);
+norm = 3.27;
 pitch_z = @(z) z.*0 + 1;
 pitch_t = @(t) exp(-nu_D*t);
 

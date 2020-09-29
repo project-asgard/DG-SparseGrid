@@ -86,6 +86,18 @@ if num_dimensions <=3
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     
+   % fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
+    
+    % Louis addition: Taking a moment with respect to some test function 
+    % using moment_integral.m
+   % test_func = @(x,p,t) x.*0 + 1; %test function 
+
+    %Taking the moment of test_func with respect to the analytic ad numerical distribution
+    %functions
+
+  % test_moment = moment_integral(pde, fval_realspace, test_func, t);
+   %test_moment_analytic = moment_integral(pde, fval_realspace_analytic, test_func, t);
+   
     if opts.save_output
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
         if num_dimensions == 1
@@ -314,7 +326,7 @@ for L = 1:num_steps
         %Taking the moment of test_func with respect to the numerical distribution
         %function
 
-        test_moment = moment_integral(pde, fval_realspace, test_func, t);
+%        test_moment = moment_integral(pde, fval_realspace, test_func);
         %%
         % Try with function convertToRealSpace
         
