@@ -22,6 +22,7 @@ default_time_independent_A = opts.time_independent_A;
 default_time_independent_build_A = opts.time_independent_build_A;
 default_many_solution_capable = opts.many_solution_capable;
 default_max_lev = opts.max_lev;
+default_max_lev_coeffs = opts.max_lev_coeffs;
 default_refinement_method = opts.refinement_method;
 default_adapt_initial_condition = opts.adapt_initial_condition;
 valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points'};
@@ -46,6 +47,7 @@ addOptional(input_parser,'time_independent_A',default_time_independent_A,@islogi
 addOptional(input_parser,'time_independent_build_A',default_time_independent_build_A,@islogical);
 addOptional(input_parser,'many_solution_capable',default_many_solution_capable,@islogical);
 addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
+addOptional(input_parser,'max_lev_coeffs',default_max_lev_coeffs, @islogical);
 addOptional(input_parser,'adapt_threshold',opts.adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
@@ -146,6 +148,7 @@ opts.time_independent_A = input_parser.Results.time_independent_A;
 opts.time_independent_build_A = input_parser.Results.time_independent_build_A;
 opts.many_solution_capable = input_parser.Results.many_solution_capable;
 opts.max_lev = input_parser.Results.max_lev;
+opts.max_lev_coeffs = input_parser.Results.max_lev_coeffs;
 opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
@@ -186,6 +189,13 @@ end
 if opts.adapt
     opts.use_oldhash = false;
 end
+
+if opts.max_lev_coeffs
+    if opts.use_oldcoeffmat
+        error("ERROR - max level coeffs not implemented for old coeff function"); 
+    end
+end
+
 
 if ~isempty(fieldnames(input_parser.Unmatched))
    disp('Extra inputs:')

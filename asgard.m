@@ -45,6 +45,8 @@ end
 for d=1:num_dimensions
     pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
 end
+% if we update all downstream code, we can avoid storing FMWT matrices at
+% all, and instead store just one set of max level dense blocks
 
 %% (Do not) Construct the connectivity.
 if opts.use_connectivity

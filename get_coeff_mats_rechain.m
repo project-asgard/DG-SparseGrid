@@ -1,4 +1,4 @@
-%% Re-chain 1D coefficient matrices
+%% Re-chain Time-Independent 1D coefficient matrices
 % If max level coefficient construction is used, partial term coefficients
 % are constructed for some maximum adaptivity level. then, when adaptivity
 % dictates (enables/disables elements that increase/decrease level for some 
@@ -19,8 +19,17 @@ for dim = 1:num_dims
             [pde.terms{term, dim}.mat, ...
              pde.terms{term, dim}.mat_unrotated] = rechain(pde.terms{term}{dim}, new_levels(d), pde.deg);
         end
+        
+        if ~isempty(pde.termsLHS)    
+            num_terms_left = numel(pde.termsLHS);
+            for term = 1:num_terms_left
+                [pde.termsLHS{term, dim}.mat, ...
+                 pde.termsLHS{term, dim}.mat_unrotated] = rechain(pde.termsLHS{term}{dim}, new_levels(d), pde.deg);
+            end
+        end
     end
 end
+
 
 end
 

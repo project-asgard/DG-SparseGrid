@@ -41,6 +41,7 @@ for tt = 1:num_terms % Construct a BC object for each term
         FMWT = dim.FMWT;
         
         lev = dim.lev;
+        dof = deg * 2^lev;
         
         for p=1:numel(term_1D.pterms)
             
@@ -94,9 +95,9 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % FIXME : test this for p>2
                     
                     if p > 1
-                        preceeding_mat = eye(size(term_1D.pterms{1}.mat));
+                        preceeding_mat = eye(dof);
                         for nn=1:p-1
-                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof, 1:dof);
                         end
                         bcL_tmp = preceeding_mat * bcL_tmp;
                     end
@@ -131,9 +132,9 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Apply mats from preceeding terms when chaining (p>1)
                     
                     if p > 1
-                        preceeding_mat = eye(size(term_1D.pterms{1}.mat));
+                        preceeding_mat = eye(dof);
                         for nn=1:p-1
-                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof, 1:dof);
                         end
                         bcR_tmp = preceeding_mat * bcR_tmp;
                     end
