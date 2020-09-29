@@ -38,7 +38,7 @@ for tt = 1:num_terms % Construct a BC object for each term
         
         xMin = dim.domainMin;
         xMax = dim.domainMax;
-        FMWT = dim.FMWT;
+        %          FMWT = dim.FMWT;
         
         lev = dim.lev;
         dof = deg * 2^lev;
@@ -80,7 +80,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     for d2=1:num_dims
                         bcL{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
-                            BCL_fList{d2},pde.params,time);
+                            BCL_fList{d2},pde.params,pde.transform_blocks,time);
                     end
                     
                     %%
@@ -88,7 +88,9 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Func*v|_xMin and Func*v|_xMax
                     
                     bcL_tmp = compute_boundary_condition(pde,this_g,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
-                    bcL_tmp = FMWT * bcL_tmp;
+                    %bcL_tmp = FMWT * bcL_tmp;
+                    trans_side = 'LN';
+                    bcL_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcL_tmp, trans_side);
                     
                     %%
                     % Apply mats from preceeding pterms when chaining (p>1)
@@ -118,7 +120,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     for d2=1:num_dims
                         bcR{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
-                            BCR_fList{d2},pde.params,time);
+                            BCR_fList{d2},pde.params,pde.transform_blocks,time);
                     end
                     
                     %%
@@ -126,8 +128,9 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Func*v|_xMin and Func*v|_xMax
                     
                     bcR_tmp = compute_boundary_condition(pde,this_g,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
-                    bcR_tmp = FMWT * bcR_tmp;
-                    
+                    %bcR_tmp = FMWT * bcR_tmp;
+                     trans_side = 'LN';
+                    bcR_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcR_tmp, trans_side);
                     %%
                     % Apply mats from preceeding terms when chaining (p>1)
                     

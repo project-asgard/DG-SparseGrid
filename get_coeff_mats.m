@@ -7,7 +7,6 @@ function pde = get_coeff_mats (pde,opts,t,TD,use_oldcoeffmat)
 
 num_terms = numel(pde.terms);
 num_dimensions = numel(pde.dimensions);
-[~, FMWT_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
 
 oldcoeff = 0;
 if exist('use_oldcoeffmat','var') && ~isempty(use_oldcoeffmat)
@@ -50,7 +49,7 @@ for tt = 1:num_terms
                 end
                     
                 [term_1D_out] = coeff_matrix(num_dimensions,opts.deg,t,dim,term_1D,pde.params, ...
-                                            FMWT_blocks, construction_level);
+                                             pde.transform_blocks, construction_level);
                 pde.terms{tt}.terms_1D{d} = term_1D_out;
 
             end
@@ -87,8 +86,13 @@ if ~isempty(pde.termsLHS)
                 if oldcoeff
                     error('Non-identity LHS mass matrix not supported by "use_oldcoeffmat=1"');
                 else          
-                    [term_1D_out] = coeff_matrix(num_dimensions,opts.deg,t,dim,term_1D,pde.params, FMWT_blocks, ...
-                                    opts.max_lev_coeffs, opts.max_lev);
+                    construction_level = dim.lev;
+                    if opts.max_lev_coeffs && ~term_1D.time_dependent
+                        construction_level = opts.max_lev;
+                    end
+                    [term_1D_out] = coeff_matrix(num_dimensions,opts.deg,t,dim,term_1D,pde.params,...
+                        pde.transform_blocks, construction_level);
+                    
                     pde.termsLHS{tt}.terms_1D{d} = term_1D_out;
                 end
                 
