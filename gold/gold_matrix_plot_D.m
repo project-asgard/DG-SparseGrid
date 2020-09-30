@@ -1,4 +1,4 @@
-gen_realspace_transform( continuity1, 'continuity_1', 'lev', 8, 'deg', 7);
+gen_realspace_transform( continuity1, 'continuity_1', 'lev', 7, 'deg', 7);
 gen_realspace_transform( continuity2, 'continuity_2', 'lev', 7, 'deg', 6);
 gen_realspace_transform( continuity3, 'continuity_3', 'lev', 6, 'deg', 5);
 gen_realspace_transform( continuity6, 'continuity_6', 'lev', 2, 'deg', 3);
@@ -16,10 +16,7 @@ pde = check_pde(pde, opts);
 
 num_dimensions = numel(pde.dimensions);
 
-% Construct the 1D multi-wavelet transform for each dimension.
-for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
-end
+[~, pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
 
 for d=1:num_dimensions
 
