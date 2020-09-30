@@ -2,31 +2,34 @@ input_parser = inputParser;
 
 input_parser.KeepUnmatched = true;
 
+opts = OPTS();
+
 default_start_time = 0;
 default_lev = 3;
 default_deg = 2;
 default_num_steps = 5;
 default_quiet = false;
-default_grid_type = 'SG';
+default_grid_type = opts.grid_type;
 valid_grid_types = {'SG','FG'};
 check_grid_type = @(x) any(validatestring(x,valid_grid_types));
-default_CFL = 0.01;
-default_dt = 1.0;
-default_adapt = false;
-default_use_oldhash = false;
-default_use_oldcoeffmat = false;
-default_timestep_method = 'RK3';
+default_CFL = opts.CFL;
+default_dt = opts.dt;
+default_adapt = opts.adapt;
+default_use_oldhash = opts.use_oldhash;
+default_use_oldcoeffmat = opts.use_oldcoeffmat;
+default_timestep_method = opts.timestep_method;
 valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE'};
 check_timestep_method = @(x) any(validatestring(x,valid_timestep_methods));
-default_time_independent_A = false;
-default_many_solution_capable = false;
-default_max_lev = 8;
-default_adapt_threshold = 1e-3;
-default_refinement_method = 1;
-default_adapt_initial_condition = false;
-default_uniform_output = false;
-default_save_output = false;
-default_output_filename_id = '';
+default_time_independent_A = opts.time_independent_A;
+default_time_independent_build_A = opts.time_independent_build_A;
+default_many_solution_capable = opts.many_solution_capable;
+default_max_lev = opts.max_lev;
+default_adapt_threshold = opts.adapt_threshold;
+default_refinement_method = opts.refinement_method;
+default_adapt_initial_condition = opts.adapt_initial_condition;
+default_uniform_output = opts.uniform_output;
+default_save_output = opts.save_output;
+default_output_filename_id = opts.output_filename_id;
 
 addRequired(input_parser, 'pde', @isstruct);
 addParameter(input_parser,'lev',default_lev, @isnumeric);
@@ -42,14 +45,18 @@ addOptional(input_parser,'adapt',default_adapt, @islogical);
 addOptional(input_parser,'use_oldhash',default_use_oldhash, @islogical);
 addOptional(input_parser,'use_oldcoeffmat',default_use_oldcoeffmat, @islogical);
 addOptional(input_parser,'time_independent_A',default_time_independent_A,@islogical);
+addOptional(input_parser,'time_independent_build_A',default_time_independent_build_A,@islogical);
 addOptional(input_parser,'many_solution_capable',default_many_solution_capable,@islogical);
 addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
 addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
 addOptional(input_parser,'uniform_output',default_uniform_output,@islogical);
+addOptional(input_parser,'add_end_points',opts.add_end_points,@islogical);
 addOptional(input_parser,'save_output',default_save_output,@islogical);
 addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
+addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
+addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -139,17 +146,25 @@ opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
 opts.time_independent_A = input_parser.Results.time_independent_A;
+opts.time_independent_build_A = input_parser.Results.time_independent_build_A;
 opts.many_solution_capable = input_parser.Results.many_solution_capable;
 opts.max_lev = input_parser.Results.max_lev;
 opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
 opts.uniform_output = input_parser.Results.uniform_output;
+opts.add_end_points = input_parser.Results.add_end_points;
 opts.save_output = input_parser.Results.save_output;
 opts.output_filename_id = input_parser.Results.output_filename_id;
+opts.plot_freq = input_parser.Results.plot_freq;
+opts.save_freq = input_parser.Results.save_freq;
 
 if opts.adapt
     opts.use_oldhash = false;
+end
+
+if sum([opts.add_end_points,opts.uniform_output]) > 1
+    error('Please set only one grid output option, thanks.');
 end
 
 if ~isempty(fieldnames(input_parser.Unmatched))

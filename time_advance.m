@@ -183,8 +183,11 @@ applyLHS = ~isempty(pde.termsLHS);
 s0 = source_vector(pde,opts,hash_table,t+dt);
 bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-if opts.time_independent_A % relies on inv() so is no good for poorly conditioned problems
+if opts.time_independent_A || opts.time_independent_build_A
     persistent A;
+end
+
+if opts.time_independent_A % relies on inv() so is no good for poorly conditioned problems
     persistent AA_inv;
     persistent ALHS_inv;
     
@@ -220,15 +223,23 @@ if opts.time_independent_A % relies on inv() so is no good for poorly conditione
         end
         f1 = AA_inv * b;
     end
-    
+   
 else % use the backslash operator instead
     if applyLHS
-        [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+        if opts.time_independent_build_A 
+            if isempty(A);[~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);end
+        else
+            [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+        end
         I = eye(numel(diag(A)));
         AA = I - dt*(ALHS \ A);
         b = f0 + dt*(ALHS \ (s0 + bc0));
     else
-        [~,A] = apply_A(pde,opts,A_data,f0,deg);
+        if opts.time_independent_build_A
+            if isempty(A);[~,A] = apply_A(pde,opts,A_data,f0,deg);end
+        else
+            [~,A] = apply_A(pde,opts,A_data,f0,deg);
+        end
         I = eye(numel(diag(A)));
         AA = I - dt*A;
         b = f0 + dt*(s0 + bc0);

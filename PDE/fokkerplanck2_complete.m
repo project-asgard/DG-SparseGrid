@@ -169,7 +169,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0;
+dim_p.domainMin = 0.1;
 dim_p.domainMax = +20;
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 

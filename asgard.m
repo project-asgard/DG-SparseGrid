@@ -5,12 +5,13 @@ function [err,fval,fval_realspace,nodes] = asgard (pde, varargin)
 format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
+root_directory = get_root_folder();
 
 %% Load PDE and runtime defaults
 runtime_defaults
 
 %% Reset any persistent variables
-if opts.time_independent_A
+if opts.time_independent_A | opts.time_independent_build_A
     clear time_advance
 end
 
@@ -192,7 +193,6 @@ end
 
 %% Time Loop
 count=1;
-plotFreq = 1;
 err = 1e9;
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:num_steps
@@ -391,7 +391,7 @@ for L = 1:num_steps
     %%
     % Plot results
     
-    if mod(L,plotFreq)==0 && ~opts.quiet
+    if mod(L,opts.plot_freq)==0 && ~opts.quiet
         
         figure(1000)
         
@@ -425,9 +425,9 @@ for L = 1:num_steps
     %%
     % Save output
     
-    if opts.save_output
-        [status, msg, msgID] = mkdir('output');
-        fName = append('output/asgard-out',opts.output_filename_id,'.mat');
+    if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
+        [status, msg, msgID] = mkdir([root_directory,'/output']);
+        fName = append(root_directory,"/output/asgard-out",string(opts.output_filename_id),".mat");
         
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
         if num_dimensions == 1

@@ -31,28 +31,36 @@ if opts.uniform_output
     quad_x_right_element = [quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
     Meval = sparse(dof*(N-1)+(dof+1)*1,dof_1D);
-else
-    % output on quadrature points (quad_x)
+elseif opts.add_end_points
+    % output on quadrature points (quad_x) with end points
     [quad_x_interior_element,~]=lgwt(deg,-1,1);
-    % add end points
     quad_x_left_element  = [-1 quad_x_interior_element']';
     quad_x_right_element = [quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
     Meval = sparse(dof*(n-2)+(dof+1)*2,dof_1D);
+else
+    % output on quadrature points (quad_x)
+    [quad_x_interior_element,~]=lgwt(deg,-1,1);
+    dof = numel(quad_x_interior_element);
+    Meval = sparse(dof_1D,dof_1D);
 end
 
 p_val       = lin_legendre(quad_x_interior_element,deg)*sqrt(1/h); % TODO : this call and normalization happens in several places. We should consolidate.
-p_val_left  = lin_legendre(quad_x_left_element,deg)    *sqrt(1/h);
-p_val_right = lin_legendre(quad_x_right_element,deg)   *sqrt(1/h);
+if opts.add_end_points || opts.uniform_output
+    p_val_left  = lin_legendre(quad_x_left_element,deg)    *sqrt(1/h);
+    p_val_right = lin_legendre(quad_x_right_element,deg)   *sqrt(1/h);
+end
 
 for i=0:n-1
     
-    if i==0
-        quad_x = quad_x_left_element;
-    elseif i==n-1
-        quad_x = quad_x_right_element;
-    else
-        quad_x = quad_x_interior_element;
+    quad_x = quad_x_interior_element;
+    
+    if opts.add_end_points || opts.uniform_output    
+        if i==0
+            quad_x = quad_x_left_element;
+        elseif i==n-1
+            quad_x = quad_x_right_element;
+        end
     end
     
     %%
@@ -73,7 +81,7 @@ for i=0:n-1
             Iu = [dof*i+1:dof*(i+1)];
             Meval(Iu,Iv) = p_val;
         end
-    else
+    elseif opts.add_end_points
         if i==0
             Iu = [1:dof+1];
             Meval(Iu,Iv) = p_val_left;
@@ -84,6 +92,9 @@ for i=0:n-1
             Iu = [dof*i+1:dof*(i+1)]+1;
             Meval(Iu,Iv) = p_val;
         end
+    else      
+        Iu = [dof*i+1:dof*(i+1)];
+        Meval(Iu,Iv) = p_val;
     end
     
     nodes(Iu) = xi;
