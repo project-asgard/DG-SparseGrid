@@ -49,11 +49,11 @@ T_a = T_eV_a*11606; %converting to Kelvin
 T_b = T_eV_b*11606; %converting to Kelvin
 nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
-nu_D =  10^6; %@(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
+nu_D =  @(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
 gauss_func = @(v,T,m) n_a/(10^6*sqrt(2*pi)).*exp(-0.5*(v-offset).^2/(10^12));
-norm = 3.27;
+norm = 1.12;
 pitch_z = @(z) z.*0 + 1;
-pitch_t = @(t) exp(-nu_D*t);
+pitch_t = @(t) exp(-nu_D(v_th(T_b,m_a))*t);
 
 BCFunc = @(v) gauss_func(v,T_b,m_a);
 
@@ -92,8 +92,8 @@ end
 %% Setup the dimensions
 % 
 dim_v.name = 'v';
-dim_v.domainMin = 0.01;
-dim_v.domainMax = 3*10^7;
+dim_v.domainMin = 10^5;
+dim_v.domainMax = 5*10^7;
 dim_v.init_cond_fn = @(v,p,t) gauss_func(v,T_a,m_a);
 
 dim_z.name = 'z';
@@ -121,7 +121,7 @@ num_dims = numel(pde.dimensions);
 %   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
 
-g1 = @(z,p,t,dat) nu_D./(2*sin(z));
+g1 = @(z,p,t,dat) nu_D(v_th(T_b,m_a))./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
