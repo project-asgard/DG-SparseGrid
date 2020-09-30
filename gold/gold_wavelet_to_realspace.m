@@ -20,7 +20,7 @@ num_dimensions = numel(pde.dimensions);
 
 % Construct the 1D multi-wavelet transform for each dimension.
 for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{d}.lev);
+    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
 end
 
 for d=1:num_dimensions
@@ -30,12 +30,13 @@ for d=1:num_dimensions
 end
 
 % create the hash table - taken directly from asgard.m
-[elements, elements_idx]    = hash_table_sparse_nD (pde.lev_vec, pde.max_lev, opts.grid_type);
+[elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, ...
+                                    opts.max_lev, opts.grid_type);
 hash_table.elements         = elements;
 hash_table.elements_idx     = elements_idx;
 
 % simple function to transform from wavelet to realspace 
-domain = [ 0:((pde.deg^num_dimensions * size(elements_idx,2) )-1) ];
+domain = [ 0:((opts.deg^num_dimensions * size(elements_idx,2) )-1) ];
 
 fval = 2 * domain;
 

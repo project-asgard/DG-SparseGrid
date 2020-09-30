@@ -18,7 +18,7 @@ num_dimensions = numel(pde.dimensions);
 
 % Construct the 1D multi-wavelet transform for each dimension.
 for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{d}.lev);
+    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
 end
 
 for d=1:num_dimensions

@@ -16,9 +16,9 @@ generate_data( diffusion1, levels, 'diffusion1', 'deg', 6 );
 levels = [3, 3];
 generate_data( diffusion2, levels, 'diffusion2', 'deg', 5 );
 levels = [4];
-generate_data( fokkerplanck1_4p1a, levels, 'fokkerplanck1_4p1a', 'deg', 3 );
+generate_data( fokkerplanck1_pitch_E(1), levels, 'fokkerplanck1_4p1a', 'deg', 3 );
 levels = [5];
-generate_data( fokkerplanck1_4p2, levels, 'fokkerplanck1_4p2', 'deg', 2 );
+generate_data( fokkerplanck1_pitch_C, levels, 'fokkerplanck1_4p2', 'deg', 2 );
 levels = [2];
 generate_data( fokkerplanck1_4p3, levels, 'fokkerplanck1_4p3', 'deg', 5 );
 levels = [5];
@@ -54,7 +54,8 @@ pde = check_pde(pde, opts);
 
 for i=1:length(pde.dimensions)
   pde.dimensions{i}.lev = lev_vec(i);
-  pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
+  pde.dimensions{i}.FMWT = OperatorTwoScale_wavelet2(opts.deg,...
+                              pde.dimensions{i}.lev);
 end
 
 out_format = strcat(coeff_dir, pde_name, '_coefficients_l%sd%i_%d_%d.dat');
@@ -65,13 +66,13 @@ for d=1:length(pde.dimensions)
     lev_string = lev_string + int2str(lev_vec(d)) + "_";
 end
 
-degree = pde.deg;
+degree = opts.deg;
 time = 1.0;
 for t=1:length(pde.terms)
     for d=1:length(pde.dimensions)
         sd_term = pde.terms{t}.terms_1D{d};
         sd_term_out = ...
-        coeff_matrix(numel(pde.dimensions),pde.deg,time,pde.dimensions{d},sd_term,pde.params);
+        coeff_matrix(numel(pde.dimensions),opts.deg,time,pde.dimensions{d},sd_term,pde.params);
         coeff_mat = sd_term_out.mat;
         unrotated = sd_term_out.mat_unrotated;
         write_octave_like_output(sprintf(out_format,lev_string,degree,t,d), full(coeff_mat));

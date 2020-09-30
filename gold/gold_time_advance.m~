@@ -220,9 +220,6 @@ function run_time_advance(pde, out_format, varargin)
     
   pde = check_pde( pde, opts );
   dt = pde.set_dt( pde, opts.CFL );
-  if length(pde.dimensions) > 3
-      opts.max_lev = 4;
-  end
   
   % non-uniform case
   if ~(length(unique(opts.lev_vec)) == 1)
@@ -231,7 +228,7 @@ function run_time_advance(pde, out_format, varargin)
          lev_string = lev_string + int2str(opts.lev_vec(i)) + "_";
       end
       out_format = strcat(out_format, '_', lower(opts.grid_type),...
-          '_l', lev_string, 'd', int2str(opts.deg), '_t%d.dat');
+          '_l', lev_string, 'd', int2str(pde.deg), '_t%d.dat');
   end
   
   [elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, ...
@@ -255,7 +252,7 @@ function run_time_advance(pde, out_format, varargin)
 
   for i=0:4
       time = i*dt;
-      out = time_advance(pde,opts,A_data,out,time,dt,opts.deg,hash_table,Vmax,Emax);
+      out = time_advance(pde,opts,A_data,out,time,dt,opt.deg,hash_table,Vmax,Emax);
       write_octave_like_output(sprintf(out_format,i), out);
   end
 end
