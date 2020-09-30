@@ -18,10 +18,8 @@ pde = check_pde(pde, opts);
 
 num_dimensions = numel(pde.dimensions);
 
-% Construct the 1D multi-wavelet transform for each dimension.
-for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
-end
+[~, pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
+
 
 for d=1:num_dimensions
 

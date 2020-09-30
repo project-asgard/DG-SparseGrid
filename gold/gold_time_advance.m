@@ -239,9 +239,7 @@ function run_time_advance(pde, out_format, varargin)
   hash_table.elements         = elements;
   hash_table.elements_idx     = elements_idx;
 
-  for i=1:length(pde.dimensions)
-      pde.dimensions{i}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{i}.lev);
-  end
+  [~, pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg,opts.max_lev);
 
   t = 0;
   TD = 0;
