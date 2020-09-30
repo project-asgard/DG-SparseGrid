@@ -223,6 +223,7 @@ function run_time_advance(pde, out_format, varargin)
   if length(pde.dimensions) > 3
       opts.max_lev = 4;
   end
+  opts.max_lev_coeffs = 1;
   
   % non-uniform case
   if ~(length(unique(opts.lev_vec)) == 1)

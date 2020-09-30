@@ -49,7 +49,7 @@ runtime_defaults
 
 opts.use_oldcoeffmat = 0;
 opts.use_oldhash = 0;
-
+opts.max_lev_coeffs = 1;
 pde = check_pde(pde, opts);
 
 for i=1:length(pde.dimensions)
@@ -74,7 +74,7 @@ for t=1:length(pde.terms)
         sd_term = pde.terms{t}.terms_1D{d};
         sd_term_out = ...
         coeff_matrix(numel(pde.dimensions),opts.deg,time,pde.dimensions{d},sd_term,pde.params, ...
-                     transform_blocks, pde.dimensions{d}.lev);
+                     transform_blocks, opts.max_lev);
         coeff_mat = sd_term_out.mat;
         unrotated = sd_term_out.mat_unrotated;
         write_octave_like_output(sprintf(out_format,lev_string,degree,t,d), full(coeff_mat));
