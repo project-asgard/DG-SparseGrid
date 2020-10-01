@@ -41,8 +41,6 @@ else
     hash_table.elements_idx     = elements_idx; % only to get the same order as the old hash table
 end
 
-%% Construct the 1D multi-wavelet transform (stored as dense matrix blocks)
-[~, pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
 
 
 %% (Do not) Construct the connectivity.
