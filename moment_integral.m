@@ -14,7 +14,7 @@ quad_ww = 2^(-Lev)/2*quad_ww;
 
 ww = repmat(quad_ww, 2^Lev(1), 1); 
 % Lin Changed below
-ww = [0;ww;0];
+%ww = [0;ww;0];
 
 if num_dimensions >= 2
     for i = 2:num_dimensions
@@ -40,11 +40,11 @@ end
 
 % Lin Changed below
 % Please check whether it is correct to put two zeros in front and back
-points = [0;points;0];
-points2 = repmat(points, [2^Lev*deg+2 1]);
+%points = [0;points;0];
+points2 = repmat(points, [2^Lev*deg 1]);
 
 %points2 = reshape(reshape(points2,num,num)',num*num,1);
-mag = length(fval_realspace);
+
 if num_dimensions == 1
     momentValue = sum(ww.*fval_realspace.*gfunc(points));
 else

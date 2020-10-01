@@ -42,20 +42,22 @@ switch test
         T_eV_a = 0.05*T_eV_b;
         offset = 0; %case with no offset but change in Temperature
     case 'c'
-        T_eV_a = 1000;
-        offset = v_th(T_eV_a*11606,m_a); %case with offset and no change in Temperature
+        T_eV_a = 10^3;
+        offset = 10^7; %case with offset and no change in Temperature
 end 
 T_a = T_eV_a*11606; %converting to Kelvin
 T_b = T_eV_b*11606; %converting to Kelvin
 nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
+maxwell = @(v,x,y) n_a/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
+gauss = @(v,x) n_a/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 nu_D =  @(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
-gauss_func = @(v,T,m) n_a/(10^6*sqrt(2*pi)).*exp(-0.5*(v-offset).^2/(10^12));
-norm = 1.12;
+norm = 3.749;
+init_func = @(v) maxwell(v,0,v_th(T_b,m_a)) + maxwell(v,5*10^6, 10^6);
 pitch_z = @(z) z.*0 + 1;
 pitch_t = @(t) exp(-nu_D(v_th(T_b,m_a))*t);
 
-BCFunc = @(v) gauss_func(v,T_b,m_a);
+BCFunc = @(v) init_func(v);
 
 
 % Domain is (a,b)
@@ -92,9 +94,9 @@ end
 %% Setup the dimensions
 % 
 dim_v.name = 'v';
-dim_v.domainMin = 10^5;
-dim_v.domainMax = 5*10^7;
-dim_v.init_cond_fn = @(v,p,t) gauss_func(v,T_a,m_a);
+dim_v.domainMin = 0.01*10^7;
+dim_v.domainMax = 3*10^7;
+dim_v.init_cond_fn = @(v,p,t) init_func(v);
 
 dim_z.name = 'z';
 dim_z.domainMin = -pi;
@@ -116,18 +118,20 @@ num_dims = numel(pde.dimensions);
 %
 % becomes 
 %
-% termC == g1(z) q(z)        [mass, g1(p) = nu_D/(2*sin(z)),  BC N/A]
-%   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
-%   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
+% termC == g1(v) g2(z) q(z)   [mass, g1(p) = nu_D(v), g2(z) = 1/(2sin(z))  BC N/A]
+%   q(z) == d/dz g3(z) r(z)   [grad, g3(z) =  sin(z), BCL=D,BCR=D]
+%   r(z) == d/dp g4(z) f(z)   [grad, g3(p) = 1,      BCL=N,BCR=N]
 
 
-g1 = @(z,p,t,dat) nu_D(v_th(T_b,m_a))./(2*sin(z));
-g2 = @(z,p,t,dat) sin(z);
-g3 = @(z,p,t,dat) z.*0 + 1;
+g1 = @(v,p,t,dat) nu_D(v);
+g2 = @(z,p,t,dat) 1./(2*sin(z));
+g3 = @(z,p,t,dat) sin(z);
+g4 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'D','D');
-pterm3 = GRAD(num_dims,g3,0,'N', 'N');
-termC_z = TERM_1D({pterm1,pterm2,pterm3});
+pterm2  = MASS(g2);
+pterm3  = GRAD(num_dims,g3,+1,'D','D');
+pterm4 = GRAD(num_dims,g4,0,'N', 'N');
+termC_z = TERM_1D({pterm1,pterm2,pterm3,pterm4});
 termC   = TERM_ND(num_dims,{termC_z,[]});
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
@@ -182,7 +186,7 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) norm*n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
+    @(v,p,t) n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
     @(z,p,t) pitch_z(z), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
