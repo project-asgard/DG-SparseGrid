@@ -85,20 +85,22 @@ if num_dimensions <=3
     %%
     % Get the real space solution
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
-    
+    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);    
     fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
     
-    % Louis addition: Taking a moment with respect to some test function 
-    % using moment_integral.m
-    test_func = @(x,p,t) 4*pi*x.^2; %test function 
-
-    %Taking the moment of test_func with respect to the analytic ad numerical distribution
-    %functions
-
-   %test_moment = moment_integral(pde.lev_vec, pde.deg, fval_realspace, test_func, pde.dimensions);
-   test_moment_analytic = moment_integral(pde.lev_vec, pde.deg, fval_realspace_analytic, test_func, pde.dimensions);
-   
+    mass_func = @(x,p,t) 4*pi*x.^2;
+    mass = moment_integral(pde.lev_vec, pde.deg, fval_realspace, mass_func, pde.dimensions);
+    mass_analytic = moment_integral(pde.lev_vec, pde.deg, fval_realspace_analytic, mass_func, pde.dimensions);
+    mass_t(1) = mass;
+    
+    normalize_by_mass = true;
+    if normalize_by_mass
+        pde.params.norm_fac = mass / mass_analytic;
+        fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+        fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
+        mass_analytic = moment_integral(pde.lev_vec, pde.deg, fval_realspace_analytic, mass_func, pde.dimensions);
+    end
+    
     if opts.save_output
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
         if num_dimensions == 1
@@ -318,15 +320,9 @@ for L = 1:num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         
+        mass = moment_integral(pde.lev_vec, pde.deg, fval_realspace, mass_func, pde.dimensions);
+        mass_t(L+1) = mass;
         
-       % Louis addition: Taking a moment with respect to some test function 
-        % using moment_integral.m
-        test_func = @(x,p,t) 4*pi*x.^2; %test function 
-
-        %Taking the moment of test_func with respect to the numerical distribution
-        %function
-
-        test_moment = moment_integral(pde.lev_vec, pde.deg, fval_realspace, test_func, pde.dimensions);
         %%
         % Try with function convertToRealSpace
         
@@ -377,7 +373,7 @@ for L = 1:num_steps
             if ~opts.quiet         
                 disp(['    real space absolute err : ', num2str(err_real)]);
                 disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-                disp(['    total integrated mass : ', num2str(test_moment)]);
+                disp(['    total integrated mass : ', num2str(mass)]);
             end
         end
         

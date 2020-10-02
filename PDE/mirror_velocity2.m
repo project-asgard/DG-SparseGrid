@@ -94,7 +94,7 @@ end
 %% Setup the dimensions
 % 
 dim_v.name = 'v';
-dim_v.domainMin = 0.01*10^7;
+dim_v.domainMin = 0;
 dim_v.domainMax = 3*10^7;
 dim_v.init_cond_fn = @(v,p,t) init_func(v);
 
@@ -185,8 +185,16 @@ pde.sources = {};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
+    function ans = soln(v,p,t)
+        ans = n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2);        
+        if isfield(p,'norm_fac')
+            ans = ans .* p.norm_fac;
+        end
+    end
+    soln_handle = @soln;
+    
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
+    @(v,p,t) soln_handle(v,p,t), ...
     @(z,p,t) pitch_z(z), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
