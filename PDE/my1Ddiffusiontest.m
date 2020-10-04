@@ -48,8 +48,27 @@ load('matrix_iter000.mat','A');
 source0 = source_vector(pde,opts,hash_table,0);
 bc0 = boundary_condition_vector(pde,opts,hash_table,0);
 
-%%%% Krylov IIF 2nd order%%%%
+%%%% Krylov IIF %%%%
+q = f0;
+tic
 
+for i=0:n-1
+    [V,H] = myarnoldi(A,q,M);
+    gamma = norm(q);
+    
+    kryExp = expm(H*dt);
+    kryExp = kryExp(:,1); %first column in matrix
+    kryExp = gamma*V*kryExp;
+
+    q = kryExp;
+
+    %f1 = wavelet_to_realspace(pde,opts,Meval,g,hash_table);
+    %plot(f1)
+    %title(['time=',num2str(i)])
+    %pause(0.0001)
+end
+
+%%%% Krylov IIF 2nd order%%%%
 f = f0;
 
 tic
@@ -154,16 +173,18 @@ f1 = wavelet_to_realspace(pde,opts,Meval,f,hash_table); %Krylov 2nd Order
 p1 = wavelet_to_realspace(pde,opts,Meval,p,hash_table); %Krylov 3rd Order
 g1 = wavelet_to_realspace(pde,opts,Meval,g,hash_table); %Forward Euler
 h1 = wavelet_to_realspace(pde,opts,Meval,h,hash_table); %Backward Euler
+q1 = wavelet_to_realspace(pde,opts,Meval,q,hash_table); %Krylov IIF
 
 xx = nodes{1};
 
 %Analytic solution
 %an = exp(-2*pi^2*dt*n)*cos(pi*xx); %diffusion1
-an = exp(-2*T)*sin(xx); %diffusion1 alternative
+an = exp(-T)*sin(xx); %diffusion1 alternative
 %an = exp(-dt*n)*sin(2*pi*xx) ;%diffusionSourceless
 
 
-plot(xx,f1,'r-+',xx,an,'k.-','LineWidth',2) %K2
+%plot(xx,f1,'r-+',xx,an,'k.-','LineWidth',2) %K2
+plot(xx,f1,'r-+',xx,q1,'m',xx,an,'k.-','LineWidth',2) %K2 K
 %plot(xx,f1,'r-+',xx,g1,'b-o',xx,an,'k.-','LineWidth',2) %K2 FE
 %plot(xx,f1,'r-+',xx,h1,'m-p',xx,an,'k.-','LineWidth',2) %K2 BE
 %plot(xx,f1,'r-+',xx,p1,'m',xx,an,'k.-','LineWidth',2) %K2 K3
@@ -171,7 +192,8 @@ plot(xx,f1,'r-+',xx,an,'k.-','LineWidth',2) %K2
 %plot(xx,f1,'r-+',xx,p1,'m',xx,h1,'g-*',xx,an,'k.-','LineWidth',2) %K2 K3 BE
 %plot(xx,f1,'r-+',xx,p1,'m',xx,g1,'b-o',xx,h1,'g-*',xx,an,'k.-','LineWidth',2) %K2 K3 FE BE
 
-legend('Krylov IIF','Analytic Solution')
+%legend('Krylov IIF','Analytic Solution')
+legend('Krylov IIF 2nd Order','Krylov IIF','Analytic Solution')
 %legend('Krylov IIF','Forward Euler','Analytic Solution')
 %legend('Krylov IIF','Backward Euler','Analytic Solution')
 %legend('Krylov IIF 2nd order','Krylov IIF 3rd order','Analytic Solution')

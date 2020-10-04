@@ -1,24 +1,20 @@
 %for testing IIF method for 1D fokkerplanck equation
 
-%T = 260; %end time
-T = 2;
-lev = 6; %level
-deg = 4; %degree
+T = 260;
+lev = 7; %level
+deg = 2; %degree
 
 %dt = 0.1;
 dt = 1/2^(lev); %time step
 %dt = 5e-05;
 
-%0.177245
-
 n = ceil(T/dt); %Number of time steps
 
-%asgard(fokkerplanck1_5p1a_noLHS,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %test 3.5.1a
+%asgard(fokkerplanck1_5p1a_noLHS,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %test 3.5.1a momentum collision
 %asgard(fokkerplanck1_4p1a,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %test 3.2.3a
 asgard(fokkerplanck1_4p4,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %Pitch angle collision
-%asgard(fokkerplanck1_4p4,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %test 3.3
 
-M = 141; %krylov subspace approximation
+M = 10; %krylov subspace approximation
 
 f0 = load('initial_vec000.mat','f0');
 f0 = f0.f0; %f0 is initial vector
@@ -88,7 +84,7 @@ toc
 
 xx = nodes{1};
 
-f1 = wavelet_to_realspace(pde,opts,Meval,f,hash_table); %Krylov 2nd Order
+f1 = wavelet_to_realspace(pde,opts,Meval,f,hash_table); %Krylov IIF
 %g1 = wavelet_to_realspace(pde,opts,Meval,g,hash_table); %Forward Euler
 h1 = wavelet_to_realspace(pde,opts,Meval,h,hash_table); %Backward Euler
 
@@ -96,16 +92,19 @@ h1 = wavelet_to_realspace(pde,opts,Meval,h,hash_table); %Backward Euler
 
 %Analytic/steady state solution
 
-%phi = tanh(atanh(xx)-T);
-%an = (1-phi.^2)./(1-xx.^2);
+% phi = tanh(atanh(xx)-T);
+% an = (1-phi.^2)./(1-xx.^2);
+
 %an = 4/sqrt(pi)*exp(-xx.^2); %steady state solution to fokkerplanck1_5p1a
-%A = 4;
-%an = A / (2*sinh(A)) * exp(A*xx);
-h = [3 0.5 1 0.7 3 0 3];
-an = 0;
-for L = 0:6
-    an = an + h(L+1)*legendreP(L,xx)*exp(-L*(L+1)*T);%steady state solution to Fokkerplanck1_4p2
-end
+
+A = 4;
+an = A / (2*sinh(A)) * exp(A*xx);
+
+% h = [3 0.5 1 0.7 3 0 3];
+% an = 0;
+% for L = 0:6
+%     an = an + h(L+1)*legendreP(L,xx)*exp(-L*(L+1)*T);%steady state solution to Fokkerplanck1_4p2
+% end
 
 
 %plot(xx,f1,'r-+','LineWidth',2) %K
@@ -124,7 +123,7 @@ legend('Krylov IIF','Backward Euler','Analytic/Steady State Solution')
 
 title(['Fokker Planck Equation, T=',num2str(T),', dt=', num2str(dt,'%10.3e')])
 
-rms(an-f1)
+norm(an-f1)/sqrt(N)
 %rms(an-g1)
-rms(an-h1)
+norm(an-h1)/sqrt(N)
 %rms(an-f1)/rms(an)

@@ -3,10 +3,10 @@
 %T = 260; %end time
 T = 3;
 lev = 5; %level
-deg = 3; %degree
+deg = 2; %degree
 
 %dt = 0.1;
-dt = 1/2^(2*lev); %time step
+dt = 1/2^(lev); %time step
 %dt = 5e-05;
 
 %0.177245
@@ -16,8 +16,6 @@ n = ceil(T/dt); %Number of time steps
 %asgard(fokkerplanck1_5p1a_noLHS,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %test 3.5.1a
 %asgard(fokkerplanck1_4p1a,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %test 3.2.3a
 asgard_ItterIIF(fokkerplanck1_4p4,'lev',lev,'deg',deg,'implicit',true,'num_steps',1) %test 3.3
-
-M = 134; %krylov subspace approximation
 
 f0 = load('initial_vec000.mat','f0');
 f0 = f0.f0; %f0 is initial vector
@@ -38,31 +36,41 @@ load('matrix2','C');
 A = B+C;
 [N,~] = size(A); %A is an N x N stiffness matrix
 
+M = 42; %krylov subspace approximation
 
-M1 = 250;
-M2 = 250;
+M1 = 8;
+M2 = 37;
 
-%%%%Itterated Krylov IIF%%%%
+%%%%Krylov IIF Strang Splitting%%%%
 p = f0;
 tic
 for i=0:n-1
     [V1,H1] = myarnoldi(B,p,M1);
     gamma1 = norm(p);
     
-    kryExp1 = expm(H1*dt);
+    kryExp1 = expm(H1*dt/2);
     kryExp1 = kryExp1(:,1); %first column in matrix
     kryExp1 = gamma1*V1*kryExp1;
 
     q = kryExp1;
     
     [V2,H2] = myarnoldi(C,q,M2);
-    gamma2 = norm(1);
+    gamma2 = norm(q);
     
     kryExp2 = expm(H2*dt);
     kryExp2 = kryExp2(:,1); %first column in matrix
     kryExp2 = gamma2*V2*kryExp2;
 
-    p = kryExp2;
+    s = kryExp2;
+    
+    [V3,H3] = myarnoldi(B,s,M1);
+    gamma3 = norm(s);
+    
+    kryExp3 = expm(H3*dt/2);
+    kryExp3 = kryExp3(:,1); %first column in matrix
+    kryExp3 = gamma3*V3*kryExp3;
+
+    p = kryExp3;
 end
 toc
 %%%%%%%%%%%%%%%%%%%
@@ -140,7 +148,7 @@ plot(xx,p1,'g-',xx,f1,'r-+',xx,h1,'m-p',xx,an,'k.-','LineWidth',2) %IK K BE AN
 %legend('Krylov IIF','Backward Euler')
 %legend('Krylov IIF','Analytic/Steady State Solution')
 %legend('Krylov IIF','Forward Euler','Analytic/Steady State Solution')
-legend('Itterated Krylov IIF','Krylov IIF','Backward Euler','Analytic/Steady State Solution')
+legend('IIF Strang Splitting','Krylov IIF','Backward Euler','Analytic/Steady State Solution')
 %legend('Krylov IIF','Forward Euler','Backwards Euler','Analytic/Steady State Solution')
 
 title(['Fokker Planck Equation, T=',num2str(T),', dt=', num2str(dt,'%10.3e')])

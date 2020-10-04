@@ -42,7 +42,7 @@ pde.CFL = 0.01;
 
     function ret = f0(x)
         
-        test = 2;
+        test = 1;
         
         ret = zeros(size(x));
         switch test

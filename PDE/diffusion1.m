@@ -42,7 +42,7 @@ pde.CFL = 0.01;
 %soln_t = @(t) exp(-2*pi^2*t);
 
 soln_x = @(x) sin(x);
-soln_t = @(t) exp(-2*t);
+soln_t = @(t) exp(-t);
 
 
 BCFunc = @(x) soln_x(x);
@@ -124,7 +124,7 @@ pde.params = params;
 % s1x = @(x,p,t) -pi^2*sin(pi*x);
 % s1t = @(t,p) exp(-2*pi^2*t);
 
-s1x = @(x,p,t) -sin(x);
+s1x = @(x,p,t) 0;
 s1t = @(t,p) exp(-2*t);
 
 source1 = {s1x, s1t};
