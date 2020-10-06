@@ -70,6 +70,7 @@ end
 
 dim_v.domainMin = 0.01;
 dim_v.domainMax = 10^7;
+dim_v.jacobian = @(v,p,t) 4.*pi.*v.^2;
 
 %steady state analytic solution
 soln_v = @(v) n_a*(2*(m_a/(m_a + m_b))*nu_s./nu_par(v_th(T_b,m_a))).*(1/(4*pi)).*(1./v.^3);

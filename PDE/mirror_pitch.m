@@ -93,7 +93,7 @@ dim_z.name = 'z';
 dim_z.domainMin = 0.1;
 dim_z.domainMax = pi-.1;
 dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
-
+dim_z.jacobian = @(z,p,t) sin(z);
 
 %%
 % Add dimensions to the pde object

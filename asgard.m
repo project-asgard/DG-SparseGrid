@@ -88,7 +88,7 @@ if num_dimensions <=3
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);    
     fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
     
-    mass_func = @(x,p,t) 4*pi*x.^2;
+    mass_func = @(x,p,t) x.*0+1;
     mass = moment_integral(pde.lev_vec, pde.deg, fval_realspace, mass_func, pde.dimensions);
     mass_analytic = moment_integral(pde.lev_vec, pde.deg, fval_realspace_analytic, mass_func, pde.dimensions);
     mass_t(1) = mass;

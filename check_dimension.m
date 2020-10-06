@@ -18,6 +18,7 @@ default_dim.domainMax = 1;
 default_dim.lev = 2;
 default_dim.FMWT = []; % Gets filled in later
 default_dim.init_cond_fn = @(x,p) x.*0;
+default_dim.jacobian = @(x,p,t) x.*0 + 1;
 
 % Check to make sure all fields exist.
 % If not, use default.
