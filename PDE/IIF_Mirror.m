@@ -3,7 +3,7 @@ lev = 5; %level
 n = 15; %num_steps
 deg = 4; %degree
 
-asgard(mirror_velocity2,'timestep_method','BE', 'dt', dt, 'num_steps', 15, 'grid_type', 'SG', 'deg', deg, 'lev', lev)
+asgard(mirror_velocity2,'timestep_method','BE', 'dt', dt, 'num_steps', 1, 'grid_type', 'SG', 'deg', deg, 'lev', lev)
 
 M = 50;
 
@@ -51,4 +51,4 @@ g_real = wavelet_to_realspace(pde,opts,Meval,g,hash_table); %Backward Euler
 
 clf
 
-plot_fval(pde,nodes,an_real,g_real,Meval)
+plot_fval(pde,nodes,g_real,an_real,Meval) %analytic solution is calculated with matrix exponential.
