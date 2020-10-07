@@ -9,6 +9,9 @@ elseif strcmp(opts.timestep_method,'FE')
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'K')
+    % Krylov
+    f = krylov(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45'}))>0
     % One of the atlab ODE integrators.
     f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -243,7 +246,15 @@ else % use the backslash operator instead
         I = eye(numel(diag(A)));
         AA = I - dt*A;
         b = f0 + dt*(s0 + bc0);
+        
     end
+    save('bc0','bc0') %save boundary condition
+    save('source_term','s0') %save source term
+    save('initial_vec000','f0') %save initial vector
+    save('matrix_iter000','A') %save matrix
+    save('hash_table','hash_table')
+    save('pde','pde')
+    save('opts','opts')    
     f1 = AA \ b;
 end
 end
@@ -314,3 +325,4 @@ else % use the backslash operator for time_indepent_A = false
 end
 
 end
+
