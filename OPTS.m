@@ -35,4 +35,16 @@ classdef OPTS
 
     end
     
+    methods
+        
+        function opts = OPTS(num_dims)            
+            if nargin > 0
+                for d=1:num_dims
+                    opts.lev_vec(d) = opts.lev;
+                end
+            end
+        end
+        
+    end
+    
 end
