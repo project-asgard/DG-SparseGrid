@@ -17,7 +17,7 @@ m_e = 9.109*10^-31; %electron mass in kg
 m_H = 1.6726*10^-27; %hydrogen mass in kgs
 m_D = 3.3443*10^-27; %deuterium mass in kgs
 eps0 = 8.85*10^-12; %permittivity of free space in Farad/m
-k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
+% k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
 e = 1.602*10^-19; %charge in Coulombs
 ln_delt = 12; %Coulomb logarithm
 
@@ -26,8 +26,8 @@ v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
 % species b
 b.n = 4e19;
 b.T_eV = 4;
-b.Z = 1;
-b.m = m_D;
+b.Z = -1;
+b.m = m_e;
 b.vth = v_th(b.T_eV,b.m);
 
 % species a
@@ -50,18 +50,14 @@ switch test
         offset = 10^7; %case with offset and no change in Temperature
 end
 
-% T_a = T_eV_a*11606; %converting to Kelvin
-% T_b = T_eV_b*11606; %converting to Kelvin
-% nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
 nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
 maxwell = @(v,x,y) n_a/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 gauss = @(v,x) n_a/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 nu_D =  @(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
-% norm = 3.749;
+
 init_func = @(v) maxwell(v,0,v_th(T_b,m_a)) + maxwell(v,5*10^6, 10^6);
 pitch_z = @(z) z.*0 + 1;
 pitch_t = @(t) exp(-nu_D(v_th(T_b,m_a))*t);
-
 
 x = @(v,vth) v./vth; 
 nu_ab0 = @(a,b) b.n * e^4 * a.Z^2 * b.Z^2 * ln_delt / (2*pi*eps0^2*a.m^2*b.vth^3);
@@ -71,8 +67,10 @@ v_ = 10.^[1:.1:7];
 loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,a))
 hold on
 loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,b))
+loglog(0.5*a.m*v_.^2/e,nu_s(v_,b,b))
+loglog(0.5*a.m*v_.^2/e,nu_s(v_,b,a))
 xlim([0.1,1e2]);
-ylim([1e4,1e11]);
+% ylim([1e4,1e11]);
 
 BCFunc = @(v) init_func(v);
 
