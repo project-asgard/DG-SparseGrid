@@ -26,7 +26,7 @@ ln_delt = 10; %Coulomb logarithm
 n_b = 4*10^19; %background density in SI units (particles/m.^3)
 T_eV_b = 4; %background temperature in eV
 z_b = 1; %atomic number of background
-m_b = m_D; %background mass
+m_b = m_e; %background mass
 
 %Target Specie Parameters
 n_a = n_b;

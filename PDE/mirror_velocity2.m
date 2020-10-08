@@ -27,7 +27,7 @@ v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
 b.n = 4e19;
 b.T_eV = 4;
 b.Z = 1;
-b.m = m_D;
+b.m = m_e;
 b.vth = v_th(b.T_eV,b.m);
 
 % species a
@@ -48,18 +48,6 @@ switch test
     case 'c'
         a.T_eV = 1e3;
         offset = 10^7; %case with offset and no change in Temperature
-<<<<<<< HEAD
-end 
-T_a = T_eV_a*11606; %converting to Kelvin
-T_b = T_eV_b*11606; %converting to Kelvin
-nu_s = @(v) psi(v./v_th(T_a,m_a)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
-nu_par = @(v) psi(v./v_th(T_a,m_a)).*n_b*L_ab./(2*pi.*v.^3); %parallel diffusion frequency
-maxwell = @(v,x,y) n_a/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
-gauss = @(v,x) n_a/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
-nu_D =  @(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
-norm = 3.749;
-init_func = @(v) maxwell(v,0,v_th(T_b,m_a)) + maxwell(v,v_th(T_a,m_a), 10^6);
-=======
 end
 
 % T_a = T_eV_a*11606; %converting to Kelvin
@@ -71,7 +59,6 @@ gauss = @(v,x) n_a/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 nu_D =  @(v) n_b*L_ab.*(phi_f(v./v_th(T_b,m_b)) - psi(v./v_th(T_b,m_b)))./(4*pi.*v.^3); %deflection frequency in s^-1
 % norm = 3.749;
 init_func = @(v) maxwell(v,0,v_th(T_b,m_a)) + maxwell(v,5*10^6, 10^6);
->>>>>>> 461119d7fa96648ed109c57926a7f449b4d44104
 pitch_z = @(z) z.*0 + 1;
 pitch_t = @(t) exp(-nu_D(v_th(T_b,m_a))*t);
 
