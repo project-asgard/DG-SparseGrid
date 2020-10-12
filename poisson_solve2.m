@@ -1,4 +1,4 @@
-function [EE,u]=poisson_solve2(Lev_x,k,Lmax,f,DeltaX,FMWT_COMP_x,Vmax,index1D)
+function [EE,u]=poisson_solve2(Lev_x,k,Lmax,f,DeltaX,FMWT_blocks,Vmax,index1D)
 %===============================================================
 % Compute EE from Poisson solver
 % Input : Lev_x,k,Lmax,rho_0,DeltaX
@@ -30,7 +30,7 @@ tmp_b=[sqrt(Lmax); zeros(dof_1D_x-1,1)]...
       -sqrt(2*Vmax)*f(Index(:));%f(1:dof_1D_x);
 
 
-b_poisson(dof_1D_x+1:end)=(FMWT_COMP_x(:,2:end-1)*FMWT_COMP_x(:,2:end-1)')*tmp_b;
+%b_poisson(dof_1D_x+1:end)=(FMWT_COMP_x(:,2:end-1)*FMWT_COMP_x(:,2:end-1)')*tmp_b;
 
 
 x_poisson=DeltaX\b_poisson;

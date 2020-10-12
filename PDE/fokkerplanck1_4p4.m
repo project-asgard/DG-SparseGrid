@@ -10,7 +10,7 @@ function pde = fokkerplanck1_4p4
 % asgard(fokkerplanck1_4p4)
 %
 % implicit 
-% asgard(fokkerplanck1_4p4,'timestep_method','CN')
+% asgard(fokkerplanck1_4p4,'timestep_method','BE','num_steps',50,'dt',0.05,'lev',4,'deg',4)
 
 pde.CFL = 0.01;
 sig = 0.1;
@@ -26,18 +26,19 @@ C = 1.0;
     end
     function ret = f0(z)
         
-        caseNumber = 3;
+        caseNumber = 4;
         shift = 0.36;
+        scaling = 0.177245;
         
         switch caseNumber
             case 1
-                f = exp(-z.^2/sig^2);
+                f = exp(-z.^2/sig^2)/scaling;
             case 2
-                f = exp(-(z-shift).^2/sig^2);
+                f = exp(-(z-shift).^2/sig^2)/scaling;
             case 3
-                f = exp(-(z+shift).^2/sig^2);
+                f = exp(-(z+shift).^2/sig^2)/scaling;
             case 4
-                f = exp(-(z-shift).^2/sig^2) + exp(-(z+shift).^2/sig^2);
+                f = (exp(-(z-shift).^2/sig^2) + exp(-(z+shift).^2/sig^2))/(2*scaling);
         end    
         ret = f;
     end

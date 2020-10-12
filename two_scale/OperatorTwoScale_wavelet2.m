@@ -1,4 +1,4 @@
-function FMWT = OperatorTwoScale_wavelet2(deg,nLev)
+function [FMWT, blocks] = OperatorTwoScale_wavelet2(deg,nLev)
 % FMWT_COMP = OperatorTwoScale_wavelet2(maxDeg,nLev)
 %----------------------------------
 % Set-up Two-scale operator       %
@@ -6,6 +6,7 @@ function FMWT = OperatorTwoScale_wavelet2(deg,nLev)
 % Input: Degree: maxDeg
 %        Level: Np
 % Output: Convert Matrix: FMWT_COMP
+%         Dense blocks also output for testing
 %**********************************
 
 % % Load G0 and H0 from file
@@ -92,16 +93,21 @@ for j=(nLev-1):-1:0,
      Gmat = [G0 * Hmat, G1 * Hmat];
      Hmat = [H0 * Hmat, H1 * Hmat];
    end;
-   blocks{ioff + j} = Gmat(1:deg,1:isize);
+   blocks{(j+1) * 2} = Gmat(1:deg,1:isize);
+   if (j == 0)
+       h_cols = n;
+   else
+       h_cols = isize;
+   end;
+       blocks{j*2 + 1} = Hmat(1:deg,1:h_cols);
 end;
-blocks{ioff + (-1)} = Hmat(1:deg,1:n);
 
 if (idebug >= 1),
-   for j=-1:(nLev-1),
-      Fmat = blocks{ioff + j};
+   for j=1:(nLev*2),
+      Fmat = blocks{j};
       nrow = size(Fmat,1);
       ncol = size(Fmat,2);
-      disp(sprintf( 'j=%d, size(blocks{ioff+j})=(%d,%d)', ...
+      disp(sprintf( 'j=%d, size(blocks{j})=(%d,%d)', ...
 		     j,    nrow,ncol  ));
    end;
 end;
@@ -119,7 +125,7 @@ irow = 1 + deg;
 for j=0:(nLev-1),
     ncells = 2^j;
     isize = n/ncells;
-    Fmat = blocks{ioff + j};
+    Fmat = blocks{ioff + j*2};
     for icell=1:ncells,
        j1 = (icell-1)*isize  + 1;
        j2 = j1 + isize - 1;
@@ -129,8 +135,6 @@ for j=0:(nLev-1),
     end;
     irow = irow + deg * ncells;
 end;
-
-
 
 end
 

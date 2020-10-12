@@ -43,3 +43,4 @@ test_moment_2D = moment_integral(3, 3, act_frs, test_func, dimensions);
 diff = abs(test_moment_2D);
 verifyLessThan(testCase, diff, 1e-6);
 end
+

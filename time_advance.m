@@ -6,6 +6,9 @@ if strcmp(opts.timestep_method,'BE')
 elseif strcmp(opts.timestep_method,'FE')
     % Forward Euler (FE) first order
     f = forward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'time_independent')
+    % time independent d/dt==0
+    f = time_independent(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -158,6 +161,17 @@ fval = f + dt*(b1*k1 + b2*k2 + b3*k3);
 
 end
 
+%% Time independent solve d/dt==0
+function f1 = time_independent(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+
+[~,A] = apply_A(pde,opts,A_data,f0,deg);
+
+f1 = -A \ (s0+bc0);
+
+end
 
 %% Forward Euler
 function f1 = forward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
@@ -194,23 +208,25 @@ if opts.time_independent_A % relies on inv() so is no good for poorly conditione
     if isempty(AA_inv)
         if applyLHS
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             ALHS_inv = inv(ALHS);
             AA = I - dt*(ALHS_inv * A);
             b = f0 + dt*(ALHS_inv * (s0 + bc0));
         else
             [~,A] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             AA = I - dt*A;
             b = f0 + dt*(s0 + bc0);
         end
         
-        rcondAA = rcond(AA);
-        if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcondAA)]); end
-        
-        if 1/rcondAA > 1e6
-            disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
-            disp(['WARNING: cond(A) = ', num2str(rcondAA)]);
+        if numel(AA(:,1)) <= 4096
+            condAA = condest(AA);
+            if ~opts.quiet; disp(['    condest(AA) : ', num2str(condAA,'%.1e')]); end
+            
+            if condAA > 1e6
+                disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
+                disp(['WARNING: cond(A) = ', num2str(condAA,'%.1e')]);
+            end
         end
         
         AA_inv = inv(AA);
@@ -231,7 +247,7 @@ else % use the backslash operator instead
         else
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
         end
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = I - dt*(ALHS \ A);
         b = f0 + dt*(ALHS \ (s0 + bc0));
     else
@@ -240,11 +256,102 @@ else % use the backslash operator instead
         else
             [~,A] = apply_A(pde,opts,A_data,f0,deg);
         end
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = I - dt*A;
         b = f0 + dt*(s0 + bc0);
     end
-    f1 = AA \ b;
+    
+    % Direct solve
+    rescale = false;
+    if rescale
+        %     [AA_rescaled,diag_scaling] = rescale2(AA);
+        %     AA_thresholded = sparsify(AA_rescaled,1e-5);
+        [P,R,C] = equilibrate(AA);
+        AA_rescaled = R*P*AA*C;
+        b_rescaled = R*P*b;
+        f1 = AA_rescaled \ b_rescaled;
+        f1 = C*f1;
+    else
+        f1 = AA \ b;
+    end
+    
+%     % Pre-kron solve
+%     num_terms = numel(pde.terms);
+%     num_dims = numel(pde.dimensions);
+%     for d=1:num_dims
+%         dim_mat_list{d} = zeros(size(pde.terms{1}.terms_1D{1}.mat));
+%         for t=1:num_terms           
+%             dim_mat_list{d} = dim_mat_list{d} + pde.terms{t}.terms_1D{d}.mat;
+%         end
+%     end
+%     for d=1:num_dims
+%         A = dim_mat_list{d};
+%         I = speye(numel(diag(A)));
+%         AA_d =  I - dt*A;
+%         dim_mat_inv_list{d} = inv(AA_d);
+%     end
+%     use_kronmultd = true;
+%     if use_kronmultd
+%         f1a = kron_multd(num_dims,dim_mat_inv_list,b);
+%     else
+%         f1a = kron_multd_full(num_dims,dim_mat_inv_list,b);
+%     end
+    
+%     % Iterative solve
+%     restart = [];
+%     tol=1e-6;
+%     maxit=1000;
+%     tic;
+%     [f10,flag,relres,iter,resvec] = gmres(AA,b,restart,tol,maxit);
+%     t_gmres = toc;
+%     figure(67)
+%     semilogy(resvec);
+%   
+%     % Direct solve - LU approach to reducing repeated work   
+%     [L,U,P] = lu(AA);
+%     n=size(AA,1);
+%     ip = P*reshape(1:n,n,1); % generate permutation vector
+%     err = norm(AA(ip,:)-L*U,1); % err should be small
+%     tol = 1e-9;
+%     isok = (err <= tol * norm(AA,1) ); % just a check
+%     disp(['isok for LU: ', num2str(isok)]);
+%     % to solve   a linear system    A * x = b, we have   P * A * x = P*b
+%     % then from LU factorization, we have (L * U) * x = (P*b),  so    x  = U \ (L \ ( P*b))
+%     f1_LU =   U \ (L \  (P*b));
+%     
+%     % Direct solve - QR reduced rank
+%     n=size(AA,1);
+%     [Q,R,P] = qr(AA); % A*P = Q*R
+%     % where R is upper triangular,   Q is orthogonal, Q’*Q is identity, P is column permutation
+%     err = norm( AA*P - Q*R,1);
+%     tol=1e-9;
+%     isok = (err <= tol * norm(AA,1));  % just a check
+%     disp(['isok for QR: ', num2str(isok)]);
+%     % to solve   A * x = b,   we have A * P * (P’*x) = b, (Q*R) * (P’*x) = b
+%     % y =   R\(Q’*b),   P*y = x
+%     tol=1e-9;
+%     is_illcond = abs(R(n,n)) <= tol * abs(R(1,1));
+%     if(is_illcond)
+%         disp('is_illcond == true');
+%         bhat = Q'*b;
+%         y = zeros(n,1);
+%         yhat =  R(1:(n-1), 1:(n-1)) \ bhat(1:(n-1));  % solve with smaller system
+%         y(1:(n-1)) = yhat(1:(n-1));
+%         y(n) = 0;  % force last component to be zero
+%         f1_QR = P * y;
+%     else
+%         disp('is_illcond == false');
+%         f1_QR = P * (R \ (Q'*b));
+%     end
+%       
+%     disp(['f1-f10:  ',num2str(norm(f1-f10)/norm(f1))]);
+%     disp(['f1-f1_LU:  ',num2str(norm(f1-f1_LU)/norm(f1))]);
+%     disp(['f1-f1_QR:  ',num2str(norm(f1-f1_QR)/norm(f1))]);
+%     disp(['direct runtime: ', num2str(t_direct)]);
+%     disp(['gmres runtime: ', num2str(t_gmres)]);
+%     
+%     f1 = f1_QR;
+    
 end
 end
 
@@ -268,13 +375,13 @@ if opts.time_independent_A % uses inv() so no good for poorly conditioned system
     if isempty(AA_inv)
         if applyLHS
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             ALHS_inv = inv(ALHS);
             AA = 2*I - dt*(ALHS_inv * A);
             b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
         else
             [~,A] = apply_A(pde,opts,A_data,f0,deg);
-            I = eye(numel(diag(A)));
+            I = speye(numel(diag(A)));
             AA = 2*I - dt*A;
             b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
         end
@@ -301,12 +408,12 @@ if opts.time_independent_A % uses inv() so no good for poorly conditioned system
 else % use the backslash operator for time_indepent_A = false
     if applyLHS
         [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = 2*I - dt*(ALHS \ A);
         b = 2*f0 + dt*(ALHS \ A)*f0 + dt*(ALHS \ (s0+s1+bc0+bc1));
     else
         [~,A] = apply_A(pde,opts,A_data,f0,deg);
-        I = eye(numel(diag(A)));
+        I = speye(numel(diag(A)));
         AA = 2*I - dt*A;
         b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
     end

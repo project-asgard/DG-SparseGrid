@@ -1,173 +1,85 @@
-generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
-generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 5, 'deg', 5 );
-generate_data( fokkerplanck2_complete, 'fokkerplanck2_complete', 'lev', 3, 'deg', 3 );
+% uniform level
+levels = [3, 3];
+generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
+levels = [4, 4];
+generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+levels = [2];
+generate_data( continuity1, levels, 'continuity1', 'deg', 2 );
+levels = [4, 4];
+generate_data( continuity2, levels, 'continuity2', 'deg', 3 );
+levels = [4, 4, 4];
+generate_data( continuity3, levels, 'continuity3', 'deg', 4 );
+levels = [2, 2, 2, 2, 2, 2];
+generate_data( continuity6, levels, 'continuity6', 'deg', 4 );
+levels = [5];
+generate_data( diffusion1, levels, 'diffusion1', 'deg', 6 );
+levels = [3, 3];
+generate_data( diffusion2, levels, 'diffusion2', 'deg', 5 );
+levels = [4];
+generate_data( fokkerplanck1_pitch_E(1), levels, 'fokkerplanck1_4p1a', 'deg', 3 );
+levels = [5];
+generate_data( fokkerplanck1_pitch_C, levels, 'fokkerplanck1_4p2', 'deg', 2 );
+levels = [2];
+generate_data( fokkerplanck1_4p3, levels, 'fokkerplanck1_4p3', 'deg', 5 );
+levels = [5];
+generate_data( fokkerplanck1_4p4, levels, 'fokkerplanck1_4p4', 'deg', 3 );
+levels = [3];
+generate_data( fokkerplanck1_4p5, levels, 'fokkerplanck1_4p5', 'deg', 5 );
 
-% coefficient testing
-coeff_dir = strcat("generated-inputs", "/", "coefficients", "/");
+% non-uniform level
+levels = [2, 3];
+generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
+levels = [4, 2];
+generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+levels = [4, 5];
+generate_data( continuity2, levels, 'continuity2', 'deg', 3 );
+levels = [2, 3, 2];
+generate_data( continuity3, levels, 'continuity3', 'deg', 4 );
+levels = [2, 3, 3, 3, 2, 4];
+generate_data( continuity6, levels, 'continuity6', 'deg', 4 );
+levels = [2, 3];
+generate_data( diffusion2, levels, 'diffusion2', 'deg', 5 );
+
+function generate_data(pde, lev_vec, pde_name, varargin)
+coeff_dir = "generated-inputs/coefficients/";
 root = get_root_folder();
-[stat,msg] = mkdir ([root,'/gold/',char(coeff_dir)]);
-
-% continuity1 term
-pde = check_pde(continuity1);
-pde.dimensions{1}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{1}.lev,'wavelet');
-time = 0;
-sd_term = pde.terms{1}.terms_1D{1};
-sd_term_out = coeff_matrix(1,pde.deg, time, pde.dimensions{1}, sd_term, pde.params);
-write_octave_like_output(strcat(coeff_dir,'continuity1_coefficients.dat'), full(sd_term_out.mat));
-
-% continuity2 terms
-pde = check_pde(continuity2);
-level = 4;
-degree = 3;
-for i=1:length(pde.dimensions)
-    pde.dimensions{i}.lev = level;
-    pde.deg = degree;
-    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
-end
-
-out_format = strcat(coeff_dir, 'continuity2_coefficients_l%i_d%i_%d_%d.dat');
-%doesn't matter, the term is time independent...
-time = 1.0;
-for t=1:length(pde.terms)
-    for d=1:length(pde.dimensions)
-        sd_term = pde.terms{t}.terms_1D{d};
-        sd_term_out = coeff_matrix(2,pde.deg,time,pde.dimensions{d},sd_term,pde.params);
-        coeff_mat = sd_term_out.mat;
-        write_octave_like_output(sprintf(out_format,level,degree,t,d), full(coeff_mat));
-    end
-end
-
-% continuity3 terms
-pde = check_pde(continuity3);
-level = 4;
-degree = 4;
-for i=1:length(pde.dimensions)
-    pde.dimensions{i}.lev = level;
-    pde.deg = degree;
-    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
-end
-
-out_format = strcat(coeff_dir, 'continuity3_coefficients_l%i_d%i_%d_%d.dat');
-out_format0 = strcat(coeff_dir, 'continuity3_coefficients_norotate_l%i_d%i_%d_%d.dat');
-%doesn't matter, the term is time independent...
-time = 1.0;
-for t=1:length(pde.terms)
-    for d=1:length(pde.dimensions)
-        sd_term = pde.terms{t}.terms_1D{d};
-        sd_term_out = coeff_matrix(3,pde.deg,time,pde.dimensions{d},sd_term,pde.params);
-        mat = sd_term_out.mat;
-        mat0 = sd_term_out.mat_unrotated;
-        write_octave_like_output(sprintf(out_format,level,degree,t,d), full(mat));
-        write_octave_like_output(sprintf(out_format0,level,degree,t,d), full(mat0));
-    end
-end
-
-% continuity6 terms
-pde = check_pde(continuity6);
-level = 2;
-degree = 4;
-for i=1:length(pde.dimensions)
-    pde.dimensions{i}.lev = level;
-    pde.deg = degree;
-    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
-end
-
-out_format = strcat(coeff_dir, 'continuity6_coefficients_l%i_d%i_%d_%d.dat');
-%doesn't matter, the term is time independent...
-time = 1.0;
-for t=1:length(pde.terms)
-    for d=1:length(pde.dimensions)
-        sd_term = pde.terms{t}.terms_1D{d};
-        sd_term_out = coeff_matrix(6,pde.deg,time,pde.dimensions{d},sd_term,pde.params);
-        mat = sd_term_out.mat;
-        write_octave_like_output(sprintf(out_format,level,degree,t,d), full(mat));
-    end
-end
-
-% fokkerplanck1_4p2 terms
-pde = check_pde(fokkerplanck1_4p2);
-level = 3;
-degree = 4;
-for i=1:length(pde.dimensions)
-    pde.dimensions{i}.lev = level;
-    pde.deg = degree;
-    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
-end
-
-out_format = strcat(coeff_dir, 'fokkerplanck1_4p2_coefficients_l%i_d%i_%d_%d.dat');
-out_format0 = strcat(coeff_dir, 'fokkerplanck1_4p2_coefficients_norotate_l%i_d%i_%d_%d.dat');
-%doesn't matter, the term is time independent...
-time = 1.0;
-for t=1:length(pde.terms)
-    for d=1:length(pde.dimensions)
-        sd_term = pde.terms{t}.terms_1D{d};
-        sd_term_out = coeff_matrix(numel(pde.dimensions),pde.deg,time,pde.dimensions{d},sd_term,pde.params);
-        mat = sd_term_out.mat;
-        mat0 = sd_term_out.mat_unrotated;
-        write_octave_like_output(sprintf(out_format,level,degree,t,d), full(mat));
-        write_octave_like_output(sprintf(out_format0,level,degree,t,d), full(mat0));
-    end
-end
-
-% fokkerplanck2_complete terms
-pde = check_pde(fokkerplanck2_complete);
-level = 3;
-degree = 4;
-for i=1:length(pde.dimensions)
-    pde.dimensions{i}.lev = level;
-    pde.deg = degree;
-    pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
-end
-
-out_format = strcat(coeff_dir, 'fokkerplanck2_complete_coefficients_l%i_d%i_%d_%d.dat');
-out_format0 = strcat(coeff_dir, 'fokkerplanck2_complete_coefficients_norotate_l%i_d%i_%d_%d.dat');
-%doesn't matter, the term is time independent...
-time = 1.0;
-for t=1:length(pde.terms)
-    for d=1:length(pde.dimensions)
-        sd_term = pde.terms{t}.terms_1D{d};
-        sd_term_out = coeff_matrix(numel(pde.dimensions),pde.deg,time,pde.dimensions{d},sd_term,pde.params);
-        mat = sd_term_out.mat;
-        mat0 = sd_term_out.mat_unrotated;
-        write_octave_like_output(sprintf(out_format,level,degree,t,d), full(mat));
-        write_octave_like_output(sprintf(out_format0,level,degree,t,d), full(mat0));
-    end
-end
-
-function generate_data(pde, output_prefix, varargin)
+[~,~] = mkdir ([root,'/gold/',char(coeff_dir)]);
 
 runtime_defaults
 
 opts.use_oldcoeffmat = 0;
-opts.use_oldhash = 1;
-
+opts.use_oldhash = 0;
+opts.max_lev_coeffs = 1;
 pde = check_pde(pde, opts);
 
-CFL = 0.01;
-dt = pde.set_dt(pde,CFL);
-
-% coefficient testing
-coeff_dir = strcat("generated-inputs/coefficients/", output_prefix, "/");
-root = get_root_folder();
-[stat,msg] = mkdir ([root,'/gold/',char(coeff_dir)]);
-
-% diffusion1 terms
 for i=1:length(pde.dimensions)
-  pde.dimensions{i}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{i}.lev,'wavelet');
+  pde.dimensions{i}.lev = lev_vec(i);
 end
 
-out_format = strcat(coeff_dir, output_prefix, '_coefficients_l%i_d%i_%d_%d.dat');
-%doesn't matter, the term is time independent...
+[~, transform_blocks] = OperatorTwoScale_wavelet2(opts.deg,...
+                                                  opts.max_lev);
+
+out_format = strcat(coeff_dir, pde_name, '_coefficients_l%sd%i_%d_%d.dat');
+out_format_unrot = strcat(coeff_dir, pde_name, '_coefficients_norotate_l%sd%i_%d_%d.dat');
+
+lev_string = "";
+for d=1:length(pde.dimensions)
+    lev_string = lev_string + int2str(lev_vec(d)) + "_";
+end
+
+degree = opts.deg;
 time = 1.0;
-level = pde.dimensions{1}.lev;
-degree = pde.deg;
 for t=1:length(pde.terms)
     for d=1:length(pde.dimensions)
         sd_term = pde.terms{t}.terms_1D{d};
         sd_term_out = ...
-        coeff_matrix(numel(pde.dimensions),pde.deg,time,pde.dimensions{d},sd_term,pde.params);
+        coeff_matrix(numel(pde.dimensions),opts.deg,time,pde.dimensions{d},sd_term,pde.params, ...
+                     transform_blocks, opts.max_lev);
         coeff_mat = sd_term_out.mat;
-        write_octave_like_output(sprintf(out_format,level,degree,t,d), full(coeff_mat));
+        unrotated = sd_term_out.mat_unrotated;
+        write_octave_like_output(sprintf(out_format,lev_string,degree,t,d), full(coeff_mat));
+        write_octave_like_output(sprintf(out_format_unrot,lev_string,degree,t,d), full(unrotated));
     end
 end
+
 end

@@ -1,10 +1,7 @@
-function [f] = forward_wavelet_transform(deg,lev,Lmin,Lmax,foo,params,t)
+function [f] = forward_wavelet_transform(deg,lev,Lmin,Lmax,foo,params,blocks,t)
 
 %% Decompose a 1D function into the multiwavelet basis 
 
-% Get the Forward Multi-Wavelet Transform matrix
-
-FMWT = OperatorTwoScale(deg,lev);
 
 % Get the Legendre-Gauss nodes (quad_x) and weights (quad_w) on the domain
 % [-1,+1] for performing quadrature.
@@ -53,7 +50,9 @@ f = f * h / 2;
 
 % Transfer to multi-DG bases
 
-f = mtimes( FMWT, f );
+%f = mtimes( FMWT, f );
+left_notrans = 'LN';
+f = apply_FMWT_blocks(lev, blocks, f, left_notrans);
 
 %%
 % After the transformation to wavelet space there may be very tiny coefficient values.

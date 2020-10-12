@@ -20,7 +20,7 @@ for d=1:num_dimensions
         pos = hash_table.elements.pos_p1(idx,d)-1;
     end
     
-    assert(lev <= pde.max_lev);
+    assert(lev <= opts.max_lev);
     assert(lev >= 0);
     assert(pos >= 0);
     

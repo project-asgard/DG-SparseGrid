@@ -1,5 +1,4 @@
 % pde testing
-
 data_dir = strcat("generated-inputs", "/", "pde", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
@@ -10,7 +9,7 @@ run_pde(diffusion1, out_format, 4.2, 0, 'lev', 3, 'deg', 2, 'CFL', 1);
 out_format = strcat( data_dir, "advection_1_");
 run_pde(advection1, out_format, 4.2, 0, 'lev', 3, 'deg', 2, 'CFL', 1);
 
-out_format = strcat( data_dir, "fokkerplanck2_complete_" )
+out_format = strcat( data_dir, "fokkerplanck2_complete_" );
 domain = [ 0.1, 0.2, 0.3, 0.4, 0.5 ];
 t = 0;
 %Captain

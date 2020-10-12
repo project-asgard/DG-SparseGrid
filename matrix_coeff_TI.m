@@ -1,4 +1,4 @@
-function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+function [vMassV,GradV,GradX,DeltaX,FluxX,FluxV]=matrix_coeff_TI(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_blocks)
 %=============================================================
 % Generate time-independent coefficient matrices
 % Vlasolv Solver:
@@ -587,19 +587,36 @@ end
 % Simple way to convert??
 %***************************************
 % Transfer to multi-DG bases
-vMassV = FMWT_COMP_v*vMassV*FMWT_COMP_v';
-GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
-GradV = FMWT_COMP_v*GradV*FMWT_COMP_v';
+left_notrans = 'LN';
+right_trans = 'RT';
+%vMassV = FMWT_COMP_v*vMassV*FMWT_COMP_v';
+vMassV = apply_FMWT_blocks(Lev_v, FMWT_blocks, vMassV, left_notrans);
+vMassV = apply_FMWT_blocks(Lev_v, FMWT_blocks, vMassV, right_trans);
 
-FluxV = FMWT_COMP_v*FluxV*FMWT_COMP_v';
-FluxX = FMWT_COMP_x*FluxX*FMWT_COMP_x';
+%GradX = FMWT_COMP_x*GradX*FMWT_COMP_x';
+GradX = apply_FMWT_blocks(Lev_x, FMWT_blocks, GradX, left_notrans);
+GradX = apply_FMWT_blocks(Lev_x, FMWT_blocks, GradX, right_trans);
 
-use_blkdiag = 0;
-if (use_blkdiag),
-  DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
-                DeltaX*...
-           blkdiag(FMWT_COMP_x',FMWT_COMP_x');
-else
+%GradV = FMWT_COMP_v*GradV*FMWT_COMP_v';
+GradV = apply_FMWT_blocks(Lev_v, FMWT_blocks, GradV, left_notrans);
+GradV = apply_FMWT_blocks(Lev_v, FMWT_blocks, GradV, right_trans);
+
+%FluxV = FMWT_COMP_v*FluxV*FMWT_COMP_v';
+FluxV = apply_FMWT_blocks(Lev_v, FMWT_blocks, FluxV, left_notrans);
+FluxV = apply_FMWT_blocks(Lev_v, FMWT_blocks, FluxV, right_trans);
+
+%FluxX = FMWT_COMP_x*FluxX*FMWT_COMP_x';
+FluxX = apply_FMWT_blocks(Lev_x, FMWT_blocks, FluxX, left_notrans);
+FluxX = apply_FMWT_blocks(Lev_x, FMWT_blocks, FluxX, right_trans);
+
+
+% disabling this option - no more explicitly formed FMWT matrices
+%use_blkdiag = 0;
+%if (use_blkdiag),
+%  DeltaX = blkdiag(FMWT_COMP_x,FMWT_COMP_x)*...
+%                DeltaX*...
+%           blkdiag(FMWT_COMP_x',FMWT_COMP_x');
+%else
  % ----------------------------------------
  % note blkdiag(A,B) creates a block diagonal matrix
  % [A, 0;
@@ -626,21 +643,24 @@ else
  % is  (2*dof_1D_x)  by (2*dof_1D_x)
  % ---------------------------------
  m = dof_1D_x;
- F = FMWT_COMP_x;
+ %F = FMWT_COMP_x;
 
  % --------------------------------
  % step 1: multiply by blkdiag(F,F) on left
  % --------------------------------
- 
- DeltaX(1:m, 1:(2*m)) = F * DeltaX(1:m,1:(2*m));
- DeltaX((m+1):(2*m), 1:(2*m)) = F * DeltaX( (m+1):(2*m), 1:(2*m) );
-
+ %DeltaX(1:m, 1:(2*m)) = F * DeltaX(1:m,1:(2*m));
+ DeltaX(1:m, 1:(2*m)) = apply_FMWT_blocks(Lev_x, FMWT_blocks, ...
+                        DeltaX(1:m, 1:(2*m)), left_notrans);
+ %DeltaX((m+1):(2*m), 1:(2*m)) = F * DeltaX( (m+1):(2*m), 1:(2*m) );
+ DeltaX((m+1):(2*m), 1:(2*m)) = apply_FMWT_blocks(Lev_x, FMWT_blocks, ...
+                        DeltaX((m+1):(2*m), 1:(2*m)), left_notrans);
  % -----------------------------------
  % multiply by blkdiag(F',F') on right
  % -----------------------------------
-
- DeltaX(1:(2*m), 1:m) = DeltaX(1:(2*m),1:m) * F';
- DeltaX(1:(2*m), (m+1):(2*m)) = DeltaX(1:(2*m),(m+1):(2*m)) * F';
+ %DeltaX(1:(2*m), 1:m) = DeltaX(1:(2*m),1:m) * F';
+  DeltaX(1:(2*m), 1:m) = apply_FMWT_blocks(Lev_x, FMWT_blocks, ...
+                        DeltaX(1:(2*m), 1:m), right_trans);
+ %DeltaX(1:(2*m), (m+1):(2*m)) = DeltaX(1:(2*m),(m+1):(2*m)) * F';
+  DeltaX(1:(2*m), (m+1):(2*m)) = apply_FMWT_blocks(Lev_x, FMWT_blocks, ...
+                        DeltaX(1:(2*m), (m+1):(2*m)), right_trans);
 end;
-
-% vMax

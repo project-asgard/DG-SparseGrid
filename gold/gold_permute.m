@@ -64,12 +64,13 @@ write_octave_like_output(filename, result);
 write_octave_like_output(count_filename, count);
 
 
-% perm_leq_d / perm_eq_d
+% perm_leq_d / perm_eq_d / perm_max (multi)
 
 out_format = strcat(data_dir, "perm_leq_d_%d_%d.dat");
 count_out_format = strcat(data_dir, "perm_leq_d_%d_%d_count.dat");
 e_out_format = strcat(data_dir, "perm_eq_d_%d_%d.dat");
 e_count_out_format = strcat(data_dir, "perm_eq_d_%d_%d_count.dat");
+m_out_format = strcat(data_dir, "perm_max_d_%d_%d.dat");
 
 levels{1} = [3, 3];
 levels{2} = [1, 4];
@@ -85,6 +86,7 @@ for i=1:size(levels, 2)
    
    e_count = perm_eq_d_count(size(levels{i}, 2), levels{i}, max(levels{i}));
    e_result = perm_eq_d(size(levels{i}, 2),levels{i}, max(levels{i}),sort);
+   m_result = perm_max(size(levels{i}, 2), levels{i}, sort);
    
    filename = sprintf(out_format, size(levels{i}, 2), sort);
    count_filename = sprintf(count_out_format, size(levels{i}, 2), sort);   
@@ -95,6 +97,9 @@ for i=1:size(levels, 2)
    count_filename = sprintf(e_count_out_format, size(levels{i}, 2), sort);   
    write_octave_like_output(filename,e_result);
    write_octave_like_output(count_filename,e_count);
+   
+   filename = sprintf(m_out_format, size(levels{i}, 2), sort);
+   write_octave_like_output(filename,m_result);
 end
 
 

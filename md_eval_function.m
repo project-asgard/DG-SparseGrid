@@ -1,4 +1,4 @@
-function fval = md_eval_function(opts, deg, dims, params, md_funcs, hash_table, t)
+function fval = md_eval_function(opts, deg, dims, params, md_funcs, hash_table, blocks, t)
 
 % Returns a multi-D wavelet space function defined by "md_funcs"
 
@@ -13,7 +13,7 @@ for s=1:num_funcs
     for d=1:num_dimensions
         fList{d} = forward_wavelet_transform(deg,dims{d}.lev, ...
             dims{d}.domainMin,dims{d}.domainMax, ...
-            md_funcs{s}{d},params,t);
+            md_funcs{s}{d},params, blocks, t);
     end
     
     time_multiplier = md_funcs{s}{num_dimensions+1}(t);

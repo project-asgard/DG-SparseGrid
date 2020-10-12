@@ -83,9 +83,9 @@ end
 % M * F' * f_wavelet -> f_realspace
 
 for d=1:num_dims
-    
-    MF_T{d} = MM * dim.FMWT';
-    
+    right_trans = 'RT';
+    %MF_T{d} = MM * dim.FMWT';
+    MF_T{d} = apply_FMWT_blocks(pde.dimensions{d}.lev, FMWT_blocks, MM, right_trans);
 end
 
 %%

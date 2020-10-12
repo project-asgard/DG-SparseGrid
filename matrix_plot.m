@@ -1,4 +1,4 @@
-function [Meval_v,v_node,Meval_x,x_node]=matrix_plot(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_COMP_x,FMWT_COMP_v)
+function [Meval_v,v_node,Meval_x,x_node]=matrix_plot(Lev_x,Lev_v,k,Lmin,Lmax,Vmin,Vmax,FMWT_blocks)
 %=========================================
 % Generate the evaluation matrix and plotting points
 %=========================================
@@ -49,10 +49,8 @@ end
 % Simple way to convert??
 %***************************************
 
-Meval_v = Meval_v*FMWT_COMP_v';
-Meval_x = Meval_x*FMWT_COMP_x';
-
-    
-
+right_trans = 'RT';
+Meval_v = apply_FMWT_blocks(Lev_v, FMWT_blocks, Meval_v, right_trans);
+Meval_x = apply_FMWT_blocks(Lev_x, FMWT_blocks, Meval_x, right_trans);
 
 

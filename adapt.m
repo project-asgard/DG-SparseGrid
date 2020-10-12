@@ -1,9 +1,9 @@
-function [pde,fval,hash_table,A_data,Meval,nodes,coord,fval_previous] ...
-    = adapt(pde,opts,fval,hash_table,nodes0,fval_realspace0,coarsen_,refine_,fval_previous)
+function [pde,fval,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,coord_nodups,fval_previous,fval_realspace_refined] ...
+    = adapt(pde,opts,fval,hash_table,Meval0,nodes0,nodes_nodups0,nodes_count0,fval_realspace0,coarsen_,refine_,fval_previous_)
 
 num_elements    = numel(hash_table.elements_idx);
 num_dims  = numel(pde.dimensions);
-deg             = pde.deg;
+deg             = opts.deg;
 
 % coarsen_ = 0;
 % refine_ = 0;
@@ -31,8 +31,10 @@ if exist('refine_','var') && ~isempty(refine_)
 end
 
 refine_previous = 0;
-if nargin >= 9
+fval_previous=0;
+if nargin >= 12
     refine_previous = 1;
+    fval_previous = fval_previous_;
     assert(numel(fval)==numel(fval_previous));
 end
 
@@ -49,10 +51,10 @@ assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
 pde0  = pde;
 fval0 = fval;
-for d=1:num_dims
-    [Meval0{d},nodes0{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
-end
-fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
+% for d=1:num_dims
+%     [Meval0{d},nodes0{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+% end
+% fval_realspace0 = wavelet_to_realspace(pde0,opts,Meval0,fval0,hash_table);
 
 %%
 % Plot the grid (1 and 2D only)
@@ -62,7 +64,7 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,1);
     plot_adapt_triangle(pde,opts,hash_table,7);
-    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,...
+    plot_coeffs(num_dims,opts.max_lev,hash_table,deg,...
         fval,num_rows,num_cols,10,refine_threshold,coarsen_threshold);
 end
 
@@ -89,9 +91,9 @@ if coarsen
         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
         
-        assert(max(lev_vec)<=pde.max_lev);
+        assert(max(lev_vec)<=opts.max_lev);
         
-        [lev_vec_, pos_vec_] = md_idx_to_lev_pos (num_dims, pde.max_lev, idx);
+        [lev_vec_, pos_vec_] = md_idx_to_lev_pos (num_dims, opts.max_lev, idx);
         assert(norm(lev_vec-lev_vec_)==0);
         assert(norm(pos_vec-pos_vec_)==0);
         
@@ -99,12 +101,13 @@ if coarsen
         gidx2 = n*element_DOF;
         
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
+        element_max = max(abs(fval(gidx1:gidx2)));
         
         %%
         % check if the element needs refining, if it is at least level 1,
         % and is labeled as a leaf
         
-        if element_sum <= coarsen_threshold ...
+        if element_max <= coarsen_threshold ...
                  && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
                 %&& hash_table.elements.type(idx) == 2
             
@@ -112,7 +115,7 @@ if coarsen
             % get element children and check if any are live elements
             
             %[num_live_children, has_complete_children] = ...
-            %    number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+            %    number_of_live_children (hash_table, lev_vec, pos_vec, opts.max_lev, refinement_method);
             
             %%
             % only coarsen (remove) this element if it has no (live)
@@ -131,7 +134,7 @@ if coarsen
                 %%
                 % determine level above leaf nodes and label them
                 
-%                 parent_elements_idx = get_parent_elements_idx(hash_table, idx, pde.max_lev, refinement_method );
+%                 parent_elements_idx = get_parent_elements_idx(hash_table, idx, opts.max_lev, refinement_method );
 %                 
 %                 for ii=1:numel(parent_elements_idx)
 %                     
@@ -204,7 +207,7 @@ if coarsen
 %         lev_vec = hash_table.elements.lev_p1(idx,:)-1;
 %         pos_vec = hash_table.elements.pos_p1(idx,:)-1;
 %         [num_live_children, has_complete_children] = ...
-%             number_of_live_children (hash_table, lev_vec, pos_vec, pde.max_lev, refinement_method);
+%             number_of_live_children (hash_table, lev_vec, pos_vec, opts.max_lev, refinement_method);
 %         if ~has_complete_children
 %             hash_table.elements.type(idx) = 2;
 %         end
@@ -224,7 +227,7 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     plot_adapt(pde,opts,hash_table,2);
     plot_adapt_triangle(pde,opts,hash_table,8);
-    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+    plot_coeffs(num_dims,opts.max_lev,hash_table,deg,fval,...
         num_rows,num_cols,11,refine_threshold,coarsen_threshold);
 end
 
@@ -251,14 +254,15 @@ if refine
         gidx2 = n*element_DOF;
         
         element_sum = sqrt(sum(fval(gidx1:gidx2).^2));
+        element_max = max(abs(fval(gidx1:gidx2)));
         
         %%
         % Check for refinement
         
-        if element_sum >= refine_threshold %&& hash_table.elements.type(idx) == 2
+        if element_max >= refine_threshold %&& hash_table.elements.type(idx) == 2
             
             if debug; disp([...
-                    '    refine ? yes, fval = ', num2str(element_sum,'%1.1e'), ...
+                    '    refine ? yes, fval = ', num2str(element_max,'%1.1e'), ...
                     ', type = ', num2str(hash_table.elements.type(idx)), ...
                     ', lev_vec = ', num2str(hash_table.elements.lev_p1(idx,:)-1) ...
                     ', pos_vec = ', num2str(hash_table.elements.pos_p1(idx,:)-1) ...
@@ -266,13 +270,13 @@ if refine
                     ]); end
             
             [child_elements_idx, num_children] = ...
-                get_child_elements_idx(num_dims, pde.max_lev, idx, refinement_method);
+                get_child_elements_idx(num_dims, opts.max_lev, idx, refinement_method);
             
             if num_children > 0
                 
                 if debug                 
                     for nn=1:num_children
-                        [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, child_elements_idx(nn));
+                        [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, opts.max_lev, child_elements_idx(nn));
                         disp(['        adding element with lev : ',num2str(lev_vec), ...
                             ', idx = ', num2str(child_elements_idx(nn))]);
                     end                   
@@ -286,7 +290,7 @@ if refine
             
         else
             
-            if debug; disp(['    refine ?  no, fval = ', num2str(element_sum,'%1.1e'), ...
+            if debug; disp(['    refine ?  no, fval = ', num2str(element_max,'%1.1e'), ...
                     ' type = ', num2str(hash_table.elements.type(idx))]); end
             
         end
@@ -325,7 +329,7 @@ if refine
                 fval_previous(i1:i2) = new_element_value; % Extend coefficient list of previous time step also
             end
             
-            [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, pde.max_lev, idx);
+            [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, opts.max_lev, idx);
             
             hash_table.elements.lev_p1(idx,:) = lev_vec+1; % NOTE : have to start lev  index from 1 for sparse storage
             hash_table.elements.pos_p1(idx,:) = pos_vec+1; % NOTE : have to start cell index from 1 for sparse storage
@@ -337,7 +341,7 @@ if refine
 %         % Set element to type to leaf
 %         
 %         [num_live_children, has_complete_children] = ...
-%             number_of_live_children_idx (hash_table, idx, pde.max_lev, refinement_method);
+%             number_of_live_children_idx (hash_table, idx, opts.max_lev, refinement_method);
 % 
 %         if has_complete_children
 %             hash_table.elements.type(idx) = 1;           
@@ -377,7 +381,7 @@ plot_grid = 1;
 if plot_grid && ~opts.quiet
     coordinates = plot_adapt(pde,opts,hash_table,3);
     plot_adapt_triangle(pde,opts,hash_table,9);
-    plot_coeffs(num_dims,pde.max_lev,hash_table,deg,fval,...
+    plot_coeffs(num_dims,opts.max_lev,hash_table,deg,fval,...
         num_rows,num_cols,12,refine_threshold,coarsen_threshold);
 end
 
@@ -386,28 +390,35 @@ elements_idx0 = hash_table.elements_idx;
 %%
 % Update all the setup outputs which need updating on the new element list
 
-%%
-% Update the FMWT transform matrices
 
+%% Update dims and coeffs
+% Update the time-indepedent coeff mats to the new size
+lev_vec = zeros(num_dims, 1);
 for d=1:num_dims
-    pde.dimensions{d}.lev = max(hash_table.elements.lev_p1(:,d)-1);
-    pde.dimensions{d}.FMWT = OperatorTwoScale(deg,pde.dimensions{d}.lev);
+    lev_vec(d) = max(hash_table.elements.lev_p1(:,d)-1);
 end
 
-%%
-% Re check the PDE
+if opts.max_lev_coeffs
+    pde = get_coeff_mats_rechain(pde, deg, lev_vec);
+end
 
+for d=1:num_dims
+    pde.dimensions{d}.lev = lev_vec(d);
+end
+
+% If we don't want to store the max lev coeffs, regen them
+if ~opts.max_lev_coeffs
+    t = 0;
+    TD = 0;
+    pde = get_coeff_mats(pde,opts,t,TD);
+end
+
+%% Re check the PDE
+% FIXME is this necessary?
 pde = check_pde(pde,opts);
 
-%%
-% Update the coeff mats to the new size
 
-t = 0;
-TD = 0;
-pde = get_coeff_mats(pde,t,TD);
-
-%%
-% Update A_data
+%% Update A_data
 
 A_data = global_matrix(pde,opts,hash_table);
 
@@ -415,13 +426,24 @@ A_data = global_matrix(pde,opts,hash_table);
 % Update the conversion to realspace matrices
 
 for d=1:num_dims
-    [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+    if strcmp(opts.output_grid,'fixed')
+        num_fixed_grid = 51;
+        nodes_nodups{d} = ...
+            linspace(pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,num_fixed_grid);
+        [Meval{d},nodes{d},nodes_count{d}] = ...
+            matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
+    else
+        [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+        nodes_nodups{d} = nodes{d};
+        nodes_count{d} = nodes{d}.*0+1;
+    end
 end
 
 %%
 % Update the coordinates for realspace evaluation
 
 coord = get_realspace_coords(pde,nodes);
+coord_nodups = get_realspace_coords(pde,nodes_nodups);
 
 %%
 % Get the new real space solution and check against unrefined solution
@@ -447,16 +469,22 @@ if ~opts.quiet
         
         subplot(4,3,4)
         f2d = singleD_to_multiD(num_dims,fval_realspace0,nodes0);
-        x = nodes0{1};
-        y = nodes0{2};
+        if strcmp(opts.output_grid,'fixed')
+            f2d = remove_duplicates(num_dims,f2d,nodes_nodups,nodes_count);
+        end
+        x = nodes_nodups0{1};
+        y = nodes_nodups0{2};
         if norm(f2d-f2d(1,1))>0 % catch for zero
             contourf(x,y,f2d,'LineColor','none');
         end
         
         subplot(4,3,5)
         f2d = singleD_to_multiD(num_dims,fval_realspace_refined,nodes);
-        x = nodes{1};
-        y = nodes{2};
+        if strcmp(opts.output_grid,'fixed')
+            f2d = remove_duplicates(num_dims,f2d,nodes_nodups,nodes_count);
+        end
+        x = nodes_nodups{1};
+        y = nodes_nodups{2};
         if norm(f2d-f2d(1,1))>0 % catch for zero
             contourf(x,y,f2d,'LineColor','none');
         end
@@ -470,7 +498,7 @@ if ~opts.quiet
 %         for i=1:deg^num_dims:num_elements
 %             view = fval((i-1).*element_DOF+1:i*element_DOF);
 %             fval_element(i) = sqrt(sum(view.^2));
-%             lev_vec = md_idx_to_lev_pos(num_dims,pde.max_lev,hash_table.elements_idx(i));
+%             lev_vec = md_idx_to_lev_pos(num_dims,opts.max_lev,hash_table.elements_idx(i));
 %             depth(i) = sum(lev_vec);
 %         end
 %         ii = find(fval_element);

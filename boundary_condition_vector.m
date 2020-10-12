@@ -14,7 +14,7 @@ terms = pde.terms;
 %%
 % dim shortcuts
 
-deg = pde.deg;
+deg = opts.deg;
 
 if opts.use_oldhash
     num_elements = numel(hash_table);
@@ -38,9 +38,10 @@ for tt = 1:num_terms % Construct a BC object for each term
         
         xMin = dim.domainMin;
         xMax = dim.domainMax;
-        FMWT = dim.FMWT;
+        %          FMWT = dim.FMWT;
         
         lev = dim.lev;
+        dof = deg * 2^lev;
         
         for p=1:numel(term_1D.pterms)
             
@@ -77,9 +78,9 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:num_dims
-                        bcL{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                        bcL{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
-                            BCL_fList{d2},pde.params,time);
+                            BCL_fList{d2},pde.params,pde.transform_blocks,time);
                     end
                     
                     %%
@@ -87,16 +88,18 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Func*v|_xMin and Func*v|_xMax
                     
                     bcL_tmp = compute_boundary_condition(pde,this_g,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
-                    bcL_tmp = FMWT * bcL_tmp;
+                    %bcL_tmp = FMWT * bcL_tmp;
+                    trans_side = 'LN';
+                    bcL_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcL_tmp, trans_side);
                     
                     %%
                     % Apply mats from preceeding pterms when chaining (p>1)
                     % FIXME : test this for p>2
                     
                     if p > 1
-                        preceeding_mat = eye(size(term_1D.pterms{1}.mat));
+                        preceeding_mat = eye(dof);
                         for nn=1:p-1
-                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof, 1:dof);
                         end
                         bcL_tmp = preceeding_mat * bcL_tmp;
                     end
@@ -115,9 +118,9 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:num_dims
-                        bcR{d1}{d2} = forward_wavelet_transform(pde.deg,pde.dimensions{d2}.lev,...
+                        bcR{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
-                            BCR_fList{d2},pde.params,time);
+                            BCR_fList{d2},pde.params,pde.transform_blocks,time);
                     end
                     
                     %%
@@ -125,15 +128,16 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Func*v|_xMin and Func*v|_xMax
                     
                     bcR_tmp = compute_boundary_condition(pde,this_g,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
-                    bcR_tmp = FMWT * bcR_tmp;
-                    
+                    %bcR_tmp = FMWT * bcR_tmp;
+                     trans_side = 'LN';
+                    bcR_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcR_tmp, trans_side);
                     %%
                     % Apply mats from preceeding terms when chaining (p>1)
                     
                     if p > 1
-                        preceeding_mat = eye(size(term_1D.pterms{1}.mat));
+                        preceeding_mat = eye(dof);
                         for nn=1:p-1
-                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                            preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof, 1:dof);
                         end
                         bcR_tmp = preceeding_mat * bcR_tmp;
                     end
@@ -144,8 +148,8 @@ for tt = 1:num_terms % Construct a BC object for each term
                 fListL = bcL{d1};
                 fListR = bcR{d1};
                 
-                bcVec = bcVec + combine_dimensions_D(pde.deg,fListL,timeFacL,hash_table,opts.use_oldhash);
-                bcVec = bcVec + combine_dimensions_D(pde.deg,fListR,timeFacR,hash_table,opts.use_oldhash);
+                bcVec = bcVec + combine_dimensions_D(opts.deg,fListL,timeFacL,hash_table,opts.use_oldhash);
+                bcVec = bcVec + combine_dimensions_D(opts.deg,fListR,timeFacR,hash_table,opts.use_oldhash);
                 
             end
             

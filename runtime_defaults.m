@@ -5,8 +5,6 @@ input_parser.KeepUnmatched = true;
 opts = OPTS();
 
 default_start_time = 0;
-default_lev = 3;
-default_deg = 2;
 default_num_steps = 5;
 default_quiet = false;
 default_grid_type = opts.grid_type;
@@ -18,22 +16,23 @@ default_adapt = opts.adapt;
 default_use_oldhash = opts.use_oldhash;
 default_use_oldcoeffmat = opts.use_oldcoeffmat;
 default_timestep_method = opts.timestep_method;
-valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE'};
-check_timestep_method = @(x) any(validatestring(x,valid_timestep_methods));
+valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE','time_independent'};
+check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
 default_time_independent_A = opts.time_independent_A;
 default_time_independent_build_A = opts.time_independent_build_A;
 default_many_solution_capable = opts.many_solution_capable;
 default_max_lev = opts.max_lev;
-default_adapt_threshold = opts.adapt_threshold;
+default_max_lev_coeffs = opts.max_lev_coeffs;
 default_refinement_method = opts.refinement_method;
 default_adapt_initial_condition = opts.adapt_initial_condition;
-default_uniform_output = opts.uniform_output;
+valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points'};
+check_output_grid = @(x) any(strcmp(x,valid_output_grids));
 default_save_output = opts.save_output;
 default_output_filename_id = opts.output_filename_id;
 
 addRequired(input_parser, 'pde', @isstruct);
-addParameter(input_parser,'lev',default_lev, @isnumeric);
-addParameter(input_parser,'deg',default_deg, @isnumeric);
+addParameter(input_parser,'lev',opts.lev, @isnumeric);
+addParameter(input_parser,'deg',opts.deg, @isnumeric);
 addOptional(input_parser,'start_time',default_start_time, @isnumeric);
 addOptional(input_parser,'num_steps',default_num_steps, @isnumeric);
 addOptional(input_parser,'quiet',default_quiet,@islogical);
@@ -48,15 +47,19 @@ addOptional(input_parser,'time_independent_A',default_time_independent_A,@islogi
 addOptional(input_parser,'time_independent_build_A',default_time_independent_build_A,@islogical);
 addOptional(input_parser,'many_solution_capable',default_many_solution_capable,@islogical);
 addOptional(input_parser,'max_lev',default_max_lev, @isnumeric);
-addOptional(input_parser,'adapt_threshold',default_adapt_threshold, @isnumeric);
+addOptional(input_parser,'max_lev_coeffs',default_max_lev_coeffs, @islogical);
+addOptional(input_parser,'adapt_threshold',opts.adapt_threshold, @isnumeric);
 addOptional(input_parser,'refinement_method',default_refinement_method, @isnumeric);
 addOptional(input_parser,'adapt_initial_condition',default_adapt_initial_condition,@islogical);
-addOptional(input_parser,'uniform_output',default_uniform_output,@islogical);
-addOptional(input_parser,'add_end_points',opts.add_end_points,@islogical);
 addOptional(input_parser,'save_output',default_save_output,@islogical);
-addOptional(input_parser,'output_filename_id',default_save_output,@ischar);
+addOptional(input_parser,'output_filename_id',default_output_filename_id,@ischar);
 addOptional(input_parser,'plot_freq',opts.plot_freq, @isnumeric);
 addOptional(input_parser,'save_freq',opts.save_freq, @isnumeric);
+addOptional(input_parser,'output_grid',opts.output_grid,check_output_grid);
+addOptional(input_parser,'use_connectivity',opts.use_connectivity,@islogical);
+addOptional(input_parser,'use_sparse_A',opts.use_sparse_A,@islogical);
+addOptional(input_parser,'case',opts.case_,@isnumeric);
+
 
 if numel(varargin) == 0 && ~exist('pde','var')
     
@@ -94,6 +97,7 @@ if numel(input_parser.Results.lev) == num_dimensions
     % Specify lev_vec at runtime to have dimension dependent lev
     for d=1:num_dimensions
         pde.dimensions{d}.lev = input_parser.Results.lev(d);
+        opts.lev_vec(d) = input_parser.Results.lev(d);
     end
 else
     %%
@@ -101,10 +105,9 @@ else
     assert(numel(input_parser.Results.lev)==1);
     for d=1:num_dimensions
         pde.dimensions{d}.lev = input_parser.Results.lev;
+        opts.lev_vec(d) = input_parser.Results.lev;
     end
 end
-
-pde.deg = input_parser.Results.deg;
 
 % CFL priority
 % low        : default_CFL
@@ -125,23 +128,19 @@ end
 
 opts.CFL = default_CFL;
 
-if isfield(pde,'CFL')
-    opts.CFL = pde.CFL;
-end
+% if isfield(pde,'CFL')
+%     opts.CFL = pde.CFL;
+% end
 if CFL_set
     opts.CFL = input_parser.Results.CFL;
 end
 
+opts.lev = input_parser.Results.lev;
+opts.deg = input_parser.Results.deg;
 opts.dt = input_parser.Results.dt;
 opts.quiet = input_parser.Results.quiet;
 opts.grid_type = input_parser.Results.grid_type;
-
 opts.timestep_method = input_parser.Results.timestep_method;
-opts.build_A = false;
-if sum(strcmp(opts.timestep_method,{'BE','CN'}))>0
-    opts.build_A = true;
-end
-
 opts.adapt = input_parser.Results.adapt;
 opts.use_oldhash = input_parser.Results.use_oldhash;
 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
@@ -149,23 +148,54 @@ opts.time_independent_A = input_parser.Results.time_independent_A;
 opts.time_independent_build_A = input_parser.Results.time_independent_build_A;
 opts.many_solution_capable = input_parser.Results.many_solution_capable;
 opts.max_lev = input_parser.Results.max_lev;
+opts.max_lev_coeffs = input_parser.Results.max_lev_coeffs;
 opts.adapt_threshold = input_parser.Results.adapt_threshold;
 opts.refinement_method = input_parser.Results.refinement_method;
 opts.adapt_initial_condition = input_parser.Results.adapt_initial_condition;
-opts.uniform_output = input_parser.Results.uniform_output;
-opts.add_end_points = input_parser.Results.add_end_points;
+opts.output_grid = input_parser.Results.output_grid;
 opts.save_output = input_parser.Results.save_output;
 opts.output_filename_id = input_parser.Results.output_filename_id;
 opts.plot_freq = input_parser.Results.plot_freq;
 opts.save_freq = input_parser.Results.save_freq;
+opts.use_connectivity = input_parser.Results.use_connectivity;
+opts.use_sparse_A = input_parser.Results.use_sparse_A;
+opts.case_ = input_parser.Results.case;
+
+opts.build_A = false;
+if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0
+    opts.build_A = true;
+end
+
+if opts.adapt
+    if opts.time_independent_build_A
+        disp("WARNING: setting 'time_independent_build_A',false to be compatible with 'adapt',true"); 
+    end
+    opts.time_independent_build_A = false;
+    if opts.time_independent_A
+        disp("WARNING: setting 'time_independent_A',false to be compatible with 'adapt',true"); 
+    end
+    opts.time_independent_A = false;
+end
+
+if opts.use_connectivity
+    if ~opts.use_oldhash
+        error("ERROR - must set 'use_oldhash' to use connectivity"); 
+    end
+    if opts.adapt
+        error("ERROR - cannot use adaptivity with use_connectivity==true");
+    end
+end
 
 if opts.adapt
     opts.use_oldhash = false;
 end
 
-if sum([opts.add_end_points,opts.uniform_output]) > 1
-    error('Please set only one grid output option, thanks.');
+if opts.max_lev_coeffs
+    if opts.use_oldcoeffmat
+        error("ERROR - max level coeffs not implemented for old coeff function"); 
+    end
 end
+
 
 if ~isempty(fieldnames(input_parser.Unmatched))
    disp('Extra inputs:')

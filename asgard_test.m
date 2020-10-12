@@ -176,42 +176,42 @@ disp('Testing continuity2 (CN/adapt)');
 verifyLessThan(testCase,err,1e-4);
 end
 
-function asgard_fokkerplanck4p1b_explicit_test(testCase)
+function asgard_fokkerplanck1_pitch_E_explicit_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing fokkerplanck4p1b (RK3)');
+disp('Testing fokkerplanck1_pitch_E (RK3)');
 
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,'lev',4,'quiet',true,'deg',3);
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),'lev',4,'quiet',true,'deg',3,'max_lev',8);
 
 verifyLessThan(testCase,err,7e-4);
 
 end
 
-function asgard_fokkerplanck4p1b_implicit_CN_test(testCase)
+function asgard_fokkerplanck1_pitch_E_implicit_CN_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck4p1b (CN)');
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
-    'lev',4,'quiet',true,'deg',3,'timestep_method', 'CN');
+disp('Testing fokkerplanck1_pitch_E (CN)');
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),...
+    'lev',4,'quiet',true,'deg',3,'timestep_method','CN','max_lev',8);
 verifyLessThan(testCase,err,7e-4);
 end
 
-function asgard_fokkerplanck4p1b_implicit_BE_test(testCase)
+function asgard_fokkerplanck1_pitch_E_implicit_BE_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck4p1b (BE)');
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
-    'lev',4,'quiet',true,'deg',3,'timestep_method', 'BE');
+disp('Testing fokkerplanck1_pitch_E (BE)');
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),...
+    'lev',4,'quiet',true,'deg',3,'timestep_method','BE','max_lev',8);
 verifyLessThan(testCase,err,7e-4);
 end
 
-function asgard_fokkerplanck4p1b_adapt_test(testCase)
+function asgard_fokkerplanck1_pitch_E_adapt_test(testCase)
 
 addpath(genpath(pwd));
 
-disp('Testing fokkerplanck4p1b (CN/adapt)');
+disp('Testing fokkerplanck1_pitch_E (CN/adapt)');
 
-[err,act_f,act_frs] = asgard(fokkerplanck1_4p1b,...
-    'lev',4,'quiet',true,'deg',3,'timestep_method', 'CN','adapt',true);
+[err,act_f,act_frs] = asgard(fokkerplanck1_pitch_E(2),...
+    'lev',4,'quiet',true,'deg',3,'timestep_method','CN','adapt',true,'max_lev',8);
 
 verifyLessThan(testCase,err,1.5e-3); % TODO : need to look into why this is larger than the adapt=false approach.
 
@@ -246,16 +246,25 @@ verifyLessThan(testCase,err,1.5e-5);
 end
 
 function asgard_diffusion2_oldhash_test(testCase)
-
 addpath(genpath(pwd));
-
 disp('Testing diffusion2 (CN/oldhash)');
-
 [err,act_f,act_frs] = asgard(diffusion2, ...
     'lev',3,'quiet',true,'deg',3,'timestep_method', 'CN','use_oldhash',true);
-
 verifyLessThan(testCase,err,1.5e-5);
+end
 
+function asgard_diffusion2_oldhash_connectivity_SG_test(testCase)
+addpath(genpath(pwd));
+disp('Testing diffusion2 (CN/oldhash/connectivity/SG)');
+[err,act_f,act_frs] = asgard(diffusion2,'lev',3,'quiet',true,'deg',3,'timestep_method','BE','use_oldhash',true,'use_connectivity',true);
+verifyLessThan(testCase,err,1.4e-5);
+end
+
+function asgard_diffusion2_oldhash_connectivity_FG_test(testCase)
+addpath(genpath(pwd));
+disp('Testing diffusion2 (CN/oldhash/connectivity/FG)');
+[err,act_f,act_frs] = asgard(diffusion2,'lev',3,'quiet',true,'deg',3,'timestep_method','BE','use_oldhash',true,'use_connectivity',true,'grid_type','FG');
+verifyLessThan(testCase,err,1.4e-5);
 end
 
 function asgard_diffusion2_adapt_test(testCase)
@@ -343,5 +352,62 @@ disp('Testing fokkerplanck1_5p1a (CN / with LHS / TIA)');
 [err,act_f,act_frs] = asgard(fokkerplanck1_5p1a,'timestep_method','CN', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_A',true);
 verifyLessThan(testCase,err,2.5e-2);
+end
+
+function end_points_grid_test(testCase)
+addpath(genpath(pwd));
+disp('Testing quadrature_with_end_points');
+[err1,~,~,~,err_rsq]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsf]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature_with_end_points');
+relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));
+verifyLessThan(testCase,relErr,1);
+% dlg - i'm kind of surprised the difference between the quadrature points
+% and those plus two end points give such a larger difference in the error,
+% although it plots correctly.
+end
+
+function fixed_grid_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fixed_grid routine');
+[err1,~,~,~,err_rsq]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsf]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','fixed');
+relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));
+verifyLessThan(testCase,relErr,1);
+end
+
+function uniform_grid_test(testCase)
+addpath(genpath(pwd));
+disp('Testing uniform_grid routine on projecti_diff1');
+[err1,~,~,~,err_rsq]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsu]=asgard(projecti_diff1,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','uniform');
+relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
+verifyLessThan(testCase,relErr,1);
+end
+
+function end_points_grid_2D_test(testCase)
+addpath(genpath(pwd));
+disp('Testing output on end points on diffusion2');
+[err1,~,~,~,err_rsq]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsf]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature_with_end_points');
+relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));
+verifyLessThan(testCase,relErr,1);
+end
+
+function fixed_grid_2D_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fixed_grid routine on diffusion2');
+[err1,~,~,~,err_rsq]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsf]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','fixed');
+relErr = abs(err_rsq-err_rsf)/abs(max([err_rsq,err_rsf]));
+verifyLessThan(testCase,relErr,1);
+end
+
+function uniform_grid_2D_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fixed_grid routine');
+[err1,~,~,~,err_rsq]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','quadrature');
+[err2,~,~,~,err_rsu]=asgard(diffusion2,'timestep_method','BE', 'lev',3,'deg',3,'num_steps',1,'dt',0.0001,'quiet',true,'output_grid','uniform');
+relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
+verifyLessThan(testCase,relErr,1);
 end
 
