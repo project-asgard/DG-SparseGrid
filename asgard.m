@@ -94,7 +94,6 @@ end
 coord = get_realspace_coords(pde,nodes);
 coord_nodups = get_realspace_coords(pde,nodes_nodups);
 
-
 %% Plot initial condition
 if num_dimensions <=3
     
@@ -105,17 +104,23 @@ if num_dimensions <=3
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);    
     fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
     
-    mass_func = @(x,p,t) x.*0+1;
-    mass = moment_integral(pde.lev_vec, pde.deg, fval_realspace, mass_func, pde.dimensions);
-    mass_analytic = moment_integral(pde.lev_vec, pde.deg, fval_realspace_analytic, mass_func, pde.dimensions);
-    mass_t(1) = mass;
+    % construct the moment function handle list for calculating the mass
+    if opts.calculate_mass
+        mass_func = @(x,p,t) x.*0+1;
+        for d=1:num_dimensions
+            moment_func_nD{d} = mass_func;
+        end
+        
+        mass = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace,moment_func_nD, pde.dimensions);
+        mass_analytic = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
+        mass_t(1) = mass;
+    end
     
-    normalize_by_mass = true;
-    if normalize_by_mass
+    if opts.normalize_by_mass
         pde.params.norm_fac = mass / mass_analytic;
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
-        mass_analytic = moment_integral(pde.lev_vec, pde.deg, fval_realspace_analytic, mass_func, pde.dimensions);
+        mass_analytic = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
     end
 
     f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);   
@@ -343,8 +348,10 @@ for L = 1:num_steps
         % Get the real space solution
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-        mass = moment_integral(pde.lev_vec, pde.deg, fval_realspace, mass_func, pde.dimensions);
-        mass_t(L+1) = mass;
+        if opts.calculate_mass
+            mass = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace,moment_func_nD,pde.dimensions);
+            mass_t(L+1) = mass;
+        end
         
         %%
         % Try with function convertToRealSpace
@@ -399,9 +406,11 @@ for L = 1:num_steps
             fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t+dt);
             err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
             if ~opts.quiet         
-                disp(['    real space absolute err : ', num2str(err_real)]);
-                disp(['    real space relative err : ', num2str(err_real/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-                disp(['    total integrated mass : ', num2str(mass)]);
+                disp(['    real space absolute err : ', num2str(err_realspace)]);
+                disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+                if opts.calculate_mass
+                    disp(['    total integrated mass : ', num2str(mass)]);
+                end
             end
         end
         

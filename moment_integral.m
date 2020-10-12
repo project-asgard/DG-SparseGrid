@@ -1,4 +1,4 @@
-function momentValue = moment_integral(lev_vec, deg, fval_realspace, gfunc, dimensions)
+function moment_value = moment_integral(lev_vec, deg, coords_nD, fval_realspace, gfunc_nD, dimensions)
 
 xmin = dimensions{1,1}.domainMin;
 xmax = dimensions{1,1}.domainMax;
@@ -12,8 +12,6 @@ h = (xmax - xmin)/2^(Lev(1));
 quad_ww = 2^(-Lev)/2*quad_ww;
 
 ww = repmat(quad_ww, 2^Lev(1), 1); 
-% Lin Changed below
-%ww = [0;ww;0];
 
 if num_dim >= 2
     for i = 2:num_dim
@@ -27,30 +25,19 @@ ww = ww.*(xmax - xmin);
 
 [x, w] = lgwt(deg, 0, h);
 
-points = [];
-num = 1;
+this_dim_coord = coords_nD{1}(:);
+jac = this_dim_coord.*0+1;
+moment = this_dim_coord.*0+1;
 
-for j = 1:length(Lev)
-    num = num*2^Lev(j)*deg;
-    for i = 0:2^Lev(j)-1
-        points = [points; xmin + x + i*h];
-    end
-end    
-
-% Lin Changed below
-% Please check whether it is correct to put two zeros in front and back
-%points = [0;points;0];
-points2 = repmat(points, [2^Lev*deg 1]);
-
-%points2 = reshape(reshape(points2,num,num)',num*num,1);
-
-if num_dim == 1
-    momentValue = sum(ww.*fval_realspace.*gfunc(points).*dimensions{1}.jacobian(points));
-else
-    jac = points2.*0+1;
+% if num_dim == 1
+%     moment = 
+%     moment_value = sum(ww.*fval_realspace.*gfunc_nD(points).*dimensions{1}.jacobian(points));
+% else
     for d=1:num_dim
-        jac = jac .* dimensions{d}.jacobian(points2);
+        this_dim_coord = coords_nD{d}(:); 
+        jac = jac .* dimensions{d}.jacobian(this_dim_coord);
+        moment = moment .* gfunc_nD{d}(this_dim_coord);
     end
-    momentValue = sum(ww.*fval_realspace.*gfunc(points2).*jac);
-end
+    moment_value = sum(ww.*fval_realspace.*moment.*jac);
+% end
 end

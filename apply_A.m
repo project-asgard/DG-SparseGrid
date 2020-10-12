@@ -95,7 +95,6 @@ for elem=1:num_elem
         % connected item.
         
         global_col = element_DOF*(connected_col_j-1) + [1:element_DOF]';
-%         global_1D_col = deg*(connecte
         
         for d=1:num_dims
             myDeg = opts.deg;

@@ -32,6 +32,8 @@ classdef OPTS
         plot_freq = 1;
         save_freq = 1;
         case_ = 1;
+        calculate_mass = true; % calculate and print the mass
+        normalize_by_mass = false; % normalize the analytic solution by the initial cond mass
 
     end
     
