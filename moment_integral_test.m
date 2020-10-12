@@ -30,16 +30,16 @@ verifyLessThan(testCase, diff, 1e-6);
 end
 
 function test_moment_2D(testCase)
-[err, act_f, act_frs] = asgard(fokkerplanck2_6p1, 'quiet', true, 'num_steps', 5, 'deg', 3, 'lev',3);
-dim_p.domainMin = 0;
-dim_p.domainMax = +10;
-dim_z.domainMin = -1;
-dim_z.domainMax = +1;
+[err, act_f, act_frs] = asgard(continuity2, 'timestep_method','CN','quiet', true, 'num_steps', 5, 'deg', 3, 'lev',3);
+dim_x.domainMin = -1;
+dim_x.domainMax = +1;
+dim_y.domainMin = -2;
+dim_y.domainMax = +2;
 test_func = @(p,z,t) p.*0 + 1;
-dim_p = check_dimension(2,dim_p);
-dim_z = check_dimension(2,dim_z);
-dimensions = {dim_p, dim_z};
+dim_x = check_dimension(2,dim_x);
+dim_y = check_dimension(2,dim_y);
+dimensions = {dim_x, dim_y};
 test_moment_2D = moment_integral(3, 3, act_frs, test_func, dimensions);
-diff = abs(test_moment_2D - 2*erf(10));
+diff = abs(test_moment_2D);
 verifyLessThan(testCase, diff, 1e-6);
 end

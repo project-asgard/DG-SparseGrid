@@ -17,24 +17,34 @@ pde.CFL = 0.01;
 m_e = 9.109*10^-31; %electron mass in kg
 m_D = 3.3443*10^-27; %deuterium mass in kgs
 m_H = 1.6726*10^-27; %hydrogen mass in kgs
-eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
 k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
 e = 1.602*10^-19; %charge in Coulombs
 ln_delt = 10; %Coulomb logarithm
+v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
+eps0 = 8.85*10^-12; %permittivity of free space in Farad/m
 
-%Background Species parameter
-n_b = 4*10^19; %background density in SI units (particles/m.^3)
-T_eV_b = 4; %background temperature in eV
-z_b = 1; %atomic number of background
-m_b = m_e; %background mass
+% species b: electrons in background
+b.n = 4e19;
+b.T_eV = 4;
+b.Z = 1;
+b.m = m_e;
+b.vth = v_th(b.T_eV,b.m);
 
-%Target Specie Parameters
-n_a = n_b;
-z_a = 1;
-m_a = m_e;%target species
+%species b2: deuterium in background
+b2.n = 4e19;
+b2.T_eV = 4;
+b2.Z = 1;
+b2.m = m_D;
+b2.vth = v_th(b2.T_eV,b2.m);
 
-v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
-L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
+% species a: electrons in beam
+a.n = 4e19;
+a.T_eV = 1e3;
+a.Z = -1;
+a.m = m_e;
+a.vth = v_th(a.T_eV,a.m);
+
+%L_ab = ln_delt*e^4/(a.m*eps_o)^2; %Coefficient accounting for Coluomb force
 
 switch test
     case 'a'
@@ -46,18 +56,24 @@ switch test
     case 'c'
         T_eV_a = 1000;
         T_a = T_eV_a*11606; %converting to Kelvin
-        offset = v_th(T_a,m_a); %case with offset and no change in Temperature
+        offset = v_th(T_a,a.m); %case with offset and no change in Temperature
 end 
-T_b = T_eV_b*11606; %converting to Kelvin
-nu_ab0 = n_b*e^4*z_a^2*z_b^2*ln_delt/(2*pi*eps_o^2*m_a^2*v_th(T_b,m_b)^3);
-nu_s = @(v) nu_ab0.*(1 + m_a/m_b).*psi(v./v_th(T_b,m_b))./(v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; %parallel diffusion frequency
-loglog(0.5*m_a*logspace(-1,7).^2/e, nu_s(logspace(-1,7)))
-%ylim([10^4, 10^11]);
-xlim([10^-1, 10^2]);
-nu_par = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab./(2*pi.*v.^3);
-maxwell = @(v,x,y) n_a/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
-gauss = @(v,x) n_a/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
-norm = v_th(T_b,m_a)*(sqrt(pi)*(v_th(T_a,m_a)^2 + 2*offset^2)*phi((offset - 0.01)/v_th(T_a,m_a)) + 2*v_th(T_a,m_a)*(0.01 + offset)*exp(-(0.01 - offset)^2/v_th(T_a,m_a)^2) + sqrt(pi)*(v_th(T_a,m_a)^2 +2*offset^2)*phi((10^7 - offset)/v_th(T_a,m_a)) - 2*v_th(T_a,m_a)*(10^7 + offset)*exp(-(10^7 - offset)^2/v_th(T_a,m_a)^2))/(v_th(T_a,m_a)^2*(2*0.01*exp(-0.01^2/v_th(T_b,m_a)^2) - 2*10^7*exp(-10^14/v_th(T_b,m_a)^2) + sqrt(pi)*v_th(T_b,m_a)*(phi(10^7/v_th(T_b,m_a)) - phi(0.01/v_th(T_b,m_a)))));
+T_b = b.T_eV*11606; %converting to Kelvin
+x = @(v,vth) v./vth; 
+nu_ab0 = @(a,b) b.n * e^4 * a.Z^2 * b.Z^2 * ln_delt / (2*pi*eps0^2*a.m^2*b.vth^3); %scaling coefficient
+nu_s = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(x(v,b.vth)) ./ x(v,b.vth); %slowing down frequency
+nu_par = @(v,a,b) nu_ab0(a,b).*(psi(x(v,b.vth))./(x(v,b.vth).^3)); %parallel diffusion frequency
+v_ = 10.^[1:.1:8];
+%loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,a))
+%hold on
+%loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,b))
+xlim([0.1,1e3]);
+ylim([1e4,1e11]);
+maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
+gauss = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
+% norm = 3.749;
+init_func = @(v) maxwell(v,0,v_th(b.T_eV,a.m)) + maxwell(v,5*10^6, 10^6);
+%norm = v_th(T_b,m_a)*(sqrt(pi)*(v_th(T_a,m_a)^2 + 2*offset^2)*phi((offset - 0.01)/v_th(T_a,m_a)) + 2*v_th(T_a,m_a)*(0.01 + offset)*exp(-(0.01 - offset)^2/v_th(T_a,m_a)^2) + sqrt(pi)*(v_th(T_a,m_a)^2 +2*offset^2)*phi((10^7 - offset)/v_th(T_a,m_a)) - 2*v_th(T_a,m_a)*(10^7 + offset)*exp(-(10^7 - offset)^2/v_th(T_a,m_a)^2))/(v_th(T_a,m_a)^2*(2*0.01*exp(-0.01^2/v_th(T_b,m_a)^2) - 2*10^7*exp(-10^14/v_th(T_b,m_a)^2) + sqrt(pi)*v_th(T_b,m_a)*(phi(10^7/v_th(T_b,m_a)) - phi(0.01/v_th(T_b,m_a)))));
 %E = 1.0; %parallel Electric field
 
 %% Setup the dimensions
@@ -77,17 +93,17 @@ end
 dim_v.domainMin = 0;
 dim_v.domainMax = 3*10^7;
 dim_v.jacobian = @(v,p,t) 4.*pi.*v.^2;
+dim_v.init_cond_fn = @(v,p,t) maxwell(v,v_th(a.T_eV,a.m), var);%.*(x == v_b);
 
 %steady state analytic solution
-soln_v = @(v) n_a*(2*(m_a/(m_a + m_b))*nu_s./nu_par(v_th(T_b,m_a))).*(1/(4*pi)).*(1./v.^3);
+soln_v = @(v) n_a*(2*(a.m/(a.m + b.m))*nu_s./nu_par(v_th(b.T_eV,a.m))).*(1/(4*pi)).*(1./v.^3);
 %normalized coordinates by thermal velocity
 %v_n_max = dim_v.domainMax/v_th(T_b,m_b);
 %v_n_min = dim_v.domainMin/v_th(T_b,m_b);
 %initial condition
 var = 10^6;
-dim_v.init_cond_fn = @(v,p,t) maxwell(v,v_th(T_a,m_a), var);%.*(x == v_b);
 
-BCFunc = @(v) maxwell(v,v_th(T_b,m_a), v_th(T_b,m_a));
+BCFunc = @(v) maxwell(v,v_th(b.T_eV,a.m), v_th(b.T_eV,a.m));
 
 % Domain is (a,b)
 
@@ -128,7 +144,7 @@ num_dims = numel(pde.dimensions);
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3.*nu_s(v).*m_a/(m_a + m_b);
+g2 = @(v,p,t,dat) v.^3.*nu_s(v,a,b).*a.m/(a.m + b.m);
 
 pterm1 = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
@@ -142,7 +158,7 @@ termV1   = TERM_ND(num_dims,{termV_s});
 % r(v) = d/dv(g3(v)f)       [grad, g3(v) = 1, BCL=N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^4.*0.5.*nu_par(v);
+g2 = @(v,p,t,dat) v.^4.*0.5.*nu_par(v,a,b);
 g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1 = MASS(g1);
@@ -168,7 +184,7 @@ pde.params = params;
 % Each source term must have nDims + 1
 
 source = { ...
-    @(v,p,t) (m_a.*nu_s/(m_a+m_b))*(1-m_a*nu_s/(m_a + m_b)*(4*v+3*t)),   ...   % s1v
+    @(v,p,t) (a.m*nu_s(v,a,b)./(a.m+b.m))*(1-a.m*nu_s(v,a,b)./(a.m + b.m)*(4*v+3*t)),   ...   % s1v
     @(t,p) t.*0 + 1 ...   % s1t
     };
 
@@ -179,7 +195,7 @@ pde.sources = {};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
     function ans = soln(v,p,t)
-        ans = n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2);        
+        ans = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);        
         if isfield(p,'norm_fac')
             ans = ans .* p.norm_fac;
         end
