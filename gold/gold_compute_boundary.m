@@ -13,7 +13,8 @@ runtime_defaults
 
 pde = check_pde(pde,opts);
 
-[elements, elements_idx]    = hash_table_sparse_nD (pde.lev_vec, pde.max_lev, opts.grid_type);
+[elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, ...
+                                                    opts.max_lev, opts.grid_type);
 hash_table.elements         = elements;
 hash_table.elements_idx     = elements_idx;
 
@@ -28,10 +29,9 @@ terms = pde.terms;
 %%
 % dim shortcuts
 
-deg = pde.deg;
+deg = opts.deg;
 level = pde.dimensions{1}.lev;
 
-num_elements = numel(hash_table.elements_idx);
 
 num_terms = numel(pde.terms);
 num_dims = numel(dims);

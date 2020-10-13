@@ -54,7 +54,6 @@ dim_vz.init_cond_fn = @(z,p,t) z.*0;
 pde.dimensions = {dim_x,dim_y,dim_z,dim_vx,dim_vy,dim_vz};
 num_dims = numel(pde.dimensions);
 
-pde.max_lev = 3;
 
 %% Setup the terms of the PDE
 %

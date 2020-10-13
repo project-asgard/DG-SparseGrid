@@ -14,21 +14,21 @@ runtime_defaults
 pde = check_pde(pde,opts);
 
 level = pde.dimensions{1}.lev;
-degree = pde.deg;
+degree = opts.deg;
 
-[elements, elements_idx]    = hash_table_sparse_nD (pde.lev_vec, opts.max_lev, ...
+[elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, opts.max_lev, ...
                                                     opts.grid_type);
 hash_table.elements         = elements;
 hash_table.elements_idx     = elements_idx;
 
 
 for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(pde.deg,pde.dimensions{d}.lev);
+    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
 end
 
 TD = 0;
 t = 0;
-pde = get_coeff_mats(pde,t,TD);
+pde = get_coeff_mats(pde,opts,t,TD);
 
 bcv = boundary_condition_vector(pde,opts,hash_table,t);
 

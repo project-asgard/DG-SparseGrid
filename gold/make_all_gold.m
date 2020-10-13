@@ -19,14 +19,12 @@ gold_quadrature
 disp('Generating gold data for transformations component');
 gold_transformations
 
-disp('Generating gold data for pde component');
-gold_pde
-git add
+% needs fixing
+% disp('Generating gold data for pde component');
+% gold_pde
+
 disp('Generating gold data for coefficients component');
 gold_coefficients
-
-disp('Generating gold data for batch component');
-gold_batch
 
 disp('Generating gold data for time_advance component');
 gold_time_advance
@@ -43,5 +41,5 @@ disp('Generating gold data for boundary condition vector');
 gold_boundary_condition_vector
 
 disp('Generating gold data for boundary condition computation');
-gold_boundary_compute_boundary
+gold_compute_boundary
 
