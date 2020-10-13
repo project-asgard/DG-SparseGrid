@@ -42,7 +42,6 @@ else
 end
 
 
-
 %% (Do not) Construct the connectivity.
 if opts.use_connectivity
     pde.connectivity = connect_nD(num_dimensions,HASH,hash_table,max(opts.lev_vec),max(opts.lev_vec),opts.grid_type);

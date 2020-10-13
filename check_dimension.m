@@ -1,4 +1,4 @@
-function default_dim = check_dimension(num_dimensions,dim)
+function default_dim = check_dimension(opts,num_dimensions,dim)
 
 % Set defaults for dimension
 
@@ -15,7 +15,7 @@ default_dim.name = 'x';
 
 default_dim.domainMin = 0;
 default_dim.domainMax = 1;
-default_dim.lev = 2;
+default_dim.lev = opts.lev;
 default_dim.init_cond_fn = @(x,p) x.*0;
 
 % Check to make sure all fields exist.
