@@ -188,13 +188,33 @@ if num_dims==3
     sy = numel(f_nD(1,:,1))/2;
     sx = numel(f_nD(1,1,:))/2;
     
-    f_slice = f_nD(:,sy,sx);
+    %plotting in x-direction
+    f1d = f3d(sz,sy,:);
+    f1d = f1d(1,:);
     x = nodes{1};
     y = nodes{2};
     z = nodes{3};
     ax1 = subplot(3,3,1);
-    plot(z,f_slice,'-o');
-    title('1D slice through 3D');
+    plot(x,f1d,'-o');
+    title('1D slice through velocity dimension');
+    
+    %plotting y-direction
+    f1d = f3d(sz,:,sx);
+    x = nodes{1};
+    y = nodes{2};
+    z = nodes{3};
+    ax2 = subplot(3,3,2);
+    plot(y,f1d,'-o');
+    title('1D slice through pitch dimension');
+    
+    %plotting z-direction
+    f1d = f3d(:,sy,sx);
+    x = nodes{1};
+    y = nodes{2};
+    z = nodes{3};
+    ax3 = subplot(3,3,3);
+    plot(z,f1d,'-o');
+    title('1D slice through spatial dimension');
     
     %%
     % Overplot analytic solution

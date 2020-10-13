@@ -59,6 +59,8 @@ addOptional(input_parser,'output_grid',opts.output_grid,check_output_grid);
 addOptional(input_parser,'use_connectivity',opts.use_connectivity,@islogical);
 addOptional(input_parser,'use_sparse_A',opts.use_sparse_A,@islogical);
 addOptional(input_parser,'case',opts.case_,@isnumeric);
+addOptional(input_parser,'calculate_mass',opts.calculate_mass,@islogical);
+addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
 
 
 if numel(varargin) == 0 && ~exist('pde','var')
@@ -160,6 +162,8 @@ opts.save_freq = input_parser.Results.save_freq;
 opts.use_connectivity = input_parser.Results.use_connectivity;
 opts.use_sparse_A = input_parser.Results.use_sparse_A;
 opts.case_ = input_parser.Results.case;
+opts.calculate_mass = input_parser.Results.calculate_mass;
+opts.normalize_by_mass = input_parser.Results.normalize_by_mass;
 
 opts.build_A = false;
 if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0
@@ -186,8 +190,21 @@ if opts.use_connectivity
     end
 end
 
+if opts.normalize_by_mass
+    opts.calculate_mass = true;
+end
+
 if opts.adapt
     opts.use_oldhash = false;
+    opts.calculate_mass = false;
+    opts.normalize_by_mass = false;
+end
+
+if ~strcmp(opts.output_grid,'quadrature')
+    if opts.normalize_by_mass
+        error("ERROR - cannot yet normalize by mass on output_grid other than 'quadrature'");
+    end
+    opts.calculate_mass = false;
 end
 
 if opts.max_lev_coeffs

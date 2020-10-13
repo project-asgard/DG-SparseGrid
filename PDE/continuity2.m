@@ -27,10 +27,12 @@ soln_t = @(t)      sin(2*t);
 dim_x.domainMin = -1;
 dim_x.domainMax = +1;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x,p,t) * soln_t(t);
+dim_x.jacobian = @(x,p,t) x.*0 + 1;
 
 dim_y.domainMin = -2;
 dim_y.domainMax = +2;
 dim_y.init_cond_fn = @(y,p,t) soln_y(y,p,t);
+dim_y.jacobian = @(y,p,t) y.*0 + 1;
 
 %%
 % Add dimensions to the pde object
