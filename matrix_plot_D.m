@@ -14,8 +14,8 @@ end
 
 lev = dimension.lev;
 deg = opts.deg;
-xMin = dimension.domainMin;
-xMax = dimension.domainMax;
+xMin = dimension.min;
+xMax = dimension.max;
 % FMWT = dimension.FMWT;
 
 %%

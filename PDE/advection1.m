@@ -16,9 +16,9 @@ function pde = advection1
 %% Setup the dimensions
 % 
 % Here we setup a 1D problem (x)
-
-dim_x.domainMin = 0;
-dim_x.domainMax = pi;
+dim_x = DIMENSION(0,pi);
+% dim_x.domainMin = 0;
+% dim_x.domainMax = pi;
 dim_x.init_cond_fn = @(x,p,t) cos(x);
 
 %%
@@ -109,8 +109,8 @@ pde.analytic_solutions_1D = {a_x,a_t};
         
         dim = pde.dimensions{1};
         lev = dim.lev;
-        xMax = dim.domainMax;
-        xMin = dim.domainMin;
+        xMax = dim.max;
+        xMin = dim.min;
         xRange = xMax-xMin;
         dx = xRange/(2^lev);
         dt = CFL*dx;

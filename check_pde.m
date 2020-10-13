@@ -49,6 +49,6 @@ end
 %%
 % Check the dimensions
 
-default_pde = check_dimensions(default_pde,opts);
+% default_pde = check_dimensions(default_pde,opts);
 
 end
