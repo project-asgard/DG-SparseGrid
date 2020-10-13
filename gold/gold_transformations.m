@@ -90,6 +90,7 @@ write_octave_like_output(filename, full(vect));
 
 % forward MWT test generation
 out_base = strcat(data_dir, "forward_transform_");
+max_lev = 8;
 
 filename = strcat(out_base, "2_2_neg1_pos1_double.dat");
 degree = 2;
@@ -97,7 +98,9 @@ level = 2;
 l_min = -1.0;
 l_max = 1.0;
 double_it = @(x,p,t) (x*2);
-vect = forward_wavelet_transform(degree, level, l_min, l_max, double_it, [], 0);
+[~, transform_blocks] = OperatorTwoScale_wavelet2(degree, max_lev);
+vect = forward_wavelet_transform(degree, level, l_min, l_max, double_it,...
+                                 [], transform_blocks, 0);
 write_octave_like_output(filename, full(vect));
 
 
@@ -107,7 +110,9 @@ level = 4;
 l_min = -2.0;
 l_max = 2.0;
 double_plus = @(x,p,t) (x + x*2);
-vect = forward_wavelet_transform(degree, level, l_min, l_max, double_plus, [], 0);
+[~, transform_blocks] = OperatorTwoScale_wavelet2(degree, max_lev);
+vect = forward_wavelet_transform(degree, level, l_min, l_max, double_plus,...
+                                 [], transform_blocks, 0);
 write_octave_like_output(filename, full(vect));
 
 % multiwavelet file generation

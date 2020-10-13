@@ -15,7 +15,7 @@ else
     for d=1:nDims
         fList{d} = forward_wavelet_transform(opts.deg,dims{d}.lev,...
             dims{d}.domainMin,dims{d}.domainMax,...
-            dims{d}.init_cond_fn,pde.params,t);
+            dims{d}.init_cond_fn,pde.params,pde.transform_blocks, t);
     end
     
     ft = 1;

@@ -390,28 +390,35 @@ elements_idx0 = hash_table.elements_idx;
 %%
 % Update all the setup outputs which need updating on the new element list
 
-%%
-% Update the FMWT transform matrices
 
+%% Update dims and coeffs
+% Update the time-indepedent coeff mats to the new size
+lev_vec = zeros(num_dims, 1);
 for d=1:num_dims
-    pde.dimensions{d}.lev = max(hash_table.elements.lev_p1(:,d)-1);
-    pde.dimensions{d}.FMWT = OperatorTwoScale(deg,pde.dimensions{d}.lev);
+    lev_vec(d) = max(hash_table.elements.lev_p1(:,d)-1);
 end
 
-%%
-% Re check the PDE
+if opts.max_lev_coeffs
+    pde = get_coeff_mats_rechain(pde, deg, lev_vec);
+end
 
+for d=1:num_dims
+    pde.dimensions{d}.lev = lev_vec(d);
+end
+
+% If we don't want to store the max lev coeffs, regen them
+if ~opts.max_lev_coeffs
+    t = 0;
+    TD = 0;
+    pde = get_coeff_mats(pde,opts,t,TD);
+end
+
+%% Re check the PDE
+% FIXME is this necessary?
 pde = check_pde(pde,opts);
 
-%%
-% Update the coeff mats to the new size
 
-t = 0;
-TD = 0;
-pde = get_coeff_mats(pde,opts,t,TD);
-
-%%
-% Update A_data
+%% Update A_data
 
 A_data = global_matrix(pde,opts,hash_table);
 

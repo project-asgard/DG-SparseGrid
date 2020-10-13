@@ -13,6 +13,8 @@ default_pde.terms = {};
 default_pde.params = {};
 default_pde.sources = {};
 default_pde.termsLHS = {};
+default_pde.transform_blocks = {}; % will be updated in asgard.m
+[~, default_pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
 % default_pde.max_lev = opts.max_lev; % This sets the maximum addressable space for the elements, i.e., cannot refine below this.
 % default_pde.deg = 2;
 % default_pde.lev_vec = [];
@@ -47,6 +49,6 @@ end
 %%
 % Check the dimensions
 
-default_pde = check_dimensions(default_pde);
+default_pde = check_dimensions(default_pde,opts);
 
 end

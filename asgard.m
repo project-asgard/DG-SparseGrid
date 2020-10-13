@@ -41,10 +41,6 @@ else
     hash_table.elements_idx     = elements_idx; % only to get the same order as the old hash table
 end
 
-%% Construct the 1D multi-wavelet transform for each dimension.
-for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
-end
 
 %% (Do not) Construct the connectivity.
 if opts.use_connectivity
@@ -98,13 +94,35 @@ end
 coord = get_realspace_coords(pde,nodes);
 coord_nodups = get_realspace_coords(pde,nodes_nodups);
 
-
 %% Plot initial condition
 if num_dimensions <=3
     
     %%
     % Get the real space solution
-    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);    
+
+    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);    
+    fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
+    
+    % construct the moment function handle list for calculating the mass
+    if opts.calculate_mass
+        mass_func = @(x,p,t) x.*0+1;
+        for d=1:num_dimensions
+            moment_func_nD{d} = mass_func;
+        end
+        
+        mass = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace,moment_func_nD, pde.dimensions);
+        mass_analytic = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
+        mass_t(1) = mass;
+    end
+    
+    if opts.normalize_by_mass
+        pde.params.norm_fac = mass / mass_analytic;
+        fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+        fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
+        mass_analytic = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
+    end
+
     f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);   
     if strcmp(opts.output_grid,'fixed')
         f_realspace_nD = ...
@@ -198,7 +216,7 @@ if num_dimensions <=3
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-    if ~opts.quiet     
+    if ~opts.quiet 
         disp(['    real space absolute err : ', num2str(err_realspace)]);
         disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
         disp(['    real space absolute err (2-norm) : ', num2str(norm(fval_realspace(:)-fval_realspace_analytic(:)))]);
@@ -252,7 +270,7 @@ for L = 1:num_steps
                 %%
                 % Generate EMassX time dependent coefficient matrix.
                 
-                EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.dimensions{1}.FMWT);
+                EMassX = matrix_coeff_TD(LevX,deg,Lmin,Lmax,E,pde.transform_blocks);
                 
                 %%
                 % Set the dat portion of the EMassX part of E.d_dv term.
@@ -330,7 +348,11 @@ for L = 1:num_steps
         % Get the real space solution
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-
+        if opts.calculate_mass
+            mass = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace,moment_func_nD,pde.dimensions);
+            mass_t(L+1) = mass;
+        end
+        
         %%
         % Try with function convertToRealSpace
         
@@ -386,6 +408,9 @@ for L = 1:num_steps
             if ~opts.quiet         
                 disp(['    real space absolute err : ', num2str(err_realspace)]);
                 disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
+                if opts.calculate_mass
+                    disp(['    total integrated mass : ', num2str(mass)]);
+                end
             end
         end
         

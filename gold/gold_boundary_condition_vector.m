@@ -22,9 +22,8 @@ hash_table.elements         = elements;
 hash_table.elements_idx     = elements_idx;
 
 
-for d=1:num_dimensions
-    pde.dimensions{d}.FMWT = OperatorTwoScale(opts.deg,pde.dimensions{d}.lev);
-end
+[~, pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{d}.lev);
+
 
 TD = 0;
 t = 0;

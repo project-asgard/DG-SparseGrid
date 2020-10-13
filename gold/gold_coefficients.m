@@ -49,14 +49,15 @@ runtime_defaults
 
 opts.use_oldcoeffmat = 0;
 opts.use_oldhash = 0;
-
+opts.max_lev_coeffs = 1;
 pde = check_pde(pde, opts);
 
 for i=1:length(pde.dimensions)
   pde.dimensions{i}.lev = lev_vec(i);
-  pde.dimensions{i}.FMWT = OperatorTwoScale_wavelet2(opts.deg,...
-                              pde.dimensions{i}.lev);
 end
+
+[~, transform_blocks] = OperatorTwoScale_wavelet2(opts.deg,...
+                                                  opts.max_lev);
 
 out_format = strcat(coeff_dir, pde_name, '_coefficients_l%sd%i_%d_%d.dat');
 out_format_unrot = strcat(coeff_dir, pde_name, '_coefficients_norotate_l%sd%i_%d_%d.dat');
@@ -72,11 +73,13 @@ for t=1:length(pde.terms)
     for d=1:length(pde.dimensions)
         sd_term = pde.terms{t}.terms_1D{d};
         sd_term_out = ...
-        coeff_matrix(numel(pde.dimensions),opts.deg,time,pde.dimensions{d},sd_term,pde.params);
+        coeff_matrix(numel(pde.dimensions),opts.deg,time,pde.dimensions{d},sd_term,pde.params, ...
+                     transform_blocks, opts.max_lev);
         coeff_mat = sd_term_out.mat;
         unrotated = sd_term_out.mat_unrotated;
         write_octave_like_output(sprintf(out_format,lev_string,degree,t,d), full(coeff_mat));
         write_octave_like_output(sprintf(out_format_unrot,lev_string,degree,t,d), full(unrotated));
     end
 end
+
 end
