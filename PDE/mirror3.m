@@ -13,54 +13,62 @@ function pde = mirror3
 test = 'c';
 pde.CFL = 0.01;
 
-m_e = 9.109*10^-31; %electron mass in kg
-m_H = 1.6726*10^-27; %hydrogen mass in kgs
-k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
-e = 1.602*10^-19; %charge in Coulombs
-ln_delt = 10; %Coulomb logarithm
-v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
-eps0 = 8.85*10^-12; %permittivity of free space in Farad/m
+ m_e = []; %electron mass in kg
+ m_H = []; %hydrogen mass in kgs
+ m_D = []; %deuterium mass in kgs
+ eps0 = []; %permittivity of free space in Farad/m
+ k_b = []; %Boltzmann constant in Joules/Kelvin
+ e = []; %charge in Coulombs
+ ln_delt = []; %Coulomb logarithm
+
+ v_th = [];
 
 % species b: electrons in background
-b.n = 4e19;
-b.T_eV = 4;
-b.Z = 1;
-b.m = m_e;
-b.vth = v_th(b.T_eV,b.m);
+ b.n = [];
+% 
+% %species b2: deuterium in background
+ b2.n = [];
 
-%species b2: deuterium in background
-b2.n = 4e19;
-b2.T_eV = 4;
-b2.Z = 1;
-b2.m = m_D;
-b2.vth = v_th(b2.T_eV,b2.m);
-
-% species a: electrons in beam
-a.n = 4e19;
-a.T_eV = 1e3;
-a.Z = -1;
-a.m = m_e;
-a.vth = v_th(a.T_eV,a.m);
-
-%L_ab = ln_delt*e^4/(a.m*eps0)^2; %Coefficient accounting for Coluomb force
+% % species a: electrons in beam
+ a.n = [];
+ 
 switch test
     case 'a'
-        a.T_eV = 0.05*b.T_eV; %Target temperature in Kelvin\
+        a.T_eV = 0.05*T_eV_b; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
     case 'b'
-        a.T_eV = 0.05*b.T_eV;
+        a.T_eV = 0.05*T_eV_b;
         offset = 0; %case with no offset but change in Temperature
     case 'c'
         a.T_eV = 1e3;
         offset = 10^7; %case with offset and no change in Temperature
 end
-%T_a = T_eV_a*11606; %converting to Kelvin
-%T_b = T_eV_b*11606; %converting to Kelvin
-x = @(v,vth) v./vth; 
-nu_ab0 = @(a,b) b.n * e^4 * a.Z^2 * b.Z^2 * ln_delt / (2*pi*eps0^2*a.m^2*b.vth^3); %scaling coefficient
-nu_s = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(x(v,b.vth)) ./ x(v,b.vth); %slowing down frequency
-nu_par = @(v,a,b) nu_ab0(a,b).*(psi(x(v,b.vth))./(x(v,b.vth).^3)); %parallel diffusion frequency
-nu_D =  @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
+
+ x = []; 
+ nu_ab0 = []; %scaling coefficient
+ nu_s = []; %slowing down frequency
+ nu_par = []; %parallel diffusion frequency
+ nu_D = [];
+ 
+maxwell = [];
+gauss = [];
+
+mirror_common
+
+% norm = 3.749;
+init_func_v = @(v) maxwell(v,v_th(a.T_eV,a.m), 10^6);
+init_func_z = @(z) z.*0 + 1;
+
+v_ = 10.^[-1:.1:7];
+%loglog(0.5*a.m*v_.^2/e,nu_D(v_,a,b))
+hold on
+%loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,b))
+%loglog(0.5*a.m*v_.^2/e,nu_par(v_,a,b))
+xlim([0.1,1e2]);
+ylim([1e4,1e11]);
+
+BCFunc = @(v) init_func(v);
+
 B_func = @(s) sin(s); %magnetic field as a function of spatial coordinate
 dB_ds = @(s) cos(s); %derivative of magnetic field
 v_test = 500; %test value for velocity in spatial advection coefficient
@@ -68,8 +76,6 @@ z_test = pi/2 - 1e-6; %test value for pitch angle in spatial advection coefficie
 A = v_test*cos(z_test); %spatial advection coefficient
 %Expected solution for velocity space, with norm to account for particle
 %conservation
-maxwell_func = @(v,T,m) n_a/(pi^3/2.*v_th(T,m).^3).*exp(-((v-offset)./v_th(T,m)).^2);
-norm = v_th(T_b,m_a)*(sqrt(pi)*(v_th(T_a,m_a)^2 + 2*offset^2)*phi((offset - 0.01)/v_th(T_a,m_a)) + 2*v_th(T_a,m_a)*(0.01 + offset)*exp(-(0.01 - offset)^2/v_th(T_a,m_a)^2) + sqrt(pi)*(v_th(T_a,m_a)^2 +2*offset^2)*phi((10^7 - offset)/v_th(T_a,m_a)) - 2*v_th(T_a,m_a)*(10^7 + offset)*exp(-(10^7 - offset)^2/v_th(T_a,m_a)^2))/(v_th(T_a,m_a)^2*(2*0.01*exp(-0.01^2/v_th(T_b,m_a)^2) - 2*10^7*exp(-10^14/v_th(T_b,m_a)^2) + sqrt(pi)*v_th(T_b,m_a)*(phi(10^7/v_th(T_b,m_a)) - phi(0.01/v_th(T_b,m_a)))));
 %Expected solution in pitch angle
 pitch_z = @(z) n_a.*cos(z);
 pitch_t = @(t) exp(-nu_D*t);

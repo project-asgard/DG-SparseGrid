@@ -8,12 +8,12 @@ function pde = mirror_velocity2
 %
 % Run with
 %
-% asgard(mirror_velocity_twodimensional,'timestep_method','BE')
+% asgard(mirror_velocity2,'timestep_method','BE')
 
 test = 'c';
 pde.CFL = 0.01;
 
- %m_e = []; %electron mass in kg
+ m_e = []; %electron mass in kg
  m_H = []; %hydrogen mass in kgs
  m_D = []; %deuterium mass in kgs
  eps0 = []; %permittivity of free space in Farad/m
@@ -25,26 +25,13 @@ pde.CFL = 0.01;
 
 % species b: electrons in background
  b.n = [];
-% b.T_eV = 4;
-% b.Z = -1;
-% b.m = m_e;
-% b.vth = v_th(b.T_eV,b.m);
 % 
 % %species b2: deuterium in background
  b2.n = [];
-% b2.T_eV = 4;
-% b2.Z = 1;
-% b2.m = m_D;
-% b2.vth = v_th(b2.T_eV,b2.m);
-% 
+
 % % species a: electrons in beam
  a.n = [];
-% a.T_eV = 1e3;
-% a.Z = -1;
-% a.m = m_e;
-% a.vth = v_th(a.T_eV,a.m);
-
-% L_ab = ln_delt*e^4/(m_a*eps0)^2; %Coefficient accounting for Coluomb force
+ 
 switch test
     case 'a'
         a.T_eV = 0.05*T_eV_b; %Target temperature in Kelvin\
@@ -57,24 +44,18 @@ switch test
         offset = 10^7; %case with offset and no change in Temperature
 end
 
-% T_a = T_eV_a*11606; %converting to Kelvin
-% T_b = T_eV_b*11606; %converting to Kelvin
-% nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; 
-
-
  x = []; 
  nu_ab0 = []; %scaling coefficient
  nu_s = []; %slowing down frequency
  nu_par = []; %parallel diffusion frequency
+ nu_D = [];
 
 mirror_common
-nu_D =  @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
 
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 gauss = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 % norm = 3.749;
-var = 10^6;
-init_func = @(v) maxwell(v,v_th(a.T_eV,a.m), var);
+init_func = @(v) maxwell(v,v_th(a.T_eV,a.m), 10^6);
 pitch_z = @(z) z.*0 + 1;
 pitch_t = @(t) exp(-nu_D(v_th(b.T_eV,a.m),a,b).*t);
 
