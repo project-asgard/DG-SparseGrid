@@ -18,6 +18,10 @@ load('nodes.mat','nodes')
 load('matrix_iter000.mat','A');
 
 [N,~] = size(A);
+% e = eig(A);
+% reale = real(e);
+% m = max(reale)
+
 
 f = f0;
 
