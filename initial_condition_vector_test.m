@@ -19,8 +19,8 @@ pde = check_pde(pde,opts);
 %         ans = 1./(x.^2);
     end
 
-pde.dimensions{1}.domainMin = 0.1;
-pde.dimensions{1}.domainMax = 2*pi;
+pde.dimensions{1}.min = 0.1;
+pde.dimensions{1}.max = 2*pi;
 pde.dimensions{1}.init_cond_fn = @(x,p,t) my_func(x);
 
 [elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, opts.max_lev, opts.grid_type);

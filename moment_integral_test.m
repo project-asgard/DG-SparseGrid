@@ -19,13 +19,13 @@ pde = check_pde(pde,opts);
         ans = z.*+1;
     end
 
-pde.dimensions{1}.domainMin = 0;
-pde.dimensions{1}.domainMax = 1;
+pde.dimensions{1}.min = 0;
+pde.dimensions{1}.max = 1;
 pde.dimensions{1}.init_cond_fn = @(v,p,t) my_func_v(v);
 pde.dimensions{1}.jacobian = @(v,p,t) v.^2;
 
-pde.dimensions{2}.domainMin = 0;
-pde.dimensions{2}.domainMax = pi;
+pde.dimensions{2}.min = 0;
+pde.dimensions{2}.max = pi;
 pde.dimensions{2}.init_cond_fn = @(z,p,t) my_func_z(z);
 pde.dimensions{2}.jacobian = @(z,p,t) sin(z);
 

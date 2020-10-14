@@ -1,4 +1,4 @@
-function pde = advection1
+function pde = advection1()
 % 1D test case using continuity equation, i.e., 
 %
 % df/dt == -2*df/dx - 2*sin(x)
@@ -17,8 +17,6 @@ function pde = advection1
 % 
 % Here we setup a 1D problem (x)
 dim_x = DIMENSION(0,pi);
-% dim_x.domainMin = 0;
-% dim_x.domainMax = pi;
 dim_x.init_cond_fn = @(x,p,t) cos(x);
 
 %%
@@ -26,7 +24,9 @@ dim_x.init_cond_fn = @(x,p,t) cos(x);
 % Note that the order of the dimensions must be consistent with this across
 % the remainder of this PDE.
 
-pde.dimensions = {dim_x};
+pde = PDE({dim_x});
+
+% pde.dimensions = {dim_x};
 num_dims = numel(pde.dimensions);
 
 % Setup boundary conditions of the solution
@@ -34,7 +34,6 @@ num_dims = numel(pde.dimensions);
 
 BCFunc_Left  = @(x) x.*0 +1;
 BCFunc_Right = @(x) x.*0 -1;
-%BCFunc_t = @(t) soln_t(t);
 
 BCL_fList = { ...
     @(x,p,t) BCFunc_Left(x), ... % replace x by b
@@ -83,12 +82,6 @@ pde.params = params;
 s1x = @(x,p,t) -2.*sin(x);
 s1t = @(t,p) t.*0 + 1;
 source1 = {s1x,s1t};
-
-%%
-% Source 2
-%s2x = @(x,p,t) sin(2*pi*x);
-%s2t = @(t,p) -2*pi*sin(t);
-%source2 = {s2x,s2t};
 
 %%
 % Add sources to the pde data structure

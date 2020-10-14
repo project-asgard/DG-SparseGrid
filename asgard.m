@@ -10,7 +10,7 @@ addpath(genpath(folder));
 root_directory = get_root_folder();
 
 %% Load PDE and runtime defaults
-runtime_defaults
+opts = get_opts()
 
 %% Reset any persistent variables
 if opts.time_independent_A | opts.time_independent_build_A
@@ -80,7 +80,7 @@ for d=1:num_dimensions
     if strcmp(opts.output_grid,'fixed')
         num_fixed_grid = 51;
         nodes_nodups{d} = ...
-            linspace(pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,num_fixed_grid);
+            linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
         [Meval{d},nodes{d},nodes_count{d}] = ...
             matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
     else
@@ -361,8 +361,8 @@ for L = 1:num_steps
             LminB = zeros(1,num_dimensions);
             LmaxB = zeros(1,num_dimensions);
             for d=1:num_dimensions
-                LminB(d) = pde.dimensions{d}.domainMin;
-                LmaxB(d) = pde.dimensions{d}.domainMax;
+                LminB(d) = pde.dimensions{d}.min;
+                LmaxB(d) = pde.dimensions{d}.max;
             end
             fval_realspaceB = convert_to_real_space(pde,num_dimensions,lev,deg,gridType,LminB,LmaxB,fval,lev);
             % fval_realspace = fval_realspaceB;

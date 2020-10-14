@@ -7,8 +7,8 @@ num_dimensions = numel(pde.dimensions);
 
 for d=1:num_dimensions
     
-    xMin = pde.dimensions{d}.domainMin;
-    xMax = pde.dimensions{d}.domainMax;
+    xMin = pde.dimensions{d}.min;
+    xMax = pde.dimensions{d}.max;
     xRng = xMax-xMin;
     
     %%

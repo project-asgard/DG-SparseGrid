@@ -5,7 +5,6 @@ function default_pde = check_pde(pde,opts)
 default_pde.set_dt = []; % Function which accepts the pde (after being updated with CMD args).
 default_pde.solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
 default_pde.applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally. 
-% default_pde.implicit = 0; % Can likely be removed and be a runtime argument. 
 default_pde.checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
 default_pde.CFL = 0.01;
 default_pde.dimensions = {};
@@ -15,9 +14,6 @@ default_pde.sources = {};
 default_pde.termsLHS = {};
 default_pde.transform_blocks = {}; % will be updated in asgard.m
 [~, default_pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
-% default_pde.max_lev = opts.max_lev; % This sets the maximum addressable space for the elements, i.e., cannot refine below this.
-% default_pde.deg = 2;
-% default_pde.lev_vec = [];
 
 if opts.many_solution_capable
     default_pde.solutions = {};
@@ -45,10 +41,5 @@ for k=1:numel(fn)
         error(strcat('Unrecognized term in PDE: ', fn{k} ));
     end
 end
-
-%%
-% Check the dimensions
-
-% default_pde = check_dimensions(default_pde,opts);
 
 end
