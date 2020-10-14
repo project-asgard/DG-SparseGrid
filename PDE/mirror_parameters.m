@@ -40,7 +40,7 @@ nu_D    = @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vt
 maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 
-init_cond_v = @(v) maxwell(v,1.5e7,v_th(a.T_eV,a.m));
+init_cond_v = @(v) maxwell(v,v_th(a.T_eV,a.m),1e6);
 init_cond_z = @(z) z.*0 + 1;
 init_cond_t = @(t) t*0 + 1;
 
@@ -72,5 +72,6 @@ end
 save_filename = 'mirror_parameters.mat';
 save(save_filename);
 p = load(save_filename);
+delete(save_filename);
 
 end

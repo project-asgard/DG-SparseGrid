@@ -10,7 +10,7 @@ function pde = mirror_velocity2
 %
 % asgard(mirror_velocity2,'timestep_method','BE')
 
-params = mirror_common();
+params = mirror_parameters();
 pde.params = params;
 
 test = 'c';
