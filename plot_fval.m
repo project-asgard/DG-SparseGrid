@@ -102,7 +102,7 @@ if num_dims==2
         title('analytic 2D solution');
     end
  
-    do_RE_paper_plots = true;
+    do_RE_paper_plots = false;
     if do_RE_paper_plots
         figure(11)
         levs = [-9,-8,-7,-6,-5,-4,-3,-2,-1,0];

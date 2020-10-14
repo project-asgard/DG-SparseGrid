@@ -500,7 +500,7 @@ for L = 1:num_steps
         time_array(L+1) = t+dt;
         wall_clock_time(L+1) = toc;
        
-        save(fName,'pde','opts','dt','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time');
+        save(fName,'pde','opts','dt','f_realspace_analytic_nD','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time');
 
     end
     

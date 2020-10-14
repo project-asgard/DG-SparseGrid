@@ -13,44 +13,44 @@ function pde = mirror_velocity2
 test = 'c';
 pde.CFL = 0.01;
 
-m_e = 9.109*10^-31; %electron mass in kg
-m_H = 1.6726*10^-27; %hydrogen mass in kgs
-m_D = 3.3443*10^-27; %deuterium mass in kgs
-eps0 = 8.85*10^-12; %permittivity of free space in Farad/m
-k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
-e = 1.602*10^-19; %charge in Coulombs
-ln_delt = 12; %Coulomb logarithm
+ %m_e = []; %electron mass in kg
+ m_H = []; %hydrogen mass in kgs
+ m_D = []; %deuterium mass in kgs
+ eps0 = []; %permittivity of free space in Farad/m
+ k_b = []; %Boltzmann constant in Joules/Kelvin
+ e = []; %charge in Coulombs
+ ln_delt = []; %Coulomb logarithm
 
-v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
+ v_th = [];
 
 % species b: electrons in background
-b.n = 4e19;
-b.T_eV = 4;
-b.Z = -1;
-b.m = m_e;
-b.vth = v_th(b.T_eV,b.m);
-
-%species b2: deuterium in background
-b2.n = 4e19;
-b2.T_eV = 4;
-b2.Z = 1;
-b2.m = m_D;
-b2.vth = v_th(b2.T_eV,b2.m);
-
-% species a: electrons in beam
-a.n = 4e19;
-a.T_eV = 1e3;
-a.Z = -1;
-a.m = m_e;
-a.vth = v_th(a.T_eV,a.m);
+ b.n = [];
+% b.T_eV = 4;
+% b.Z = -1;
+% b.m = m_e;
+% b.vth = v_th(b.T_eV,b.m);
+% 
+% %species b2: deuterium in background
+ b2.n = [];
+% b2.T_eV = 4;
+% b2.Z = 1;
+% b2.m = m_D;
+% b2.vth = v_th(b2.T_eV,b2.m);
+% 
+% % species a: electrons in beam
+ a.n = [];
+% a.T_eV = 1e3;
+% a.Z = -1;
+% a.m = m_e;
+% a.vth = v_th(a.T_eV,a.m);
 
 % L_ab = ln_delt*e^4/(m_a*eps0)^2; %Coefficient accounting for Coluomb force
 switch test
     case 'a'
-        T_eV_a = 0.05*T_eV_b; %Target temperature in Kelvin\
+        a.T_eV = 0.05*T_eV_b; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
     case 'b'
-        T_eV_a = 0.05*T_eV_b;
+        a.T_eV = 0.05*T_eV_b;
         offset = 0; %case with no offset but change in Temperature
     case 'c'
         a.T_eV = 1e3;
@@ -62,23 +62,27 @@ end
 % nu_s = @(v) psi(v./v_th(T_b,m_b)).*n_b*L_ab*(1 + m_a/m_b)./(2*pi*v_th(T_b,m_b).^3.*v./v_th(T_b,m_b)); %Slowing down frequency in s^-1; 
 
 
-x = @(v,vth) v./vth; 
-nu_ab0 = @(a,b) b.n * e^4 * a.Z^2 * b.Z^2 * ln_delt / (2*pi*eps0^2*a.m^2*b.vth^3); %scaling coefficient
-nu_s = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(x(v,b.vth)) ./ x(v,b.vth); %slowing down frequency
-nu_par = @(v,a,b) nu_ab0(a,b).*(psi(x(v,b.vth))./(x(v,b.vth).^3)); %parallel diffusion frequency
+ x = []; 
+ nu_ab0 = []; %scaling coefficient
+ nu_s = []; %slowing down frequency
+ nu_par = []; %parallel diffusion frequency
+
+mirror_common
 nu_D =  @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
 
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 gauss = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 % norm = 3.749;
-init_func = @(v) maxwell(v,0,v_th(b.T_eV,a.m)) + maxwell(v,5*10^6, 10^6);
+var = 10^6;
+init_func = @(v) maxwell(v,v_th(a.T_eV,a.m), var);
 pitch_z = @(z) z.*0 + 1;
 pitch_t = @(t) exp(-nu_D(v_th(b.T_eV,a.m),a,b).*t);
 
-v_ = 10.^[1:.1:7];
-%loglog(0.5*a.m*v_.^2/e,nu_D(v_,a,a))
-hold on
+v_ = 10.^[-1:.1:7];
 %loglog(0.5*a.m*v_.^2/e,nu_D(v_,a,b))
+hold on
+%loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,b))
+%loglog(0.5*a.m*v_.^2/e,nu_par(v_,a,b))
 xlim([0.1,1e2]);
 ylim([1e4,1e11]);
 
