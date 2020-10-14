@@ -112,7 +112,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     %%
                     % Get time multiplier
                     
-                    timeFacR = BCR_fList{num_dims+1}(time);
+                    timeFacR = BCR_fList{num_dims+1}(time,pde.params);
                     
                     %%
                     % Get boundary functions for all dims
