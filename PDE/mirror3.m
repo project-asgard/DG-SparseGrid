@@ -10,54 +10,25 @@ function pde = mirror3
 %
 % asgard(mirror3,'timestep_method','BE')
 
+params = mirror_parameters();
+pde.params = params;
+
 test = 'c';
 pde.CFL = 0.01;
 
- m_e = []; %electron mass in kg
- m_H = []; %hydrogen mass in kgs
- m_D = []; %deuterium mass in kgs
- eps0 = []; %permittivity of free space in Farad/m
- k_b = []; %Boltzmann constant in Joules/Kelvin
- e = []; %charge in Coulombs
- ln_delt = []; %Coulomb logarithm
-
- v_th = [];
-
-% species b: electrons in background
- b.n = [];
-% 
-% %species b2: deuterium in background
- b2.n = [];
-
-% % species a: electrons in beam
- a.n = [];
- 
 switch test
     case 'a'
-        a.T_eV = 0.05*T_eV_b; %Target temperature in Kelvin\
+        params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
     case 'b'
-        a.T_eV = 0.05*T_eV_b;
+        params.a.T_eV = 0.05*params.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
     case 'c'
-        a.T_eV = 1e3;
+        params.a.T_eV = 1e3;
         offset = 10^7; %case with offset and no change in Temperature
 end
 
- x = []; 
- nu_ab0 = []; %scaling coefficient
- nu_s = []; %slowing down frequency
- nu_par = []; %parallel diffusion frequency
- nu_D = [];
- 
-maxwell = [];
-gauss = [];
-
-mirror_common
-
-% norm = 3.749;
-init_func_v = @(v) maxwell(v,v_th(a.T_eV,a.m), 10^6);
-init_func_z = @(z) z.*0 + 1;
+maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 v_ = 10.^[-1:.1:7];
 %loglog(0.5*a.m*v_.^2/e,nu_D(v_,a,b))
@@ -66,8 +37,6 @@ hold on
 %loglog(0.5*a.m*v_.^2/e,nu_par(v_,a,b))
 xlim([0.1,1e2]);
 ylim([1e4,1e11]);
-
-BCFunc = @(v) init_func(v);
 
 B_func = @(s) sin(s); %magnetic field as a function of spatial coordinate
 dB_ds = @(s) cos(s); %derivative of magnetic field
@@ -83,7 +52,7 @@ pitch_t = @(t) exp(-nu_D*t);
 space_s = @(s) exp(s);
 space_t = @(t) exp(-2*A*t);
 %Boundary for velocity space
-BCFunc = @(v) maxwell_func(v,T_b,m_a);
+BCFunc = @(v,p,t) p.init_cond_v(v);
 
 
 % Domain is (a,b)
@@ -92,9 +61,9 @@ BCFunc = @(v) maxwell_func(v,T_b,m_a);
 % x = a and x = b
 BCL_fList = { ...
     @(v,p,t) v.*0, ... 
-    @(z,p,t) pitch_z(z), ...
+    @(z,p,t) p.init_cond_z(z), ...
     @(s,p,t) space_s(s), ...
-    @(t,p) pitch_t(t).*space_t(t)
+    @(t,p) p.init_cond_t(t)
     };
 
 BCR_fList = { ...

@@ -1,4 +1,4 @@
-function plot_fval(pde,nodes,f_nD,f_nD_analytic,element_coordinates)
+function plot_fval(pde,nodes,f_nD,f_nD_analytic,element_coordinates,window_title)
 
 num_dims = numel(pde.dimensions);
 
