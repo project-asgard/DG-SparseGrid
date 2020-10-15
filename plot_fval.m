@@ -189,7 +189,7 @@ if num_dims==3
     sx = numel(f_nD(1,1,:))/2;
     
     %plotting in x-direction
-    f1d = f3d(sz,sy,:);
+    f1d = f_nD(sz,sy,:);
     f1d = f1d(1,:);
     x = nodes{1};
     y = nodes{2};
@@ -199,7 +199,7 @@ if num_dims==3
     title('1D slice through velocity dimension');
     
     %plotting y-direction
-    f1d = f3d(sz,:,sx);
+    f1d = f_nD(sz,:,sx);
     x = nodes{1};
     y = nodes{2};
     z = nodes{3};
@@ -208,7 +208,7 @@ if num_dims==3
     title('1D slice through pitch dimension');
     
     %plotting z-direction
-    f1d = f3d(:,sy,sx);
+    f1d = f_nD(:,sy,sx);
     x = nodes{1};
     y = nodes{2};
     z = nodes{3};
@@ -222,7 +222,7 @@ if num_dims==3
     if pde.checkAnalytic
         f_slice_analytic = f_nD_analytic(:,sy,sx);
         hold on;
-        plot(z,f1d_analytic,'-');
+        plot(z,f_slice_analytic,'-');
         hold off;
     end
     
