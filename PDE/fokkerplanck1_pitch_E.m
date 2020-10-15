@@ -12,9 +12,11 @@ function pde = fokkerplanck1_pitch_E(case_)
 
 % implicit
 % asgard(fokkerplanck1_pitch_E,'lev',5,'deg',3,'timestep_method','CN','CFL',0.1,'num_steps',30)
-
-% case_number = 1; % flat initial condition
-% case_number = 2; % gaussian initial condition
+%
+% choose a case
+%
+% asgard(fokkerplanck1_pitch_E(1)) % run case 1 - flat initial condition
+% asgard(fokkerplanck1_pitch_E(2)) % run case 2 - gaussian initial condition
 
 case_number = 1;
 if nargin > 0
