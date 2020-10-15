@@ -38,19 +38,6 @@ hold on
 xlim([0.1,1e2]);
 ylim([1e4,1e11]);
 
-B_func = @(s) sin(s); %magnetic field as a function of spatial coordinate
-dB_ds = @(s) cos(s); %derivative of magnetic field
-v_test = 500; %test value for velocity in spatial advection coefficient
-z_test = pi/2 - 1e-6; %test value for pitch angle in spatial advection coefficient
-A = v_test*cos(z_test); %spatial advection coefficient
-%Expected solution for velocity space, with norm to account for particle
-%conservation
-%Expected solution in pitch angle
-pitch_z = @(z) n_a.*cos(z);
-pitch_t = @(t) exp(-nu_D*t);
-%Expected solution for spatial dimension
-space_s = @(s) exp(s);
-space_t = @(t) exp(-2*A*t);
 %Boundary for velocity space
 BCFunc = @(v,p,t) p.init_cond_v(v);
 
@@ -62,47 +49,38 @@ BCFunc = @(v,p,t) p.init_cond_v(v);
 BCL_fList = { ...
     @(v,p,t) v.*0, ... 
     @(z,p,t) p.init_cond_z(z), ...
-    @(s,p,t) space_s(s), ...
+    @(s,p,t) p.init_cond_s(s), ...
     @(t,p) p.init_cond_t(t)
     };
 
 BCR_fList = { ...
-    @(v,p,t) BCFunc(v), ... % 
-    @(z,p,t) pitch_z(z), ...
-    @(s,p,t) space_s(s), ...
-    @(t,p) pitch_t(t).*space_t(t)
+    @(v,p,t) o.init_cond_v(v), ... % 
+    @(z,p,t) p.init_cond_z(z), ...
+    @(s,p,t) p.init_cond_s(s), ...
+    @(t,p) p.init_cond_t(t)
     };
 
 %E = 1.0; %parallel Electric field
 
-function ret = phi(x)
-        ret = erf(x);
-end
-function ret = phi_f(x)
-        ret = (x + 1./(2*x)).*erf(x) + exp(-x.^2)./sqrt(pi);     
-end
-function ret = psi(x)     
-        dphi_dx = 2./sqrt(pi) * exp(-x.^2);
-        ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);   
-        ix = find(abs(x)<1e-5); % catch singularity at boundary
-        ret(ix) = 0;
-end
 
 %% Setup the dimensions
-% 
+%
 dim_v.name = 'v';
-dim_v.domainMin = 0.01;
-dim_v.domainMax = 10^7;
-dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);
+dim_v.domainMin = 0;
+dim_v.domainMax = 3*10^7;
+dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
+dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 
 dim_z.name = 'z';
-dim_z.domainMin = -pi;
+dim_z.domainMin = 0;
 dim_z.domainMax = pi;
-dim_z.init_cond_fn = @(z,p,t) pitch_z(z)*pitch_t(t);
+dim_z.init_cond_fn = @(z,p,t) p.init_cond_z(z)*p.init_cond_t(t);
+dim_z.jacobian = @(z,p,t) sin(z);
 
 dim_s.domainMin = 0;
 dim_s.domainMax = 5;
-dim_s.init_cond_fn = @(s,p,t) space_s(s);
+dim_s.init_cond_fn = @(s,p,t) p.init_cond_s(s);
+dim_s.jacobian = @(s,p,t) s.*0 + 1;
 
 %%
 % Add dimensions to the pde object
@@ -141,7 +119,7 @@ termS1   = TERM_ND(num_dims,{term1_s,[],[]});
 
 g1 = @(v,p,t,dat) v;
 g2 = @(z,p,t,dat) cos(z);
-g3 = @(s,p,t,dat) -dB_ds(s)./B_func(s);
+g3 = @(s,p,t,dat) -p.dB_ds(s)./p.B_func(s);
 
 pterm1 = MASS(g1);
 pterm2 = MASS(g2);
@@ -151,22 +129,24 @@ termB1 = TERM_1D({pterm1,pterm2,pterm3});
 
 termS2 = TERM_ND(num_dims,{termB1,[],[]});
 
+%% 
 % termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
 %
 % becomes 
 %
-% termC == g1(z) q(z)        [mass, g1(p) = nu_D/(2*sin(z)),  BC N/A]
-%   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
-%   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
+% termC == g1(v) g2(z) q(z)   [mass, g1(p) = nu_D(v), g2(z) = 1/(2sin(z))  BC N/A]
+%   q(z) == d/dz g3(z) r(z)   [grad, g3(z) =  sin(z), BCL=D,BCR=D]
+%   r(z) == d/dp g4(z) f(z)   [grad, g3(p) = 1,      BCL=N,BCR=N]
 
-
-g1 = @(z,p,t,dat) nu_D./(2*sin(z));
-g2 = @(z,p,t,dat) sin(z);
-g3 = @(z,p,t,dat) z.*0 + 1;
+g1 = @(v,p,t,dat) p.nu_D(v,p.a,p.b);
+g2 = @(z,p,t,dat) 1./(2*sin(z));
+g3 = @(z,p,t,dat) sin(z);
+g4 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'D','D');
-pterm3 = GRAD(num_dims,g3,0,'N', 'N');
-termC_z = TERM_1D({pterm1,pterm2,pterm3});
+pterm2  = MASS(g2);
+pterm3  = GRAD(num_dims,g3,+1,'D','D');
+pterm4  = GRAD(num_dims,g4,-1,'N', 'N');
+termC_z = TERM_1D({pterm1,pterm2,pterm3,pterm4});
 termC   = TERM_ND(num_dims,{termC_z,[],[]});
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
@@ -174,12 +154,12 @@ termC   = TERM_ND(num_dims,{termC_z,[],[]});
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=D]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*m_a*nu_s/(m_a + m_b);
+g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
-pterm1 = MASS(g1);
+pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
 termV_s = TERM_1D({pterm1,pterm2});
-termV1   = TERM_ND(num_dims,{termV_s,[],[]});
+termV1  = TERM_ND(num_dims,{termV_s,[],[]});
 
 %%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
@@ -188,14 +168,14 @@ termV1   = TERM_ND(num_dims,{termV_s,[],[]});
 % r(v) = d/dv(g3(v)f)       [grad, g3(v) = 1, BCL=N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^4.*0.5.*nu_par(v);
+g2 = @(v,p,t,dat) v.^4.*0.5.*p.nu_par(v,p.a,p.b);
 g3 = @(v,p,t,dat) v.*0 + 1;
 
-pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,-1,'D','N');
-pterm3 = GRAD(num_dims,g3,+1,'N','D', BCL_fList, BCR_fList);
-termV_par = TERM_1D({pterm1,pterm2,pterm3});
-termV2   = TERM_ND(num_dims,{termV_par,[],[]});
+pterm1      = MASS(g1);
+pterm2      = GRAD(num_dims,g2,-1,'D','N');
+pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL_fList, BCR_fList);
+termV_par   = TERM_1D({pterm1,pterm2,pterm3});
+termV2      = TERM_ND(num_dims,{termV_par,[],[]});
 
 %%
 % Add terms to the pde object
@@ -221,9 +201,9 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) norm*n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
-    @(z,p,t) pitch_z(z), ...
-    @(s,p,t) space_s(s), ...
+    @(v,p,t) p.analytic_solution_v(v,p,t), ...
+    @(z,p,t) p.init_cond_z(z), ...
+    @(s,p,t) p.init_cond_s(s), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
 
