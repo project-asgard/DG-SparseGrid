@@ -2,24 +2,27 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
 
     x = nodes{1};
     y = nodes{2};
+    z = nodes{3};
     
     nx = numel(x);
     ny = numel(y);
+    nz = numel(z);
     
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(ny/2));
-    if ny > 2
-        sy = sy+2; % just to get off the exact middle
-    end
+    sz = numel(f_nD(:,1,1))/2;
+    sy = numel(f_nD(1,:,1))/2;
+    sx = numel(f_nD(1,1,:))/2;
     
-    f_slice = f_nD{1,2}(sy,:);
+    %plotting in x-direction
+    f1d = f_nD(sz,sy,:);
+    f1d = f1d(1,:);
     x = nodes{1};
     y = nodes{2};
-    ax1 = subplot(2,2,1);
+    z = nodes{3};
     x = 9.109*10^-31*x.^2/(1.602*10^-19);
-    loglog(x,f_slice,'-o');
+    loglog(x,f1d,'-o');
     xlim([0.01,1e4]);
     ylim([0.01,1e4]);
     title('Mirror 2D Relaxation');
@@ -30,9 +33,10 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
     % Overplot analytic solution
     
     if pde.checkAnalytic
-        f_slice_analytic = f_nD_analytic(sy,:);
+        f_1d_analytic = f_nD_analytic(sz,sy,:);
+        f_1d_analytic = f_1d_analytic(1,:);
         hold on;
-        plot(x,f_slice_analytic,'-');
+        loglog(x,f_1d_analytic,'-');
         hold off;
     end
     

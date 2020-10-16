@@ -1,4 +1,4 @@
-function pde = mirror3
+function pde = mirror3(case_)
 % Three-dimensional magnetic mirror from the FP paper - evolution of the ion velocity and spatial dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
@@ -10,36 +10,41 @@ function pde = mirror3
 %
 % asgard(mirror3,'timestep_method','BE')
 
+% choose a case
+%
+% asgard(mirror3(1)) % run case 1 - maxwellian offset and different Temp.
+% asgard(mirror3(2)) % run case 2 - max. no offset and different Temp.
+% asgard(mirror3(3)) % run case 3 - max. offset and same Temp.
+
+case_number = 1;
+if nargin > 0
+    case_number = case_;
+end
+
 params = mirror_parameters();
 pde.params = params;
 
-test = 'c';
 pde.CFL = 0.01;
 
-switch test
-    case 'a'
-        params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin\
-        offset = 10^6; %case with offset and change in Temperature
-    case 'b'
+switch case_number
+    case 1
+        params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin
+        params.init_cond_v = @(v) params.maxwell(v,params.v_th(params.a.T_eV,params.a.m),1e6);
+    case 2
         params.a.T_eV = 0.05*params.b.T_eV;
-        offset = 0; %case with no offset but change in Temperature
-    case 'c'
+        params.init_cond_v = @(v) params.maxwell(v,0,1e6);
+    case 3
         params.a.T_eV = 1e3;
-        offset = 10^7; %case with offset and no change in Temperature
+        params.init_cond_v = @(v) v.*0 + 1;%params.maxwell(v,params.v_th(params.a.T_eV,params.a.m),1e6);
 end
 
-maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
-
-v_ = 10.^[-1:.1:7];
+%v_ = 10.^[-1:.1:7];
 %loglog(0.5*a.m*v_.^2/e,nu_D(v_,a,b))
-hold on
+%hold on
 %loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,b))
 %loglog(0.5*a.m*v_.^2/e,nu_par(v_,a,b))
-xlim([0.1,1e2]);
-ylim([1e4,1e11]);
-
-%Boundary for velocity space
-BCFunc = @(v,p,t) p.init_cond_v(v);
+%xlim([0.1,1e2]);
+%ylim([1e4,1e11]);
 
 
 % Domain is (a,b)
@@ -180,7 +185,7 @@ termV2      = TERM_ND(num_dims,{termV_par,[],[]});
 %%
 % Add terms to the pde object
 
-pde.terms = {termV1,termV2, termC,termS1,termS2};
+pde.terms = {termV1,termV2, termC,termS1};
 
 %% Construct some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -201,8 +206,8 @@ pde.sources = {};
 % This requires nDims+time function handles.
 
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) p.analytic_solution_v(v,p,t), ...
-    @(z,p,t) p.init_cond_z(z), ...
+    @(v,p,t) p.init_cond_v(v), ...
+    @(z,p,t) p.analytic_solution_z(z,p,t), ...
     @(s,p,t) p.init_cond_s(s), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };

@@ -42,14 +42,14 @@ gauss   = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 B_func = @(s) sin(s); %magnetic field as a function of spatial coordinate
 dB_ds = @(s) cos(s); %derivative of magnetic field
 
-init_cond_v = @(v) maxwell(v,v_th(a.T_eV,a.m),1e6);
-init_cond_z = @(z) cos(z);%@(z) z.*0 + 1;
-init_cond_s = @(s) exp(s);
+init_cond_v = @(v) v.*0 + 1;
+init_cond_z = @(z) a.n*cos(z);
+init_cond_s = @(s) s.*0 + 1;
 init_cond_t = @(t) t*0 + 1;
 
-analytic_solution_v = @soln_v;
-function ret = soln_v(v,p,t)
-ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
+analytic_solution_z = @soln_z;
+function ret = soln_z(z,p,t)
+ret = a.n.*cos(z).*exp(-nu_D(b.vth,a,b).*t);
 if isfield(p,'norm_fac')
     ret = ret .* p.norm_fac;
 end
