@@ -4,12 +4,16 @@ end
 
 function test_moment_2D_spherical(testCase)
 
-num_dims = 2;
-pde = mirror_velocity2;
-opts = OPTS(num_dims);
+opts = OPTS();
 opts.lev = 4;
 opts.deg = 4;
-pde = check_pde(pde,opts);
+opts.case_ = 3;
+pde = mirror_velocity2(opts);
+num_dims = numel(pde.dimensions);
+opts = opts.init_lev_vec(pde); % need to fix this crap
+for d=1:num_dims
+    pde.dimensions{d}.lev = opts.lev_vec(d);
+end
 
     function ans = my_func_v(v)
         v_th = 0.2;

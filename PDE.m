@@ -17,7 +17,14 @@ classdef PDE
         % MSC = Many Solution Capable fields
         % (all PDEs will transition to this soon)
         solutions = {};
-        initial_conditions = {};        
+        initial_conditions = {}; 
+        
+        % Old hash table - to be removed when support for oldhashtable is
+        % removed
+        hash_table = [];
+        
+        % In case of use_connectivity = true
+        connectivity = {};
     end
     
     methods
