@@ -415,7 +415,7 @@ end
 
 %% Re check the PDE
 % FIXME is this necessary?
-pde = check_pde(pde,opts);
+% pde = check_pde(pde,opts);
 
 
 %% Update A_data
