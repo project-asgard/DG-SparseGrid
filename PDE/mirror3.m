@@ -1,4 +1,4 @@
-function pde = mirror3
+function pde = mirror3(opts)
 % Three-dimensional magnetic mirror from the FP paper - evolution of the ion velocity and spatial dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
@@ -8,10 +8,11 @@ function pde = mirror3
 %
 % Run with
 %
-% asgard(mirror3,'timestep_method','BE')
-
-test = 'c';
-pde.CFL = 0.01;
+% asgard(@mirror3,'timestep_method','BE','case',3,'calculate_mass',false,'quiet',true);
+%
+% NOTES
+% DLG: the calculation of the mass can be added back in once the mirror_3D
+% branch has been merged in (same with the plotting)
 
 m_e = 9.109*10^-31; %electron mass in kg
 m_H = 1.6726*10^-27; %hydrogen mass in kgs
@@ -33,14 +34,15 @@ m_a = m_H;%target species
 
 v_th = @(T,m) (2*k_b*T./m).^0.5; %thermal velocity function
 L_ab = ln_delt*e^4/(m_a*eps_o)^2; %Coefficient accounting for Coluomb force
-switch test
-    case 'a'
+
+switch opts.case_
+    case 1
         T_eV_a = 0.05*T_eV_b; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
-    case 'b'
+    case 2
         T_eV_a = 0.05*T_eV_b;
         offset = 0; %case with no offset but change in Temperature
-    case 'c'
+    case 3
         T_eV_a = T_eV_b;
         offset = 10^6; %case with offset and no change in Temperature
 end 
@@ -101,31 +103,23 @@ function ret = psi(x)
         ret(ix) = 0;
 end
 
-%% Setup the dimensions
-% 
+%% Define the dimensions
+
+dim_v = DIMENSION(0.01,10^7);
 dim_v.name = 'v';
-dim_v.domainMin = 0.01;
-dim_v.domainMax = 10^7;
 dim_v.init_cond_fn = @(v,p,t) maxwell_func(v,T_a,m_a);
 
+dim_z = DIMENSION(-pi,+pi);
 dim_z.name = 'z';
-dim_z.domainMin = -pi;
-dim_z.domainMax = pi;
 dim_z.init_cond_fn = @(z,p,t) pitch_z(z)*pitch_t(t);
 
-dim_s.domainMin = 0;
-dim_s.domainMax = 5;
+dim_s = DIMENSION(0,5);
 dim_s.init_cond_fn = @(s,p,t) space_s(s);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_v, dim_z, dim_s};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_v, dim_z, dim_s};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 
 %% 
 %% Advection  term
@@ -145,8 +139,8 @@ pterm3 = GRAD(num_dims,g3,-1,'D','D', BCL_fList, BCR_fList);
 term1_s = TERM_1D({pterm1,pterm2,pterm3});
 termS1   = TERM_ND(num_dims,{term1_s,[],[]});
 
-%%Mass term
-%termS2 == -vcos(z)dB/ds f
+%% Mass term
+% termS2 == -vcos(z)dB/ds f
 % termS1 == q(v)*r(z)*w(s)
 % q(v) == g1(v)  [mass, g1(p) = v,  BC N/A]
 % r(z) == g2(z) [mass, g2(z) = cos(z),  BC N/A]
@@ -210,45 +204,38 @@ pterm3 = GRAD(num_dims,g3,+1,'N','D', BCL_fList, BCR_fList);
 termV_par = TERM_1D({pterm1,pterm2,pterm3});
 termV2   = TERM_ND(num_dims,{termV_par,[],[]});
 
-%%
-% Add terms to the pde object
+terms = {termV1,termV2,termC,termS1,termS2};
 
-pde.terms = {termV1,termV2, termC,termS1,termS2};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
+%% Define sources
 
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1
-
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...    
+analytic_solutions_1D = { ...    
     @(v,p,t) norm*n_a/(pi^3/2.*v_th(T_b,m_a).^3).*exp(-(v./v_th(T_b,m_a)).^2), ...
     @(z,p,t) pitch_z(z), ...
     @(s,p,t) space_s(s), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
 
-%%
-% Function to set time step
-    function dt=set_dt(pde,CFL)
-        
-        Lmax = pde.dimensions{1}.domainMax;
+%% Define function to set time step
+    function dt=set_dt(pde,CFL)      
+        Lmax = pde.dimensions{1}.max;
         LevX = pde.dimensions{1}.lev;
         dt = Lmax/2^LevX*CFL;
     end
 
-pde.set_dt = @set_dt;
+
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end

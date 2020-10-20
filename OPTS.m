@@ -42,11 +42,27 @@ classdef OPTS
     
     methods
         
-        function opts = OPTS(num_dims)
-                    
-            input_parser = inputParser();  
+        function opts = init_lev_vec(opts,pde)
+            
+            num_dims = numel(pde.dimensions);
+            
+            if numel(opts.lev) > 1 || num_dims == 1
+                assert(numel(opts.lev)==num_dims,'lev specifier must be num_dim long');               
+                for d=1:num_dims
+                    opts.lev_vec(d) = opts.lev(d);
+                end
+            else
+                for d=1:num_dims
+                    opts.lev_vec(d) = opts.lev;
+                end
+            end
+        end
+        
+        function opts = OPTS(varargin,num_dims)
+            
+            input_parser = inputParser();
             input_parser.KeepUnmatched = true;
-                       
+            
             valid_grid_types = {'SG','FG'};
             check_grid_type = @(x) any(validatestring(x,valid_grid_types));
             valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE','time_independent'};
@@ -54,7 +70,8 @@ classdef OPTS
             valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points'};
             check_output_grid = @(x) any(strcmp(x,valid_output_grids));
             
-            addRequired(input_parser, 'pde', @isstruct);
+            %             addRequired(input_parser, 'pde', @isstruct);
+            %             addRequired(input_parser, 'pde', @(var)isa(var,'functionhandle'));
             
             addOptional(input_parser,'lev',opts.lev, @isnumeric);
             addOptional(input_parser,'deg',opts.deg, @isnumeric);
@@ -86,54 +103,54 @@ classdef OPTS
             addOptional(input_parser,'case',opts.case_,@isnumeric);
             addOptional(input_parser,'calculate_mass',opts.calculate_mass,@islogical);
             addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
-                        
-            if numel(varargin) == 0 && ~exist('pde','var')
-                
-                num_parameters = numel(input_parser.Parameters);
-                
-                disp('ASGarD - Adaptive Sparse Grid Discrization');
-                disp('');
-                disp('Run with ...');
-                disp('');
-                disp("asgard(pde_name,'opt_name',opt_val)");
-                disp('');
-                disp('e.g.,');
-                disp('');
-                disp("asgard(continuity1,'lev',4,'deg',3,'timestep_method','BE','CFL',0.1,'adapt',true)");
-                disp('');
-                disp('Available options are ...');
-                
-                for p=1:num_parameters
-                    disp(input_parser.Parameters(p));
-                end
-                
-                error('Run with no arguments, exiting.');
-                
-            end
             
-            parse(input_parser,pde,varargin{:})
+            %             if numel(varargin) == 0 && ~exist('pde','var')
+            %
+            %                 num_parameters = numel(input_parser.Parameters);
+            %
+            %                 disp('ASGarD - Adaptive Sparse Grid Discrization');
+            %                 disp('');
+            %                 disp('Run with ...');
+            %                 disp('');
+            %                 disp("asgard(pde_name,'opt_name',opt_val)");
+            %                 disp('');
+            %                 disp('e.g.,');
+            %                 disp('');
+            %                 disp("asgard(continuity1,'lev',4,'deg',3,'timestep_method','BE','CFL',0.1,'adapt',true)");
+            %                 disp('');
+            %                 disp('Available options are ...');
+            %
+            %                 for p=1:num_parameters
+            %                     disp(input_parser.Parameters(p));
+            %                 end
+            %
+            %                 error('Run with no arguments, exiting.');
+            %
+            %             end
             
-            num_terms       = numel(pde.terms);
-            num_dimensions  = numel(pde.dimensions);
-            num_steps       = input_parser.Results.num_steps;
-            t               = input_parser.Results.start_time;
+            parse(input_parser,varargin{:})
             
-            if numel(input_parser.Results.lev) == num_dimensions
-                %%
-                % Specify lev_vec at runtime to have dimension dependent lev
-                for d=1:num_dimensions
-                    pde.dimensions{d}.lev = input_parser.Results.lev(d);
-                    opts.lev_vec(d) = input_parser.Results.lev(d);
-                end
-            else
-                %%
-                % Specify a single lev which all dimensions get
-                assert(numel(input_parser.Results.lev)==1);
-                for d=1:num_dimensions
-                    pde.dimensions{d}.lev = input_parser.Results.lev;
-                    opts.lev_vec(d) = input_parser.Results.lev;
-                end
-            end
+            %             num_terms       = numel(pde.terms);
+            %             num_dimensions  = numel(pde.dimensions);
+            %             num_steps       = input_parser.Results.num_steps;
+            %             t               = input_parser.Results.start_time;
+            
+            %             if numel(input_parser.Results.lev) == num_dimensions
+            %                 %%
+            %                 % Specify lev_vec at runtime to have dimension dependent lev
+            %                 for d=1:num_dimensions
+            % %                     pde.dimensions{d}.lev = input_parser.Results.lev(d);
+            %                     opts.lev_vec(d) = input_parser.Results.lev(d);
+            %                 end
+            %             else
+            %                 %%
+            %                 % Specify a single lev which all dimensions get
+            %                 assert(numel(input_parser.Results.lev)==1);
+            %                 for d=1:num_dimensions
+            %                     pde.dimensions{d}.lev = input_parser.Results.lev;
+            %                     opts.lev_vec(d) = input_parser.Results.lev;
+            %                 end
+            %             end
             
             % CFL priority
             % low        : opts.CFL
@@ -185,6 +202,8 @@ classdef OPTS
             opts.case_ = input_parser.Results.case;
             opts.calculate_mass = input_parser.Results.calculate_mass;
             opts.normalize_by_mass = input_parser.Results.normalize_by_mass;
+            opts.num_steps = input_parser.Results.num_steps;
+            opts.start_time = input_parser.Results.start_time;
             
             opts.build_A = false;
             if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0
@@ -242,11 +261,11 @@ classdef OPTS
             end
             
             
-            if nargin > 0
-                for d=1:num_dims
-                    opts.lev_vec(d) = opts.lev;
-                end
-            end
+            %             if nargin > 0
+            %                 for d=1:num_dims
+            %                     opts.lev_vec(d) = opts.lev;
+            %                 end
+            %             end
             
         end
         

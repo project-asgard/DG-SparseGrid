@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace,nodes,err_realspace] = asgard(pde,varargin)
+function [err,fval,fval_realspace,nodes,err_realspace] = asgard(pde_handle,varargin)
 
 tic
 
@@ -9,16 +9,30 @@ folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 root_directory = get_root_folder();
 
-%% Load PDE and runtime defaults
-opts = get_opts()
+%% Check for valid PDE function handle
+if ~exist('pde_handle','var')
+    if ~isa(pde_handle,'functionhandle')
+        error('Invalid PDE function handle, exiting.');
+    end
+end
+
+%% Create options
+opts = OPTS(varargin);
 
 %% Reset any persistent variables
 if opts.time_independent_A | opts.time_independent_build_A
     clear time_advance
 end
 
-%% Check PDE
-pde = check_pde(pde,opts);
+%% Create PDE
+% pde = check_pde(pde,opts);
+pde = pde_handle(opts);
+num_dimensions = numel(pde.dimensions);
+
+opts = opts.init_lev_vec(pde);
+for d=1:num_dimensions
+    pde.dimensions{d}.lev = opts.lev_vec(d);
+end
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
@@ -28,6 +42,7 @@ else
     opts.dt = dt;
 end
 if ~opts.quiet; disp(sprintf('dt = %g', dt )); end
+
 
 %% Construct the Element (Hash) table.
 if ~opts.quiet; disp('Constructing hash and inverse hash tables'); end
@@ -227,10 +242,10 @@ end
 count=1;
 err = 1e9;
 if ~opts.quiet; disp('Advancing time ...'); end
-for L = 1:num_steps
+for L = 1:opts.num_steps
     
     tic;
-    timeStr = sprintf('Step %i of %i at %f seconds',L,num_steps,t);
+    timeStr = sprintf('Step %i of %i at %f seconds',L,opts.num_steps,t);
     
     if ~opts.quiet; disp(timeStr); end
     Emax = 0;

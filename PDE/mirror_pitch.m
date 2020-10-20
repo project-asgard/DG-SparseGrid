@@ -1,4 +1,4 @@
-function pde = mirror_pitch
+function pde = mirror_pitch(opts)
 % PDE using the 1D Diffusion Equation for a case involving pitcha angle to axis \
 % of the magnetic field line in a mirror configuration. This PDE is
 % time dependent (although not all the terms are time dependent). The test
@@ -19,17 +19,12 @@ function pde = mirror_pitch
 % Run with
 %
 % explicit
-% asgard(mirror_pitch);
+% asgard(@mirror_pitch,'CFL',0.0001);
 %
 % implicit
-% asgard(mirror_pitch,'timestep_method','BE', 'dt', 1e-8);
+% asgard(@mirror_pitch,'timestep_method','BE', 'dt', 1e-8);
 %
 
-pde.CFL = 0.0001;
-
-%% Setup the dimensions
-% 
-% Here we setup a 1D problem 
     function ret = psi(x)
         
         phi = erf(x);
@@ -89,21 +84,17 @@ BCR_fList = { ...
     @(t,p) BCFunc_t(t)
     };
 
+%% Define the dimensions
+
+dim_z = DIMENSION(0.1,pi-0.1);
 dim_z.name = 'z';
-dim_z.domainMin = 0.1;
-dim_z.domainMax = pi-.1;
 dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
 dim_z.jacobian = @(z,p,t) sin(z);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_z};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_z};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 %
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
@@ -126,51 +117,37 @@ pterm3 = GRAD(num_dims,g3,+1,'N','N');
 termC_z = TERM_1D({pterm1,pterm2,pterm3});
 termC   = TERM_ND(num_dims,{termC_z});
 
-%%
-% Add terms to the pde object
+terms = {termC};
 
-pde.terms = {termC};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
 
-%%
-% Sources
+%% Define sources
 
-%s1x = @(x,p,t) -nu^2*cos(nu*x);
-%s1t = @(t,p) exp(-2*nu^2*t);
-%source1 = {s1x, s1t};
-
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(z,p,t) soln_z(z), ...
     @(t,p) soln_t(t) 
     };
 
-    function dt=set_dt(pde,CFL)
-        
-        dims = pde.dimensions;
-        
-        % for Diffusion equation: dt = C * dx^2
-        
+    function dt=set_dt(pde,CFL)      
+        dims = pde.dimensions;       
+        % for Diffusion equation: dt = C * dx^2       
         lev = dims{1}.lev;
         dx = 1/2^lev;
-        dt = CFL*dx^2;
-        
+        dt = CFL*dx^2;        
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
-
-%%
-% Function to set time step

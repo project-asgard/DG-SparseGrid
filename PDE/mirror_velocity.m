@@ -1,4 +1,4 @@
-function pde = mirror_velocity
+function pde = mirror_velocity(opts)
 % One-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
@@ -8,9 +8,7 @@ function pde = mirror_velocity
 %
 % Run with
 %
-% asgard(mirror_velocity,'timestep_method','BE')
-
-test = 'c';
+% asgard(@mirror_velocity,'timestep_method','BE','case',3)
 
 pde.CFL = 0.01;
 
@@ -22,6 +20,7 @@ e = 1.602*10^-19; %charge in Coulombs
 ln_delt = 10; %Coulomb logarithm
 v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
 eps0 = 8.85*10^-12; %permittivity of free space in Farad/m
+var = 10^6;
 
 % species b: electrons in background
 b.n = 4e19;
@@ -46,14 +45,14 @@ a.vth = v_th(a.T_eV,a.m);
 
 %L_ab = ln_delt*e^4/(a.m*eps_o)^2; %Coefficient accounting for Coluomb force
 
-switch test
-    case 'a'
+switch opts.case_
+    case 1
         T_eV_a = 0.05*T_eV_b; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
-    case 'b'
+    case 2
         T_eV_a = 0.05*T_eV_b;
         offset = 0; %case with no offset but change in Temperature
-    case 'c'
+    case 3
         T_eV_a = 1000;
         T_a = T_eV_a*11606; %converting to Kelvin
         offset = v_th(T_a,a.m); %case with offset and no change in Temperature
@@ -76,8 +75,6 @@ init_func = @(v) maxwell(v,0,v_th(b.T_eV,a.m)) + maxwell(v,5*10^6, 10^6);
 %norm = v_th(T_b,m_a)*(sqrt(pi)*(v_th(T_a,m_a)^2 + 2*offset^2)*phi((offset - 0.01)/v_th(T_a,m_a)) + 2*v_th(T_a,m_a)*(0.01 + offset)*exp(-(0.01 - offset)^2/v_th(T_a,m_a)^2) + sqrt(pi)*(v_th(T_a,m_a)^2 +2*offset^2)*phi((10^7 - offset)/v_th(T_a,m_a)) - 2*v_th(T_a,m_a)*(10^7 + offset)*exp(-(10^7 - offset)^2/v_th(T_a,m_a)^2))/(v_th(T_a,m_a)^2*(2*0.01*exp(-0.01^2/v_th(T_b,m_a)^2) - 2*10^7*exp(-10^14/v_th(T_b,m_a)^2) + sqrt(pi)*v_th(T_b,m_a)*(phi(10^7/v_th(T_b,m_a)) - phi(0.01/v_th(T_b,m_a)))));
 %E = 1.0; %parallel Electric field
 
-%% Setup the dimensions
-% 
 function ret = phi(x)
         ret = erf(x);
 end
@@ -90,8 +87,9 @@ function ret = psi(x)
 end
 %soln_t = @(t) exp(-m_a*nu_s.*t/(m_a + m_b));
 
-dim_v.domainMin = 0;
-dim_v.domainMax = 3*10^7;
+%% Define the dimensions
+
+dim_v = DIMENSION(0,3e7);
 dim_v.jacobian = @(v,p,t) 4.*pi.*v.^2;
 dim_v.init_cond_fn = @(v,p,t) maxwell(v,v_th(a.T_eV,a.m), var);%.*(x == v_b);
 
@@ -101,7 +99,6 @@ soln_v = @(v) n_a*(2*(a.m/(a.m + b.m))*nu_s./nu_par(v_th(b.T_eV,a.m))).*(1/(4*pi
 %v_n_max = dim_v.domainMax/v_th(T_b,m_b);
 %v_n_min = dim_v.domainMin/v_th(T_b,m_b);
 %initial condition
-var = 10^6;
 
 BCFunc = @(v) maxwell(v,v_th(b.T_eV,a.m), v_th(b.T_eV,a.m));
 
@@ -119,15 +116,10 @@ BCR_fList = { ...
     @(t,p) t.*0 + 1
     };
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_v};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_v};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 
 %% 
 % -E*Z_a/m_a d/dz(f)
@@ -167,30 +159,17 @@ pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
 termV_par = TERM_1D({pterm1,pterm2,pterm3});
 termV2   = TERM_ND(num_dims,{termV_par});
 
-%%
-% Add terms to the pde object
+terms = {termV1,termV2};
 
-pde.terms = {termV1,termV2};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
+%% Define sources
 
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1
-
-source = { ...
-    @(v,p,t) (a.m*nu_s(v,a,b)./(a.m+b.m))*(1-a.m*nu_s(v,a,b)./(a.m + b.m)*(4*v+3*t)),   ...   % s1v
-    @(t,p) t.*0 + 1 ...   % s1t
-    };
-
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
@@ -202,21 +181,20 @@ pde.sources = {};
     end
     soln_handle = @soln;
 
-
-pde.analytic_solutions_1D = { ...    
+analytic_solutions_1D = { ...    
     @(v,p,t) soln_handle(v,p,t); ...
     @(t,p) t.*0 + 1; 
     };
 
-%%
-% Function to set time step
-    function dt=set_dt(pde,CFL)
-        
-        Lmax = pde.dimensions{1}.domainMax;
+%% Define function to set time step
+    function dt=set_dt(pde,CFL)       
+        Lmax = pde.dimensions{1}.max;
         LevX = pde.dimensions{1}.lev;
         dt = Lmax/2^LevX*CFL;
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
