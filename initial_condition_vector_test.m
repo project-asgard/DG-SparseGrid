@@ -6,10 +6,8 @@ end
 function sane_1D_function_test(testCase)
 addpath(genpath(pwd));
 
-opts = OPTS();
-opts.lev = 4;
-opts.deg = 4;
-opts.max_lev_coeffs = true;
+args = {'lev',4,'deg',4,'max_lev_coeffs',true};
+opts = OPTS(args);
 pde = advection1(opts);
 num_dims = numel(pde.dimensions);
 

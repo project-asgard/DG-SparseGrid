@@ -4,11 +4,10 @@ end
 
 function test_moment_2D_spherical(testCase)
 
-opts = OPTS();
-opts.lev = 4;
-opts.deg = 4;
-opts.case_ = 3;
+args = {'lev',4,'deg',4,'case',3};
+opts = OPTS(args);
 pde = mirror_velocity2(opts);
+
 num_dims = numel(pde.dimensions);
 
     function ans = my_func_v(v)
