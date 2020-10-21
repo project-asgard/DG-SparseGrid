@@ -8,9 +8,6 @@ addpath(genpath(pwd));
 
 args = {'lev',4,'deg',4,'max_lev_coeffs',true};
 opts = OPTS(args);
-% opts.lev = 4;
-% opts.deg = 4;
-% opts.max_lev_coeffs = true;
 pde = advection1(opts);
 num_dims = numel(pde.dimensions);
 

@@ -85,7 +85,7 @@ classdef OPTS
                 addOptional(input_parser,'calculate_mass',opts.calculate_mass,@islogical);
                 addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
                 
-                parse(input_parser,varargin{:})
+                parse(input_parser,varargin{:}{:})
                 
                 % CFL priority
                 % low        : opts.CFL

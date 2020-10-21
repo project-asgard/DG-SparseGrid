@@ -381,3 +381,18 @@ relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
 verifyLessThan(testCase,relErr,1);
 end
 
+% function mirror3_pitch_test(testCase)
+% addpath(genpath(pwd));
+% disp('Testing the pitch dimension within mirror3');
+% % setup PDE
+% args = {'lev',3,'deg',2,'dt',1e-5,'calculate_mass',false,'quiet',true,'num_steps',2};
+% opts = OPTS(args);
+% pde = mirror3(opts);
+% % modify PDE
+% pde.dimensions{1}.init_cond_fn = @(x,p,t) x.*0 +1;
+% % run PDE
+% [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+% % assert on correctness
+% verifyLessThan(testCase,err,1e-5);
+% end
+
