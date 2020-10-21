@@ -9,7 +9,7 @@ function pde = mirror_space1
 % asgard(mirror_space1)
 
 % implicit
-% asgard(advection1,'mirror_space1','BE')
+% asgard(mirror_space1, 'timestep_method','BE')
 
 
 %% Setup the dimensions

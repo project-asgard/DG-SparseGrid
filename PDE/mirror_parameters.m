@@ -10,6 +10,14 @@ e = 1.602*10^-19; %charge in Coulombs
 ln_delt = 10; %Coulomb logarithm
 v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
 eps0 = 8.85*10^-12; %permittivity of free space in Farad/m
+mu0 = 4*pi*10^-7; %magnetic permeability in Henries/m
+n_turns = 5; %number of turns in the mirror
+R_mag = 0.4; %radius of individual loop in meters
+I_mag = 10; %current going through individual loop in meters
+B_o = mu0*n_turns*I_mag/(2*R_mag); %magnetic field under current loop
+v_test = 500; %test value for velocity in coefficient
+z_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
+advec_space_1D = v_test*cos(z_test); %advection coefficient for 1D in space
 
 % species b: electrons in background
 b.n = 4e19;
@@ -32,24 +40,26 @@ a.Z = -1;
 a.m = m_e;
 a.vth = v_th(a.T_eV,a.m);
 
-x       = @(v,vth) v./vth;
+x       = @(v,vth) v./vth; %normalized velocity to thermal velocity
+xi      = @(s,R_mag) s/R_mag; %normalized spatial coordinate to radius of magnetic coil
 nu_ab0  = @(a,b) b.n * e^4 * a.Z^2 * b.Z^2 * ln_delt / (2*pi*eps0^2*a.m^2*b.vth^3); %scaling coefficient
 nu_s    = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(x(v,b.vth)) ./ x(v,b.vth); %slowing down frequency
 nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(x(v,b.vth))./(x(v,b.vth).^3)); %parallel diffusion frequency
-nu_D    = @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
+nu_D    = @(v,a,b) v*0 + 10^6; %nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
 maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
-B_func = @(s) sin(s); %magnetic field as a function of spatial coordinate
-dB_ds = @(s) cos(s); %derivative of magnetic field
+B_func = @(s) exp(s); % @(xi) B_o./(1 + xi.^2).^(3/2) %magnetic field as a function of spatial coordinate
+dB_ds = @(s) exp(s); % @(xi, R_mag) -3*B_o.*xi./(R_mag.*(1 + xi.^2).^(5/2)) derivative of magnetic field
+advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
 
 init_cond_v = @(v) v.*0 + 1;
-init_cond_z = @(z) a.n*cos(z);
-init_cond_s = @(s) s.*0 + 1;
+init_cond_z = @(z) z.*0 + 1;
+init_cond_s = @(s) exp(s);
 init_cond_t = @(t) t*0 + 1;
 
-analytic_solution_z = @soln_z;
-function ret = soln_z(z,p,t)
-ret = a.n.*cos(z).*exp(-nu_D(b.vth,a,b).*t);
+analytic_solution_s = @soln_s;
+function ret = soln_s(s,p,t)
+ret = exp(s);
 if isfield(p,'norm_fac')
     ret = ret .* p.norm_fac;
 end
