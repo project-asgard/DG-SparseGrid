@@ -40,7 +40,7 @@ classdef OPTS
     
     methods
         
-        function opts = OPTS(varargin,num_dims)
+        function opts = OPTS(varargin)
             
             if nargin == 0
             else
