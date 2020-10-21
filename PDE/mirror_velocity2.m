@@ -8,7 +8,7 @@ function pde = mirror_velocity2(opts)
 %
 % Run with
 %
-% asgard(@mirror_velocity2,'timestep_method','BE','case',3)
+% asgard(@mirror_velocity2,'timestep_method','BE','case',3,'dt',1e-6)
 
 params = mirror_parameters();
 

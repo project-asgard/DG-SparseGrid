@@ -47,28 +47,36 @@ init_cond_z = @(z) a.n*cos(z);
 init_cond_s = @(s) s.*0 + 1;
 init_cond_t = @(t) t*0 + 1;
 
+analytic_solution_v = @soln_v;
+    function ret = soln_v(v,p,t)
+        ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
+        if isfield(p,'norm_fac')
+            ret = ret .* p.norm_fac;
+        end
+    end
+
 analytic_solution_z = @soln_z;
-function ret = soln_z(z,p,t)
-ret = a.n.*cos(z).*exp(-nu_D(b.vth,a,b).*t);
-if isfield(p,'norm_fac')
-    ret = ret .* p.norm_fac;
-end
-end
+    function ret = soln_z(z,p,t)
+        ret = a.n.*cos(z).*exp(-nu_D(b.vth,a,b).*t);
+        if isfield(p,'norm_fac')
+            ret = ret .* p.norm_fac;
+        end
+    end
 
-function ret = phi(x)
-ret = erf(x);
-end
+    function ret = phi(x)
+        ret = erf(x);
+    end
 
-function ret = phi_f(x)
-ret = (x + 1./(2*x)).*erf(x) + exp(-x.^2)./sqrt(pi);
-end
+    function ret = phi_f(x)
+        ret = (x + 1./(2*x)).*erf(x) + exp(-x.^2)./sqrt(pi);
+    end
 
-function ret = psi(x)
-dphi_dx = 2./sqrt(pi) * exp(-x.^2);
-ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);
-ix = find(abs(x)<1e-5); % catch singularity at boundary
-ret(ix) = 0;
-end
+    function ret = psi(x)
+        dphi_dx = 2./sqrt(pi) * exp(-x.^2);
+        ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);
+        ix = find(abs(x)<1e-5); % catch singularity at boundary
+        ret(ix) = 0;
+    end
 
 % throw all these into a parameters structure for use elsewhere
 

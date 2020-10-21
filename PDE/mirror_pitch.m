@@ -22,7 +22,7 @@ function pde = mirror_pitch(opts)
 % asgard(@mirror_pitch,'CFL',0.0001);
 %
 % implicit
-% asgard(@mirror_pitch,'timestep_method','BE', 'dt', 1e-8);
+% asgard(@mirror_pitch,'timestep_method','BE','dt',1e-8);
 %
 
     function ret = psi(x)
