@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_complete
+function pde = fokkerplanck2_complete(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Full PDE from the 2D runaway electron paper 
@@ -30,50 +30,47 @@ function pde = fokkerplanck2_complete
 % Run with
 %
 % explicit
-% asgard(fokkerplanck2_complete)
+% asgard(@fokkerplanck2_complete,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4)
+% asgard(@fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
 %
 % with adaptivity
-% asgard(fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true)
+% asgard(@fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true,'case',1)
+%
+% NOTES
 %
 % For Lin's case the command that should reproduce her results
-% asgard(fokkerplanck2_complete,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000,'time_independent_A',true)
+% asgard(@fokkerplanck2_complete,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000,'time_independent_A',true,'case',1)
 %
 % David's adjustment can be run as follows ...
-% asgard(fokkerplanck2_complete,'timestep_method','BE','lev',3,'deg',6,'dt',1,'num_steps',50,'grid_type','FG','time_independent_A',true)
+% asgard(@fokkerplanck2_complete,'timestep_method','BE','lev',3,'deg',6,'dt',1,'num_steps',50,'grid_type','FG','time_independent_A',true,'case',1)
 % or, run with the high order time integrator ...
-% asgard(fokkerplanck2_complete,'timestep_method','ode15s','lev',3,'deg',5,'dt',50,'num_steps',1,'grid_type','SG')
-
-pde.CFL = 0.01;
-
-%%
-% Select 6.1, 6.2, 6.3, etc where it goes as 6.test
-test = 'full'; 
+% asgard(f@okkerplanck2_complete,'timestep_method','ode15s','lev',3,'deg',5,'dt',50,'num_steps',1,'grid_type','SG','case',1)
 
 %%
 % Define a few relevant functions
 
 nuEE = 1;
 vT = 1;
+test = opts.case_;
 switch test
-    case '6p1a'
+    case 1
         delta = 0.042;
         Z = 1;
         E = 0.0025;
         tau = 10^5;
-    case '6p1b'
+    case 2
         delta = 0.042;
         Z = 1;
         E = 0.25;
         tau = 10^5;
-    case '6p1c' 
+    case 3 
         delta = 0.042;
         Z = 1;
         E = 0.0025;
         tau = 10^5;
-    case 'full'
+    case 4
         delta = 0.3;
         Z = 5;
         E = 0.4;
@@ -101,14 +98,14 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 
     function ret = f0_z(x)
-        
+        test = opts.case_;
         ret = zeros(size(x));
         switch test
-            case '6p1a'
+            case 1
                 ret = x.*0+1;
-            case '6p1b'
+            case 2
                 ret = x.*0+1;
-            case '6p1c'
+            case 3
                 h = [3,0.5,1,0.7,3,0,3];
                 
                 for l=1:numel(h)
@@ -120,17 +117,17 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     ret = ret + h(l) * P;
                     
                 end
-            case 'full'
+            case 4
                 ret = x.*0 + 1;
         end
     end
 
     function ret = f0_p(x)
-               
+        test = opts.case_;       
         ret = zeros(size(x));
         switch test
             
-            case '6p1a'
+            case 1
                 for i=1:numel(x)
                     if x(i) <= 5
                         ret(i) = 3/(2*5^3);
@@ -139,12 +136,12 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     end
                 end
                 
-            case '6p1b' 
+            case 2 
                 a = 2;
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
-            case '6p1c'
+            case 3
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
-            case 'full'
+            case 4
                 N = 1000;
                 h = 20/N;
                 Q = 0;
@@ -169,23 +166,16 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0.1;
-dim_p.domainMax = +20;
+dim_p = DIMENSION(0.1,+20);
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
-dim_z.domainMin = -1;
-dim_z.domainMax = +1;
+dim_z = DIMENSION(-1,+1);
 dim_z.init_cond_fn = @(x,p,t) f0_z(x);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_p,dim_z};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_p,dim_z};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 
 %% -div(flux_C) == termC1 + termC2 + termC3
 
@@ -290,7 +280,6 @@ termE2_p = TERM_1D({pterm1});
 
 pterm1   = GRAD(num_dims,g2,+1,'N','N');% Lin's Setting
 
-
 termE2_z = TERM_1D({pterm1});
 
 termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
@@ -309,7 +298,6 @@ g3 = @(x,p,t,dat) 1-x.^2;
 
 pterm1   = MASS(g1);% This is not needed - by Lin
 pterm2   = GRAD(num_dims,g2,1,'N','N');% Lin's Setting
-
 
 termR1_p = TERM_1D({pterm1,pterm2});
 
@@ -335,47 +323,40 @@ termR2_z = TERM_1D({pterm1});
 
 termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
 
-%%
-% Add terms to the pde object
-pde.terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
+terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
 
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
 
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1
+%% Define sources
 
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(x,p,t) soln_p(x,t), ...
     @(x,p,t) soln_z(x,t), ...
     @(t,p) 1
     };
 
-%%
-% Function to set time step
-    function dt=set_dt(pde,CFL)
-        
+%% Define function to set time step
+    function dt=set_dt(pde,CFL)      
         dims = pde.dimensions;
-        xRange = dims{1}.domainMax-dims{1}.domainMin;
+        xRange = dims{1}.max-dims{1}.min;
         lev = dims{1}.lev;
         dx = xRange/2^lev;
-        dt = CFL * dx;
-        
+        dt = CFL * dx;       
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
 

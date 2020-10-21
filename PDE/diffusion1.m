@@ -1,4 +1,4 @@
-function pde = diffusion1
+function pde = diffusion1(opts)
 % Example PDE using the 1D Diffusion Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
@@ -24,16 +24,15 @@ function pde = diffusion1
 % Run with
 %
 % explicit
-% asgard(diffusion1);
+% asgard(@diffusion1,'CFL',0.01);
 %
 % implicit
-% asgard(diffusion1,'timestep_method','CN');
+% asgard(@diffusion1,'timestep_method','CN');
 %
 %Louis: With small nu, stability is maintained for longer times
-% asgard(diffusion1,'lev',3,'deg',4,'timestep_method','BE', 'dt',0.05,'num_steps',20)
-pde.CFL = 0.01;
+% asgard(@diffusion1,'lev',3,'deg',4,'timestep_method','BE', 'dt',0.05,'num_steps',20)
 
-%% Setup the dimensions
+%% Define the dimensions
 % 
 % Here we setup a 1D problem (x,y)
 nu = 0.01; %coefficient set to be very small to allow for stability
@@ -57,21 +56,14 @@ BCR_fList = { ...
     @(t,p) BCFunc_t(t)
     };
 
+dim_x = DIMENSION(0,1);
 dim_x.name = 'x';
-dim_x.domainMin = 0;
-dim_x.domainMax = 1;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
 
+dimensions = {dim_x};
+num_dims = numel(dimensions);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
-
-pde.dimensions = {dim_x};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 %
 % Here we have 1 term, with each term having nDims (x and y) operators.
 
@@ -94,32 +86,27 @@ pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
 term1_x = TERM_1D({pterm1,pterm2});
 term1   = TERM_ND(num_dims,{term1_x});
 
-%%
-% Add terms to the pde object
+terms = {term1};
 
- pde.terms = {term1};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
 
-%%
-% Sources
+%% Define sources
 
 s1x = @(x,p,t) -nu^2*cos(nu*x);
 s1t = @(t,p) exp(-2*nu^2*t);
 source1 = {s1x, s1t};
 
-pde.sources = {source1};
+sources = {source1};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(x,p,t) soln_x(x), ...
     @(t,p) soln_t(t) 
     };
@@ -136,9 +123,8 @@ pde.analytic_solutions_1D = { ...
         
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
-
-%%
-% Function to set time step

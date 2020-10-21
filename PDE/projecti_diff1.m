@@ -1,4 +1,4 @@
-function pde = projecti_diff1
+function pde = projecti_diff1(opts)
 % Example PDE using the 1D Diffusion Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
@@ -20,40 +20,29 @@ function pde = projecti_diff1
 % Run with
 %
 % explicit
-% asgard(projecti_diff1);
+% asgard(@projecti_diff1);
 %
 % implicit
-% asgard(projecti_diff1,'timestep_method','CN');
+% asgard(@projecti_diff1,'timestep_method','BE');
 %
 % FE
-% asgard(projecti_diff1,'lev',4,'deg',4,'timestep_method','FE', 'dt',0.01,'num_steps',16)
+% asgard(@projecti_diff1,'lev',4,'deg',4,'timestep_method','FE', 'dt',0.01,'num_steps',16)
 
-pde.CFL = 0.01;
-
-%% Setup the dimensions
-% 
-% Here we setup a 1D problem (x,y)
+%% Define the dimensions
 
 k = pi/2;
 nu = 0.01;
 soln_x = @(x) sin(k*x);
 soln_t = @(t) exp(-nu*k^2*t);
 
+dim_x = DIMENSION(0,2);
 dim_x.name = 'x';
-dim_x.domainMin = 0;
-dim_x.domainMax = 2;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
 
+dimensions = {dim_x};
+num_dims = numel(dimensions);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
-
-pde.dimensions = {dim_x};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 %
 % Here we have 1 term, with each term having nDims (x and y) operators.
 
@@ -76,47 +65,38 @@ pterm2 = GRAD(num_dims,g2,-1,'D','D');
 term1_x = TERM_1D({pterm1,pterm2});
 term1   = TERM_ND(num_dims,{term1_x});
 
-%%
-% Add terms to the pde object
+terms = {term1};
 
- pde.terms = {term1};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
+%% Define sources
 
-%%
-% Sources
-
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(x,p,t) soln_x(x), ...
     @(t,p) soln_t(t) 
     };
 
-    function dt=set_dt(pde,CFL)
-        
-        dims = pde.dimensions;
-        
-        % for Diffusion equation: dt = C * dx^2
-        
+    function dt=set_dt(pde,CFL)     
+        dims = pde.dimensions;     
+        % for Diffusion equation: dt = C * dx^;       
         lev = dims{1}.lev;
         dx = 1/2^lev;
-        dt = CFL*dx^2;
-        
+        dt = CFL*dx^2;       
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
 
-%%
-% Function to set time step
+

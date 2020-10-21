@@ -36,8 +36,8 @@ for tt = 1:num_terms % Construct a BC object for each term
         term_1D = term_nD.terms_1D{d1};
         %         type = term_1D_.type;
         
-        xMin = dim.domainMin;
-        xMax = dim.domainMax;
+        xMin = dim.min;
+        xMax = dim.max;
         %          FMWT = dim.FMWT;
         
         lev = dim.lev;
@@ -79,7 +79,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     for d2=1:num_dims
                         bcL{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
-                            pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
+                            pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
                             BCL_fList{d2},pde.params,pde.transform_blocks,time);
                     end
                     
@@ -119,7 +119,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     for d2=1:num_dims
                         bcR{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
-                            pde.dimensions{d2}.domainMin,pde.dimensions{d2}.domainMax,...
+                            pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
                             BCR_fList{d2},pde.params,pde.transform_blocks,time);
                     end
                     
