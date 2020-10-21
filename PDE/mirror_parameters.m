@@ -51,9 +51,10 @@ gauss   = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
 B_func = @(s) exp(s); % @(xi) B_o./(1 + xi.^2).^(3/2) %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); % @(xi, R_mag) -3*B_o.*xi./(R_mag.*(1 + xi.^2).^(5/2)) derivative of magnetic field
 advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
+uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
 
-init_cond_v = @(v) v.*0 + 1;
-init_cond_z = @(z) z.*0 + 1;
+init_cond_v = @(v) maxwell(v, a.vth, 10^6);
+init_cond_z = @(z) a.n*cos(z);
 init_cond_s = @(s) exp(s);
 init_cond_t = @(t) t*0 + 1;
 
