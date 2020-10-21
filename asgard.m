@@ -25,14 +25,8 @@ if opts.time_independent_A | opts.time_independent_build_A
 end
 
 %% Create PDE
-% pde = check_pde(pde,opts);
 pde = pde_handle(opts);
 num_dimensions = numel(pde.dimensions);
-
-opts = opts.init_lev_vec(pde);
-for d=1:num_dimensions
-    pde.dimensions{d}.lev = opts.lev_vec(d);
-end
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
@@ -48,10 +42,10 @@ if ~opts.quiet; disp(sprintf('dt = %g', dt )); end
 if ~opts.quiet; disp('Constructing hash and inverse hash tables'); end
 
 if opts.use_oldhash
-    [HASH,hash_table] = hash_table_nD(opts.lev_vec, opts.grid_type);
+    [HASH,hash_table] = hash_table_nD(pde.get_lev_vec, opts.grid_type);
     pde.hash_table = hash_table;
 else
-    [elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, opts.max_lev, opts.grid_type);
+    [elements, elements_idx]    = hash_table_sparse_nD (pde.get_lev_vec, opts.max_lev, opts.grid_type);
     hash_table.elements         = elements;
     hash_table.elements_idx     = elements_idx; % only to get the same order as the old hash table
 end
@@ -59,7 +53,7 @@ end
 
 %% (Do not) Construct the connectivity.
 if opts.use_connectivity
-    pde.connectivity = connect_nD(num_dimensions,HASH,hash_table,max(opts.lev_vec),max(opts.lev_vec),opts.grid_type);
+    pde.connectivity = connect_nD(num_dimensions,HASH,hash_table,max(pde.get_lev_vec),max(pde.get_lev_vec),opts.grid_type);
 else
     connectivity = [];
 end
@@ -126,8 +120,8 @@ if num_dimensions <=3
             moment_func_nD{d} = mass_func;
         end
         
-        mass = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace,moment_func_nD, pde.dimensions);
-        mass_analytic = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
+        mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD, pde.dimensions);
+        mass_analytic = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
         mass_t(1) = mass;
     end
     
@@ -364,7 +358,7 @@ for L = 1:opts.num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         if opts.calculate_mass
-            mass = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace,moment_func_nD,pde.dimensions);
+            mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD,pde.dimensions);
             mass_t(L+1) = mass;
         end
         

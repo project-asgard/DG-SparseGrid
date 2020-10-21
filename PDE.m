@@ -1,5 +1,5 @@
 classdef PDE
-    properties        
+    properties
         % these all need to be removed or moved to opts
         solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally.
         applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally.
@@ -17,7 +17,7 @@ classdef PDE
         % MSC = Many Solution Capable fields
         % (all PDEs will transition to this soon)
         solutions = {};
-        initial_conditions = {}; 
+        initial_conditions = {};
         
         % Old hash table - to be removed when support for oldhashtable is
         % removed
@@ -28,6 +28,13 @@ classdef PDE
     end
     
     methods
+        
+        function lev_vec = get_lev_vec(pde)
+            num_dims = numel(pde.dimensions);
+            for d=1:num_dims
+                lev_vec(d) = pde.dimensions{d}.lev;
+            end
+        end
         
         function pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,set_dt,analytic_solutions_1D,initial_conditions_MSC,solutions_MSC)
             
@@ -44,6 +51,28 @@ classdef PDE
                 pde.initial_conditions = initial_conditions_MSC;
             end
             
-        end 
-    end  
+            pde.dimensions = set_levels(opts.lev,dimensions);
+            
+        end
+    end
+end
+
+function dimensions_out = set_levels(lev,dimensions_in)
+
+num_dims = numel(dimensions_in);
+num_levs = numel(lev);
+
+if num_levs > 1
+    assert(num_dims == num_levs);
+end
+
+for d=1:num_dims
+    dimensions_out{d} = dimensions_in{d};
+    if num_levs == 1
+        dimensions_out{d}.lev = lev;
+    else
+        dimensions_out{d}.lev = lev(d);
+    end
+end
+
 end

@@ -2,8 +2,7 @@ classdef OPTS
     
     properties
         
-        lev = 3;
-        lev_vec = [];
+        lev = 3; % can be set as 'lev',3 or 'lev',[2,3]
         deg = 2;
         dt_set_at_runtime = true;
         CFL = 0.01;
@@ -35,28 +34,11 @@ classdef OPTS
         calculate_mass = true; % calculate and print the mass
         normalize_by_mass = false; % normalize the analytic solution by the initial cond mass
         start_time = 0;
-        num_steps = 5;
-        
+        num_steps = 5;   
         
     end
     
     methods
-        
-        function opts = init_lev_vec(opts,pde)
-            
-            num_dims = numel(pde.dimensions);
-            
-            if numel(opts.lev) > 1 || num_dims == 1
-                assert(numel(opts.lev)==num_dims,'lev specifier must be num_dim long');
-                for d=1:num_dims
-                    opts.lev_vec(d) = opts.lev(d);
-                end
-            else
-                for d=1:num_dims
-                    opts.lev_vec(d) = opts.lev;
-                end
-            end
-        end
         
         function opts = OPTS(varargin,num_dims)
             
@@ -71,7 +53,7 @@ classdef OPTS
                 check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
                 valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points'};
                 check_output_grid = @(x) any(strcmp(x,valid_output_grids));
-
+                
                 addOptional(input_parser,'lev',opts.lev, @isnumeric);
                 addOptional(input_parser,'deg',opts.deg, @isnumeric);
                 addOptional(input_parser,'start_time',opts.start_time, @isnumeric);

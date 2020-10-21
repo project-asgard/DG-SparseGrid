@@ -10,10 +10,6 @@ opts.deg = 4;
 opts.case_ = 3;
 pde = mirror_velocity2(opts);
 num_dims = numel(pde.dimensions);
-opts = opts.init_lev_vec(pde); % need to fix this crap
-for d=1:num_dims
-    pde.dimensions{d}.lev = opts.lev_vec(d);
-end
 
     function ans = my_func_v(v)
         v_th = 0.2;
@@ -33,7 +29,7 @@ pde.dimensions{2}.max = pi;
 pde.dimensions{2}.init_cond_fn = @(z,p,t) my_func_z(z);
 pde.dimensions{2}.jacobian = @(z,p,t) sin(z);
 
-[elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, opts.max_lev, opts.grid_type);
+[elements, elements_idx]    = hash_table_sparse_nD (pde.get_lev_vec, opts.max_lev, opts.grid_type);
 hash_table.elements         = elements;
 hash_table.elements_idx     = elements_idx;
 
