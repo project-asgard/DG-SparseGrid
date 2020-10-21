@@ -6,21 +6,24 @@ end
 function sane_1D_function_test(testCase)
 addpath(genpath(pwd));
 
-num_dims = 1;
-pde = advection1;
-opts = OPTS(num_dims);
+opts = OPTS();
 opts.lev = 4;
 opts.deg = 4;
 opts.max_lev_coeffs = true;
-pde = check_pde(pde,opts);
+pde = advection1(opts);
+num_dims = numel(pde.dimensions);
+opts = opts.init_lev_vec(pde); % need to fix this crap
+for d=1:num_dims
+    pde.dimensions{d}.lev = opts.lev_vec(d);
+end
 
     function ans = my_func(x)
         ans = cos(x);
 %         ans = 1./(x.^2);
     end
 
-pde.dimensions{1}.domainMin = 0.1;
-pde.dimensions{1}.domainMax = 2*pi;
+pde.dimensions{1}.min = 0.1;
+pde.dimensions{1}.max = 2*pi;
 pde.dimensions{1}.init_cond_fn = @(x,p,t) my_func(x);
 
 [elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, opts.max_lev, opts.grid_type);

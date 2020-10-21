@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_4p4
+function pde = fokkerplanck1_4p4(opts)
 % Problem 4.4 from the RE paper - evolution of the pitch angle dependence
 % of f in the presence of electric field acceleration and collisions 
 % 
@@ -7,12 +7,11 @@ function pde = fokkerplanck1_4p4
 % Run with
 %
 % explicit 
-% asgard(fokkerplanck1_4p4)
+% asgard(@fokkerplanck1_4p4,'CFL',0.01,'case',3)
 %
 % implicit 
-% asgard(fokkerplanck1_4p4,'timestep_method','BE','num_steps',50,'dt',0.05,'lev',4,'deg',4)
+% asgard(@fokkerplanck1_4p4,'timestep_method','BE','num_steps',50,'dt',0.05,'lev',4,'deg',4,'case',1)
 
-pde.CFL = 0.01;
 sig = 0.1;
 E = 4.0;
 C = 1.0;
@@ -26,7 +25,7 @@ C = 1.0;
     end
     function ret = f0(z)
         
-        caseNumber = 4;
+        caseNumber = opts.case_;
         shift = 0.36;
         scaling = 0.177245;
         
@@ -47,21 +46,14 @@ C = 1.0;
         ret = A / (2*sinh(A)) * exp(A*z);
     end
 
-% dim_z.BCL = 'D'; % dirichlet
-% dim_z.BCR = 'D';
-dim_z.domainMin = -1;
-dim_z.domainMax = +1;
+
+dim_z = DIMENSION(-1,+1);
 dim_z.init_cond_fn = @(z,p,t) f0(z);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_z};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_z};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 %
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
@@ -103,46 +95,40 @@ pterm2  = GRAD(num_dims,g2,+1,'N','N');
 termC_z = TERM_1D({pterm1,pterm2});
 termC   = TERM_ND(num_dims,{termC_z});
 
-%%
-% Add terms to the pde object
+terms = {termE,termC};
 
-pde.terms = {termE,termC};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
 
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1
+%% Define sources
 
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(z,p,t) soln(z,t), ...
     @(t,p) 1 
     };
 
-%%
-% Function to set time step
+%% Define function to set time step
 
     function dt=set_dt(pde,CFL)
         
-        Lmax = pde.dimensions{1}.domainMax;
-        Lmin = pde.dimensions{1}.domainMin;
+        Lmax = pde.dimensions{1}.max;
+        Lmin = pde.dimensions{1}.min;
         LevX = pde.dimensions{1}.lev;
         dt = (Lmax-Lmin)/2^LevX*CFL;
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
 

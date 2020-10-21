@@ -150,8 +150,8 @@ else
     % dim shortcuts
     
     lev     = coeff_level;
-    xMin    = dim.domainMin;
-    xMax    = dim.domainMax;
+    xMin    = dim.min;
+    xMax    = dim.max;
     %     FMWT    = dim.FMWT;
     %     BCL     = dim.BCL;
     %     BCR     = dim.BCR;

@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_6p1
+function pde = fokkerplanck2_6p1(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Problems 6.1, 6.2, and 6.3 from the RE paper.
@@ -12,16 +12,10 @@ function pde = fokkerplanck2_6p1
 % Run with
 %
 % explicit
-% asgard(fokkerplanck2_6p1)
+% asgard(@fokkerplanck2_6p1,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(fokkerplanck2_6p1,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4)
-
-pde.CFL = 0.01;
-
-%%
-% Select 6.1, 6.2, 6.3, etc where it goes as 6.test
-test = '6p1b'; 
+% asgard(@fokkerplanck2_6p1,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1) 
 
 %%
 % Define a few relevant functions
@@ -53,15 +47,15 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
     end
 
 
-    function ret = f0_z(x)
-        
+    function ret = f0_z(x)     
+        test = opts.case_;
         ret = zeros(size(x));
         switch test
-            case '6p1a'
+            case 1
                 ret = x.*0+1;
-            case '6p1b'
+            case 2
                 ret = x.*0+1;
-            case '6p1c'
+            case 3
                 h = [3,0.5,1,0.7,3,0,3];
                 
                 for l=1:numel(h)
@@ -76,12 +70,12 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
         end
     end
 
-    function ret = f0_p(x)
-               
+    function ret = f0_p(x)        
+        test = opts.case_;
         ret = zeros(size(x));
         switch test
             
-            case '6p1a'
+            case 1
                 for i=1:numel(x)
                     if x(i) <= 5
                         ret(i) = 3/(2*5^3);
@@ -90,11 +84,11 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     end
                 end
                 
-            case '6p1b' 
+            case 2
                 a = 2;
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
                 
-            case '6p1c'
+            case 3
                 ret = 2/(3*sqrt(pi)) * exp(-x.^2);
                 
         end
@@ -110,23 +104,16 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
 
 %% Setup the dimensions 
 
-dim_p.domainMin = 0;
-dim_p.domainMax = +10;
+dim_p = DIMENSION(0.01,+10);
 dim_p.init_cond_fn = @(x,p,t) f0_p(x);
 
-dim_z.domainMin = -1;
-dim_z.domainMax = +1;
+dim_z = DIMENSION(-1,+1);
 dim_z.init_cond_fn = @(x,p,t) f0_z(x);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_p,dim_z};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_p,dim_z};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 
 %% 
 % termC1 == 1/p^2*d/dp*p^2*Ca*df/dp
@@ -185,48 +172,40 @@ term3_z = TERM_1D({pterm1,pterm2});
 
 termC3 = TERM_ND(num_dims,{term3_p,term3_z});
 
-%%
-% Add terms to the pde object
+terms = {termC1,termC2,termC3};
 
-pde.terms = {termC1,termC2,termC3};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
 
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1
+%% Define sources
 
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(x,p,t) soln_p(x,t), ...
     @(x,p,t) soln_z(x,t), ...
     @(t,p) 1
     };
 
-%%
-% Function to set time step
-    function dt=set_dt(pde,CFL)
-        
+%% Define function to set time step
+    function dt=set_dt(pde,CFL)        
         dims = pde.dimensions;
-        xRange = dims{1}.domainMax-dims{1}.domainMin;
+        xRange = dims{1}.max-dims{1}.min;
         lev = dims{1}.lev;
         dx = xRange/2^lev;
-        dt = CFL * dx;
-        
+        dt = CFL * dx;       
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
 

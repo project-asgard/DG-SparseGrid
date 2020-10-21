@@ -1,7 +1,7 @@
 function moment_value = moment_integral(lev_vec, deg, coords_nD, fval_realspace, gfunc_nD, dimensions)
 
-xmin = dimensions{1,1}.domainMin;
-xmax = dimensions{1,1}.domainMax;
+xmin = dimensions{1,1}.min;
+xmax = dimensions{1,1}.max;
 num_dim = length(dimensions);
 
 Lev = lev_vec(1);
@@ -16,9 +16,9 @@ ww = ww_1D;
 
 if num_dim >= 2
     for i = 2:num_dim
-         domainMin = dimensions{1,i}.domainMin;
-         domainMax = dimensions{1,i}.domainMax;
-         ww = kron(ww,ww_1D).*(domainMax - domainMin);
+         min = dimensions{1,i}.min;
+         max = dimensions{1,i}.max;
+         ww = kron(ww,ww)*(max - min);
     end
 end
 

@@ -1,3 +1,5 @@
+function opts = get_opts()
+
 input_parser = inputParser;
 
 input_parser.KeepUnmatched = true;
@@ -172,18 +174,18 @@ end
 
 if opts.adapt
     if opts.time_independent_build_A
-        disp("WARNING: setting 'time_independent_build_A',false to be compatible with 'adapt',true"); 
+        disp("WARNING: setting 'time_independent_build_A',false to be compatible with 'adapt',true");
     end
     opts.time_independent_build_A = false;
     if opts.time_independent_A
-        disp("WARNING: setting 'time_independent_A',false to be compatible with 'adapt',true"); 
+        disp("WARNING: setting 'time_independent_A',false to be compatible with 'adapt',true");
     end
     opts.time_independent_A = false;
 end
 
 if opts.use_connectivity
     if ~opts.use_oldhash
-        error("ERROR - must set 'use_oldhash' to use connectivity"); 
+        error("ERROR - must set 'use_oldhash' to use connectivity");
     end
     if opts.adapt
         error("ERROR - cannot use adaptivity with use_connectivity==true");
@@ -209,13 +211,15 @@ end
 
 if opts.max_lev_coeffs
     if opts.use_oldcoeffmat
-        error("ERROR - max level coeffs not implemented for old coeff function"); 
+        error("ERROR - max level coeffs not implemented for old coeff function");
     end
 end
 
 
 if ~isempty(fieldnames(input_parser.Unmatched))
-   disp('Extra inputs:')
-   disp(input_parser.Unmatched)
-   error('Unrecognised input.')
+    disp('Extra inputs:')
+    disp(input_parser.Unmatched)
+    error('Unrecognised input.')
+end
+
 end

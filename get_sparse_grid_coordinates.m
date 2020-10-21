@@ -32,12 +32,12 @@ for elem=1:num_elems
         lev1 = hash_table.elements.lev_p1(idx,1)-1;
         lev2 = hash_table.elements.lev_p1(idx,2)-1;
         
-        x_min = pde.dimensions{1}.domainMin;
-        x_max = pde.dimensions{1}.domainMax;
+        x_min = pde.dimensions{1}.min;
+        x_max = pde.dimensions{1}.max;
         x_rng = x_max-x_min;
         
-        y_min = pde.dimensions{2}.domainMin;
-        y_max = pde.dimensions{2}.domainMax;
+        y_min = pde.dimensions{2}.min;
+        y_max = pde.dimensions{2}.max;
         y_rng = y_max-y_min;
         
         x = coordinates(elem,1);

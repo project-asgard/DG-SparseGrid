@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_5p1a
+function pde = fokkerplanck1_5p1a(opts)
 % Test the momentum dynamics for the RE problem for E = R = 0
 %
 % x^2 * df/dt == d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
@@ -9,13 +9,7 @@ function pde = fokkerplanck1_5p1a
 %
 % Run with
 %
-% asgard(fokkerplanck1_5p1a,'timestep_method','CN','lev',3,'num_steps',50,'CFL',1.5)
-
-pde.CFL = 0.01;
-
-%% Setup the dimensions
-% 
-% Here we setup a 1D problem (x)
+% asgard(@fokkerplanck1_5p1a,'timestep_method','CN','lev',3,'num_steps',50,'CFL',1.5,'case',1)
 
     function ret = psi(x,t)
         
@@ -27,7 +21,7 @@ pde.CFL = 0.01;
 
     function ret = f0(x)
         
-        test = 2;
+        test = opts.case_;
         
         ret = zeros(size(x));
         switch test
@@ -61,30 +55,27 @@ pde.CFL = 0.01;
         ret = 4/sqrt(pi) * exp(-x.^2);
     end
 
-dim_x.domainMin = 0;
-dim_x.domainMax = +10;
+%% Define the dimensions
+% 
+% Here we setup a 1D problem (x)
+
+dim_x = DIMENSION(0,+10);
 dim_x.init_cond_fn = @(z,p,t) f0(z);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_x};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_x};
-num_dims = numel(pde.dimensions);
+%% Define the terms of the PDE
 
-%% Setup the terms of the PDE
-
-%%
 % x^2 * df/dt (LHS non-identity coeff requires special treatment)
 
 g1 = @(x,p,t,dat) x.^2;
 pterm1 = MASS(g1);
 
-termLHS_x = TERM_1D({pterm1});
-termLHS   = TERM_ND(num_dims,{termLHS_x});
+LHS_term_x = TERM_1D({pterm1});
+LHS_term   = TERM_ND(num_dims,{LHS_term_x});
 
-pde.termsLHS = {termLHS};
+LHS_terms = {LHS_term};
 
 %% 
 % d/dx*x^2*psi(x)/x*df/dx, split as two first order as 
@@ -107,47 +98,39 @@ pterm1  = GRAD(num_dims,g1,-1,'N','D');
 term2_x = TERM_1D({pterm1});
 term2   = TERM_ND(num_dims,{term2_x});
 
-%%
-% Add terms to the pde object
+terms = {term1,term2};
 
-pde.terms = {term1,term2};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
 
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1
+%% Define sources
 
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(z,p,t) soln(z,t), ...
     @(t,p) 1 
     };
 
-%%
-% Function to set time step
-    function dt=set_dt(pde,CFL)
-        
+%% Define function to set time step
+    function dt=set_dt(pde,CFL)       
         dims = pde.dimensions;
-        xRange = dims{1}.domainMax-dims{1}.domainMin;
+        xRange = dims{1}.max-dims{1}.min;
         lev = dims{1}.lev;
         dx = xRange/2^lev;
-        dt = CFL * dx;
-        
+        dt = CFL * dx;     
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,@set_dt,analytic_solutions_1D);
 
 end
 

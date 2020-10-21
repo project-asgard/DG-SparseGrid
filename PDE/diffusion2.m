@@ -1,4 +1,4 @@
-function pde = diffusion2
+function pde = diffusion2(opts)
 % Example PDE using the 2D (1x-1y) Heat Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
@@ -23,14 +23,12 @@ function pde = diffusion2
 % Run with
 %
 % explicit
-% asgard(diffusion2);
+% asgard(@diffusion2,'CFL',0.01);
 %
 % implicit
-% asgard(diffusion2,'timestep_method','CN');
+% asgard(@diffusion2,'timestep_method','CN');
 
-pde.CFL = 0.01;
-
-%% Setup the dimensions
+%% Define the dimensions
 % 
 % Here we setup a 2D problem (x,y)
 
@@ -57,9 +55,8 @@ BCR_fList = { ...
     @(t,p) BCFunc_t(t)
     };
 
+dim_x = DIMENSION(0,1);
 dim_x.name = 'x';
-dim_x.domainMin = 0;
-dim_x.domainMax = 1;
 dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
 
 % The function is defined for the plane
@@ -76,20 +73,14 @@ BCR_fList = { ...
     @(t,p) BCFunc_t(t)
     };
 
+dim_y = DIMENSION(0,1);
 dim_y.name = 'y';
-dim_y.domainMin = 0;
-dim_y.domainMax = 1;
 dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_x, dim_y};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_x, dim_y};
-num_dims = numel(pde.dimensions);
-
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 %
 % Here we have 1 term, with each term having nDims (x and y) operators.
 
@@ -131,27 +122,23 @@ pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
 term2_y = TERM_1D({pterm1,pterm2});
 term2   = TERM_ND(num_dims,{[],term2_y});
 
-%%
-% Add terms to the pde object
+terms = {term1, term2};
 
- pde.terms = {term1, term2};
-
-%% Construct some parameters and add to pde object.
+%% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
 
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-pde.params = params;
 
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+%% Define sources
+
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...
+analytic_solutions_1D = { ...
     @(x,p,t) soln_x(x), ...
     @(y,p,t) soln_y(y), ... 
     @(t,p) soln_t(t) 
@@ -169,10 +156,9 @@ pde.analytic_solutions_1D = { ...
         
     end
 
-pde.set_dt = @set_dt;
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
-
-%%
-% Function to set time step
 

@@ -415,7 +415,7 @@ end
 
 %% Re check the PDE
 % FIXME is this necessary?
-pde = check_pde(pde,opts);
+% pde = check_pde(pde,opts);
 
 
 %% Update A_data
@@ -429,7 +429,7 @@ for d=1:num_dims
     if strcmp(opts.output_grid,'fixed')
         num_fixed_grid = 51;
         nodes_nodups{d} = ...
-            linspace(pde.dimensions{d}.domainMin,pde.dimensions{d}.domainMax,num_fixed_grid);
+            linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
         [Meval{d},nodes{d},nodes_count{d}] = ...
             matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
     else

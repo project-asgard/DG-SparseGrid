@@ -25,8 +25,8 @@ for d=1:num_dims
     %%
     % Get the scale_fac for this level
     
-    d_min     = dim.domainMin;
-    d_max     = dim.domainMax;
+    d_min     = dim.min;
+    d_max     = dim.max;
     h         = (d_max-d_min) / num_legendre;
     scale_fac = sqrt(1/h);
     

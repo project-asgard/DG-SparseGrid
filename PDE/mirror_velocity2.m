@@ -1,4 +1,4 @@
-function pde = mirror_velocity2
+function pde = mirror_velocity2(opts)
 % Two-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
@@ -8,22 +8,18 @@ function pde = mirror_velocity2
 %
 % Run with
 %
-% asgard(mirror_velocity2,'timestep_method','BE')
+% asgard(@mirror_velocity2,'timestep_method','BE','case',3,'dt',1e-6)
 
 params = mirror_parameters();
-pde.params = params;
 
-test = 'c';
-pde.CFL = 0.01;
-
-switch test
-    case 'a'
+switch opts.case_
+    case 1 
         params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
-    case 'b'
+    case 2 
         params.a.T_eV = 0.05*params.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
-    case 'c'
+    case 3 
         params.a.T_eV = 1e3;
         offset = 10^7; %case with offset and no change in Temperature
 end
@@ -56,31 +52,25 @@ BCR_fList = { ...
     @(t,p) p.init_cond_t(t)
     };
 
-%% Setup the dimensions
-% 
+
+%% Define the dimensions
+ 
+dim_v = DIMENSION(0,3e7);
 dim_v.name = 'v';
-dim_v.domainMin = 0;
-dim_v.domainMax = 3*10^7;
 dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 
+dim_z = DIMENSION(0,pi);
 dim_z.name = 'z';
-dim_z.domainMin = 0;
-dim_z.domainMax = pi;
 dim_z.init_cond_fn = @(z,p,t) p.init_cond_z(z)*p.init_cond_t(t);
 dim_z.jacobian = @(z,p,t) sin(z);
 
-%%
-% Add dimensions to the pde object
-% Note that the order of the dimensions must be consistent with this across
-% the remainder of this PDE.
+dimensions = {dim_v, dim_z};
+num_dims = numel(dimensions);
 
-pde.dimensions = {dim_v, dim_z};
-num_dims = numel(pde.dimensions);
 
-%% Setup the terms of the PDE
+%% Define the terms of the PDE
 
-%% 
 % termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
 %
 % becomes 
@@ -112,7 +102,6 @@ pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
 termV_s = TERM_1D({pterm1,pterm2});
 termV1  = TERM_ND(num_dims,{termV_s,[]});
 
-%%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
 % term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
 % q(v) == d/dv(g2(v)r(v))   [grad, g2(v) = v^4*0.5*nu_par, BCL= D, BCR=D]
@@ -128,36 +117,32 @@ pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL_fList, BCR_fList);
 termV_par   = TERM_1D({pterm1,pterm2,pterm3});
 termV2      = TERM_ND(num_dims,{termV_par,[]});
 
-%%
-% Add terms to the pde object
+terms = {termV1,termV2,termC};
 
-pde.terms = {termV1,termV2, termC};
 
-%% Add an arbitrary number of sources to the RHS of the PDE
-% Each source term must have nDims + 1
+%% Define sources 
 
-%%
-% Add sources to the pde data structure
-pde.sources = {};
+sources = {};
 
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-pde.analytic_solutions_1D = { ...    
+analytic_solutions_1D = { ...    
     @(v,p,t) p.analytic_solution_v(v,p,t), ...
     @(z,p,t) p.init_cond_z(z), ...
     @(t,p) t.*0 + 1;
     };
 
-%%
-% Function to set time step
-    function dt=set_dt(pde,CFL)
-        
-        Lmax = pde.dimensions{1}.domainMax;
+%% Define function to set time step
+    function dt=set_dt(pde,CFL)    
+        Lmax = pde.dimensions{1}.max;
         LevX = pde.dimensions{1}.lev;
         dt = Lmax/2^LevX*CFL;
     end
 
-pde.set_dt = @set_dt;
+
+%% Construct PDE
+
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
 
 end
