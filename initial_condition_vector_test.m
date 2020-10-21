@@ -12,10 +12,6 @@ opts.deg = 4;
 opts.max_lev_coeffs = true;
 pde = advection1(opts);
 num_dims = numel(pde.dimensions);
-opts = opts.init_lev_vec(pde); % need to fix this crap
-for d=1:num_dims
-    pde.dimensions{d}.lev = opts.lev_vec(d);
-end
 
     function ans = my_func(x)
         ans = cos(x);
@@ -26,7 +22,7 @@ pde.dimensions{1}.min = 0.1;
 pde.dimensions{1}.max = 2*pi;
 pde.dimensions{1}.init_cond_fn = @(x,p,t) my_func(x);
 
-[elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, opts.max_lev, opts.grid_type);
+[elements, elements_idx]    = hash_table_sparse_nD (pde.get_lev_vec, opts.max_lev, opts.grid_type);
 hash_table.elements         = elements;
 hash_table.elements_idx     = elements_idx;
 

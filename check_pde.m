@@ -12,7 +12,6 @@ default_pde.terms = {};
 default_pde.params = {};
 default_pde.sources = {};
 default_pde.termsLHS = {};
-default_pde.transform_blocks = {}; % will be updated in asgard.m
 [~, default_pde.transform_blocks] = OperatorTwoScale_wavelet2(opts.deg, opts.max_lev);
 
 if opts.many_solution_capable
