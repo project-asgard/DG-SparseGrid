@@ -381,6 +381,8 @@ for L = 1:opts.num_steps
         assert(numel(fval)==numel(fval_analytic));
         
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
+        outputs.err{L+1} = err_wavelet;
+        outputs.rel_err{L+1} = err_wavelet/sqrt(mean(fval_analytic(:).^2));
         if ~opts.quiet  
             disp(['    num_dof : ', num2str(numel(fval))]);
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
@@ -500,6 +502,8 @@ for L = 1:opts.num_steps
     end
     
     t = t + dt;
+    
+    outputs.dt = dt;
     
 end
 
