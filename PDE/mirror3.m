@@ -65,7 +65,7 @@ dim_v = DIMENSION(0,3e7);
 dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 
-dim_z = DIMENSION(-pi,+pi);
+dim_z = DIMENSION(0.1,+pi-0.1);
 dim_z.name = 'z';
 dim_z.init_cond_fn = @(z,p,t) p.init_cond_z(z);
 dim_z.jacobian = @(z,p,t) sin(z);
@@ -173,8 +173,8 @@ sources = {};
 % This requires nDims+time function handles.
 
 analytic_solutions_1D = { ...    
-    @(v,p,t) p.init_cond_v(v), ...
-    @(z,p,t) p.init_cond_z(z), ...
+    @(v,p,t) p.analytic_solution_v(v,p,t), ...
+    @(z,p,t) p.analytic_solution_z(z,p,t), ...
     @(s,p,t) p.analytic_solution_s(s,p,t), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
