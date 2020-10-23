@@ -1,4 +1,7 @@
-function [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde)
+function [err,fval,fval_realspace,nodes,err_realspace,outputs] = ...
+    asgard_run_pde(opts,pde)
+
+root_directory = get_root_folder();
 
 tic
 
@@ -473,16 +476,18 @@ for L = 1:opts.num_steps
         else           
             filename_str = opts.output_filename_id;           
         end
-        fName = append(root_directory,"/output/asgard-out",filename_str,".mat");
- 
+        output_file_name = append(root_directory,"/output/asgard-out",filename_str,".mat");
+        outputs.output_file_name = output_file_name;
+        
         f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes); 
         if strcmp(opts.output_grid,'fixed')
             f_realspace_nD = ...
                 remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
         end
         
-        if num_dimensions >= 1
+        if num_dimensions <= 3
             f_realspace_nD_t{L+1} = f_realspace_nD;
+            f_realspace_analytic_nD_t{L+1} = f_realspace_analytic_nD;
         else
             error('Save output for num_dimensions >3 not yet implemented');
         end
@@ -490,7 +495,7 @@ for L = 1:opts.num_steps
         time_array(L+1) = t+dt;
         wall_clock_time(L+1) = toc;
        
-        save(fName,'pde','opts','dt','f_realspace_analytic_nD','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time');
+        save(output_file_name,'pde','opts','dt','f_realspace_analytic_nD_t','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time');
 
     end
     

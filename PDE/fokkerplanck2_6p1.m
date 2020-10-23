@@ -15,100 +15,18 @@ function pde = fokkerplanck2_6p1(opts)
 % asgard(@fokkerplanck2_6p1,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_6p1,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1) 
+% asgard(@fokkerplanck2_6p1,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',3) 
 
-%%
-% Define a few relevant functions
-
-nuEE = 1;
-vT = 1;
-delta = 0.042;
-Z = 1;
-E = 0.0025;
-tau = 10^5;
-gamma = @(p)sqrt(1+(delta*p).^2);
-vx = @(p)1/vT*(p./gamma(p));
-
-Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
-
-Cb = @(p)1/2*nuEE*vT^2*1./vx(p).*(Z+phi(vx(p))-psi(vx(p))+delta^4*vx(p).^2/2);
-
-Cf = @(p)2*nuEE*vT*psi(vx(p));
-
-    function ret = phi(x)
-        ret = erf(x);
-    end
-
-    function ret = psi(x,t)     
-        dphi_dx = 2./sqrt(pi) * exp(-x.^2);
-        ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);   
-        ix = find(abs(x)<1e-5); % catch singularity at boundary
-        ret(ix) = 0;
-    end
-
-
-    function ret = f0_z(x)     
-        test = opts.case_;
-        ret = zeros(size(x));
-        switch test
-            case 1
-                ret = x.*0+1;
-            case 2
-                ret = x.*0+1;
-            case 3
-                h = [3,0.5,1,0.7,3,0,3];
-                
-                for l=1:numel(h)
-                    
-                    L = l-1;
-                    P_m = legendre(L,x); % Use matlab rather than Lin's legendre.
-                    P = P_m(1,:)';
-                    
-                    ret = ret + h(l) * P;
-                    
-                end
-        end
-    end
-
-    function ret = f0_p(x)        
-        test = opts.case_;
-        ret = zeros(size(x));
-        switch test
-            
-            case 1
-                for i=1:numel(x)
-                    if x(i) <= 5
-                        ret(i) = 3/(2*5^3);
-                    else
-                        ret(i) = 0;
-                    end
-                end
-                
-            case 2
-                a = 2;
-                ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
-                
-            case 3
-                ret = 2/(3*sqrt(pi)) * exp(-x.^2);
-                
-        end
-    end
-
-
-    function ret = soln_z(x,t)
-        ret = x.*0+1;
-    end
-    function ret = soln_p(x,t)
-        ret = 2/sqrt(pi) * exp(-x.^2);
-    end
+params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
 dim_p = DIMENSION(0.01,+10);
-dim_p.init_cond_fn = @(x,p,t) f0_p(x);
+dim_p.init_cond_fn = @(x,p,t) p.f0_p(x);
+dim_p.jacobian = @(x,p,t) x.^2;
 
 dim_z = DIMENSION(-1,+1);
-dim_z.init_cond_fn = @(x,p,t) f0_z(x);
+dim_z.init_cond_fn = @(x,p,t) p.f0_z(x);
 
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
@@ -125,7 +43,7 @@ num_dims = numel(dimensions);
 %   r(p) == d/dp g3(p) f(p)   [grad, g3(p) = 1,      BCL=N,BCR=D]
 
 g1 = @(x,p,t,dat) 1./x.^2;
-g2 = @(x,p,t,dat) x.^2.*Ca(x);
+g2 = @(x,p,t,dat) x.^2.*p.Ca(x);
 g3 = @(x,p,t,dat) x.*0+1; 
 
 pterm1  = MASS(g1);
@@ -143,7 +61,7 @@ termC1  = TERM_ND(num_dims,{term1_p,[]});
 %   q(p) == d/dp g2(p) f(p)  [grad, g2(p)=p^2*Cf, BCL=N,BCR=D]
 
 g1 = @(x,p,t,dat) 1./x.^2;
-g2 = @(x,p,t,dat) x.^2.*Cf(x);
+g2 = @(x,p,t,dat) x.^2.*p.Cf(x);
 
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,+1,'N','D');
@@ -160,7 +78,7 @@ termC2   = TERM_ND(num_dims,{term2_p,[]});
 %   r(z) == d/dz g2(z) s(z)  [grad, g2(z) = 1-z^2,     BCL=D,BCR=D]
 %   s(z) == d/dz g3(z) f(z)  [grad, g3(z) = 1,         BCL=N,BCR=N]
 
-g1 = @(x,p,t,dat) Cb(x)./x.^4;
+g1 = @(x,p,t,dat) p.Cb(x)./x.^4;
 pterm1  = MASS(g1);
 term3_p = TERM_1D({pterm1});
 
@@ -174,13 +92,6 @@ termC3 = TERM_ND(num_dims,{term3_p,term3_z});
 
 terms = {termC1,termC2,termC3};
 
-%% Define some parameters and add to pde object.
-%  These might be used within the various functions below.
-
-params.parameter1 = 0;
-params.parameter2 = 1;
-
-
 %% Define sources
 
 sources = {};
@@ -189,8 +100,8 @@ sources = {};
 % This requires nDims+time function handles.
 
 analytic_solutions_1D = { ...
-    @(x,p,t) soln_p(x,t), ...
-    @(x,p,t) soln_z(x,t), ...
+    @(x,p,t) p.soln_p(x,t), ...
+    @(x,p,t) p.soln_z(x,t), ...
     @(t,p) 1
     };
 

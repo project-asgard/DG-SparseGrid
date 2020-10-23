@@ -25,7 +25,7 @@ classdef OPTS
         adapt_threshold = 1e-3;
         refinement_method = 1;
         adapt_initial_condition = false;
-        output_grid = 'quadrature'; % 'quadrature', 'fixed', 'uniform', 'quadrature_with_end_points'
+        output_grid = 'quadrature'; % 'quadrature', 'fixed', 'uniform', 'quadrature_with_end_points','dual_valued'
         save_output = false;
         output_filename_id = '';
         plot_freq = 1;
@@ -51,7 +51,7 @@ classdef OPTS
                 check_grid_type = @(x) any(validatestring(x,valid_grid_types));
                 valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE','time_independent'};
                 check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
-                valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points'};
+                valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points','dual_valued'};
                 check_output_grid = @(x) any(strcmp(x,valid_output_grids));
                 
                 addOptional(input_parser,'lev',opts.lev, @isnumeric);

@@ -50,6 +50,14 @@ elseif strcmp(opts.output_grid,'quadrature_with_end_points')
     quad_x_right_element = [quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
     Meval = sparse(dof*(n-2)+(dof+1)*2,dof_1D);
+elseif strcmp(opts.output_grid,'dual_valued')
+    % output on quadrature points (quad_x) with end points of each element
+    % note that this will produce dual valued output at the boundaries
+    % between each element, and not just at the ends of the domain
+    [quad_x_interior_element,~]=lgwt(deg,-1,1);
+    quad_x_interior_element  = [-1 quad_x_interior_element' +1]';
+    dof = numel(quad_x_interior_element);
+    Meval = sparse(dof*n,dof_1D);  
 else
     % output on quadrature points (quad_x) without end points
     [quad_x_interior_element,~]=lgwt(deg,-1,1);
