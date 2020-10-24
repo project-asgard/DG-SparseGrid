@@ -11,6 +11,7 @@ function [FMWT, blocks] = OperatorTwoScale_wavelet2(deg,nLev)
 
 % % Load G0 and H0 from file
 idebug = 0;
+assert(nLev >= 0);
 
 asgard_root = get_root_folder();
 
@@ -22,6 +23,12 @@ else
     disp('Generating two-scale file');
     [H0,H1,G0,G1,scale_co,phi_co]=MultiwaveletGen(deg);
     save(fileName,'H0','G0','scale_co','phi_co');
+end
+
+if(nLev == 0)
+   FMWT = eye(deg, deg);
+   blocks = {};
+   return
 end
 
 % ---------------------------------------------
