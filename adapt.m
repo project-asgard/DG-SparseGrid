@@ -406,7 +406,7 @@ for d=1:num_dims
     pde.dimensions{d}.lev = lev_vec(d);
 end
 
-assert(pde.get_lev_vec==lev_vec);
+assert(norm(pde.get_lev_vec-lev_vec)==0);
 
 % If we don't want to store the max lev coeffs, regen them
 if ~opts.max_lev_coeffs
