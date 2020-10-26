@@ -10,6 +10,12 @@ function Y = apply_FMWT_blocks(level, blocks, X, transpose_side)
 % transpose_side =  'RT'  right multiply, transpose
 %
 
+assert(level >= 0);
+if(level == 0)
+    Y = X;
+    return
+end
+
 assert(length(blocks) > 0);
 assert(mod(length(blocks),2) == 0);
 max_level = length(blocks) / 2;
