@@ -123,8 +123,7 @@ end
 function asgard_continuity1_adapt_test(testCase)
 addpath(genpath(pwd));
 disp('Testing continuity1 (CN/adapt)');
-[err,act_f,act_frs] = asgard(@continuity1,'quiet',true,...
-    'timestep_method', 'CN','num_steps',2,'adapt',true);
+[err,act_f,act_frs] = asgard(@continuity1,'quiet',true,'timestep_method', 'CN','num_steps',2,'adapt',true);
 verifyLessThan(testCase,err,1e-4);
 end
 
