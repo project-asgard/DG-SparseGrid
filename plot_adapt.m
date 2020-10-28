@@ -1,10 +1,9 @@
-function [coordinates] = plot_adapt(pde,opts,hash_table,pos)
+function [coordinates] = plot_adapt(pde,opts,hash_table)
 
 num_elements = numel(hash_table.elements_idx);
 num_dims = numel(pde.dimensions);
 xMin = pde.dimensions{1}.min;
 xMax = pde.dimensions{1}.max;
-
 
 %%
 % Get grid point coordinates
@@ -34,10 +33,10 @@ for i=1:num_elements
     
 end
 
-figure(222);
+% figure(222);
 
 if num_dims == 1
-    subplot(2,3,pos)
+%     subplot(2,3,pos)
     cla
     hold on
     for i=1:num_elements
@@ -54,6 +53,8 @@ if num_dims == 1
         
         coord_D = get_my_realspace_coord(pde,opts,hash_table,idx);
         plot(coord_D(1),-y,style,'MarkerSize',10);
+        ylabel('lev');
+        yticks(-opts.max_lev:0);
         
         [child_elements_idx, cnt] ...
             = get_child_elements_idx (num_dims, opts.max_lev, idx, opts.refinement_method);
@@ -76,7 +77,7 @@ if num_dims == 1
     end
     
 elseif num_dims == 2
-    subplot(4,3,pos)
+%     subplot(4,3,pos)
     cla
     hold on
     for i=1:num_elements

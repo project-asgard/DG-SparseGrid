@@ -1,10 +1,10 @@
-function [res] = plot_coeffs(num_dims,max_lev,hash_table,deg,fval,num_rows,num_cols,pos,...
+function [res] = plot_coeffs(num_dims,max_lev,hash_table,deg,fval,...
     refine_threshold, coarsen_threshold)
 
 element_DOF = deg^num_dims;
 num_elements = numel(fval)/element_DOF;
 hold off
-subplot(num_rows,num_cols,pos)
+% subplot(num_rows,num_cols,pos)
 fval_element = zeros(num_elements,1);
 depth = zeros(num_elements,1);
 fval_depth = zeros(numel(fval),1);

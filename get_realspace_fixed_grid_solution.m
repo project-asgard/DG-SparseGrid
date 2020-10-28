@@ -14,9 +14,18 @@ if nargin<4
         hash_table.elements_idx     = elements_idx; % only to get the same order as the old hash table
     end
 end
+% 
+% use_adapt_grid = true;
+% if use_adapt_grid
+%  [coordinates,depth] = get_element_coordinates(pde,opts,hash_table)
+%  coordinates = sort(coordinates);
+% end
 
 for d=1:num_dimensions
     nodes_nodups{d} = linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
+%     if use_adapt_grid
+%         nodes_nodups{d} = coordinates';
+%     end
     [Meval{d},nodes{d},nodes_count{d}] = matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
 end
 

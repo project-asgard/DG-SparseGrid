@@ -5,7 +5,7 @@ root_directory = get_root_folder();
 
 tic
 
-num_dimensions = numel(pde.dimensions);
+num_dims = numel(pde.dimensions);
 
 %% Reset any persistent variables
 if opts.time_independent_A | opts.time_independent_build_A
@@ -37,7 +37,7 @@ end
 
 %% (Do not) Construct the connectivity.
 if opts.use_connectivity
-    pde.connectivity = connect_nD(num_dimensions,HASH,hash_table,max(pde.get_lev_vec),max(pde.get_lev_vec),opts.grid_type);
+    pde.connectivity = connect_nD(num_dims,HASH,hash_table,max(pde.get_lev_vec),max(pde.get_lev_vec),opts.grid_type);
 else
     connectivity = [];
 end
@@ -69,11 +69,17 @@ if pde.solvePoisson
 end
 
 %% Construct transforms back to realspace for plotting
-for d=1:num_dimensions
+
+for d=1:num_dims
     if strcmp(opts.output_grid,'fixed')
         num_fixed_grid = 51;
         nodes_nodups{d} = ...
             linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
+        [Meval{d},nodes{d},nodes_count{d}] = ...
+            matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
+    elseif strcmp(opts.output_grid,'elements')
+        [element_coordinates,element_coordinates_deg] = get_sparse_grid_coordinates(pde,opts,hash_table);
+        nodes_nodups{d} = unique(sort(element_coordinates_deg(d,:)));
         [Meval{d},nodes{d},nodes_count{d}] = ...
             matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
     else
@@ -88,7 +94,7 @@ coord = get_realspace_coords(pde,nodes);
 coord_nodups = get_realspace_coords(pde,nodes_nodups);
 
 %% Plot initial condition
-if num_dimensions <=3
+if num_dims <=3
     
     %%
     % Get the real space solution
@@ -100,7 +106,7 @@ if num_dimensions <=3
     % construct the moment function handle list for calculating the mass
     if opts.calculate_mass
         mass_func = @(x,p,t) x.*0+1;
-        for d=1:num_dimensions
+        for d=1:num_dims
             moment_func_nD{d} = mass_func;
         end
         
@@ -116,16 +122,16 @@ if num_dimensions <=3
         mass_analytic = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
     end
 
-    f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);   
-    if strcmp(opts.output_grid,'fixed')
+    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);   
+    if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
         f_realspace_nD = ...
-            remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
+            remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
     end
     
     f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
 
     if opts.save_output
-        if num_dimensions <= 3
+        if num_dims <= 3
             f_realspace_nD_t{1} = f_realspace_nD;
         else
             error('Save output for num_dimensions >3 not yet implemented');
@@ -155,6 +161,7 @@ if write_fval; write_fval_to_file(fval,lev,deg,0); end
 
 %% Check to see if initial resolution meets requested accuracy
 if opts.adapt 
+    figs.adapt = figure();
     if opts.adapt_initial_condition
         if ~opts.quiet; disp('Adapting initial for requested accuracy ...'); end
                        
@@ -163,7 +170,7 @@ if opts.adapt
             num_pre_adapt = numel(fval);
             % first refine
             [pde,fval_tmp,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,coord_nodups,~,fval_realspace] ...
-                = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
+                = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
                 fval_realspace,0,1);
             if num_pre_adapt == numel(fval_tmp)
                 keep_adapting_initial_condition = false;
@@ -175,7 +182,7 @@ if opts.adapt
         
         % coarsen
         [pde,~,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,coord_nodups] ...
-            = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
+            = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
             fval_realspace,1,0);
         % reproject onto coarsend basis
         fval = initial_condition_vector(pde, opts, hash_table, t);
@@ -186,7 +193,7 @@ if opts.adapt
         % Check to ensure refinement is not required to start
         pre_refinement_num_DOF = length(fval);
         [~,fval_check] ...
-            = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,0,1);
+            = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,0,1,figs);
         if (length(fval_check)>pre_refinement_num_DOF)
 %             error('Initial grid was insifficient for requested accuracy');
         end
@@ -205,7 +212,7 @@ if ~opts.quiet
     disp(['    wavelet space absolute err (2-norm) : ', num2str(norm(fval-fval_analytic))]);
 end
 
-if num_dimensions <=3
+if num_dims <=3
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
@@ -231,7 +238,7 @@ for L = 1:opts.num_steps
     % Coarsen Grid
     if opts.adapt
         [pde,fval,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,coord_nodups] ...
-            = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,1,0);
+            = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,1,0);
     end
     
     needs_adapting = true;
@@ -257,7 +264,7 @@ for L = 1:opts.num_steps
         end
         
         if ~opts.quiet; disp('    Calculate time dependent matrix coeffs'); end
-        if num_dimensions==2
+        if num_dims==2
             if (pde.applySpecifiedE || pde.solvePoisson)
                 
                 %%
@@ -304,8 +311,12 @@ for L = 1:opts.num_steps
             num_elements_0 = numel(fval);
             
             [pde,~,hash_table,A_data,Meval,nodes,nodes_nodups,nodes_count,coord,coord_nodups,fval_unstepped_adapted] ...
-                = adapt(pde,opts,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
+                = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count, ...
                 fval_realspace,0,1,fval_unstepped);
+            
+            for d=1:num_dims
+                assert(numel(nodes_nodups{d})==numel(nodes_count{d}))
+            end
             
             num_elements_adapted = numel(fval_unstepped_adapted);
             
@@ -335,7 +346,7 @@ for L = 1:opts.num_steps
     % Write the present fval to file.
     if write_fval; write_fval_to_file(fval,lev,deg,L); end
     
-    if num_dimensions <=3
+    if num_dims <=3
         
         %%
         % Get the real space solution
@@ -351,13 +362,13 @@ for L = 1:opts.num_steps
         
         tryConvertToRealSpace = 0;
         if tryConvertToRealSpace
-            LminB = zeros(1,num_dimensions);
-            LmaxB = zeros(1,num_dimensions);
-            for d=1:num_dimensions
+            LminB = zeros(1,num_dims);
+            LmaxB = zeros(1,num_dims);
+            for d=1:num_dims
                 LminB(d) = pde.dimensions{d}.min;
                 LmaxB(d) = pde.dimensions{d}.max;
             end
-            fval_realspaceB = convert_to_real_space(pde,num_dimensions,lev,deg,gridType,LminB,LmaxB,fval,lev);
+            fval_realspaceB = convert_to_real_space(pde,num_dims,lev,deg,gridType,LminB,LmaxB,fval,lev);
             % fval_realspace = fval_realspaceB;
         end
         
@@ -392,7 +403,7 @@ for L = 1:opts.num_steps
         %%
         % Check the realspace solution
         
-        if num_dimensions <= 3
+        if num_dims <= 3
             if ~opts.quiet
                 disp(['t: ',num2str(t)]);
                 disp(['dt: ',num2str(dt)]);
@@ -423,12 +434,12 @@ for L = 1:opts.num_steps
         
         figure(1000)
         
-        if num_dimensions <= 3
+        if num_dims <= 3
             
-            f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes);
-            if strcmp(opts.output_grid,'fixed')
+            f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
+            if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
                 f_realspace_nD = ...
-                    remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
+                    remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
             end
 
             f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t+dt);
@@ -481,23 +492,24 @@ for L = 1:opts.num_steps
         output_file_name = append(root_directory,"/output/asgard-out",filename_str,".mat");
         outputs.output_file_name = output_file_name;
         
-        f_realspace_nD = singleD_to_multiD(num_dimensions,fval_realspace,nodes); 
-        if strcmp(opts.output_grid,'fixed')
+        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes); 
+        if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
             f_realspace_nD = ...
-                remove_duplicates(num_dimensions,f_realspace_nD,nodes_nodups,nodes_count);
+                remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
         end
         
-        if num_dimensions <= 3
+        if num_dims <= 3
             f_realspace_nD_t{L+1} = f_realspace_nD;
             f_realspace_analytic_nD_t{L+1} = f_realspace_analytic_nD;
         else
             error('Save output for num_dimensions >3 not yet implemented');
         end
         fval_t{L+1} = fval;
+        nodes_t{L+1} = nodes_nodups;
         time_array(L+1) = t+dt;
         wall_clock_time(L+1) = toc;
        
-        save(output_file_name,'pde','opts','dt','f_realspace_analytic_nD_t','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time');
+        save(output_file_name,'pde','opts','dt','f_realspace_analytic_nD_t','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time','nodes_t');
 
     end
     

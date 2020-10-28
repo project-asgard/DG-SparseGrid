@@ -31,7 +31,16 @@ if user_provided_nodes
     num_nodes = numel(input_nodes);
     nodes_count = input_nodes .* 0;
     dof = num_nodes*deg;
-    Meval = sparse(num_nodes,dof_1D);
+    Meval = sparse(num_nodes,dof_1D); % dual values can change this below
+    do_plot = false;
+    if do_plot
+        plot(input_nodes,input_nodes.*0+1,'-o');
+        hold on
+        basis_edges = linspace(xMin,xMax,n+1);
+        plot(basis_edges,basis_edges.*0+2,'-o');
+        hold off
+        ylim([0,10])
+    end
 elseif strcmp(opts.output_grid,'uniform')
     % output on uniformly spaced grid
     % note that this uses the left of the dual value options
@@ -57,8 +66,8 @@ elseif strcmp(opts.output_grid,'dual_valued')
     [quad_x_interior_element,~]=lgwt(deg,-1,1);
     quad_x_interior_element  = [-1 quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
-    Meval = sparse(dof*n,dof_1D);  
-else
+    Meval = sparse(dof*n,dof_1D);
+else   
     % output on quadrature points (quad_x) without end points
     [quad_x_interior_element,~]=lgwt(deg,-1,1);
     dof = numel(quad_x_interior_element);
@@ -69,7 +78,9 @@ cnt = 0;
 for i=0:n-1
     
     if user_provided_nodes
-        % which nodes are in this element
+        % which nodes are in this element (but recall, these are the
+        % elements in the first of two basis spaces, i.e., the
+        % non-hierarchical one)
         quad_x = ((input_nodes - xMin)/h - i)*2-1;
         in_this_node = quad_x>=-1 & quad_x<=+1;
         nodes_count(in_this_node) = nodes_count(in_this_node)+1; % for averaging dual values later
@@ -127,14 +138,17 @@ for i=0:n-1
         nodes(Iu) = xi;
         
     else
-        error('ERROR : quad_x is empty');
+%         error('ERROR : quad_x is empty');
     end
 end
 
+if user_provided_nodes
+    assert(numel(nodes_count)==numel(input_nodes));
+end
 %%
 % Transform back to real space from wavelet space
 
 %Meval = Meval*FMWT';
 trans_side = 'RT';
-Meval = apply_FMWT_blocks(lev, pde.transform_blocks, Meval, trans_side); 
+Meval = apply_FMWT_blocks(lev, pde.transform_blocks, Meval, trans_side);
 
