@@ -9,7 +9,7 @@ classdef OPTS
         dt = 0;
         quiet = false;
         grid_type = 'SG'; % 'SG', 'FG'
-        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent'
+        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent','matrix_exponential'
         build_A = false;
         adapt = false;
         use_connectivity = false;
@@ -49,7 +49,7 @@ classdef OPTS
                 
                 valid_grid_types = {'SG','FG'};
                 check_grid_type = @(x) any(validatestring(x,valid_grid_types));
-                valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE','time_independent'};
+                valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE','time_independent','matrix_exponential'};
                 check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
                 valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points','dual_valued','elements'};
                 check_output_grid = @(x) any(strcmp(x,valid_output_grids));

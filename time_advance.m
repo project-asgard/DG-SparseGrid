@@ -173,6 +173,25 @@ f1 = -A \ (s0+bc0);
 
 end
 
+%% Matrix Exponential
+function f1 = matrix_exponential(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+
+applyLHS = ~isempty(pde.termsLHS);
+
+if applyLHS
+    error('apply LHS not implemented for FE');
+else
+%     f1 = f0 + dt * (apply_A(pde,opts,A_data,f0,deg) + s0 + bc0);
+%     [~,A] = apply_A(pde,opts,A_data,f0,deg);
+
+    f1 = f0 + expm(A*t)*f0; 
+end
+
+end
+
 %% Forward Euler
 function f1 = forward_euler(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
