@@ -141,7 +141,7 @@ classdef OPTS
                 opts.start_time = input_parser.Results.start_time;
                 
                 opts.build_A = false;
-                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0
+                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential'}))>0
                     opts.build_A = true;
                 end
                 
