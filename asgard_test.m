@@ -244,8 +244,7 @@ end
 function asgard_diffusion2_adapt_test(testCase)
 addpath(genpath(pwd));
 disp('Testing diffusion2 (CN/adapt)');
-[err,act_f,act_frs] = asgard(@diffusion2,'lev',3,'quiet',true,'deg',3, ...
-    'timestep_method', 'CN','adapt',true);
+[err,act_f,act_frs] = asgard(@diffusion2,'lev',3,'quiet',true,'deg',3,'timestep_method', 'CN','adapt',true);
 verifyLessThan(testCase,err,9.5e-4);
 end
 

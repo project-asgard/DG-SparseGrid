@@ -193,7 +193,7 @@ if opts.adapt
         % Check to ensure refinement is not required to start
         pre_refinement_num_DOF = length(fval);
         [~,fval_check] ...
-            = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,0,1,figs);
+            = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,0,1);
         if (length(fval_check)>pre_refinement_num_DOF)
 %             error('Initial grid was insifficient for requested accuracy');
         end
