@@ -1,105 +1,106 @@
 root = get_root_folder();
 directory = [root,'/2020-07-runaway-electron-paper-scripts/'];
+file_extension = '.png';
 
-% %% Pich angle dynamics
-% %
-% % Collision term test
-% % -------------------
-% lev = 4;
-% deg = 1;
-% [err,~,~,~,~,outputs] = asgard(@fokkerplanck1_pitch_C,'timestep_method','BE','dt',0.001,...
-%     'num_steps',500,'lev',lev,'deg',deg,'save_output',true,'quiet',false,...
-%     'output_grid','dual_valued');
-% load(outputs.output_file_name);
-% 
-% figure('Position', [10 10 1600 400])
-% subplot(1,3,1)
-% plot_output1(outputs,[5],lev,deg,dt,[],0);
-% subplot(1,3,2)
-% plot_output1(outputs,[50],lev,deg,dt,[],0);
-% subplot(1,3,3)
-% plot_output1(outputs,[500],lev,deg,dt,[],0);
-% 
-% filename = [directory,'RE-pitch-C-deg-',num2str(deg)];
-% savefig([filename,'.fig']);
-% exportgraphics(gcf,[filename,'.pdf'],'ContentType','vector','BackgroundColor','none');
-% 
-% deg = 4;
-% [err,~,~,~,~,outputs] = asgard(@fokkerplanck1_pitch_C,'timestep_method','BE','dt',0.001,...
-%     'num_steps',500,'lev',lev,'deg',deg,'save_output',true,'quiet',false,...
-%     'output_grid','dual_valued');
-% load(outputs.output_file_name);
-% 
-% figure('Position', [10 10 1600 400])
-% subplot(1,3,1)
-% plot_output1(outputs,[5],lev,deg,dt,[],0);
-% subplot(1,3,2)
-% plot_output1(outputs,[50],lev,deg,dt,[],0);
-% subplot(1,3,3)
-% plot_output1(outputs,[500],lev,deg,dt,[],0);
-% 
-% filename = [directory,'RE-pitch-C-deg-',num2str(deg)];
-% savefig([filename,'.fig']);
-% exportgraphics(gcf,[filename,'.pdf'],'ContentType','vector','BackgroundColor','none');
-% 
-% % Electric field term test
-% % ------------------------
-% lev = 4;
-% deg = 4;
-% dt = 0.05;
-% num_steps = 50;
-% [err,~,~,~,~,outputs_noadapt] = asgard(@fokkerplanck1_pitch_E,...
-%     'timestep_method','BE','dt',dt,'num_steps',num_steps,'lev',4,'deg',4,...
-%     'save_output',true,'quiet',false,'adapt',false);
-% adapt_threshold = 1e-3;
-% [err_adapt,~,~,~,~,outputs_adapt] = asgard(@fokkerplanck1_pitch_E,...
-%     'timestep_method','BE','dt',dt,'num_steps',num_steps,'lev',4,'deg',4,...
-%     'save_output',true,'quiet',false,'adapt',true,...
-%     'adapt_threshold',adapt_threshold,'adapt_initial_condition',true,...
-%     'output_grid','elements');
-% 
-% plot_times = [10,50];
-% figure('Position', [10 10 1600 400])
-% hold off
-% 
-% % plot non-adapted
-% outputs = outputs_noadapt;
-% subplot(1,2,1)
-% plot_output1(outputs,plot_times,lev,deg,dt,adapt_threshold,1);
-% title('Uniform')
-% % plot adapted
-% outputs = outputs_adapt;
-% subplot(1,2,2)
-% plot_output1(outputs,plot_times,lev,deg,dt,adapt_threshold,1);
-% title('Adapted')
-% 
-% filename = [directory,'RE-pitch-E-deg-',num2str(deg)];
-% savefig([filename,'.fig']);
-% exportgraphics(gcf,[filename,'.pdf'],'ContentType','vector','BackgroundColor','none');
-% 
-% % plot the hierarchical grid
-% figure('Position', [10 10 1600 400]);
-% output = load(outputs_noadapt.output_file_name);
-% subplot(1,2,1)
-% pde = output.pde;
-% opts = output.opts;
-% hash_table = output.hash_table;
-% coordinates = plot_adapt(pde,opts,hash_table);
-% set(gca,'FontSize',14)
-% title('Uniform')
-% 
-% output = load(outputs_adapt.output_file_name);
-% subplot(1,2,2)
-% pde = output.pde;
-% opts = output.opts;
-% hash_table = output.hash_table;
-% coordinates = plot_adapt(pde,opts,hash_table);
-% set(gca,'FontSize',14)
-% title('Adapted')
-% 
-% filename = [directory,'RE-pitch-E-mesh-hierarchy-deg-',num2str(deg)];
-% savefig([filename,'.fig']);
-% exportgraphics(gcf,[filename,'.pdf'],'ContentType','vector','BackgroundColor','none');
+%% Pich angle dynamics
+%
+% Collision term test
+% -------------------
+lev = 4;
+deg = 1;
+[err,~,~,~,~,outputs] = asgard(@fokkerplanck1_pitch_C,'timestep_method','BE','dt',0.001,...
+    'num_steps',500,'lev',lev,'deg',deg,'save_output',true,'quiet',false,...
+    'output_grid','dual_valued');
+load(outputs.output_file_name);
+
+figure('Position', [10 10 1600 400])
+subplot(1,3,1)
+plot_output1(outputs,[5],lev,deg,dt,[],0);
+subplot(1,3,2)
+plot_output1(outputs,[50],lev,deg,dt,[],0);
+subplot(1,3,3)
+plot_output1(outputs,[500],lev,deg,dt,[],0);
+
+filename = [directory,'RE-pitch-C-deg-',num2str(deg)];
+savefig([filename,'.fig']);
+exportgraphics(gcf,[filename,'.pdf'],'ContentType','vector','BackgroundColor','none');
+
+deg = 4;
+[err,~,~,~,~,outputs] = asgard(@fokkerplanck1_pitch_C,'timestep_method','BE','dt',0.001,...
+    'num_steps',500,'lev',lev,'deg',deg,'save_output',true,'quiet',false,...
+    'output_grid','dual_valued');
+load(outputs.output_file_name);
+
+figure('Position', [10 10 1600 400])
+subplot(1,3,1)
+plot_output1(outputs,[5],lev,deg,dt,[],0);
+subplot(1,3,2)
+plot_output1(outputs,[50],lev,deg,dt,[],0);
+subplot(1,3,3)
+plot_output1(outputs,[500],lev,deg,dt,[],0);
+
+filename = [directory,'RE-pitch-C-deg-',num2str(deg)];
+savefig([filename,'.fig']);
+exportgraphics(gcf,[filename,file_extension],'ContentType','vector','BackgroundColor','none');
+
+% Electric field term test
+% ------------------------
+lev = 4;
+deg = 4;
+dt = 0.05;
+num_steps = 50;
+[err,~,~,~,~,outputs_noadapt] = asgard(@fokkerplanck1_pitch_E,...
+    'timestep_method','BE','dt',dt,'num_steps',num_steps,'lev',4,'deg',4,...
+    'save_output',true,'quiet',false,'adapt',false);
+adapt_threshold = 1e-3;
+[err_adapt,~,~,~,~,outputs_adapt] = asgard(@fokkerplanck1_pitch_E,...
+    'timestep_method','BE','dt',dt,'num_steps',num_steps,'lev',4,'deg',4,...
+    'save_output',true,'quiet',false,'adapt',true,...
+    'adapt_threshold',adapt_threshold,'adapt_initial_condition',true,...
+    'output_grid','elements');
+
+plot_times = [10,50];
+figure('Position', [10 10 1600 400])
+hold off
+
+% plot non-adapted
+outputs = outputs_noadapt;
+subplot(1,2,1)
+plot_output1(outputs,plot_times,lev,deg,dt,adapt_threshold,1);
+title('Uniform')
+% plot adapted
+outputs = outputs_adapt;
+subplot(1,2,2)
+plot_output1(outputs,plot_times,lev,deg,dt,adapt_threshold,1);
+title('Adapted')
+
+filename = [directory,'RE-pitch-E-deg-',num2str(deg)];
+savefig([filename,'.fig']);
+exportgraphics(gcf,[filename,file_extension],'ContentType','vector','BackgroundColor','none');
+
+% plot the hierarchical grid
+figure('Position', [10 10 1600 400]);
+output = load(outputs_noadapt.output_file_name);
+subplot(1,2,1)
+pde = output.pde;
+opts = output.opts;
+hash_table = output.hash_table;
+coordinates = plot_adapt(pde,opts,hash_table);
+set(gca,'FontSize',14)
+title('Uniform')
+
+output = load(outputs_adapt.output_file_name);
+subplot(1,2,2)
+pde = output.pde;
+opts = output.opts;
+hash_table = output.hash_table;
+coordinates = plot_adapt(pde,opts,hash_table);
+set(gca,'FontSize',14)
+title('Adapted')
+
+filename = [directory,'RE-pitch-E-mesh-hierarchy-deg-',num2str(deg)];
+savefig([filename,'.fig']);
+exportgraphics(gcf,[filename,file_extension],'ContentType','vector','BackgroundColor','none');
 
 % case 2 - advected pulse
 lev = 4;
@@ -134,7 +135,31 @@ title('Adapted')
 
 filename = [directory,'RE-pitch-E-case-2-deg-',num2str(deg)];
 savefig([filename,'.fig']);
-exportgraphics(gcf,[filename,'.pdf'],'ContentType','vector','BackgroundColor','none');
+exportgraphics(gcf,[filename,file_extension],'ContentType','vector','BackgroundColor','none');
+
+% plot the hierarchical grid
+figure('Position', [10 10 1600 400]);
+output = load(outputs_noadapt.output_file_name);
+subplot(1,2,1)
+pde = output.pde;
+opts = output.opts;
+hash_table = output.hash_table;
+coordinates = plot_adapt(pde,opts,hash_table);
+set(gca,'FontSize',14)
+title('Uniform')
+
+output = load(outputs_adapt.output_file_name);
+subplot(1,2,2)
+pde = output.pde;
+opts = output.opts;
+hash_table = output.hash_table;
+coordinates = plot_adapt(pde,opts,hash_table);
+set(gca,'FontSize',14)
+title('Adapted')
+
+filename = [directory,'RE-pitch-E-case-2-mesh-hierarchy-deg-',num2str(deg)];
+savefig([filename,'.fig']);
+exportgraphics(gcf,[filename,file_extension],'ContentType','vector','BackgroundColor','none');
 
 disp('END');
 
