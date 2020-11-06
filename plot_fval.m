@@ -179,43 +179,43 @@ end
 
 if num_dims==3
     
-    figure(1000);
+%    figure(1000);
     
     %%
     % Plot a 1D line through the solution
     
-    sz = numel(f_nD(:,1,1))/1;
-    sy = numel(f_nD(1,:,1)) - 1;
-    sx = numel(f_nD(1,1,:))-1;
-    
-    %plotting in x-direction
-    f1d = f_nD(sz,sy,:);
-    f1d = f1d(1,:);
+    sz = 2;%numel(f_nD(1,1,:))/2;
+    sy = 2;%numel(f_nD(1,:,1))/2;
+    sx = 2;%numel(f_nD(:,1,1))-/4 - 4;
+%     
+%     %plotting in x-direction
+%     f1d = f_nD(sz,sy,:);
+%     f1d = f1d(1,:);
     x = nodes{1};
     y = nodes{2};
     z = nodes{3};
-    ax1 = subplot(3,3,1);
-    plot(x,f1d,'-o');
-    title('1D slice through velocity dimension');
-    
-    %plotting y-direction
-    f1d = f_nD(sz,:,sx);
-    x = nodes{1};
-    y = nodes{2};
-    z = nodes{3};
-    ax2 = subplot(3,3,2);
-    plot(y,f1d,'-o');
-    title('1D slice through pitch dimension');
-    
-    %plotting z-direction
-    f1d = f_nD(:,sy,sx);
-    x = nodes{1};
-    y = nodes{2};
-    z = nodes{3};
-    ax3 = subplot(3,3,3);
-    plot(z,f1d,'-o');
-    title('1D slice through spatial dimension');
-    
+%     ax1 = subplot(3,3,1);
+%     plot(x,f1d,'-o');
+%     title('1D slice through velocity dimension');
+%     
+%     %plotting y-direction
+%     f1d = f_nD(sz,:,sx);
+%     x = nodes{1};
+%     y = nodes{2};
+%     z = nodes{3};
+%     ax2 = subplot(3,3,2);
+%     plot(y,f1d,'-o');
+%     title('1D slice through pitch dimension');
+%     
+%     %plotting z-direction
+%     f1d = f_nD(:,sy,sx);
+%     x = nodes{1};
+%     y = nodes{2};
+%     z = nodes{3};
+%     ax3 = subplot(3,3,3);
+%     plot(z,f1d,'-o');
+%     title('1D slice through spatial dimension');
+%     
     %%
     % Overplot analytic solution
     
@@ -229,12 +229,12 @@ if num_dims==3
     %%
     % Plot a 2D xy plane
     
-    ax1 = subplot(3,3,4);
+    ax1 = subplot(2,3,1);
     contourf(z,y,f_nD(:,:,sx)');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
-        ax2 = subplot(3,3,7);
+        ax2 = subplot(2,3,4);
         contourf(z,y,f_nD_analytic(:,:,sx)');
         title('2D slice through 3D analytic');
     end
@@ -242,12 +242,12 @@ if num_dims==3
     %%
     % Plot a 2D xz plane
     
-    ax3 = subplot(3,3,5);
+    ax3 = subplot(2,3,2);
     contourf(z,x,squeeze(f_nD(:,sy,:))');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
-        ax3 = subplot(3,3,8);
+        ax3 = subplot(2,3,5);
         contourf(z,x,squeeze(f_nD_analytic(:,sy,:))');
         title('2D slice through 3D analytic');
     end
@@ -255,12 +255,12 @@ if num_dims==3
     %%
     % Plot a 2D yz plane
     
-    ax3 = subplot(3,3,6);
+    ax3 = subplot(2,3,3);
     contourf(y,x,squeeze(f_nD(sz,:,:))');
     title('2D slice through 3D numeric');
     
     if pde.checkAnalytic
-        ax3 = subplot(3,3,9);
+        ax3 = subplot(2,3,6);
         contourf(y,x,squeeze(f_nD_analytic(sz,:,:))');
         title('2D slice through 3D analytic');
     end

@@ -18,7 +18,7 @@ if num_dim >= 2
     for i = 2:num_dim
          min = dimensions{1,i}.min;
          max = dimensions{1,i}.max;
-         ww = kron(ww,ww)*(max - min);
+         ww = kron(ww,ww_1D)*(max - min);
     end
 end
 
