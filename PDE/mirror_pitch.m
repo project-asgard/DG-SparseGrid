@@ -86,7 +86,7 @@ BCR_fList = { ...
 
 %% Define the dimensions
 
-dim_z = DIMENSION(0.1,pi-0.1);
+dim_z = DIMENSION(0.1,pi/2);
 dim_z.name = 'z';
 dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
 dim_z.jacobian = @(z,p,t) sin(z);

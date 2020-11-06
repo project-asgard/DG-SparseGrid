@@ -23,11 +23,10 @@ switch opts.case_
         params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin
         params.init_cond_v = @(v) params.maxwell(v,params.v_th(params.a.T_eV,params.a.m),1e6);
     case 2
-        params.a.T_eV = 0.05*params.b.T_eV;
-        params.init_cond_v = @(v) params.maxwell(v,0,1e6);
+        params.a.T_eV = 250*params.b.T_eV;
+        params.init_cond_v = @(v) params.maxwell(v,0, 1e6);
     case 3
         params.a.T_eV = 1e3;
-        params.init_cond_v = @(v) v.*0 + 1;%params.maxwell(v,params.v_th(params.a.T_eV,params.a.m),1e6);
 end
 
 %v_ = 10.^[-1:.1:7];
@@ -61,11 +60,11 @@ BCR_fList = { ...
 %% Define the dimensions
 
 dim_v.name = 'v';
-dim_v = DIMENSION(0,3e7);
+dim_v = DIMENSION(0,5e6);
 dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 
-dim_z = DIMENSION(0.1,+pi-0.1);
+dim_z = DIMENSION(0.01,+pi-0.01);
 dim_z.name = 'z';
 dim_z.init_cond_fn = @(z,p,t) p.init_cond_z(z);
 dim_z.jacobian = @(z,p,t) sin(z);
@@ -85,9 +84,9 @@ num_dims = numel(dimensions);
 % q(v) == g1(v)  [mass, g1(p) = v,  BC N/A]
 % r(z) == g2(z) [mass, g2(z) = cos(z),  BC N/A]
 % w(s) == d/ds g3(s) f [grad, g3(s) = -1, BCL= D, BCR=D]
-g1 = @(v,p,t,dat) v;
+g1 = @(v,p,t,dat) -v;
 g2 = @(z,p,t,dat) cos(z);
-g3 = @(s,p,t,dat) s.*0 - 1;
+g3 = @(s,p,t,dat) s.*0 + 1;
 
 pterm1 = MASS(g1);
 pterm2 = MASS(g2);
@@ -103,9 +102,9 @@ termS1   = TERM_ND(num_dims,{term1_s,[],[]});
 % r(z) == g2(z) [mass, g2(z) = cos(z),  BC N/A]
 % w(s) == g3(s) f [mass, g3(s) = -dB/ds/B, BCL= D, BCR=D]
 
-g1 = @(v,p,t,dat) v;
+g1 = @(v,p,t,dat) -v;
 g2 = @(z,p,t,dat) cos(z);
-g3 = @(s,p,t,dat) -p.dB_ds(s)./p.B_func(s);
+g3 = @(s,p,t,dat) p.dB_ds(s)./p.B_func(s);
 
 pterm1 = MASS(g1);
 pterm2 = MASS(g2);
@@ -130,8 +129,8 @@ g3 = @(z,p,t,dat) sin(z);
 g4 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
 pterm2  = MASS(g2);
-pterm3  = GRAD(num_dims,g3,+1,'D','D');
-pterm4  = GRAD(num_dims,g4,-1,'N', 'N');
+pterm3  = GRAD(num_dims,g3,+1,'N','N');
+pterm4  = GRAD(num_dims,g4,-1,'D', 'D');
 termC_z = TERM_1D({pterm1,pterm2,pterm3,pterm4});
 termC   = TERM_ND(num_dims,{termC_z,[],[]});
 
@@ -166,6 +165,7 @@ termV2      = TERM_ND(num_dims,{termV_par,[],[]});
 terms = {termV1,termV2,termC,termS1};
 
 %% Define sources
+
 
 sources = {};
 

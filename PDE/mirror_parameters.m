@@ -53,29 +53,37 @@ dB_ds = @(s) exp(s); % @(xi, R_mag) -3*B_o.*xi./(R_mag.*(1 + xi.^2).^(5/2)) deri
 advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
 
-init_cond_v = @(v) maxwell(v, a.vth, 10^6);
-init_cond_z = @(z) a.n*cos(z);
+init_cond_v = @(v) maxwell(v,1e6,2e5);
+init_cond_z = @(z) cos(z/2);
 init_cond_s = @(s) exp(s);
 init_cond_t = @(t) t*0 + 1;
+
+s_z = @(z,p,t) -0.5.*(sin(z)+cot(z).*cos(z)); %source pitch fuction for mirror3
+s_v = @(v,p,t) nu_D(v,a,b);
+s_space = @(s,p,t) s.*0 + 1;
+s_time = @(t,p) t.*0 + 1;
+
+source_3D = {s_z, s_v, s_space, s_time};
+
 
 analytic_solution_s = @soln_s;
     function ret = soln_s(s,p,t)
 	ret = exp(s);
-        if isfield(p,'norm_fac')
-             ret = ret .* p.norm_fac;
-        end
+%         if isfield(p,'norm_fac')
+%              ret = ret .* p.norm_fac;
+%         end
     end
 analytic_solution_v = @soln_v;
     function ret = soln_v(v,p,t)
         ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
-        if isfield(p,'norm_fac')
-            ret = ret .* p.norm_fac;
-        end
+%         if isfield(p,'norm_fac')
+%             ret = ret .* p.norm_fac;
+%         end
     end
 
 analytic_solution_z = @soln_z;
     function ret = soln_z(z,p,t)
-        ret = a.n.*cos(z).*exp(-nu_D(b.vth,a,b).*t);
+        ret = cos(z/2);
         if isfield(p,'norm_fac')
             ret = ret .* p.norm_fac;
         end

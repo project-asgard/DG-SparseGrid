@@ -119,7 +119,7 @@ if num_dims <=3
         pde.params.norm_fac = mass / mass_analytic;
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
-        mass_analytic = moment_integral(opts.lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
+        mass_analytic = moment_integral(opts.lev,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
     end
 
     f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);   
