@@ -1,11 +1,10 @@
 %% MATLAB (reference) version of the ASGarD solver
 
-function [err,fval,fval_realspace,nodes,err_realspace] = asgard(pde_handle,varargin)
+function [err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard(pde_handle,varargin)
 
 format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
-root_directory = get_root_folder();
 
 %% Check for valid PDE function handle
 if ~exist('pde_handle','var')
@@ -21,7 +20,7 @@ opts = OPTS(varargin);
 pde = pde_handle(opts);
 
 %% Launch ASGarD with this PDE
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+[err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
 
 end
 

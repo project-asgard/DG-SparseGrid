@@ -1,4 +1,4 @@
-function [coordinates] = get_sparse_grid_coordinates(pde, opts, hash_table)
+function [coordinates,coordinates_deg] = get_sparse_grid_coordinates(pde, opts, hash_table)
 %%
 % coordinates is a (num_pts x num_dims) array of real space coordinates of
 % the sparse-grid element locations.
@@ -23,26 +23,33 @@ if plot_grid && numel(pde.dimensions)==2
 end
 
 z=0;
+cnt = 0;
 for elem=1:num_elems
     idx = hash_table.elements_idx(elem);
     coordinates(elem,:) = get_my_realspace_coord(pde, opts, hash_table, idx);
     
+    lev1 = hash_table.elements.lev_p1(idx,1)-1;
+    x_min = pde.dimensions{1}.min;
+    x_max = pde.dimensions{1}.max;
+    x_rng = x_max-x_min;
+    x = coordinates(elem,1);
+    dx = 1/(2^max([lev1,1]))*x_rng;
+    
+    tmp_x = linspace(x-dx,x+dx,opts.deg+2);
+    tmp_x_inner = tmp_x(2:end)-(tmp_x(2)-tmp_x(1))/2;
+
+    coordinates_deg(cnt+1:cnt+1+numel(tmp_x_inner)-1) = tmp_x_inner;
+    cnt = cnt + numel(tmp_x_inner);   
+    
     if plot_grid && numel(pde.dimensions)==2
         depth(elem) = sum (hash_table.elements.lev_p1(idx,:)-1,'all');
-        lev1 = hash_table.elements.lev_p1(idx,1)-1;
         lev2 = hash_table.elements.lev_p1(idx,2)-1;
-        
-        x_min = pde.dimensions{1}.min;
-        x_max = pde.dimensions{1}.max;
-        x_rng = x_max-x_min;
-        
+    
         y_min = pde.dimensions{2}.min;
         y_max = pde.dimensions{2}.max;
         y_rng = y_max-y_min;
         
-        x = coordinates(elem,1);
         y = coordinates(elem,2);
-        dx = 1/(2^max([lev1,1]))*x_rng;
         dy = 1/(2^max([lev2,1]))*y_rng;
         
         x1 = x+dx;

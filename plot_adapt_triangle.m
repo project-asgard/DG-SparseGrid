@@ -1,10 +1,10 @@
-function plot_adapt_triangle(pde,opts,hash_table,plot_num)
+function plot_adapt_triangle(pde,opts,hash_table);%,plot_num)
 
 num_dimensions  = numel (pde.dimensions);
 num_elements    = numel (hash_table.elements_idx);
 
 if num_dimensions == 2
-    subplot(4,3,plot_num);
+%     subplot(4,3,plot_num);
     cla
     hold on
     

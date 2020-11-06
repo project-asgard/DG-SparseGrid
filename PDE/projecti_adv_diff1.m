@@ -22,18 +22,15 @@ function pde = projecti_adv_diff1(opts)
 % explicit
 % asgard(@projecti_adv_diff1,'CFL',0.01);
 %
-% implicit
-% asgard(@projecti_adv_diff1,'timestep_method','BE');
-%
-% FE
-% asgard(projecti_adv_diff1,'lev',4,'deg',4,'timestep_method','FE', 'dt',0.01,'num_steps',16)
+% high order implicit
+% asgard(@projecti_adv_diff1,'timestep_method','ode15s','dt',0.04,'num_steps',1000,'lev',3,'deg',4)
 
 
 %% Define the dimensions
 
 k = pi/2;
-nu = 0.01;
-v = 10;
+nu = 0.0;
+v = 40;
 soln_x = @(x,t) (sin(k*(x-v*t)));
 
 soln_t = @(t) exp(-nu*k^2*t);

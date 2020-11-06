@@ -6,6 +6,9 @@ if strcmp(opts.timestep_method,'BE')
 elseif strcmp(opts.timestep_method,'FE')
     % Forward Euler (FE) first order
     f = forward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'matrix_exponential')
+    % Matrix Exponential (ME) all order
+    f = matrix_exponential(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'time_independent')
     % time independent d/dt==0
     f = time_independent(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -170,6 +173,30 @@ bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 [~,A] = apply_A(pde,opts,A_data,f0,deg);
 
 f1 = -A \ (s0+bc0);
+
+end
+
+%% Matrix Exponential
+function f1 = matrix_exponential(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+% Note that this is not implemented for source terms, so is only here for
+% testing purposed. Adding sources terms requires adding another term,
+% i.e., 
+% f1 = expm(t*A) * int_0^t exp(-u*A) s(t) du  + expm(t*A)*f0
+% as well as something for the boundary terms - that integral looks like a
+% pain.
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+
+applyLHS = ~isempty(pde.termsLHS);
+
+if applyLHS
+    error('apply LHS not implemented for FE');
+else
+    [~,A] = apply_A(pde,opts,A_data,f0,deg);
+    f1 = expm(A*dt)*f0; 
+end
 
 end
 
