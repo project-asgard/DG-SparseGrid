@@ -64,7 +64,7 @@ dim_v = DIMENSION(0,5e6);
 dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 
-dim_z = DIMENSION(0.01,+pi-0.01);
+dim_z = DIMENSION(0.1,+pi-0.1);
 dim_z.name = 'z';
 dim_z.init_cond_fn = @(z,p,t) p.init_cond_z(z);
 dim_z.jacobian = @(z,p,t) sin(z);
@@ -129,8 +129,8 @@ g3 = @(z,p,t,dat) sin(z);
 g4 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
 pterm2  = MASS(g2);
-pterm3  = GRAD(num_dims,g3,+1,'N','N');
-pterm4  = GRAD(num_dims,g4,-1,'D', 'D');
+pterm3  = GRAD(num_dims,g3,+1,'D','D');
+pterm4  = GRAD(num_dims,g4,-1,'N', 'N');
 termC_z = TERM_1D({pterm1,pterm2,pterm3,pterm4});
 termC   = TERM_ND(num_dims,{termC_z,[],[]});
 

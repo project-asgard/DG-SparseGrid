@@ -16,14 +16,14 @@ BCFunc = @(v,p,t) p.init_cond_v(v);
 
 BCL_fList = { ...
     @(v,p,t) v.*0, ... 
-    @(z,p,t) p.init_cond_z(z), ...
-    @(t,p) p.init_cond_t(t)
+%    @(z,p,t) p.init_cond_z(z), ...
+    @(t,p) t.*0 + 1
     };
 
 BCR_fList = { ...
     @(v,p,t) BCFunc(v,p,t), ... % 
-    @(z,p,t) p.init_cond_z(z), ...
-    @(t,p) p.init_cond_t(t)
+%    @(z,p,t) p.init_cond_z(z), ...
+    @(t,p) t.*0 + 1
     };
 
 
@@ -73,7 +73,7 @@ g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,+1,'D','N');
-pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
+pterm3 = GRAD(num_dims,g3, -1,'N','D', BCL_fList, BCR_fList);
 termV_par = TERM_1D({pterm1,pterm2,pterm3});
 termV2   = TERM_ND(num_dims,{termV_par});
 
