@@ -24,7 +24,7 @@ function mirror1_pitch_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the pitch dimension within mirror1');
 % setup PDE
-args = {'lev',3,'deg',3,'dt',5e-7,'quiet',true,'num_steps',20,'timestep_method','matrix_exponential','normalize_by_mass',false};
+args = {'lev',4,'deg',4,'dt',5e-7,'quiet',true,'num_steps',20,'timestep_method','matrix_exponential','normalize_by_mass',false};
 opts = OPTS(args);
 pde = mirror1_pitch(opts);
 % modify PDE - not needed here

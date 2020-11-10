@@ -45,7 +45,7 @@ e = 1.602*10^-19; %charge in Coulombs
 ln_Delt = 10; %Coulomb logarithm
 m_a = 1.6726*10^-27; %target mass in kg
 L_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
-nu_D = 10^6; %deflection frequency in s^-1
+nu_D = 10^4; %deflection frequency in s^-1
 
 %Initial parameters for target specie
 n_o = 0.5*n_b; %initial number density for specie at specific velocity
