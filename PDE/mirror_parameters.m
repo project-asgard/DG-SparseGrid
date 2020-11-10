@@ -69,24 +69,15 @@ source_3D = {s_z, s_v, s_space, s_time};
 analytic_solution_s = @soln_s;
     function ret = soln_s(s,p,t)
 	ret = exp(s);
-%         if isfield(p,'norm_fac')
-%              ret = ret .* p.norm_fac;
-%         end
     end
 analytic_solution_v = @soln_v;
     function ret = soln_v(v,p,t)
         ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
-%         if isfield(p,'norm_fac')
-%             ret = ret .* p.norm_fac;
-%         end
     end
 
 analytic_solution_z = @soln_z;
     function ret = soln_z(z,p,t)
         ret = cos(z/2);
-%         if isfield(p,'norm_fac')
-%             ret = ret .* p.norm_fac;
-%         end
     end
 
     function ret = phi(x)

@@ -379,26 +379,3 @@ relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
 verifyLessThan(testCase,relErr,1);
 end
 
-function mirror3_pitch_test(testCase)
-addpath(genpath(pwd));
-disp('Testing the pitch dimension within mirror3');
-% setup PDE
-args = {'lev',3,'deg',3,'dt',1e-8,'calculate_mass',false,'quiet',true,'num_steps',2};
-opts = OPTS(args);
-pde = mirror3(opts);
-% modify PDE
-pde.dimensions{1}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.dimensions{2}.init_cond_fn = @(z,p,t) p.a.n.*cos(z);
-pde.dimensions{3}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.analytic_solutions_1D = { ...    
-    @(v,p,t) p.init_cond_v(v), ...
-    @(z,p,t) p.analytic_solution_z(z,p,t), ...
-    @(s,p,t) p.init_cond_s(s), ...
-    @(t,p) t.*0 + 1; %pitch_t(t)
-    };
-% run PDE
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
-% assert on correctness
-verifyLessThan(testCase,err,1e-5);
-end
-

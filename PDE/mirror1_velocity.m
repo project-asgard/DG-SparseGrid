@@ -1,4 +1,4 @@
-function pde = mirror_velocity(opts)
+function pde = mirror1_velocity(opts)
 % One-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
@@ -8,7 +8,7 @@ function pde = mirror_velocity(opts)
 %
 % Run with
 %
-% asgard(@mirror_velocity,'timestep_method','BE','case',3,'dt',1e-10,'num_steps',25,'lev',5,'deg',4,'normalize_by_mass',true)
+% asgard(@mirror_velocity,'timestep_method','matrix_exponential','case',3,'dt',1e-8,'num_steps',50,'lev',3,'deg',4,'normalize_by_mass',true)
 
 params = mirror_parameters();
 
