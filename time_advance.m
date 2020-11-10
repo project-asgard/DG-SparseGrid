@@ -6,13 +6,16 @@ if strcmp(opts.timestep_method,'BE')
 elseif strcmp(opts.timestep_method,'FE')
     % Forward Euler (FE) first order
     f = forward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'matrix_exponential')
+    % Matrix Exponential (ME) all order
+    f = matrix_exponential(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'time_independent')
     % time independent d/dt==0
     f = time_independent(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45'}))>0
+elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45','ode23s'}))>0
     % One of the atlab ODE integrators.
     f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 else
@@ -91,6 +94,19 @@ elseif strcmp(opts.timestep_method,'ode15s')
     options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
         'Stats',stats,'OutputFcn',output_func,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+
+elseif strcmp(opts.timestep_method,'ode23s')
+    
+    % call ode23s
+    stats = 'off';
+    output_func = '';   
+    if(~opts.quiet)
+        disp('Using ode23s');
+        stats = 'on';
+        output_func = @odetpbar;       
+    end
+    options = odeset('Stats',stats,'OutputFcn',output_func);
+    [tout,fout] = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15i')
     
@@ -170,6 +186,30 @@ bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 [~,A] = apply_A(pde,opts,A_data,f0,deg);
 
 f1 = -A \ (s0+bc0);
+
+end
+
+%% Matrix Exponential
+function f1 = matrix_exponential(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+% Note that this is not implemented for source terms, so is only here for
+% testing purposed. Adding sources terms requires adding another term,
+% i.e., 
+% f1 = expm(t*A) * int_0^t exp(-u*A) s(t) du  + expm(t*A)*f0
+% as well as something for the boundary terms - that integral looks like a
+% pain.
+
+s0 = source_vector(pde,opts,hash_table,t+dt);
+bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
+
+applyLHS = ~isempty(pde.termsLHS);
+
+if applyLHS
+    error('apply LHS not implemented for FE');
+else
+    [~,A] = apply_A(pde,opts,A_data,f0,deg);
+    f1 = expm(A*dt)*f0; 
+end
 
 end
 

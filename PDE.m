@@ -32,7 +32,7 @@ classdef PDE
         function lev_vec = get_lev_vec(pde)
             num_dims = numel(pde.dimensions);
             for d=1:num_dims
-                lev_vec(d) = pde.dimensions{d}.lev;
+                lev_vec(d,1) = pde.dimensions{d}.lev;
             end
         end
         

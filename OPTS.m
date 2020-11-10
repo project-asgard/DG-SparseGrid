@@ -9,7 +9,7 @@ classdef OPTS
         dt = 0;
         quiet = false;
         grid_type = 'SG'; % 'SG', 'FG'
-        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent'
+        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent','matrix_exponential'
         build_A = false;
         adapt = false;
         use_connectivity = false;
@@ -25,7 +25,7 @@ classdef OPTS
         adapt_threshold = 1e-3;
         refinement_method = 1;
         adapt_initial_condition = false;
-        output_grid = 'quadrature'; % 'quadrature', 'fixed', 'uniform', 'quadrature_with_end_points'
+        output_grid = 'quadrature'; % 'quadrature', 'fixed', 'uniform', 'quadrature_with_end_points','dual_valued','elements'
         save_output = false;
         output_filename_id = '';
         plot_freq = 1;
@@ -49,9 +49,9 @@ classdef OPTS
                 
                 valid_grid_types = {'SG','FG'};
                 check_grid_type = @(x) any(validatestring(x,valid_grid_types));
-                valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode45','RK3','FE','time_independent'};
+                valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode23s','ode45','RK3','FE','time_independent','matrix_exponential'};
                 check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
-                valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points'};
+                valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points','dual_valued','elements'};
                 check_output_grid = @(x) any(strcmp(x,valid_output_grids));
                 
                 addOptional(input_parser,'lev',opts.lev, @isnumeric);
@@ -141,7 +141,7 @@ classdef OPTS
                 opts.start_time = input_parser.Results.start_time;
                 
                 opts.build_A = false;
-                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent'}))>0
+                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential'}))>0
                     opts.build_A = true;
                 end
                 
