@@ -184,9 +184,9 @@ if num_dims==3
     %%
     % Plot a 1D line through the solution
     
-    sz = 2;%numel(f_nD(1,1,:))/2;
-    sy = 2;%numel(f_nD(1,:,1))/2;
-    sx = 2;%numel(f_nD(:,1,1))-/4 - 4;
+    sz = numel(f_nD(1,1,:))/2;
+    sy = numel(f_nD(1,:,1))/2;
+    sx = numel(f_nD(:,1,1))/4 - 4;
 %     
 %     %plotting in x-direction
 %     f1d = f_nD(sz,sy,:);
