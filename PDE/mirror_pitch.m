@@ -86,7 +86,7 @@ BCR_fList = { ...
 
 %% Define the dimensions
 
-dim_z = DIMENSION(0.1,pi/2);
+dim_z = DIMENSION(0,pi/2);
 dim_z.name = 'z';
 dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
 dim_z.jacobian = @(z,p,t) sin(z);
@@ -112,8 +112,8 @@ g1 = @(z,p,t,dat) nu_D./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'D','D');
-pterm3 = GRAD(num_dims,g3,+1,'N','N');
+pterm2  = GRAD(num_dims,g2,-1,'N','N');
+pterm3 = GRAD(num_dims,g3,+1,'D','D');
 termC_z = TERM_1D({pterm1,pterm2,pterm3});
 termC   = TERM_ND(num_dims,{termC_z});
 

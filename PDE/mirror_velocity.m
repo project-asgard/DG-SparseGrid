@@ -8,7 +8,7 @@ function pde = mirror_velocity(opts)
 %
 % Run with
 %
-% asgard(@mirror_velocity,'timestep_method','BE','case',3,'dt',1e-5,'num_steps',5)
+% asgard(@mirror_velocity,'timestep_method','BE','deg', 4, 'lev', 3, 'case',3,'dt',1e-3,'num_steps',20, 'normalize_by_mass', true)
 
 params = mirror_parameters();
 
@@ -21,7 +21,7 @@ switch opts.case_
         offset = 0; %case with no offset but change in Temperature
     case 3 
         params.a.T_eV = 1e3;
-        offset = 10^7; %case with offset and no change in Temperature
+        offset = 10^6; %case with offset and no change in Temperature
 end
 
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
@@ -47,14 +47,14 @@ BCFunc = @(v,p,t) p.init_cond_v(v);
 % x = a and x = b
 BCL_fList = { ...
     @(v,p,t) v.*0, ... 
-    @(z,p,t) p.init_cond_z(z), ...
-    @(t,p) p.init_cond_t(t)
+%    @(z,p,t) p.init_cond_z(z), ...
+    @(t,p) t.*0 + 1
     };
 
 BCR_fList = { ...
     @(v,p,t) BCFunc(v,p,t), ... % 
-    @(z,p,t) p.init_cond_z(z), ...
-    @(t,p) p.init_cond_t(t)
+%    @(z,p,t) p.init_cond_z(z), ...
+    @(t,p) t.*0 + 1
     };
 
 
@@ -104,7 +104,7 @@ g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,+1,'D','N');
-pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
+pterm3 = GRAD(num_dims,g3, -1,'N','D', BCL_fList, BCR_fList);
 termV_par = TERM_1D({pterm1,pterm2,pterm3});
 termV2   = TERM_ND(num_dims,{termV_par});
 
