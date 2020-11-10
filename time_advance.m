@@ -15,7 +15,7 @@ elseif strcmp(opts.timestep_method,'time_independent')
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
-elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45'}))>0
+elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45','ode23s'}))>0
     % One of the atlab ODE integrators.
     f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 else
@@ -94,6 +94,19 @@ elseif strcmp(opts.timestep_method,'ode15s')
     options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
         'Stats',stats,'OutputFcn',output_func,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+
+elseif strcmp(opts.timestep_method,'ode23s')
+    
+    % call ode23s
+    stats = 'off';
+    output_func = '';   
+    if(~opts.quiet)
+        disp('Using ode23s');
+        stats = 'on';
+        output_func = @odetpbar;       
+    end
+    options = odeset('Stats',stats,'OutputFcn',output_func);
+    [tout,fout] = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15i')
     

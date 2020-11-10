@@ -8,43 +8,12 @@ function pde = mirror_velocity(opts)
 %
 % Run with
 %
-% asgard(@mirror_velocity,'timestep_method','BE','case',3,'dt',1e-5,'num_steps',5)
+% asgard(@mirror_velocity,'timestep_method','BE','case',3,'dt',1e-10,'num_steps',25,'lev',5,'deg',4,'normalize_by_mass',true)
 
 params = mirror_parameters();
 
-switch opts.case_
-    case 1 
-        params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin\
-        offset = 10^6; %case with offset and change in Temperature
-    case 2 
-        params.a.T_eV = 0.05*params.b.T_eV;
-        offset = 0; %case with no offset but change in Temperature
-    case 3 
-        params.a.T_eV = 1e3;
-        offset = 10^7; %case with offset and no change in Temperature
-end
-
-maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
-gauss = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
-% norm = 3.749;
-init_func = @(v) maxwell(v,v_th(a.T_eV,a.m), 10^6);
-pitch_z = @(z) z.*0 + 1;
-pitch_t = @(t) exp(-nu_D(v_th(b.T_eV,a.m),a,b).*t);
-
-v_ = 10.^[-1:.1:7];
-%loglog(0.5*a.m*v_.^2/e,nu_D(v_,a,b))
-hold on
-%loglog(0.5*a.m*v_.^2/e,nu_s(v_,a,b))
-%loglog(0.5*a.m*v_.^2/e,nu_par(v_,a,b))
-xlim([0.1,1e2]);
-ylim([1e4,1e11]);
-
 BCFunc = @(v,p,t) p.init_cond_v(v);
 
-% Domain is (a,b)
-
-% The function is defined for the plane
-% x = a and x = b
 BCL_fList = { ...
     @(v,p,t) v.*0, ... 
     @(z,p,t) p.init_cond_z(z), ...
@@ -60,7 +29,7 @@ BCR_fList = { ...
 
 %% Define the dimensions
 
-dim_v = DIMENSION(0,3e7);
+dim_v = DIMENSION(0,0.5e7);
 dim_v.name = 'v';
 dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
@@ -117,8 +86,16 @@ sources = {};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
+solution1 = @solution;
+    function ret = solution(v,p,t)
+        ret =  p.analytic_solution_v(v,p,t);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
+    end
+
 analytic_solutions_1D = { ...    
-    @(v,p,t) p.analytic_solution_v(v,p,t), ...
+    @(v,p,t) solution1(v,p,t), ...
     @(t,p) t.*0 + 1;
     };
 
