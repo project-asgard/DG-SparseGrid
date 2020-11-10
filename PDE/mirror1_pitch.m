@@ -1,4 +1,4 @@
-function pde = mirror_pitch(opts)
+function pde = mirror1_pitch(opts)
 % PDE using the 1D Diffusion Equation for a case involving pitcha angle to axis \
 % of the magnetic field line in a mirror configuration. This PDE is
 % time dependent (although not all the terms are time dependent). The test
@@ -18,11 +18,8 @@ function pde = mirror_pitch(opts)
 %
 % Run with
 %
-% explicit
-% asgard(@mirror_pitch,'CFL',0.0001);
-%
 % implicit
-% asgard(@mirror_pitch,'timestep_method','BE','dt',1e-8);
+% asgard(@mirror1_pitch,'timestep_method','BE','dt',1e-8);
 %
 
     function ret = psi(x)
