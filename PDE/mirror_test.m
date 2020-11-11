@@ -39,7 +39,7 @@ function mirror3_pitch_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the pitch dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',3,'dt',1e-8,'calculate_mass',false,'quiet',true,'num_steps',2};
+args = {'lev',3,'deg',4,'dt',1e-10,'calculate_mass',true,'quiet',false,'num_steps',20,'normalize_by_mass',true,'timestep_method','matrix_exponential'};
 opts = OPTS(args);
 pde = mirror3(opts);
 % modify PDE
