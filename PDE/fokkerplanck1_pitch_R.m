@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_4p3(opts)
+function pde = fokkerplanck1_pitch_R(opts)
 % Problem 4.3 from the RE paper - radiation damping term  
 % df/dt == -d/dz ( z(1-z^2)f )
 %
@@ -21,10 +21,9 @@ sig = 0.1;
     end
     function ret = f0(z)
         
-        caseNumber = 1;
         shift = 0.36;
         
-        switch caseNumber
+        switch opts.case_
             case 1
                 f = exp(-z.^2/sig^2);
             case 2
