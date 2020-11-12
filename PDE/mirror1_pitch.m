@@ -72,7 +72,7 @@ BCFunc_t = @(t) soln_t(t);
 % The function is defined for the plane
 % x = a and x = b
 BCL_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by a
+    @(x,p,t) x.*0, ... % replace x by a
     @(t,p) BCFunc_t(t)
     };
 
@@ -109,8 +109,8 @@ g1 = @(z,p,t,dat) nu_D./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','N');
-pterm3 = GRAD(num_dims,g3,+1,'D','D');
+pterm2  = GRAD(num_dims,g2,+1,'D','N');
+pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
 termC_z = TERM_1D({pterm1,pterm2,pterm3});
 termC   = TERM_ND(num_dims,{termC_z});
 
