@@ -20,8 +20,14 @@ dim_x = DIMENSION(0,pi);
 dim_x.init_cond_fn = @(x,p,t) cos(x);
 
 dimensions = {dim_x};
-
 num_dims = numel(dimensions);
+
+%% Define initial conditions
+
+ic_x = @(x,p,t) cos(x);
+ic1 = new_md_func(num_dims,{ic_x,[]});
+
+initial_conditions = {ic1};
 
 %Inhomogeneous Dirichlet condition on one side of the domain
 
@@ -44,8 +50,8 @@ BCR_fList = { ...
 g1 = @(x,p,t,dat) x.*0 + 2;
 pterm = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
 
-term_x = TERM_1D({pterm});
-term1 = TERM_ND(num_dims, {term_x});
+term_x = SD_TERM({pterm});
+term1 = MD_TERM(num_dims, {term_x});
 
 terms = {term1};
 
@@ -58,8 +64,7 @@ params.parameter2 = 1;
 %% Define sources
 
 s1x = @(x,p,t) 2*sin(x);
-s1t = @(t,p) t.*0 + 1;
-source1 = {s1x, s1t};
+source1 = new_md_func(num_dims,{s1x,[]});
 
 sources = {source1};
 
@@ -67,9 +72,9 @@ sources = {source1};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 a_x = @(x,p,t) cos(x);
-a_t = @(t,p) t.*0 + 1;
+soln1 = new_md_func(num_dims,{a_x,[]});
 
-analytic_solutions_1D = {a_x, a_t};
+solutions = {soln1};
 
 %% Define function to set time step
     function dt = set_dt(pde, CFL)
@@ -84,6 +89,6 @@ analytic_solutions_1D = {a_x, a_t};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end

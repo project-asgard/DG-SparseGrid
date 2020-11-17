@@ -25,15 +25,13 @@ soln_t = @(t)      sin(2*t);
 % Here we setup a 2D problem (x,y)
 
 dim_x = DIMENSION(-1,+1);
-dim_x.init_cond_fn = @(x,p,t) soln_x(x,p,t) * soln_t(t);
-dim_x.jacobian = @(x,p,t) x.*0 + 1;
-
 dim_y = DIMENSION(-2,+2);
-dim_y.init_cond_fn = @(y,p,t) soln_y(y,p,t);
-dim_y.jacobian = @(y,p,t) y.*0 + 1;
-
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
+
+%% Initial conditions
+ic1 = new_md_func(num_dims,{soln_x,soln_y,soln_t});
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -46,8 +44,8 @@ num_dims = numel(dimensions);
 
 g1 = @(x,p,t,dat) x*0-1;
 pterm1  = GRAD(num_dims,g1,0,'P','P');
-term1_x = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_x,[]});
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x,[]});
 
 %%
 % -df/dy which is
@@ -56,8 +54,8 @@ term1   = TERM_ND(num_dims,{term1_x,[]});
 
 g1 = @(y,p,t,dat) y*0-1;
 pterm1  = GRAD(num_dims,g1,0,'P','P');
-term2_y = TERM_1D({pterm1});
-term2   = TERM_ND(num_dims,{[],term2_y});
+term2_y = SD_TERM({pterm1});
+term2   = MD_TERM(num_dims,{[],term2_y});
 
 terms = {term1,term2};
 
@@ -66,7 +64,6 @@ terms = {term1,term2};
 
 params.parameter1 = 0;
 params.parameter2 = 1;
-
 
 %% Define sources
 
@@ -97,13 +94,9 @@ source3 = { ...
 sources = {source1,source2,source3};
 
 %% Define the analytic solution (optional).
-% This requires nDims+time function handles.
 
-analytic_solutions_1D = { ...
-    soln_x,    ... % a_x
-    soln_y,    ... % a_y
-    soln_t     ... % a_t
-    };
+soln1 = new_md_func(num_dims,{soln_x,soln_y,soln_t});
+solutions = {soln1};
 
 %% Define function to set dt
 
@@ -117,7 +110,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

@@ -1,4 +1,4 @@
-classdef TERM_ND
+classdef MD_TERM
     
     properties
         name
@@ -6,11 +6,11 @@ classdef TERM_ND
     end
     
     methods
-        function t = TERM_ND(num_dims,terms_1D_)
+        function t = MD_TERM(num_dims,terms_1D_)
             assert(nargin>0);
             if nargin<2
                 for d=1:num_dims
-                    terms_1D_{d} = TERM_1D();
+                    terms_1D_{d} = SD_TERM();
                 end
             end
             
@@ -19,7 +19,7 @@ classdef TERM_ND
             % Fill in empty dimensions with identity mass           
             for d=1:num_dims               
                 if isempty(terms_1D_{d})                  
-                    terms_1D_{d} = TERM_1D({MASS()});                 
+                    terms_1D_{d} = SD_TERM({MASS()});                 
                 end             
             end
             

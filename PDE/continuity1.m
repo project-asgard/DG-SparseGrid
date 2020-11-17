@@ -16,10 +16,14 @@ function pde = continuity1(opts)
 %% Define the dimensions
 
 dim_x = DIMENSION(-1,+1);
-dim_x.init_cond_fn = @(x,p,t) x.*0;
-
 dimensions = {dim_x};
 num_dims = numel(dimensions);
+
+%% Define the initial conditions
+
+ic_x = @(x,p,t) x.*0;
+ic1 = new_md_func(num_dims,{ic_x});
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -31,8 +35,8 @@ num_dims = numel(dimensions);
 g1 = @(x,p,t,dat) x.*0-1;
 pterm1 = GRAD(num_dims,g1,0,'P','P');
 
-term1_x = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_x});
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x});
 
 %%
 % Add terms to the pde object
@@ -44,7 +48,6 @@ terms = {term1};
 
 params.parameter1 = 0;
 params.parameter2 = 1;
-
 
 %% Define sources
 
@@ -67,8 +70,8 @@ sources = {source1,source2};
 
 a_x = @(x,p,t) cos(2*pi*x);
 a_t = @(t,p) sin(t);
-
-analytic_solutions_1D = {a_x,a_t};
+sol1 = new_md_func(num_dims,{a_x,a_t});
+solutions = {sol1};
 
 %% Define function to set time step
 
@@ -85,7 +88,7 @@ analytic_solutions_1D = {a_x,a_t};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

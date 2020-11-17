@@ -1,4 +1,4 @@
-classdef MASS < PARTIAL_TERM_1D
+classdef MASS < PARTIAL_SD_TERM
     
     properties
     end
@@ -13,7 +13,7 @@ classdef MASS < PARTIAL_TERM_1D
                 dat_ = [];
             end
             
-            m@PARTIAL_TERM_1D('mass',g_,dat_);
+            m@PARTIAL_SD_TERM('mass',g_,dat_);
             
             m.g = g_;
             m.dat = dat_;

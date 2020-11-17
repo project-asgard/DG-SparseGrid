@@ -44,8 +44,8 @@ num_dims = numel(dimensions);
 
 %g1 = @(v,p,t,dat) -E.*Z_a/m_a;
 %pterm1  = GRAD(num_dims,g1,-1,'N','N');
-%termE_v = TERM_1D({pterm1});
-%termE   = TERM_ND(num_dims,{termE_v});
+%termE_v = SD_TERM({pterm1});
+%termE   = MD_TERM(num_dims,{termE_v});
 
 %% 
 
@@ -58,8 +58,8 @@ g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
 pterm1 = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
-termV_s = TERM_1D({pterm1,pterm2});
-termV1   = TERM_ND(num_dims,{termV_s});
+termV_s = SD_TERM({pterm1,pterm2});
+termV1   = MD_TERM(num_dims,{termV_s});
 
 %%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
@@ -74,8 +74,8 @@ g3 = @(v,p,t,dat) v.*0 + 1;
 pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,+1,'D','N');
 pterm3 = GRAD(num_dims,g3, -1,'N','D', BCL_fList, BCR_fList);
-termV_par = TERM_1D({pterm1,pterm2,pterm3});
-termV2   = TERM_ND(num_dims,{termV_par});
+termV_par = SD_TERM({pterm1,pterm2,pterm3});
+termV2   = MD_TERM(num_dims,{termV_par});
 
 terms = {termV1,termV2};
 

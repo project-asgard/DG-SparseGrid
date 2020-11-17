@@ -35,8 +35,8 @@ num_dims = numel(dimensions);
 
 g1 = @(x,p,t,dat) x*0-1;
 pterm1  = GRAD(num_dims,g1,0,'D','N');
-term1_x = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_x,[]});
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x,[]});
 
 %%
 % -df/dy which is
@@ -51,8 +51,8 @@ BCL_fList = { ...
 
 g1 = @(y,p,t,dat) y*0-1;
 pterm1  = GRAD(num_dims,g1,0,'D','N',BCL_fList);
-term2_y = TERM_1D({pterm1});
-term2   = TERM_ND(num_dims,{[],term2_y});
+term2_y = SD_TERM({pterm1});
+term2   = MD_TERM(num_dims,{[],term2_y});
 
 terms = {term1,term2};
 

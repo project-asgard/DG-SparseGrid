@@ -111,8 +111,8 @@ g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','N');
 pterm3 = GRAD(num_dims,g3,+1,'D','D');
-termC_z = TERM_1D({pterm1,pterm2,pterm3});
-termC   = TERM_ND(num_dims,{termC_z});
+termC_z = SD_TERM({pterm1,pterm2,pterm3});
+termC   = MD_TERM(num_dims,{termC_z});
 
 terms = {termC};
 

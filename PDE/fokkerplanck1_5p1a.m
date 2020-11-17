@@ -1,11 +1,26 @@
 function pde = fokkerplanck1_5p1a(opts)
 % Test the momentum dynamics for the RE problem for E = R = 0
 %
-% x^2 * df/dt == d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
-%             == d/dx*x^2*psi(x)/x*df/dx  +  d/dx*x^2*2*psi(x)*f
+% df/dt == 1/x^2 * d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
+%       == 1/x^2 * d/dx*x^2*psi(x)/x*df/dx  +  1/x^2 * d/dx*x^2*2*psi(x)*f
+%          \                              /    \                         /
+%           --------- term1 --------------      -------- term2 ----------
+% split into 
 %
-% (note the x^2 moved to the left side)
+% term1
 %
+% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g(x) p(x)   [grad,g(x)=x^2*psi(x)/x, BCL=D, BCR=N]
+% eq3 :   p(x) == d/dx f(x)        [grad,g(x)=1,            BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2 * mat3
+%
+% term2
+%
+% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g(x) f(x)   [grad,g(x)=x^2*2*psi(x), BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2
 %
 % Run with
 %
@@ -51,52 +66,68 @@ function pde = fokkerplanck1_5p1a(opts)
         end
     end
 
-    function ret = soln(x,t)
+    function ret = soln(x)
         ret = 4/sqrt(pi) * exp(-x.^2);
     end
 
 %% Define the dimensions
-% 
-% Here we setup a 1D problem (x)
 
 dim_x = DIMENSION(0,+10);
-dim_x.init_cond_fn = @(z,p,t) f0(z);
-
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
-%% Define the terms of the PDE
+%% Define the analytic solution (optional).
 
-% x^2 * df/dt (LHS non-identity coeff requires special treatment)
+soln_z = @(z,p,t) soln(z);
+soln1 = new_md_func(num_dims,{soln_z});
+solutions = {soln1};
 
-g1 = @(x,p,t,dat) x.^2;
-pterm1 = MASS(g1);
+%% Define initial conditions
 
-LHS_term_x = TERM_1D({pterm1});
-LHS_term   = TERM_ND(num_dims,{LHS_term_x});
+ic_x = @(z,p,t) f0(z);
+ic1 = new_md_func(num_dims,{ic_x});
+initial_conditions = {ic1};
 
-LHS_terms = {LHS_term};
+%% Setup the terms of the PDE
 
-%% 
-% d/dx*x^2*psi(x)/x*df/dx, split as two first order as 
+% term1
 %
-% df/dt == d/dx g1(x) q(x)   [grad,g1(x)=x^2*psi(x)/x, BCL=D, BCR=N]
-%  q(x) == d/dx g2(x) f(x)   [grad,g2(x)=1, BCL=N, BCR=D]
+% 1/x^2 * d/dx*x^2*psi(x)/x*df/dx
+%
+% eq1 :  df/dt == g1(x) q(x)        [mass,g1(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g2(x) p(x)   [grad,g2(x)=x^2*psi(x)/x, BCL=D, BCR=N]
+% eq3 :   p(x) == d/dx g3(x) f(x)   [grad,g3(x)=1,            BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2 * mat3
 
-g1      = @(x,p,t,dat) x_psi(x);
-g2      = @(x,p,t,dat) x.*0+1;
-pterm1  = GRAD(num_dims,g1,-1,'D','N');
-pterm2  = GRAD(num_dims,g2,+1,'N','D');
-term1_x = TERM_1D({pterm1,pterm2});
-term1   = TERM_ND(num_dims,{term1_x});
+g1 = @(x,p,t,dat) 1./(x.^2);
+g2 = @(x,p,t,dat) x_psi(x);
+g3 = @(x,p,t,dat) x.*0+1;
 
-%%
-% d/dx*x^2*2*psi(x)*f
+pterm1 = MASS(g1);
+pterm2 = GRAD(num_dims,g2,-1,'D','N');
+pterm3 = GRAD(num_dims,g3,+1,'N','D');
 
-g1      = @(x,p,t,dat) x*2.*x_psi(x);
-pterm1  = GRAD(num_dims,g1,-1,'N','D');
-term2_x = TERM_1D({pterm1});
-term2   = TERM_ND(num_dims,{term2_x});
+term1_x = SD_TERM({pterm1,pterm2,pterm3});
+term1   = MD_TERM(num_dims,{term1_x});
+
+% term2
+%
+% 1/x^2 * d/dx*x^2*2*psi(x)*f
+%
+% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
+% eq2 :   q(x) == d/dx g(x) f(x)   [grad,g(x)=x^2*2*psi(x), BCL=N, BCR=D]
+%
+% coeff_mat = mat1 * mat2
+
+g1 = @(x,p,t,dat) 1./(x.^2);
+g2 = @(x,p,t,dat) 2.*x.*x_psi(x);
+
+pterm1 = MASS(g1);
+pterm2 = GRAD(num_dims,g2,-1,'N','D');
+
+term2_x = SD_TERM({pterm1,pterm2});
+term2   = MD_TERM(num_dims,{term2_x});
 
 terms = {term1,term2};
 
@@ -106,18 +137,9 @@ terms = {term1,term2};
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-
 %% Define sources
 
 sources = {};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(z,p,t) soln(z,t), ...
-    @(t,p) 1 
-    };
 
 %% Define function to set time step
     function dt=set_dt(pde,CFL)       
@@ -125,12 +147,12 @@ analytic_solutions_1D = { ...
         xRange = dims{1}.max-dims{1}.min;
         lev = dims{1}.lev;
         dx = xRange/2^lev;
-        dt = CFL * dx;     
+        dt = CFL * dx;       
     end
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

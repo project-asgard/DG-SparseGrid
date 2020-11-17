@@ -92,8 +92,8 @@ pterm1 = MASS(g1);
 pterm2 = MASS(g2);
 pterm3 = GRAD(num_dims,g3,-1,'D','D', BCL_fList, BCR_fList);
 
-term1_s = TERM_1D({pterm1,pterm2,pterm3});
-termS1   = TERM_ND(num_dims,{term1_s,[],[]});
+term1_s = SD_TERM({pterm1,pterm2,pterm3});
+termS1   = MD_TERM(num_dims,{term1_s,[],[]});
 
 %% Mass term
 % termS2 == -vcos(z)dB/ds f
@@ -110,9 +110,9 @@ pterm1 = MASS(g1);
 pterm2 = MASS(g2);
 pterm3 = MASS(g3);
 
-termB1 = TERM_1D({pterm1,pterm2,pterm3});
+termB1 = SD_TERM({pterm1,pterm2,pterm3});
 
-termS2 = TERM_ND(num_dims,{termB1,[],[]});
+termS2 = MD_TERM(num_dims,{termB1,[],[]});
 
 %% 
 % termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
@@ -131,8 +131,8 @@ pterm1  = MASS(g1);
 pterm2  = MASS(g2);
 pterm3  = GRAD(num_dims,g3,+1,'D','D');
 pterm4  = GRAD(num_dims,g4,-1,'N', 'N');
-termC_z = TERM_1D({pterm1,pterm2,pterm3,pterm4});
-termC   = TERM_ND(num_dims,{termC_z,[],[]});
+termC_z = SD_TERM({pterm1,pterm2,pterm3,pterm4});
+termC   = MD_TERM(num_dims,{termC_z,[],[]});
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
@@ -143,8 +143,8 @@ g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
-termV_s = TERM_1D({pterm1,pterm2});
-termV1  = TERM_ND(num_dims,{termV_s,[],[]});
+termV_s = SD_TERM({pterm1,pterm2});
+termV1  = MD_TERM(num_dims,{termV_s,[],[]});
 
 %%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
@@ -159,8 +159,8 @@ g3 = @(v,p,t,dat) v.*0 + 1;
 pterm1      = MASS(g1);
 pterm2      = GRAD(num_dims,g2,-1,'D','N');
 pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL_fList, BCR_fList);
-termV_par   = TERM_1D({pterm1,pterm2,pterm3});
-termV2      = TERM_ND(num_dims,{termV_par,[],[]});
+termV_par   = SD_TERM({pterm1,pterm2,pterm3});
+termV2      = MD_TERM(num_dims,{termV_par,[],[]});
 
 terms = {termV1,termV2,termC,termS1};
 

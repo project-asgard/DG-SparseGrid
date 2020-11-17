@@ -26,59 +26,32 @@ function pde = diffusion2(opts)
 % asgard(@diffusion2,'CFL',0.01);
 %
 % implicit
-% asgard(@diffusion2,'timestep_method','CN');
+% asgard(@diffusion2,'timestep_method','BE','dt',0.001,'num_steps',20)
 
 %% Define the dimensions
-% 
-% Here we setup a 2D problem (x,y)
-
-soln_x = @(x) cos(pi*x);
-soln_y = @(y) cos(pi*y);
-soln_t = @(t) exp(-2*pi^2*t);
-
-BCFunc = @(x) soln_x(x);
-BCFunc_t = @(t) soln_t(t);
-
-% Domain is (a,b)x(c,d)
-
-% The function is defined for the plane
-% x = a and x = b
-BCL_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by a
-    @(y,p,t) BCFunc(y), ...
-    @(t,p) BCFunc_t(t)
-    };
-
-BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by b
-    @(y,p,t) BCFunc(y), ...
-    @(t,p) BCFunc_t(t)
-    };
-
-dim_x = DIMENSION(0,1);
-dim_x.name = 'x';
-dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
-
-% The function is defined for the plane
-% y = c and y = d
-BCL_fList = { ...
-    @(x,p,t) BCFunc(x), ...
-    @(y,p,t) BCFunc(y), ... % replace y by c
-    @(t,p) BCFunc_t(t)
-    };
-
-BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ...
-    @(y,p,t) BCFunc(y), ...  % replace y by d
-    @(t,p) BCFunc_t(t)
-    };
 
 dim_y = DIMENSION(0,1);
-dim_y.name = 'y';
-dim_y.init_cond_fn = @(y,p,t) soln_y(y)*soln_t(t);
-
-dimensions = {dim_x, dim_y};
+dim_x = DIMENSION(0,1);
+dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional).
+
+soln_x = @(x,p,t) cos(pi*x);
+soln_y = @(y,p,t) cos(pi*y);
+soln_t = @(t,p) exp(-2*pi^2*t);
+soln1 = new_md_func(num_dims,{soln_x,soln_y,soln_t});
+
+solutions = {soln1};
+
+%% Define the boundary conditions
+
+BCL = soln1;
+BCR = soln1;
+
+%% Initial conditions
+
+initial_conditions = {soln1};
 
 %% Define the terms of the PDE
 %
@@ -98,10 +71,10 @@ g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
+pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL,BCR);
 
-term1_x = TERM_1D({pterm1,pterm2});
-term1   = TERM_ND(num_dims,{term1_x,[]});
+term1_x = SD_TERM({pterm1,pterm2});
+term1   = MD_TERM(num_dims,{term1_x,[]});
 
 %% 
 % Setup the d^2_dy^2 term
@@ -117,10 +90,10 @@ g1 = @(y,p,t,dat) y.*0+1;
 g2 = @(y,p,t,dat) y.*0+1;
 
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
+pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL,BCR);
 
-term2_y = TERM_1D({pterm1,pterm2});
-term2   = TERM_ND(num_dims,{[],term2_y});
+term2_y = SD_TERM({pterm1,pterm2});
+term2   = MD_TERM(num_dims,{[],term2_y});
 
 terms = {term1, term2};
 
@@ -130,35 +103,23 @@ terms = {term1, term2};
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-
 %% Define sources
 
 sources = {};
 
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(x,p,t) soln_x(x), ...
-    @(y,p,t) soln_y(y), ... 
-    @(t,p) soln_t(t) 
-    };
+%% Define a function to set dt
 
     function dt=set_dt(pde,CFL)
-        
-        dims = pde.dimensions;
-        
+        dims = pde.dimensions;      
         % for Diffusion equation: dt = C * dx^2
-        
         lev = dims{1}.lev;
         dx = 1/2^lev;
         dt = CFL*dx^2;
-        
     end
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

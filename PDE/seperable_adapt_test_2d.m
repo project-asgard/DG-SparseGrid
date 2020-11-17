@@ -61,8 +61,8 @@ num_dims = numel(dimensions);
 
 g1 = @(x,p,t,dat) x*0-1;
 pterm1  = GRAD(num_dims,g1,0,'D','D');
-term1_x = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_x,[]});
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x,[]});
 
 terms = {term1};
 

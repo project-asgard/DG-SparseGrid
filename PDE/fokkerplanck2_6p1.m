@@ -15,28 +15,39 @@ function pde = fokkerplanck2_6p1(opts)
 % asgard(@fokkerplanck2_6p1,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_6p1,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',3) 
+% asgard(@fokkerplanck2_6p1,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',3)
 
 params = fokkerplanck_parameters(opts);
 
-%% Setup the dimensions 
+%% Setup the dimensions
 
 dim_p = DIMENSION(0.01,+10);
-dim_p.init_cond_fn = @(x,p,t) p.f0_p(x);
 dim_p.jacobian = @(x,p,t) x.^2;
-
 dim_z = DIMENSION(-1,+1);
-dim_z.init_cond_fn = @(x,p,t) p.f0_z(x);
-
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
 
+%% Define the initial conditions
+
+ic_p = @(x,p,t) p.f0_p(x);
+ic_z = @(x,p,t) p.f0_z(x);
+ic1 = new_md_func(num_dims,{ic_p,ic_z});
+initial_conditions = {ic1};
+
+%% Define the analytic solution (optional)
+
+soln_p = @(x,p,t) p.soln_p(x,t);
+soln_z = @(x,p,t) p.soln_z(x,t);
+soln1 = new_md_func(num_dims,{soln_p,soln_z});
+solutions = {soln1};
+
+
 %% Define the terms of the PDE
 
-%% 
+%%
 % termC1 == 1/p^2*d/dp*p^2*Ca*df/dp
 %
-% becomes 
+% becomes
 %
 % termC1 == g1(p) q(p)        [mass, g1(p) = 1/p^2,  BC N/A]
 %   q(p) == d/dp g2(p) r(p)   [grad, g2(p) = p^2*Ca, BCL=D,BCR=N]
@@ -44,13 +55,13 @@ num_dims = numel(dimensions);
 
 g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*p.Ca(x);
-g3 = @(x,p,t,dat) x.*0+1; 
+g3 = @(x,p,t,dat) x.*0+1;
 
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,+1,'D','N');
 pterm3  = GRAD(num_dims,g3,-1,'N','D');
-term1_p = TERM_1D({pterm1,pterm2,pterm3});
-termC1  = TERM_ND(num_dims,{term1_p,[]});
+term1_p = SD_TERM({pterm1,pterm2,pterm3});
+termC1  = MD_TERM(num_dims,{term1_p,[]});
 
 %%
 % termC2 == 1/p^2*d/dp*p^2*Cf*f
@@ -65,8 +76,8 @@ g2 = @(x,p,t,dat) x.^2.*p.Cf(x);
 
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,+1,'N','D');
-term2_p = TERM_1D({pterm1,pterm2});
-termC2   = TERM_ND(num_dims,{term2_p,[]});
+term2_p = SD_TERM({pterm1,pterm2});
+termC2   = MD_TERM(num_dims,{term2_p,[]});
 
 %%
 % termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
@@ -80,15 +91,15 @@ termC2   = TERM_ND(num_dims,{term2_p,[]});
 
 g1 = @(x,p,t,dat) p.Cb(x)./x.^4;
 pterm1  = MASS(g1);
-term3_p = TERM_1D({pterm1});
+term3_p = SD_TERM({pterm1});
 
 g2 = @(x,p,t,dat) (1-x.^2);
 g3 = @(x,p,t,dat) x.*0+1;
 pterm1  = GRAD(num_dims,g2,+1,'D','D');
 pterm2  = GRAD(num_dims,g3,-1,'N','N');
-term3_z = TERM_1D({pterm1,pterm2});
+term3_z = SD_TERM({pterm1,pterm2});
 
-termC3 = TERM_ND(num_dims,{term3_p,term3_z});
+termC3 = MD_TERM(num_dims,{term3_p,term3_z});
 
 terms = {termC1,termC2,termC3};
 
@@ -96,27 +107,18 @@ terms = {termC1,termC2,termC3};
 
 sources = {};
 
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(x,p,t) p.soln_p(x,t), ...
-    @(x,p,t) p.soln_z(x,t), ...
-    @(t,p) 1
-    };
-
 %% Define function to set time step
-    function dt=set_dt(pde,CFL)        
+    function dt=set_dt(pde,CFL)
         dims = pde.dimensions;
         xRange = dims{1}.max-dims{1}.min;
         lev = dims{1}.lev;
         dx = xRange/2^lev;
-        dt = CFL * dx;       
+        dt = CFL * dx;
     end
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

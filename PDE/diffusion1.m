@@ -29,39 +29,43 @@ function pde = diffusion1(opts)
 % implicit
 % asgard(@diffusion1,'timestep_method','CN');
 %
-%Louis: With small nu, stability is maintained for longer times
-% asgard(@diffusion1,'lev',3,'deg',4,'timestep_method','BE', 'dt',0.05,'num_steps',20)
+% Notes
+%
+% Louis: With small nu, stability is maintained for longer times
+%   asgard(@diffusion1,'lev',3,'deg',4,'timestep_method','BE', 'dt',0.05,'num_steps',20)
 
 %% Define the dimensions
 % 
 % Here we setup a 1D problem (x,y)
 nu = 0.01; %coefficient set to be very small to allow for stability
-soln_x = @(x) cos(nu*x);
-soln_t = @(t) exp(-2*nu^2*t);
+soln_x = @(x,p,t) cos(nu*x);
+soln_t = @(t,p) exp(-2*nu^2*t);
 
-BCFunc = @(x) soln_x(x);
-BCFunc_t = @(t) soln_t(t);
+BCFunc = @(x,p,t) soln_x(x,p,t);
+BCFunc_t = @(t,p) soln_t(t,p);
 
 % Domain is (a,b)
 
 % The function is defined for the plane
 % x = a and x = b
 BCL_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by a
-    @(t,p) BCFunc_t(t)
+    @(x,p,t) BCFunc(x,p,t), ... % replace x by a
+    @(t,p) BCFunc_t(t,p)
     };
 
 BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by b
-    @(t,p) BCFunc_t(t)
+    @(x,p,t) BCFunc(x,p,t), ... % replace x by b
+    @(t,p) BCFunc_t(t,p)
     };
 
 dim_x = DIMENSION(0,1);
-dim_x.name = 'x';
-dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
-
 dimensions = {dim_x};
 num_dims = numel(dimensions);
+
+%% Initial conditions
+
+ic1 = new_md_func(num_dims,{soln_x,soln_t});
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -83,8 +87,8 @@ g2 = @(x,p,t,dat) x.*0+1;
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
 pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
 
-term1_x = TERM_1D({pterm1,pterm2});
-term1   = TERM_ND(num_dims,{term1_x});
+term1_x = SD_TERM({pterm1,pterm2});
+term1   = MD_TERM(num_dims,{term1_x});
 
 terms = {term1};
 
@@ -93,7 +97,6 @@ terms = {term1};
 
 params.parameter1 = 0;
 params.parameter2 = 1;
-
 
 %% Define sources
 
@@ -106,10 +109,8 @@ sources = {source1};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-analytic_solutions_1D = { ...
-    @(x,p,t) soln_x(x), ...
-    @(t,p) soln_t(t) 
-    };
+soln1 = new_md_func(num_dims,{soln_x,soln_t});
+solutions = {soln1};
 
     function dt=set_dt(pde,CFL)
         
@@ -125,6 +126,6 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end

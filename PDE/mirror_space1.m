@@ -56,8 +56,8 @@ BCR_fList = { ...
 g1 = @(s,p,t,dat) s.*0 - A;
 pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
 
-term1_s = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_s});
+term1_s = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_s});
 
 %%
 % Add terms to the pde object
@@ -66,9 +66,9 @@ term1   = TERM_ND(num_dims,{term1_s});
 % (vcosz/B)dB/ds f
 g2 = @(s,p,t,dat) s.*0 - A.*dB_ds(s)./B_func(s);
 pterm1   = MASS(g2);
-termB1 = TERM_1D({pterm1});
+termB1 = SD_TERM({pterm1});
 
-term2 = TERM_ND(num_dims,{termB1});
+term2 = MD_TERM(num_dims,{termB1});
 
 terms = {term1,term2};
 

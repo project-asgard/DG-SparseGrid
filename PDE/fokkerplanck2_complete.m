@@ -53,15 +53,21 @@ params = fokkerplanck_parameters(opts);
 %% Setup the dimensions 
 
 dim_p = DIMENSION(0.,+10);
-dim_p.init_cond_fn = @(x,p,t) p.f0_p(x);
-dim_p.jacobian = @(x,p,t) x.^2;
-
 dim_z = DIMENSION(-1,+1);
-dim_z.init_cond_fn = @(x,p,t) p.f0_z(x);
+dim_p.jacobian = @(x,p,t) x.^2;
 dim_z.jacobian = @(x,p,t) x.*0+1;
-
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional)
+
+solutions = {};
+
+%% Define the initial conditions
+ic_p = @(x,p,t) p.f0_p(x);
+ic_z = @(x,p,t) p.f0_z(x);
+ic1 = new_md_func(num_dims,{ic_p,ic_z});
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 
@@ -84,8 +90,8 @@ pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,+1,'D','D');
 pterm3  = GRAD(num_dims,g3,-1,'N','N');
 
-term1_p = TERM_1D({pterm1,pterm2,pterm3});
-termC1  = TERM_ND(num_dims,{term1_p,[]});
+term1_p = SD_TERM({pterm1,pterm2,pterm3});
+termC1  = MD_TERM(num_dims,{term1_p,[]});
 
 %%
 % termC2 == 1/p^2*d/dp*p^2*Cf*f
@@ -101,8 +107,8 @@ g2 = @(x,p,t,dat) x.^2.*p.Cf(x);
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','N');
 
-term2_p = TERM_1D({pterm1,pterm2});
-termC2   = TERM_ND(num_dims,{term2_p,[]});
+term2_p = SD_TERM({pterm1,pterm2});
+termC2   = MD_TERM(num_dims,{term2_p,[]});
 
 %%
 % termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
@@ -116,16 +122,16 @@ termC2   = TERM_ND(num_dims,{term2_p,[]});
 
 g1 = @(x,p,t,dat) p.Cb(x)./x.^4;
 pterm1  = MASS(g1);
-term3_p = TERM_1D({pterm1});
+term3_p = SD_TERM({pterm1});
 
 g2 = @(x,p,t,dat) (1-x.^2);
 g3 = @(x,p,t,dat) x.*0+1;
 pterm1  = GRAD(num_dims,g2,+1,'D','D');
 pterm2  = GRAD(num_dims,g3,-1,'N','N');
 
-term3_z = TERM_1D({pterm1,pterm2});
+term3_z = SD_TERM({pterm1,pterm2});
 
-termC3 = TERM_ND(num_dims,{term3_p,term3_z});
+termC3 = MD_TERM(num_dims,{term3_p,term3_z});
 
 %% -div(flux_E) == termE1 + termE2
 
@@ -144,14 +150,14 @@ g2 = @(x,p,t,dat) 1./x.^2;
 g3 = @(x,p,t,dat) p.E*x.^2;
 
 pterm1   = MASS(g1);
-termE1_z = TERM_1D({pterm1});
+termE1_z = SD_TERM({pterm1});
 
 pterm1 = MASS(g2); 
 pterm2 = GRAD(num_dims,g3,0,'N','N');% Lin's Setting
 
-termE1_p = TERM_1D({pterm1,pterm2});
+termE1_p = SD_TERM({pterm1,pterm2});
 
-termE1 = TERM_ND(num_dims,{termE1_p,termE1_z});
+termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
 
 % termE2 == -E*p*f(p) * d/dz (1-z^2) f(z)
 %        == q(p) * r(z)
@@ -164,13 +170,13 @@ g1 = @(x,p,t,dat) -1./x;
 g2 = @(x,p,t,dat) p.E*(1-x.^2);
 
 pterm1   = MASS(g1);
-termE2_p = TERM_1D({pterm1});
+termE2_p = SD_TERM({pterm1});
 
 pterm1   = GRAD(num_dims,g2,+1,'N','N');% Lin's Setting
 
-termE2_z = TERM_1D({pterm1});
+termE2_z = SD_TERM({pterm1});
 
-termE2 = TERM_ND(num_dims,{termE2_p,termE2_z});
+termE2 = MD_TERM(num_dims,{termE2_p,termE2_z});
 
 %% -div(flux_R) == termR1 + termR2
 
@@ -187,12 +193,12 @@ g3 = @(x,p,t,dat) 1-x.^2;
 pterm1   = MASS(g1);% This is not needed - by Lin
 pterm2   = GRAD(num_dims,g2,1,'N','N');% Lin's Setting
 
-termR1_p = TERM_1D({pterm1,pterm2});
+termR1_p = SD_TERM({pterm1,pterm2});
 
 pterm1   = MASS(g3);
-termR1_z = TERM_1D({pterm1});
+termR1_z = SD_TERM({pterm1});
 
-termR1   = TERM_ND(num_dims,{termR1_p,termR1_z});
+termR1   = MD_TERM(num_dims,{termR1_p,termR1_z});
 
 % termR2 == -1/(tau*gam(p)) f(p) * d/dz z(1-z^2) f(z)
 %        == q(p) * r(z)
@@ -203,13 +209,13 @@ g1 = @(x,p,t,dat) -1./(p.tau.*p.gamma(x));
 g2 = @(x,p,t,dat) x.*(1-x.^2);
 
 pterm1   = MASS(g1);
-termR2_p = TERM_1D({pterm1});
+termR2_p = SD_TERM({pterm1});
 
 pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
 
-termR2_z = TERM_1D({pterm1});
+termR2_z = SD_TERM({pterm1});
 
-termR2 = TERM_ND(num_dims,{termR2_p, termR2_z});
+termR2 = MD_TERM(num_dims,{termR2_p, termR2_z});
 
 terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
 
@@ -217,15 +223,6 @@ terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
 %% Define sources
 
 sources = {};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(x,p,t) p.soln_p(x,t), ...
-    @(x,p,t) p.soln_z(x,t), ...
-    @(t,p) 1
-    };
 
 %% Define function to set time step
     function dt=set_dt(pde,CFL)      
@@ -238,7 +235,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

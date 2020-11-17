@@ -5,10 +5,10 @@ function pde = fokkerplanck1_pitch_R(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck1_4p3,'CFL',0.01)
+% asgard(@fokkerplanck1_pitch_R,'CFL',0.01)
 %
 % implicit
-% asgard(@fokkerplanck1_4p3,'timestep_method','CN')
+% asgard(@fokkerplanck1_pitch_R,'timestep_method','matrix_exponential','lev',4,'deg',4,'num_steps',20,'dt',0.01)
 
 sig = 0.1;
 
@@ -44,11 +44,20 @@ sig = 0.1;
     end
 
 dim_z = DIMENSION(-1,+1);
-dim_z.name = 'z';
-dim_z.init_cond_fn = @(z,p,t) soln(z,0);
-
 dimensions = {dim_z};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional)
+
+soln_z = @(z,p,t) soln(z,t);
+soln1 = new_md_func(num_dims,{soln_z});
+solutions = {soln1};
+
+%% Define the initial conditions
+
+ic_z = @(z,p,t) soln(z,0);
+ic1 = new_md_func(num_dims,{ic_z});
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -59,8 +68,8 @@ num_dims = numel(dimensions);
 
 g1 = @(z,p,t,dat) -z.*(1-z.^2);
 pterm1  = GRAD(num_dims,g1,-1,'D','D');
-term1_z = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_z});
+term1_z = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_z});
 
 terms = {term1};
 
@@ -70,19 +79,9 @@ terms = {term1};
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-
 %% Define sources
-% Each source term must have nDims + 1
 
 sources = {};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(z,p,t) soln(z,t), ...
-    @(t,p) 1 
-    };
 
 %% Define function to set time step
     function dt=set_dt(pde,CFL)      
@@ -94,7 +93,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

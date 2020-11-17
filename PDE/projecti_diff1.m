@@ -62,8 +62,8 @@ g2 = @(x,p,t,dat) x.*0+1;
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
 pterm2 = GRAD(num_dims,g2,-1,'D','D');
 
-term1_x = TERM_1D({pterm1,pterm2});
-term1   = TERM_ND(num_dims,{term1_x});
+term1_x = SD_TERM({pterm1,pterm2});
+term1   = MD_TERM(num_dims,{term1_x});
 
 terms = {term1};
 
