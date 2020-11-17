@@ -43,24 +43,24 @@ end
 % x = a and x = b
 BCL_fList = { ...
     @(v,p,t) v.*0, ... 
-    @(z,p,t) p.init_cond_z(z), ...
-    @(s,p,t) p.init_cond_s(s), ...
-    @(t,p)   t.*0 + 1
+    @(z,p,t) p.boundary_cond_z(z,p,t), ...
+    @(s,p,t) p.boundary_cond_s(s,p,t), ...
+    @(t,p)   p.boundary_cond_t(t,p)
     };
 
 BCR_fList = { ...
-    @(v,p,t) p.init_cond_v(v), ... % 
-    @(z,p,t) p.init_cond_z(z), ...
-    @(s,p,t) p.init_cond_s(s), ...
-    @(t,p) p.init_cond_t(t)
+    @(v,p,t) p.boundary_cond_v(v,p,t), ... % 
+    @(z,p,t) p.boundary_cond_z(z,p,t), ...
+    @(s,p,t) p.boundary_cond_s(s,p,t), ...
+    @(t,p) p.boundary_cond_t(t,p)
     };
 
 %E = 1.0; %parallel Electric field
 
 %% Define the dimensions
 
+dim_v = DIMENSION(0,8e6);
 dim_v.name = 'v';
-dim_v = DIMENSION(0,5e6);
 dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 
@@ -70,6 +70,7 @@ dim_z.init_cond_fn = @(z,p,t) p.init_cond_z(z);
 dim_z.jacobian = @(z,p,t) sin(z);
 
 dim_s = DIMENSION(0,5);
+dim_s.name = 's';
 dim_s.init_cond_fn = @(s,p,t) p.init_cond_s(s);
 dim_s.jacobian = @(s,p,t) s.*0 + 1;
 
@@ -92,8 +93,10 @@ pterm1 = MASS(g1);
 pterm2 = MASS(g2);
 pterm3 = GRAD(num_dims,g3,-1,'D','D', BCL_fList, BCR_fList);
 
-term1_s = TERM_1D({pterm1,pterm2,pterm3});
-termS1   = TERM_ND(num_dims,{term1_s,[],[]});
+term1_v = TERM_1D({pterm1});
+term1_z = TERM_1D({pterm2});
+term1_s = TERM_1D({pterm3});
+termS1  = TERM_ND(num_dims,{term1_v,term1_z,term1_s});
 
 %% Mass term
 % termS2 == -vcos(z)dB/ds f
@@ -110,9 +113,11 @@ pterm1 = MASS(g1);
 pterm2 = MASS(g2);
 pterm3 = MASS(g3);
 
-termB1 = TERM_1D({pterm1,pterm2,pterm3});
+termB1_v = TERM_1D({pterm1});
+termB1_z = TERM_1D({pterm2});
+termB1_s = TERM_1D({pterm3});
 
-termS2 = TERM_ND(num_dims,{termB1,[],[]});
+termS2 = TERM_ND(num_dims,{termB1_v,termB1_z,termB1_s});
 
 %% 
 % termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
@@ -131,8 +136,9 @@ pterm1  = MASS(g1);
 pterm2  = MASS(g2);
 pterm3  = GRAD(num_dims,g3,+1,'D','N');
 pterm4  = GRAD(num_dims,g4,-1,'N', 'D', BCL_fList, BCR_fList);
-termC_z = TERM_1D({pterm1,pterm2,pterm3,pterm4});
-termC   = TERM_ND(num_dims,{termC_z,[],[]});
+termC_v = TERM_1D({pterm1});
+termC_z = TERM_1D({pterm2,pterm3,pterm4});
+termC   = TERM_ND(num_dims,{termC_v,termC_z,[]});
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
@@ -143,8 +149,8 @@ g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
-termV_s = TERM_1D({pterm1,pterm2});
-termV1  = TERM_ND(num_dims,{termV_s,[],[]});
+termV_v = TERM_1D({pterm1,pterm2});
+termV1  = TERM_ND(num_dims,{termV_v,[],[]});
 
 %%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
@@ -157,12 +163,12 @@ g2 = @(v,p,t,dat) v.^4.*0.5.*p.nu_par(v,p.a,p.b);
 g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1      = MASS(g1);
-pterm2      = GRAD(num_dims,g2,-1,'D','N');
-pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL_fList, BCR_fList);
-termV_par   = TERM_1D({pterm1,pterm2,pterm3});
-termV2      = TERM_ND(num_dims,{termV_par,[],[]});
+pterm2      = GRAD(num_dims,g2,+1,'D','N');
+pterm3      = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
+termV_v     = TERM_1D({pterm1,pterm2,pterm3});
+termV2      = TERM_ND(num_dims,{termV_v,[],[]});
 
-terms = {termV1,termV2,termC,termS1};
+terms = {termV1, termV2, termC, termS1};
 
 
 %% Define sources

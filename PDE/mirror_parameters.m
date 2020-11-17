@@ -22,7 +22,7 @@ advec_space_1D = v_test*cos(z_test); %advection coefficient for 1D in space
 % species b: electrons in background
 b.n = 4e19;
 b.T_eV = 4;
-b.Z = 1;
+b.Z = -1;
 b.m = m_e;
 b.vth = v_th(b.T_eV,b.m);
 
@@ -54,9 +54,14 @@ advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
 
 init_cond_v = @(v) maxwell(v,1e6,2e5);
-init_cond_z = @(z) cos(z/2);
+init_cond_z = @(z) cos(z);
 init_cond_s = @(s) exp(s);
 init_cond_t = @(t) t*0 + 1;
+
+boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
+boundary_cond_z = @(z,p,t) cos(z);
+boundary_cond_s = @(s,p,t) exp(s);
+boundary_cond_t = @(t,p) t.*0 + 1;
 
 s_z = @(z,p,t) -0.5.*(sin(z)+cot(z).*cos(z)); %source pitch fuction for mirror3
 s_v = @(v,p,t) nu_D(v,a,b);
