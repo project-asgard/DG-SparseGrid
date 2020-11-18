@@ -52,7 +52,7 @@ params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
-dim_p = DIMENSION(0.,+10);
+dim_p = DIMENSION(0.1,+10);
 dim_z = DIMENSION(-1,+1);
 dim_p.jacobian = @(x,p,t) x.^2;
 dim_z.jacobian = @(x,p,t) x.*0+1;

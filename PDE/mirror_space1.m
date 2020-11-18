@@ -18,34 +18,28 @@ v_test = 500; %test value for velocity in coefficient
 z_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
 A = v_test*cos(z_test);
 
-%% Define the analytic solution
-
-a_s = @(s) exp(s);
-a_t = @(t) exp(-2*A*t);
-
 %% Define the dimensions
 
 dim_s = DIMENSION(0,5);
-dim_s.init_cond_fn = @(s,p,t) a_s(s);
-
 dimensions = {dim_s};
 num_dims = numel(dimensions);
 
-% Setup boundary conditions of the solution
-% Dirichlet on the right, f(0) = 1
+%% Define the analytic solution
 
-%BCFunc_t = @(t) soln_t(t);
+a_s = @(s,p,t) exp(s);
+a_t = @(t,p) exp(-2*A*t);
+soln1 = new_md_func(num_dims,{a_s,a_t});
+solutions = {soln1};
 
-BCL_fList = { ...
-    @(s,p,t) a_s(s), ... % replace x by b
-    @(t,p) a_t(t)
-    };
+%% Define the initial conditions
 
-BCR_fList = { ...
-    @(s,p,t) a_s(s), ... % replace x by b
-    @(t,p) a_t(t)
-    };
+ic1 = new_md_func(num_dims,{a_s});
+initial_conditions = {ic1};
 
+%% Define the boundary conditions
+
+BCL = soln1;
+BCR = soln1;
 
 %% Define the terms of the PDE
 %
@@ -54,7 +48,7 @@ BCR_fList = { ...
 %% Advection  term
 % -vcosz*df/ds
 g1 = @(s,p,t,dat) s.*0 - A;
-pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
+pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL, BCR);
 
 term1_s = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_s});
@@ -82,14 +76,6 @@ params.parameter2 = 1;
 
 sources = {};
 
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(s,p,t) a_s(s), ...
-    @(t,p) a_t(t)
-    };
-
 %% Define function to set time step
 
     function dt=set_dt(pde,CFL)      
@@ -104,6 +90,6 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end

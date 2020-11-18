@@ -7,22 +7,29 @@ function pde = spacetime2(opts)
 %
 % asgard(@spacetime2,'lev',4,'deg',3,'timestep_method','time_independent','num_steps',1,'adapt',true,'adapt_threshold',2e-3)
 
-soln_x = @(x,p,t)  x.*0;
-soln_y = @(y,p,t)  y.*0;
-soln_t = @(t)      1;
-
-%% Setup the dimensions
-%
-% Here we setup a 2D problem (x,y)
+%% Define the dimensions
 
 dim_x = DIMENSION(0,+1);
-dim_x.init_cond_fn = @(x,p,t) x.*0;
-
 dim_y = DIMENSION(0,+1);
-dim_y.init_cond_fn = @(y,p,t) y.*0;
-
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
+
+%% Define the solutions (optional)
+
+solutions = {};
+
+%% Define the initial conditions
+
+ic1 = new_md_func(num_dims); % all zero IC
+initial_conditions = {ic1};
+
+%% Define the boundary conditions
+
+BCL = new_md_func(num_dims,{ ...
+    @(x,p,t) sin(pi*x), ...
+    @(y,p,t) y.*0+1, ...
+    @(t,p) 1
+    });
 
 %% Define the terms of the PDE
 %
@@ -43,14 +50,9 @@ term1   = MD_TERM(num_dims,{term1_x,[]});
 %
 % d/dy g1(y) f(x,y)          [grad,g1(y)=-1, BCL=D, BCR=N]
 % 
-BCL_fList = { ...
-    @(x,p,t) sin(pi*x), ... % replace x by a
-    @(y,p,t) y.*0+1, ...
-    @(t,p) 1
-    };
 
 g1 = @(y,p,t,dat) y*0-1;
-pterm1  = GRAD(num_dims,g1,0,'D','N',BCL_fList);
+pterm1  = GRAD(num_dims,g1,0,'D','N',BCL);
 term2_y = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{[],term2_y});
 
@@ -64,15 +66,6 @@ params.parameter2 = 1;
 
 sources = {};
 
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    soln_x,    ... % a_x
-    soln_y,    ... % a_y
-    soln_t     ... % a_t
-    };
-
 %% Define function to set dt
 
     function dt=set_dt(pde,CFL)       
@@ -84,7 +77,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 
