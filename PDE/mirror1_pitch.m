@@ -67,21 +67,16 @@ solutions = {soln1};
 
 %% Define the initial conditions
 
-<<<<<<< HEAD
-% The function is defined for the plane
-% x = a and x = b
-BCL_fList = { ...
-    @(x,p,t) x.*0, ... % replace x by a
-    @(t,p) BCFunc_t(t)
-    };
-=======
 ic1 = soln1;
 initial_conditions = {ic1};
->>>>>>> reference
 
 %% Define the boundary conditions
 
+bcl_x = @(x,p,t) x.*0;
+bcl_t = soln_t;
+BCL = new_md_func(num_dims,{bcl_x,bcl_t});
 
+BCR = soln1;
 
 %% Define the terms of the PDE
 %
@@ -100,17 +95,10 @@ g1 = @(z,p,t,dat) nu_D./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
-<<<<<<< HEAD
 pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
-termC_z = TERM_1D({pterm1,pterm2,pterm3});
-termC   = TERM_ND(num_dims,{termC_z});
-=======
-pterm2  = GRAD(num_dims,g2,-1,'N','N');
-pterm3 = GRAD(num_dims,g3,+1,'D','D');
+pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
 termC_z = SD_TERM({pterm1,pterm2,pterm3});
 termC   = MD_TERM(num_dims,{termC_z});
->>>>>>> reference
 
 terms = {termC};
 
