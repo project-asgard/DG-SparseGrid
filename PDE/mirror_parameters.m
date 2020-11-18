@@ -53,10 +53,10 @@ dB_ds = @(s) exp(s); % @(xi, R_mag) -3*B_o.*xi./(R_mag.*(1 + xi.^2).^(5/2)) deri
 advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
 
-init_cond_v = @(v) maxwell(v,1e6,2e5);
-init_cond_z = @(z) cos(z);
-init_cond_s = @(s) exp(s);
-init_cond_t = @(t) t*0 + 1;
+init_cond_v = @(v,p,t) maxwell(v,1e6,2e5);
+init_cond_z = @(z,p,t) cos(z/2);
+init_cond_s = @(s,p,t) exp(s);
+init_cond_t = @(t,p) t*0 + 1;
 
 boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
 boundary_cond_z = @(z,p,t) cos(z);
@@ -71,17 +71,16 @@ s_time = @(t,p) t.*0 + 1;
 source_3D = {s_z, s_v, s_space, s_time};
 
 
-analytic_solution_s = @soln_s;
-    function ret = soln_s(s,p,t)
+soln_s = @solution_s;
+    function ret = solution_s(s,p,t)
 	ret = exp(s);
     end
-analytic_solution_v = @soln_v;
-    function ret = soln_v(v,p,t)
+soln_v = @solution_v;
+    function ret = solution_v(v,p,t)
         ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
     end
-
-analytic_solution_z = @soln_z;
-    function ret = soln_z(z,p,t)
+soln_z = @solution_z;
+    function ret = solution_z(z,p,t)
         ret = cos(z/2);
     end
 

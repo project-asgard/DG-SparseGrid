@@ -15,7 +15,7 @@ levels{3} = [3, 2, 3];
 max_adapt_lev = 7;
 out_format = strcat(data_dir, "table_%dd_%s.dat");
 id_out_format = strcat(data_dir, "ids_%dd_%s.dat");
-
+child_id_out_format = strcat(data_dir, "child_ids_%dd_%s.dat");
 for i=1:size(levels, 2)
     [sparse_elements, sparse_elementsIDX] = hash_table_sparse_nD (levels{i}, max_adapt_lev, 'SG');
     [level_row,level_col,level_val] = find(sparse_elements.lev_p1);
@@ -49,6 +49,18 @@ for i=1:size(levels, 2)
     filename = sprintf(id_out_format, size(levels{i}, 2), "SG");
     write_octave_like_output(filename,(sparse_elementsIDX'-1));
     
+    
+    sparse_children = generate_child_ids(sparse_elementsIDX, size(levels{i}, 2), ...
+                                         max_adapt_lev);
+    full_children = generate_child_ids(full_elementsIDX, size(levels{i}, 2), ...
+                                         max_adapt_lev);
+                                     
+    filename = sprintf(child_id_out_format, size(levels{i}, 2), "SG");
+    write_octave_like_output(filename,(sparse_children-1));
+
+    filename = sprintf(child_id_out_format, size(levels{i}, 2), "FG");
+    write_octave_like_output(filename,(full_children-1));
+    
 end
 
 % 1d indexing tests
@@ -68,4 +80,15 @@ for i=1:size(pairs, 2)
 end
 
 
-
+function [child_ids] = generate_child_ids(parent_element_ids, num_dims, max_lev)
+    
+    child_ids = [];
+    refinement_method = 1; % this is the only method implemented in C++ currently
+    for i=1:length(parent_element_ids)
+        children_i = get_child_elements_idx (num_dims, max_lev,...
+                    parent_element_ids(i), refinement_method);
+        child_ids = [child_ids ; children_i];
+    end
+    
+    
+end

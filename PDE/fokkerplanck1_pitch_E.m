@@ -40,11 +40,20 @@ function pde = fokkerplanck1_pitch_E(opts)
 %% Define the dimensions
 
 dim_z = DIMENSION(-1,+1);
-dim_z.name = 'z';
-dim_z.init_cond_fn = @(z,p,t) soln(z,0);
-
 dimensions = {dim_z};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional).
+
+soln_z = @(z,p,t) soln(z,t);
+soln1 = new_md_func(num_dims,{soln_z});
+solutions = {soln1};
+
+%% Define the initial conditions
+
+ic_z = @(z,p,t) soln(z,0);
+ic1 = new_md_func(num_dims,{ic_z});
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -55,8 +64,8 @@ num_dims = numel(dimensions);
 
 g1 = @(z,p,t,dat) -1.*(1-z.^2);
 pterm1  = GRAD(num_dims,g1,-1,'N','N');
-term1_x = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_x});
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x});
 
 terms = {term1};
 
@@ -66,18 +75,9 @@ terms = {term1};
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-
 %% Define source
 
 sources = {};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(z,p,t) soln(z,t), ...
-    @(t,p) 1 
-    };
 
 %% Define function to set time step
     function dt=set_dt(pde,CFL)      
@@ -90,7 +90,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

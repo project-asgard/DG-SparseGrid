@@ -98,10 +98,12 @@ if num_dims <=3
     
     %%
     % Get the real space solution
-
+    
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);    
-    fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
+    if ~isempty(pde.solutions)
+        fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+        fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace),1);
+    end
     
     % construct the moment function handle list for calculating the mass
     if opts.calculate_mass
@@ -111,25 +113,31 @@ if num_dims <=3
         end
         
         mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD, pde.dimensions);
-        mass_analytic = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
+        if ~isempty(pde.solutions)
+            mass_analytic = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
+        end
         mass_t(1) = mass;
     end
     
-    if opts.normalize_by_mass
+    if opts.normalize_by_mass && ~isempty(pde.solutions)
         pde.params.norm_fac = mass / mass_analytic;
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
         mass_analytic = moment_integral(opts.lev,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
     end
-
-    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);   
+    
+    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
     if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
         f_realspace_nD = ...
             remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
     end
     
-    f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
-
+    if isempty(pde.solutions)
+        f_realspace_analytic_nD = [];
+    else
+        f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
+    end
+    
     if opts.save_output
         if num_dims <= 3
             f_realspace_nD_t{1} = f_realspace_nD;
@@ -137,7 +145,7 @@ if num_dims <=3
             error('Save output for num_dimensions >3 not yet implemented');
         end
     end
-   
+    
     if opts.use_oldhash
     else
         element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
@@ -160,11 +168,11 @@ write_fval = 0;
 if write_fval; write_fval_to_file(fval,lev,deg,0); end
 
 %% Check to see if initial resolution meets requested accuracy
-if opts.adapt 
+if opts.adapt
     figs.adapt = figure();
     if opts.adapt_initial_condition
         if ~opts.quiet; disp('Adapting initial for requested accuracy ...'); end
-                       
+        
         keep_adapting_initial_condition = true;
         while keep_adapting_initial_condition
             num_pre_adapt = numel(fval);
@@ -186,7 +194,7 @@ if opts.adapt
             fval_realspace,1,0);
         % reproject onto coarsend basis
         fval = initial_condition_vector(pde, opts, hash_table, t);
-
+        
     else
         if ~opts.quiet; disp('Checking if initial grid is sufficient for requested accuracy ...'); end
         
@@ -195,12 +203,12 @@ if opts.adapt
         [~,fval_check] ...
             = adapt(pde,opts,figs,fval,hash_table,Meval,nodes,nodes_nodups,nodes_count,fval_realspace,0,1);
         if (length(fval_check)>pre_refinement_num_DOF)
-%             error('Initial grid was insifficient for requested accuracy');
+            %             error('Initial grid was insifficient for requested accuracy');
         end
         clear fval_check;
     end
 else
-   if ~opts.quiet; disp(['Number of DOF : ', num2str(numel(fval))]); end
+    if ~opts.quiet; disp(['Number of DOF : ', num2str(numel(fval))]); end
 end
 
 fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
@@ -216,7 +224,7 @@ if num_dims <=3
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-    if ~opts.quiet 
+    if ~opts.quiet
         disp(['    real space absolute err : ', num2str(err_realspace)]);
         disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
         disp(['    real space absolute err (2-norm) : ', num2str(norm(fval_realspace(:)-fval_realspace_analytic(:)))]);
@@ -279,7 +287,7 @@ for L = 1:opts.num_steps
                 
             end
         end
-                
+        
         %%
         % Now construct the TD coeff_mats.
         
@@ -382,7 +390,7 @@ for L = 1:opts.num_steps
     
     %%
     % Check against known solution
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         
         %%
         % Check the wavelet space solution with the analytic solution
@@ -408,10 +416,10 @@ for L = 1:opts.num_steps
                 disp(['t: ',num2str(t)]);
                 disp(['dt: ',num2str(dt)]);
             end
-
+            
             fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t+dt);
             err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
-            if ~opts.quiet         
+            if ~opts.quiet
                 disp(['    real space absolute err : ', num2str(err_realspace)]);
                 disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
                 if opts.calculate_mass
@@ -441,7 +449,7 @@ for L = 1:opts.num_steps
                 f_realspace_nD = ...
                     remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
             end
-
+            
             f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t+dt);
             
             element_coordinates = [];
@@ -450,7 +458,7 @@ for L = 1:opts.num_steps
                 element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
             end
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
-           
+            
             % this is just for the RE paper
             plot_fval_in_cyl = false;
             if plot_fval_in_cyl
@@ -465,7 +473,7 @@ for L = 1:opts.num_steps
                 f2d = interp2(p,z,f,p2dA,z2dA,'spline',0);
                 levs = linspace(1,10,10)./10.*max(f(:));
                 figure(87)
-                contour(ppar,pper,f2d,levs)            
+                contour(ppar,pper,f2d,levs)
             end
         end
         
@@ -486,13 +494,13 @@ for L = 1:opts.num_steps
             filename_str = ['-l',replace(num2str(opts.lev),' ','') ...
                 '-d',num2str(opts.deg),'-',opts.grid_type,'-dt',num2str(dt),...
                 '-adapt-',adapt_str];
-        else           
-            filename_str = opts.output_filename_id;           
+        else
+            filename_str = opts.output_filename_id;
         end
         output_file_name = append(root_directory,"/output/asgard-out",filename_str,".mat");
         outputs.output_file_name = output_file_name;
         
-        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes); 
+        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
         if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
             f_realspace_nD = ...
                 remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
@@ -508,9 +516,9 @@ for L = 1:opts.num_steps
         nodes_t{L+1} = nodes_nodups;
         time_array(L+1) = t+dt;
         wall_clock_time(L+1) = toc;
-       
+        
         save(output_file_name,'pde','opts','dt','f_realspace_analytic_nD_t','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time','nodes_t');
-
+        
     end
     
     t = t + dt;

@@ -30,17 +30,23 @@ function pde = projecti_diff1(opts)
 
 %% Define the dimensions
 
-k = pi/2;
-nu = 0.01;
-soln_x = @(x) sin(k*x);
-soln_t = @(t) exp(-nu*k^2*t);
-
 dim_x = DIMENSION(0,2);
-dim_x.name = 'x';
-dim_x.init_cond_fn = @(x,p,t) soln_x(x)*soln_t(t);
-
 dimensions = {dim_x};
 num_dims = numel(dimensions);
+
+%% Define the solution (optional)
+
+k = pi/2;
+nu = 0.01;
+soln_x = @(x,p,t) sin(k*x);
+soln_t = @(t,p) exp(-nu*k^2*t);
+soln1 = new_md_func(num_dims,{soln_x,soln_t});
+solutions = {soln1};
+
+%% Define the initial condition
+
+ic1 = soln1;
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -62,8 +68,8 @@ g2 = @(x,p,t,dat) x.*0+1;
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
 pterm2 = GRAD(num_dims,g2,-1,'D','D');
 
-term1_x = TERM_1D({pterm1,pterm2});
-term1   = TERM_ND(num_dims,{term1_x});
+term1_x = SD_TERM({pterm1,pterm2});
+term1   = MD_TERM(num_dims,{term1_x});
 
 terms = {term1};
 
@@ -77,14 +83,6 @@ params.parameter2 = 1;
 
 sources = {};
 
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(x,p,t) soln_x(x), ...
-    @(t,p) soln_t(t) 
-    };
-
     function dt=set_dt(pde,CFL)     
         dims = pde.dimensions;     
         % for Diffusion equation: dt = C * dx^;       
@@ -95,7 +93,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

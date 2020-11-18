@@ -18,7 +18,7 @@ if num_dims==1
     %%
     % Overplot analytic solution
     
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         hold on;
         coord = {x};
         if overPlotAnalytic
@@ -55,7 +55,7 @@ if num_dims==2
     %%
     % Overplot analytic solution
     
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         f_slice_analytic = f_nD_analytic(sy,:);
         hold on;
         plot(x,f_slice_analytic,'-');
@@ -74,7 +74,7 @@ if num_dims==2
     plot(y,f_slice,'-o');
     title('1D slice (horizontal)');
     
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         f_slice_analytic = f_nD_analytic(:,sx);
         hold on;
         plot(y,f_slice_analytic,'-');
@@ -96,7 +96,7 @@ if num_dims==2
         hold off
     end
     
-    if pde.checkAnalytic && norm(f_nD_analytic-f_nD_analytic(1,1))>0
+    if ~isempty(pde.solutions) && norm(f_nD_analytic-f_nD_analytic(1,1))>0
         ax2 = subplot(2,2,4);
         contourf(x,y,f_nD_analytic);
         title('analytic 2D solution');
@@ -219,7 +219,7 @@ if num_dims==3
     %%
     % Overplot analytic solution
     
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         f_slice_analytic = f_nD_analytic(:,sy,sx);
         hold on;
         plot(z,f_slice_analytic,'-');
@@ -233,7 +233,7 @@ if num_dims==3
     contourf(z,y,f_nD(:,:,sx)');
     title('2D slice through 3D numeric');
     
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         ax2 = subplot(2,3,4);
         contourf(z,y,f_nD_analytic(:,:,sx)');
         title('2D slice through 3D analytic');
@@ -246,7 +246,7 @@ if num_dims==3
     contourf(z,x,squeeze(f_nD(:,sy,:))');
     title('2D slice through 3D numeric');
     
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         ax3 = subplot(2,3,5);
         contourf(z,x,squeeze(f_nD_analytic(:,sy,:))');
         title('2D slice through 3D analytic');
@@ -259,7 +259,7 @@ if num_dims==3
     contourf(y,x,squeeze(f_nD(sz,:,:))');
     title('2D slice through 3D numeric');
     
-    if pde.checkAnalytic
+    if ~isempty(pde.solutions)
         ax3 = subplot(2,3,6);
         contourf(y,x,squeeze(f_nD_analytic(sz,:,:))');
         title('2D slice through 3D analytic');

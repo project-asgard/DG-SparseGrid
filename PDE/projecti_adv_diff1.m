@@ -25,23 +25,28 @@ function pde = projecti_adv_diff1(opts)
 % high order implicit
 % asgard(@projecti_adv_diff1,'timestep_method','ode15s','dt',0.04,'num_steps',1000,'lev',3,'deg',4)
 
-
 %% Define the dimensions
+
+dim_x = DIMENSION(-1,+3);
+dimensions = {dim_x};
+num_dims = numel(dimensions);
+
+%% Define the solution (optional)
 
 k = pi/2;
 nu = 0.0;
 v = 40;
-soln_x = @(x,t) (sin(k*(x-v*t)));
+soln_x = @(x,p,t) (sin(k*(x-v*t)));
+soln_t = @(t,p) exp(-nu*k^2*t);
+soln_t = @(t,p) 1;
 
-soln_t = @(t) exp(-nu*k^2*t);
-soln_t = @(t) 1;
+soln1 = new_md_func(num_dims,{soln_x,soln_t});
+solutions = {soln1};
 
-dim_x = DIMENSION(-1,+3);
-dim_x.name = 'x';
-dim_x.init_cond_fn = @(x,p,t) soln_x(x,t)*soln_t(t);
+%% Define the initial conditions
 
-dimensions = {dim_x};
-num_dims = numel(dimensions);
+ic1 = soln1;
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -63,8 +68,8 @@ g2 = @(x,p,t,dat) x.*0+1;
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
 pterm2 = GRAD(num_dims,g2,-1,'D','D');
 
-term1_x = TERM_1D({pterm1,pterm2});
-term1   = TERM_ND(num_dims,{term1_x});
+term1_x = SD_TERM({pterm1,pterm2});
+term1   = MD_TERM(num_dims,{term1_x});
 
 %% 
 % Setup the -v*df/dx term
@@ -77,8 +82,8 @@ g1 = @(x,p,t,dat) x.*0-v;
 
 pterm1 = GRAD(num_dims,g1,-1,'P','P');
 
-term2_x = TERM_1D({pterm1});
-term2   = TERM_ND(num_dims,{term2_x});
+term2_x = SD_TERM({pterm1});
+term2   = MD_TERM(num_dims,{term2_x});
 
 terms = {term2};
 
@@ -93,14 +98,6 @@ params.parameter2 = 1;
 
 sources = {};
 
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(x,p,t) soln_x(x,t), ...
-    @(t,p) soln_t(t) 
-    };
-
     function dt=set_dt(pde,CFL)       
         dims = pde.dimensions;        
         % for Diffusion equation: dt = C * dx^2      
@@ -111,7 +108,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

@@ -41,17 +41,26 @@ C = 1.0;
         end    
         ret = f;
     end
-    function ret = soln(z,t)
+    function ret = soln(z)
         A = E/C;
         ret = A / (2*sinh(A)) * exp(A*z);
     end
 
 
 dim_z = DIMENSION(-1,+1);
-dim_z.init_cond_fn = @(z,p,t) f0(z);
-
 dimensions = {dim_z};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional).
+soln_z = @(z,p,t) soln(z);
+soln1 = new_md_func(num_dims,{soln_z});
+solutions = {soln1};
+
+%% Initial conditions
+
+ic_z = @(z,p,t) f0(z);
+ic1 = new_md_func(num_dims,{ic_z});
+initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -68,8 +77,8 @@ num_dims = numel(dimensions);
 
 g1 = @(z,p,t,dat) -E.*(1-z.^2);
 pterm1  = GRAD(num_dims,g1,-1,'D','D');
-termE_z = TERM_1D({pterm1});
-termE   = TERM_ND(num_dims,{termE_z});
+termE_z = SD_TERM({pterm1});
+termE   = MD_TERM(num_dims,{termE_z});
 
 %% 
 % +C * d/dz( (1-z^2) df/dz )
@@ -92,8 +101,8 @@ g1 = @(z,p,t,dat) 1-z.^2;
 g2 = @(z,p,t,dat) z.*0+1;
 pterm1  = GRAD(num_dims,g1,-1,'D','D');
 pterm2  = GRAD(num_dims,g2,+1,'N','N');
-termC_z = TERM_1D({pterm1,pterm2});
-termC   = TERM_ND(num_dims,{termC_z});
+termC_z = SD_TERM({pterm1,pterm2});
+termC   = MD_TERM(num_dims,{termC_z});
 
 terms = {termE,termC};
 
@@ -103,18 +112,9 @@ terms = {termE,termC};
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-
 %% Define sources
 
 sources = {};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(z,p,t) soln(z,t), ...
-    @(t,p) 1 
-    };
 
 %% Define function to set time step
 
@@ -128,7 +128,7 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

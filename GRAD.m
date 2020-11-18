@@ -1,4 +1,4 @@
-classdef GRAD < PARTIAL_TERM_1D
+classdef GRAD < PARTIAL_SD_TERM
     
     properties
         LF
@@ -39,7 +39,7 @@ classdef GRAD < PARTIAL_TERM_1D
                 dat_ = [];            
             end
             
-            obj@PARTIAL_TERM_1D('grad',g_,dat_)
+            obj@PARTIAL_SD_TERM('grad',g_,dat_)
             
             obj.LF = LF_;
             obj.BCL = BCL_;

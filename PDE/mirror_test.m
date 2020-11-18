@@ -39,23 +39,26 @@ function mirror3_pitch_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the pitch dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',3,'dt',1e-7,'calculate_mass', true,'quiet',true,'num_steps',1,'normalize_by_mass', true, 'timestep_method','matrix_exponential'};
+args = {'lev',3,'deg',3,'dt',1e-7,'calculate_mass',true,'quiet',false,'num_steps',1,'normalize_by_mass',true,'timestep_method','matrix_exponential'};
 opts = OPTS(args);
 pde = mirror3(opts);
+params = pde.params;
+num_dims = numel(pde.dimensions);
+
 % modify PDE
-pde.dimensions{1}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.dimensions{2}.init_cond_fn = @(z,p,t) cos(z);
-pde.dimensions{3}.init_cond_fn = @(x,p,t) x.*0 + 1;
 pde.params.boundary_cond_v = @(v,p,t) v.*0 + 1;
 pde.params.boundary_cond_s = @(s,p,t) s.*0 + 1;
 pde.terms = {pde.terms{1,3}};
 
-pde.analytic_solutions_1D = { ...    
-    @(v,p,t) exp(-p.nu_D(v,p.a,p.b).*t), ...
-    @(z,p,t) cos(z), ...
-    @(s,p,t) s.*0 + 1, ...
-    @(t,p) t.*0 + 1; %pitch_t(t)
-    };
+s_v = @(v,p,t) exp(-p.nu_D(v,p.a,p.b).*t);
+s_z = @(z,p,t) cos(z);
+soln1 = new_md_func(num_dims,{s_v,s_z,[]});
+pde.solutions = {soln1};
+
+ic_z = @(z,p,t) cos(z);
+ic1 = new_md_func(num_dims,{[],ic_z,[]});
+pde.initial_conditions = {ic1};
+
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
 % assert on correctness
@@ -68,16 +71,20 @@ function mirror3_velocity_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the velocity dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',3,'dt',20e-8,'calculate_mass',true,'normalize_by_mass',true,'timestep_method','matrix_exponential','quiet',true,'num_steps',1};
+args = {'lev',3,'deg',3,'dt',10e-8,'calculate_mass',true,'normalize_by_mass',true,'timestep_method','matrix_exponential','quiet',true,'num_steps',1};
 opts = OPTS(args);
 pde = mirror3(opts);
+num_dims = numel(pde.dimensions);
+
 % modify PDE
-pde.dimensions{1}.init_cond_fn = @(x,p,t) p.init_cond_v(x);
-pde.dimensions{2}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.dimensions{3}.init_cond_fn = @(x,p,t) x.*0 + 1;
+ic_v = @(x,p,t) p.init_cond_v(x);
+ic1 = new_md_func(num_dims,{ic_v,[],[]});
+pde.initial_conditions = {ic1};
+
 pde.params.boundary_cond_v = @(v,p,t) p.init_cond_v(v);
 pde.params.boundary_cond_z = @(z,p,t) z.*0 + 1;
 pde.params.boundary_cond_s = @(s,p,t) s.*0 + 1;
+
 pde.dimensions{1,1}.min = 0;
 pde.dimensions{1,1}.max = 5e6;
 pde.dimensions{1,2}.min = 0;
@@ -85,23 +92,20 @@ pde.dimensions{1,2}.max = pi/2;
 pde.terms = {pde.terms{1,1}, pde.terms{1,2}};
 
     function ret = solution(v,p,t)
-        ret =  p.analytic_solution_v(v,p,t);
+        ret =  p.soln_v(v,p,t);
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
         end
     end
 
-pde.analytic_solutions_1D = { ...    
-    @(v,p,t) solution(v,p,t), ...
-    @(z,p,t) z.*0 + 1, ...
-    @(s,p,t) s.*0 + 1, ...
-    @(t,p) t.*0 + 1; %pitch_t(t)
-    };
+soln1 = new_md_func(num_dims,{@solution,[],[]});
+pde.solutions = {soln1};
+
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = outputs.rel_err{end};
-verifyLessThan(testCase,rel_err,1e-4);
+verifyLessThan(testCase,rel_err,1.5e-4);
 end
 
 function mirror3_space_test(testCase)
@@ -111,27 +115,27 @@ disp('Testing the spatial dimension within mirror3');
 args = {'lev',3,'deg',3,'dt',5e-15, 'normalize_by_mass', true, 'timestep_method', 'matrix_exponential','quiet',true,'num_steps',1};
 opts = OPTS(args);
 pde = mirror3(opts);
+num_dims = numel(pde.dimensions);
+
 % modify PDE
-pde.dimensions{1}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.dimensions{2}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.dimensions{3}.init_cond_fn = @(x,p,t) exp(x);
+ic_s = @(x,p,t) exp(x);
+ic1 = new_md_func(num_dims,{[],[],ic_s});
+pde.initial_conditions = {ic1};
+
 pde.params.boundary_cond_v = @(v,p,t) v.*0 + 1;
 pde.params.boundary_cond_z = @(z,p,t) z.*0 + 1;
 pde.terms = {pde.terms{1,4}, pde.terms{1,5}};
 
     function ret = solution(s,p,t)
-        ret =  p.analytic_solution_s(s,p,t);
+        ret =  p.soln_s(s,p,t);
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
         end
     end
 
-pde.analytic_solutions_1D = { ...    
-    @(v,p,t) v.*0 + 1, ...
-    @(z,p,t) z.*0 + 1, ...
-    @(s,p,t) solution(s,p,t), ...
-    @(t,p) t.*0 + 1; %pitch_t(t)
-    };
+soln1 = new_md_func(num_dims,{[],[],@solution});
+pde.solutions = {soln1};
+
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
 % assert on correctness
