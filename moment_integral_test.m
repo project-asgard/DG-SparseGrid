@@ -20,13 +20,18 @@ num_dims = numel(pde.dimensions);
 
 pde.dimensions{1}.min = 0;
 pde.dimensions{1}.max = 1;
-pde.dimensions{1}.init_cond_fn = @(v,p,t) my_func_v(v);
 pde.dimensions{1}.jacobian = @(v,p,t) v.^2;
 
 pde.dimensions{2}.min = 0;
 pde.dimensions{2}.max = pi;
-pde.dimensions{2}.init_cond_fn = @(z,p,t) my_func_z(z);
 pde.dimensions{2}.jacobian = @(z,p,t) sin(z);
+
+% overwrite the initial conditions for this test
+
+ic_v = @(v,p,t) my_func_v(v);
+ic_z = @(z,p,t) my_func_z(z);
+ic1 = new_md_func(num_dims,{ic_v,ic_z});
+pde.initial_conditions = {ic1};
 
 [elements, elements_idx]    = hash_table_sparse_nD (pde.get_lev_vec, opts.max_lev, opts.grid_type);
 hash_table.elements         = elements;

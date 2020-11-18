@@ -42,16 +42,14 @@ disp('Testing the pitch dimension within mirror3');
 args = {'lev',3,'deg',4,'dt',1e-10,'calculate_mass',true,'quiet',false,'num_steps',20,'normalize_by_mass',true,'timestep_method','matrix_exponential'};
 opts = OPTS(args);
 pde = mirror3(opts);
+params = pde.params;
+num_dims = numel(pde.dimensions);
 % modify PDE
-pde.dimensions{1}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.dimensions{2}.init_cond_fn = @(z,p,t) p.a.n.*cos(z);
-pde.dimensions{3}.init_cond_fn = @(x,p,t) x.*0 + 1;
-pde.analytic_solutions_1D = { ...    
-    @(v,p,t) p.init_cond_v(v), ...
-    @(z,p,t) p.analytic_solution_z(z,p,t), ...
-    @(s,p,t) p.init_cond_s(s), ...
-    @(t,p) t.*0 + 1; %pitch_t(t)
-    };
+ic_z = @(z,p,t) p.a.n .* cos(z);
+ic1 = new_md_func(num_dims,{[],ic_z,[]});
+pde.initial_conditions = {ic1};
+soln1 = new_md_func(num_dims,{params.init_cond_v,params.soln_z,params.init_cond_s});
+pde.solutions = {soln1};
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness

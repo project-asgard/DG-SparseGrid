@@ -12,30 +12,35 @@ function pde = mirror1_velocity(opts)
 
 params = mirror_parameters();
 
-BCFunc = @(v,p,t) p.init_cond_v(v);
-
-BCL_fList = { ...
-    @(v,p,t) v.*0, ... 
-%    @(z,p,t) p.init_cond_z(z), ...
-    @(t,p) t.*0 + 1
-    };
-
-BCR_fList = { ...
-    @(v,p,t) BCFunc(v,p,t), ... % 
-%    @(z,p,t) p.init_cond_z(z), ...
-    @(t,p) t.*0 + 1
-    };
-
-
 %% Define the dimensions
 
 dim_v = DIMENSION(0,0.5e7);
-dim_v.name = 'v';
-dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
-
 dimensions = {dim_v};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional)
+
+    function ret = solution(v,p,t)
+        ret =  p.soln_v(v,p,t);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
+    end
+
+soln1 = new_md_func(num_dims,{@solution});
+solutions = {soln1};
+
+%% Define the initial conditions
+
+ic_v = @(v,p,t) p.init_cond_v(v);
+ic1 = new_md_func(num_dims,{ic_v});
+initial_conditions = {ic1};
+
+%% Define the boundary conditions
+
+BCL = ic1;
+BCR = ic1;
 
 %% Define the terms of the PDE
 
@@ -44,8 +49,8 @@ num_dims = numel(dimensions);
 
 %g1 = @(v,p,t,dat) -E.*Z_a/m_a;
 %pterm1  = GRAD(num_dims,g1,-1,'N','N');
-%termE_v = TERM_1D({pterm1});
-%termE   = TERM_ND(num_dims,{termE_v});
+%termE_v = SD_TERM({pterm1});
+%termE   = MD_TERM(num_dims,{termE_v});
 
 %% 
 
@@ -57,9 +62,9 @@ g1 = @(v,p,t,dat) 1./v.^2;
 g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
 pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
-termV_s = TERM_1D({pterm1,pterm2});
-termV1   = TERM_ND(num_dims,{termV_s});
+pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
+termV_s = SD_TERM({pterm1,pterm2});
+termV1   = MD_TERM(num_dims,{termV_s});
 
 %%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
@@ -73,31 +78,15 @@ g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,+1,'D','N');
-pterm3 = GRAD(num_dims,g3, -1,'N','D', BCL_fList, BCR_fList);
-termV_par = TERM_1D({pterm1,pterm2,pterm3});
-termV2   = TERM_ND(num_dims,{termV_par});
+pterm3 = GRAD(num_dims,g3, -1,'N','D', BCL, BCR);
+termV_par = SD_TERM({pterm1,pterm2,pterm3});
+termV2   = MD_TERM(num_dims,{termV_par});
 
 terms = {termV1,termV2};
 
 %% Define sources 
 
 sources = {};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-solution1 = @solution;
-    function ret = solution(v,p,t)
-        ret =  p.analytic_solution_v(v,p,t);
-        if isfield(p,'norm_fac')
-            ret = p.norm_fac .* ret;
-        end
-    end
-
-analytic_solutions_1D = { ...    
-    @(v,p,t) solution1(v,p,t), ...
-    @(t,p) t.*0 + 1;
-    };
 
 %% Define function to set time step
     function dt=set_dt(pde,CFL)       
@@ -108,6 +97,6 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end

@@ -3,7 +3,7 @@ classdef PDE
         % these all need to be removed or moved to opts
         solvePoisson = 0; % Controls the "workflow" ... something we still don't know how to do generally.
         applySpecifiedE = 0; % Controls the "workflow" ... something we still don't know how to do generally.
-        checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
+%         checkAnalytic = 1; % Will only work if an analytic solution is provided within the PDE.
         
         set_dt = @(pde,CFL) 1; % Function which accepts the pde (after being updated with CMD args).
         dimensions = {};
@@ -14,6 +14,7 @@ classdef PDE
         transform_blocks = {}; % will be updated in asgard.m
         analytic_solutions_1D = {}; % to be removed when transition all to many_solution_capable
         
+        boundary_conditions = {};
         % MSC = Many Solution Capable fields
         % (all PDEs will transition to this soon)
         solutions = {};

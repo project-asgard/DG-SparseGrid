@@ -17,12 +17,13 @@ function pde = advection1(opts)
 %% Define dimensions
 
 dim_x = DIMENSION(0,pi);
-dim_x.init_cond_fn = @(x,p,t) cos(x);
-
 dimensions = {dim_x};
-
 num_dims = numel(dimensions);
 
+%% Initial conditions
+ic_x = @(x,p,t) cos(x);
+ic1 = new_md_func(num_dims,{ic_x});
+initial_conditions = {ic1};
 
 %% Define boundary conditions
 
@@ -49,8 +50,8 @@ BCR_fList = { ...
 g1 = @(x,p,t,dat) x.*0-2;
 pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
 
-term1_x = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_x});
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x});
 
 terms = {term1};
 
@@ -73,12 +74,10 @@ sources = {source1};
 
 
 %% Define the analytic solution (optional).
-% This requires nDims+time function handles.
 
 a_x = @(x,p,t) cos(x);
-a_t = @(t,p) t.*0 + 1;
-
-analytic_solutions_1D = {a_x,a_t};
+sol1 = new_md_func(num_dims,{a_x});
+solutions = {sol1};
 
 %% Define function to calculate time step
 
@@ -95,6 +94,6 @@ analytic_solutions_1D = {a_x,a_t};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end

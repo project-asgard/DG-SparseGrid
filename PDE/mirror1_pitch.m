@@ -51,45 +51,28 @@ nu_D = 10^4; %deflection frequency in s^-1
 n_o = 0.5*n_b; %initial number density for specie at specific velocity
 v_o = 0.5*v_b; %initial known velocity
 
-%function y = dd1(n)
-% Our default value is 0
-%y = 0; 
-
-% The function is 1 only if the input is 0
-%if n == 0
-%    y = 1;
-%end
-
-%end
-soln_z = @(z) n_o.*cos(z);
-soln_t = @(t) exp(-nu_D*t);
-
-BCFunc = @(z) soln_z(z);
-BCFunc_t = @(t) soln_t(t);
-
-% Domain is (a,b)
-
-% The function is defined for the plane
-% x = a and x = b
-BCL_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by a
-    @(t,p) BCFunc_t(t)
-    };
-
-BCR_fList = { ...
-    @(x,p,t) BCFunc(x), ... % replace x by b
-    @(t,p) BCFunc_t(t)
-    };
-
 %% Define the dimensions
 
 dim_z = DIMENSION(0,pi/2);
-dim_z.name = 'z';
-dim_z.init_cond_fn = @(z,p,t) soln_z(z)*soln_t(t);
 dim_z.jacobian = @(z,p,t) sin(z);
-
 dimensions = {dim_z};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional)
+
+soln_z = @(z,p,t) n_o.*cos(z);
+soln_t = @(t,p) exp(-nu_D*t);
+soln1 = new_md_func(num_dims,{soln_z,soln_t});
+solutions = {soln1};
+
+%% Define the initial conditions
+
+ic1 = soln1;
+initial_conditions = {ic1};
+
+%% Define the boundary conditions
+
+
 
 %% Define the terms of the PDE
 %
@@ -104,15 +87,14 @@ num_dims = numel(dimensions);
 %   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
 %   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
-
 g1 = @(z,p,t,dat) nu_D./(2*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','N');
 pterm3 = GRAD(num_dims,g3,+1,'D','D');
-termC_z = TERM_1D({pterm1,pterm2,pterm3});
-termC   = TERM_ND(num_dims,{termC_z});
+termC_z = SD_TERM({pterm1,pterm2,pterm3});
+termC   = MD_TERM(num_dims,{termC_z});
 
 terms = {termC};
 
@@ -122,18 +104,9 @@ terms = {termC};
 params.parameter1 = 0;
 params.parameter2 = 1;
 
-
 %% Define sources
 
 sources = {};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-analytic_solutions_1D = { ...
-    @(z,p,t) soln_z(z), ...
-    @(t,p) soln_t(t) 
-    };
 
     function dt=set_dt(pde,CFL)      
         dims = pde.dimensions;       
@@ -145,6 +118,6 @@ analytic_solutions_1D = { ...
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,analytic_solutions_1D);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end

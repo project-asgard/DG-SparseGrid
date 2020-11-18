@@ -18,37 +18,32 @@ C = 1.0;
     end
 
 
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-solution1 = { ...
-    @(x,p,t)  x .* expf(x,t), ...
-    @(y,p,t)  y.*0 + 1, ...
-    @(t)      1 ...
-    };
-
-solution2 = { ...
-    @(x,p,t)  expf(x,t), ...
-    @(y,p,t)  -C.*sin(2*pi*y), ...
-    @(t)      1 ...
-    };
-
-solutions = {solution1,solution2};
-
-%%
-% Add initial conditions
-
-initial_conditions = {solution1,solution2};
-
 %% Define the dimensions
-%
-% Here we setup a 2D problem (x,y)
 
 dim_x = DIMENSION(-10,+10);
 dim_y = DIMENSION(-1,+1);
-
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
+
+%% Define the solution
+
+solution1 = new_md_func(num_dims,{ ...
+    @(x,p,t)  x .* expf(x,t), ...
+    @(y,p,t)  y.*0 + 1, ...
+    @(t)      1 ...
+    });
+
+solution2 = new_md_func(num_dims,{ ...
+    @(x,p,t)  expf(x,t), ...
+    @(y,p,t)  -C.*sin(2*pi*y), ...
+    @(t)      1 ...
+    });
+
+solutions = {solution1,solution2};
+
+%% Define initial conditions
+
+initial_conditions = {solution1,solution2};
 
 %% Define the terms of the PDE
 %
@@ -61,8 +56,8 @@ num_dims = numel(dimensions);
 
 g1 = @(x,p,t,dat) x*0-1;
 pterm1  = GRAD(num_dims,g1,0,'D','D');
-term1_x = TERM_1D({pterm1});
-term1   = TERM_ND(num_dims,{term1_x,[]});
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x,[]});
 
 terms = {term1};
 
