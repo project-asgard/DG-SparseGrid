@@ -18,7 +18,6 @@ classdef OPTS
         use_sparse_A = false;
         time_independent_A = false;
         time_independent_build_A = false;
-        many_solution_capable = true; % everything needs to transition to this by defalt, all it means is that a soln or init_cond can be defined as the sum of terms, i.e., soln1 + soln2 defined as solutions = {soln1, soln2}, where each soln is a multi-d function definition
         max_lev = 8;
         max_lev_coeffs = true; % when enabled, build partial term coeff matrices for some max level,
         % and rechain 1d term matrices as adaptivity dictates
@@ -68,7 +67,6 @@ classdef OPTS
                 addOptional(input_parser,'use_oldcoeffmat',opts.use_oldcoeffmat, @islogical);
                 addOptional(input_parser,'time_independent_A',opts.time_independent_A,@islogical);
                 addOptional(input_parser,'time_independent_build_A',opts.time_independent_build_A,@islogical);
-                addOptional(input_parser,'many_solution_capable',opts.many_solution_capable,@islogical);
                 addOptional(input_parser,'max_lev',opts.max_lev, @isnumeric);
                 addOptional(input_parser,'max_lev_coeffs',opts.max_lev_coeffs, @islogical);
                 addOptional(input_parser,'adapt_threshold',opts.adapt_threshold, @isnumeric);
@@ -121,7 +119,6 @@ classdef OPTS
                 opts.use_oldcoeffmat = input_parser.Results.use_oldcoeffmat;
                 opts.time_independent_A = input_parser.Results.time_independent_A;
                 opts.time_independent_build_A = input_parser.Results.time_independent_build_A;
-                opts.many_solution_capable = input_parser.Results.many_solution_capable;
                 opts.max_lev = input_parser.Results.max_lev;
                 opts.max_lev_coeffs = input_parser.Results.max_lev_coeffs;
                 opts.adapt_threshold = input_parser.Results.adapt_threshold;
