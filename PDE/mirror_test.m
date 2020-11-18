@@ -39,7 +39,7 @@ function mirror3_pitch_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the pitch dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',4,'dt',1e-10,'calculate_mass', true,'quiet',false,'num_steps',5,'normalize_by_mass', true, 'timestep_method','matrix_exponential'};
+args = {'lev',3,'deg',3,'dt',1e-10,'calculate_mass', true,'quiet',false,'num_steps',5,'normalize_by_mass', true, 'timestep_method','matrix_exponential'};
 opts = OPTS(args);
 pde = mirror3(opts);
 % modify PDE
@@ -47,8 +47,7 @@ pde.dimensions{1}.init_cond_fn = @(x,p,t) x.*0 + 1;
 pde.dimensions{2}.init_cond_fn = @(z,p,t) cos(z);
 pde.dimensions{3}.init_cond_fn = @(x,p,t) x.*0 + 1;
 pde.params.boundary_cond_v = @(v,p,t) v.*0 + 1;
-pde.dimensions{1,1}.max = 5e6;
-pde.dimensions{1,1}.min = 0;
+pde.params.boundary_cond_s = @(s,p,t) s.*0 + 1;
 pde.analytic_solutions_1D = { ...    
     @(v,p,t) exp(-p.nu_D(v,p.a,p.b).*t), ...
     @(z,p,t) cos(z), ...
@@ -66,15 +65,30 @@ function mirror3_velocity_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the velocity dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',7,'dt',5e-8, 'normalize_by_mass', true, 'timestep_method', 'BE','quiet',true,'num_steps',10};
+args = {'lev',3,'deg',5,'dt',1e-8, 'calculate_mass', true, 'normalize_by_mass', true, 'timestep_method', 'matrix_exponential','quiet',true,'num_steps',20};
 opts = OPTS(args);
 pde = mirror3(opts);
 % modify PDE
-pde.dimensions{1}.init_cond_fn = @(x,p,t) p.maxwell(x,1e6,2e5);
+pde.dimensions{1}.init_cond_fn = @(x,p,t) p.init_cond_v(x);
 pde.dimensions{2}.init_cond_fn = @(x,p,t) x.*0 + 1;
 pde.dimensions{3}.init_cond_fn = @(x,p,t) x.*0 + 1;
+pde.params.boundary_cond_v = @(v,p,t) p.init_cond_v(v);
+pde.params.boundary_cond_z = @(z,p,t) z.*0 + 1;
+pde.params.boundary_cond_s = @(s,p,t) s.*0 + 1;
+pde.dimensions{1,1}.min = 0;
+pde.dimensions{1,1}.max = 5e6;
+pde.dimensions{1,2}.min = 0;
+pde.dimensions{1,2}.max = pi/2;
+
+    function ret = solution(v,p,t)
+        ret =  p.analytic_solution_v(v,p,t);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
+    end
+
 pde.analytic_solutions_1D = { ...    
-    @(v,p,t) p.analytic_solution_v(v,p,t), ...
+    @(v,p,t) solution(v,p,t), ...
     @(z,p,t) z.*0 + 1, ...
     @(s,p,t) s.*0 + 1, ...
     @(t,p) t.*0 + 1; %pitch_t(t)
@@ -90,17 +104,28 @@ function mirror3_space_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the spatial dimension within mirror3');
 % setup PDE
-args = {'lev',4,'deg',4,'dt',1e-15, 'normalize_by_mass', true, 'timestep_method', 'BE','quiet',true,'num_steps',5};
+args = {'lev',3,'deg',4,'dt',1e-15, 'normalize_by_mass', true, 'timestep_method', 'matrix_exponential','quiet',true,'num_steps',5};
 opts = OPTS(args);
 pde = mirror3(opts);
 % modify PDE
 pde.dimensions{1}.init_cond_fn = @(x,p,t) x.*0 + 1;
 pde.dimensions{2}.init_cond_fn = @(x,p,t) x.*0 + 1;
 pde.dimensions{3}.init_cond_fn = @(x,p,t) exp(x);
+
+pde.params.boundary_cond_v = @(v,p,t) v.*0 + 1;
+pde.params.boundary_cond_z = @(z,p,t) z.*0 + 1;
+
+    function ret = solution(s,p,t)
+        ret =  p.analytic_solution_s(s,p,t);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
+    end
+
 pde.analytic_solutions_1D = { ...    
     @(v,p,t) v.*0 + 1, ...
     @(z,p,t) z.*0 + 1, ...
-    @(s,p,t) p.analytic_solution_s(s,p,t), ...
+    @(s,p,t) solution(s,p,t), ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
 % run PDE

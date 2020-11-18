@@ -59,7 +59,7 @@ BCR_fList = { ...
 
 %% Define the dimensions
 
-dim_v = DIMENSION(0,8e6);
+dim_v = DIMENSION(0,5e6);
 dim_v.name = 'v';
 dim_v.init_cond_fn = @(v,p,t) p.init_cond_v(v);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
@@ -168,7 +168,7 @@ pterm3      = GRAD(num_dims,g3,-1,'N','D', BCL_fList, BCR_fList);
 termV_v     = TERM_1D({pterm1,pterm2,pterm3});
 termV2      = TERM_ND(num_dims,{termV_v,[],[]});
 
-terms = {termV1, termV2, termC, termS1};
+terms = {termS1, termS2};
 
 
 %% Define sources

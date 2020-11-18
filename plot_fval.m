@@ -186,7 +186,7 @@ if num_dims==3
     
     sz = numel(f_nD(1,1,:))/2;
     sy = numel(f_nD(1,:,1))/2;
-    sx = numel(f_nD(:,1,1));
+    sx = numel(f_nD(:,1,1))/2;
 %     
 %     %plotting in x-direction
 %     f1d = f_nD(sz,sy,:);
