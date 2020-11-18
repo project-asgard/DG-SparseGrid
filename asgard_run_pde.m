@@ -393,11 +393,11 @@ for L = 1:opts.num_steps
         
         err_wavelet = sqrt(mean((fval(:) - fval_analytic(:)).^2));
         outputs.err{L+1} = err_wavelet;
-        outputs.rel_err{L+1} = err_wavelet/sqrt(mean(fval_analytic(:).^2));
+        outputs.rel_err{L+1} = err_wavelet/norm(fval_analytic(:),Inf);
         if ~opts.quiet  
             disp(['    num_dof : ', num2str(numel(fval))]);
             disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
-            disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
+            disp(['    wavelet space relative err : ', num2str(err_wavelet/norm(fval_analytic(:),Inf)*100), ' %']);
         end
         
         %%

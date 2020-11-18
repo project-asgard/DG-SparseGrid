@@ -39,7 +39,7 @@ function mirror3_pitch_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the pitch dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',4,'dt',1e-7,'calculate_mass', true,'quiet',true,'num_steps',5,'normalize_by_mass', true, 'timestep_method','matrix_exponential'};
+args = {'lev',3,'deg',3,'dt',1e-7,'calculate_mass', true,'quiet',true,'num_steps',1,'normalize_by_mass', true, 'timestep_method','matrix_exponential'};
 opts = OPTS(args);
 pde = mirror3(opts);
 % modify PDE
@@ -57,9 +57,10 @@ pde.analytic_solutions_1D = { ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
 % run PDE
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+[err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
 % assert on correctness
-verifyLessThan(testCase,err,1e-5);
+rel_err = outputs.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-4);
 end
 
 function mirror3_velocity_test(testCase)
@@ -67,7 +68,7 @@ function mirror3_velocity_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the velocity dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',5,'dt',1e-8, 'calculate_mass', true, 'normalize_by_mass', true, 'timestep_method', 'matrix_exponential','quiet',true,'num_steps',20};
+args = {'lev',3,'deg',3,'dt',20e-8,'calculate_mass',true,'normalize_by_mass',true,'timestep_method','matrix_exponential','quiet',true,'num_steps',1};
 opts = OPTS(args);
 pde = mirror3(opts);
 % modify PDE
@@ -97,17 +98,17 @@ pde.analytic_solutions_1D = { ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
 % run PDE
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+[err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
 % assert on correctness
-verifyLessThan(testCase,err,1e-2);
-
+rel_err = outputs.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-4);
 end
 
 function mirror3_space_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the spatial dimension within mirror3');
 % setup PDE
-args = {'lev',3,'deg',4,'dt',1e-15, 'normalize_by_mass', true, 'timestep_method', 'matrix_exponential','quiet',true,'num_steps',5};
+args = {'lev',3,'deg',3,'dt',5e-15, 'normalize_by_mass', true, 'timestep_method', 'matrix_exponential','quiet',true,'num_steps',1};
 opts = OPTS(args);
 pde = mirror3(opts);
 % modify PDE
@@ -132,7 +133,8 @@ pde.analytic_solutions_1D = { ...
     @(t,p) t.*0 + 1; %pitch_t(t)
     };
 % run PDE
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+[err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
 % assert on correctness
-verifyLessThan(testCase,err,1e-2);
+rel_err = outputs.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-4);
 end
