@@ -141,3 +141,42 @@ pde.solutions = {soln1};
 rel_err = outputs.rel_err{end};
 verifyLessThan(testCase,rel_err,1e-4);
 end
+
+function mirror3_manufacture_test(testCase)
+addpath(genpath(pwd));
+disp('Testing a manufactured solution within mirror3');
+% setup PDE
+args = {'lev',3,'deg',3,'dt',1e-12,'calculate_mass',true,'quiet',true,'num_steps',1,'normalize_by_mass',true,'timestep_method','matrix_exponential'};
+opts = OPTS(args);
+pde = mirror3(opts);
+num_dims = numel(pde.dimensions);
+
+% modify PDE
+pde.params.nu_D = @(v,a,b) v;
+pde.params.nu_s = @(v,a,b) v;
+pde.params.nu_par = @(v,a,b) v;
+pde.params.boundary_cond_v = @(v,p,t) exp(-v.*t);
+pde.params.boundary_cond_s = @(s,p,t) s.*0 + 1;
+pde.terms = {pde.terms{1,1},pde.terms{1,2},pde.terms{1,3},pde.terms{1,4}};
+
+%source function for manufactured solution
+src_v = @(v,p,t) exp(-v.*t).*((p.a.m./(p.a.m + p.b.m)).*(-4*v + v.^2.*t) + 5*v.^2.*t./2 - v.^3.*t.^2./2);
+src_z = @(z,p,t) cos(z);
+
+s_v = @(v,p,t) exp(-v.*t);
+s_z = @(z,p,t) cos(z);
+soln1 = new_md_func(num_dims,{s_v,s_z,[]});
+src = new_md_func(num_dims,{src_v,src_z,[]});
+pde.solutions = {soln1};
+pde.sources = {src};
+
+ic_z = @(z,p,t) cos(z);
+ic1 = new_md_func(num_dims,{[],ic_z,[]});
+pde.initial_conditions = {ic1};
+
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = outputs.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-4);
+end
