@@ -146,7 +146,7 @@ function mirror3_manufacture_test(testCase)
 addpath(genpath(pwd));
 disp('Testing a manufactured solution within mirror3');
 % setup PDE
-args = {'lev',3,'deg',3,'dt',1e-12,'calculate_mass',true,'quiet',true,'num_steps',1,'normalize_by_mass',true,'timestep_method','matrix_exponential'};
+args = {'lev',3,'deg',3,'dt',1e-12,'calculate_mass',true,'quiet',true,'num_steps',1,'normalize_by_mass',true,'timestep_method','BE'};
 opts = OPTS(args);
 pde = mirror3(opts);
 num_dims = numel(pde.dimensions);
