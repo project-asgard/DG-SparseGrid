@@ -234,6 +234,7 @@ end
 %% Time Loop
 count=1;
 err = 1e9;
+outputs = [];
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:opts.num_steps
     
@@ -390,6 +391,10 @@ for L = 1:opts.num_steps
     
     %%
     % Check against known solution
+    
+    if opts.calculate_mass
+        disp(['    total integrated mass : ', num2str(mass)]);
+    end
     if ~isempty(pde.solutions)
         
         %%
@@ -422,9 +427,6 @@ for L = 1:opts.num_steps
             if ~opts.quiet
                 disp(['    real space absolute err : ', num2str(err_realspace)]);
                 disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-                if opts.calculate_mass
-                    disp(['    total integrated mass : ', num2str(mass)]);
-                end
             end
         end
         

@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_6p1(opts)
+function pde = fokkerplanck2_C(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Problems 6.1, 6.2, and 6.3 from the RE paper.
@@ -7,32 +7,29 @@ function pde = fokkerplanck2_6p1(opts)
 %
 % termC1 == 1/p^2*d/dp*p^2*Ca*df/dp
 % termC2 == 1/p^2*d/dp*p^2*Cf*f
-% termC2 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
+% termC3 == Cb(p)/p^4 * d/dz( (1-z^2) * df/dz )
 %
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck2_6p1,'CFL',0.01,'case',1)
+% asgard(@fokkerplanck2_C,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_6p1,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',3)
+% asgard(@fokkerplanck2_C,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
+%
+% case = 1 % step function in momentum
+% case = 2 %
+% case = 3 % 
 
 params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions
 
-dim_p = DIMENSION(0.01,+10);
+dim_p = DIMENSION(0,+10);
 dim_p.jacobian = @(x,p,t) x.^2;
 dim_z = DIMENSION(-1,+1);
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
-
-%% Define the initial conditions
-
-ic_p = @(x,p,t) p.f0_p(x);
-ic_z = @(x,p,t) p.f0_z(x);
-ic1 = new_md_func(num_dims,{ic_p,ic_z});
-initial_conditions = {ic1};
 
 %% Define the analytic solution (optional)
 
@@ -41,6 +38,23 @@ soln_z = @(x,p,t) p.soln_z(x,t);
 soln1 = new_md_func(num_dims,{soln_p,soln_z});
 solutions = {soln1};
 
+%% Define the initial conditions
+
+ic_p = @(x,p,t) p.f0_p(x);
+ic_z = @(x,p,t) p.f0_z(x);
+ic1 = new_md_func(num_dims,{ic_p,ic_z});
+initial_conditions = {ic1};
+
+%% Define the boundary conditions
+
+%% Look at some of the coefficients for sanity checking
+
+p = 0:.001:10;
+plot(p,p.^2.*params.Ca(p));
+hold on
+plot(p,p.^2.*params.Cf(p));
+plot(p,min(params.Cb(p)./p.^4,10));
+hold off
 
 %% Define the terms of the PDE
 
@@ -89,7 +103,7 @@ termC2   = MD_TERM(num_dims,{term2_p,[]});
 %   r(z) == d/dz g2(z) s(z)  [grad, g2(z) = 1-z^2,     BCL=D,BCR=D]
 %   s(z) == d/dz g3(z) f(z)  [grad, g3(z) = 1,         BCL=N,BCR=N]
 
-g1 = @(x,p,t,dat) p.Cb(x)./x.^4;
+g1 = @(x,p,t,dat) min(p.Cb(x)./x.^4,1e2); % DLG - NOTE the limiter here
 pterm1  = MASS(g1);
 term3_p = SD_TERM({pterm1});
 

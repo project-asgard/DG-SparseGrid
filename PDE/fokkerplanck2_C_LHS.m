@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_6p1_withLHS(opts)
+function pde = fokkerplanck2_C_LHS(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Problems 6.1, 6.2, and 6.3 from the RE paper.
@@ -12,10 +12,10 @@ function pde = fokkerplanck2_6p1_withLHS(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck2_6p1_withLHS,'CFL',0.01,'case',1)
+% asgard(@fokkerplanck2_C_LHS,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_6p1_withLHS,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
+% asgard(@fokkerplanck2_C_LHS,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
 %
 % NOTES
 % DLG - case 3 doesn't seem to be working, although it does work for the

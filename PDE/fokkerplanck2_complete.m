@@ -52,7 +52,7 @@ params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
-dim_p = DIMENSION(0.1,+10);
+dim_p = DIMENSION(0,+10);
 dim_z = DIMENSION(-1,+1);
 dim_p.jacobian = @(x,p,t) x.^2;
 dim_z.jacobian = @(x,p,t) x.*0+1;
@@ -120,7 +120,7 @@ termC2   = MD_TERM(num_dims,{term2_p,[]});
 %   r(z) == d/dz g2(z) s(z)  [grad, g2(z) = 1-z^2,     BCL=D,BCR=D]
 %   s(z) == d/dz g3(z) f(z)  [grad, g3(z) = 1,         BCL=N,BCR=N]
 
-g1 = @(x,p,t,dat) p.Cb(x)./x.^4;
+g1 = @(x,p,t,dat) min(p.Cb(x)./x.^4,100);
 pterm1  = MASS(g1);
 term3_p = SD_TERM({pterm1});
 

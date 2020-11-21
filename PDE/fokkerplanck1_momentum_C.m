@@ -1,4 +1,5 @@
-function pde = fokkerplanck1_5p1a(opts)
+function pde = fokkerplanck1_momentum_C(opts)
+
 % Test the momentum dynamics for the RE problem for E = R = 0
 %
 % df/dt == 1/x^2 * d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
@@ -24,7 +25,10 @@ function pde = fokkerplanck1_5p1a(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck1_5p1a,'timestep_method','CN','lev',3,'num_steps',50,'CFL',1.5,'case',1)
+% asgard(@fokkerplanck1_momentum_C,'timestep_method','CN','lev',3,'deg',4,'num_steps',50,'CFL',1.5,'case',1)
+%
+% case = 1 % maxwellian initial condition
+% case = 2 % step function initial condition
 
     function ret = psi(x,t)
         
