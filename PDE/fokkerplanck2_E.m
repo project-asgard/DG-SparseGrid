@@ -63,12 +63,12 @@ pterm2   = GRAD(num_dims,g3,0,'N','N');% Lin's Setting (DLG-why is this central 
 termE1_p = SD_TERM({pterm1,pterm2});
 termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
 
-p = 0:.001:10;
-plot(p,g1(p,params,[],[]));
-hold on
-plot(p,g2(p,params,[],[]));
-plot(p,g3(p,params,[],[]));
-hold off
+% p = 0:.001:10;
+% plot(p,g1(p,params,[],[]));
+% hold on
+% plot(p,g2(p,params,[],[]));
+% plot(p,g3(p,params,[],[]));
+% hold off
 
 % termE2 == -E/p*f(p) * d/dz (1-z^2) f(z)
 %        == q(p) * r(z)
