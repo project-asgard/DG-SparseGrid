@@ -147,7 +147,7 @@ g3 = @(x,p,t,dat) x.^2;
 pterm1   = MASS(g1);
 termE1_z = SD_TERM({pterm1});
 pterm1   = MASS(g2); 
-pterm2   = GRAD(num_dims,g3,-1,'N','N');% Lin's Setting (DLG-why is this central flux?)
+pterm2   = GRAD(num_dims,g3,0,'N','N');% Lin's Setting (DLG-why is this central flux?)
 termE1_p = SD_TERM({pterm1,pterm2});
 termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
 
@@ -167,7 +167,7 @@ g1 = @(x,p,t,dat) -p.E ./ x;
 g2 = @(x,p,t,dat) 1-x.^2;
 pterm1   = MASS(g1);
 termE2_p = SD_TERM({pterm1});
-pterm1   = GRAD(num_dims,g2,-1,'N','N');% Lin's Setting
+pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
 termE2_z = SD_TERM({pterm1});
 termE2= MD_TERM(num_dims,{termE2_p,termE2_z});
 
@@ -210,8 +210,8 @@ termR2_z = SD_TERM({pterm1});
 
 termR2 = MD_TERM(num_dims,{termR2_p, termR2_z});
 
-% terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
-terms = {termE1};%,termE2};
+terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
+% terms = {termE1};%,termE2};
 
 
 %% Define sources
