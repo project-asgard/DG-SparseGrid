@@ -249,3 +249,31 @@ rel_err = output.rel_err{end};
 verifyLessThan(testCase,rel_err,1e-4);
 
 end
+
+function fp1_E_momentum_test(testCase)
+addpath(genpath(pwd));
+disp('Testing the momentum dimensions for term E within fokkerplanck1_momentum_E');
+
+% setup PDE - case 1 (flat function initial condition)
+args = {'lev',4,'deg',5,'dt',0.1,'quiet',true,'num_steps',1,'timestep_method','matrix_exponential','case',1,'normalize_by_mass',false};
+opts = OPTS(args);
+pde = fokkerplanck1_momentum_E(opts);
+% modify PDE - not needed here
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = output.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-4);
+
+% setup PDE - case 2 (Maxwellian initial condition)
+args = {'lev',4,'deg',5,'dt',0.1,'quiet',true,'num_steps',1,'timestep_method','matrix_exponential','case',2,'normalize_by_mass',false};
+opts = OPTS(args);
+pde = fokkerplanck1_momentum_E(opts);
+% modify PDE - not needed here
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = output.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-4);
+
+end

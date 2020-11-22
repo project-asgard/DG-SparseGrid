@@ -50,7 +50,7 @@ if num_dims==2
     y = nodes{2};
     ax1 = subplot(2,2,1);
     plot(x,f_slice,'-o');
-    title('1D slice (vertical)');
+    title('1D slice (horizontal)');
     
     %%
     % Overplot analytic solution
@@ -63,6 +63,7 @@ if num_dims==2
     end
     
     sx = max(1,floor(nx/2));
+    sx = 2;
     if nx > 2
         sx = sx+2; % just to get off the exact middle
     end
@@ -72,7 +73,7 @@ if num_dims==2
     y = nodes{2};
     ax1 = subplot(2,2,2);
     plot(y,f_slice,'-o');
-    title('1D slice (horizontal)');
+    title('1D slice (vertical)');
     
     if ~isempty(pde.solutions)
         f_slice_analytic = f_nD_analytic(:,sx);
@@ -85,9 +86,9 @@ if num_dims==2
     % Plot 2D
     
     ax1 = subplot(2,2,3);
-    f_nD_with_noise = f_nD;
-    f_nD_with_noise(1,1) = f_nD_with_noise(1,1)*1.0001;
-    contourf(x,y,f_nD_with_noise,'LineColor','none');
+    contourf(x,y,f_nD,'LineColor','none');
+    hold off
+
     title('numeric 2D solution');
     
     if nargin >= 5
@@ -101,7 +102,7 @@ if num_dims==2
         contourf(x,y,f_nD_analytic);
         title('analytic 2D solution');
     end
- 
+
     do_RE_paper_plots = false;
     if do_RE_paper_plots
         figure(11)

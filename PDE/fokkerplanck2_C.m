@@ -72,8 +72,8 @@ g2 = @(x,p,t,dat) x.^2.*p.Ca(x);
 g3 = @(x,p,t,dat) x.*0+1;
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'D','N');
-pterm3  = GRAD(num_dims,g3,-1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'D','D');
+pterm3  = GRAD(num_dims,g3,-1,'N','N');
 term1_p = SD_TERM({pterm1,pterm2,pterm3});
 termC1  = MD_TERM(num_dims,{term1_p,[]});
 
@@ -89,7 +89,7 @@ g1 = @(x,p,t,dat) 1./x.^2;
 g2 = @(x,p,t,dat) x.^2.*p.Cf(x);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,+1,'N','D');
+pterm2  = GRAD(num_dims,g2,+1,'N','N');
 term2_p = SD_TERM({pterm1,pterm2});
 termC2   = MD_TERM(num_dims,{term2_p,[]});
 

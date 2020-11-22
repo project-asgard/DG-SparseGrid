@@ -392,7 +392,7 @@ for L = 1:opts.num_steps
     %%
     % Check against known solution
     
-    if opts.calculate_mass
+    if opts.calculate_mass && ~opts.quiet
         disp(['    total integrated mass : ', num2str(mass)]);
     end
     if ~isempty(pde.solutions)

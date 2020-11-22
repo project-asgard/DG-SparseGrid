@@ -20,7 +20,7 @@ function pde = fokkerplanck2_complete(opts)
 % -div(flux_E) == termE1 + termE2
 %
 % termE1 == -E*z*f(z) * 1/p^2 (d/dp p^2 f(p))
-% termE2 == -E*p*f(p) * d/dz (1-z^2) f(z)
+% termE2 == -E/p*f(p) * d/dz (1-z^2) f(z)
 %
 % -div(flux_R) == termR1 + termR2
 %
@@ -141,42 +141,35 @@ termC3 = MD_TERM(num_dims,{term3_p,term3_z});
 %   q(p) == g2(p) u(p)       [mass, g2(p) = 1/p^2, BC N/A]
 %   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
 
-% g1 = @(x,p,t,dat) -E.*x;
-% g2 = @(x,p,t,dat) 1./x.^2;
-% g3 = @(x,p,t,dat) x.^2;
-
-g1 = @(x,p,t,dat) -x;
-g2 = @(x,p,t,dat) 1./x.^2;
-g3 = @(x,p,t,dat) p.E*x.^2;
-
+g1 = @(z,p,t,dat) -p.E .* z;
+g2 = @(x,p,t,dat) min(1./x.^2,100);
+g3 = @(x,p,t,dat) x.^2;
 pterm1   = MASS(g1);
 termE1_z = SD_TERM({pterm1});
-
-pterm1 = MASS(g2); 
-pterm2 = GRAD(num_dims,g3,0,'N','N');% Lin's Setting
-
+pterm1   = MASS(g2); 
+pterm2   = GRAD(num_dims,g3,-1,'N','N');% Lin's Setting (DLG-why is this central flux?)
 termE1_p = SD_TERM({pterm1,pterm2});
-
 termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
 
-% termE2 == -E*p*f(p) * d/dz (1-z^2) f(z)
+p = 0:.001:10;
+plot(p,g1(p,params,[],[]));
+hold on
+plot(p,g2(p,params,[],[]));
+plot(p,g3(p,params,[],[]));
+hold off
+
+% termE2 == -E/p*f(p) * d/dz (1-z^2) f(z)
 %        == q(p) * r(z)
 %   q(p) == g1(p) f(p)       [mass, g1(p) = -E*p,  BC N/A]
 %   r(z) == d/dz g2(z) f(z)  [grad, g2(z) = 1-z^2, BCL=N,BCR=N]
 
-% g1 = @(x,p,t,dat) -E.*x;
-% g2 = @(x,p,t,dat) 1-x.^2;
-g1 = @(x,p,t,dat) -1./x;
-g2 = @(x,p,t,dat) p.E*(1-x.^2);
-
+g1 = @(x,p,t,dat) -p.E ./ x;
+g2 = @(x,p,t,dat) 1-x.^2;
 pterm1   = MASS(g1);
 termE2_p = SD_TERM({pterm1});
-
-pterm1   = GRAD(num_dims,g2,+1,'N','N');% Lin's Setting
-
+pterm1   = GRAD(num_dims,g2,-1,'N','N');% Lin's Setting
 termE2_z = SD_TERM({pterm1});
-
-termE2 = MD_TERM(num_dims,{termE2_p,termE2_z});
+termE2= MD_TERM(num_dims,{termE2_p,termE2_z});
 
 %% -div(flux_R) == termR1 + termR2
 
@@ -217,7 +210,8 @@ termR2_z = SD_TERM({pterm1});
 
 termR2 = MD_TERM(num_dims,{termR2_p, termR2_z});
 
-terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
+% terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
+terms = {termE1};%,termE2};
 
 
 %% Define sources
