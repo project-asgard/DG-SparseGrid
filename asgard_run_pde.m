@@ -4,6 +4,7 @@ function [err,fval,fval_realspace,nodes,err_realspace,outputs] = ...
 root_directory = get_root_folder();
 
 tic
+figs = [];
 
 num_dims = numel(pde.dimensions);
 
@@ -151,6 +152,7 @@ if num_dims <=3
         element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
     end
     
+    figs.ic = figure('Name','Initial Condition','Units','normalized','Position',[0.7,0.1,0.3,0.3]);
     if norm(fval_realspace) > 0 && ~opts.quiet
         if opts.use_oldhash
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
@@ -364,6 +366,7 @@ for L = 1:opts.num_steps
         if opts.calculate_mass
             mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD,pde.dimensions);
             mass_t(L+1) = mass;
+            outputs.mass_t = mass_t;
         end
         
         %%
@@ -442,7 +445,11 @@ for L = 1:opts.num_steps
     
     if mod(L,opts.plot_freq)==0 && ~opts.quiet
         
-        figure(1000)
+        if isfield(figs,'solution')
+            figure(figs.solution);          
+        else
+            figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+        end
         
         if num_dims <= 3
             
@@ -526,6 +533,18 @@ for L = 1:opts.num_steps
     t = t + dt;
     
     outputs.dt = dt;
+    
+    if opts.calculate_mass
+        if isfield(figs,'mass')
+            figure(figs.mass);
+        else
+            figs.mass = figure('Name','mass(t)','Units','normalized','Position',[0.7,0.5,0.2,0.3]);
+        end
+        plot(outputs.mass_t/outputs.mass_t(1));
+        xtitle='timestep';
+        ytitle='mass/mass(t=0)';
+        ylim([0,2]);
+    end
     
 end
 

@@ -17,7 +17,7 @@ function pde = fokkerplanck2_E(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck1_momentum_E,'timestep_method','matrix_exponential','dt',0.01,'num_steps',10,'case',2)
+% asgard(@fokkerplanck2_E,'timestep_method','matrix_exponential','dt',0.01,'num_steps',10,'case',2)
 %
 % case = 1 % flat initial condition
 % case = 2 % maxwellian initial condition
