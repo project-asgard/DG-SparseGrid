@@ -12,7 +12,7 @@ function pde = fokkerplanck2_E(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck2_E,'timestep_method','matrix_exponential','dt',0.1,'num_steps',5,'case',2,'lev',4,'deg',4)
+% asgard(@fokkerplanck2_E,'timestep_method','BE','dt',0.01,'num_steps',10,'case',3,'lev',4,'deg',4)
 %
 % case = 1 % flat initial condition, solution stays the same
 % case = 2 % made up initial conditions, no known solution
