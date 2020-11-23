@@ -152,8 +152,9 @@ if num_dims <=3
         element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
     end
     
-    figs.ic = figure('Name','Initial Condition','Units','normalized','Position',[0.7,0.1,0.3,0.3]);
     if norm(fval_realspace) > 0 && ~opts.quiet
+        figs.ic = figure('Name','Initial Condition','Units','normalized','Position',[0.7,0.1,0.3,0.3]);
+
         if opts.use_oldhash
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
         else
@@ -495,6 +496,25 @@ for L = 1:opts.num_steps
     %%
     % Save output
     
+    outputs.fval_t{L+1} = fval;
+    outputs.nodes_t{L+1} = nodes_nodups;
+    outputs.time_array(L+1) = t+dt;
+    outputs.wall_clock_time(L+1) = toc;
+    outputs.dt = dt;
+
+    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
+    if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
+        f_realspace_nD = ...
+            remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
+    end
+    
+    if num_dims <= 3
+        outputs.f_realspace_nD_t{L+1} = f_realspace_nD;
+        outputs.f_realspace_analytic_nD_t{L+1} = f_realspace_analytic_nD;
+    else
+        error('Save output for num_dimensions >3 not yet implemented');
+    end
+    
     if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
         [status, msg, msgID] = mkdir([root_directory,'/output']);
         if isempty(opts.output_filename_id)
@@ -508,33 +528,15 @@ for L = 1:opts.num_steps
         end
         output_file_name = append(root_directory,"/output/asgard-out",filename_str,".mat");
         outputs.output_file_name = output_file_name;
-        
-        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-        if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
-            f_realspace_nD = ...
-                remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
-        end
-        
-        if num_dims <= 3
-            f_realspace_nD_t{L+1} = f_realspace_nD;
-            f_realspace_analytic_nD_t{L+1} = f_realspace_analytic_nD;
-        else
-            error('Save output for num_dimensions >3 not yet implemented');
-        end
-        fval_t{L+1} = fval;
-        nodes_t{L+1} = nodes_nodups;
-        time_array(L+1) = t+dt;
-        wall_clock_time(L+1) = toc;
-        
-        save(output_file_name,'pde','opts','dt','f_realspace_analytic_nD_t','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time','nodes_t');
+     
+        save(output_file_name,'pde','opts','outputs.dt','outputs.f_realspace_analytic_nD_t',...
+            'outputs.f_realspace_nD_t','outputs.fval_t','nodes','time_array','hash_table','outputs.wall_clock_time','outputs.nodes_t');
         
     end
     
     t = t + dt;
-    
-    outputs.dt = dt;
-    
-    if opts.calculate_mass
+       
+    if opts.calculate_mass && ~opts.quiet
         if isfield(figs,'mass')
             figure(figs.mass);
         else
@@ -548,4 +550,15 @@ for L = 1:opts.num_steps
     
 end
 
+% delta_mass(1) = 0;
+% for i=1:numel(outputs.mass_t)-1
+%     z=outputs.nodes_t{end}{2};
+%     f=outputs.f_realspace_nD_t{i+1}(:,end);
+%     dz=abs(z(1)-z(2));
+%     delta_mass(i+1) = sum(f.*z'*.25*outputs.dt*dz);
+% end
+% plot(outputs.mass_t/outputs.mass_t(1));
+% hold on
+% plot(cumsum(delta_mass)/outputs.mass_t(1))
+% plot((outputs.mass_t+cumsum(delta_mass(2:end)))/outputs.mass_t(1))
 end

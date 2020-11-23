@@ -277,3 +277,31 @@ rel_err = output.rel_err{end};
 verifyLessThan(testCase,rel_err,1e-4);
 
 end
+
+function fp2_E_test(testCase)
+addpath(genpath(pwd));
+disp('Testing term E in 2D within fokkerplanck2_E');
+
+% setup PDE - case 1 (flat function initial condition - solution does not change)
+args = {'lev',4,'deg',4,'dt',0.01,'quiet',true,'num_steps',1,'timestep_method','matrix_exponential','case',1,'normalize_by_mass',false};
+opts = OPTS(args);
+pde = fokkerplanck2_E(opts);
+% modify PDE - not needed here
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = output.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-4);
+
+% setup PDE - case 3 (manufactured solution)
+args = {'lev',4,'deg',4,'dt',0.01,'quiet',true,'num_steps',1,'timestep_method','BE','case',3,'normalize_by_mass',false};
+opts = OPTS(args);
+pde = fokkerplanck2_E(opts);
+% modify PDE - not needed here
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = output.rel_err{end};
+verifyLessThan(testCase,rel_err,1e-5);
+
+end

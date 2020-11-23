@@ -199,6 +199,8 @@ function f1 = matrix_exponential(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Ema
 % as well as something for the boundary terms - that integral looks like a
 % pain.
 
+assert(isempty(pde.sources));
+
 s0 = source_vector(pde,opts,hash_table,t+dt);
 bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
