@@ -4,22 +4,43 @@ out_format = strcat(data_dir, 'continuity1_l4_d3_');
 run_adapt(@continuity1,@fval_gen_1, out_format, ...
     'lev',4,'deg',3,'grid_type','SG');
 out_format = strcat(data_dir, 'continuity2_l5_d2_');
-run_adapt(@continuity1,@fval_gen_zeroes, out_format, ...
+run_adapt(@continuity2,@fval_gen_zeroes, out_format, ...
     'lev',5,'deg',2,'grid_type','SG');
+out_format = strcat(data_dir, 'continuity3_l4_d4_');
+run_adapt(@continuity3,@fval_gen_2, out_format, ...
+    'lev',4,'deg',4,'grid_type','SG');
 
 
 function [x] = fval_gen_1(num_entries, elem_size)
     x = zeros(num_entries, 1);
     num_elems = num_entries/elem_size;
     for i=1:num_elems-1
-        entry = i*elem_size;
+        entry = (i*elem_size)+1;
         if mod(i, 2) == 0
-            x(entry:entry+elem_size-1) = 1e-7;
+            x(entry) = 0.5e-5; % should be coarsened
         end
         if mod(i, 3) == 0
-            x(entry:entry+elem_size-1) = (1/elem_size)*2e-5;
+            x(entry) = 1e-3; % should be refined
         end
     end
+    x(num_entries-elem_size+1:num_entries) = 1.0;
+end
+
+function [x] = fval_gen_2(num_entries, elem_size)
+    x = zeros(num_entries, 1);
+    num_elems = num_entries/elem_size;
+    for i=1:num_elems-1
+        entry = (i*elem_size)+1;
+        if mod(i, 3) == 0
+            x(entry) = 1e-5; % should be coarsened
+            x(entry + elem_size) = 1e-5;
+        end
+        if mod(i, 5) == 0
+            x(entry) = 1; % should be refined
+            x(entry + elem_size) = 0.5;
+        end
+    end
+    x = x(1:num_entries);
     x(num_entries-elem_size+1:num_entries) = 1.0;
 end
 
@@ -32,7 +53,7 @@ function run_adapt(pde_handle, fval_gen, out_format, varargin)
 
   opts = OPTS(varargin);  
   opts.quiet = 1;
-  opts.adapt_threshold = 1e-6;
+  opts.adapt_threshold = 1e-4;
   opts.max_lev_coeffs = 0;
   
   pde = pde_handle( opts );
