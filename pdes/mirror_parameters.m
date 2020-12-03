@@ -34,6 +34,7 @@ magn_field = mu0*n_turns*current_loop/(2*radius_loop); %magnetic field under cur
 vel_test = 500; %test value for velocity in coefficient
 pitch_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
 advec_space_1D = vel_test*cos(pitch_test); %advection coefficient for 1D in space
+alpha_z = @(z) z.*0;
 coil_nloops  = [+5, +5]*1e3; %number of loops in each coil
 coil_radius  = [radius_loop, radius_loop]; %radii of coils
 coil_coords = [-1.5, 1.5]; %location of coils in physical space
@@ -80,6 +81,8 @@ maxwell = @(v,offset,vth) a.n/(pi^(3/2).*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x,y,a) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
+E_dreicer_si = 1;
+E = 10^-8*E_dreicer_si;
 
 % Vacuum magnetic field function:
 % Function based on simple current loops:
@@ -114,6 +117,13 @@ dB_ds2 = @get_dBds;
 advec_time_1D = @(t) exp(-2*vel_test*cos(pitch_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
 
+f0_v = @f_init_v;
+    function res = f_init_v(v)
+        res = zeros(size(v));
+        res = maxwell(v,a.v_beam,a.vth);
+        %res = gauss(v,a.v_beam,a.vth,a);
+    end
+
 init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
 init_cond_z = @(z,p,t) z.*0 + 1;%gauss(z,a.z0,a.dz0,a);
 init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
@@ -139,6 +149,9 @@ soln_s = @solution_s;
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
         ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
     end
 soln_z = @solution_z;
     function ret = solution_z(z,p,~)

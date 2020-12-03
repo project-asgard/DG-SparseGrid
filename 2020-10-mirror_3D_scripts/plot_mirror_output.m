@@ -1,6 +1,26 @@
 function plot_mirror_output(nodes, outputs, pde, opts)
 
-      params = mirror_parameters();
+      n_cgs = 8e14; %equilibrium density in cm.^-3
+      m_e_cgs = 9.109*10^-28; %electron mass in g
+      m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
+      m_He_cgs = 6.7*10^-24; %helium 4 mass in g
+      m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
+      m_Ne_cgs = 3.3509177*10^-23; %Neon mass in g
+      temp_cgs = 1.6022e-10; %temperature in erg
+      params_cgs.a.n = n_cgs;
+      params_cgs.b.n = n_cgs;
+      params_cgs.b2.n = n_cgs;
+      %         params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
+      %         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
+      params_cgs.a.m = m_e_cgs; %beam is electrons
+      params_cgs.b.m = m_D_cgs; %background ions
+      params_cgs.b2.m = m_e_cgs; %background electrons
+      params_cgs.e = 4.803*10^-10; %charge in Fr
+      params_cgs.c = 3*10^10; %speed of light in cm/s
+      params_cgs.a.theta = pde.params.a.T_eV/(params_cgs.a.m*params_cgs.c^2);
+      nu_ee = 4*pi*params_cgs.a.n.*params_cgs.e.^4*pde.params.ln_delt/(params_cgs.a.theta^(3/2)...
+          *params_cgs.a.m^3*params_cgs.c^3);
+      franz_conduct = params_cgs.a.n*params_cgs.e^2/(pde.params.b.Z*params_cgs.a.m*nu_ee);
       x = nodes{1};
       y = nodes{2};
       nx = numel(x);
@@ -9,7 +29,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       sy = max(1, floor(2*ny/8));
       energy_func_v = @(x) 0.5*pde.params.a.m.*x.^2/(1.602*10^-19);
       energy_func_z = @(z) z.*0 + 2*pi;
-      current_func_v = @(x) pde.params.a.Z.*pde.params.e.*x;
+      current_func_v = @(x) 2*pi*pde.params.a.Z.*pde.params.e.*x;
       current_func_z = @(x) cos(x);
       coord = get_realspace_coords(pde,nodes);
       mass_func = @(x) x.*0 + sqrt(2*pi);
@@ -21,13 +41,13 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       mass_func_nD{2} = mass_func;
       current_func_nD{1} = current_func_v;
       current_func_nD{2} = current_func_z;
-      x_E = 0.5.*params.a.m*x.^2/params.e;
+      x_E = 0.5.*pde.params.a.m*x.^2/pde.params.e;
       num_steps = length(outputs.time_array);
       spitzer_conduct = (3/(4*sqrt(2*pi)))*(4*pi*pde.params.eps0)^2*(1.38e-23*pde.params.a.T_eV*11604)^(3/2)...
-          /(pde.params.b2.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
+          /(pde.params.b.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
       spitzer_conduct2 = 4*pi*pde.params.eps0^2*(pde.params.a.m*pde.params.a.vth^2)^(3/2) ... 
           /(pde.params.a.m^(1/2)*pde.params.e^2*pde.params.ln_delt*pde.params.b2.Z);
-%      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
+      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
       %getting energy density
       lev_vec = [opts.lev, opts.lev];
@@ -56,12 +76,12 @@ for j = 1:num_steps
 %    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
      %e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
     %hint_func(j) = energy_vals(1)*exp(-e_hint);
-%      for i = 1:length(x)
-%          f1d_new(i) = sqrt(x_E(i))*f1d(i);
-%          f1d_analytic_new(i) = sqrt(x_E(i))*f1d_analytic(i);
-%      end
-     %loglog(x_E,f1d_new,'-','LineWidth', 3);
-     %hold on
+     for i = 1:length(x)
+          f1d_new(i) = fval_realspace(i);
+          f1d_analytic_new(i) = f1d_analytic(i);
+      end
+     %loglog(x_E,f_data,'-','LineWidth', 3);
+     hold on
 end
       %formulating the Hinton solution
       timespan = [0 1e-3]; %time span in seconds
@@ -77,6 +97,9 @@ end
      %figure
      %plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
      %hold off
+     %f_slice = outputs.f_realspace_nD_t{1,num_steps};
+     %v_norm = x./pde.params.b.vth;
+     %plot(v_norm,f_slice);
      %figure
      plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
     % hold on
@@ -124,18 +147,18 @@ end
 %     moment_func_nD = {energy_func,par_func,space_func};
 %    % v_par_temp = moment_integral(pde.get_lev_vec,deg,coord,f_nD,moment_func_nD,pde.dimensions,subset_dimensions);
 %     %%
-%     % Plot a 1D line through the solution
-%     for i = 1:nx
-%         for j = 1:ny
-%             v_par(i,j) = x(i).*cos(y(j));
-%             v_perp(i,j) = x(i).*sin(y(j));
-%         end
-%     end
+    % Plot a 1D line through the solution
+    for i = 1:nx
+        for j = 1:ny
+            v_par(i,j) = x(i).*cos(y(j));
+            v_perp(i,j) = x(i).*sin(y(j));
+        end
+    end
 %     
 %     sz = numel(f_nD{1,1}(:,1,1))/2 + 1;
 
     
-    %contourf(v_par,v_perp,f_nD{1,1}(:,:,sx));
+%    contourf(v_par,v_perp,outputs.f_realspace_nD_t{1,num_steps}(:,sx));
 %     hold on
 %     plot(z,v_perp_temp, 'r');
 %     plot(z,v_par_temp, 'b');
