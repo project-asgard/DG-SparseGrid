@@ -291,10 +291,10 @@ pde = fokkerplanck2_E(opts);
 [err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = output.rel_err{end};
-verifyLessThan(testCase,rel_err,1e-4);
+verifyLessThan(testCase,rel_err,1e-12);
 
 % setup PDE - case 3 (manufactured solution)
-args = {'lev',4,'deg',4,'dt',0.01,'quiet',true,'num_steps',1,'timestep_method','BE','case',3,'normalize_by_mass',false};
+args = {'lev',4,'deg',4,'dt',0.01,'quiet',false,'num_steps',1,'timestep_method','BE','case',3,'normalize_by_mass',false};
 opts = OPTS(args);
 pde = fokkerplanck2_E(opts);
 % modify PDE - not needed here

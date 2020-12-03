@@ -27,7 +27,7 @@ end
 
 %% Setup the dimensions
 
-dim_p = DIMENSION(0.1,+1);
+dim_p = DIMENSION(0,+10);
 dim_z = DIMENSION(-1,+1);
 dim_p.jacobian = @(x,p,t) x.^2;
 dim_z.jacobian = @(x,p,t) x.*0+1;
@@ -61,8 +61,10 @@ switch opts.case_
         ic_z = @(z,p,t) z.*0+1;
         ic1 = new_md_func(num_dims,{ic_p,ic_z});
     case 2
-        ic_p = @(x,p,t) exp(-x.^2);
-        ic_z = @(z,p,t) cos(z*pi)+1;
+        %         ic_p = @(x,p,t) exp(-x.^2);
+        %         ic_z = @(z,p,t) cos(z*pi)+1;
+        ic_p = @(x,p,t) p.f0_p(x);
+        ic_z = @(x,p,t) p.f0_z(x);
         ic1 = new_md_func(num_dims,{ic_p,ic_z});
     case 3
         ic1 = soln1;
@@ -80,28 +82,45 @@ initial_conditions = {ic1};
 %   q(p) == g2(p) u(p)       [mass, g2(p) = 1/p^2, BC N/A]
 %   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
 
+cap = 1e2;
+
 g1 = @(z,p,t,dat) -p.E .* z;
-g2 = @(x,p,t,dat) min(1./x.^2,1e3);
+g2 = @(x,p,t,dat) min(1./x.^2,cap);
 g3 = @(x,p,t,dat) x.^2;
 pterm1   = MASS(g1);
 termE1_z = SD_TERM({pterm1});
 pterm1   = MASS(g2);
-pterm2   = GRAD(num_dims,g3,0,'N','N');% Lin's Setting (DLG-why is this central flux?)
+pterm2   = GRAD(num_dims,g3,0,'N','N'); % central flux due to change of z sign within domain
 termE1_p = SD_TERM({pterm1,pterm2});
 termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
+
+figure(50)
+p = 0:.001:10;
+plot(p,g1(p,params,[],[]));
+hold on
+plot(p,g2(p,params,[],[]));
+plot(p,g3(p,params,[],[]));
+hold off
 
 % termE2 == -E/p*f(p) * d/dz (1-z^2) f(z)
 %        == q(p) * r(z)
 %   q(p) == g1(p) f(p)       [mass, g1(p) = -E*p,  BC N/A]
 %   r(z) == d/dz g2(z) f(z)  [grad, g2(z) = 1-z^2, BCL=N,BCR=N]
 
-g1 = @(x,p,t,dat) -p.E ./ x;
+g1 = @(x,p,t,dat) -p.E * min(1 ./ x,cap);
 g2 = @(z,p,t,dat) 1-z.^2;
 pterm1   = MASS(g1);
 termE2_p = SD_TERM({pterm1});
-pterm1   = GRAD(num_dims,g2,0,'N','N');% Lin's Setting
+pterm1   = GRAD(num_dims,g2,0,'N','N'); % central flux due to change of z sign within domain
 termE2_z = SD_TERM({pterm1});
 termE2= MD_TERM(num_dims,{termE2_p,termE2_z});
+
+figure(51)
+p = 0:.001:10;
+plot(p,g1(p,params,[],[]));
+hold on
+plot(p,g2(p,params,[],[]));
+hold off
 
 terms = {termE1,termE2};
 

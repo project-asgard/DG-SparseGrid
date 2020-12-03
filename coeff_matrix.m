@@ -279,10 +279,6 @@ else
         assert(~isnan(sum(Mass,'all')))
         assert(~isnan(sum(Grad,'all')))
         
-        
-        %%
-        % Setup boundary conditions
-        
         if strcmp(type,'grad')
             
             BCL = pterm.BCL;
@@ -297,7 +293,10 @@ else
             % Flux = {{f}} + C/2*[[u]]
             %      = ( f_L + f_R )/2 + FunCoef*( u_R - u_L )/2
             % [[v]] = v_R - v_L
-            
+            % F(u) = {{f(u)}} + C/2 * [[u]]
+            % {{f(u)}} = (f(u_L) + f(u_R))/2
+            % [[u]] = u_R - u_L
+                        
             FCL = G(xL,params,t,dat_R_quad);
             FCR = G(xR,params,t,dat_R_quad);
             TraVal = [...
@@ -307,6 +306,12 @@ else
                 ( p_R)' * FCR * p_L/2 + FluxVal * abs(FCR)/2 * ( p_R)' * (-p_L),...% xR
                 ];
             FCL(isnan(FCL))=0;
+            
+            
+            %%
+            % Setup boundary conditions
+            
+            
             %%
             % If dirichelt
             % u^-_LEFT = g(LEFT)

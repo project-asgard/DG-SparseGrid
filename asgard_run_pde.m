@@ -560,5 +560,5 @@ end
 % plot(outputs.mass_t/outputs.mass_t(1));
 % hold on
 % plot(cumsum(delta_mass)/outputs.mass_t(1))
-% plot((outputs.mass_t+cumsum(delta_mass(2:end)))/outputs.mass_t(1))
+% plot((outputs.mass_t+cumsum(delta_mass))/outputs.mass_t(1))
 end

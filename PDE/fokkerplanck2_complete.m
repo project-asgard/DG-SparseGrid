@@ -142,7 +142,7 @@ termC3 = MD_TERM(num_dims,{term3_p,term3_z});
 %   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
 
 g1 = @(z,p,t,dat) -p.E .* z;
-g2 = @(x,p,t,dat) min(1./x.^2,100);
+g2 = @(x,p,t,dat) min(1./x.^2,1e3);
 g3 = @(x,p,t,dat) x.^2;
 pterm1   = MASS(g1);
 termE1_z = SD_TERM({pterm1});
@@ -151,12 +151,12 @@ pterm2   = GRAD(num_dims,g3,0,'N','N');% Lin's Setting (DLG-why is this central 
 termE1_p = SD_TERM({pterm1,pterm2});
 termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
 
-p = 0:.001:10;
-plot(p,g1(p,params,[],[]));
-hold on
-plot(p,g2(p,params,[],[]));
-plot(p,g3(p,params,[],[]));
-hold off
+% p = 0:.001:10;
+% plot(p,g1(p,params,[],[]));
+% hold on
+% plot(p,g2(p,params,[],[]));
+% plot(p,g3(p,params,[],[]));
+% hold off
 
 % termE2 == -E/p*f(p) * d/dz (1-z^2) f(z)
 %        == q(p) * r(z)
@@ -210,8 +210,8 @@ termR2_z = SD_TERM({pterm1});
 
 termR2 = MD_TERM(num_dims,{termR2_p, termR2_z});
 
-terms = {termC1, termC2, termC3, termE1, termE2, termR1, termR2};
-% terms = {termE1};%,termE2};
+% terms = {termC1, termC2, termC3, termE1, termE2};%, termR1, termR2};
+terms = {termE1, termE2};%, termR1, termR2};
 
 
 %% Define sources

@@ -1,9 +1,9 @@
 function pde = projecti_diff1(opts)
 % Example PDE using the 1D Diffusion Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
-% implies the need for an initial condition. 
+% implies the need for an initial condition.
 % PDE:
-% 
+%
 % df/dt = nu * d^2 f/dx^2
 %
 % Domain is [0,2]
@@ -38,7 +38,12 @@ num_dims = numel(dimensions);
 
 k = pi/2;
 nu = 0.01;
-soln_x = @(x,p,t) sin(k*x);
+switch opts.case_
+    case 1
+        soln_x = @(x,p,t) sin(k*x);
+    case 2
+        soln_x = @(x,p,t) cos(k*x);
+end
 soln_t = @(t,p) exp(-nu*k^2*t);
 soln1 = new_md_func(num_dims,{soln_x,soln_t});
 solutions = {soln1};
@@ -52,7 +57,7 @@ initial_conditions = {ic1};
 %
 % Here we have 1 term, with each term having nDims (x and y) operators.
 
-%% 
+%%
 % Setup the d^2_dx^2 term
 
 % term1
@@ -65,8 +70,14 @@ initial_conditions = {ic1};
 g1 = @(x,p,t,dat) x.*0+nu;
 g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,-1,'D','D');
+switch opts.case_
+    case 1
+        pterm1 = GRAD(num_dims,g1,+1,'N','N');
+        pterm2 = GRAD(num_dims,g2,-1,'D','D');
+    case 2
+        pterm1 = GRAD(num_dims,g1,+1,'D','D');
+        pterm2 = GRAD(num_dims,g2,-1,'N','N');
+end
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
@@ -83,12 +94,12 @@ params.parameter2 = 1;
 
 sources = {};
 
-    function dt=set_dt(pde,CFL)     
-        dims = pde.dimensions;     
-        % for Diffusion equation: dt = C * dx^;       
+    function dt=set_dt(pde,CFL)
+        dims = pde.dimensions;
+        % for Diffusion equation: dt = C * dx^;
         lev = dims{1}.lev;
         dx = 1/2^lev;
-        dt = CFL*dx^2;       
+        dt = CFL*dx^2;
     end
 
 %% Construct PDE

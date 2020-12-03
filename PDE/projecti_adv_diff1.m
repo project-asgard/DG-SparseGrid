@@ -34,11 +34,10 @@ num_dims = numel(dimensions);
 %% Define the solution (optional)
 
 k = pi/2;
-nu = 0.0;
+nu = 1.0;
 v = 40;
 soln_x = @(x,p,t) (sin(k*(x-v*t)));
 soln_t = @(t,p) exp(-nu*k^2*t);
-soln_t = @(t,p) 1;
 
 soln1 = new_md_func(num_dims,{soln_x,soln_t});
 solutions = {soln1};
@@ -66,7 +65,7 @@ g1 = @(x,p,t,dat) x.*0+nu;
 g2 = @(x,p,t,dat) x.*0+1;
 
 pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,-1,'D','D');
+pterm2 = GRAD(num_dims,g2,-1,'P','P');
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
@@ -85,7 +84,7 @@ pterm1 = GRAD(num_dims,g1,-1,'P','P');
 term2_x = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{term2_x});
 
-terms = {term2};
+terms = {term1,term2};
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
