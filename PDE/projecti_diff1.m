@@ -29,8 +29,14 @@ function pde = projecti_diff1(opts)
 % asgard(@projecti_diff1,'lev',4,'deg',4,'timestep_method','FE', 'dt',0.01,'num_steps',16)
 
 %% Define the dimensions
-
-dim_x = DIMENSION(0,2);
+switch opts.case_
+    case 3
+        dim_x = DIMENSION(0,3);
+    case 4 
+        dim_x = DIMENSION(-1,2);
+    otherwise
+        dim_x = DIMENSION(0,2);        
+end
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -41,7 +47,7 @@ nu = 0.01;
 switch opts.case_
     case 1
         soln_x = @(x,p,t) sin(k*x);
-    case 2
+    otherwise
         soln_x = @(x,p,t) cos(k*x);
 end
 soln_t = @(t,p) exp(-nu*k^2*t);
@@ -77,6 +83,12 @@ switch opts.case_
     case 2
         pterm1 = GRAD(num_dims,g1,+1,'D','D');
         pterm2 = GRAD(num_dims,g2,-1,'N','N');
+    case 3
+        pterm1 = GRAD(num_dims,g1,+1,'D','N'); % if you switch the signs of the fluxes this will fail
+        pterm2 = GRAD(num_dims,g2,-1,'N','D');
+    case 4
+        pterm1 = GRAD(num_dims,g1,+1,'N','D'); % if you switch the signs of the fluxes this will pass
+        pterm2 = GRAD(num_dims,g2,-1,'D','N');
 end
 
 term1_x = SD_TERM({pterm1,pterm2});

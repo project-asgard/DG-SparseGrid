@@ -33,11 +33,14 @@ function pde = diffusion1(opts)
 %
 % Louis: With small nu, stability is maintained for longer times
 %   asgard(@diffusion1,'lev',3,'deg',4,'timestep_method','BE', 'dt',0.05,'num_steps',20)
+% DLG : it seems like the k and nu are mixed up / together here? i.e., the
+% equation assumes nu = 1 since it is not present in g1 or g2, but nu is
+% specified as != 1 below?
 
 %% Define the dimensions
 % 
 % Here we setup a 1D problem (x,y)
-nu = 0.01; %coefficient set to be very small to allow for stability
+nu = pi/2; %coefficient set to be very small to allow for stability % DLG - WTF is this?
 soln_x = @(x,p,t) cos(nu*x);
 soln_t = @(t,p) exp(-2*nu^2*t);
 
