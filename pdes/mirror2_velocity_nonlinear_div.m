@@ -1,11 +1,10 @@
-function pde = mirror2_velocity_div(opts)
+function pde = mirror2_velocity_nonlinear_div(opts)
 % Two-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
-% of f in the presence of Coulomb collisions with background electrons
-% Also applied to the 2D test for CQL4D equations
+% of f in the presence of Coulomb collisions with background electrons,
+% using fully non-linear collision operator
 
-% df/dt == -1/v^2 d(v^2 ZeE/m cos(th) f)/dv + 1/(vsin(th)) d(sin(th) ZeE/m sin(th) f)/dth 
-%            + sum_{b} ( nu_D/(2*sin(th)) d/dth ( sin(th) 1/v d (v f) /dth ) + 
-%             1/v^2 (d/dv(v^2[(m_a/(m_a + m_b))v nu_s f) + 0.5*nu_par*v^2*d/dv(f)])
+% df/dt == 1/v^2 d/dv (v^2 A f) + 1/v^2 d/dv (v^2 B df/dv) + 1/(v*sin(th))
+% d/dth (sin(th) (F/sin(th)) 1/v df/dth)
 %
 % v,th are spherical coordinates (v,th,phi), so the div and grad look like 
 %
@@ -15,44 +14,34 @@ function pde = mirror2_velocity_div(opts)
 % and the volument_element dV = v^2 sin(th)
 %
 
-% df/dt ==      -1/v^2 d(v^2 ZeE/m cos(th) f)/dv %term1
-%                + 1/(vsin(th)) d(sin(th) ZeE/m sin(th) f)/dth  %term2
-%                + % sum_b (( 1/v^2 (d/dv (v^2[0.5*nu_par*v^2*d/dv(f)]) %%term3 
-%                 + 1/v^2 (d/dv(v^2[v (m_a/(m_a + m_b))nu_s f)]) %%term4
-%                 + nu_D/(2 sin(z)) d/dth ( sin(th) df/dth )) %%term5 
+% df/dt ==      1/v^2 d/dv (v^2 A f) %term1
+%               + 1/v^2 d/dv (v^2 B df/dv) %term2
+%                1/(v*sin(th))d/dth (sin(th) (F/sin(th)) 1/v df/dth) %%term3 
+
+% split into three div terms (term1,term2, term3)
 %
-% split into five div terms (term1,term2, term3, term4, and term5)
+% term1 is a simple div term 
 %
-% term1 is done combining mass and div defining F(th) = -ZeE/m cos(th) and
-% G(v) = 1
+% eq1 : df/dt == div(f)      [pterm1: div(g(v)=A ,-1, BCL=D,BCR=N)]
 %
-% eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
+% term2 is done using SLDG defining B(v) = sqrt(B)
 %
-% term2 is a simple div term, defining K(th) = ZeE/m sin(th)
+% eq1 :  df/dt == div(B(v) * q)   [pterm1: div (g(v)=B(v),+1, BCL=D, BCR=D]
+% eq2 :      q == B(v) * grad(f)  [pterm2: grad(g(v)=B(v),-1, BCL=N, BCR=N]
 %
-% eq1 : df/dt == div(K(th) f)     [pterm1:div(g(th)=K(th),-1, BCL=N,BCR=N)]
+% term3 is done combining mass and div SLDG defining F(v) = sqrt(F)
 %
-% term3 is done combining mass and div defining C(v) = (nu_D(v)/2) 
+% eq1 :  df/dt == div(q)   [pterm1: div (g(v)=F(v),+1, BCL=D, BCR=D]
+% eq2 :      q ==  grad(f)  [pterm2: grad(g(v)=F(v),-1, BCL=N, BCR=N]
 %
-% eq1 :  df/dt == div( q)   [pterm1: div (g(v)=D(v),+1, BCL=D, BCR=D]
-% eq2 :      q ==  C(v) grad(f)  [pterm2: grad(g(v)=D(v),-1, BCL=N, BCR=N]
-%
-% term4 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
-%
-% eq1 :  df/dt == div(B(v) * f)       [pterm1: div(g(p)=B(v),+1, BCL=?, BCR=?]
-%
-%
-% term5 is done using SLDG defining C(v) = sqrt(v*nu_D(v)/2)
-%
-% eq1 :  df/dt == div(C(v) * q)   [pterm1: div (g(v)=C(v),+1, BCL=D, BCR=D]
-% eq2 :      q == C(v) * grad(f)  [pterm2: grad(g(v)=C(v),-1, BCL=N, BCR=N]
-% Run with
-%
-% asgard(@mirror2_velocity_div,'timestep_method','BE','case',3, 'grid_type','SG', 'lev', 3, 'deg', 3,'num_steps', 10, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true,'save_output',true,'update_params_each_timestep', true)
 
 % Run with
 %
-% asgard(@mirror2_velocity_div,'timestep_method','BE','case',3,'dt',1e-6)
+% asgard(@mirror2_velocity_nonlinear_div,'timestep_method','BE','case',3, 'grid_type','SG', 'lev', 3, 'deg', 3,'num_steps', 10, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true,'save_output',true,'update_params_each_timestep', true)
+
+% Run with
+%
+% asgard(@mirror2_velocity_nonlinear_div,'timestep_method','BE','case',3,'dt',1e-6)
 
 params = mirror_parameters();
 
@@ -151,6 +140,11 @@ switch opts.case_
         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
         %params.eps0 = 1/(4*pi);
 end
+%get nonlinear coefficients
+
+    function ret = my_coeffs(x,p,t)
+        ret =  p.fp_Coeffs(x);
+    end
     function ret = phi(x)
         ret = erf(x);
     end
@@ -219,10 +213,10 @@ BCR = new_md_func(num_dims,{...
 
 %% Define the terms of the PDE
 
-% termE1a is done combining mass and div defining F(th) = (ZeE/m cos(th)) and
-% G(v) = 1
+% term1 is a simple div term 
 %
-% eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
+% eq1 : df/dt == div(f)      [pterm1: div(g(v)=A ,-1, BCL=D,BCR=N)]
+%
 
  dV_v = @(x,p,t,d) x.^2; 
  dV_th = @(x,p,t,d) sin(x);

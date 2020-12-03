@@ -52,8 +52,8 @@ num_dims = numel(dimensions);
 
 %% Define the analytic solution (optional)
 
-soln_p = @(x,p,t) p.soln_p(x,p,t);
-soln_z = @(x,p,t) p.soln_z(x,p,t);
+soln_p = @(x,p,t) p.soln_p(x,t);
+soln_z = @(x,p,t) p.soln_z(x,t);
 soln1 = new_md_func(num_dims,{soln_p,soln_z});
 solutions = {soln1};
 
@@ -62,7 +62,7 @@ solutions = {soln1};
 ic_p = @(x,p,t) p.f0_p(x);
 ic_z = @(x,p,t) p.f0_z(x);
 ic1 = new_md_func(num_dims,{ic_p,ic_z});
-initial_conditions = {ic1};
+initial_conditions = {soln1};
 
 %% Define the boundary conditions
 
@@ -156,7 +156,7 @@ dV_z = @(x,p,t,dat) sqrt(1-x.^2);
 
 % MASS in p
 
-g1 = @(x,p,t,dat) sqrt(p.Cb(x));
+g1 = @(x,p,t,dat) min(sqrt(p.Cb(x))./x,1e7); %Limiting so we don't get 0/0.
 pterm1  = MASS(g1,'','',dV_p);
 term3_p = SD_TERM({pterm1,pterm1});
 
