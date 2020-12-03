@@ -14,7 +14,7 @@ params = mirror_parameters();
 
 %% Define the dimensions
 
-dim_v = DIMENSION(0,0.5e7);
+dim_v = DIMENSION(0,2e7);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 dimensions = {dim_v};
 num_dims = numel(dimensions);

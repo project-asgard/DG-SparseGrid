@@ -48,12 +48,14 @@ nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(x(v,b.vth))./(x(v,b.vth).^3)); %parallel di
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
 maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/x).^2);
-B_func = @(s) exp(s); % @(xi) B_o./(1 + xi.^2).^(3/2) %magnetic field as a function of spatial coordinate
-dB_ds = @(s) exp(s); % @(xi, R_mag) -3*B_o.*xi./(R_mag.*(1 + xi.^2).^(5/2)) derivative of magnetic field
+B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
+dB_ds = @(s) exp(s); 
+B_func2 = @(s) B_o./(1 + s.^2).^(3/2); %magnetic field from sum of loops around mirro
+dB_ds2 = @(s) -3*B_o.*s./(R_mag.*(1 + s.^2).^(5/2)); %derivative of field around loops
 advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
 
-init_cond_v = @(v,p,t) maxwell(v,1e6,2e5);
+init_cond_v = @(v,p,t) maxwell(v,a.vth, 1e6);
 init_cond_z = @(z,p,t) cos(z/2);
 init_cond_s = @(s,p,t) exp(s);
 init_cond_t = @(t,p) t*0 + 1;
