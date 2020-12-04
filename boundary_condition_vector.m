@@ -137,6 +137,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     if p > 1
                         preceeding_mat = eye(dof);
                         for nn=1:p-1
+                            % DLG - should the(1:dof,1:dof) here be (end-dof:end,end-dof,:end)?
                             preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof, 1:dof);
                         end
                         bcR_tmp = preceeding_mat * bcR_tmp;

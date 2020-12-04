@@ -23,16 +23,18 @@ function pde = projecti_diff1(opts)
 % asgard(@projecti_diff1);
 %
 % implicit
-% asgard(@projecti_diff1,'timestep_method','BE');
-%
-% FE
-% asgard(@projecti_diff1,'lev',4,'deg',4,'timestep_method','FE', 'dt',0.01,'num_steps',16)
+% asgard(@projecti_diff1,'timestep_method','BE','dt',50,'num_steps',10,'lev',3,'deg',4,'case',1);
+
 
 %% Define the dimensions
 switch opts.case_
     case 3
         dim_x = DIMENSION(0,3);
     case 4 
+        dim_x = DIMENSION(-1,2);
+    case 5
+        dim_x = DIMENSION(0,3);
+    case 6 
         dim_x = DIMENSION(-1,2);
     otherwise
         dim_x = DIMENSION(0,2);        
@@ -76,19 +78,28 @@ initial_conditions = {ic1};
 g1 = @(x,p,t,dat) x.*0+nu;
 g2 = @(x,p,t,dat) x.*0+1;
 
+BCL = soln1;
+BCR = soln1;
+
 switch opts.case_
     case 1
-        pterm1 = GRAD(num_dims,g1,+1,'N','N');
-        pterm2 = GRAD(num_dims,g2,-1,'D','D');
+        pterm1 = GRAD(num_dims,g1,0,'N','N'); % Q = k*cos(k*x) => Q(x) = k, Q'(x) = -k^2*sin(k*x) == 0 
+        pterm2 = GRAD(num_dims,g2,0,'D','D'); % f = sin(k*x) => Q(x)=0
     case 2
         pterm1 = GRAD(num_dims,g1,+1,'D','D');
         pterm2 = GRAD(num_dims,g2,-1,'N','N');
     case 3
-        pterm1 = GRAD(num_dims,g1,+1,'D','N'); % if you switch the signs of the fluxes this will fail
+        pterm1 = GRAD(num_dims,g1,+1,'D','N'); % if you switch the signs of the fluxes this will fail on the right
         pterm2 = GRAD(num_dims,g2,-1,'N','D');
     case 4
-        pterm1 = GRAD(num_dims,g1,+1,'N','D'); % if you switch the signs of the fluxes this will pass
-        pterm2 = GRAD(num_dims,g2,-1,'D','N');
+        pterm1 = GRAD(num_dims,g1,-1,'N','D'); % if you switch the signs of the fluxes this will pass
+        pterm2 = GRAD(num_dims,g2,+1,'D','N');
+    case 5 
+        pterm1 = GRAD(num_dims,g1,0,'D','N');
+        pterm2 = GRAD(num_dims,g2,0,'N','D');
+    case 6
+        pterm1 = GRAD(num_dims,g1,0,'N','D');
+        pterm2 = GRAD(num_dims,g2,0,'D','N');
 end
 
 term1_x = SD_TERM({pterm1,pterm2});
