@@ -32,7 +32,7 @@ E = 0.0025;
 tau = 10^5;
 gamma = @(p)sqrt(1+(delta*p).^2);
 vx = @(p)1/vT*(p./gamma(p));
-p_min = 0.005;
+p_min = 0.2;
 
 Ca = @(p)nuEE*vT^2*(psi(vx(p))./vx(p));
 

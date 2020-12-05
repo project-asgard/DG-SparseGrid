@@ -1,8 +1,8 @@
 %for testing IIF method for 2D fokkerplanck equation
 
-T = 100; %end time
-lev = 5; %level
-deg = 2; %degree
+lev = 6; %level
+deg = 3; %degree
+T = 10*1/2^(lev); %end time
 
 dt = 1/2^(lev); %time step
 %dt = 5e-06;
@@ -11,7 +11,7 @@ n = ceil(T/dt); %Number of time steps
 
 asgard(fokkerplanck2_6p1,'lev',lev,'deg',deg,'implicit',true,'num_steps',1)
 
-M = 25; %krylov subspace approximation
+M = 200; %krylov subspace approximation
 
 load('pde.mat','pde')
 load('opts.mat','opts')
@@ -93,7 +93,7 @@ h1 = wavelet_to_realspace(pde,opts,Meval,h,hash_table); %Backward Euler
 G = reshape(g1,shape,shape); %Forward Euler
 H = reshape(h1,shape,shape); %Backward Euler
 
-rms(f1-h1)
+norm(f1-h1)
 
 %surf(XX,YY,F)
 %surf(XX,YY,P)
