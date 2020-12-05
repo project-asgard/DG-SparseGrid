@@ -248,76 +248,76 @@ disp('Testing diffusion2 (CN/adapt)');
 verifyLessThan(testCase,err,9.5e-4);
 end
 
-function asgard_fokkerplanck1_5p1a_ode15s_test(testCase)
+function asgard_fokkerplanck1_momentum_C_ode15s_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (ode15s)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a,...
+disp('Testing fokkerplanck1_momentum_C (ode15s)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,...
     'timestep_method','ode15s','lev',3,'num_steps',1,'dt',1.875*30,'quiet',true,'case',2);
 verifyLessThan(testCase,err,3.8e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_CN_test(testCase)
+function asgard_fokkerplanck1_momentum_C_CN_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (CN)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a,...
+disp('Testing fokkerplanck1_momentum_C (CN)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,...
     'timestep_method','CN','lev',3,'num_steps',30,'dt',1.875,'quiet',true,'case',2);
 verifyLessThan(testCase,err,3.8e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_CN_TIA_test(testCase)
+function asgard_fokkerplanck1_momentum_C_CN_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (CN / TIA)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a,...
+disp('Testing fokkerplanck1_momentum_C (CN / TIA)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,...
     'timestep_method','CN','lev',3,'num_steps',30,'dt',1.875,...
     'quiet',true,'time_independent_A',true,'case',2);
 verifyLessThan(testCase,err,3.8e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_BE_test(testCase)
+function asgard_fokkerplanck1_momentum_C_BE_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (BE)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a,...
+disp('Testing fokkerplanck1_momentum_C (BE)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,...
     'timestep_method','BE','lev',3,'num_steps',30,'dt',1.875,'quiet',true,'case',2);
 verifyLessThan(testCase,err,3.8e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_BE_TIA_test(testCase)
+function asgard_fokkerplanck1_momentum_C_BE_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (BE / TIA)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a,...
+disp('Testing fokkerplanck1_momentum_C (BE / TIA)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,...
     'timestep_method','BE','lev',3,'num_steps',30,'dt',1.875,...
     'quiet',true,'time_independent_A',true,'case',2);
 verifyLessThan(testCase,err,3.8e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_implicit_BE_test(testCase)
+function asgard_fokkerplanck1_momentum_C_implicit_BE_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (BE / with LHS)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a_withLHS,'timestep_method','BE', ...
+disp('Testing fokkerplanck1_momentum_C (BE / with LHS)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C_LHS,'timestep_method','BE', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true);
 verifyLessThan(testCase,err,2.5e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_implicit_BE_TIA_test(testCase)
+function asgard_fokkerplanck1_momentum_C_implicit_BE_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (BE / with LHS / TIA)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a_withLHS,'timestep_method','BE', ...
+disp('Testing fokkerplanck1_momentum_C (BE / with LHS / TIA)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C_LHS,'timestep_method','BE', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_A',true);
 verifyLessThan(testCase,err,2.5e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_implicit_CN_test(testCase)
+function asgard_fokkerplanck1_momentum_C_implicit_CN_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (CN / with LHS)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a_withLHS,'timestep_method','CN', ...
+disp('Testing fokkerplanck1_momentum_C (CN / with LHS)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C_LHS,'timestep_method','CN', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true);
 verifyLessThan(testCase,err,2.5e-2);
 end
 
-function asgard_fokkerplanck1_5p1a_implicit_CN_TIA_test(testCase)
+function asgard_fokkerplanck1_momentum_C_implicit_CN_TIA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_5p1a (CN / with LHS / TIA)');
-[err,act_f,act_frs] = asgard(@fokkerplanck1_5p1a_withLHS,'timestep_method','CN', ...
+disp('Testing fokkerplanck1_momentum_C (CN / with LHS / TIA)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C_LHS,'timestep_method','CN', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_A',true);
 verifyLessThan(testCase,err,2.5e-2);
 end
@@ -379,3 +379,34 @@ relErr = abs(err_rsq-err_rsu)/abs(max([err_rsq,err_rsu]));
 verifyLessThan(testCase,relErr,1);
 end
 
+function matrix_exponential_sources1_test(testCase)
+addpath(genpath(pwd));
+disp('Testing matrix exponential with sources in 1D');
+[err,fval]=asgard(@continuity1,'timestep_method','matrix_exponential','lev',3,'deg',4,'num_steps',1,'dt',0.01,'quiet',true);
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-4);
+end
+
+function matrix_exponential_bcs2_test(testCase)
+addpath(genpath(pwd));
+disp('Testing matrix exponential with boundary condition vector in 2D');
+[err,fval]=asgard(@diffusion2,'timestep_method','matrix_exponential','lev',3,'deg',4,'num_steps',1,'dt',0.02,'quiet',true);
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-5);
+end
+
+function matrix_exponential_LHS_test(testCase)
+addpath(genpath(pwd));
+disp('Testing matrix exponential with LHS');
+[err,fval]=asgard(@fokkerplanck2_E_LHS,'timestep_method','matrix_exponential','lev',3,'deg',4,'num_steps',1,'dt',0.01,'quiet',true,'case',3);
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,2e-5);
+end
+
+function ode15s_LHS_test(testCase)
+addpath(genpath(pwd));
+disp('Testing ode15s with LHS');
+[err,fval]=asgard(@fokkerplanck2_E_LHS,'timestep_method','ode15s','lev',3,'deg',3,'num_steps',1,'dt',0.01,'quiet',true,'case',3);
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-4);
+end
