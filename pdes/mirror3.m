@@ -59,9 +59,9 @@ end
 
 %% Define the dimensions
 
+
 dim_v = DIMENSION(1.0e5,2e7);
 dim_z = DIMENSION(0,pi);
-dim_s = DIMENSION(-3,3);
 
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 dim_z.jacobian = @(z,p,t) sin(z);
