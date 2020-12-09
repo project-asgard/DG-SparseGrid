@@ -28,14 +28,14 @@ switch opts.case_
     case 3
         params.B_func = params.B_func2; %setting magnetic field to loop function
         params.dB_ds = params.dB_ds2;
-        params.init_cond_s = @(s,p,t) exp(s);
+        params.init_cond_s = @(s,p,t) params.maxwell(s,5,0.1);
 end
 
 %% Define the dimensions
 
 dim_v = DIMENSION(0,2e7);
 dim_z = DIMENSION(0,pi/2);
-dim_s = DIMENSION(0,2);
+dim_s = DIMENSION(-3,3);
 
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 dim_z.jacobian = @(z,p,t) sin(z);
