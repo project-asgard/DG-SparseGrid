@@ -51,7 +51,6 @@ b2.vth = v_th(b2.T_eV,b2.m);
 % species a: electrons in beam
 a.n = 4e19;
 a.E_eV = 1e3;
-a.v_beam = sqrt(2*e.*a.E_eV/a.m);
 a.T_eV = 50;
 a.Z = -1;
 a.z0 = pi/4; %location of beam injection in pitch 
@@ -60,6 +59,7 @@ a.s0 = 0;
 a.ds0 = 0.1;
 a.m = m_e;
 a.vth = v_th(a.T_eV,a.m);
+a.v_beam = sqrt(2*e.*a.E_eV./a.m);
 
 x       = @(v,vth) v./vth; %normalized velocity to thermal velocity
 xi      = @(s,R_mag) s/R_mag; %normalized spatial coordinate to radius of magnetic coil
@@ -68,18 +68,18 @@ nu_s    = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(x(v,b.vth)) ./ x(v,b.vth); 
 nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(x(v,b.vth))./(x(v,b.vth).^3)); %parallel diffusion frequency
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
 maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
-gauss   = @(v,x,y) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/y).^2);
+gauss   = @(v,x,y) 1/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
 % Vacuum magnetic field function:
 % Function based on simple current loops:
-B_func2 = @(z) sum((mu0.*n.*I./(2*R)).*(1 + ((z-z0)./R).^2 ).^(-3/2));%magnetic field from sum of loops around mirror
+B_func2 = @(s) sum((mu0.*n.*I./(2*R)).*(1 + ((s-z0)./R).^2 ).^(-3/2));%magnetic field from sum of loops around mirror
 % Calculate normalizied vacuum magnetic field profile:
 % Set the profile equal to 1 at the center of mirror:
-for ii = 1:numel(z)
-    Bz(ii) = B_func2(z(ii));
-end
-dB_ds2 = @(z) sum(-3*(mu0.*n.*I./(2*R)).*(z-z0)./R./(R.*(1 + ((z-z0)./R).^2).^(5/2))); %derivative of field around loops
+%for ii = 1:numel(z)
+%    Bz(ii) = B_func2(z(ii));
+%end
+dB_ds2 = @(s) sum(-3*(mu0.*n.*I./(2*R)).*(s-z0)./R./(R.*(1 + ((s-z0)./R).^2).^(5/2))); %derivative of field around loops
 for ii = 1:numel(z)
     dBdz(ii) = dB_ds2(z(ii));
 end
@@ -92,7 +92,7 @@ init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0);
 init_cond_t = @(t,p) t*0 + 1;
 
 boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
-boundary_cond_z = @(z,p,t) z.*0 + 1;
+boundary_cond_z = @(z,p,t) z.*0 + 0.153667;
 boundary_cond_s = @(s,p,t) s.*0 + 1;
 boundary_cond_t = @(t,p) t.*0 + 1;
 
