@@ -71,18 +71,37 @@ maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x,y) 1/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
+
 % Vacuum magnetic field function:
 % Function based on simple current loops:
-B_func2 = @(s) sum((mu0.*n.*I./(2*coil_radius)).*(1 + ((s-z0)./coil_radius).^2 ).^(-3/2));%magnetic field from sum of loops around mirror
-% Calculate normalizied vacuum magnetic field profile:
-% Set the profile equal to 1 at the center of mirror:
-%for ii = 1:numel(z)
-%    Bz(ii) = B_func2(z(ii));
-%end
-dB_ds2 = @(s) sum(-3*(mu0.*n.*I./(2*coil_radius)).*(s-z0)./coil_radius./(coil_radius.*(1 + ((s-z0)./coil_radius).^2).^(5/2))); %derivative of field around loops
-for ii = 1:numel(z)
-    dBdz(ii) = dB_ds2(z(ii));
-end
+
+B_func2 = @get_B;
+
+    function B = get_B(s)
+        B = s.*0;
+        for coil = 1:numel(coil_radius)
+            zz = z0(coil);
+            rr = coil_radius(coil);
+            II = I(coil);
+            nn = n(coil);
+            B = B + (mu0.*nn.*II./(2*rr)).*(1 + ((s-zz)./rr).^2 ).^(-3/2);%magnetic field from sum of loops around mirror
+        end
+    end
+
+dB_ds2 = @get_dBds; 
+
+    function dBds = get_dBds(s)
+        
+        dBds = s.*0;
+        for coil = 1:numel(coil_radius)
+            zz = z0(coil);
+            rr = coil_radius(coil);
+            II = I(coil);
+            nn = n(coil);    
+            dBds = dBds -3*(mu0.*nn.*II./(2.*rr)).*(s-zz)./rr./(rr.*(1 + ((s-zz)./rr).^2).^(5/2)); %derivative of field around loops
+        end
+    end
+
 advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
 
