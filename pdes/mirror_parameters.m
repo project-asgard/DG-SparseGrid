@@ -9,7 +9,6 @@ Lx_offset = 0;                     % [m]
 N = 200;                           % number of elements on profile
 % =========================================================================
 % Axial domain:
-
 %z = linspace(-Lx/2,Lx/2,N)' + Lx_offset;
 %speed of light
 
@@ -49,21 +48,10 @@ b.Z = -1;%atomic number of species
 b.m = m_e; %mass of background
 b.vth = v_th(b.T_eV,b.m);%thermal velocity of background
 
-R_mag = 0.6; %radius of individual loop in meters
-I_mag = 10; %current going through individual loop in meters
-B_o = mu0*n_turns*I_mag/(2*R_mag); %magnetic field under current loop
-v_test = 500; %test value for velocity in coefficient
-z_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
-advec_space_1D = v_test*cos(z_test); %advection coefficient for 1D in space
-n  = [+5, +5]*1e3; %number of loops in each coil
-coil_radius  = [R_mag, R_mag]; %radii of coils
-z0 = [-1.5, 1.5]; %location of coils in physical space
-I  = [+1.5,1.5]*1e2; %current going through each coil in amps
-
-
 %species b2: deuterium in background
 b2.n = 4e19;
 b2.E_eV = 0;
+b2.T_eV = 50;
 b2.Z = 1;
 b2.m = m_D;
 b2.vth = v_th(b2.T_eV,b2.m);
@@ -139,28 +127,11 @@ f0_v = @f_init_v;
 init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
 init_cond_z = @(z,p,t) z.*0 + 1;%gauss(z,a.z0,a.dz0,a);
 init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
-
-% Vacuum magnetic field function:
-% Function based on simple current loops:
-B_func2 = @(s) sum((mu0.*n.*I./(2*coil_radius)).*(1 + ((s-z0)./coil_radius).^2 ).^(-3/2));%magnetic field from sum of loops around mirror
-% Calculate normalizied vacuum magnetic field profile:
-% Set the profile equal to 1 at the center of mirror:
-%for ii = 1:numel(z)
-%    Bz(ii) = B_func2(z(ii));
-%end
-dB_ds2 = @(s) sum(-3*(mu0.*n.*I./(2*coil_radius)).*(s-z0)./coil_radius./(coil_radius.*(1 + ((s-z0)./coil_radius).^2).^(5/2))); %derivative of field around loops
-for ii = 1:numel(z)
-    dBdz(ii) = dB_ds2(z(ii));
-end
-advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
-uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
-
 init_cond_t = @(t,p) t*0 + 1;
 
 boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
 boundary_cond_z = @(z,p,t) z.*0 + 1;
 boundary_cond_s = @(s,p,t) s.*0;
-
 boundary_cond_t = @(t,p) t.*0 + 1;
 
 source_pitch = @(z,p,t) -0.5.*(sin(z)+cot(z).*cos(z)); %source pitch fuction for mirror3
