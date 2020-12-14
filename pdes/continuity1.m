@@ -19,6 +19,14 @@ dim_x = DIMENSION(-1,+1);
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
+%% Define the analytic solution (optional).
+% This requires nDims+time function handles.
+
+a_x = @(x,p,t) cos(2*pi*x);
+a_t = @(t,p) sin(t);
+sol1 = new_md_func(num_dims,{a_x,a_t});
+solutions = {sol1};
+
 %% Define the initial conditions
 
 ic_x = @(x,p,t) x.*0;
@@ -64,14 +72,6 @@ s2t = @(t,p) -2*pi*sin(t);
 source2 = {s2x,s2t};
 
 sources = {source1,source2};
-
-%% Define the analytic solution (optional).
-% This requires nDims+time function handles.
-
-a_x = @(x,p,t) cos(2*pi*x);
-a_t = @(t,p) sin(t);
-sol1 = new_md_func(num_dims,{a_x,a_t});
-solutions = {sol1};
 
 %% Define function to set time step
 

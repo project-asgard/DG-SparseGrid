@@ -77,6 +77,7 @@ function pde = fokkerplanck1_momentum_C(opts)
 %% Define the dimensions
 
 dim_x = DIMENSION(0,+10);
+dim_x.jacobian = @(x,p,t) x.^2;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
