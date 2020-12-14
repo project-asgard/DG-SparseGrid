@@ -28,7 +28,8 @@ switch opts.case_
     case 3
         params.B_func = params.B_func2; %setting magnetic field to loop function
         params.dB_ds = params.dB_ds2;
-        params.init_cond_s = @(s,p,t) params.maxwell(s,5,0.1);
+        params.init_cond_s = @(s,p,t) params.maxwell(s,params.Lx/3,0.1);
+        params.boundary_cond_s = @(s,p,t) params.maxwell(s,0,params.Lx/2);
 end
 
 %% Define the dimensions
