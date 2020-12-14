@@ -9,7 +9,7 @@ Lx_offset = 0;                     % [m]
 N = 200;                           % number of elements on profile
 % =========================================================================
 % Axial domain:
-<<<<<<< HEAD
+
 %z = linspace(-Lx/2,Lx/2,N)' + Lx_offset;
 %speed of light
 
@@ -29,7 +29,6 @@ v_th = @(T_eV,m) sqrt(2*T_eV * e/m);
 eps0 = 8.85*10^-12; %permittivity of free space in Farad/m
 mu0 = 4*pi*10^-7; %magnetic permeability in Henries/m
 n_turns = 10;
-<<<<<<< HEAD
 radius_loop = 0.6; %radius of individual loop in meters
 current_loop = 10; %current going through individual loop in meters
 magn_field = mu0*n_turns*current_loop/(2*radius_loop); %magnetic field under current loop
@@ -49,7 +48,7 @@ b.T_eV = 50;%temperature/spread of background species
 b.Z = -1;%atomic number of species
 b.m = m_e; %mass of background
 b.vth = v_th(b.T_eV,b.m);%thermal velocity of background
-=======
+
 R_mag = 0.6; %radius of individual loop in meters
 I_mag = 10; %current going through individual loop in meters
 B_o = mu0*n_turns*I_mag/(2*R_mag); %magnetic field under current loop
@@ -61,30 +60,16 @@ R  = [R_mag, R_mag]; %radii of coils
 z0 = [-1.5, 1.5]; %location of coils in physical space
 I  = [+1.5,1.5]*1e2; %current going through each coil in amps
 
-% species b: electrons in background
-b.n = 4e19;
-b.E_eV = 0;
-b.T_eV = 4;
-b.Z = -1;
-b.m = m_e;
-b.vth = v_th(b.T_eV,b.m);
->>>>>>> Modified objects in mirror_parameters to distinguish between energy and temperature in eV. Set up parameters for upcoming simulation with Juan, with exception of boundary conditions. Initial condition have been modified to be composed of maxwell and gaussian distributions.
 
 %species b2: deuterium in background
 b2.n = 4e19;
 b2.E_eV = 0;
-<<<<<<< HEAD
-b2.T_eV = 50;
-=======
-b2.T_eV = 4;
->>>>>>> Modified objects in mirror_parameters to distinguish between energy and temperature in eV. Set up parameters for upcoming simulation with Juan, with exception of boundary conditions. Initial condition have been modified to be composed of maxwell and gaussian distributions.
 b2.Z = 1;
 b2.m = m_D;
 b2.vth = v_th(b2.T_eV,b2.m);
 
 % species a: species in beam
 a.n = 4e19;
-<<<<<<< HEAD
 a.E_eV = 3e3; %energy of beam species
 a.T_eV = 20; %temperature/spread of beam species
 a.Z = 1;
@@ -93,24 +78,12 @@ a.dz0 = sqrt(a.T_eV/a.E_eV); %spread of beam in pitch angle
 a.s0 = 0; %location of beam in space (m)
 a.ds0 = 2.5; %spread of beam in space (m)
 a.m = m_D;
-=======
-a.E_eV = 1e3;
-a.v_beam = sqrt(2*e.*a.E_eV/a.m);
-a.T_eV = 50;
-a.Z = -1;
-a.z0 = pi/4; %location of beam injection in pitch 
-a.dz0 = a.z0/4;
-a.s0 = 0;
-a.ds0 = 0.1;
-a.m = m_e;
->>>>>>> Modified objects in mirror_parameters to distinguish between energy and temperature in eV. Set up parameters for upcoming simulation with Juan, with exception of boundary conditions. Initial condition have been modified to be composed of maxwell and gaussian distributions.
 a.vth = v_th(a.T_eV,a.m);
 a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
 
 vel_norm       = @(v,vth) v./vth; %normalized velocity to thermal velocity
 space_norm      = @(s,R_mag) s/R_mag; %normalized spatial coordinate to radius of magnetic coil
 nu_ab0  = @(a,b) b.n * e^4 * a.Z^2 * b.Z^2 * ln_delt / (2*pi*eps0^2*a.m^2*b.vth^3); %scaling coefficient
-<<<<<<< HEAD
 nu_s    = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(vel_norm(v,b.vth)) ./ vel_norm(v,b.vth); %slowing down frequency
 nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth).^3)); %parallel diffusion frequency
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi(vel_norm(v,b.vth)) - psi(vel_norm(v,b.vth)))./(vel_norm(v,b.vth).^3); %deflection frequency in s^-1
@@ -166,42 +139,28 @@ f0_v = @f_init_v;
 init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
 init_cond_z = @(z,p,t) z.*0 + 1;%gauss(z,a.z0,a.dz0,a);
 init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
-=======
-nu_s    = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(x(v,b.vth)) ./ x(v,b.vth); %slowing down frequency
-nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(x(v,b.vth))./(x(v,b.vth).^3)); %parallel diffusion frequency
-nu_D    = @(v,a,b) nu_ab0(a,b).*(phi_f(x(v,b.vth)) - psi(x(v,b.vth)))./(x(v,b.vth).^3); %deflection frequency in s^-1
-maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
-gauss   = @(v,x,y) a.n/(sqrt(2*pi)*x)*exp(-0.5*((v - x)/y).^2);
-B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
-dB_ds = @(s) exp(s); 
+
 % Vacuum magnetic field function:
 % Function based on simple current loops:
-B_func2 = @(z) sum((mu0.*n.*I./(2*R)).*(1 + ((z-z0)./R).^2 ).^(-3/2));%magnetic field from sum of loops around mirror
+B_func2 = @(s) sum((mu0.*n.*I./(2*R)).*(1 + ((s-z0)./R).^2 ).^(-3/2));%magnetic field from sum of loops around mirror
 % Calculate normalizied vacuum magnetic field profile:
 % Set the profile equal to 1 at the center of mirror:
-for ii = 1:numel(z)
-    Bz(ii) = B_func2(z(ii));
-end
-dB_ds2 = @(z) sum(-3*(mu0.*n.*I./(2*R)).*(z-z0)./R./(R.*(1 + ((z-z0)./R).^2).^(5/2))); %derivative of field around loops
+%for ii = 1:numel(z)
+%    Bz(ii) = B_func2(z(ii));
+%end
+dB_ds2 = @(s) sum(-3*(mu0.*n.*I./(2*R)).*(s-z0)./R./(R.*(1 + ((s-z0)./R).^2).^(5/2))); %derivative of field around loops
 for ii = 1:numel(z)
     dBdz(ii) = dB_ds2(z(ii));
 end
 advec_time_1D = @(t) exp(-2*v_test*cos(z_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniform condition if needed
 
-init_cond_v = @(v,p,t) maxwell(v,a.v_beam,a.vth);
-init_cond_z = @(z,p,t) gauss(z,a.z0,a.dz0);
-init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0);
->>>>>>> Modified objects in mirror_parameters to distinguish between energy and temperature in eV. Set up parameters for upcoming simulation with Juan, with exception of boundary conditions. Initial condition have been modified to be composed of maxwell and gaussian distributions.
 init_cond_t = @(t,p) t*0 + 1;
 
 boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
 boundary_cond_z = @(z,p,t) z.*0 + 1;
-<<<<<<< HEAD
 boundary_cond_s = @(s,p,t) s.*0;
-=======
-boundary_cond_s = @(s,p,t) s.*0 + 1;
->>>>>>> Modified objects in mirror_parameters to distinguish between energy and temperature in eV. Set up parameters for upcoming simulation with Juan, with exception of boundary conditions. Initial condition have been modified to be composed of maxwell and gaussian distributions.
+
 boundary_cond_t = @(t,p) t.*0 + 1;
 
 source_pitch = @(z,p,t) -0.5.*(sin(z)+cot(z).*cos(z)); %source pitch fuction for mirror3
@@ -218,14 +177,10 @@ soln_s = @solution_s;
     end
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
-<<<<<<< HEAD
         ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
         end
-=======
-        ret = a.n/(pi^3/2.*v_th(b.E_eV,a.m).^3).*exp(-(v./v_th(b.E_eV,a.m)).^2);
->>>>>>> Modified objects in mirror_parameters to distinguish between energy and temperature in eV. Set up parameters for upcoming simulation with Juan, with exception of boundary conditions. Initial condition have been modified to be composed of maxwell and gaussian distributions.
     end
 soln_z = @solution_z;
     function ret = solution_z(z,p,~)
