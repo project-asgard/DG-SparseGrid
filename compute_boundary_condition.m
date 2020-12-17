@@ -1,4 +1,4 @@
-function bc = compute_boundary_condition(pde,g_func,t,Lev,Deg,xMin,xMax,Fun,LorR)
+function bc = compute_boundary_condition(pde,g_func,jacobian,t,Lev,Deg,xMin,xMax,Fun,LorR)
 % function bc = ComputeBC(Lev,Deg,xMin,xMax,Fun,time,LorR)
 % function ComputeBC to compute the bc term
 % This is the evaluation for two points on 1D
@@ -25,12 +25,12 @@ if strcmp(LorR,'L')
     IntVal =  p_L'*Fun(xMin,p,t) ;
     if isfinite(g_func(xMin,p,t)) %make sure g_func is finite
         
-        bc(c) = -g_func(xMin,p,t).*IntVal;
+        bc(c) = -g_func(xMin,p,t).*IntVal.*jacobian(xMin,p,t);
     
     else
         
         xLclose = xMin + small_dx; %Move away from xMin by small_dx
-        bc(c) = -g_func(xLclose,p,t).*IntVal;
+        bc(c) = -g_func(xLclose,p,t).*IntVal.*jacobian(xMin,p,t);
         
     end
 else
@@ -41,12 +41,12 @@ else
     
     if isfinite(g_func(xMax,p,t)) %make sure g_func is finite
         
-        bc(c) = g_func(xMax,p,t).*IntVal;
+        bc(c) = g_func(xMax,p,t).*IntVal.*jacobian(xMax,p,t);
         
     else
         
         xRclose = xMax - small_dx; %Move away from xMax by small_dx
-        bc(c) = g_func(xRclose,p,t).*Intval;
+        bc(c) = g_func(xRclose,p,t).*Intval.*jacobian(xMax,p,t);
         
     end
     

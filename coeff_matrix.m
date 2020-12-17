@@ -248,15 +248,15 @@ else
         % Get dat_R at the quadrature points
         
         dat_R_quad = p_val * dat_R(c1:c2);
-        
+             
         %%
         % M // mass matrix u . v
-        G1 = G(quad_xi,params,t,dat_R_quad);
+        G1 = G(quad_xi,params,t,dat_R_quad) .* dim.jacobian(quad_xi,params,t);
         val_mass = p_val' * (G1 .* p_val .* quad_w) * Jacobi;
         
         %%
         % G // grad matrix u . v'
-        G1 = G(quad_xi,params,t,dat_R_quad);
+        G1 = G(quad_xi,params,t,dat_R_quad) .* dim.jacobian(quad_xi,params,t);
         val_grad  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
         
         assert(~isnan(norm(G1)))
@@ -296,9 +296,9 @@ else
             % F(u) = {{f(u)}} + C/2 * [[u]]
             % {{f(u)}} = (f(u_L) + f(u_R))/2
             % [[u]] = u_R - u_L
-                        
-            FCL = G(xL,params,t,dat_R_quad);
-            FCR = G(xR,params,t,dat_R_quad);
+                   
+            FCL = G(xL,params,t,dat_R_quad) .* dim.jacobian(xL,params,t);
+            FCR = G(xR,params,t,dat_R_quad) .* dim.jacobian(xR,params,t);
             TraVal = [...
                 (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
                 (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL

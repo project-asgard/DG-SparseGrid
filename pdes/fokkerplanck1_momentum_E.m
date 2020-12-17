@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_E(opts)
+function pde = fokkerplanck1_momentum_E(opts)
 % Combining momentum and pitch angle dynamics for the E term
 %
 % d/dt f(p,z) == -div(flux_E)
@@ -17,7 +17,7 @@ function pde = fokkerplanck2_E(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck2_E,'timestep_method','matrix_exponential','dt',0.01,'num_steps',10,'case',2)
+% asgard(@fokkerplanck1_momentum_E,'timestep_method','matrix_exponential','dt',0.01,'num_steps',10,'case',2)
 %
 % case = 1 % flat initial condition
 % case = 2 % maxwellian initial condition
@@ -26,7 +26,7 @@ params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
-dim_p = DIMENSION(0.0,+1);
+dim_p = DIMENSION(0.0,+5);
 dim_p.jacobian = @(x,p,t) x.^2;
 dimensions = {dim_p};
 num_dims = numel(dimensions);
@@ -48,13 +48,12 @@ solutions = {soln1};
 switch opts.case_
     case 1
         f0_p = @(x,p,t) x.*0+1;
+        ic_p = f0_p;
+        ic1 = new_md_func(num_dims,{ic_p});
+        initial_conditions = {ic1};
     case 2
-        f0_p = @(x,p,t) exp(-x.^2);
+        initial_conditions = {soln1};
 end
-
-ic_p = f0_p;
-ic1 = new_md_func(num_dims,{ic_p});
-initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 
@@ -65,10 +64,10 @@ initial_conditions = {ic1};
 %   q(p) == g2(p) u(p)       [mass, g2(p) = 1/p^2, BC N/A]
 %   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
 
-g2 = @(x,p,t,dat) -min(1./x.^2,1e12);
+g2 = @(x,p,t,dat) -1./x.^2;
 g3 = @(x,p,t,dat) x.^2;
 pterm1   = MASS(g2); 
-pterm2   = GRAD(num_dims,g3,+1,'N','N');% Lin's Setting (DLG-why is this central flux?)
+pterm2   = GRAD(num_dims,g3,0,'D','D',soln1,soln1);
 termE1_p = SD_TERM({pterm1,pterm2});
 termE1 = MD_TERM(num_dims,{termE1_p});
 
@@ -81,7 +80,6 @@ termE2_p = SD_TERM({pterm1});
 termE2= MD_TERM(num_dims,{termE2_p});
 
 terms = {termE1,termE2};
-
 
 %% Define sources
 

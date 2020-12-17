@@ -95,6 +95,12 @@ initial_conditions = {ic1};
 
 %% Setup the terms of the PDE
 
+g1 = @(x,p,t,dat) x.^2;
+pterm1 = MASS(g1);
+LHS_term_x = SD_TERM({pterm1});
+LHS_term   = MD_TERM(num_dims,{LHS_term_x});
+LHS_terms = {LHS_term};
+
 % term1
 %
 % 1/x^2 * d/dx*x^2*psi(x)/x*df/dx
@@ -157,7 +163,7 @@ sources = {};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
 

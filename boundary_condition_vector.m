@@ -87,7 +87,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Overwrite the trace (boundary) value just for this dim
                     % Func*v|_xMin and Func*v|_xMax
                     
-                    bcL_tmp = compute_boundary_condition(pde,this_g,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
+                    bcL_tmp = compute_boundary_condition(pde,this_g,dim.jacobian,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
                     %bcL_tmp = FMWT * bcL_tmp;
                     trans_side = 'LN';
                     bcL_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcL_tmp, trans_side);
@@ -127,7 +127,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Overwrite the trace (boundary) value just for this dim
                     % Func*v|_xMin and Func*v|_xMax
                     
-                    bcR_tmp = compute_boundary_condition(pde,this_g,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
+                    bcR_tmp = compute_boundary_condition(pde,this_g,dim.jacobian,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
                     %bcR_tmp = FMWT * bcR_tmp;
                      trans_side = 'LN';
                     bcR_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcR_tmp, trans_side);
