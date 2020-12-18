@@ -1,11 +1,11 @@
 function pde = advection1_spherical(opts)
 % 1D test case using continuity equation, i.e., 
 %
-% df/dt == -1/r * d/dr r^2 * v * r * f(r,t)
+% df/dt == -1/r^2 * d/dr r^2 * v * r * f(r,t)
 %
 % f(r,0) == cos(r)
 %
-% analytic solution cos(r/(1+r*t*v)) / (1+r*t*v)^3
+% analytic solution exp(-3*t*v) * cos(exp(-t*v)*r)
 %
 % Run with
 %
@@ -34,7 +34,7 @@ num_dims = numel(dimensions);
 
 %% Define the analytic solution (optional).
 
-a_x = @(x,p,t) cos(x./(1+x.*t.*p.v))./(1+x.*t.*p.v).^3;
+a_x = @(x,p,t) exp(-3.*t.*p.v) .* cos(exp(-t.*p.v).*x);
 sol1 = new_md_func(num_dims,{a_x});
 solutions = {sol1};
 
@@ -60,8 +60,8 @@ switch opts.case_
         LHS_terms = {LHS_term};
 end
  
-% -1/r * d/dr (r^2 * v * r * f)
-g1 = @(x,p,t,dat) -1./x;
+% -1/r^2 * d/dr (r^2 * v * r * f)
+g1 = @(x,p,t,dat) -1./x.^2;
 g2 = @(x,p,t,dat) x.^2 .* p.v .* x;
 pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,+1,'D','D', BCL, BCR);
