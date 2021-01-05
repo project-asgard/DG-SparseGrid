@@ -2,7 +2,7 @@ function pde = mirror3(opts)
 % Three-dimensional magnetic mirror from the FP paper - evolution of the ion velocity and spatial dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == -dB/ds f - vcos(z)df/dz + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
+% df/dt == -dB/ds f - vcos(z)df/ds - vcos(z)fdB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
@@ -23,19 +23,24 @@ switch opts.case_
         params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin
         params.init_cond_v = @(v,p,t) params.maxwell(v,params.v_th(params.a.T_eV,params.a.m),1e6);
     case 2
-        params.a.T_eV = 250*params.b.T_eV;
-        params.init_cond_v = @(v,p,t) params.maxwell(v,0, 1e6);
+        params.init_cond_s = @(s,p,t) params.maxwell(s,params.Lx/3,2.5);
+        params.boundary_cond_s = @(s,p,t) s.*0;
+        params.soln_z = @(z,p,t) z.*0 + 1;
+        params.soln_s = @(s,p,t) params.maxwell(s,params.coil_coords(1), 0.1) + params.maxwell(s,params.coil_coords(2),0.1);
     case 3
         params.B_func = params.B_func2; %setting magnetic field to loop function
         params.dB_ds = params.dB_ds2;
-        params.init_cond_s = @(s,p,t) params.maxwell(s,params.Lx/3,0.1);
-        params.boundary_cond_s = @(s,p,t) params.maxwell(s,0,params.Lx/2);
+        params.init_cond_s = @(s,p,t) params.gauss(s,-0.4,2.5);
+        params.boundary_cond_s = @(s,p,t) s.*0;
+        params.soln_z = @(z,p,t) z.*0 + 1;
+        %params.z0 = pi/2 -1e-6;
+        params.soln_s = @(s,p,t) params.maxwell(s,params.coil_coords(1), 0.1) + params.maxwell(s,params.coil_coords(2),0.1);
 end
 
 %% Define the dimensions
 
-dim_v = DIMENSION(0,2e7);
-dim_z = DIMENSION(0,pi/2);
+dim_v = DIMENSION(1.0e7,2e7);
+dim_z = DIMENSION(0,pi);
 dim_s = DIMENSION(-3,3);
 
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
@@ -83,7 +88,7 @@ g3 = @(s,p,t,dat) s.*0 + 1;
 
 pterm1 = MASS(g1);
 pterm2 = MASS(g2);
-pterm3 = GRAD(num_dims,g3,-1,'D','D', BCL, BCR);
+pterm3 = GRAD(num_dims,g3,0,'N','N');
 
 term1_v = SD_TERM({pterm1});
 term1_z = SD_TERM({pterm2});

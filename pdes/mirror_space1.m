@@ -14,9 +14,9 @@ function pde = mirror_space1(opts)
 B_func = @(s) exp(s); %magnetic field as a function of spatial coordinate
 dB_ds = @(s) B_func(s); %derivative of magnetic field
 
-v_test = 500; %test value for velocity in coefficient
-z_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
-A = v_test*cos(z_test);
+vel_test = 500; %test value for velocity in coefficient
+pitch_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
+decay_coeff = vel_test*cos(pitch_test);
 
 %% Define the dimensions
 
@@ -26,14 +26,14 @@ num_dims = numel(dimensions);
 
 %% Define the analytic solution
 
-a_s = @(s,p,t) exp(s);
-a_t = @(t,p) exp(-2*A*t);
-soln1 = new_md_func(num_dims,{a_s,a_t});
+sol_s = @(s,p,t) exp(s);
+sol_t = @(t,p) exp(-2*decay_coeff*t);
+soln1 = new_md_func(num_dims,{sol_s,sol_t});
 solutions = {soln1};
 
 %% Define the initial conditions
 
-ic1 = new_md_func(num_dims,{a_s});
+ic1 = new_md_func(num_dims,{sol_s});
 initial_conditions = {ic1};
 
 %% Define the boundary conditions
@@ -47,9 +47,9 @@ BCR = soln1;
 
 %% Advection  term
 % -vcosz*df/ds
-g1 = @(s,p,t,dat) s.*0 - A;
+g1 = @(s,p,t,dat) s.*0 - decay_coeff;
 pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL, BCR);
-
+%pterm1 = GRAD(num_dims,g1,-1,'N','N');
 term1_s = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_s});
 
@@ -58,7 +58,7 @@ term1   = MD_TERM(num_dims,{term1_s});
 
 %% Mass term
 % (vcosz/B)dB/ds f
-g2 = @(s,p,t,dat) s.*0 - A.*dB_ds(s)./B_func(s);
+g2 = @(s,p,t,dat) s.*0 - decay_coeff.*dB_ds(s)./B_func(s);
 pterm1   = MASS(g2);
 termB1 = SD_TERM({pterm1});
 
