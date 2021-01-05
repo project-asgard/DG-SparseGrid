@@ -31,25 +31,25 @@ function pde = mirror1_pitch(opts)
     end
 
 %Background Parameters
-k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
+boltz = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
 n_b = 10^19; %background density in SI units (particles/m.^3)
-T_b = 116050; %background temperature in Kelvin
-z_b = 1; %atomic number of background specie
+temp_b = 116050; %background temperature in Kelvin
+% z_b = 1; %atomic number of background specie
 m_b = 9.109*10^-31; %background mass in kg 
-v_b = sqrt(2*k_b*T_b/m_b); %background velocity in m/s
-eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
-
-%Target Specie Parameters
-z_a = 1;
-e = 1.602*10^-19; %charge in Coulombs
-ln_Delt = 10; %Coulomb logarithm
-m_a = 1.6726*10^-27; %target mass in kg
-L_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
+v_b = sqrt(2*boltz*temp_b/m_b); %background velocity in m/s
+% eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
+% 
+% %Target Specie Parameters
+% z_a = 1;
+% e = 1.602*10^-19; %charge in Coulombs
+% ln_Delt = 10; %Coulomb logarithm
+% m_a = 1.6726*10^-27; %target mass in kg
+% coeff_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
 nu_D = 10^4; %deflection frequency in s^-1
 
 %Initial parameters for target specie
-n_o = 0.5*n_b; %initial number density for specie at specific velocity
-v_o = 0.5*v_b; %initial known velocity
+ n_o = 0.5*n_b; %initial number density for specie at specific velocity
+ v_o = 0.5*v_b; %initial known velocity
 
 %% Define the dimensions
 
