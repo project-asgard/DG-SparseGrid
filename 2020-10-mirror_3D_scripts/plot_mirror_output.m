@@ -147,6 +147,7 @@ end
 %     moment_func_nD = {energy_func,par_func,space_func};
 %    % v_par_temp = moment_integral(pde.get_lev_vec,deg,coord,f_nD,moment_func_nD,pde.dimensions,subset_dimensions);
 %     %%
+
     % Plot a 1D line through the solution
     for i = 1:nx
         for j = 1:ny
@@ -154,6 +155,7 @@ end
             v_perp(i,j) = x(i).*sin(y(j));
         end
     end
+<<<<<<< HEAD
 %     
 %     sz = numel(f_nD{1,1}(:,1,1))/2 + 1;
 
@@ -163,6 +165,18 @@ end
 %     plot(z,v_perp_temp, 'r');
 %     plot(z,v_par_temp, 'b');
 %     hold off
+=======
+    
+    sz = numel(f_nD{1,4}(:,1,1))/2;
+    sy = numel(f_nD{1,4}(1,:,1))/2;
+    sx = numel(f_nD{1,4}(1,1,:))/2;
+    
+    %contourf(v_par,v_perp,f_nD{1,1}(:,:,sx));
+    hold on
+    plot(z,v_perp_temp, 'r');
+    plot(z,v_par_temp, 'b');
+    hold off
+>>>>>>> Modified plot_mirror_output and moment_integral to get plots of lower-dimensional moment and to plot temperatures over space inside mirror
     %plotting 
 %     f1d = f1d(1,:);
 %     x = nodes{1};
@@ -203,6 +217,7 @@ end
 %     %%
 %     % Plot 2D
 %     
+<<<<<<< HEAD
 %     ax1 = subplot(2,3,1);
 %     contourf(z,y,squeeze(f_nD{1,num_steps}(:,:,sx))');
 %     title('Space vs. Pitch');
@@ -221,4 +236,16 @@ end
 %     contourf(z,time_array,squeeze(n_total(:,:))');
 %     title('Number Density vs. Time');
     
+=======
+    ax1 = subplot(2,3,1);
+    sx = 8;
+    contourf(z,y,f_nD{1,4}(:,:,sx)');
+    ax2 = subplot(2,3,2);
+    title('2D slice through 3D numeric');
+    sx = 24;
+    contourf(z,y,f_nD{1,4}(:,:,sx)');
+
+
+
+>>>>>>> Modified plot_mirror_output and moment_integral to get plots of lower-dimensional moment and to plot temperatures over space inside mirror
 end
