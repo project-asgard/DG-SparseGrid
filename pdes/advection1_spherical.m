@@ -27,7 +27,7 @@ switch opts.case_
     case 1
         dim_x.jacobian = @(x,p,t) x.*0+1;
     case 2
-        dim_x.jacobian = @(x,p,t) x.^2;
+        dim_x.jacobian = @(x,p,t) 2*pi*x.^2;
 end
 dimensions = {dim_x};
 num_dims = numel(dimensions);
@@ -64,7 +64,7 @@ end
 g1 = @(x,p,t,dat) -1./x.^2;
 g2 = @(x,p,t,dat) x.^2 .* p.v .* x;
 pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,+1,'D','D', BCL, BCR);
+pterm2 = GRAD(num_dims,g2,+1,'D','N', BCL, BCR);
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
