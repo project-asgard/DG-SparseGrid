@@ -14,7 +14,7 @@ function pde = mirror3(opts)
 %
 % case 1 - maxwellian offset and different Temp.
 % case 2 - max. no offset and different Temp.
-% case 3 - max. offset and same Temp.
+% case 3 - max. offset and same Temp.ans
 
 params = mirror_parameters();
 
