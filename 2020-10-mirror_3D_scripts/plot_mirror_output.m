@@ -19,9 +19,9 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
     par_func = @(x) cos(x).^2;
     coord = get_realspace_coords(pde,nodes);
     moment_func_nD = {energy_func,perp_func,space_func};
-    v_perp_temp = moment_integral(pde.get_lev_vec,deg,coord,f_nD,moment_func_nD,pde.dimensions,subset_dimensions);
+   % v_perp_temp = moment_integral(pde.get_lev_vec,deg,coord,f_nD,moment_func_nD,pde.dimensions,subset_dimensions);
     moment_func_nD = {energy_func,par_func,space_func};
-    v_par_temp = moment_integral(pde.get_lev_vec,deg,coord,f_nD,moment_func_nD,pde.dimensions,subset_dimensions);
+   % v_par_temp = moment_integral(pde.get_lev_vec,deg,coord,f_nD,moment_func_nD,pde.dimensions,subset_dimensions);
     %%
     % Plot a 1D line through the solution
     for i = 1:nx
@@ -31,15 +31,15 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
         end
     end
     
-    sz = numel(f_nD{1,4}(:,1,1))/2;
-    sy = numel(f_nD{1,4}(1,:,1))/2;
-    sx = numel(f_nD{1,4}(1,1,:))/2;
+    sz = numel(f_nD{1,2}(:,1,1))/2;
+    sy = 3*numel(f_nD{1,2}(1,:,1))/4;
+    sx = numel(f_nD{1,2}(1,1,:))/12;
     
     %contourf(v_par,v_perp,f_nD{1,1}(:,:,sx));
-    hold on
-    plot(z,v_perp_temp, 'r');
-    plot(z,v_par_temp, 'b');
-    hold off
+%     hold on
+%     plot(z,v_perp_temp, 'r');
+%     plot(z,v_par_temp, 'b');
+%     hold off
     %plotting 
 %     f1d = f_nD(:,sy,sx);
 %     f1d = f1d(1,:);
@@ -83,12 +83,12 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
 %     % Plot 2D
 %     
     ax1 = subplot(2,3,1);
-    sx = 8;
-    contourf(z,y,f_nD{1,4}(:,:,sx)');
-    ax2 = subplot(2,3,2);
+  %  sx = 8;  
+    contourf(z,x,squeeze(f_nD{1,2}(:,sy,:))');
+%    ax2 = subplot(2,3,2);
     title('2D slice through 3D numeric');
-    sx = 24;
-    contourf(z,y,f_nD{1,4}(:,:,sx)');
+    sx = 46;
+%    contourf(z,x,f_nD{1,2}(:,sy,:));
 
 
 
