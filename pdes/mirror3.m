@@ -2,9 +2,15 @@ function pde = mirror3(opts)
 % Three-dimensional magnetic mirror from the FP paper - evolution of the ion velocity and spatial dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
+<<<<<<< HEAD
 % df/dt == (v^2 sin(z)^2*cos(z))/2 dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
 %
 % df/dt == (v^2 sin(z)^2*cos(z))/2 dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
+=======
+% df/dt == (v^2 sin(z)^2 cos(z)/(2*B) dB/ds)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
+%
+% df/dt == (v^2 sin(z)^2 cos(z)/B dB/ds)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
+>>>>>>> Added missing term associated with advection in velocity space. Coefficient also has cosine in denominator because of math correction.
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
@@ -179,6 +185,7 @@ termV_s = SD_TERM({pterm1});
 termV1 = MD_TERM(num_dims,{termV_v,termV_z,termV_s});
 %termV1 = MD_TERM(num_dims,{termV_v,[],termV_s});
 
+
 % term V2 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=D]
@@ -206,6 +213,7 @@ pterm2      = GRAD(num_dims,g2,+1,'D','D');
 pterm3      = GRAD(num_dims,g3,-1,'N','N');% BCL, BCR);
 termV_v     = SD_TERM({pterm1,pterm2,pterm3});
 termV3      = MD_TERM(num_dims,{termV_v,[],[]});
+
 terms = {termV1,termS1,termS2};
 
 %% Define sources
