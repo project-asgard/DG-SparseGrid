@@ -2,9 +2,9 @@ function pde = mirror3(opts)
 % Three-dimensional magnetic mirror from the FP paper - evolution of the ion velocity and spatial dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == (v^2 sin(z)^2 cos(z)/(2*B) dB/ds)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
+% df/dt == (v^2 sin(z)^2/(2*cos(z)) dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
 %
-% df/dt == (v^2 sin(z)^2 cos(z)/B dB/ds)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
+% df/dt == (v^2 sin(z)^2/(2*cos(z))/ dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
@@ -32,7 +32,7 @@ switch opts.case_
     case 3
         params.B_func = params.B_func2; %setting magnetic field to loop function
         params.dB_ds = params.dB_ds2;
-        params.init_cond_s = @(s,p,t) params.gauss(s,0,2.5);
+        params.init_cond_s = @(s,p,t) params.gauss(s,0.4,2.5);
         params.boundary_cond_s = @(s,p,t) s.*0;
         params.soln_z = @(z,p,t) z.*0 + 1;
         %params.z0 = pi/2 -1e-6;
@@ -139,7 +139,7 @@ termC_v = SD_TERM({pterm1});
 termC_z = SD_TERM({pterm2,pterm3,pterm4});
 termC   = MD_TERM(num_dims,{termC_v,termC_z,[]});
 
-% term V1 == 0.5*(sin(z)^2 cos(z)/B dB/ds)v^2 df/dv
+% term V1 == (sin(z)^2/(2*cos(z))*dB/ds/B)v^2 df/dv
 % term V1 == q(z)r(s)w(v) 
 % q(z) = g1(z) [mass, g1(z) = 0.5*sin(z)^2 cos(z), BC = N/A]
 % r(s) = g2(s) [mass, g2(s) = dB/ds / B, BC = N/A]
