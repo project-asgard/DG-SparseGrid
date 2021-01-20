@@ -32,7 +32,8 @@ switch opts.case_
     case 3
         params.B_func = params.B_func2; %setting magnetic field to loop function
         params.dB_ds = params.dB_ds2;
-        params.init_cond_s = @(s,p,t) params.gauss(s,0.4,2.5);
+        params.init_cond_s = @(s,p,t) params.gauss(s,0.4,2);
+        params.init_cond_z = @(z,p,t) params.gauss(z,pi/4,0.5);
         params.boundary_cond_s = @(s,p,t) s.*0;
         params.soln_z = @(z,p,t) z.*0 + 1;
         %params.z0 = pi/2 -1e-6;
@@ -41,7 +42,7 @@ end
 
 %% Define the dimensions
 
-dim_v = DIMENSION(1.0e3,2e7);
+dim_v = DIMENSION(1.0e3,5e7);
 dim_z = DIMENSION(0,pi);
 dim_s = DIMENSION(-3,3);
 
@@ -98,7 +99,7 @@ term1_s = SD_TERM({pterm3});
 termS1  = MD_TERM(num_dims,{term1_v,term1_z,term1_s});
 
 %% Mass term
-% termS2 == -vcos(z)dB/ds f
+% termS2 == -vcos(z)dB/ds/B f
 % termS1 == q(v)*r(z)*w(s)
 % q(v) == g1(v)  [mass, g1(p) = v,  BC N/A]
 % r(z) == g2(z) [mass, g2(z) = cos(z),  BC N/A]
@@ -133,8 +134,8 @@ g3 = @(z,p,t,dat) sin(z);
 g4 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
 pterm2  = MASS(g2);
-pterm3  = GRAD(num_dims,g3,+1,'D','N');
-pterm4  = GRAD(num_dims,g4,-1,'N', 'D', BCL, BCR);
+pterm3  = GRAD(num_dims,g3,+1,'D','D');
+pterm4  = GRAD(num_dims,g4,-1,'N', 'N');% BCL, BCR);
 termC_v = SD_TERM({pterm1});
 termC_z = SD_TERM({pterm2,pterm3,pterm4});
 termC   = MD_TERM(num_dims,{termC_v,termC_z,[]});
@@ -152,7 +153,7 @@ g4 = @(v,p,t,dat) v.*0 + 1;
 pterm1 = MASS(g1);
 pterm2 = MASS(g2);
 pterm3 = MASS(g3);
-pterm4 = GRAD(num_dims,g4,+1,'N','D', BCL, BCR);
+pterm4 = GRAD(num_dims,g4,+1,'D','D', BCL, BCR);
 termV_z = SD_TERM({pterm1});
 termV_s = SD_TERM({pterm2});
 termV_v = SD_TERM({pterm3,pterm4});
