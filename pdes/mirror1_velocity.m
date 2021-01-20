@@ -2,9 +2,12 @@ function pde = mirror1_velocity(opts)
 % One-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == 1/v^2 (d/dv(flux_v))
+% df/dt == (v^2/2)df/dv + 1/v^2 (d/dv(flux_v))
 %
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
+%
+% df/dt == (v^2)/2 )df/dv + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)])
+%
 %
 % Run with
 %
@@ -14,7 +17,7 @@ params = mirror_parameters();
 
 %% Define the dimensions
 
-dim_v = DIMENSION(0,2e7);
+dim_v = DIMENSION(1e3,2e7);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 dimensions = {dim_v};
 num_dims = numel(dimensions);
@@ -54,6 +57,17 @@ BCR = ic1;
 
 %% 
 
+% term V1 == v^2/2 df/dv
+% term V1 == g(v) q(v) 
+% g(v) = g1(v) [mass, g1(z) = v^2/2, BC = N/A]
+% q(v) = d/dv (g2(v) f) [grad, g2(v) = 1, BCL=N, BCR=D ]
+g1 = @(v,p,t,dat) 0.5*v.^2;
+g2 = @(v,p,t,dat) v.*0 + 1;
+pterm1 = MASS(g1);
+pterm2 = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
+termV_v = SD_TERM({pterm1,pterm2});
+termV1 = MD_TERM(num_dims,{termV_v});
+
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
@@ -64,7 +78,7 @@ g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 pterm1 = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
 termV_s = SD_TERM({pterm1,pterm2});
-termV1   = MD_TERM(num_dims,{termV_s});
+termV2   = MD_TERM(num_dims,{termV_s});
 
 %%
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
@@ -80,9 +94,9 @@ pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,+1,'D','N');
 pterm3 = GRAD(num_dims,g3, -1,'N','D', BCL, BCR);
 termV_par = SD_TERM({pterm1,pterm2,pterm3});
-termV2   = MD_TERM(num_dims,{termV_par});
+termV3   = MD_TERM(num_dims,{termV_par});
 
-terms = {termV1,termV2};
+terms = {termV1,termV2,termV3};
 
 %% Define sources 
 
