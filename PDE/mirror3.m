@@ -2,9 +2,9 @@ function pde = mirror3(opts)
 % Three-dimensional magnetic mirror from the FP paper - evolution of the ion velocity and spatial dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == (v^2 sin(z)^2/(2*cos(z)) dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
+% df/dt == (v^2 sin(z)^2*cos(z))/2 dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
 %
-% df/dt == (v^2 sin(z)^2/(2*cos(z))/ dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
+% df/dt == (v^2 sin(z)^2*cos(z))/2 dB/ds/B)df/dv - vcos(z)df/ds - vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
@@ -41,7 +41,7 @@ end
 
 %% Define the dimensions
 
-dim_v = DIMENSION(1.0e5,2e7);
+dim_v = DIMENSION(1.0e3,2e7);
 dim_z = DIMENSION(0,pi);
 dim_s = DIMENSION(-3,3);
 
@@ -139,13 +139,13 @@ termC_v = SD_TERM({pterm1});
 termC_z = SD_TERM({pterm2,pterm3,pterm4});
 termC   = MD_TERM(num_dims,{termC_v,termC_z,[]});
 
-% term V1 == (sin(z)^2/(2*cos(z))*dB/ds/B)v^2 df/dv
+% term V1 == (sin(z)^2*cos(z)/2 *dB/ds/B)v^2 df/dv
 % term V1 == q(z)r(s)w(v) 
 % q(z) = g1(z) [mass, g1(z) = 0.5*sin(z)^2 cos(z), BC = N/A]
 % r(s) = g2(s) [mass, g2(s) = dB/ds / B, BC = N/A]
 % w(v) = g3(v) m(v) [mass, g3(v), BC = N/A]
 % m(v) = d/dv (g4(v) f) [grad, g4(v) = 1, BCL=N, BCR=D ]
-g1 = @(z,p,t,dat) 0.5*sin(z).^2./cos(z);
+g1 = @(z,p,t,dat) 0.5*sin(z).^2.*cos(z);
 g2 = @(s,p,t,dat) p.dB_ds(s)./p.B_func(s);
 g3 = @(v,p,t,dat) v.^2;
 g4 = @(v,p,t,dat) v.*0 + 1;
