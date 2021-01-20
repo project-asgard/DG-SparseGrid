@@ -1,82 +1,93 @@
-function moment_value = moment_integral(lev_vec, deg, coords_nD, fval_realspace, gfunc_nD, dimensions, subset_dimensions)
+function ans = moment_integral(lev_vec,deg,f,md_gfunc,dims,nodes,dims_subset_idx)
 
-xmin = dimensions{1,1}.min;
-xmax = dimensions{1,1}.max;
-num_dim = length(dimensions);
+% evaluation of some function (md_gfunc) moment of a real-space distribution function f
 
-Lev = lev_vec(1);
-h = (xmax - xmin)/2^(Lev(1));
-num_elements = 2^Lev*deg;
-submag = length(fval_realspace{1,1}).^subset_dimensions;
-if subset_dimensions > 0
-    for i = 1:submag
-        for j = 1:num_elements
-            for k = 1:num_elements
-                sub_fval_realspace(i,:) = fval_realspace{1,1}(j,k,:);
-            end
-        end
+assert(numel(size(f)) == numel(dims)); % this function now accepts the m x n (for 2D) shaped f
+
+num_dims = length(dims);
+
+% select which dimensions to do the moment over
+vecdim = 1:num_dims;
+if nargin>6
+    if ~isempty(dims_subset_idx)
+        vecdim = dims_subset_idx;
     end
-    fval_realspace = sub_fval_realspace;
-else
-    mag = length(fval_realspace{1,1}).^num_dim;
-    fval_realspace = reshape(fval_realspace{1,1}, mag, 1);
 end
 
+lev = lev_vec(1);
+if numel(lev_vec)>1
+assert(sum(lev_vec./lev)==num_dims); % for now assert that lev is the same for all dims
+end
 
+% this implementation assumes that the solution is provide on the
+% original quadrature points, i.e., asgard('output_grid','quadrature'),
+% which is the default, and there is a catch to assert this in OPTS.m
+
+% get quadrature points and weights
 [quad_xx, quad_ww] = lgwt(deg, -1, 1);
 
-quad_ww = 2^(-Lev)/2*quad_ww;
+% scale the weights becuase why? Lin?
+quad_ww = 2^(-lev)/2*quad_ww;
 
-ww_1D = repmat(quad_ww, 2^Lev(1), 1); 
-ww = ww_1D;
-
-if subset_dimensions >= 2 
-    for i = 2:subset_dimensions
-         min = dimensions{1,i}.min;
-         max = dimensions{1,i}.max;
-         ww = kron(ww,ww_1D)*(max - min);
-    end
-elseif num_dim >=2
-   for i = 2:num_dim
-         min = dimensions{1,i}.min;
-         max = dimensions{1,i}.max;
-         ww = kron(ww,ww_1D)*(max - min);
+ww_1D = repmat(quad_ww, 2^lev(1), 1);
+ww = 1;
+for d1 = 1:num_dims
+    min = dims{1,d1}.min;
+    max = dims{1,d1}.max;
+    if ~isempty(find(vecdim==d1)) % only apply quadrature weights for those dimensions we are integrating over
+        ww = kron(ww,ww_1D)*(max - min);
+    else
+        ww = kron(ww,ww_1D.*0+1);
     end
 end
 
-ww = ww.*(xmax - xmin);
-if subset_dimensions > 0
-    for i = 1:submag
-        for j = 1:num_elements
-            for k = 1:num_elements
-                this_dim_coord(i,:) = coords_nD{1,1}(j,k,:);
-            end
+ww = reshape(ww,size(f))';
+
+jac = ones('like',f);
+moment = ones('like',f);
+
+% create the md grid (because coords at the main level is in the wrong order)
+if num_dims == 1
+    coords{1} = nodes{1};
+elseif num_dims == 2
+    [coords{1},coords{2}] = ndgrid(nodes{1},nodes{2});
+elseif num_dims ==3
+    [coords{1},coords{2},coords{3}] = ndgrid(nodes{1},nodes{2},nodes{3});
+else
+    error('num_dims>3 not supported');
+end
+
+
+% we want the following (which can be summed over to give the integral due
+% to the use the quadrature weights ww at the quadrature points xx, yy 
+% (2D example)
+% ww(xx,yy) * f(xx,yy) * g(xx,yy) * J(xx,yy)
+% which can be written as the product of 1D funcions as
+% 1 * ww(xx) * f(xx) * g(xx) * J(xx) * ww(yy) * f(yy) * g(yy) * J(yy)
+% where xx and yy are of md_ type. 
+
+% e.g., 2D, r, th (spherical with ph integrated away)
+
+% dl = gr(r)gr(th) r_hat + gth(r)gth(th) th_hat
+% gr(r) = 1, gr(th) = 1
+% gth(r) = r, gth(th) = 1
+
+    
+f = permute(f,flip(1:num_dims)); % again, because f dims are in the wrong order at the main level :(
+
+for d1 = 1:num_dims
+    this_dim_coord = coords{d1};
+    if ~isempty(find(vecdim==d1)) % only apply moment func and jac for those dimensions we are integrating over
+        moment = moment .* md_gfunc{d1}(this_dim_coord);
+        
+        for d2 = 1:num_dims
+            this_dim_coord = coords{d2};
+            jac = jac .* dims{d1}.jacobian{d2}(this_dim_coord);
         end
     end
-else
-    this_dim_coord = coords_nD{1}(:);
 end
-    jac = this_dim_coord.*0+1;
-    moment = this_dim_coord.*0+1;
 
-if subset_dimensions > 0 && subset_dimensions < num_dim
-    for d=1:subset_dimensions
-        for j = 1:num_elements
-            for k = 1:num_elements
-                this_dim_coord(i,:) = coords_nD{d}(j,k,:);
-            end
-        end
-    end
-        jac = jac .* dimensions{d}.jacobian(this_dim_coord);
-        moment = moment .* gfunc_nD{d}(this_dim_coord);
-else
-    for d = 1:num_dim
-        this_dim_coord = coords_nD{d}(:);
-        jac = jac .* dimensions{d}.jacobian(this_dim_coord);
-        moment = moment .* gfunc_nD{d}(this_dim_coord); 
-    end
-end
-      
-moment_value = sum(ww.*fval_realspace.*moment.*jac);
+md_moment = ww.*f.*moment.*jac;
+ans = sum(md_moment,vecdim);
 
 end
