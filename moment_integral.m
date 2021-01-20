@@ -1,4 +1,4 @@
-function ans = moment_integral(lev_vec,deg,md_coords,f,md_gfunc,dims,dims_subset_idx,J,nodes)
+function ans = moment_integral(lev_vec,deg,f,md_gfunc,dims,nodes,dims_subset_idx)
 
 % evaluation of some function (md_gfunc) moment of a real-space distribution function f
 
@@ -9,7 +9,9 @@ num_dims = length(dims);
 % select which dimensions to do the moment over
 vecdim = 1:num_dims;
 if nargin>6
-    vecdim = dims_subset_idx;
+    if ~isempty(dims_subset_idx)
+        vecdim = dims_subset_idx;
+    end
 end
 
 lev = lev_vec(1);
@@ -44,16 +46,15 @@ ww = reshape(ww,size(f))';
 jac = ones('like',f);
 moment = ones('like',f);
 
-if nargin>7
-    if num_dims == 1
-        coords{1} = nodes{1};
-    elseif num_dims == 2
-        [coords{1},coords{2}] = ndgrid(nodes{1},nodes{2});
-    elseif num_dims ==3
-        [coords{1},coords{2},coords{3}] = ndgrid(nodes{1},nodes{2},nodes{3});
-    else
-        error('num_dims>3 not supported');
-    end
+% create the md grid (because coords at the main level is in the wrong order)
+if num_dims == 1
+    coords{1} = nodes{1};
+elseif num_dims == 2
+    [coords{1},coords{2}] = ndgrid(nodes{1},nodes{2});
+elseif num_dims ==3
+    [coords{1},coords{2},coords{3}] = ndgrid(nodes{1},nodes{2},nodes{3});
+else
+    error('num_dims>3 not supported');
 end
 
 this_dim_coord = coords_nD{1}(:);
