@@ -194,6 +194,13 @@ classdef OPTS
                     end
                 end
                 
+                if ~strcmp(opts.output_grid,'quadrature')
+                   
+                    opts.calculate_mass = false;
+                    opts.normalize_by_mass = false;
+                    
+                end
+                
                 if ~isempty(fieldnames(input_parser.Unmatched))
                     disp('Extra inputs:')
                     disp(input_parser.Unmatched)
