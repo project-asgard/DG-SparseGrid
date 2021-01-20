@@ -1,4 +1,4 @@
-function ans = moment_integral(lev_vec,deg,md_coords,f,md_gfunc,dims,dims_subset_idx,J,nodes)
+function ans = moment_integral(lev_vec,deg,f,md_gfunc,dims,nodes,dims_subset_idx)
 
 % evaluation of some function (md_gfunc) moment of a real-space distribution function f
 
@@ -9,7 +9,9 @@ num_dims = length(dims);
 % select which dimensions to do the moment over
 vecdim = 1:num_dims;
 if nargin>6
-    vecdim = dims_subset_idx;
+    if ~isempty(dims_subset_idx)
+        vecdim = dims_subset_idx;
+    end
 end
 
 lev = lev_vec(1);
@@ -44,17 +46,17 @@ ww = reshape(ww,size(f))';
 jac = ones('like',f);
 moment = ones('like',f);
 
-if nargin>7
-    if num_dims == 1
-        coords{1} = nodes{1};
-    elseif num_dims == 2
-        [coords{1},coords{2}] = ndgrid(nodes{1},nodes{2});
-    elseif num_dims ==3
-        [coords{1},coords{2},coords{3}] = ndgrid(nodes{1},nodes{2},nodes{3});
-    else
-        error('num_dims>3 not supported');
-    end
+% create the md grid (because coords at the main level is in the wrong order)
+if num_dims == 1
+    coords{1} = nodes{1};
+elseif num_dims == 2
+    [coords{1},coords{2}] = ndgrid(nodes{1},nodes{2});
+elseif num_dims ==3
+    [coords{1},coords{2},coords{3}] = ndgrid(nodes{1},nodes{2},nodes{3});
+else
+    error('num_dims>3 not supported');
 end
+
 
 % we want the following (which can be summed over to give the integral due
 % to the use the quadrature weights ww at the quadrature points xx, yy 
@@ -70,39 +72,22 @@ end
 % gr(r) = 1, gr(th) = 1
 % gth(r) = r, gth(th) = 1
 
-if nargin>7
     
-    f = permute(f,flip(1:num_dims));
-    
-    for d1 = 1:num_dims
-        this_dim_coord = coords{d1};
-        if ~isempty(find(vecdim==d1)) % only apply moment func and jac for those dimensions we are integrating over
-            moment = moment .* md_gfunc{d1}(this_dim_coord);
+f = permute(f,flip(1:num_dims)); % again, because f dims are in the wrong order at the main level :(
 
-            for d2 = 1:num_dims
-                this_dim_coord = coords{d2};
-                jac = jac .* J{d1}{d2}(this_dim_coord);
-            end
+for d1 = 1:num_dims
+    this_dim_coord = coords{d1};
+    if ~isempty(find(vecdim==d1)) % only apply moment func and jac for those dimensions we are integrating over
+        moment = moment .* md_gfunc{d1}(this_dim_coord);
+        
+        for d2 = 1:num_dims
+            this_dim_coord = coords{d2};
+            jac = jac .* dims{d1}.jacobian{d2}(this_dim_coord);
         end
     end
-    
-else
-    for d = 1:num_dims
-        this_dim_coord = md_coords{d};
-        if ~isempty(find(vecdim==d)) % only apply moment func and jac for those dimensions we are integrating over
-            d
-            jac = jac .* dims{d}.jacobian(this_dim_coord);
-            moment = moment .* md_gfunc{d}(this_dim_coord);
-        end
-    end
-    
 end
 
 md_moment = ww.*f.*moment.*jac;
 ans = sum(md_moment,vecdim);
-
-if nargin>6
-    disp('here');
-end
 
 end
