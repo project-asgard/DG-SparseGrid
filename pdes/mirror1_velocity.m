@@ -2,11 +2,11 @@ function pde = mirror1_velocity(opts)
 % One-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == (v^2/2)df/dv + 1/v^2 (d/dv(flux_v))
+% df/dt == (v^2/2)df/dv  - v*f + 1/v^2 (d/dv(flux_v))
 %
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
-% df/dt == (v^2)/2 )df/dv + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)])
+% df/dt == (v^2)/2 )df/dv -v*f + 1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)])
 %
 %
 % Run with
@@ -17,7 +17,7 @@ params = mirror_parameters();
 
 %% Define the dimensions
 
-dim_v = DIMENSION(1e3,2e7);
+dim_v = DIMENSION(0,2e7);
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 dimensions = {dim_v};
 num_dims = numel(dimensions);
@@ -42,8 +42,16 @@ initial_conditions = {ic1};
 
 %% Define the boundary conditions
 
-BCL = ic1;
-BCR = ic1;
+%% Define the boundary conditions
+
+BCL = new_md_func(num_dims,{...
+    @(v,p,t) v.*0, ...
+    params.boundary_cond_t});
+ 
+
+BCR = new_md_func(num_dims,{...
+    params.boundary_cond_v, ... 
+    params.boundary_cond_t});
 
 %% Define the terms of the PDE
 
@@ -61,15 +69,22 @@ BCR = ic1;
 % term V1 == g(v) q(v) 
 % g(v) = g1(v) [mass, g1(z) = v^2/2, BC = N/A]
 % q(v) = d/dv (g2(v) f) [grad, g2(v) = 1, BCL=N, BCR=D ]
-g1 = @(v,p,t,dat) 0.5*v.^2;
+g1 = @(v,p,t,dat) v.^2/2;
 g2 = @(v,p,t,dat) v.*0 + 1;
 pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
 termV_v = SD_TERM({pterm1,pterm2});
 termV1 = MD_TERM(num_dims,{termV_v});
 
-% term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
-% term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
+%term V2 == -v*f
+%term V2 == g1(v)*f [mass, g1(v) = -v, BC = N/A]
+g1 = @(v,p,t,dat) -v;
+pterm1 = MASS(g1);
+termV_v = SD_TERM({pterm1});
+termV2 = MD_TERM(num_dims,{termV_v});
+
+% term V3 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
+% term V3 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
@@ -78,11 +93,11 @@ g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 pterm1 = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
 termV_s = SD_TERM({pterm1,pterm2});
-termV2   = MD_TERM(num_dims,{termV_s});
+termV3   = MD_TERM(num_dims,{termV_s});
 
 %%
-% term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
-% term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
+% term V4 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
+% term V4 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
 % q(v) == d/dv(g2(v)r(v))   [grad, g2(v) = v^4*0.5*nu_par, BCL= D, BCR=D]
 % r(v) = d/dv(g3(v)f)       [grad, g3(v) = 1, BCL=N, BCR=N]
 
@@ -94,9 +109,9 @@ pterm1 = MASS(g1);
 pterm2 = GRAD(num_dims,g2,+1,'D','N');
 pterm3 = GRAD(num_dims,g3, -1,'N','D', BCL, BCR);
 termV_par = SD_TERM({pterm1,pterm2,pterm3});
-termV3   = MD_TERM(num_dims,{termV_par});
+termV4   = MD_TERM(num_dims,{termV_par});
 
-terms = {termV1,termV2,termV3};
+terms = {termV1,termV2,termV3,termV4};
 
 %% Define sources 
 
