@@ -68,7 +68,7 @@ nu_s    = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(vel_norm(v,b.vth)) ./ vel_n
 nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth).^3)); %parallel diffusion frequency
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi_f(vel_norm(v,b.vth)) - psi(vel_norm(v,b.vth)))./(vel_norm(v,b.vth).^3); %deflection frequency in s^-1
 maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
-gauss   = @(v,x,y) 1/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
+gauss   = @(v,x,y) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
 
@@ -132,7 +132,7 @@ soln_v = @solution_v;
         ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
     end
 soln_z = @solution_z;
-    function ret = solution_z(z,p,t)
+    function ret = solution_z(z,p,~)
         ret = cos(z/2);
     end
 

@@ -186,7 +186,7 @@ pterm2      = GRAD(num_dims,g2,+1,'D','N');
 pterm3      = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
 termV_v     = SD_TERM({pterm1,pterm2,pterm3});
 termV3      = MD_TERM(num_dims,{termV_v,[],[]});
-terms = {termV1, termV2, termV3, termC, termS1, termS2};
+terms = {termV2, termV3, termC, termS1, termS2};
 
 %% Define sources
 
