@@ -8,10 +8,15 @@ root = get_root_folder();
 
 %% adaptive time advance testing
 
-out_format = strcat(data_dir,'fokkerplanck1_4p1a_ad_sg_l4_d4_t%d.dat');
+out_format = strcat(data_dir,'fokkerplanck1_pitch_E_case1_ad_sg_l4_d4_t%d.dat');
 run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
     'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','timestep_method','RK3', 'adapt', true, ...
-    'adapt_initial_condition', true, 'adapt_threshold', 1e-4);
+    'adapt_initial_condition', true, 'adapt_threshold', 1e-4,'case',1);
+
+out_format = strcat(data_dir,'fokkerplanck1_pitch_E_case2_ad_sg_l4_d4_t%d.dat');
+run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
+    'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','timestep_method','RK3', 'adapt', true, ...
+    'adapt_initial_condition', true, 'adapt_threshold', 1e-4,'case',2);
 
 out_format = strcat(data_dir,'continuity2_ad_sg_l3_d4_t%d.dat');
 run_time_advance(@continuity2,out_format, ...
@@ -102,23 +107,28 @@ out_format = strcat(data_dir, 'continuity6_sg_l2_d3_t%d.dat');
 run_time_advance(@continuity6,out_format, ...
     'CFL',0.01,'lev',2,'deg',3,'grid_type','SG','timestep_method','RK3');
 
-% fokkerplanck1_4p2 sg l2d2
-out_format = strcat(data_dir,'fokkerplanck1_4p2_sg_l2_d2_t%d.dat');
+% fokkerplanck1_pitch_C sg l2d2
+out_format = strcat(data_dir,'fokkerplanck1_pitch_C_sg_l2_d2_t%d.dat');
 run_time_advance(@fokkerplanck1_pitch_C,out_format, ...
     'CFL',0.01,'lev',2,'deg',2,'grid_type','SG','timestep_method','RK3');
 
-% fokkerplanck1_4p2 fg l2d2
-out_format = strcat(data_dir,'fokkerplanck1_4p2_fg_l2_d2_t%d.dat');
+% fokkerplanck1_pitch_C fg l2d2
+out_format = strcat(data_dir,'fokkerplanck1_pitch_C_fg_l2_d2_t%d.dat');
 run_time_advance(@fokkerplanck1_pitch_C,out_format, ...
     'CFL',0.01,'lev',2,'deg',2,'grid_type','FG','timestep_method','RK3');
 
-% fokkerplanck1_4p1a sg l2d2
-out_format = strcat(data_dir,'fokkerplanck1_4p1a_sg_l2_d2_t%d.dat');
+% fokkerplanck1_pitch_E_case1 sg l2d2
+out_format = strcat(data_dir,'fokkerplanck1_pitch_E_case1_sg_l2_d2_t%d.dat');
 run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
-    'CFL',0.01,'lev',2,'deg',2,'grid_type','SG','timestep_method','RK3');
+'CFL',0.01,'lev',2,'deg',2,'grid_type','SG','timestep_method','RK3','case',1);
 
-%fokkerplanck1_4p3 sg l2d2
-out_format = strcat(data_dir,'fokkerplanck1_4p3_sg_l2_d2_t%d.dat');
+% fokkerplanck1_pitch_E_case2 sg l2d2
+out_format = strcat(data_dir,'fokkerplanck1_pitch_E_case2_sg_l2_d2_t%d.dat');
+run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
+'CFL',0.01,'lev',2,'deg',2,'grid_type','SG','timestep_method','RK3','case',2);
+
+%fokkerplanck1_pitch_R sg l2d2
+out_format = strcat(data_dir,'fokkerplanck1_pitch_R_sg_l2_d2_t%d.dat');
 run_time_advance(@fokkerplanck1_pitch_R,out_format, ...
     'CFL',0.01,'lev',2,'deg',2,'grid_type','SG','timestep_method','RK3');
 
