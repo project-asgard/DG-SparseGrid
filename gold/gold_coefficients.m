@@ -1,4 +1,12 @@
 % uniform level
+
+%TODO: Debug: after update of the way PDE are implemented
+% now it is not acceptable to call constructor without parameters
+continuity1
+%Possible fix: update all PDE constructor with a default one.
+% or change this file to build opts and give as parameter before
+% calling PDE constructor.
+
 levels = [3, 3];
 generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
 levels = [4, 4];
