@@ -3,7 +3,7 @@ data_dir = strcat("generated-inputs", "/", "pde", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
-t = 0;
+t = 5;
 domain = [ 0.1, 0.2, 0.3, 0.4, 0.5 ];
 
 out_format = strcat( data_dir, "diffusion_1_");
@@ -54,7 +54,7 @@ function run_pde(pde_handle, out_format, x, t, varargin)
   end
   
   if ~isempty(pde.solutions)
-    y_exact_time = pde.solutions{1}{length(pde.dimensions)}(x);
+    y_exact_time = pde.solutions{1}{length(pde.dimensions)}(t);
     write_octave_like_output(strcat(out_format, 'exact_time.dat'), y_exact_time);
   end
   
@@ -63,7 +63,7 @@ function run_pde(pde_handle, out_format, x, t, varargin)
       y_source = pde.sources{s}{d}(x);
       write_octave_like_output(strcat(out_format, sprintf('source%d_dim%d.dat',s-1,d-1)), ...
                                y_source);
-      y_source_t = pde.sources{s}{length(pde.sources{s})}(x);
+      y_source_t = pde.sources{s}{length(pde.sources{s})}(t);
       write_octave_like_output(strcat(out_format, sprintf('source%d_time.dat',s-1)), y_source_t);
     end
   end
