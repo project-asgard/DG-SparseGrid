@@ -1,56 +1,56 @@
 % uniform level
 levels = [3, 3];
-generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
 levels = [4, 4];
-generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
 levels = [2];
-generate_data( continuity1, levels, 'continuity1', 'deg', 2 );
+generate_data( @continuity1, levels, 'continuity1', 'deg', 2 );
 levels = [4, 4];
-generate_data( continuity2, levels, 'continuity2', 'deg', 3 );
+generate_data( @continuity2, levels, 'continuity2', 'deg', 3 );
 levels = [4, 4, 4];
-generate_data( continuity3, levels, 'continuity3', 'deg', 4 );
+generate_data( @continuity3, levels, 'continuity3', 'deg', 4 );
 levels = [2, 2, 2, 2, 2, 2];
-generate_data( continuity6, levels, 'continuity6', 'deg', 4 );
+generate_data( @continuity6, levels, 'continuity6', 'deg', 4 );
 levels = [5];
-generate_data( diffusion1, levels, 'diffusion1', 'deg', 6 );
+generate_data( @diffusion1, levels, 'diffusion1', 'deg', 6 );
 levels = [3, 3];
-generate_data( diffusion2, levels, 'diffusion2', 'deg', 5 );
+generate_data( @diffusion2, levels, 'diffusion2', 'deg', 5 );
 levels = [4];
-generate_data( fokkerplanck1_pitch_E(1), levels, 'fokkerplanck1_4p1a', 'deg', 3 );
+generate_data( @fokkerplanck1_pitch_E, levels, 'fokkerplanck1_4p1a', 'case', 1, 'deg', 3 );
 levels = [5];
-generate_data( fokkerplanck1_pitch_C, levels, 'fokkerplanck1_4p2', 'deg', 2 );
+generate_data( @fokkerplanck1_pitch_C, levels, 'fokkerplanck1_4p2', 'deg', 2 );
 levels = [2];
-generate_data( fokkerplanck1_4p3, levels, 'fokkerplanck1_4p3', 'deg', 5 );
+generate_data( @fokkerplanck1_pitch_R, levels, 'fokkerplanck1_4p3', 'deg', 5 );
 levels = [5];
-generate_data( fokkerplanck1_4p4, levels, 'fokkerplanck1_4p4', 'deg', 3 );
+generate_data( @fokkerplanck1_pitch_CE, levels, 'fokkerplanck1_4p4', 'deg', 3 );
 levels = [3];
-generate_data( fokkerplanck1_4p5, levels, 'fokkerplanck1_4p5', 'deg', 5 );
+generate_data( @fokkerplanck1_pitch_CER, levels, 'fokkerplanck1_4p5', 'deg', 5 );
 
 % non-uniform level
 levels = [2, 3];
-generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
 levels = [4, 2];
-generate_data( fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
 levels = [4, 5];
-generate_data( continuity2, levels, 'continuity2', 'deg', 3 );
+generate_data( @continuity2, levels, 'continuity2', 'deg', 3 );
 levels = [2, 3, 2];
-generate_data( continuity3, levels, 'continuity3', 'deg', 4 );
+generate_data( @continuity3, levels, 'continuity3', 'deg', 4 );
 levels = [2, 3, 3, 3, 2, 4];
-generate_data( continuity6, levels, 'continuity6', 'deg', 4 );
+generate_data( @continuity6, levels, 'continuity6', 'deg', 4 );
 levels = [2, 3];
-generate_data( diffusion2, levels, 'diffusion2', 'deg', 5 );
+generate_data( @diffusion2, levels, 'diffusion2', 'deg', 5 );
 
-function generate_data(pde, lev_vec, pde_name, varargin)
+function generate_data(pde_handle, lev_vec, pde_name, varargin)
 coeff_dir = "generated-inputs/coefficients/";
 root = get_root_folder();
 [~,~] = mkdir ([root,'/gold/',char(coeff_dir)]);
 
-runtime_defaults
-
+opts = OPTS(varargin);  
+opts.quiet = 1;
 opts.use_oldcoeffmat = 0;
 opts.use_oldhash = 0;
 opts.max_lev_coeffs = 1;
-pde = check_pde(pde, opts);
+pde = pde_handle( opts );
 
 for i=1:length(pde.dimensions)
   pde.dimensions{i}.lev = lev_vec(i);
