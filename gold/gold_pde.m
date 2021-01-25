@@ -15,6 +15,8 @@ run_pde(@diffusion2, out_format, domain, t, 'lev', 3, 'deg', 2, 'CFL', 1);
 out_format = strcat( data_dir, "advection_1_");
 run_pde(@advection1, out_format, domain, t, 'lev', 3, 'deg', 2, 'CFL', 1);
 
+% note fp2 must be calculated with modified x domain [1, 20] to avoid
+% singularity problem
 out_format = strcat( data_dir, "fokkerplanck2_complete_" );
 run_pde(@fokkerplanck2_complete, out_format, domain, t, 'case', 4, 'lev', 5, 'deg', 4);
 
