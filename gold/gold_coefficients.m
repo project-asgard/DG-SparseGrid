@@ -1,8 +1,8 @@
 % uniform level
 levels = [3, 3];
-generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'deg', 3 );
 levels = [4, 4];
-generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'lev', 4, 'deg', 4 );
 levels = [2];
 generate_data( @continuity1, levels, 'continuity1', 'deg', 2 );
 levels = [4, 4];
@@ -28,9 +28,9 @@ generate_data( @fokkerplanck1_pitch_CER, levels, 'fokkerplanck1_4p5', 'deg', 5 )
 
 % non-uniform level
 levels = [2, 3];
-generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'deg', 3 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'deg', 3 );
 levels = [4, 2];
-generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'lev', 4, 'deg', 4 );
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'lev', 4, 'deg', 4 );
 levels = [4, 5];
 generate_data( @continuity2, levels, 'continuity2', 'deg', 3 );
 levels = [2, 3, 2];

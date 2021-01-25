@@ -16,7 +16,7 @@ out_format = strcat( data_dir, "advection_1_");
 run_pde(@advection1, out_format, domain, t, 'lev', 3, 'deg', 2, 'CFL', 1);
 
 out_format = strcat( data_dir, "fokkerplanck2_complete_" );
-run_pde(@fokkerplanck2_complete, out_format, domain, t, 'lev', 5, 'deg', 4);
+run_pde(@fokkerplanck2_complete, out_format, domain, t, 'case', 4, 'lev', 5, 'deg', 4);
 
 out_format = strcat( data_dir, "continuity_1_" );
 run_pde(@continuity1, out_format, domain, t, 'lev', 2, 'deg', 2);
@@ -25,7 +25,7 @@ out_format = strcat( data_dir, "continuity2_" );
 run_pde(@continuity2, out_format, domain, t, 'lev', 5, 'deg', 4);
 
 out_format = strcat( data_dir, "continuity_3_" );
-run_pde(@continuity3, out_format, domain, t);
+run_pde(@continuity3, out_format, domain, t, 'lev', 5, 'deg', 4);
 
 out_format = strcat( data_dir, "continuity_6_" );
 run_pde(@continuity6, out_format, domain, t);
@@ -43,7 +43,7 @@ function run_pde(pde_handle, out_format, x, t, varargin)
   
   for d=1:length(pde.dimensions)
     init_cond = pde.initial_conditions{1}{d};
-    y_init = init_cond(x, pde.params, t);
+    y_init = init_cond(x, pde.params, 0);
     write_octave_like_output(strcat(out_format, sprintf('initial_dim%d.dat', d-1)), y_init);
 
     if ~isempty(pde.solutions)
@@ -54,7 +54,7 @@ function run_pde(pde_handle, out_format, x, t, varargin)
   end
   
   if ~isempty(pde.solutions)
-    y_exact_time = pde.solutions{1}{length(pde.dimensions)}(t);
+    y_exact_time = pde.solutions{1}{length(pde.dimensions)+1}(t);
     write_octave_like_output(strcat(out_format, 'exact_time.dat'), y_exact_time);
   end
   
