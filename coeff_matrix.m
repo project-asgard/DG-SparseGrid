@@ -251,7 +251,9 @@ else
              
         %%
         % M // mass matrix u . v
-        G1 = G(quad_xi,params,t,dat_R_quad) .* dim.jacobian(quad_xi,params,t);
+%         G1 = G(quad_xi,params,t,dat_R_quad) .* dim.jacobian(quad_xi,params,t);
+
+        G1 = dim.jacobian(quad_xi,params,t); % Lin changed here
         val_mass = p_val' * (G1 .* p_val .* quad_w) * Jacobi;
         
         %%
@@ -438,11 +440,11 @@ else
     
     left_notrans = 'LN';
     right_trans = 'RT';
-    %Mass = FMWT * Mass * FMWT';
+%     %Mass = FMWT * Mass * FMWT';
     Mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, Mass, left_notrans);
     Mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, Mass, right_trans);
-    
-    %Grad = FMWT * Grad * FMWT';
+%     
+%     %Grad = FMWT * Grad * FMWT';
     Grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, Grad, left_notrans);
     Grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, Grad, right_trans);
     

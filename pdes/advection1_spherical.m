@@ -22,7 +22,10 @@ params.v = 1;
 
 %% Define dimensions
 
-dim_x = DIMENSION(0,2*pi);
+dim_x = DIMENSION(0.5,2*pi);
+
+% dim_x = DIMENSION(0,1);
+
 switch opts.case_
     case 1
         dim_x.jacobian = @(x,p,t) x.*0+1;
@@ -64,9 +67,19 @@ end
 g1 = @(x,p,t,dat) -1./x.^2;
 g2 = @(x,p,t,dat) x.^2 .* p.v .* x;
 pterm1 = MASS(g1);
+<<<<<<< HEAD
 pterm2 = GRAD(num_dims,g2,+1,'D','N', BCL, BCR);
+=======
+% pterm2 = GRAD(num_dims,g2,+1,'D','D', BCL, BCR);
+% pterm2 = GRAD(num_dims,g2,+1,'D','N', BCL, BCR);
 
-term1_x = SD_TERM({pterm1,pterm2});
+pterm2 = GRAD(num_dims,@(x,p,t,dat) -p.v .* x,-1,'D','N',BCL);
+ 
+term1_x = SD_TERM({pterm2});
+
+>>>>>>> 53673b44f03bb90990fcad1a24920526d2ca3b4f
+
+% term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
 
 terms = {term1};
