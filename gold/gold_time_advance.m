@@ -8,6 +8,11 @@ root = get_root_folder();
 
 %% adaptive time advance testing
 
+out_format = strcat(data_dir,'fokkerplanck1_pitch_E_case2_ad_sg_l4_d4_t%d.dat');
+run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
+    'CFL',0.01,'lev',4,'deg',4,'case', 2, 'grid_type','SG','timestep_method','RK3', 'adapt', true, ...
+    'adapt_initial_condition', true, 'adapt_threshold', 1e-4);
+
 out_format = strcat(data_dir,'fokkerplanck1_4p1a_ad_sg_l4_d4_t%d.dat');
 run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
     'CFL',0.01,'lev',4,'deg',4,'grid_type','SG','timestep_method','RK3', 'adapt', true, ...
@@ -116,6 +121,11 @@ run_time_advance(@fokkerplanck1_pitch_C,out_format, ...
 out_format = strcat(data_dir,'fokkerplanck1_4p1a_sg_l2_d2_t%d.dat');
 run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
     'CFL',0.01,'lev',2,'deg',2,'grid_type','SG','timestep_method','RK3');
+
+% same, case 2
+out_format = strcat(data_dir,'fokkerplanck1_pitch_E_case2_sg_l2_d2_t%d.dat');
+run_time_advance(@fokkerplanck1_pitch_E,out_format, ...
+    'CFL',0.01,'case', 2, 'lev',2,'deg',2,'grid_type','SG','timestep_method','RK3');
 
 %fokkerplanck1_4p3 sg l2d2
 out_format = strcat(data_dir,'fokkerplanck1_4p3_sg_l2_d2_t%d.dat');
