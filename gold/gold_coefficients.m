@@ -18,6 +18,7 @@ levels = [3, 3];
 generate_data( @diffusion2, levels, 'diffusion2', 'deg', 5 );
 levels = [4];
 generate_data( @fokkerplanck1_pitch_E, levels, 'fokkerplanck1_4p1a', 'case', 1, 'deg', 3 );
+generate_data( @fokkerplanck1_pitch_E, levels, 'fokkerplanck1_pitch_E_case2', 'case', 2, 'deg', 3 );
 levels = [5];
 generate_data( @fokkerplanck1_pitch_C, levels, 'fokkerplanck1_4p2', 'deg', 2 );
 levels = [2];
