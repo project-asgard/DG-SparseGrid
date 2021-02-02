@@ -9,6 +9,7 @@ function [term_1D] = coeff_matrix(num_dimensions,deg,t,dim,term_1D,params, FMWT_
 if ~exist('coeff_level','var') || isempty(coeff_level)
   coeff_level = dim.lev;
 end
+coeff_level = dim.lev;
 
 
 %%
@@ -251,9 +252,7 @@ else
              
         %%
         % M // mass matrix u . v
-%         G1 = G(quad_xi,params,t,dat_R_quad) .* dim.jacobian(quad_xi,params,t);
-
-        G1 = dim.jacobian(quad_xi,params,t); % Lin changed here
+        G1 = G(quad_xi,params,t,dat_R_quad) .* dim.jacobian(quad_xi,params,t);
         val_mass = p_val' * (G1 .* p_val .* quad_w) * Jacobi;
         
         %%
