@@ -2,7 +2,7 @@ function pde = advection2_spherical(opts)
 % 1D test case using continuity equation, i.e., 
 %
 % df/dt == -div(au) = -1/r^2 d/dr( r^2 a_r u ) + 
-%                           1/(r*sin(th)) d/d\th(sin(th) a_th u) = 0
+%                           1/(r*sin(th)) d/dth(sin(th) a_th u) = 0
 % where a = [a_r,a_th] = [2,1]
 %
 % analytic solution 1/sqrt(r)*exp(-3*th)*cos(-.5r+t)/sin(th)
@@ -56,22 +56,18 @@ BCR = sol1;
 
 %% Define PDE terms
 
-switch opts.case_
-    case 1     
-        LHS_terms = {};
-    case 2
-        g1 = @(x,p,t,dat) x.^2;
-        pterm1 = MASS(g1);
-        g2 = @(y,p,t,dat) sin(y);
-        pterm2 = MASS(g2);
-        LHS_term_x = SD_TERM({pterm1});
-        LHS_term_y = SD_TERM({pterm2});
-        LHS_term   = MD_TERM(num_dims,{LHS_term_x,LHS_term_y});
-        LHS_terms = {LHS_term};
-end
+%LHS Mass Matrix
+g1 = @(x,p,t,dat) x.^2;
+pterm1 = MASS(g1);
+g2 = @(y,p,t,dat) sin(y);
+pterm2 = MASS(g2);
+LHS_term_x = SD_TERM({pterm1});
+LHS_term_y = SD_TERM({pterm2});
+LHS_term   = MD_TERM(num_dims,{LHS_term_x,LHS_term_y});
+LHS_terms = {LHS_term};
 
 % -r^2*sin(th)*a_r*u*dv/dr
-g1 = @(x,p,t,dat) -x.^2*2;
+g1 = @(x,p,t,dat) -x.^2*2; %Negative must be on the direction of GRAD
 g2 = @(y,p,t,dat) sin(y);
 pterm1_x = GRAD(num_dims,g1,-1,'D','N',BCL);
 pterm1_y = MASS(g2);
@@ -80,8 +76,8 @@ term1_y = SD_TERM({pterm1_y});
 term1 = MD_TERM(num_dims,{term1_x,term1_y});
 
 % -r*sin(th)*a_th*u*dv/dth
-g1 = @(x,p,t,dat) -x;
-g2 = @(y,p,t,dat) sin(y);
+g1 = @(x,p,t,dat) x;
+g2 = @(y,p,t,dat) -sin(y); %Negative must be on the direction of GRAD
 pterm2_x = MASS(g1);
 pterm2_y = GRAD(num_dims,g2,-1,'D','N',BCL);
 term2_x = SD_TERM({pterm2_x});
