@@ -22,8 +22,24 @@ params = mirror_parameters();
 
 switch opts.case_
     case 1
-        params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin
-        params.init_cond_v = @(v,p,t) params.maxwell(v,params.v_th(params.a.T_eV,params.a.m),1e6);
+        %initial test with no collisions and only magnetic field varying in
+        %space
+        params.a.Z = 1; %hydrogen particles in beam
+        params.b.Z = 1; %hydrogen particles in background
+        params.a.m = params.m_H; %hydrogen mass in beam
+        params.b.m = params.m_H; %hydrogen mass in background
+        params.a.T_eV = 10; %Target temperature in Kelvin
+        params.b.E_eV = params.a.E_eV; %background energy also at 1 keV
+        params.b.T_eV = params.a.T_eV;
+        params.a.s0 = 0; %beam centered at s = 0
+        params.a.ds0 = 0.3; %spread of beam
+        params.a.dz0 = sqrt(params.a.T_eV/params.a.E_eV); %spread of pitch angle
+        params.a.n = 1e19; %beam density
+        params.b.n = params.a.n; %background density equal to beam density
+        params.B_func = params.B_func2; %setting magnetic field to loop function
+        params.dB_ds = params.dB_ds2;
+        params.init_cond_v = @(v,p,t) params.a.n.*params.gauss(v,params.a.v_beam,params.a.vth);
+        params.init_cond_s = @(s,p,t) params.gauss(s,params.a.s0,params.a.ds0);
     case 2
         params.init_cond_s = @(s,p,t) params.maxwell(s,params.Lx/3,2.5);
         params.boundary_cond_s = @(s,p,t) s.*0;
@@ -32,8 +48,9 @@ switch opts.case_
     case 3
         params.B_func = params.B_func2; %setting magnetic field to loop function
         params.dB_ds = params.dB_ds2;
-        params.init_cond_s = @(s,p,t) params.gauss(s,0.4,2);
-        params.init_cond_z = @(z,p,t) params.gauss(z,pi/4,0.5);
+        params.init_cond_v = @(v,p,t) params.gauss(v,params.a.v_beam,params.a.vth)/params.a.n;
+        params.init_cond_s = @(s,p,t) params.gauss(s,0,2);
+        params.init_cond_z = @(z,p,t) z.*0 + 1;
         params.boundary_cond_s = @(s,p,t) s.*0;
         params.soln_z = @(z,p,t) z.*0 + 1;
         %params.z0 = pi/2 -1e-6;
@@ -42,7 +59,7 @@ end
 
 %% Define the dimensions
 
-dim_v = DIMENSION(1.0e3,5e7);
+dim_v = DIMENSION(1.0e5,2e7);
 dim_z = DIMENSION(0,pi);
 dim_s = DIMENSION(-3,3);
 
@@ -141,23 +158,26 @@ termC_z = SD_TERM({pterm2,pterm3,pterm4});
 termC   = MD_TERM(num_dims,{termC_v,termC_z,[]});
 
 % term V1 == (sin(z)^2*cos(z)/2 *dB/ds/B)v^2 df/dv
-% term V1 == q(z)r(s)w(v) 
-% q(z) = g1(z) [mass, g1(z) = 0.5*sin(z)^2 cos(z), BC = N/A]
-% r(s) = g2(s) [mass, g2(s) = dB/ds / B, BC = N/A]
-% w(v) = g3(v) m(v) [mass, g3(v), BC = N/A]
-% m(v) = d/dv (g4(v) f) [grad, g4(v) = 1, BCL=N, BCR=D ]
-g1 = @(z,p,t,dat) 0.5*sin(z).^2.*cos(z);
-g2 = @(s,p,t,dat) p.dB_ds(s)./p.B_func(s);
-g3 = @(v,p,t,dat) v.^2;
-g4 = @(v,p,t,dat) v.*0 + 1;
+% term V1 == w(v)q(z)r(s)
+% w(v) = g1(v) m(v) [mass, g1(v) = v.^2, BC = N/A]
+% m(v) = d/dv (g2(v) f) [grad, g2(v) = 1, BCL=N, BCR=D ]
+% q(z) = g3(z) [mass, g3(z) = 0.5*sin(z)^2 cos(z), BC = N/A]
+% r(s) = g4(s) [mass, g5(s) = dB/ds / B, BC = N/A]
+g1 = @(v,p,t,dat) v.^2;
+g2 = @(v,p,t,dat) v.*0 + 1;
 pterm1 = MASS(g1);
-pterm2 = MASS(g2);
-pterm3 = MASS(g3);
-pterm4 = GRAD(num_dims,g4,+1,'D','D', BCL, BCR);
+pterm2 = GRAD(num_dims,g2,0,'N','N');%, BCL, BCR);
+termV_v = SD_TERM({pterm1,pterm2});
+
+g3 = @(z,p,t,dat) 0.5*sin(z).^2.*cos(z);
+pterm1 = MASS(g3);
 termV_z = SD_TERM({pterm1});
-termV_s = SD_TERM({pterm2});
-termV_v = SD_TERM({pterm3,pterm4});
+
+g4 = @(s,p,t,dat) p.dB_ds(s)./p.B_func(s);
+pterm1 = MASS(g4);
+termV_s = SD_TERM({pterm1});
 termV1 = MD_TERM(num_dims,{termV_v,termV_z,termV_s});
+%termV1 = MD_TERM(num_dims,{termV_v,[],termV_s});
 
 % term V2 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
@@ -167,7 +187,7 @@ g1 = @(v,p,t,dat) 1./v.^2;
 g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
+pterm2  = GRAD(num_dims,g2,-1,'N','N');% BCL, BCR);
 termV_v = SD_TERM({pterm1,pterm2});
 termV2  = MD_TERM(num_dims,{termV_v,[],[]});
 
@@ -182,11 +202,11 @@ g2 = @(v,p,t,dat) v.^4.*0.5.*p.nu_par(v,p.a,p.b);
 g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1      = MASS(g1);
-pterm2      = GRAD(num_dims,g2,+1,'D','N');
-pterm3      = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
+pterm2      = GRAD(num_dims,g2,+1,'D','D');
+pterm3      = GRAD(num_dims,g3,-1,'N','N');% BCL, BCR);
 termV_v     = SD_TERM({pterm1,pterm2,pterm3});
 termV3      = MD_TERM(num_dims,{termV_v,[],[]});
-terms = {termV2, termV3, termC, termS1, termS2};
+terms = {termV1,termS1,termS2};
 
 %% Define sources
 
