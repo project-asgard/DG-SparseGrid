@@ -1,4 +1,4 @@
-function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
+function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 
      x = nodes{1};
 %     x = 0.5*9.109*10^-31*x.^2/(1.602*10^-19);
@@ -31,9 +31,9 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
         end
     end
     
-    sz = numel(f_nD{1,2}(:,1,1))/2;
-    sy = 3*numel(f_nD{1,2}(1,:,1))/4;
-    sx = numel(f_nD{1,2}(1,1,:))/12;
+    sz = numel(f_nD{1,1}(:,1,1))/2 + 1;
+    sy = numel(f_nD{1,1}(1,:,1))/4;
+    sx = numel(f_nD{1,1}(1,1,:))-1;
     
     %contourf(v_par,v_perp,f_nD{1,1}(:,:,sx));
 %     hold on
@@ -82,14 +82,25 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde)
 %     %%
 %     % Plot 2D
 %     
+    num_steps = length(time_array);
     ax1 = subplot(2,3,1);
-  %  sx = 8;  
-    contourf(z,x,squeeze(f_nD{1,2}(:,sy,:))');
-%    ax2 = subplot(2,3,2);
-    title('2D slice through 3D numeric');
-    sx = 46;
-%    contourf(z,x,f_nD{1,2}(:,sy,:));
+    contourf(z,y,squeeze(f_nD{1,num_steps}(:,:,sx))');
+    title('Space vs. Pitch');
+    ax2 = subplot(2,3,2);
+    contourf(z,x,squeeze(f_nD{1,num_steps}(:,sy,:))');
+    title('Space vs. Velocity');
+    %sx = 46;
+    ax3 = subplot(2,3,3);
+    contourf(y,x,squeeze(f_nD{1,num_steps}(sz,:,:))');
+    title('Pitch vs Velocity');
 
-
-
+    
+    n_total = zeros(nz, num_steps);
+    for i = 1:num_steps
+         n_total(:,i) = squeeze(sum(f_nD{1,i}, [2 3]));
+    end
+    ax4 = subplot(2,3,5);
+    contourf(z,time_array,squeeze(n_total(:,:))');
+    title('Number Density vs. Time');
+    
 end
