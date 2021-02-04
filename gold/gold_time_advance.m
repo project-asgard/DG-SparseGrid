@@ -37,6 +37,17 @@ run_time_advance(@diffusion2,out_format, ...
 
 %% uniform level, explicit
 
+% mirror3 l3d5
+out_format = strcat(data_dir,'mirror3_sg_l3_d5_case1_t%d.dat');
+run_time_advance(@mirror3,out_format, ...
+    'CFL',0.01,'lev',3,'deg',5,'grid_type','SG','case',1,'timestep_method','RK3');
+out_format = strcat(data_dir,'mirror3_sg_l3_d5_case2_t%d.dat');
+run_time_advance(@mirror3,out_format, ...
+    'CFL',0.01,'lev',3,'deg',5,'grid_type','SG','case',2,'timestep_method','RK3');
+out_format = strcat(data_dir,'mirror3_sg_l3_d5_case3_t%d.dat');
+run_time_advance(@mirror3,out_format, ...
+    'CFL',0.01,'lev',3,'deg',5,'grid_type','SG','case',3,'timestep_method','RK3');
+
 % diffusion2 l2d2 RK3
 out_format = strcat(data_dir,'diffusion2_sg_l2_d2_t%d.dat');
 run_time_advance(@diffusion2,out_format, ...

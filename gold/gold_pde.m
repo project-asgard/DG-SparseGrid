@@ -32,6 +32,13 @@ run_pde(@continuity3, out_format, domain, t, 'lev', 5, 'deg', 4);
 out_format = strcat( data_dir, "continuity_6_" );
 run_pde(@continuity6, out_format, domain, t);
 
+out_format = strcat( data_dir, "mirror_3_case1_" );
+run_pde(@mirror3, out_format, domain, t, 'lev', 4, 'deg', 5, 'case', 1);
+out_format = strcat( data_dir, "mirror_3_case2_" );
+run_pde(@mirror3, out_format, domain, t, 'lev', 4, 'deg', 5, 'case', 2);
+out_format = strcat( data_dir, "mirror_3_case3_" );
+run_pde(@mirror3, out_format, domain, t, 'lev', 4, 'deg', 5, 'case', 3);
+
 
 function run_pde(pde_handle, out_format, x, t, varargin)
 

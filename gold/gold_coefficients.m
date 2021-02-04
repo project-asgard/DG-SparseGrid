@@ -27,14 +27,19 @@ levels = [5];
 generate_data( @fokkerplanck1_pitch_CE, levels, 'fokkerplanck1_4p4', 'deg', 3 );
 levels = [3];
 generate_data( @fokkerplanck1_pitch_CER, levels, 'fokkerplanck1_4p5', 'deg', 5 );
+levels = [3, 3, 3];
+generate_data( @mirror3, levels, 'mirror_3_case1', 'case', 1, 'deg', 4);
+generate_data( @mirror3, levels, 'mirror_3_case2', 'case', 2, 'deg', 4);
+generate_data( @mirror3, levels, 'mirror_3_case3', 'case', 3, 'deg', 4);
 
 % non-uniform level
 % note fp2 must be calculated with modified x domain [1,20] to avoid singularity problem
-levels = [2, 310];
+levels = [2, 3];
 generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'deg', 3 );
 levels = [4, 2];
 generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'lev', 4, 'deg', 4 );
 levels = [4, 5];
+
 generate_data( @continuity2, levels, 'continuity2', 'deg', 3 );
 levels = [2, 3, 2];
 generate_data( @continuity3, levels, 'continuity3', 'deg', 4 );
