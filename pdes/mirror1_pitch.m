@@ -6,10 +6,10 @@ function pde = mirror1_pitch(opts)
 % distribution that has a Maxwellian form. 
 % PDE:
 % 
-% df/dt == nu_D/(2*sin(z)) d/dz ( sin(z) df/dz )
+% df/dt sin(z)  == nu_D/2 d/dz ( sin(z) df/dz ) 
 %
 % nu_D is the deflection frequency
-% Domain is [-pi,pi]
+% Domain is [0,pi]
 % Homogeneous Neumann boundary condition 
 % Code will be added to equation involving velocity dimension
 %
@@ -53,7 +53,7 @@ nu_D = 10^4; %deflection frequency in s^-1
 
 %% Define the dimensions
 
-dim_z = DIMENSION(0,pi/2);
+dim_z = DIMENSION(0,pi);
 dim_z.jacobian = @(z,p,t) sin(z);
 dimensions = {dim_z};
 num_dims = numel(dimensions);
@@ -83,15 +83,24 @@ BCR = soln1;
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
+
+% LHS_term == df/dt sin(z)
+g1 = @(z,p,t,dat) sin(z);
+pterm1 = MASS(g1);
+LHS_term_z = SD_TERM({pterm1});
+LHS_term = MD_TERM(num_dims,{LHS_term_z});
+LHS_terms = {LHS_term};
+
+
+% termC == nu_D/2*d/dz sin(z)*df/dz
 %
 % becomes 
 %
-% termC == g1(z) q(z)        [mass, g1(p) = nu_D/(2*sin(z)),  BC N/A]
+% termC == g1(z) q(z)        [mass, g1(p) = nu_D/2,  BC N/A]
 %   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
 %   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
-g1 = @(z,p,t,dat) nu_D./(2*sin(z));
+g1 = @(z,p,t,dat) nu_D./2;
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
@@ -122,6 +131,6 @@ sources = {};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
