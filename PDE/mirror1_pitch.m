@@ -19,7 +19,7 @@ function pde = mirror1_pitch(opts)
 % Run with
 %
 % implicit
-% asgard(@mirror1_pitch,'timestep_method','matrix_exponential','dt',5e-7,'num_steps',20,'lev',3,'deg',3);
+% asgard(@mirror1_pitch,'timestep_method','BE','dt',5e-7,'num_steps',20,'lev',3,'deg',3, 'calculate_mass', false, 'normalize_by_mass', false);
 %
 
     function ret = psi(x)
@@ -85,14 +85,14 @@ BCR = soln1;
 %% 
 
 % LHS_term == df/dt sin(z)
-g1 = @(z,p,t,dat) sin(z);
+g1 = @(z,p,t,dat) dim_z.jacobian(z,p,t);
 pterm1 = MASS(g1);
 LHS_term_z = SD_TERM({pterm1});
 LHS_term = MD_TERM(num_dims,{LHS_term_z});
 LHS_terms = {LHS_term};
 
 
-% termC == nu_D/2*d/dz sin(z)*df/dz
+% termC == nu_D/(2sin(z))*d/dz sin(z)*df/dz*sin(z)
 %
 % becomes 
 %
@@ -100,7 +100,7 @@ LHS_terms = {LHS_term};
 %   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
 %   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
-g1 = @(z,p,t,dat) nu_D./2;
+g1 = @(z,p,t,dat) nu_D.*dim_z.jacobian(z,p,t)./(2.*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
