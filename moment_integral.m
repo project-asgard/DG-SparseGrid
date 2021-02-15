@@ -2,7 +2,14 @@ function ans = moment_integral(lev_vec,deg,f,md_gfunc,dims,nodes,dims_subset_idx
 
 % evaluation of some function (md_gfunc) moment of a real-space distribution function f
 
-assert(numel(size(f)) == numel(dims)); % this function now accepts the m x n (for 2D) shaped f
+num_dims_from_f = numel(size(f));
+if num_dims_from_f <= 2
+   if numel(f(:)) == max(size(f))
+       num_dims_from_f = 1;
+   end
+end
+
+assert( num_dims_from_f == numel(dims)); % this function now accepts the m x n (for 2D) shaped f
 
 num_dims = length(dims);
 
@@ -32,10 +39,10 @@ quad_ww = 2^(-lev)/2*quad_ww;
 ww_1D = repmat(quad_ww, 2^lev(1), 1);
 ww = 1;
 for d1 = 1:num_dims
-    min = dims{1,d1}.min;
-    max = dims{1,d1}.max;
+    dim_min = dims{1,d1}.min;
+    dim_max = dims{1,d1}.max;
     if ~isempty(find(vecdim==d1)) % only apply quadrature weights for those dimensions we are integrating over
-        ww = kron(ww,ww_1D)*(max - min);
+        ww = kron(ww,ww_1D)*(dim_max - dim_min);
     else
         ww = kron(ww,ww_1D.*0+1);
     end
