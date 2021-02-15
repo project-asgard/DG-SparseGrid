@@ -6,7 +6,7 @@ function pde = mirror1_pitch(opts)
 % distribution that has a Maxwellian form. 
 % PDE:
 % 
-% df/dt sin(z)  == nu_D/2 d/dz ( sin(z) df/dz ) 
+% df/dt  == nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) 
 %
 % nu_D is the deflection frequency
 % Domain is [0,pi]
@@ -92,7 +92,7 @@ LHS_term = MD_TERM(num_dims,{LHS_term_z});
 LHS_terms = {LHS_term};
 
 
-% termC == nu_D/(2sin(z))*d/dz sin(z)*df/dz*sin(z)
+% termC == nu_D/(2sin(z))*d/dz sin(z)*df/dz
 %
 % becomes 
 %
@@ -100,7 +100,7 @@ LHS_terms = {LHS_term};
 %   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
 %   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
-g1 = @(z,p,t,dat) nu_D.*dim_z.jacobian(z,p,t)./(2.*sin(z));
+g1 = @(z,p,t,dat) nu_D./(2.*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
@@ -131,6 +131,6 @@ sources = {};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
