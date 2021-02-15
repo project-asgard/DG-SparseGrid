@@ -65,7 +65,7 @@ dim_s = DIMENSION(-3,3);
 
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
 dim_z.jacobian = @(z,p,t) sin(z);
-dim_s.jacobian = @(s,p,t) s.*0 + 1;
+dim_s.jacobian = @(s,p,t) params.B_func(s);
 
 dimensions = {dim_v,dim_z,dim_s};
 num_dims = numel(dimensions);
