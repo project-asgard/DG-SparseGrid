@@ -2,7 +2,7 @@ function ans = moment_integral(lev_vec,deg,f,md_gfunc,dims,nodes,dims_subset_idx
 
 % evaluation of some function (md_gfunc) moment of a real-space distribution function f
 
-assert(numel(size(f)) == numel(dims)); % this function now accepts the m x n (for 2D) shaped f
+assert(numel(squeeze(size(f))) == numel(dims)); % this function now accepts the m x n (for 2D) shaped f
 
 num_dims = length(dims);
 
