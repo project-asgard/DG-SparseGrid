@@ -1,7 +1,7 @@
 function pde = mirror_space1(opts)
 % 1D mirror case along magnetic axis direction, i.e., 
 %
-% df/dt B(s) == -vcoszdf/ds B(s) - (vcosz)dB/ds/B(s) f B(s)
+% df/dt B(s) == -cos(pi/4)*df/ds B(s) - cos(pi/4)*dB/ds/B(s) f B(s)
 %
 % Run with
 %
@@ -9,13 +9,13 @@ function pde = mirror_space1(opts)
 % asgard(@mirror_space1, 'calculate_mass', false, 'normalize_by_mass', false)
 
 % implicit
-% asgard(@mirror_space1,'timestep_method','BE', 'calculate_mass', false, 'normalize_by_mass', false)
+% asgard(@mirror_space1,'timestep_method','BE', 'calculate_mass', true, 'normalize_by_mass', true)
 
 B_func = @(s) exp(s); %magnetic field as a function of spatial coordinate
 dB_ds = @(s) B_func(s); %derivative of magnetic field
 
-vel_test = 500; %test value for velocity in coefficient
-pitch_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
+vel_test = 1; %test value for velocity in coefficient
+pitch_test = pi/4; %test value for pitch angle in coefficient
 decay_coeff = vel_test*cos(pitch_test);
 
 %% Define the dimensions
