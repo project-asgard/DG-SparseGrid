@@ -6,7 +6,7 @@ function pde = mirror1_pitch(opts)
 % distribution that has a Maxwellian form. 
 % PDE:
 % 
-% df/dt  == nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) 
+% df/dt  == -cos(z)*f + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) 
 %
 % nu_D is the deflection frequency
 % Domain is [0,pi]
@@ -19,7 +19,7 @@ function pde = mirror1_pitch(opts)
 % Run with
 %
 % implicit
-% asgard(@mirror1_pitch,'timestep_method','BE','dt',5e-7,'num_steps',20,'lev',3,'deg',3, 'calculate_mass', false, 'normalize_by_mass', false);
+% asgard(@mirror1_pitch,'timestep_method','BE','dt',5e-7,'num_steps',20,'lev',3,'deg',3, 'calculate_mass', true, 'normalize_by_mass', true);
 %
 
     function ret = psi(x)
@@ -91,6 +91,12 @@ LHS_term_z = SD_TERM({pterm1});
 LHS_term = MD_TERM(num_dims,{LHS_term_z});
 LHS_terms = {LHS_term};
 
+%term V2 == -cos(z)*f
+%term V2 == g1(v)*f [mass, g1(v) = -cos(z), BC = N/A]
+g1 = @(z,p,t,dat) -cos(z);
+pterm1 = MASS(g1);
+termM_z = SD_TERM({pterm1});
+termM= MD_TERM(num_dims,{termM_z});
 
 % termC == nu_D/(2sin(z))*d/dz sin(z)*df/dz
 %
@@ -109,7 +115,7 @@ pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
 termC_z = SD_TERM({pterm1,pterm2,pterm3});
 termC   = MD_TERM(num_dims,{termC_z});
 
-terms = {termC};
+terms = {termM,termC};
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
