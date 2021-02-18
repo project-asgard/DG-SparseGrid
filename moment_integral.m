@@ -87,7 +87,6 @@ for d1 = 1:num_dims
     this_dim_coord = coords{d1};
     if ~isempty(find(vecdim==d1)) % only apply moment func and jac for those dimensions we are integrating over
         moment = moment .* md_gfunc{d1}(this_dim_coord);
-        
         for d2 = 1:num_dims
             this_dim_coord = coords{d2};
             jac = jac .* dims{d1}.jacobian(this_dim_coord);

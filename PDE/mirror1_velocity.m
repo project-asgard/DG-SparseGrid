@@ -2,11 +2,11 @@ function pde = mirror1_velocity(opts)
 % Strong form of one-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == (v^2/2)df/dv  - v*f + 1/v^2 (d/dv(flux_v))
+% df/dt == -(1 - v^2/2*sin^2(pi/4))*cos(pi/4)*df/dv  - v*cos(pi/4)*f + 1/v^2 (d/dv(flux_v))
 %
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
-% df/dt == (v^2)/2 )df/dv*v^2 -v*f*v^2 + 1/v^2 (d/dv(v^3[(m_a/(m_a +
+% df/dt ==  -( 1-v^2/4)*sqrt(2)/2*df/dv*v^2 -v*sqrt(2)/2*f + 1/v^2 (d/dv(v^3[(m_a/(m_a +
 % m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)])*v^2
 %
 %
@@ -67,20 +67,20 @@ BCR = new_md_func(num_dims,{...
 %% 
 
 
-% term V1 == v^2/2 df/dv*v^2
+% term V1 == -(1 - v^2/4)*sqrt(2)/2*df/dv*v^2
 % term V1 == g(v) q(v) 
-% g(v) = g1(v) [mass, g1(z) = v^2/2, BC = N/A]
+% g(v) = g1(v) [mass, g1(z) = (1 - v^2/4)*sqrt(2)/2, BC = N/A]
 % q(v) = d/dv (g2(v) f) [grad, g2(v) = 1, BCL=N, BCR=D ]
-g1 = @(v,p,t,dat) v.^2;
+g1 = @(v,p,t,dat) -(1 - v.^2./4).*sqrt(2)/2;
 g2 = @(v,p,t,dat) v.*0 + 1;
 pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
+pterm2 = GRAD(num_dims,g2,0,'N','D', BCL, BCR);
 termV_v = SD_TERM({pterm1,pterm2});
 termV1 = MD_TERM(num_dims,{termV_v});
 
-%term V2 == -v*f*v^2
+%term V2 == -v*sqrt(2)/2*f
 %term V2 == g1(v)*f [mass, g1(v) = -v, BC = N/A]
-g1 = @(v,p,t,dat) -v;
+g1 = @(v,p,t,dat) -v.*sqrt(2)/2;
 pterm1 = MASS(g1);
 termV_v = SD_TERM({pterm1});
 termV2 = MD_TERM(num_dims,{termV_v});
