@@ -77,7 +77,7 @@ function pde = fokkerplanck1_momentum_C(opts)
 %% Define the dimensions
 
 dim_x = DIMENSION(0,+10);
-dim_x.jacobian = @(x,p,t) x.^2;
+dim_x.jacobian = @(x,p,t,dat) x.^2;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -95,52 +95,50 @@ initial_conditions = {ic1};
 
 %% Setup the terms of the PDE
 
-g1 = @(x,p,t,dat) x.^2;
-pterm1 = MASS(g1);
-LHS_term_x = SD_TERM({pterm1});
+% LHS terms (mass matrix)
+
+gL = @(x,p,t,dat) x.^2;
+ptermL = MASS(gL);
+LHS_term_x = SD_TERM({ptermL});
 LHS_term   = MD_TERM(num_dims,{LHS_term_x});
 LHS_terms = {LHS_term};
 
+% RHS terms
+
 % term1
 %
-% 1/x^2 * d/dx*x^2*psi(x)/x*df/dx
+% p^2*df/dt == d/dp(p*psi*df/dp)
 %
-% eq1 :  df/dt == g1(x) q(x)        [mass,g1(x)=1/x^2,        BC N/A for mass]
-% eq2 :   q(x) == d/dx g2(x) p(x)   [grad,g2(x)=x^2*psi(x)/x, BCL=D, BCR=N]
-% eq3 :   p(x) == d/dx g3(x) f(x)   [grad,g3(x)=1,            BCL=N, BCR=D]
+% (1) :   gL*df/dt == d/dp(g1*w)   [grad,g2=p*psi, BCL=D, BCR=N]
+% (2) :          w == d/dp(g2*f)   [grad,g3=1,        BCL=N, BCR=D]
 %
-% coeff_mat = mat1 * mat2 * mat3
+% coeff_mat = mat1 * mat2
 
-g1 = @(x,p,t,dat) 1./(x.^2);
-g2 = @(x,p,t,dat) x_psi(x);
-g3 = @(x,p,t,dat) x.*0+1;
+g1 = @(x,p,t,dat) x_psi(x);
+g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,-1,'D','N');
-pterm3 = GRAD(num_dims,g3,+1,'N','D');
+pterm1 = GRAD(num_dims,g1,+1,'D','N');
+pterm2 = GRAD(num_dims,g2,-1,'N','D');
 
-term1_x = SD_TERM({pterm1,pterm2,pterm3});
+term1_x = SD_TERM({pterm1,pterm2}); % order here is as in equation
 term1   = MD_TERM(num_dims,{term1_x});
 
 % term2
 %
-% 1/x^2 * d/dx*x^2*2*psi(x)*f
+% p^2*df/dt == d/dp(p^2*2*psi*f)
 %
-% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
-% eq2 :   q(x) == d/dx g(x) f(x)   [grad,g(x)=x^2*2*psi(x), BCL=N, BCR=D]
+% (3) :   gL*df/dt == d/dp(g3*f)   [grad,g3=p^2*2*psi, BCL=N, BCR=D]
 %
 % coeff_mat = mat1 * mat2
 
-g1 = @(x,p,t,dat) 1./(x.^2);
-g2 = @(x,p,t,dat) 2.*x.*x_psi(x);
+g3 = @(x,p,t,dat) 2.*x.*x_psi(x);
 
-pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,-1,'N','D');
+pterm3 = GRAD(num_dims,g3,-1,'N','D');
 
-term2_x = SD_TERM({pterm1,pterm2});
+term2_x = SD_TERM({pterm3});
 term2   = MD_TERM(num_dims,{term2_x});
 
-terms = {term1,term2};
+terms = {term1};%,term2};
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.

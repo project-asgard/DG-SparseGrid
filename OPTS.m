@@ -151,6 +151,8 @@ classdef OPTS
                         disp("WARNING: setting 'time_independent_A',false to be compatible with 'adapt',true");
                     end
                     opts.time_independent_A = false;
+                else
+                    opts.max_lev_coeffs = false;
                 end
                 
                 if opts.use_connectivity

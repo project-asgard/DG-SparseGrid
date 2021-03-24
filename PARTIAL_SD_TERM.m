@@ -1,11 +1,22 @@
 classdef PARTIAL_SD_TERM
     
     properties
+        
         type
-        g
         dat
+        
+        % RHS g_func, matrix, and vector 
+        % (vector presently unused but should be where we but the surface integrals) 
+        g
         mat
+        
+        % LHS g_func, matrix, and vector
+        LHS_g
+        LHS_mat
+        
+        % for debugging purposes only
         mat_unrotated
+        LHS_mat_unrotated
     end
     
     methods

@@ -66,7 +66,10 @@ for tt = 1:num_terms % Construct a BC object for each term
                 
                 timeFacL = 1;
                 timeFacR = 1;
-                                
+                
+                jacobian_pterm = MASS(dim.jacobian);
+                mass_J = coeff_matrix_mass_or_grad(opts.deg,time,dim,jacobian_pterm,pde.params,pde.transform_blocks,dim.lev);
+                
                 if strcmp(this_BCL,'D') % Left side
                     
                     %%
@@ -94,18 +97,23 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     %%
                     % Apply mats from preceeding pterms when chaining (p>1)
-                    % FIXME : test this for p>2
                     
-                    if p > 1
+%                     if p > 1
                         preceeding_mat = eye(dof);
                         for nn=1:p-1
+                            if nn>1
+                                disp('mult by J^-1');
+                                preceeding_mat = preceeding_mat * inv(mass_J);
+                            end
                             preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof, 1:dof);
                         end
-                        bcL_tmp = preceeding_mat * bcL_tmp;
-                    end
+                        bcL_tmp = preceeding_mat * inv(mass_J) * bcL_tmp;
+%                     end
                     
                     bcL{d1}{d1} = bcL_tmp;
                 end
+                
+                
                 
                 if strcmp(this_BCR,'D') % Right side
                     
@@ -129,11 +137,11 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     bcR_tmp = compute_boundary_condition(pde,this_g,dim.jacobian,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
                     %bcR_tmp = FMWT * bcR_tmp;
-                     trans_side = 'LN';
+                    trans_side = 'LN';
                     bcR_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcR_tmp, trans_side);
                     %%
                     % Apply mats from preceeding terms when chaining (p>1)
-                    
+                                        
                     if p > 1
                         preceeding_mat = eye(dof);
                         for nn=1:p-1
@@ -145,7 +153,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     bcR{d1}{d1} = bcR_tmp;
                 end
-                                
+                
                 fListL = bcL{d1};
                 fListR = bcR{d1};
                 

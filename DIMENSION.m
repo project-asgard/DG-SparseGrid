@@ -7,7 +7,7 @@ classdef DIMENSION
         max = 1;
         lev = 3;
         init_cond_fn = @(x,p) x.*0;
-        jacobian = @(x,p,t) x.*0 + 1;
+        jacobian = @(x,p,t,d) x.*0 + 1;
         
     end
     
