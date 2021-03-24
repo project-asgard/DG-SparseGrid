@@ -1,11 +1,11 @@
-function pde = advect_blob2(opts)
-% 2D advect a blob across a domain. Use for feature tracking testing in the adaptiviy.  
+function pde = advect_blob3(opts)
+% 3D advect a blob across a domain. Use for feature tracking testing in the adaptiviy.  
 %
 % df/dt == -v * df/dx
 %
 % Run with
 %
-% asgard(@advect_blob2,'deg',5','lev',4,'num_steps',5,'dt',0.002)
+% asgard(@advect_blob3,'deg',5','lev',4,'num_steps',5,'dt',0.002)
 %
 % Notes:
 %  DLG - analytic solution won't work past about t = 0.002*500
@@ -14,7 +14,8 @@ function pde = advect_blob2(opts)
 
 dim_x = DIMENSION(-1,+1);
 dim_y = DIMENSION(-1,+1);
-dimensions = {dim_x,dim_y};
+dim_z = DIMENSION(-1,+1);
+dimensions = {dim_x,dim_y,dim_z};
 num_dims = numel(dimensions);
 
 %% Define some parameters and add to pde object.
@@ -26,8 +27,9 @@ params.sig = 0.1; % blob width
 
 a_x = @(x,p,t) exp(-(x-p.v*t).^2/p.sig.^2)+exp(-(x-p.v*t+2).^2/p.sig.^2);
 a_y = @(x,p,t) exp(-x.^2/p.sig.^2);
+a_z = @(x,p,t) exp(-x.^2/p.sig.^2);
 a_t = @(t,p) t.*0+1;
-sol1 = new_md_func(num_dims,{a_x,a_y,a_t});
+sol1 = new_md_func(num_dims,{a_x,a_y,a_z,a_t});
 solutions = {sol1};
 
 %% Define the initial conditions
@@ -42,7 +44,7 @@ g1 = @(x,p,t,dat) x.*0-p.v;
 pterm1 = GRAD(num_dims,g1,-1,'P','P');
 
 term1_x = SD_TERM({pterm1});
-term1   = MD_TERM(num_dims,{term1_x,[]});
+term1   = MD_TERM(num_dims,{term1_x,[],[]});
 
 %%
 % Add terms to the pde object

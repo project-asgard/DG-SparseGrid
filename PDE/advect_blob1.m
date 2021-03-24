@@ -5,7 +5,7 @@ function pde = advect_blob1(opts)
 %
 % Run with
 %
-% asgard(@advect_blob1)
+% asgard(@advect_blob1,'deg',5','lev',4,'num_steps',5,'dt',0.002)
 %
 % Notes:
 %  DLG - analytic solution won't work past about t = 0.002*500
