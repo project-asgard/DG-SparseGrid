@@ -1,19 +1,24 @@
-generate_data( diffusion1, 'diffusion1', 'lev', 2, 'deg', 2);
-generate_data( diffusion1, 'diffusion1', 'lev', 4, 'deg', 4);
-generate_data( diffusion1, 'diffusion1', 'lev', 5, 'deg', 5);
+generate_data( @diffusion1, 'diffusion1', 'lev', 2, 'deg', 2);
+generate_data( @diffusion1, 'diffusion1', 'lev', 4, 'deg', 4);
+generate_data( @diffusion1, 'diffusion1', 'lev', 5, 'deg', 5);
 
-function [ bcL, bcR ] = generate_data(pde, pde_name, varargin)
+generate_data( @mirror3, 'mirror3_case1', 'case', 1, 'lev', 3, 'deg', 4);
+generate_data( @mirror3, 'mirror3_case2', 'case', 2, 'lev', 3, 'deg', 4);
+generate_data( @mirror3, 'mirror3_case3', 'case', 3, 'lev', 3, 'deg', 4);
+
+
+function [ bcL, bcR ] = generate_data(pde_handle, pde_name, varargin)
 data_dir = strcat("generated-inputs/boundary_conditions/");
 out_format = strcat(data_dir, "compute_%s_%s_%dd_%dl_%dt_%ddim_%dp.dat");
 
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
-runtime_defaults
+opts = OPTS(varargin);  
+opts.quiet = 1;
+pde = pde_handle( opts );  
 
-pde = check_pde(pde,opts);
-
-[elements, elements_idx]    = hash_table_sparse_nD (opts.lev_vec, ...
+[elements, elements_idx]    = hash_table_sparse_nD (pde.get_lev_vec, ...
                                                     opts.max_lev, opts.grid_type);
 hash_table.elements         = elements;
 hash_table.elements_idx     = elements_idx;
@@ -46,8 +51,8 @@ for tt = 1:num_terms % Construct a BC object for each term
         term_1D = term_nD.terms_1D{d1};
         %         type = term_1D_.type;
 
-        xMin = dim.domainMin;
-        xMax = dim.domainMax;
+        xMin = dim.min;
+        xMax = dim.max;
 
         lev = dim.lev;
 
