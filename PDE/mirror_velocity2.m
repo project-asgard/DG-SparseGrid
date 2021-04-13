@@ -3,7 +3,7 @@ function pde = mirror_velocity2(opts)
 % of f in the presence of Coulomb collisions with background electrons
 % Also applied to the 2D test for CQL4D equations
 
-% df/dt == -eE/m cos(z) v^2 sin(z) df/du - eE_par/m sin(z)/vdf/dz + v^2*nu_D/2 d/dz ( sin(z) df/dz ) + sin(z)*(d/dv(flux_v))
+% df/dt == -eE/m cos(z) v^2 sin(z) df/du + eE/m sin^2(z)vdf/dz + v^2*nu_D/2 d/dz ( sin(z) df/dz ) + sin(z)*(d/dv(flux_v))
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
@@ -62,20 +62,33 @@ BCR = ic1;
 
 %% Define the terms of the PDE
 
-% -u^2 sin(z)*E*Z_a/m_a cos(z) d/dv(f)
+% -u^2 sin(z)*eE*Z_a/m_a cos(z) d/dv(f)
 
-g1 = @(v,p,t,dat) -E.*Z_a.v.^2./m_a;
+g1 = @(v,p,t,dat) -p.e.*p.E.*Z_a.v.^2./m_a;
 g2 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g3,-1,'N','N');
+pterm2  = GRAD(num_dims,g2,-1,'N','N');
 termE_v = SD_TERM({pterm1,pterm2});
 
-g1 = @(z,p,t,dat) sin(z).*cos(z);
-pterm1 = MASS(g1);
+g3 = @(z,p,t,dat) sin(z).*cos(z);
+pterm1 = MASS(g3);
 termE_z = SD_TERM({pterm1});
-termE   = MD_TERM(num_dims,{termE_v,termE_z});
+termE1   = MD_TERM(num_dims,{termE_v,termE_z});
 
+% eE/m sin^2(z)vdf/dz
+
+g1 = @(v,p,t,dat) p.e.*p.E*v./m_a;
+g2 = @(z,p,t,dat) sin(z)^2;
+g3 = @(z,p,t,dat) z.*0 + 1;
+
+pterm1 = MASS(g1);
+pterm2 = MASS(g2);
+pterm3 = GRAD(num_dims,g3,-1,'N','N');
+
+termE_v = SD_TERM({pterm1});
+termE_z = SD_TERM({pterm2,pterm3});
+termE2 = MD_TERM(num_dims,{termE_v,termE_z});
 
 % termC == v.^2.*nu_D/(2*sin(z))*d/dz sin(z)*df/dz
 %
