@@ -13,5 +13,6 @@ verifyLessThan(testCase, diff, 1e-6);
 lIndex1 = 1;
 testVal1 = mirror_Mfunctional(func,minVal,lIndex1);
 diff1 = abs(testVal1 - 0.8862);
+verifyLessThan(testCase,diff1, 5e-5);
 
 end
