@@ -9,10 +9,10 @@ function mirror1_velocity_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the velocity dimension within mirror1');
 % setup PDE
-args = {'lev',4,'deg',4,'dt',1e-8,'quiet',true,'num_steps',20,'timestep_method','matrix_exponential','normalize_by_mass',true};
+args = {'lev',5,'deg',3,'dt',1e-7,'quiet',true,'num_steps',20,'timestep_method','matrix_exponential','normalize_by_mass',false};
 opts = OPTS(args);
 pde = mirror1_velocity(opts);
-% modify PDE - not needed here
+% modify PDE
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness

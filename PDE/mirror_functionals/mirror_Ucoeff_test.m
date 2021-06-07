@@ -12,7 +12,7 @@ func = @(x,y) x.*y.^2;
 %testing U_coeff for l = 0 Legendre polynomial
 lIndex = 0;
 gold_M = 2.9348;
-testVal = mirror_Ucoeff(func,lIndex,uVal);
+testVal = mirror_Ucoeff(func,uVal,lIndex);
 rel_err = abs(testVal - gold_M)/abs(gold_M);
 verifyLessThan(testCase, rel_err, rel_tol);
 
