@@ -10,6 +10,13 @@ N = 200;                           % number of elements on profile
 % =========================================================================
 % Axial domain:
 %z = linspace(-Lx/2,Lx/2,N)' + Lx_offset;
+%speed of light
+
+c = 3*10^8; %m/s
+
+%setting up integrand matrix
+
+gamma = @(u) sqrt(1 + u.^2./c^2); %relativistic correction
 
 m_e = 9.109*10^-31; %electron mass in kg
 m_D = 3.3443*10^-27; %deuterium mass in kgs
@@ -35,7 +42,7 @@ coil_i  = [+1.5,1.5]*1e2; %current going through each coil in amps
 % species b: electrons in background
 b.n = 4e19; %number density of background species in m^-3
 b.E_eV = 0;%energy of background species
-b.T_eV = 4;%temperature/spread of background species
+b.T_eV = 50;%temperature/spread of background species
 b.Z = -1;%atomic number of species
 b.m = m_e; %mass of background
 b.vth = v_th(b.T_eV,b.m);%thermal velocity of background
@@ -48,16 +55,16 @@ b2.Z = 1;
 b2.m = m_D;
 b2.vth = v_th(b2.T_eV,b2.m);
 
-% species a: electrons in beam
+% species a: species in beam
 a.n = 4e19;
-a.E_eV = 1e3; %energy of beam species
-a.T_eV = 100; %temperature/spread of beam species
-a.Z = -1;
+a.E_eV = 3e3; %energy of beam species
+a.T_eV = 20; %temperature/spread of beam species
+a.Z = 1;
 a.z0 = pi/4; %location of beam injection in pitch angle (radians)
 a.dz0 = sqrt(a.T_eV/a.E_eV); %spread of beam in pitch angle
 a.s0 = 0; %location of beam in space (m)
 a.ds0 = 2.5; %spread of beam in space (m)
-a.m = m_e;
+a.m = m_D;
 a.vth = v_th(a.T_eV,a.m);
 a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
 
