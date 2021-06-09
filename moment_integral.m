@@ -72,6 +72,8 @@ end
 % which can be written as the product of 1D funcions as
 % 1 * ww(xx) * f(xx) * g(xx) * J(xx) * ww(yy) * f(yy) * g(yy) * J(yy)
 % where xx and yy are of md_ type. 
+% DLG - I backpedeled the md_ type for the jacobian since I switched to
+% storing the elements of dV, rather than the pieces of dl. 
 
 % e.g., 2D, r, th (spherical with ph integrated away)
 
@@ -87,15 +89,12 @@ for d1 = 1:num_dims
     this_dim_coord = coords{d1};
     if ~isempty(find(vecdim==d1)) % only apply moment func and jac for those dimensions we are integrating over
         moment = moment .* md_gfunc{d1}(this_dim_coord);
-        for d2 = 1:num_dims
-            this_dim_coord = coords{d2};
-            jac = jac .* dims{d1}.jacobian(this_dim_coord);
-        end
+        jac = jac .* dims{d1}.jacobian(this_dim_coord);
     end
 end
 moment = reshape(moment,size(f));
-jac = reshape(moment, size(f));
-md_moment = ww.*f.*moment.*jac;
+jac = reshape(jac, size(f));
+md_moment = ww'.*f.*moment.*jac;
 ans = sum(md_moment,vecdim);
 
 end
