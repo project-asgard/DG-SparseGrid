@@ -5,14 +5,15 @@ tests = functiontests(fh);
 
 end
 
-function mirror1_velocity_test(testCase)
+function mirror1_collision_beamMaxwell_test(testCase)
 addpath(genpath(pwd));
-disp('Testing the velocity dimension within mirror1');
+disp('Testing the collision operator within mirror1');
 % setup PDE
-args = {'lev',5,'deg',3,'dt',1e-7,'quiet',true,'num_steps',20,'timestep_method','matrix_exponential','normalize_by_mass',false};
+args = {'lev',5,'deg',3,'dt',1e-3,'quiet',true,'num_steps',2,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
 opts = OPTS(args);
-pde = mirror1_velocity(opts);
+pde = mirror1_collision(opts);
 % modify PDE
+pde.initial_conditions = @(v,p,t) p.soln_v(v);
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness
