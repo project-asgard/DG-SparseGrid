@@ -21,21 +21,13 @@ v_th = 0.2;
 
 pde.dimensions{1}.min = 0;
 pde.dimensions{1}.max = 1;
-% pde.dimensions{1}.jacobian = @(v,p,t) v.^2;
 
 pde.dimensions{2}.min = 0;
 pde.dimensions{2}.max = pi;
-% pde.dimensions{2}.jacobian = @(z,p,t) sin(z);
 
 % with jacobian
-jacv_v = @(v,p,t) v.*0+1;
-jacv_z = @(z,p,t) z.*0+1;
-jacv = new_md_func(num_dims,{jacv_v,jacv_z});
-pde.dimensions{1}.jacobian = jacv;
-jacz_v = @(v,p,t) v;
-jacz_z = @(z,p,t) z.*0+1;
-jacz = new_md_func(num_dims,{jacz_v,jacz_z});
-pde.dimensions{2}.jacobian = jacz;
+pde.dimensions{1}.jacobian = @(v,p,t) v;
+pde.dimensions{2}.jacobian = @(z,p,t) z.*0+1;
 
 % overwrite the initial conditions for this test
 
@@ -106,36 +98,45 @@ verifyLessThan(testCase, diff3, 1e-6);
 
 % check the 1D mass moment of a 2D function, i.e., give back a vector
 
-% with jacobian
+% with jacobian but over z only
 moment_func_nD = {@mass_func_v,@mass_func_z};
 moment = moment_integral(opts.lev, opts.deg, f, moment_func_nD, pde.dimensions,nodes,[2]);
-moment_analytic_fn = @(v) 1/2*exp(-v.^2./v_th^2).*pi^2.*v;
+moment_analytic_fn = @(v) 1/2*exp(-v.^2./v_th^2).*pi^2;
 moment_analytic = moment_analytic_fn(nodes{1});
 moment_analytic = reshape(moment_analytic,size(moment));
 diff5 = norm(moment-moment_analytic);
-% plot(nodes{1},moment)
-% hold on
-% plot(nodes{1},moment_analytic,'o')
-% hold off
-verifyLessThan(testCase, diff5, 2e-6);
+plot(nodes{1},moment)
+hold on
+plot(nodes{1},moment_analytic,'o')
+hold off
+verifyLessThan(testCase, diff5, 2e-5);
 
-% no jacobian
+% with jacobian but over v only
+moment_func_nD = {@mass_func_v,@mass_func_z};
+moment = moment_integral(opts.lev, opts.deg, f, moment_func_nD, pde.dimensions,nodes,[1]);
+moment_analytic_fn = @(z) 1/2 * (1-exp(-1/v_th^2))*v_th^2.*z;
+moment_analytic = moment_analytic_fn(nodes{2});
+moment_analytic = reshape(moment_analytic,size(moment));
+diff6 = norm(moment-moment_analytic);
+plot(nodes{2},moment)
+hold on
+plot(nodes{2},moment_analytic,'o')
+hold off
+verifyLessThan(testCase, diff6, 2e-5);
 
-jacv = new_md_func(num_dims);
-jacz = new_md_func(num_dims);
-pde.dimensions{1}.jacobian = jacv;
-pde.dimensions{2}.jacobian = jacz;
-
+% no jacobian and over z only
+pde.dimensions{1}.jacobian = @(v,p,t) v.*0+1;
+pde.dimensions{2}.jacobian = @(v,p,t) v.*0+1;
 moment_func_nD = {@mass_func_v,@mass_func_z};
 moment = moment_integral(opts.lev, opts.deg, f, moment_func_nD, pde.dimensions,nodes,[2]);
 moment_analytic_fn = @(v) 1/2*exp(-v.^2./v_th^2).*pi^2;
 moment_analytic = moment_analytic_fn(nodes{1});
 moment_analytic = reshape(moment_analytic,size(moment));
 diff4 = norm(moment-moment_analytic);
-% plot(nodes{1},moment)
-% hold on
-% plot(nodes{1},moment_analytic,'o')
-% hold off
+plot(nodes{1},moment)
+hold on
+plot(nodes{1},moment_analytic,'o')
+hold off
 verifyLessThan(testCase, diff4, 2e-5);
 
 end
