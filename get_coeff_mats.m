@@ -26,9 +26,10 @@ end
 
 %%
 % Normal RHS terms
-disp('RHS terms')
+
 for tt = 1:num_terms
-    disp(['term: ',num2str(tt)])
+    
+    %disp(['term: ',num2str(tt)])
     
     term_nD = pde.terms{tt};
     
@@ -59,13 +60,13 @@ end
 
 %%
 % LHS mass matrix
-disp('LHS terms')
+
 if ~isempty(pde.termsLHS)
     
     nTermsLHS = numel(pde.termsLHS);
     
     for tt=1:nTermsLHS
-        disp(['term: ',num2str(tt)])
+        %disp(['term: ',num2str(tt)])
         
         term_nD = pde.termsLHS{tt};
         

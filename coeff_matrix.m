@@ -6,7 +6,7 @@
 
 function [term_1D] = coeff_matrix(deg,t,dim,term_1D,params,FMWT_blocks,lev)
 
-if ~exist('coeff_level','var') || isempty(lev)
+if ~exist('lev','var') || isempty(lev)
     lev = dim.lev;
 end
 
@@ -42,10 +42,10 @@ mat_unrotated = eye(dof);
 
 for i=1:numel(term_1D.pterms)
     if i>1
-        disp('mult by J^-1');
+        %disp('mult by J^-1');
         mat = mat * inv(mass_J);
     end
-    disp('mult by mat')
+    %disp('mult by mat')
     mat = mat * term_1D.pterms{i}.mat(1:dof, 1:dof);
     [m,n] = size(mat); % these three lines are just here to test if I can remove all the (1:dof,1:dof) cruft
     assert(m==dof);

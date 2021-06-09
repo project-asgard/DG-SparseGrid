@@ -21,7 +21,7 @@ classdef PARTIAL_SD_TERM
     
     methods
         
-        function pt = PARTIAL_SD_TERM(type_,g_,dat_)           
+        function pt = PARTIAL_SD_TERM(type_,g_,LHS_g_,dat_)           
             if nargin<1
                 type_ = 'mass';
             end
@@ -29,11 +29,15 @@ classdef PARTIAL_SD_TERM
                 g_ = @(x,p,t,dat) x.*0+1;
             end
             if nargin<3
+                LHS_g_ = @(x,p,t,dat) x.*0+1;
+            end
+            if nargin<4
                 dat_ = [];
             end
             
             pt.type = type_;
             pt.g = g_;
+            pt.LHS_g = LHS_g_;
             pt.dat = dat_;
         end
         
