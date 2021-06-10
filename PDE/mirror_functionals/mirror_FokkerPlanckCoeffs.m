@@ -40,19 +40,20 @@ delta3_B = delta3_func(funcs_B,uVal,lIndex,params);
 % (u/gamma)*delta3_A^b_l)]*P_l (cos (theta))
  
 %individual element for background species with distribution f_b at order lIndex
-A_c = @(u) -0.5*params.gamma(u).^2*[(params.b.Z/params.a.Z)^2*(params.a.m/params.b.m)*paramas.ln_delt.*(2*lIndex*(lIndex+1)*(params.gamma(u)/u).*A_b_l- (2 + lIndex*(lIndex+1))*delta_A + (uVal/params.gamma(uVal)^3)*(2*delta2_A +(uVal/params.gamma(uVal))*delta3_A) ]*(legendre(lIndex,val_z));
+A_c = @(u) -0.5*params.gamma(u).^2*((params.b.Z/params.a.Z)^2*(params.a.m/params.b.m)*paramas.ln_delt.*(2*lIndex*(lIndex+1)*(params.gamma(u)/u).*A_b_l- (2 + lIndex*(lIndex+1))*delta_A + (uVal/params.gamma(uVal)^3)*(2*delta2_A +(uVal/params.gamma(uVal))*delta3_A) )*(legendre(lIndex,val_z));
 
 % B_c = 0.5*u^2*sum_{b,l}[(Z_b/Z_a)^2*ln_delt*(delta2_B^b_l]*P_l (cos (theta))
 
-B_c = 0.5*uVal^2*[(params.b.Z/params.a.Z)^2*params.ln_delt*delta2_B]*legendre(lIndex,val_z);
+B_c = 0.5*uVal^2*((params.b.Z/params.a.Z)^2*params.ln_delt*delta2_B)*legendre(lIndex,val_z);
 
 % C_c = 0.5*gamma*sum_{b,l}[(Z_b/Z_a)^2*ln_delt*(delta_B^b_l) -
 % (gamma/u)*B^b_l]*(dP_l (cos (theta))/dtheta)
 
-C_c = 0.5*params.gamma(uVal)^2*[(params.b.Z/params.a.Z)^2*params.ln_delt*delta_B*(params.gamma(uVal)/uVal)*B_b_l]*(-lIndex-1)*(val_z*legendre(lIndex,val_z) - legendre(lIndex+1,val_z))/(val_z^2 -1);
+C_c = 0.5*params.gamma(uVal)^2*((params.b.Z/params.a.Z)^2*params.ln_delt*delta_B*(params.gamma(uVal)/uVal)*B_b_l)*(-lIndex-1)*(val_z*legendre(lIndex,val_z) - legendre(lIndex+1,val_z))/(val_z^2 -1);
 
 % D_c = -0.5*gamma^2*sum_{b,l}[(Z_b/Z_a)^2*(m_a/m_b)*ln_delt*(delta2_A^b_l/gamma^3) - 
-% (2*delta_A^b_l/u) - l*(l+1)*(gamma/u^2)*A^b_l]*sin (theta) dP_l (cos (theta))/dtheta
+% (2*delta_A^b_l/u) - l*(l+1)*(gamma/u^2)*A^b_l]*sin (theta) dP_l (cos
+% (theta))/dtheta (-sin(theta))
 
 D_c = -0.5*params.gamma(uVal)^2*[(params.b.Z/params.a.Z)^2*(params.a.m/params.b.m)*params.ln_delt*(delta2_A/params.gamma(uVal)^3) - (2*delta_A - lIndex*(lIndex+1)*(params.gamma(uVal)/uVal^2)*A_b_l]*sin(z)*(-lIndex-1)*(val_z*legendre(lIndex,val_z) - legendre(lIndex+1,val_z))/(val_z^2 -1);
 

@@ -12,8 +12,11 @@ disp('Testing the collision operator within mirror1');
 args = {'lev',5,'deg',3,'dt',1e-3,'quiet',true,'num_steps',2,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
 opts = OPTS(args);
 pde = mirror1_collision(opts);
+num_dims = numel(pde.dimensions);
 % modify PDE
-pde.initial_conditions = @(v,p,t) p.soln_v(v);
+ic_v = @(v,p,t) p.soln_v(v);
+ic1 = new_md_func(num_dims,{ic_v});
+pde.initial_conditions = {ic1};
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness
@@ -28,6 +31,7 @@ disp('Testing the pitch dimension within mirror1');
 args = {'lev',4,'deg',4,'dt',5e-7,'quiet',true,'num_steps',20,'timestep_method','matrix_exponential','normalize_by_mass',false};
 opts = OPTS(args);
 pde = mirror1_pitch(opts);
+
 % modify PDE - not needed here
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
