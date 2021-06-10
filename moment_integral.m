@@ -83,6 +83,7 @@ end
 
 if num_dims > 1    
     f = permute(f,flip(1:num_dims)); % again, because f dims are in the wrong order at the main level :(
+    ww = permute(ww,flip(1:num_dims));
 end
 
 for d1 = 1:num_dims
@@ -94,7 +95,7 @@ for d1 = 1:num_dims
 end
 moment = reshape(moment,size(f));
 jac = reshape(jac, size(f));
-md_moment = ww'.*f.*moment.*jac;
+md_moment = ww.*f.*moment.*jac;
 ans = sum(md_moment,vecdim);
 
 end
