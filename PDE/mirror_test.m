@@ -5,11 +5,11 @@ tests = functiontests(fh);
 
 end
 
-function mirror1_collision_beamMaxwell_test(testCase)
+function mirror1_collision_sameTemp_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the collision operator within mirror1');
 % setup PDE
-args = {'lev',5,'deg',3,'dt',1e-3,'quiet',true,'num_steps',2,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
+args = {'lev',5,'deg',4,'dt',1e-3,'quiet',true,'num_steps',2,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
 opts = OPTS(args);
 pde = mirror1_collision(opts);
 num_dims = numel(pde.dimensions);
@@ -17,6 +17,60 @@ num_dims = numel(pde.dimensions);
 ic_v = @(v,p,t) p.soln_v(v);
 ic1 = new_md_func(num_dims,{ic_v});
 pde.initial_conditions = {ic1};
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-5);
+end
+
+function mirror1_collision_diffTemp_test(testCase)
+addpath(genpath(pwd));
+disp('Testing the collision operator within mirror1 by changing the temperature of the beam');
+% setup PDE
+args = {'lev',5,'deg',4,'dt',1e-3,'quiet',true,'num_steps',10,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
+opts = OPTS(args);
+pde = mirror1_collision(opts);
+num_dims = numel(pde.dimensions);
+% modify PDE
+p.a.T_eV = 100;
+p.a.v_beam = 0;
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-5);
+end
+
+function mirror1_collision_shiftBeam_test(testCase)
+addpath(genpath(pwd));
+disp('Testing the collision operator within mirror1 by shifting the beam');
+% setup PDE
+args = {'lev',5,'deg',4,'dt',1e-3,'quiet',false,'num_steps',10,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
+opts = OPTS(args);
+pde = mirror1_collision(opts);
+num_dims = numel(pde.dimensions);
+% modify PDE
+p.a.E_eV = 4*pde.params.b.E_eV;
+p.a.T_eV = pde.params.b.T_eV;
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-5);
+end
+
+function mirror1_collision_diffTemp_shiftBeam_test(testCase)
+addpath(genpath(pwd));
+disp('Testing the collision operator within mirror1');
+% setup PDE
+args = {'lev',5,'deg',4,'dt',1e-3,'quiet',false,'num_steps',10,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
+opts = OPTS(args);
+pde = mirror1_collision(opts);
+num_dims = numel(pde.dimensions);
+% modify PDE
+p.a.E_eV = 4*pde.params.b.E_eV;
+p.a.T_eV = 4*pde.params.b.T_eV;
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness
