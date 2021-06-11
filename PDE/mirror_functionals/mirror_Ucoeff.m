@@ -1,16 +1,20 @@
-function U_coeff = mirror_Ucoeff(f_prev,uVal,lIndex)
-
-    dz = 5e-5;
-    num_cells = pi/dz;
-    U_coeff = 0;
-    for k = 0:num_cells
-        z = -pi + k*dz;
-        val_z = cos(z);
-        val_z1 = cos(z+dz);
-        legendre_Val = legendre(lIndex,val_z);
-        legendre_Val1 = legendre(lIndex,val_z1);
-        integrand = ((-f_prev(uVal,z)*legendre_Val(lIndex + 1)*sin(z))+ (-f_prev(uVal,z+dz)*legendre_Val1(lIndex + 1)*sin(z+dz)))*dz/2;
-        U_coeff = U_coeff + integrand;
+function U_coeff = mirror_Ucoeff(f_prev,uVals,l)
+    function ans = myfun(u,z)
+        assert(numel(u)==1);
+        nz = numel(z);
+        sizez = size(z);
+        z = reshape(z,1,nz);
+        legendre_vals = legendre(l, z);
+        legendre_val = legendre_vals(l+1,:);
+        f = f_prev(u,z);
+        ans = f.*legendre_val;
+        ans = reshape(ans,sizez);
     end
-    U_coeff = (2*lIndex + 1)*U_coeff/2;
+% z = linspace(-1,1);
+% y = myfun(1,z);
+% y2 = myfun(1,z');
+% plot(z,y);
+for i = 1:numel(uVals)
+    U_coeff(i) = integral(@(z) myfun(uVals(i),z), -1, 1);
+end
 end

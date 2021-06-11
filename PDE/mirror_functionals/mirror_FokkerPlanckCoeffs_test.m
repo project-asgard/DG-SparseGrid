@@ -8,6 +8,7 @@ end
 function test_FokkerPlanckCoeffs_Mawellian(testCase)
 
 uVals = [3.5314*10^6, 7.3150*10^6, 1.1099*10^7, 1.4882*10^7, 1.8666*10^7, 2.2450*10^7, 2.6233*10^7, 3.0017*10^7, 3.3800*10^7, 3.7584*10^7]; %test velocity in m/s
+%uVals = [3.5314*10^6];
 temp = 100; %temperature in eV
 n_o = 8e20; %equilibrium density in eV
 e = 1.602*10^-19; %charge in Coulombs
