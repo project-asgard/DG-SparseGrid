@@ -6,7 +6,7 @@ function U_coeff = mirror_Ucoeff(f_prev,uVals,l)
         z = reshape(z,1,nz);
         legendre_vals = legendre(l, z);
         legendre_val = legendre_vals(l+1,:);
-        f = f_prev(u,z);
+        f = f_prev(u,cos(z));
         ans = f.*legendre_val;
         ans = reshape(ans,sizez);
     end
@@ -15,6 +15,6 @@ function U_coeff = mirror_Ucoeff(f_prev,uVals,l)
 % y2 = myfun(1,z');
 % plot(z,y);
 for i = 1:numel(uVals)
-    U_coeff(i) = integral(@(z) myfun(uVals(i),z), -1, 1);
+    U_coeff(i) = integral(@(z) (2*l+1)/2*myfun(uVals(i),z), -1, 1);
 end
 end
