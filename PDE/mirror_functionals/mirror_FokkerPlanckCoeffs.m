@@ -17,7 +17,7 @@ coeffs_R = mirror_RosenbluthCoeffs(f_b, uVal, lIndex);
 
 %argument for functionals in A is U/gamma
 
-U_coeff_A = @(u) mirror_Ucoeff(f_b, u, lIndex)./gamma(u);
+U_coeff_A = @(u) mirror_Ucoeff(f_b, u, lIndex)./params.gamma(u);
 
 %argument for functions in B is U
 
