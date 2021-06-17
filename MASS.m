@@ -5,18 +5,22 @@ classdef MASS < PARTIAL_SD_TERM
     
     methods
         
-        function m = MASS(g_,dat_)
+        function m = MASS(g_,LHS_mass_g_,dat_,dV_)
             if nargin<1
                 g_ = @(x,p,t,dat) x.*0+1;
             end
             if nargin<2
+                LHS_mass_g_ = @(x,p,t,dat) x.*0+1;
+            end
+            if nargin<3
                 dat_ = [];
             end
+            if nargin<4
+                dV_ = @(x,p,t,dat) x.*0+1;
+            end
             
-            m@PARTIAL_SD_TERM('mass',g_,dat_);
+            m@PARTIAL_SD_TERM('mass',g_,LHS_mass_g_,dat_,dV_);
             
-            m.g = g_;
-            m.dat = dat_;
         end
     end
     

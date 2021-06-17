@@ -6,22 +6,24 @@ classdef PARTIAL_SD_TERM
         dat
         
         % RHS g_func, matrix, and vector 
-        % (vector presently unused but should be where we but the surface integrals) 
         g
         mat
         
         % LHS g_func, matrix, and vector
-        LHS_g
-        LHS_mat
+        LHS_mass_g
+        LHS_mass_mat
+        
+        % dV / jacobian / volume_element
+        dV
         
         % for debugging purposes only
         mat_unrotated
-        LHS_mat_unrotated
+        LHS_mass_mat_unrotated
     end
     
     methods
         
-        function pt = PARTIAL_SD_TERM(type_,g_,LHS_g_,dat_)           
+        function pterm = PARTIAL_SD_TERM(type_,g_,LHS_mass_g_,dat_,dV_)           
             if nargin<1
                 type_ = 'mass';
             end
@@ -29,16 +31,20 @@ classdef PARTIAL_SD_TERM
                 g_ = @(x,p,t,dat) x.*0+1;
             end
             if nargin<3
-                LHS_g_ = @(x,p,t,dat) x.*0+1;
+                LHS_mass_g_ = @(x,p,t,dat) x.*0+1;
             end
             if nargin<4
                 dat_ = [];
             end
+            if nargin<5
+                dV_ = @(x,p,t,d) x.*0+1;
+            end
             
-            pt.type = type_;
-            pt.g = g_;
-            pt.LHS_g = LHS_g_;
-            pt.dat = dat_;
+            pterm.type = type_;
+            pterm.g = g_;
+            pterm.LHS_mass_g = LHS_mass_g_;
+            pterm.dat = dat_;
+            pterm.dV = dV_;
         end
         
     end
