@@ -79,7 +79,7 @@ initial_conditions = {ic1};
 
 % term1
 %
-% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=1, BCL=N, BCR=D]
+% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [div ,g1(x)=1, BCL=N, BCR=D]
 % eq2 :   q(x,y) == d/dx g2(x) f(x,y)   [grad,g2(x)=1, BCL=D, BCR=D]
 %
 % coeff_mat = mat1 * mat2
@@ -88,7 +88,7 @@ g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
 pterm1 =  DIV(num_dims,g1,'',+1,'N','N');
-pterm2 =  DIV(num_dims,g2,'',-1,'D','D',BCL_fList,BCR_fList);
+pterm2 =  GRAD(num_dims,g2,'',-1,'N','N',BCL_fList,BCR_fList);
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});

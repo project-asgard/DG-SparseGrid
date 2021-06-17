@@ -320,7 +320,7 @@ for i=0:N-1
     
 end
 
-grad = div';
+grad = -div';
 
 %%
 % Store non-transformed matrices for convenince
