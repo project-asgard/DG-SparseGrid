@@ -171,7 +171,7 @@ for i=0:N-1
     assert(~isnan(sum(mass,'all')))
     assert(~isnan(sum(div,'all')))
     
-    if strcmp(type,'div')
+    if (strcmp(type,'div') || strcmp(type,'grad'))
         
         BCL = pterm.BCL;
         BCR = pterm.BCR;
