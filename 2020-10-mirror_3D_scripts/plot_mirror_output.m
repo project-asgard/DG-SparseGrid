@@ -1,14 +1,18 @@
 function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 
      x = nodes{1};
-     x = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
+     x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
      f1d_ic = f_nD{1,1};
-     f1d = f_nD{1,2};
-     plot(x,f1d,'-o');
+     f1d = f_nD{1,31};
+     f1d_analytic = f_nD_analytic{1,31};
+     for i = 1:length(x)
+         f1d_new = sqrt(x_E(i))*f1d(i);
+         f1d_analytic_new = sqrt(x_E(i))*f1d_analytic(i);
+     end
+     plot(x_E,f1d_new,'-o');
      hold on;
      %plot(x,f1d_ic,'--');
-     f1d_analytic = f_nD_analytic{1,2};
-    % plot(x,f1d_analytic, '-');
+     plot(x_E,f1d_analytic_new, '-');
      hold off;
 %     y = nodes{2};
 %     z = nodes{3};
