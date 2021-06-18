@@ -13,6 +13,10 @@ temp = 100; %temperature in eV
 n_o = 8e20; %equilibrium density in eV
 e = 1.602*10^-19; %charge in Coulombs
 m_e = 9.109*10^-31; %electron mass in kg
+params = mirror_parameters();
+params.a.m = m_e; %beam is electrons
+params.b.m = m_e; %background is electrons
+params.ln_delt = 15;
 u_th = sqrt(2*temp*e/m_e); %thermal velocity in m/s
 rel_tol = 1e-6;
 func = @(u,z) n_o.*exp(-u.^2./u_th^2).*(z.*0 + 1)./(pi^(3/2)*u_th^3);
@@ -20,13 +24,27 @@ test_Avals = [];
 testVals = [];
 
 %testing Rosenbluth Coeffs for l = 0
-lIndex = 0;
+lIndex = [0,1];
 z = pi/4;
 gold_M = 2.9798*10^-3;
 for i = 1:length(uVals)
     uVal = uVals(i);
-    testVals = mirror_FokkerPlanckCoeffs(func,uVal,lIndex,z);
-    test_Avals(i) = testVals(1);
+    for j = 1:length(lIndex)
+        gamma_a = 4*pi*(params.a.Z)^2*e^4/((params.a.m)^2*(4*pi*params.eps0)^2);
+        testVals = mirror_FokkerPlanckCoeffs(func,uVal,lIndex(j),z,params);
+        test_Avals(i,j) = testVals(1);
+        test_Bvals(i,j) = testVals(2);
+        test_Cvals(i,j) = testVals(3);
+        test_Dvals(i,j) = testVals(4);
+        test_Evals(i,j) = testVals(5);
+        test_Fvals(i,j) = testVals(6);
+    end
+    total_A(i) = sum(test_Avals(i,:));
+    total_B(i) = sum(test_Bvals(i,:));
+    total_C(i) = sum(test_Cvals(i,:));
+    total_D(i) = sum(test_Dvals(i,:));
+    total_E(i) = sum(test_Evals(i,:));
+    total_F(i) = sum(test_Fvals(i,:));
 end
 rel_err = abs(testVal(1) - gold_M)/abs(gold_M);
 verifyLessThan(testCase, rel_err, rel_tol);

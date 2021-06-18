@@ -31,7 +31,7 @@ num_dims = numel(dimensions);
 %     end
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
-        ret = 1./(pi^3/2*p.v_th(p.b.T_eV,p.a.m)^3).*exp(-(v./p.v_th(p.b.T_eV,p.a.m)).^2);
+        ret = p.maxwell(v,0,p.v_th(p.b.T_eV,p.a.m));
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
         end
@@ -82,8 +82,8 @@ g2 = @(v,p,t,dat) v.^4.*0.5.*p.nu_par(v,p.a,p.b);
 g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1 = MASS(g1);
-pterm2 = GRAD(num_dims,g2,+1,'D','N');
-pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
+pterm2 = GRAD(num_dims,g2,-1,'D','N');
+pterm3 = GRAD(num_dims,g3,+1,'N','D', BCL, BCR);
 termV_par = SD_TERM({pterm1,pterm2,pterm3});
 termV2   = MD_TERM(num_dims,{termV_par});
 

@@ -44,13 +44,13 @@ b.n = 4e19; %number density of background species in m^-3
 b.E_eV = 0;%energy of background species
 b.T_eV = 50;%temperature/spread of background species
 b.Z = -1;%atomic number of species
-b.m = m_e; %mass of background
+b.m = m_D; %mass of background
 b.vth = v_th(b.T_eV,b.m);%thermal velocity of background
 
 %species b2: deuterium in background
 b2.n = 4e19;
 b2.E_eV = 0;
-b2.T_eV = 4;
+b2.T_eV = 50;
 b2.Z = 1;
 b2.m = m_D;
 b2.vth = v_th(b2.T_eV,b2.m);
@@ -58,7 +58,7 @@ b2.vth = v_th(b2.T_eV,b2.m);
 % species a: species in beam
 a.n = 4e19;
 a.E_eV = 3e3; %energy of beam species
-a.T_eV = 20; %temperature/spread of beam species
+a.T_eV = 5; %temperature/spread of beam species
 a.Z = 1;
 a.z0 = pi/4; %location of beam injection in pitch angle (radians)
 a.dz0 = sqrt(a.T_eV/a.E_eV); %spread of beam in pitch angle
@@ -75,7 +75,7 @@ nu_s    = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(vel_norm(v,b.vth)) ./ vel_n
 nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth).^3)); %parallel diffusion frequency
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi_f(vel_norm(v,b.vth)) - psi(vel_norm(v,b.vth)))./(vel_norm(v,b.vth).^3); %deflection frequency in s^-1
 maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
-gauss   = @(v,x,y) 1/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
+gauss   = @(v,x,y,a) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
 
@@ -112,9 +112,9 @@ dB_ds2 = @get_dBds;
 advec_time_1D = @(t) exp(-2*vel_test*cos(pitch_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
 
-init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth);
-init_cond_z = @(z,p,t) gauss(z,a.z0,a.dz0);
-init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0);
+init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
+init_cond_z = @(z,p,t) gauss(z,a.z0,a.dz0,a);
+init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
 init_cond_t = @(t,p) t*0 + 1;
 
 boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
