@@ -42,6 +42,7 @@ function pde = diffusion1_div(opts)
 % Here we setup a 1D problem (x,y)
 nu = pi/2; %coefficient set to be very small to allow for stability % DLG - WTF is this?
 soln_x = @(x,p,t) cos(nu*x);
+%soln_x = @(x,p,t) sin(nu*x);
 soln_t = @(t,p) exp(-2*nu^2*t);
 
 BCFunc = @(x,p,t) soln_x(x,p,t);
@@ -87,13 +88,25 @@ initial_conditions = {ic1};
 g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 =  DIV(num_dims,g1,'',+1,'N','N');
-pterm2 =  GRAD(num_dims,g2,'',-1,'N','N',BCL_fList,BCR_fList);
+pterm1 =  DIV(num_dims,g1,'',-1,'N','N');
+pterm2 =  GRAD(num_dims,g2,'',+1,'D','D',BCL_fList,BCR_fList);
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
 
-terms = {term1};
+pen = 0;
+g3 = @(x,p,t,dat) 0.*x+pen;
+g4 = @(x,p,t,dat) 0.*x-pen;
+
+pterm1 = DIV(num_dims,g3,'',-1,'N','N',BCL_fList,BCR_fList);
+term2_x = SD_TERM({pterm1});
+term2 = MD_TERM(num_dims,{term2_x});
+
+pterm1 = DIV(num_dims,g4,'', 0,'N','N',BCL_fList,BCR_fList);
+term3_x = SD_TERM({pterm1});
+term3 = MD_TERM(num_dims,{term3_x});
+
+terms = {term1,term2,term3};
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -107,6 +120,7 @@ s1x = @(x,p,t) -nu^2*cos(nu*x);
 s1t = @(t,p) exp(-2*nu^2*t);
 source1 = {s1x, s1t};
 
+%sources = {};
 sources = {source1};
 
 %% Define the analytic solution (optional).

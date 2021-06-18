@@ -6,6 +6,8 @@ classdef DIV_OR_GRAD < PARTIAL_SD_TERM
         BCR
         BCL_fList
         BCR_fList
+        IBCL
+        IBCR
     end
     
     methods

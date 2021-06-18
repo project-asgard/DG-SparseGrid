@@ -173,8 +173,8 @@ for i=0:N-1
     
     if (strcmp(type,'div') || strcmp(type,'grad'))
         
-        BCL = pterm.BCL;
-        BCR = pterm.BCR;
+        BCL = pterm.IBCL;
+        BCR = pterm.IBCR;
         
         FluxVal = pterm.LF;
         
