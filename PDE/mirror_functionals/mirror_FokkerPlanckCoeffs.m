@@ -1,10 +1,8 @@
-function vec = mirror_FokkerPlanckCoeffs(f_b,uVal,lIndex,z)
+function vec = mirror_FokkerPlanckCoeffs(f_b,uVal,lIndex,z,params)
 
 %evaluation of local Fokker-Planck coefficients A through F corresponding to
 %equations 31-36 in Franz's dissertation (Franz, 1993) for a species a
 %colliding with background species b
-
-params = mirror_parameters();
 
 val_z = cos(z);
 legendre_val = legendre(lIndex,val_z);
@@ -56,29 +54,58 @@ B_c = 0.5*uVal^2*((params.b.Z/params.a.Z)^2*params.ln_delt*delta2_B)*legendre_va
 % (gamma/u)*B^b_l]*(dP_l (cos (theta))/dtheta)
 
 C_c = 0.5*params.gamma(uVal)^2*((params.b.Z/params.a.Z)^2*params.ln_delt*delta_B*(params.gamma(uVal)/uVal)*coeffs_R(2))...
-    *(-lIndex-1)*(val_z*legendre_val - legendre_val1)*(-sin(z))/(val_z^2 -1);
+    *(-lIndex-1)*legendre_derivative(lIndex,val_z);
 
 % D_c = -0.5*gamma^2*sum_{b,l}[(Z_b/Z_a)^2*(m_a/m_b)*ln_delt*(delta2_A^b_l/gamma^3) - 
 % (2*delta_A^b_l/u) - l*(l+1)*(gamma/u^2)*A^b_l]*sin (theta) dP_l (cos
 % (theta))/dtheta (-sin(theta))
 
 D_c = -0.5*params.gamma(uVal)^2*((params.b.Z/params.a.Z)^2*(params.a.m/params.b.m)*params.ln_delt*...
-    (delta2_A/params.gamma(uVal)^3) - (2*delta_A - lIndex*(lIndex+1)*(params.gamma(uVal)/uVal^2)*coeffs_R(1)))*sin(z)...
-    *(-lIndex-1)*(val_z*legendre_val - legendre_val1)/(val_z^2 -1);
+    (delta2_A/params.gamma(uVal)^3) - (2*delta_A - lIndex*(lIndex+1)*(params.gamma(uVal)/uVal^2)*coeffs_R(1)))*... 
+    legendre_derivative(lIndex,val_z);
 
 
 % E_c = 0.5*gamma*sum_{b,l}[(Z_b/Z_a)^2*ln_delt*(delta_B^b_l) -
 % (gamma/u)*B^b_l]*sin(theta)*(dP_l (cos (theta))/dtheta)
 
 E_c = 0.5*params.gamma(uVal)*((params.b.Z/params.b.Z)^2*params.ln_delt*(delta_B) -(params.gamma(uVal)/uVal)*coeffs_R(2))...
-*(-sin(z)^2)*(-lIndex-1)*(val_z*legendre_val - legendre_val1)/(val_z^2 -1);
+*(sin(z))*(-lIndex-1)*legendre_derivative(lIndex,val_z);
 
 % F_c = 0.5*sum_{b,l}[(Z_b/Z_a)^2*ln_delt*(delta_B^b_l)*(P_l (cos (theta))
 % + (gamma^2/u^2)*B^b_l*(d^2 P_l (cos (theta))/dtheta^2)]*sin(theta)
 
 F_c = 0.5*((params.b.Z/params.a.Z)^2*params.ln_delt*(delta_B)*legendre_val ...
-+ (params.gamma(uVal)^2/uVal^2)*coeffs_R(2)*(lIndex+1)*((lIndex*(val_z^2 -1) + 2*val_z^2)*legendre_val ...
-- 2*val_z*legendre_val1)/(val_z^2 -1)^2)*(-cos(z)*sin(z));
++ (params.gamma(uVal)^2/uVal^2)*coeffs_R(2)*legendre_derivative2(lIndex,val_z))*(sin(z));
+
+%derivatives of legendre polynomials
+
+    function val = legendre_derivative(l,val_z)
+        if (l == 0)
+            val = 0;
+        else
+            legendre_l = legendre(l,val_z);
+            legendre_l = legendre_l(l+1);
+            legendre_l1= legendre(l-1,val_z);
+            legendre_l1 = legendre_l1(l);
+            val = (val_z*legendre_l - legendre_l1)/(val_z^2 -1);
+        end
+        
+    end
+
+    function val = legendre_derivative2(l,val_z)
+        if (l == 0)
+            val = 0;
+        else
+            %getting first derivative values
+            legendre_d1_l = legendre_derivative(l,val_z);
+            legendre_d1_l1 = legendre_derivative(l-1,val_z);
+            legendre_l = legendre(l,val_z);
+            legendre_l = legendre_l(l+1);
+            val = -2*val_z*legendre_d1_l/(val_z^2 -1) + (l/(val_z^2 -1))*(legendre_l + val_z*legendre_d1_l ... 
+                - legendre_d1_l1);
+        end
+        
+    end
 
 %delta functions from Franz thesis
 
