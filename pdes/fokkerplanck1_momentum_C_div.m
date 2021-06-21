@@ -86,7 +86,7 @@ params.parameter1 = 0;
 
 %% Define the dimensions
 
-dV_p = @(x,p,t,d) x.^2;
+dV_p = @(x,p,t) x.^2;
 dim_p = DIMENSION(0,+10);
 dim_p.volume_element = dV_p;
 dimensions = {dim_p};

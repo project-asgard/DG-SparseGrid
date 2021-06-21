@@ -27,7 +27,7 @@ function pde = diffusion1_div(opts)
 % asgard(@diffusion1,'CFL',0.01);
 %
 % implicit
-% asgard(@diffusion1,'timestep_method','CN');
+% asgard(@diffusion1,'timestep_method','BE');
 %
 % Notes
 %
