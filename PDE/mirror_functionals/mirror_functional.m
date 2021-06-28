@@ -8,6 +8,12 @@ function vec = mirror_functional(wfunc,uLimit,lIndex)
 
 %speed of light
 
+%set up velocity spaces
+
+N = 200;
+u_low = linspace(0,uLimit,N);
+u_high = linspace(uLimit,100*uLimit,N);
+
 c = 3*10^8; %m/s
 
 %setting up integrand matrix
@@ -28,10 +34,15 @@ integrand_R = @(u) wfunc(u).*R_int(u);
 integrand_E = @(u) wfunc(u).*E_int(u);
 
 %integrating
-M = integral(integrand_M, uLimit, Inf);
-N = integral(integrand_N, 0, uLimit);
-R = integral(integrand_R, uLimit, Inf);
-E = integral(integrand_E, 0, uLimit);
+% M = integral(integrand_M, uLimit, Inf);
+% N = integral(integrand_N, 0, uLimit);
+% R = integral(integrand_R, uLimit, Inf);
+% E = integral(integrand_E, 0, uLimit);
+
+M = trapz(u_high,integrand_M(u_high));
+N = trapz(u_low,integrand_N(u_low));
+R = trapz(u_high,integrand_R(u_high));
+E = trapz(u_low,integrand_E(u_low));
 
 vec = [M,N,R,E];
 
