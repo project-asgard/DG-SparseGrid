@@ -3,7 +3,10 @@ function vec = mirror_FokkerPlanckCoeffs(f_b,uVal,lIndex,z,params)
 %evaluation of local Fokker-Planck coefficients A through F corresponding to
 %equations 31-36 in Franz's dissertation (Franz, 1993) for a species a
 %colliding with background species b
-
+global abs_tol; 
+global rel_tol;
+abs_tol = 1e-8;
+rel_tol = 1e-8;
 val_z = cos(z);
 legendre_val = legendre(lIndex,val_z);
 legendre_val = legendre_val(lIndex+1);
