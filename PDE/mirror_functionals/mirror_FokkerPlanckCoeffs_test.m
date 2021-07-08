@@ -7,30 +7,38 @@ end
 
 function test_FokkerPlanckCoeffs_Mawellian(testCase)
 
-uVals = [3.5314*10^6, 7.3150*10^6, 1.1099*10^7, 1.4882*10^7, 1.8666*10^7, 2.2450*10^7, 2.6233*10^7, 3.0017*10^7, 3.3800*10^7, 3.7584*10^7]; %test velocity in m/s
+uVals = [3.5314*10^8, 7.3150*10^8, 1.1099*10^9, 1.4882*10^9, 1.8666*10^9, 2.2450*10^9, 2.6233*10^9, 3.0017*10^9, 3.3800*10^9, 3.7584*10^9]; %test velocity in m/s
 %uVals = [3.5314*10^6];
-temp = 100; %temperature in eV
-n_o = 8e20; %equilibrium density in eV
-e = 1.602*10^-19; %charge in Coulombs
-m_e = 9.109*10^-31; %electron mass in kg
+temp = 1.6022e-10; %temperature in erg
+k_e = 1.3807e-16; %Boltzmann constant in cgs 
+n_o = 8e14; %equilibrium density in cm.^-3
+e = 4.803*10^-10; %charge in Fr
+m_e = 9.109*10^-28; %electron mass in g
+c = 3*10^10; %cm/s
+
+%setting up integrand matrix
+
 params = mirror_parameters();
+params.gamma = @(u) sqrt(1 + u.^2./c^2); %relativistic correction
+params.a.Z = -1;
+params.b.Z = -1;
 params.a.m = m_e; %beam is electrons
 params.b.m = m_e; %background is electrons
 params.ln_delt = 15;
-u_th = sqrt(2*temp*e/m_e); %thermal velocity in m/s
+u_th = sqrt(temp/m_e); %thermal velocity in cm/s
 rel_tol = 1e-6;
 func = @(u,z) n_o.*exp(-u.^2./u_th^2).*(z.*0 + 1)./(pi^(3/2)*u_th^3);
 test_Avals = [];
 testVals = [];
 
 %testing Rosenbluth Coeffs for l = 0
-lIndex = [0,1];
+lIndex = [0 1];
 z = pi/4;
 gold_M = 2.9798*10^-3;
 for i = 1:length(uVals)
     uVal = uVals(i);
     for j = 1:length(lIndex)
-        gamma_a = 4*pi*(params.a.Z)^2*e^4/((params.a.m)^2*(4*pi*params.eps0)^2);
+        gamma_a = 4*pi*(params.a.Z)^2*e^4/((params.a.m)^2);
         testVals = mirror_FokkerPlanckCoeffs(func,uVal,lIndex(j),z,params);
         test_Avals(i,j) = testVals(1);
         test_Bvals(i,j) = testVals(2);
@@ -46,6 +54,7 @@ for i = 1:length(uVals)
     total_E(i) = sum(test_Evals(i,:));
     total_F(i) = sum(test_Fvals(i,:));
 end
+data = [uVals; total_A; total_B; total_C; total_D; total_E; total_F];
 rel_err = abs(testVal(1) - gold_M)/abs(gold_M);
 verifyLessThan(testCase, rel_err, rel_tol);
 

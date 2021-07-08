@@ -118,7 +118,7 @@ init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
 init_cond_t = @(t,p) t*0 + 1;
 
 boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
-boundary_cond_z = @(z,p,t) z.*0 + 1;
+boundary_cond_z = @(z,p,t) z.*0;
 boundary_cond_s = @(s,p,t) s.*0;
 boundary_cond_t = @(t,p) t.*0 + 1;
 
@@ -140,7 +140,7 @@ soln_v = @solution_v;
     end
 soln_z = @solution_z;
     function ret = solution_z(z,p,~)
-        ret = cos(z/2);
+        ret = z.*0 + 1;
     end
 
     function ret = phi(x)

@@ -1,7 +1,7 @@
 function U_coeff = mirror_Ucoeff(f_prev,uVals,l)
 global abs_tol
 global rel_tol
-    function ans = myfun(u,z)
+    function ans = myfun(u,z,l)
         assert(numel(u)==1);
         nz = numel(z);
         sizez = size(z);
@@ -17,9 +17,9 @@ z = linspace(0,pi,N);
 % y = myfun(1,z);
 % y2 = myfun(1,z');
 % plot(z,y);
-U_coeff = ones(size(uVals));
+U_coeff = zeros(size(uVals));
 for i = 1:numel(uVals)
-    U_coeff(i) = trapz(z,(2*l+1)/2.*myfun(uVals(i),z));
+    U_coeff(i) = trapz(z,(2*l+1)/2.*myfun(uVals(i),z,l));
     %U_coeff(i) = integral(@(x) (2*l + 1)/2.*myfun(uVals(i),x),0,pi);
 end
 end

@@ -10,11 +10,11 @@ function vec = mirror_functional(wfunc,uLimit,lIndex)
 
 %set up velocity spaces
 
-N = 200;
+N = 100;
 u_low = linspace(0,uLimit,N);
-u_high = linspace(uLimit,100*uLimit,N);
+u_high = linspace(uLimit,50*uLimit,N);
 
-c = 3*10^8; %m/s
+c = 3*10^10; %cm/s
 
 %setting up integrand matrix
 
