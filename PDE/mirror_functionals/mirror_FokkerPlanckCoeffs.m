@@ -7,6 +7,8 @@ global abs_tol;
 global rel_tol;
 abs_tol = 1e-8;
 rel_tol = 1e-8;
+
+
 val_z = cos(z);
 legendre_val = legendre(lIndex,val_z);
 legendre_val = legendre_val(lIndex+1);
@@ -56,8 +58,8 @@ B_c = 0.5*uVal^2*((params.b.Z/params.a.Z)^2*params.ln_delt*delta2_B)*legendre_va
 % C_c = 0.5*gamma*sum_{b,l}[(Z_b/Z_a)^2*ln_delt*(delta_B^b_l) -
 % (gamma/u)*B^b_l]*(dP_l (cos (theta))/dtheta)
 
-C_c = 0.5*params.gamma(uVal)^2*((params.b.Z/params.a.Z)^2*params.ln_delt*delta_B*(params.gamma(uVal)/uVal)*coeffs_R(2))...
-    *(-lIndex-1)*legendre_derivative(lIndex,val_z);
+C_c = 0.5*params.gamma(uVal)*((params.b.Z/params.a.Z)^2*params.ln_delt*delta_B - (params.gamma(uVal)/uVal)*coeffs_R(2))...
+    *legendre_derivative(lIndex,val_z);
 
 % D_c = -0.5*gamma^2*sum_{b,l}[(Z_b/Z_a)^2*(m_a/m_b)*ln_delt*(delta2_A^b_l/gamma^3) - 
 % (2*delta_A^b_l/u) - l*(l+1)*(gamma/u^2)*A^b_l]*sin (theta) dP_l (cos
