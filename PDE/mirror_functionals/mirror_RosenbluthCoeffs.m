@@ -14,7 +14,7 @@ function vec = mirror_RosenbluthCoeffs(f_prev, uVal, lIndex)
 
 %speed of light
 
-c = 3*10^8; %m/s
+c = 3*10^10; %cm/s
 
 %relativistic correction
 
