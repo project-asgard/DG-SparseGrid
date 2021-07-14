@@ -9,7 +9,7 @@ function pde = mirror2_collision(opts)
 %
 % Run with
 %
-% asgard(@mirror2_collision,'timestep_method','BE','case',3,'dt',1e-6)
+% asgard(@mirror2_collision,'timestep_method','matrix_exponential','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5)
 
 params = mirror_parameters();
 
@@ -21,10 +21,10 @@ switch opts.case_
         params.a.T_eV = 0.05*params.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
     case 3 
-        params.a.T_eV = 5;
+        params.a.T_eV = 20;
         params.a.E_eV = 3e3; %case with offset and no change in Temperature
+        params.b.m = params.m_e;
 end
-
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
@@ -95,8 +95,8 @@ BCR = soln1;
 %   q(z) == d/dz g3(z) r(z)   [grad, g3(z) =  sin(z), BCL=D,BCR=D]
 %   r(z) == d/dp g4(z) f(z)   [grad, g3(p) = 1,      BCL=N,BCR=N]
 
-g1 = @(v,p,t,dat) p.nu_D(v,p.a,p.b);
-g2 = @(z,p,t,dat) 1./(2.*sin(z));
+g1 = @(v,p,t,dat) p.nu_D(v,p.a,p.b)/2;
+g2 = @(z,p,t,dat) 1./sin(z);
 g3 = @(z,p,t,dat) sin(z);
 g4 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
@@ -128,8 +128,8 @@ g2 = @(v,p,t,dat) v.^4.*0.5.*p.nu_par(v,p.a,p.b);
 g3 = @(v,p,t,dat) v.*0 + 1;
 
 pterm1      = MASS(g1);
-pterm2      = GRAD(num_dims,g2,-1,'D','N');
-pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL, BCR);
+pterm2      = GRAD(num_dims,g2,+1,'D','N');
+pterm3      = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
 termV_par   = SD_TERM({pterm1,pterm2,pterm3});
 termV2      = MD_TERM(num_dims,{termV_par,[]});
 

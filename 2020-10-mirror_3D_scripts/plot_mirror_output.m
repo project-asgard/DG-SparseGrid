@@ -1,24 +1,29 @@
 function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 
      x = nodes{1};
-     x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
-     f1d_ic = f_nD{1,1};
-     f1d = f_nD{1,31};
-     f1d_analytic = f_nD_analytic{1,31};
-     for i = 1:length(x)
-         f1d_new = sqrt(x_E(i))*f1d(i);
-         f1d_analytic_new = sqrt(x_E(i))*f1d_analytic(i);
-     end
-     plot(x_E,f1d_new,'-o');
-     hold on;
-     %plot(x,f1d_ic,'--');
-     plot(x_E,f1d_analytic_new, '-');
-     hold off;
-%     y = nodes{2};
+%      x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
+%      f1d_ic = f_nD{1,1};
+%      f1d = f_nD{1,31};
+%      f1d_analytic = f_nD_analytic{1,31};
+%      for i = 1:length(x)
+%          f1d_new = sqrt(x_E(i))*f1d(i);
+%          f1d_analytic_new = sqrt(x_E(i))*f1d_analytic(i);
+%      end
+%      plot(x_E,f1d_new,'-o');
+%      hold on;
+%      %plot(x,f1d_ic,'--');
+%      plot(x_E,f1d_analytic_new, '-');
+%      hold off;
+     y = nodes{2};
 %     z = nodes{3};
-%     
-%     nx = numel(x);
-%     ny = numel(y);
+     num_steps = length(time_array);
+     nx = numel(x);
+     ny = numel(y);
+     ax1 = subplot(1,2,1);
+     contourf(y,x,squeeze(f_nD{1,1}(:,:))');
+     ax2 = subplot(1,2,2);
+     contourf(y,x,squeeze(f_nD{1,num_steps}(:,:))');
+     title('Pitch vs Velocity');
 %     nz = numel(z);     
 %     num_dims = 3;
 %     subset_dimensions = 2;
@@ -76,7 +81,7 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 %           hold off;
 % %     end
 %     
-%     sx = max(1,floor(nx/2));
+     sx = max(1,floor(nx/2));
 %     if nx > 2
 %         sx = sx+2; % just to get off the exact middle
 %     end
@@ -92,7 +97,6 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 %     %%
 %     % Plot 2D
 %     
-%     num_steps = length(time_array);
 %     ax1 = subplot(2,3,1);
 %     contourf(z,y,squeeze(f_nD{1,num_steps}(:,:,sx))');
 %     title('Space vs. Pitch');
@@ -101,8 +105,6 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 %     title('Space vs. Velocity');
 %     %sx = 46;
 %     ax3 = subplot(2,3,3);
-%     contourf(y,x,squeeze(f_nD{1,num_steps}(sz,:,:))');
-%     title('Pitch vs Velocity');
 % 
 %     
 %     n_total = zeros(nz, num_steps);
