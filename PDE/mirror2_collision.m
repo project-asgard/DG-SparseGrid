@@ -9,7 +9,7 @@ function pde = mirror2_collision(opts)
 %
 % Run with
 %
-% asgard(@mirror2_collision,'timestep_method','matrix_exponential','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5)
+% asgard(@mirror2_collision,'timestep_method','matrix_exponential','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true)
 
 params = mirror_parameters();
 
@@ -21,7 +21,7 @@ switch opts.case_
         params.a.T_eV = 0.05*params.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
     case 3 
-        params.a.T_eV = 20;
+        params.a.T_eV = 50;
         params.a.E_eV = 3e3; %case with offset and no change in Temperature
         params.b.m = params.m_e;
 end
@@ -29,7 +29,7 @@ maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
  
-dim_v = DIMENSION(1e5,1e6);
+dim_v = DIMENSION(0,1e6);
 dim_z = DIMENSION(0,pi);
 
 dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
@@ -53,9 +53,15 @@ initial_conditions = {ic1};
 
 %% Define the boundary conditions
 
-BCL = soln1;
+BCL = new_md_func(num_dims,{...
+    @(v,p,t) v.*0, ...
+    @(z,p,t) z.*0, ...
+    params.boundary_cond_t});
 
-BCR = soln1;
+BCR = new_md_func(num_dims,{...
+    params.boundary_cond_v, ...
+    params.boundary_cond_z, ...
+    params.boundary_cond_t});
 
 %% Define the terms of the PDE
 
@@ -104,7 +110,7 @@ pterm2  = MASS(g2);
 pterm3  = GRAD(num_dims,g3,+1,'D','D');
 pterm4  = GRAD(num_dims,g4,-1,'N', 'N');
 termC_z = SD_TERM({pterm1,pterm2,pterm3,pterm4});
-termC   = MD_TERM(num_dims,{termC_z,[]});
+termC   = MD_TERM(num_dims,{[],termC_z});
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
 % term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
@@ -115,8 +121,8 @@ g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
 pterm1  = MASS(g1);
 pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
-termV_s = SD_TERM({pterm1,pterm2});
-termV1  = MD_TERM(num_dims,{termV_s,[]});
+termV_v = SD_TERM({pterm1,pterm2});
+termV1  = MD_TERM(num_dims,{termV_v,[]});
 
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
 % term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
@@ -130,8 +136,8 @@ g3 = @(v,p,t,dat) v.*0 + 1;
 pterm1      = MASS(g1);
 pterm2      = GRAD(num_dims,g2,+1,'D','N');
 pterm3      = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
-termV_par   = SD_TERM({pterm1,pterm2,pterm3});
-termV2      = MD_TERM(num_dims,{termV_par,[]});
+termV_v     = SD_TERM({pterm1,pterm2,pterm3});
+termV2      = MD_TERM(num_dims,{termV_v,[]});
 
 terms = {termV1,termV2,termC};
 

@@ -2,7 +2,6 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 
      x = nodes{1};
 %      x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
-%      f1d_ic = f_nD{1,1};
 %      f1d = f_nD{1,31};
 %      f1d_analytic = f_nD_analytic{1,31};
 %      for i = 1:length(x)
@@ -19,11 +18,28 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
      num_steps = length(time_array);
      nx = numel(x);
      ny = numel(y);
-     ax1 = subplot(1,2,1);
+     ax1 = subplot(2,2,1);
      contourf(y,x,squeeze(f_nD{1,1}(:,:))');
-     ax2 = subplot(1,2,2);
+     ax2 = subplot(2,2,2);
      contourf(y,x,squeeze(f_nD{1,num_steps}(:,:))');
-     title('Pitch vs Velocity');
+     %title('Pitch vs Velocity');
+     
+     sy = numel(f_nD{1,1}(:,1))/4;
+     sx = 1;
+     f1d = f_nD{1,num_steps}(:,sx);
+     f1d_ic = f_nD{1,1}(:,sx);
+     ax3 = subplot(2,2,3);
+     plot(y,f1d,'-o');
+     hold on
+     plot(y,f1d_ic, '-');
+     hold off
+     f1d = f_nD{1,num_steps}(sy,:);
+     f1d_ic = f_nD{1,1}(sy,:);
+     ax4 = subplot(2,2,4);
+     plot(x,f1d,'-o');
+     hold on
+     plot(x,f1d_ic, '-');
+     
 %     nz = numel(z);     
 %     num_dims = 3;
 %     subset_dimensions = 2;
@@ -47,8 +63,7 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 %     end
 %     
 %     sz = numel(f_nD{1,1}(:,1,1))/2 + 1;
-%     sy = numel(f_nD{1,1}(1,:,1))/4;
-%     sx = numel(f_nD{1,1}(1,1,:))-1;
+
     
     %contourf(v_par,v_perp,f_nD{1,1}(:,:,sx));
 %     hold on
@@ -56,13 +71,11 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 %     plot(z,v_par_temp, 'b');
 %     hold off
     %plotting 
-%     f1d = f_nD(:,sy,sx);
 %     f1d = f1d(1,:);
 %     x = nodes{1};
 %     y = nodes{2};
 %     z = nodes{3};
 %     x = 9.109*10^-31*x.^2/(1.602*10^-19);
-%     plot(z,f1d,'-o');
     %xlim([0.01,1e4]);
     %ylim([0.01,1e4]);
 %     title('Mirror 2D Relaxation');
@@ -81,7 +94,7 @@ function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
 %           hold off;
 % %     end
 %     
-     sx = max(1,floor(nx/2));
+%     sx = max(1,floor(nx/2));
 %     if nx > 2
 %         sx = sx+2; % just to get off the exact middle
 %     end
