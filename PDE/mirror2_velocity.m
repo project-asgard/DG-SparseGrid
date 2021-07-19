@@ -1,16 +1,15 @@
-function pde = mirror2_collision(opts)
-% Two-dimensional magnetic mirror from the FP paper - evolution of t*he ion velocity dependence
+function pde = mirror2_velocity(opts)
+% Two-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % Also applied to the 2D test for CQL4D equations
 
-% df/dt == sum_{b} ( nu_D/(2 sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2
-% (d/dv(flux_v)) )
+% df/dt == -eE/m cos(z) df/du + eE/m sin(z) df/dz + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 1/v^2 (d/dv(flux_v))
 %a
 % flux_v == v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]
 %
 % Run with
 %
-% asgard(@mirror2_collision,'timestep_method','matrix_exponential','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true)
+% asgard(@mirror2_velocity,'timestep_method','BE','case',3,'dt',1e-6)
 
 params = mirror_parameters();
 
@@ -25,7 +24,9 @@ switch opts.case_
         params.a.T_eV = 20;
         params.a.E_eV = 3e3; %case with offset and no change in Temperature
         params.b.m = params.m_e;
+        params.E = 1e-4;
 end
+
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
@@ -64,37 +65,39 @@ BCR = new_md_func(num_dims,{...
     params.boundary_cond_z, ...
     params.boundary_cond_t});
 
+
 %% Define the terms of the PDE
 
-% -u^2 sin(z)*eE*Z_a/m_a cos(z) d/dv(f)
+% -eE*Z_a/m_a cos(z) d/dv(f)
 
-% g1 = @(v,p,t,dat) -p.e.*p.E.*Z_a.v.^2./m_a;
-% g2 = @(v,p,t,dat) v.*0 + 1;
-% 
-% pterm1 = MASS(g1);
-% pterm2  = GRAD(num_dims,g2,-1,'N','N');
-% termE_v = SD_TERM({pterm1,pterm2});
-% 
-% g3 = @(z,p,t,dat) sin(z).*cos(z);
-% pterm1 = MASS(g3);
-% termE_z = SD_TERM({pterm1});
-% termE1   = MD_TERM(num_dims,{termE_v,termE_z});
-% 
-% % eE/m sin^2(z)vdf/dz
-% 
-% g1 = @(v,p,t,dat) p.e.*p.E*v./m_a;
-% g2 = @(z,p,t,dat) sin(z)^2;
-% g3 = @(z,p,t,dat) z.*0 + 1;
-% 
-% pterm1 = MASS(g1);
-% pterm2 = MASS(g2);
-% pterm3 = GRAD(num_dims,g3,-1,'N','N');
-% 
-% termE_v = SD_TERM({pterm1});
-% termE_z = SD_TERM({pterm2,pterm3});
-% termE2 = MD_TERM(num_dims,{termE_v,termE_z});
+g1 = @(v,p,t,dat) -p.e.*p.E.*p.a.Z./p.a.m;
+g2 = @(v,p,t,dat) v.*0 + 1;
 
-% termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
+pterm1 = MASS(g1);
+pterm2  = GRAD(num_dims,g2,-1,'N','D',BCL,BCR);
+termE_v = SD_TERM({pterm1,pterm2});
+
+g3 = @(z,p,t,dat) cos(z);
+
+pterm1 = MASS(g3);
+termE_z = SD_TERM({pterm1});
+termE1   = MD_TERM(num_dims,{termE_v,termE_z});
+
+% eE/m sin(z)vdf/dz
+
+g1 = @(v,p,t,dat) p.e.*p.E*v./p.a.m;
+g2 = @(z,p,t,dat) sin(z);
+g3 = @(z,p,t,dat) z.*0 + 1;
+
+pterm1 = MASS(g1);
+pterm2 = MASS(g2);
+pterm3 = GRAD(num_dims,g3,-1,'N','N');
+
+termE_v = SD_TERM({pterm1});
+termE_z = SD_TERM({pterm2,pterm3});
+termE2 = MD_TERM(num_dims,{termE_v,termE_z});
+
+% termC == v.^2.*nu_D/(2*sin(z))*d/dz sin(z)*df/dz
 %
 % becomes 
 %
@@ -112,21 +115,7 @@ pterm3  = GRAD(num_dims,g3,+1,'D','N');
 pterm4  = GRAD(num_dims,g4,-1,'N', 'D',BCL,BCR);
 termC_v = SD_TERM({pterm1});
 termC_z = SD_TERM({pterm2,pterm3,pterm4});
-termC1   = MD_TERM(num_dims,{termC_v,termC_z});
-
-%same term but for species b2
-
-g1 = @(v,p,t,dat) p.nu_D(v,p.a,p.b2)/2;
-g2 = @(z,p,t,dat) 1./sin(z);
-g3 = @(z,p,t,dat) sin(z);
-g4 = @(z,p,t,dat) z.*0 + 1;
-pterm1  = MASS(g1);
-pterm2  = MASS(g2);
-pterm3  = GRAD(num_dims,g3,+1,'D','N');
-pterm4  = GRAD(num_dims,g4,-1,'N', 'D',BCL,BCR);
-termC_v = SD_TERM({pterm1});
-termC_z = SD_TERM({pterm2,pterm3,pterm4});
-termC2   = MD_TERM(num_dims,{termC_v,termC_z});
+termC   = MD_TERM(num_dims,{termC_v,termC_z});
 
 
 % term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
@@ -134,22 +123,12 @@ termC2   = MD_TERM(num_dims,{termC_v,termC_z});
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
 
 g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m); 
+g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
 
 pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,0,'N','D', BCL, BCR);
-termV_v = SD_TERM({pterm1,pterm2});
-termV1  = MD_TERM(num_dims,{termV_v,[]});
-
-%same term but for species b2
-
-g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b2)./(p.a.m + p.b2.m); 
-
-pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,0,'N','D', BCL, BCR);
-termV_v = SD_TERM({pterm1,pterm2});
-termV2  = MD_TERM(num_dims,{termV_v,[]});
+pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
+termV_s = SD_TERM({pterm1,pterm2});
+termV1  = MD_TERM(num_dims,{termV_s,[]});
 
 % term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
 % term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
@@ -163,22 +142,10 @@ g3 = @(v,p,t,dat) v.*0 + 1;
 pterm1      = MASS(g1);
 pterm2      = GRAD(num_dims,g2,-1,'D','N');
 pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL, BCR);
-termV_v     = SD_TERM({pterm1,pterm2,pterm3});
-termV3      = MD_TERM(num_dims,{termV_v,[]});
+termV_par   = SD_TERM({pterm1,pterm2,pterm3});
+termV2      = MD_TERM(num_dims,{termV_par,[]});
 
-%same term but for species b2
-
-g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^4.*0.5.*p.nu_par(v,p.a,p.b2);
-g3 = @(v,p,t,dat) v.*0 + 1;
-
-pterm1      = MASS(g1);
-pterm2      = GRAD(num_dims,g2,-1,'D','N');
-pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL, BCR);
-termV_v     = SD_TERM({pterm1,pterm2,pterm3});
-termV4      = MD_TERM(num_dims,{termV_v,[]});
-
-terms = {termV1,termV2,termV3, termV4, termC1,termC2};
+terms = {termV1,termV2,termC,termE1,termE2};
 
 
 %% Define sources 
