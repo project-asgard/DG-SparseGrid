@@ -107,16 +107,8 @@ if num_dims <=3
     end
     
     % construct the moment function handle list for calculating the mass
-    if opts.calculate_mass
-        mass_func = @(x,p,t) x.*0+1;
-        for d=1:num_dims
-            moment_func_nD{d} = mass_func;
-        end
-        
-        mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD, pde.dimensions);
-        if ~isempty(pde.solutions)
-            mass_analytic = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
-        end
+    if opts.calculate_mass       
+        [mass,mass_analytic] = calculate_mass(pde,opts,coord,fval_realspace,fval_realspace_analytic);
         mass_t(1) = mass;
     end
     
@@ -124,7 +116,6 @@ if num_dims <=3
         pde.params.norm_fac = mass / mass_analytic;
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
-        mass_analytic = moment_integral(opts.lev,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
     end
     
     f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
@@ -163,6 +154,11 @@ if num_dims <=3
     end
     
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
+    
+    if opts.calculate_mass
+        [mass,mass_analytic] = calculate_mass(pde,opts,coord,fval_realspace,fval_realspace_analytic);
+        mass_t(1) = mass;
+    end
     
 end
 
@@ -234,10 +230,13 @@ if num_dims <=3
     end
 end
 
+% need to clean up this interface!
+outputs = save_output([],0,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
+outputs.mass_t = mass_t;
+
 %% Time Loop
 count=1;
 err = 1e9;
-outputs = [];
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:opts.num_steps
     
@@ -365,7 +364,7 @@ for L = 1:opts.num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         if opts.calculate_mass
-            mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD,pde.dimensions);
+            mass = calculate_mass(pde,opts,coord,fval_realspace);
             mass_t(L+1) = mass;
             outputs.mass_t = mass_t;
         end
@@ -493,46 +492,7 @@ for L = 1:opts.num_steps
     t1 = toc;
     if ~opts.quiet; disp(['Took ' num2str(t1) ' [s]']); end
     
-    %%
-    % Save output
-    
-    outputs.fval_t{L+1} = fval;
-    outputs.nodes_t{L+1} = nodes_nodups;
-    outputs.time_array(L+1) = t+dt;
-    outputs.wall_clock_time(L+1) = toc;
-    outputs.dt = dt;
-
-    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-    if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
-        f_realspace_nD = ...
-            remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
-    end
-    
-    if num_dims <= 3
-        outputs.f_realspace_nD_t{L+1} = f_realspace_nD;
-        outputs.f_realspace_analytic_nD_t{L+1} = f_realspace_analytic_nD;
-    else
-        error('Save output for num_dimensions >3 not yet implemented');
-    end
-    
-    if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
-        [status, msg, msgID] = mkdir([root_directory,'/output']);
-        if isempty(opts.output_filename_id)
-            adapt_str = 'n';
-            if opts.adapt; adapt_str=num2str(opts.adapt_threshold,'%1.1e'); end
-            filename_str = ['-l',replace(num2str(opts.lev),' ','') ...
-                '-d',num2str(opts.deg),'-',opts.grid_type,'-dt',num2str(dt),...
-                '-adapt-',adapt_str];
-        else
-            filename_str = opts.output_filename_id;
-        end
-        output_file_name = append(root_directory,"/output/asgard-out",filename_str,".mat");
-        outputs.output_file_name = output_file_name;
-     
-        save(output_file_name,'pde','opts','outputs.dt','outputs.f_realspace_analytic_nD_t',...
-            'outputs.f_realspace_nD_t','outputs.fval_t','nodes','time_array','hash_table','outputs.wall_clock_time','outputs.nodes_t');
-        
-    end
+    outputs = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
     
     t = t + dt;
        

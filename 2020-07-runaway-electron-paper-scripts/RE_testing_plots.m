@@ -2,10 +2,43 @@ root = get_root_folder();
 directory = [root,'/2020-07-runaway-electron-paper-scripts/'];
 file_extension = '.png';
 
-%% Pich angle dynamics
-%
-% Collision term test
-% -------------------
+
+%% Momentum dynamics
+
+% Momentum (Collision, E=R=0)
+% Two initial conditions:
+% Case 1: smooth Maxwellian
+% Case 2: discontinuous step function
+
+lev = 5;
+deg = 4; 
+dt = 50;
+[err,~,~,~,~,outputs] = asgard(@fokkerplanck1_momentum_C_div,...
+    'timestep_method','matrix_exponential','lev',lev,'deg',deg,'num_steps',5,'dt',dt,...
+    'case',2,'save_output',true,'calculate_mass',true,'quiet',true);
+load(outputs.output_file_name);
+figure('Position', [10 10 1600 400])
+subplot(1,3,1)
+plot_times = [];
+plot_output1(outputs,plot_times,lev,deg,dt,[],1);
+
+% look at the error versus lev
+dt = 350;
+for deg=1:4
+for lev=3:6
+    disp(['Solving for deg=',num2str(deg)]);
+    disp(['Solving for lev=',num2str(lev)]);
+  [err,~,~,~,~,outputs] = asgard(@fokkerplanck1_momentum_C_div,...
+    'timestep_method','matrix_exponential','lev',lev,'deg',deg,'num_steps',1,'dt',dt,...
+    'case',2,'save_output',true,'calculate_mass',true,'quiet',true);  
+    err_table(lev,deg) = err;
+end
+end
+
+%% Pitch angle dynamics
+
+% Pitch (Collision, E=R=0)
+
 lev = 4;
 deg = 1;
 [err,~,~,~,~,outputs] = asgard(@fokkerplanck1_pitch_C,'timestep_method','BE','dt',0.001,...
@@ -163,7 +196,13 @@ exportgraphics(gcf,[filename,file_extension],'ContentType','vector','BackgroundC
 
 disp('END');
 
-function plot_output1(outputs,plot_times,lev,deg,dt,adapt_threshold,use_log)
+function plot_output1(outputs,plot_indicies,lev,deg,dt,adapt_threshold,use_log)
+
+if isempty(plot_indicies)
+    num_times = numel(outputs.fval_t);
+    plot_indicies = linspace(1,num_times,num_times);
+end
+
 green = '#77AC30';
 blue  = '#0072BD';
 red = '#D95319';
@@ -172,34 +211,35 @@ orange = '#EDB120';
 purple = '#7E2F8E';
 colors = {green,blue,red,aqua,orange,purple};
 
-output = load(outputs.output_file_name);
-pde = output.pde;
-opts = output.opts;
-hash_table = output.hash_table;
-f_realspace_analytic_nD_t = output.f_realspace_analytic_nD_t;
-f_realspace_nD_t = output.f_realspace_nD_t;
-fval_t = output.fval_t;
-nodes_t = output.nodes_t;
+loaded_struct = load(outputs.output_file_name);
+pde = loaded_struct.pde;
+opts = loaded_struct.opts;
+hash_table = loaded_struct.hash_table;
+f_realspace_analytic_nD_t = loaded_struct.outputs.f_realspace_analytic_nD_t;
+f_realspace_nD_t = loaded_struct.outputs.f_realspace_nD_t;
+fval_t = loaded_struct.outputs.fval_t;
+nodes_t = loaded_struct.outputs.nodes_t;
 
 cnt = 1;
-for i=1:numel(plot_times)
+for i=1:numel(plot_indicies)
     hold on
-    p=plot(nodes_t{plot_times(i)}{1},f_realspace_analytic_nD_t{plot_times(i)},'-','LineWidth',5.5,'Color',colors{i});
+    color_index = 1+mod(i-1,numel(colors));
+    p=plot(nodes_t{plot_indicies(i)}{1},f_realspace_analytic_nD_t{plot_indicies(i)},'-','LineWidth',5.5,'Color',colors{color_index});
     p.Color(4)=0.5;
-    plot(nodes_t{plot_times(i)}{1},f_realspace_nD_t{plot_times(i)},'-o','LineWidth',1,'Color',colors{i});
-    labels{cnt} = ['t = ',num2str(plot_times(i)*outputs.dt),' (analytic)'];
+    plot(nodes_t{plot_indicies(i)}{1},f_realspace_nD_t{plot_indicies(i)},'-o','LineWidth',1,'Color',colors{color_index});
+    labels{cnt} = ['t = ',num2str((plot_indicies(i)-1)*outputs.dt),' (analytic)'];
     if opts.adapt
-        labels{cnt+1} = ['t = ',num2str(plot_times(i)*outputs.dt),...
+        labels{cnt+1} = ['t = ',num2str(plot_indicies(i)*outputs.dt),...
             ' (numeric), adapt threshold=',num2str(adapt_threshold),...
             ', deg=',num2str(deg),...
-            ', DoF=',num2str(numel(fval_t{plot_times(i)})),...
-            ', L2 err=',num2str(outputs.err{plot_times(i)},'%4.1e')];
+            ', DoF=',num2str(numel(fval_t{plot_indicies(i)})),...
+            ', L2 err=',num2str(outputs.err{plot_indicies(i)},'%4.1e')];
     else
-        labels{cnt+1} = ['t = ',num2str(plot_times(i)*outputs.dt),...
+        labels{cnt+1} = ['t = ',num2str(plot_indicies(i)*outputs.dt),...
             ' (numeric), lev=',num2str(lev),...
             ', deg=',num2str(deg),...
-            ', DoF=',num2str(numel(fval_t{plot_times(i)})),...
-            ', L2 err=',num2str(outputs.err{plot_times(i)},'%4.1e')];
+            ', DoF=',num2str(numel(fval_t{plot_indicies(i)})),...
+            ', L2 err=',num2str(outputs.err{plot_indicies(i)},'%4.1e')];
     end
     legend(labels,'FontSize',12,'Location','northwest');
     xlabel('\zeta');
@@ -208,6 +248,7 @@ for i=1:numel(plot_times)
     set(gca,'FontSize',14)
     if use_log
     set(gca,'yscale','log')
+    ylim([1e-10,10]);
     end
     cnt = cnt+2;
 end
