@@ -30,6 +30,7 @@ rel_tol = 1e-6;
 func = @(u,z) n_o.*exp(-u.^2./u_th^2).*(z.*0 + 1)./(pi^(3/2)*u_th^3);
 test_Avals = [];
 testVals = [];
+numer_func = interpolate_numerical_distribution();
 
 %testing Rosenbluth Coeffs for l = 0
 lIndex = [0 1];
@@ -39,7 +40,16 @@ for i = 1:length(uVals)
     uVal = uVals(i);
     for j = 1:length(lIndex)
         gamma_a = 4*pi*(params.a.Z)^2*e^4/((params.a.m)^2);
+        numerVals = mirror_FokkerPlanckCoeffs(numer_func,uVal,lIndex(j),z,params);
         testVals = mirror_FokkerPlanckCoeffs(func,uVal,lIndex(j),z,params);
+        %get FP coefficients from numerical function
+        numer_Avals(i,j) = numerVals(1);
+        numer_Bvals(i,j) = numerVals(2);
+        numer_Cvals(i,j) = numerVals(3);
+        numer_Dvals(i,j) = numerVals(4);
+        numer_Evals(i,j) = numerVals(5);
+        numer_Fvals(i,j) = numerVals(6);
+        %get FP coefficients for analytic Maxwellian
         test_Avals(i,j) = testVals(1);
         test_Bvals(i,j) = testVals(2);
         test_Cvals(i,j) = testVals(3);
@@ -47,6 +57,12 @@ for i = 1:length(uVals)
         test_Evals(i,j) = testVals(5);
         test_Fvals(i,j) = testVals(6);
     end
+    total_numA(i) = sum(numer_Avals(i,:));
+    total_numB(i) = sum(numer_Bvals(i,:));
+    total_numC(i) = sum(numer_Cvals(i,:));
+    total_numD(i) = sum(numer_Dvals(i,:));
+    total_numE(i) = sum(numer_Evals(i,:));
+    total_numF(i) = sum(numer_Fvals(i,:));
     total_A(i) = sum(test_Avals(i,:));
     total_B(i) = sum(test_Bvals(i,:));
     total_C(i) = sum(test_Cvals(i,:));
@@ -55,6 +71,7 @@ for i = 1:length(uVals)
     total_F(i) = sum(test_Fvals(i,:));
 end
 data = [uVals; total_A; total_B; total_C; total_D; total_E; total_F];
+numer_data = [uVals; total_numA; total_numB; total_numC; total_numD; total_numE; total_numF];
 rel_err = abs(testVal(1) - gold_M)/abs(gold_M);
 verifyLessThan(testCase, rel_err, rel_tol);
 
