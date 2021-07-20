@@ -30,7 +30,7 @@ moment = this_dim_coord.*0+1;
 
 for d=1:num_dim
     this_dim_coord = coords_nD{d}(:);
-    jac = jac .* dimensions{d}.volume_element(this_dim_coord);
+    jac = jac .* dimensions{d}.moment_dV(this_dim_coord);
     moment = moment .* gfunc_nD{d}(this_dim_coord);
 end
 moment_value = sum(ww.*fval_realspace.*moment.*jac);

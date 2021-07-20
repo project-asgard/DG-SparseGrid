@@ -43,15 +43,16 @@ for tt = 1:num_terms % Construct a BC object for each term
         
         for p=1:numel(term_1D.pterms)
             
-            this_type = term_1D.pterms{p}.type;
-            this_g = term_1D.pterms{p}.g;
+            pterm = term_1D.pterms{p};
+            this_type = pterm.type;
+            this_g = pterm.g;
             
             if strcmp(this_type,'grad') || strcmp(this_type,'div') % BCs are only present for grad/div terms
                 
-                this_BCL = term_1D.pterms{p}.BCL;
-                this_BCR = term_1D.pterms{p}.BCR;
-                BCL_fList = term_1D.pterms{p}.BCL_fList;
-                BCR_fList = term_1D.pterms{p}.BCR_fList;
+                this_BCL = pterm.BCL;
+                this_BCR = pterm.BCR;
+                BCL_fList = pterm.BCL_fList;
+                BCR_fList = pterm.BCR_fList;
                 
                 %%
                 % Initialize to zero
@@ -85,14 +86,14 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Overwrite the trace (boundary) value just for this dim
                     % Func*v|_xMin and Func*v|_xMax
                     
-                    bcL_tmp = compute_boundary_condition(pde,this_g,dim.volume_element,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
+                    bcL_tmp = compute_boundary_condition(pde,this_g,pterm.dV,time,lev,deg,xMin,xMax,BCL_fList{d1},'L');
                     trans_side = 'LN';
                     bcL_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcL_tmp, trans_side);
                     
                     %%
                     % Apply LHS_mass_mat for this pterm
                    
-                    M = term_1D.pterms{p}.LHS_mass_mat;
+                    M = pterm.LHS_mass_mat;
                     bcL_tmp = inv(M) * bcL_tmp;
                     
                     %%
@@ -129,14 +130,14 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Overwrite the trace (boundary) value just for this dim
                     % Func*v|_xMin and Func*v|_xMax
                     
-                    bcR_tmp = compute_boundary_condition(pde,this_g,dim.volume_element,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
+                    bcR_tmp = compute_boundary_condition(pde,this_g,pterm.dV,time,lev,deg,xMin,xMax,BCR_fList{d1},'R');
                     trans_side = 'LN';
                     bcR_tmp = apply_FMWT_blocks(lev, pde.transform_blocks, bcR_tmp, trans_side);
                     
                     %%
                     % Apply LHS_mass_mat for this pterm
                    
-                    M = term_1D.pterms{p}.LHS_mass_mat;
+                    M = pterm.LHS_mass_mat;
                     bcR_tmp = inv(M) * bcR_tmp;                
                     
                     %%

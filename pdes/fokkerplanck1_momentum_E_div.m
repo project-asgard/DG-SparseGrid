@@ -34,8 +34,8 @@ params = fokkerplanck_parameters(opts);
 %% Setup the dimensions 
 
 dV_p = @(x,p,t,d) x.^2;
-dim_p = DIMENSION(0.1,+10);
-dim_p.volume_element = dV_p;
+dim_p = DIMENSION(1,+10);
+dim_p.moment_dV = dV_p;
 dimensions = {dim_p};
 num_dims = numel(dimensions);
 

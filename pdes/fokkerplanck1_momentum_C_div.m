@@ -88,7 +88,7 @@ params.parameter1 = 0;
 
 dV_p = @(x,p,t,d) x.^2;
 dim_p = DIMENSION(0,+10);
-dim_p.volume_element = dV_p;
+dim_p.moment_dV = dV_p;
 dimensions = {dim_p};
 num_dims = numel(dimensions);
 
@@ -106,10 +106,6 @@ initial_conditions = {ic1};
 
 %% LHS terms (mass only)
 
-% LHS_pterm1   = MASS(dV_p);
-% LHS_term1_p = SD_TERM({LHS_pterm1});
-% LHS_term1 = MD_TERM(num_dims,{LHS_term1_p});
-% LHS_terms = {LHS_term1};
 LHS_terms = {};
 
 %% RHS terms

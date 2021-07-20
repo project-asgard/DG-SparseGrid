@@ -143,12 +143,12 @@ for i=0:N-1
     
     %%
     % mass matrix u . v
-    G1 = pterm.g(quad_xi,params,t,dat_R_quad) .* dim.volume_element(quad_xi,params,t);
+    G1 = pterm.g(quad_xi,params,t,dat_R_quad) .* pterm.dV(quad_xi,params,t);
     val_mass = p_val' * (G1 .* p_val .* quad_w) * Jacobi;
     
     %%
     % div matrix u . v'
-    G1 = pterm.g(quad_xi,params,t,dat_R_quad) .* dim.volume_element(quad_xi,params,t);
+    G1 = pterm.g(quad_xi,params,t,dat_R_quad) .* pterm.dV(quad_xi,params,t);
     val_div  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
     
     assert(~isnan(norm(G1)))
@@ -189,8 +189,8 @@ for i=0:N-1
         % {{f(u)}} = (f(u_L) + f(u_R))/2
         % [[u]] = u_R - u_L
         
-        FCL = pterm.g(xL,params,t,dat_R_quad) .* dim.volume_element(xL,params,t);
-        FCR = pterm.g(xR,params,t,dat_R_quad) .* dim.volume_element(xR,params,t);
+        FCL = pterm.g(xL,params,t,dat_R_quad) .* pterm.dV(xL,params,t);
+        FCR = pterm.g(xR,params,t,dat_R_quad) .* pterm.dV(xR,params,t);
         TraVal = [...
             (-p_L)' * FCL * p_R/2 + FluxVal * abs(FCL)/2 * (-p_L)' *   p_R,...
             (-p_L)' * FCL * p_L/2 + FluxVal * abs(FCL)/2 * (-p_L)' * (-p_L),...% xL
