@@ -12,9 +12,14 @@ classdef DIV_OR_GRAD < PARTIAL_SD_TERM
     
     methods
         function obj = DIV_OR_GRAD(type_,num_dims,g_,LHS_mass_g_,LF_,BCL_,BCR_,BCL_fList_,BCR_fList_,dat_,dV_)
+            
             assert(nargin>=2);
-            if nargin<3
-                g_ = @(x,p,t,dat) x.*0+1;
+            
+            g = @(x,p,t,dat) x.*0+1;
+            if exist('g_','var')
+                if ~isempty(g_)
+                    g = g_;
+                end
             end
             
             LHS_mass_g = @(x,p,t,dat) x.*0+1;

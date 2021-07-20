@@ -5,10 +5,10 @@ function [pterm] = pterm_coeff_matrix(deg,t,dim,pterm,params, ...
 
 [L,L_not_rotated] = coeff_matrix(deg,t,dim,pterm,params,FMWT_blocks,coeff_level);
 
-% Get the LHS matrix (M) for this pterm
+% Get the LHS mass matrix (M) for this pterm
 
 lhs_mass_pterm = MASS(pterm.LHS_mass_g);
-[M,M_not_rotated] = coeff_matrix(deg,t,dim,lhs_mass_pterm,params,FMWT_blocks,coeff_level);
+[M,M_not_rotated] = coeff_matrix(deg,t,dim,lhs_mass_pterm,params,FMWT_blocks,coeff_level); % note that dV is applied in here
 
 % Move M to the RHS
 

@@ -33,8 +33,8 @@ params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
-dV_p = @(x,p,t) x.^2;
-dim_p = DIMENSION(0,+10);
+dV_p = @(x,p,t,d) x.^2;
+dim_p = DIMENSION(0.1,+10);
 dim_p.volume_element = dV_p;
 dimensions = {dim_p};
 num_dims = numel(dimensions);
@@ -69,19 +69,19 @@ end
 
 % termE1 == -1/p^2 (d/dp p^2 f(p)) [div, g1(p) = -1,   BCL=D,BCR=D]
 
-g1 = @(x,p,t,dat) -1; 
+g1     = @(x,p,t,d) x.*0-1; 
 pterm1 = DIV (num_dims,g1,'',-1,'D','N',soln1,soln1,'',dV_p);
 
 termE1_p = SD_TERM({pterm1});
-termE1 = MD_TERM(num_dims,{termE1_p});
+termE1   = MD_TERM(num_dims,{termE1_p});
 
 % termE2 == +2/p f
 %        == g1(p) f(p)       [mass, g1(p) = +2/p,  BC N/A]
 
-g1 = @(x,p,t,dat) +2./x;
-pterm1   = MASS(g1);
+g1       = @(x,p,t,d) +2./x;
+pterm1   = MASS(g1,'','',dV_p);
 termE2_p = SD_TERM({pterm1});
-termE2= MD_TERM(num_dims,{termE2_p});
+termE2   = MD_TERM(num_dims,{termE2_p});
 
 terms = {termE1,termE2};
 

@@ -27,12 +27,21 @@ classdef PARTIAL_SD_TERM
             if nargin<1
                 type_ = 'mass';
             end
-            if nargin<2
-                g_ = @(x,p,t,dat) x.*0+1;
+            
+            g = @(x,p,t,dat) x.*0+1;
+            if exist('g_','var')
+                if ~isempty(g_)
+                    g = g_;
+                end
             end
-            if nargin<3
-                LHS_mass_g_ = @(x,p,t,dat) x.*0+1;
+            
+            LHS_mass_g = @(x,p,t,dat) x.*0+1;
+            if exist('LHS_mass_g_','var')
+                if ~isempty(LHS_mass_g_)
+                    LHS_mass_g = LHS_mass_g_;
+                end
             end
+            
             if nargin<4
                 dat_ = [];
             end
@@ -41,8 +50,8 @@ classdef PARTIAL_SD_TERM
             end
             
             pterm.type = type_;
-            pterm.g = g_;
-            pterm.LHS_mass_g = LHS_mass_g_;
+            pterm.g = g;
+            pterm.LHS_mass_g = LHS_mass_g;
             pterm.dat = dat_;
             pterm.dV = dV_;
         end

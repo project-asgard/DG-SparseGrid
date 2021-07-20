@@ -27,9 +27,9 @@ end
 %% RHS terms
 
 for tt = 1:num_terms
-        
+    
     term_nD = pde.terms{tt};
-        
+    
     for d = 1:num_dimensions
         
         dim = pde.dimensions{d};
@@ -59,30 +59,34 @@ if ~isempty(pde.termsLHS)
     num_terms_LHS = numel(pde.termsLHS);
     assert(num_terms_LHS == 1);
     
-    term_nD = pde.termsLHS{1};
-    
-    for d = 1:num_dimensions
+    for tt = 1:num_terms_LHS
         
-        dim = pde.dimensions{d};
-        term_1D = term_nD.terms_1D{d};
+        term_nD = pde.termsLHS{tt};
         
-        if term_1D.time_dependent == TD
+        for d = 1:num_dimensions
             
-            if debug; disp([TD_STR ' - LHS term : ' num2str(1) '  d : ' num2str(d) ]); end
+            dim = pde.dimensions{d};
+            term_1D = term_nD.terms_1D{d};
             
-            for p=1:numel(term_1D.pterms)
-                assert(strcmp(term_1D.pterms{p}.type,'mass'));
+            if term_1D.time_dependent == TD
+                
+                if debug; disp([TD_STR ' - LHS term : ' num2str(1) '  d : ' num2str(d) ]); end
+                
+                for p=1:numel(term_1D.pterms)
+                    assert(strcmp(term_1D.pterms{p}.type,'mass'));
+                end
+                
+                construction_level = dim.lev;
+                if opts.max_lev_coeffs && ~term_1D.time_dependent
+                    construction_level = opts.max_lev;
+                end
+                
+                pde.termsLHS{tt}.terms_1D{d} = sd_term_coeff_matrix(opts.deg,t,dim,term_1D,pde.params,...
+                    pde.transform_blocks, construction_level);
+                
             end
-            
-            construction_level = dim.lev;
-            if opts.max_lev_coeffs && ~term_1D.time_dependent
-                construction_level = opts.max_lev;
-            end
-            pde.termsLHS{tt}.terms_1D{d} = sd_term_coeff_matrix(opts.deg,t,dim,term_1D,pde.params,...
-                pde.transform_blocks, construction_level);
             
         end
-        
     end
     
 end
