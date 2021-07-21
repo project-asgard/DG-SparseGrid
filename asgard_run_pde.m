@@ -75,11 +75,7 @@ end
 
 for d=1:num_dims
     if strcmp(opts.output_grid,'fixed')
-        if d==1
-            num_fixed_grid = 51;
-        else
-            num_fixed_grid = 21;
-        end
+        num_fixed_grid = 51;
         nodes_nodups{d} = ...
             linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
         [Meval{d},nodes{d},nodes_count{d}] = ...
@@ -107,8 +103,6 @@ if num_dims <=3
     % Get the real space solution    
 
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-
     if ~isempty(pde.solutions)
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace),1);
@@ -129,6 +123,7 @@ if num_dims <=3
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
     end
     
+    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
     if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
         f_realspace_nD = ...
             remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
@@ -245,11 +240,9 @@ end
 
 % need to clean up this interface!
 outputs = save_output([],0,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
-
 if opts.calculate_mass
     outputs.mass_t = mass_t;
 end
-
 
 %% Time Loop
 count=1;
@@ -532,15 +525,43 @@ for L = 1:opts.num_steps
     
     if opts.update_params_each_timestep
        
-        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
-%       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
-        alpha_z = @(z) (pde.params.f0_p(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_p0,z,'spline','extrap'))/dt;
+        f_v0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
+%        alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
+%        alpha_z = @(z) (pde.params.f0_v(nodes{1}(1))-interp1(nodes{2},f_v0,z,'spline','extrap'))/dt;
+        alpha_z = @(z) (pde.params.f0_v(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_v0,z,'spline','extrap'))/dt;
+%        alpha_z =  @(z) z.*0 + f_v0(1)./dt;
         pde.params.alpha_z = alpha_z;
-        z = linspace(-1,1,100);
+%        z = linspace(0,pi,100);
         outputs.alpha_t0{L+1} = alpha_z;
-%         outputs.alpha_t{L+1} = sum(alpha_z(z));
+%        outputs.alpha_t{L+1} = sum(alpha_z(z));
         outputs.alpha_t{L+1} = alpha_z(0);
-       
+%        alpha_z(0)
+
+        background_species = [pde.params.b, pde.params.b2];
+        uVals = nodes{1};
+        for k = 1:numel(background_species)
+%             for i = 1:length(uVals)
+%                 uVal = uVals(i);
+                for j = 1:length(lIndex)
+                    gamma_a = 4*pi*(params.a.Z)^2*e^4/((params.a.m)^2);
+                    %            numerVals = mirror_FokkerPlanckCoeffs(numer_func,uVal,lIndex(j),z,params,background_species(k));
+                    coeffVals = @(x) mirror_FokkerPlanckCoeffs(func,x,lIndex(j),z,params,background_species(k));
+                    test_Avals(j) =  test_Avals(j) + testVals(1);
+                    test_Bvals(j) = test_Bvals(j) + testVals(2);
+                    test_Cvals(j) = test_Cvals(j) + testVals(3);
+                    test_Dvals(j) = test_Dvals(j) + testVals(4);
+                    test_Evals(j) = test_Evals(j) + testVals(5);
+                    test_Fvals(j) = test_Fvals(j) + testVals(6);
+                end
+                %     total_numA(i) = sum(numer_Avals(i,:));
+                %     total_numB(i) = sum(numer_Bvals(i,:));
+                %     total_numC(i) = sum(numer_Cvals(i,:));
+                %     total_numD(i) = sum(numer_Dvals(i,:));
+                %     total_numE(i) = sum(numer_Evals(i,:));
+                %     total_numF(i) = sum(numer_Fvals(i,:));
+                pde.params.fp_Coeffs = coeffVals;
+            end
+%         end
     end
        
 end
@@ -548,4 +569,15 @@ end
 outputs.pde = pde;
 outputs.opts = opts;
 
+% delta_mass(1) = 0;
+% for i=1:numel(outputs.mass_t)-1
+%     z=outputs.nodes_t{end}{2};
+%     f=outputs.f_realspace_nD_t{i+1}(:,end);
+%     dz=abs(z(1)-z(2));
+%     delta_mass(i+1) = sum(f.*z'*.25*outputs.dt*dz);
+% end
+% plot(outputs.mass_t/outputs.mass_t(1));
+% hold on
+% plot(cumsum(delta_mass)/outputs.mass_t(1))
+% plot((outputs.mass_t+cumsum(delta_mass))/outputs.mass_t(1))
 end
