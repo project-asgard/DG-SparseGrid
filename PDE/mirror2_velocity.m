@@ -21,10 +21,17 @@ switch opts.case_
         params.a.T_eV = 0.05*params.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
     case 3 
-        params.a.T_eV = 20;
-        params.a.E_eV = 3e3; %case with offset and no change in Temperature
-        params.b.m = params.m_e;
-        params.E = 1e-4;
+        n_o = 8e14; %equilibrium density in cm.^-3
+        m_e = 9.109*10^-28; %electron mass in g
+        temp = 1.6022e-10; %temperature in erg
+        params.a.n = n_o;
+        params.b.n = n_o;
+        params.a.vth = sqrt(2*temp/m_e);
+        params.b.vth = sqrt(2*temp/m_e);
+        params.a.m = m_e; %beam is electrons
+        params.b.m = m_e; %background is electrons
+        params.E = 3.33e-7; %E field in statvolt/cm
+        params.init_cond_v = @(v,p,t) params.maxwell(v,0,a.vth);
 end
 
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
