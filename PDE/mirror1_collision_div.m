@@ -64,6 +64,10 @@ ic_v = @(v,p,t) p.init_cond_v(v);
 ic1 = new_md_func(num_dims,{ic_v});
 initial_conditions = {ic1};
 
+%% LHS terms (mass only)
+
+LHS_terms = {};
+
 %% Define the boundary conditions
 
 %% Define the boundary conditions
@@ -120,6 +124,6 @@ sources = {};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
