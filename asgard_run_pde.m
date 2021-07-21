@@ -103,8 +103,6 @@ if num_dims <=3
     % Get the real space solution    
 
     fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-
     if ~isempty(pde.solutions)
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace),1);
@@ -125,6 +123,7 @@ if num_dims <=3
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
     end
     
+    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
     if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
         f_realspace_nD = ...
             remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
