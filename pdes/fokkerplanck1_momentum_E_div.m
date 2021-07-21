@@ -28,13 +28,19 @@ function pde = fokkerplanck1_momentum_E_div(opts)
 %
 % case = 1 % flat initial condition
 % case = 2 % maxwellian initial condition
+%
+% Notes:
+% DLG - including the mass term gives rise to a system that does not
+% conserve mass and I'm not sure why. Simply assuming d/dz==0 gives a
+% systems without that mass term which does conserve mass so I'm using that
+% for now (slightly different solution as noted below).
 
 params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
 dV_p = @(x,p,t,d) x.^2;
-dim_p = DIMENSION(1,+10);
+dim_p = DIMENSION(0,+10);
 dim_p.moment_dV = dV_p;
 dimensions = {dim_p};
 num_dims = numel(dimensions);
@@ -45,7 +51,8 @@ num_dims = numel(dimensions);
      case 1
          soln_p = @(x,p,t) x.*0 + 1;
      case 2
-         soln_p = @(x,p,t) exp(-(x-t).^2);
+%          soln_p = @(x,p,t) exp(-(x-4-t).^2);
+         soln_p = @(x,p,t) exp(-(x-4-t).^2) .*(x-t).^2 ./ x.^2; % solution to the mass conserving term2==0 system
  end
 
 soln1 = new_md_func(num_dims,{soln_p});
@@ -67,10 +74,10 @@ end
 
 %% -div(flux_E) == termE1
 
-% termE1 == -1/p^2 (d/dp p^2 f(p)) [div, g1(p) = -1,   BCL=D,BCR=D]
+% termE1 == -1/p^2 (d/dp p^2 f(p)) [div, g1(p) = -1,   BCL=D,BCR=N]
 
 g1     = @(x,p,t,d) x.*0-1; 
-pterm1 = DIV (num_dims,g1,'',-1,'D','N',soln1,soln1,'',dV_p);
+pterm1 = DIV (num_dims,g1,'',-1,'N','N',soln1,soln1,'',dV_p);
 
 termE1_p = SD_TERM({pterm1});
 termE1   = MD_TERM(num_dims,{termE1_p});
@@ -83,7 +90,7 @@ pterm1   = MASS(g1,'','',dV_p);
 termE2_p = SD_TERM({pterm1});
 termE2   = MD_TERM(num_dims,{termE2_p});
 
-terms = {termE1,termE2};
+terms = {termE1};%,termE2};
 
 %% Define sources
 
