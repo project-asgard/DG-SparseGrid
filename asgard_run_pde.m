@@ -241,7 +241,9 @@ end
 
 % need to clean up this interface!
 outputs = save_output([],0,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
-%outputs.mass_t = mass_t;
+if opts.calculate_mass
+    outputs.mass_t = mass_t;
+end
 
 %% Time Loop
 count=1;
