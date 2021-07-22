@@ -322,6 +322,15 @@ disp('Testing fokkerplanck1_momentum_C (CN / with LHS / TIA)');
 verifyLessThan(testCase,err,2.5e-2);
 end
 
+function asgard_mirror1_collision_div_test(testCase)
+addpath(genpath(pwd));
+disp('Testing mirror1_collision_div (matrix_exponential)');
+[err,act_f,act_frs] = asgard(@mirror1_collision_div,'timestep_method','BE', ...
+    'lev',4, 'deg', 5,'dt',1e-3,'num_steps',20,'quiet',false,'calculate_mass', true, ...
+    'normalize_by_mass', true);
+verifyLessThan(testCase,err,2.5e-2);
+end
+
 function end_points_grid_test(testCase)
 addpath(genpath(pwd));
 disp('Testing quadrature_with_end_points');
