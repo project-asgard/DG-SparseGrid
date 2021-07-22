@@ -49,7 +49,7 @@ num_dims = numel(dimensions);
 %     end
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
-        ret = p.maxwell(v,0,p.v_th(p.b.T_eV,p.a.m));
+        ret = p.maxwell(v,0,p.v_th(p.b.T_eV,p.a.m))./p.a.n;
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
         end
@@ -60,7 +60,7 @@ solutions = {soln1};
 
 %% Define the initial conditions
 
-ic_v = @(v,p,t) p.init_cond_v(v);
+ic_v = @(v,p,t) p.init_cond_v(v)./p.a.n;
 ic1 = new_md_func(num_dims,{ic_v});
 initial_conditions = {ic1};
 
