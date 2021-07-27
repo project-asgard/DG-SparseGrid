@@ -12,7 +12,7 @@ function vec = mirror_functional(wfunc,uLimit,lIndex)
 
 N = 100;
 u_low = linspace(0,uLimit,N);
-u_high = linspace(uLimit,50*uLimit,N);
+u_high = linspace(uLimit,100*uLimit,N);
 
 c = 3*10^10; %cm/s
 

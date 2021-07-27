@@ -74,6 +74,7 @@ nu_ab0  = @(a,b) b.n * e^4 * a.Z^2 * b.Z^2 * ln_delt / (2*pi*eps0^2*a.m^2*b.vth^
 nu_s    = @(v,a,b) nu_ab0(a,b) .* (1+a.m/b.m) .* psi(vel_norm(v,b.vth)) ./ vel_norm(v,b.vth); %slowing down frequency
 nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth).^3)); %parallel diffusion frequency
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi(vel_norm(v,b.vth)) - psi(vel_norm(v,b.vth)))./(vel_norm(v,b.vth).^3); %deflection frequency in s^-1
+nu_E    = @(v,a,b) nu_ab0(a,b).*2*(a.m/b.m)*(psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth)) - dphidx(vel_norm(v,b.vth))./(vel_norm(v,b.vth))^2);
 maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x,y,a) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
@@ -145,6 +146,10 @@ soln_z = @solution_z;
 
     function ret = phi(x)
         ret = erf(x);
+    end
+
+    function ret = dphidx(x)
+        ret = 2./sqrt(pi) * exp(-x.^2);
     end
 
     function ret = phi_f(x)
