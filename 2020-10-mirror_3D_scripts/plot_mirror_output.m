@@ -1,10 +1,25 @@
-function plot_mirror_output(nodes, outputs, pde)
+function plot_mirror_output(nodes, outputs, pde, opts)
 
+      coord = get_realspace_coords(pde,nodes);
+      coord_E = @(x) 0.5*3.3443*10^-27*coord{:,:}.^2/(1.602*10^-19);
+      num_dims = numel(pde.dimensions);
+for d=1:num_dims
+    moment_func_nD{d} = coord_E;
+end
       x = nodes{1};
       x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
       num_steps = length(outputs.time_array);
       f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
+      %getting energy density
+      lev_vec = [opts.lev, opts.lev];
+      for i = 1:num_steps
+            energy_vals(i) = moment_integral(lev_vec, opts.deg, coord, outputs.f_realspace_nD_t{1,i}, moment_func_nD, pde.dimensions);
+      end
+      %formulating the Hinton solution
+      x_hint = @(v,a,b) x_E(1)*pde.params.nu_E(v,a,b);
+      e_hint = @(t) integral(-x_hint, 0, t);
+      hint_func = @(t) exp(e_hint(t));
 for j = 1:num_steps
     f1d = outputs.f_realspace_nD_t{1,j};
      for i = 1:length(x)
