@@ -1,44 +1,48 @@
-function plot_mirror_output(nodes, f_nD, f_nD_analytic, pde, time_array)
+function plot_mirror_output(nodes, outputs, pde)
 
-     x = nodes{1};
-%      x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
-%      f1d = f_nD{1,31};
-%      f1d_analytic = f_nD_analytic{1,31};
-%      for i = 1:length(x)
-%          f1d_new = sqrt(x_E(i))*f1d(i);
-%          f1d_analytic_new = sqrt(x_E(i))*f1d_analytic(i);
-%      end
-%      plot(x_E,f1d_new,'-o');
-%      hold on;
-%      %plot(x,f1d_ic,'--');
-%      plot(x_E,f1d_analytic_new, '-');
+      x = nodes{1};
+      x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
+      num_steps = length(outputs.time_array);
+      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
+      f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
+for j = 1:num_steps
+    f1d = outputs.f_realspace_nD_t{1,j};
+     for i = 1:length(x)
+         f1d_new(i) = sqrt(x_E(i))*f1d(i);
+         f1d_analytic_new(i) = sqrt(x_E(i))*f1d_analytic(i);
+     end
+     loglog(x_E,f1d_new,'-','LineWidth', 3);
+     hold on;
+end
+     %plot(x,f1d_ic,'--');
+     loglog(x_E,f1d_analytic_new, '-o');
+     hold off
 %      hold off;
-     y = nodes{2};
+%     y = nodes{2};
 %     z = nodes{3};
-     num_steps = length(time_array);
-     nx = numel(x);
-     ny = numel(y);
-     ax1 = subplot(2,2,1);
-     contourf(y,x,squeeze(f_nD{1,1}(:,:))');
-     ax2 = subplot(2,2,2);
-     contourf(y,x,squeeze(f_nD{1,num_steps}(:,:))');
+%      nx = numel(x);
+%      ny = numel(y);
+%      ax1 = subplot(2,2,1);
+%      contourf(y,x,squeeze(f_nD{1,1}(:,:))');
+%      ax2 = subplot(2,2,2);
+%      contourf(y,x,squeeze(f_nD{1,num_steps}(:,:))');
      %title('Pitch vs Velocity');
      
-     sy = numel(f_nD{1,1}(:,1))/4;
-     sx = 1;
-     f1d = f_nD{1,num_steps}(:,sx);
-     f1d_ic = f_nD{1,1}(:,sx);
-     ax3 = subplot(2,2,3);
-     plot(y,f1d,'-o');
-     hold on
-     plot(y,f1d_ic, '-');
-     hold off
-     f1d = f_nD{1,num_steps}(sy,:);
-     f1d_ic = f_nD{1,1}(sy,:);
-     ax4 = subplot(2,2,4);
-     plot(x,f1d,'-o');
-     hold on
-     plot(x,f1d_ic, '-');
+%      sy = numel(f_nD{1,1}(:,1))/4;
+%      sx = 1;
+%      f1d = f_nD{1,num_steps}(:,sx);
+%      f1d_ic = f_nD{1,1}(:,sx);
+%      ax3 = subplot(2,2,3);
+%      plot(y,f1d,'-o');
+%      hold on
+%      plot(y,f1d_ic, '-');
+%      hold off
+%      f1d = f_nD{1,num_steps}(sy,:);
+%      f1d_ic = f_nD{1,1}(sy,:);
+%      ax4 = subplot(2,2,4);
+%      plot(x,f1d,'-o');
+%      hold on
+%      plot(x,f1d_ic, '-');
      
 %     nz = numel(z);     
 %     num_dims = 3;
