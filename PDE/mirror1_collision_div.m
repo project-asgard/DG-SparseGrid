@@ -109,7 +109,35 @@ pterm3 = DIV(num_dims,g3,'',-1,'N','D','','','',dV_v);
 term2_v = SD_TERM({pterm3});
 term2   = MD_TERM(num_dims,{term2_v});
 
-terms = {term1,term2};
+%repeating but adding second background species
+
+% term3 is done using SLDG defining A(v)= sqrt(0.5*nu_par*v^2)
+%
+% eq1 :  df/dt == div(A(v) * q)        [pterm1: div (g(v)=A(v),+1, BCL=?, BCR=?)]
+% eq2 :      q == A(v) * grad(f)       [pterm2: grad(g(v)=A(v),-1, BCL=D, BCR=N)]
+
+A = @(v,p) sqrt(0.5.*v.^2.*p.nu_par(v,p.a,p.b2));
+g1 = @(v,p,t,dat) A(v,p);
+g2 = @(v,p,t,dat) A(v,p);
+
+pterm1 = DIV (num_dims,g1,'',+1,'D','N','','','',dV_v);
+pterm2 = GRAD(num_dims,g2,'',-1,'N','D','','','',dV_v);
+term3_v = SD_TERM({pterm1,pterm2});
+term3   = MD_TERM(num_dims,{term3_v});
+
+% term4 is a div using B(v) = v (m_a/(m_a + m_b2))nu_s
+%
+% eq1 :  df/dt == div(B(v) * f)       [pterm1: div(g(p)=B(v),+1, BCL=?, BCR=?]
+
+B = @(v,p) v*p.a.m.*p.nu_s(v,p.a,p.b2)./(p.a.m + p.b2.m);
+g3 = @(v,p,t,dat) B(v,p);
+
+pterm3 = DIV(num_dims,g3,'',-1,'N','D','','','',dV_v);
+
+term4_v = SD_TERM({pterm3});
+term4   = MD_TERM(num_dims,{term4_v});
+
+terms = {term1,term2,term3,term4};
 
 %% Define sources 
 
