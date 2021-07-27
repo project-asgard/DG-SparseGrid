@@ -1,4 +1,4 @@
-function vec = mirror_FokkerPlanckCoeffs(f_b,uVal,lIndex,z,params)
+function vec = mirror_FokkerPlanckCoeffs(f_b,uVal,lIndex,z,params,b_species)
 
 %evaluation of local Fokker-Planck coefficients A through F corresponding to
 %equations 31-36 in Franz's dissertation (Franz, 1993) for a species a
@@ -8,6 +8,7 @@ global rel_tol;
 abs_tol = 1e-8;
 rel_tol = 1e-8;
 
+params.b = b_species;
 
 val_z = cos(z);
 legendre_val = legendre(lIndex,val_z);
