@@ -34,6 +34,9 @@ funcs_B = mirror_functional(U_coeff_B, uVal, lIndex);
 
 %getting delta, delta^2, and delta^3 of A and B Rosenbluth Coefficients
 
+U_coeff_A(uVal)
+U_coeff_B(uVal)
+
 delta_A = delta_func(funcs_A,uVal,lIndex,params);
 delta2_A = delta2_func(funcs_A,uVal,lIndex,params);
 delta3_A = delta3_func(funcs_A,uVal,lIndex,params);
@@ -77,10 +80,10 @@ D_c = -0.5*params.gamma(uVal)^2*((params.b.Z/params.a.Z)^2*(params.a.m/params.b.
 E_c = 0.5*params.gamma(uVal)*((params.b.Z/params.b.Z)^2*params.ln_delt*(delta_B) -(params.gamma(uVal)/uVal)*coeffs_R(2))...
 *(sin(z))*(-lIndex-1)*legendre_derivative(lIndex,val_z);
 
-% F_c = 0.5*sum_{b,l}[(Z_b/Z_a)^2*ln_delt*(delta_B^b_l)*(P_l (cos (theta))
+% F_c = ln_delt*sum_{b,l}*0.5*(Z_b/Z_a)^2[(gamma/u)*(delta_B^b_l)*(P_l (cos (theta))
 % + (gamma^2/u^2)*B^b_l*(d^2 P_l (cos (theta))/dtheta^2)]*sin(theta)
 
-F_c = 0.5*((params.b.Z/params.a.Z)^2*params.ln_delt*(delta_B)*legendre_val ...
+F_c = 0.5*(params.b.Z/params.a.Z)^2*params.ln_delt*((params.gamma(uVal)/uVal)*(delta_B)*legendre_val ...
 + (params.gamma(uVal)^2/uVal^2)*coeffs_R(2)*legendre_derivative2(lIndex,val_z))*(sin(z));
 
 %derivatives of legendre polynomials
