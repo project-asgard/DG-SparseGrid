@@ -34,8 +34,8 @@ func = @(u,z) n_o.*exp(-u.^2./u_th^2).*(z.*0 + 1)./(pi^(3/2)*u_th^3);
 numer_func = interpolate_numerical_distribution();
 
 %testing Rosenbluth Coeffs for l = 0
-lIndex = [0 1];
-z = pi/4;
+lIndex = [0 1 2];
+z = pi/2;
 gold_M = 2.9798*10^-3;
 test_Avals = zeros([length(uVals) length(lIndex)]);
 test_Bvals = zeros([length(uVals) length(lIndex)]);
