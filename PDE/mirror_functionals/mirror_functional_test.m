@@ -4,38 +4,53 @@ end
 
 function test_functional_Maxwellian(testCase)
 
-minVal = 0;
+minVal = 0.01;
 rel_tol = 7e-5;
-func = @(x) exp(-x.^2);
+n_o = 1;
+func = @(x) n_o.*exp(-x.^2);
 testVal = [];
 
 %testing M functional for l = 0
 lIndex = 0;
-gold_M = 0.5;
+gold_M = 0.31601;
 testVal = mirror_functional(func,minVal,lIndex);
 rel_err = abs(testVal(1) - gold_M)/abs(gold_M);
 verifyLessThan(testCase, rel_err, rel_tol);
 
 %testing M functional for l = 1
 lIndex = 1;
-gold_M = 0.8862;
+gold_M = 0.736824;
+testVal = mirror_functional(func,minVal,lIndex);
+rel_err = abs(testVal(1) - gold_M)/abs(gold_M);
+verifyLessThan(testCase,rel_err, rel_tol);
+
+%testing M functional for l = 2
+lIndex = 2;
+gold_M = 4.20692;
 testVal = mirror_functional(func,minVal,lIndex);
 rel_err = abs(testVal(1) - gold_M)/abs(gold_M);
 verifyLessThan(testCase,rel_err, rel_tol);
 
 
-minVal = 0.01; %resetting minVal for R functional
+%minVal = 5e8; %resetting minVal for R functional
 
 %testing R functional for l = 0
 lIndex = 0;
-gold_R = 0.5;
+gold_R = 0.132121;
 testVal = mirror_functional(func,minVal,lIndex);
 rel_err = abs(testVal(3) - gold_R)/abs(gold_R);
 verifyLessThan(testCase, rel_err, rel_tol);
 
 %testing R functional for l = 1
 lIndex = 1;
-gold_R = 0.44313;
+gold_R = 0.189472;
+testVal = mirror_functional(func,minVal,lIndex);
+rel_err = abs(testVal(3) - gold_R)/abs(gold_R);
+verifyLessThan(testCase,rel_err, rel_tol);
+
+%testing R functional for l = 2
+lIndex = 2;
+gold_R = 0.31601;
 testVal = mirror_functional(func,minVal,lIndex);
 rel_err = abs(testVal(3) - gold_R)/abs(gold_R);
 verifyLessThan(testCase,rel_err, rel_tol);
