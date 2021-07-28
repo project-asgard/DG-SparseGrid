@@ -1,50 +1,39 @@
 function pde = diffusion_LDG_test(opts)
 
-% Test the momentum dynamics for the RE problem for E = R = 0
+% Test 2D LDG diffusion in spherical coordinates
 %
 % df/dt == div(grad f) in spherical cordinates
 %
-% p is a spherical coordinate (p,th,ph), so the div and grad look like 
+% (p,th) is a spherical coordinate (p,th,ph), so the div and grad look like 
 %
-% div[] = 1/p^2 * d/dp * p^2[], grad[] = d/dp[]
+% div[A] = 1/p^2 * d/dp * p^2[A_p] + 1/(p*sin(th)) d/dth(sin(th) A_th
 %
-% and the volument_element dV = p^2
+%      where A = A_p \hat{p} + A_th \hat{th}
 %
-% 
-% split into two div(flux) terms (term1 and term2)
+% grad[f] = df/dp \hat{p} + 1/r df/dth \hat{th}
 %
-% term1 is done using SLDG defining eta1(p)=sqrt(psi(p)/p)
-%
-% eq1 :  df/dt == div(eta(p) * q)        [pterm1: div (g(p)=eta(p),+1, BCL=?, BCR=?)]
-% eq2 :      q == eta(p) * grad(f)       [pterm2: grad(g(p)=eta(p),-1, BCL=D, BCR=N)]
-%
-% coeff_mat = pterm1.mat * pterm2.mat
-%
-% term2 is just a div
-%
-% eq1 :  df/dt == div(2*psi(p) * f)       [pterm1: div(g(p)=2*psi(p),+1, BCL=?, BCR=?]
-%
-% coeff_mat = pterm1.mat1
+% and the volument_element dV = p^2*sin(th)
 %
 % Run with
 %
-% asgard(@diffusion_LDG_test,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5,'case',1)
+% asgard(@diffusion_LDG_test,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
 %
-% case = 1 % maxwellian initial condition
-% case = 2 % step function initial condition
+% Analytic solution: f(r,th,t) = exp(-t)*(sin(r)/r^2-cos(r)/r)*cos(th)
+%   using approprite Dirichlet BCs
 
 %% Define some parameters and add to pde object.
 
 params.parameter1 = 0;
 
 %% Define the dimensions
-
 dV_p = @(x,p,t,d) x.^2;
-dim_p = DIMENSION(0,4.4934);
+dim_p = DIMENSION(0,4.49340945790906); %Gives zero dirichlet BCs
+%dim_p = DIMENSION(0.5,pi);
 dim_p.moment_dV = dV_p;
-dim_z = DIMENSION(0,pi/2);
-dim_z.moment_dV = @(x,p,t,d) sin(x);
-dimensions = {dim_p,dim_z};
+dim_th = DIMENSION(0,pi);
+%dim_th = DIMENSION(0.5,pi-0.5);
+dim_th.moment_dV = @(x,p,t,d) sin(x);
+dimensions = {dim_p,dim_th};
 num_dims = numel(dimensions);
 
 %% Define the analytic solution (optional).
@@ -63,34 +52,51 @@ initial_conditions = {ic1};
 
 %% LHS terms (mass only)
 
+g1 = @(x,p,t,dat) 0*x+1;
+pterm1 = MASS(g1,[],[],dim_p.moment_dV);
+pterm2 = MASS(g1,[],[],dim_th.moment_dV);
+LHS_term_p = SD_TERM({pterm1});
+LHS_term_th = SD_TERM({pterm2});
+
+LHS_term = MD_TERM(num_dims,{LHS_term_p,LHS_term_th});
+
+%LHS_terms = {LHS_term};
 LHS_terms = {};
 
 %% RHS terms
 
-% term1 is done using SLDG defining eta(p)=sqrt(psi(p)/p)
+% term1 is done using SLDG in p with mass in th
 %
-% eq1 :  df/dt == div(q)        [pterm1: div (g1(p)=1,+1, BCL=D, BCR=D)]
-% eq2 :      q == grad(f)       [pterm2: grad(g2(p)=1,-1, BCL=N, BCR=N)]
+% eq1 :  df/dt == div(q)        [pterm1: div (g1(p)=1,+1, BCL=N, BCR=N)]
+% eq2 :      q == grad(f)       [pterm2: grad(g2(p)=1,-1, BCL=D, BCR=D)]
 %
 
 g1 = @(x,p,t,dat) 0*x+1;
+dV_p = @(x,p,t,d) x.^2;
+dV_th = @(x,p,t,d) sin(x);
 
 pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV_p);
 pterm2 = GRAD(num_dims,g1,'',-1,'D','D',soln1,soln1,'',dV_p);
+%pterm1 =  DIV(num_dims,g1,'',+1,'D','D','','','',dV_p);
+%pterm2 = GRAD(num_dims,g1,'',-1,'N','N','','','',dV_p);
 term1_p = SD_TERM({pterm1,pterm2}); % order here is as in equation
 
-pterm1 = MASS(g1,[],[],@(x,p,t,d) sin(x)); 
-term1_th = SD_TERM({pterm1});
+pterm1 = MASS(g1,[],[],dV_th); 
+term1_th = SD_TERM({pterm1,pterm1});
+
 term1   = MD_TERM(num_dims,{term1_p,term1_th});
 
-% term2 is just a div
+% term2 is done using mass in p with SLDG in th.
 %
-% eq1 :  df/dt == div(2*psi(p) * f)       [pterm1: div(g3(p)=2*psi(p),+1, BCL=N, BCR=D]
+% eq1 :  df/dt == div(q)        [pterm1: div (g1(p)=1,+1, BCL=N, BCR=N)]
+% eq2 :      q == grad(f)       [pterm2: grad(g2(p)=1,-1, BCL=D, BCR=D)]
+%
 
 dV_p = @(x,p,t,d) x;
 dV_th = @(x,p,t,d) sin(x);
+
 pterm1 = MASS(g1,[],[],dV_p);
-term2_p = SD_TERM({pterm1});
+term2_p = SD_TERM({pterm1,pterm1});
 
 pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV_th);
 pterm2 = GRAD(num_dims,g1,'',-1,'D','D',soln1,soln1,'',dV_th);
@@ -125,10 +131,12 @@ function z = soln_p(x,p,t)
     else
         z = sin(x)./(x.^2) - cos(x)./x;
     end
+    %z = (x > pi/2-0.25).*(x < pi/2+0.25);
 end
 
 function z = soln_th(x,p,t)
     z = cos(x);
+    %z = (x > pi/4-0.25).*(x < pi/4+0.25);
 end
 
 

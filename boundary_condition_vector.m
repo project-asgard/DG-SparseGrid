@@ -94,7 +94,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Apply LHS_mass_mat for this pterm
                    
                     M = pterm.LHS_mass_mat;
-                    bcL_tmp = inv(M) * bcL_tmp;
+                    bcL_tmp = M \ bcL_tmp;
                     
                     %%
                     % Apply mats from preceeding pterms when chaining (p>1)
@@ -138,7 +138,7 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Apply LHS_mass_mat for this pterm
                    
                     M = pterm.LHS_mass_mat;
-                    bcR_tmp = inv(M) * bcR_tmp;                
+                    bcR_tmp = M \ bcR_tmp;                
                     
                     %%
                     % Apply mats from preceeding terms when chaining (p>1)
