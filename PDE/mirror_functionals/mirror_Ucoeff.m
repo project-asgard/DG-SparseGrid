@@ -19,7 +19,7 @@ z = linspace(0,pi,N);
 % plot(z,y);
 U_coeff = zeros(size(uVals));
 for i = 1:numel(uVals)
-    U_coeff(i) = trapz(z,(2*l+1)/2.*myfun(uVals(i),z,l));
-    %U_coeff(i) = integral(@(x) (2*l + 1)/2.*myfun(uVals(i),x),0,pi);
+    U_coeff(i) = (2.*l+1)./2.*trapz(z,myfun(uVals(i),z,l));
+    %U_coeff(i) = integral(@(x) (2*l + 1)/2.*myfun(uVals(i),x,l),0,pi);
 end
 end
