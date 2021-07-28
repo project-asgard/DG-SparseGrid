@@ -10,7 +10,7 @@ function vec = mirror_functional(wfunc,uLimit,lIndex)
 
 %set up velocity spaces
 
-N = 100;
+N = 150;
 u_low = linspace(0,uLimit,N);
 u_high = linspace(uLimit,100*uLimit,N);
 
@@ -34,12 +34,12 @@ integrand_R = @(u) wfunc(u).*R_int(u);
 integrand_E = @(u) wfunc(u).*E_int(u);
 
 %integrating
-% M = integral(integrand_M, uLimit, Inf);
-% N = integral(integrand_N, 0, uLimit);
-% R = integral(integrand_R, uLimit, Inf);
-% E = integral(integrand_E, 0, uLimit);
+ M = integral(integrand_M, uLimit, 100*uLimit,'RelTol',0,'AbsTol',1e-12);
+% N = integral(integrand_N, 0, uLimit,'RelTol',0,'AbsTol',1e-12);
+% R = integral(integrand_R, uLimit, 100*uLimit,'RelTol',0,'AbsTol',1e-12);
+% E = integral(integrand_E, 0, uLimit,'RelTol',0,'AbsTol',1e-12);
 
-M = trapz(u_high,integrand_M(u_high));
+%M = trapz(u_high,integrand_M(u_high));
 N = trapz(u_low,integrand_N(u_low));
 R = trapz(u_high,integrand_R(u_high));
 E = trapz(u_low,integrand_E(u_low));
