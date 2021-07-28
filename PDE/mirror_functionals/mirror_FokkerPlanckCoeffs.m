@@ -34,8 +34,8 @@ funcs_B = mirror_functional(U_coeff_B, uVal, lIndex);
 
 %getting delta, delta^2, and delta^3 of A and B Rosenbluth Coefficients
 
-%U_coeff_A(uVal)
-%U_coeff_B(uVal)
+U_coeff_A(uVal)
+U_coeff_B(uVal)
 
 delta_A = delta_func(funcs_A,uVal,lIndex,params);
 delta2_A = delta2_func(funcs_A,uVal,lIndex,params);
