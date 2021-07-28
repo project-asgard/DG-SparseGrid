@@ -1,10 +1,12 @@
 function plot_mirror_output(nodes, outputs, pde, opts)
 
       coord = get_realspace_coords(pde,nodes);
-      coord_E = @(x) 0.5*3.3443*10^-27*coord{:,:}.^2/(1.602*10^-19);
+      coord_E = @(x) x.*0 + 0.5*3.3443*10^-27*coord{:,:}.^2/(1.602*10^-19);
+      coord_func = @(x) x.*0 + coord{:,:};
       num_dims = numel(pde.dimensions);
 for d=1:num_dims
     moment_func_nD{d} = coord_E;
+    moment_vel_nD{d} = coord_func;
 end
       x = nodes{1};
       x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
@@ -15,22 +17,27 @@ end
       lev_vec = [opts.lev, opts.lev];
       for i = 1:num_steps
             energy_vals(i) = moment_integral(lev_vec, opts.deg, coord, outputs.f_realspace_nD_t{1,i}, moment_func_nD, pde.dimensions);
+            vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
       end
       %formulating the Hinton solution
-      x_hint = @(v,a,b) x_E(1)*pde.params.nu_E(v,a,b);
-      e_hint = @(t) integral(-x_hint, 0, t);
-      hint_func = @(t) exp(e_hint(t));
+      x_hint = @(t,v,a,b) pde.params.nu_E(v,a,b).*t;
 for j = 1:num_steps
     f1d = outputs.f_realspace_nD_t{1,j};
+    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
+    e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
+    hint_func(j) = energy_vals(1)*exp(-e_hint);
      for i = 1:length(x)
          f1d_new(i) = sqrt(x_E(i))*f1d(i);
          f1d_analytic_new(i) = sqrt(x_E(i))*f1d_analytic(i);
      end
-     loglog(x_E,f1d_new,'-','LineWidth', 3);
-     hold on;
+     %loglog(x_E,f1d_new,'-','LineWidth', 3);
+     %hold on
 end
      %plot(x,f1d_ic,'--');
-     loglog(x_E,f1d_analytic_new, '-o');
+     semilogy(outputs.time_array,energy_vals,'b')
+     hold on
+     %loglog(x_E,f1d_analytic_new, '-o');
+     semilogy(outputs.time_array,hint_func,'k');
      hold off
 %      hold off;
 %     y = nodes{2};
