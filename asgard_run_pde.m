@@ -43,6 +43,8 @@ else
     connectivity = [];
 end
 
+%% Generate 1D mass matrices in each dimension (used in L2 projections)
+pde = compute_dimension_mass_mat(opts,pde);
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
