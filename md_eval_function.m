@@ -16,7 +16,8 @@ for s=1:num_md_funcs
     for d=1:num_dims
         fList{d} = forward_wavelet_transform(deg,dims{d}.lev, ...
             dims{d}.min,dims{d}.max, ...
-            md_func{d},params, blocks, t);
+            md_func{d},dims{d}.moment_dV,params, blocks, t);
+        fList{d} = dims{d}.mass_mat \ fList{d}; 
     end
     
     time_multiplier = md_funcs{s}{num_dims+1}(t);
