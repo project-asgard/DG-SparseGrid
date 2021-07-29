@@ -18,6 +18,10 @@ function pde = diffusion_LDG_test(opts)
 %
 % asgard(@diffusion_LDG_test,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
 %
+% or 
+%
+% asgard(@diffusion_LDG_test,'timestep_method','matrix_exponential','lev',2,'deg',4,'grid_type','FG','num_steps',1,'dt',3)
+%
 % Analytic solution: f(r,th,t) = exp(-t)*(sin(r)/r^2-cos(r)/r)*cos(th)
 %   using approprite Dirichlet BCs
 
@@ -27,11 +31,12 @@ params.parameter1 = 0;
 
 %% Define the dimensions
 dV_p = @(x,p,t,d) x.^2;
-dim_p = DIMENSION(0,4.49340945790906); %Gives zero dirichlet BCs
-%dim_p = DIMENSION(0.5,pi);
+%dim_p = DIMENSION(0,4.49340945790906); %Gives zero dirichlet BCs
+%dim_p = DIMENSION(0,pi);
+dim_p = DIMENSION(0.5,pi);
 dim_p.moment_dV = dV_p;
-dim_th = DIMENSION(0,pi);
-%dim_th = DIMENSION(0.5,pi-0.5);
+%dim_th = DIMENSION(0,pi);
+dim_th = DIMENSION(0.5,pi-0.5);
 dim_th.moment_dV = @(x,p,t,d) sin(x);
 dimensions = {dim_p,dim_th};
 num_dims = numel(dimensions);

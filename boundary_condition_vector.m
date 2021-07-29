@@ -77,10 +77,21 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:num_dims
+                        term_1D_oth_dim = term_nD.terms_1D{d2};
+                        mass_pterm      = term_1D_oth_dim.pterms{p};
                         bcL{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
-                            BCL_fList{d2},pde.params,pde.transform_blocks,time);
+                            BCL_fList{d2},mass_pterm.dV,pde.params,pde.transform_blocks,time);
+                        %Apply inverse mat
+                        bcL{d1}{d2}     = mass_pterm.LHS_mass_mat \ bcL{d1}{d2};
+                        %Apply previous pterms
+                        for q=1:p-1
+                             bcL{d1}{d2} = term_1D_oth_dim.pterms{q}.mat * bcL{d1}{d2};
+                        end
                     end
+                    
+                    
+                    
                     
                     %%
                     % Overwrite the trace (boundary) value just for this dim
@@ -121,9 +132,17 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Get boundary functions for all dims
                     
                     for d2=1:num_dims
+                        term_1D_oth_dim = term_nD.terms_1D{d2};
+                        mass_pterm      = term_1D_oth_dim.pterms{p};
                         bcR{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
-                            BCR_fList{d2},pde.params,pde.transform_blocks,time);
+                            BCR_fList{d2},mass_pterm.dV,pde.params,pde.transform_blocks,time);
+                        %Apply inverse mat
+                        bcR{d1}{d2}     = mass_pterm.LHS_mass_mat \ bcR{d1}{d2};
+                        %Apply previous pterms
+                        for q=1:p-1
+                             bcR{d1}{d2} = term_1D_oth_dim.pterms{q}.mat * bcR{d1}{d2};
+                        end
                     end
                     
                     %%
