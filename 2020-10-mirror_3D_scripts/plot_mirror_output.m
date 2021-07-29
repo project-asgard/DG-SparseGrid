@@ -1,12 +1,12 @@
 function plot_mirror_output(nodes, outputs, pde, opts)
 
+      energy_func = @(x) 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
       coord = get_realspace_coords(pde,nodes);
-      coord_E = @(x) x.*0 + 0.5*3.3443*10^-27*coord{:,:}.^2/(1.602*10^-19);
-      coord_func = @(x) x.*0 + coord{:,:};
+      mass_func = @(x) x.*0 + 1;
       num_dims = numel(pde.dimensions);
 for d=1:num_dims
-    moment_func_nD{d} = coord_E;
-    moment_vel_nD{d} = coord_func;
+    moment_func_nD{d} = energy_func;
+    mass_func_nD{d} = mass_func;
 end
       x = nodes{1};
       x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
@@ -15,30 +15,40 @@ end
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
       %getting energy density
       lev_vec = [opts.lev, opts.lev];
+      mass = moment_integral(lev_vec, opts.deg, coord, outputs.f_realspace_nD_t{1,1}, moment_func_nD, pde.dimensions);
       for i = 1:num_steps
-            energy_vals(i) = moment_integral(lev_vec, opts.deg, coord, outputs.f_realspace_nD_t{1,i}, moment_func_nD, pde.dimensions);
-            vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
+          f = singleD_to_multiD(num_dims,outputs.f_realspace_nD_t{1,i},nodes);
+          energy_vals(i) = moment_integral(lev_vec, opts.deg, coord, f, moment_func_nD, pde.dimensions)./mass;
+  %        vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
       end
       %formulating the Hinton solution
-      x_hint = @(t,v,a,b) pde.params.nu_E(v,a,b).*t;
+      timespan = [0 1e-2]; %time span in seconds
+      x0 = 3e3; %initial energy in eV
+      y = @(x) sqrt(1.602e-19.*x./(0.5.*3.3443e-27)); %velocity function in terms of energy
+      [t,x] = ode45(@(t,x) -pde.params.nu_E(y(x),pde.params.a,pde.params.b).*x,timespan,x0);
 for j = 1:num_steps
     f1d = outputs.f_realspace_nD_t{1,j};
-    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
-    e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
-    hint_func(j) = energy_vals(1)*exp(-e_hint);
-     for i = 1:length(x)
-         f1d_new(i) = sqrt(x_E(i))*f1d(i);
-         f1d_analytic_new(i) = sqrt(x_E(i))*f1d_analytic(i);
-     end
+%    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
+     %e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
+    %hint_func(j) = energy_vals(1)*exp(-e_hint);
+%      for i = 1:length(x)
+%          f1d_new(i) = sqrt(x_E(i))*f1d(i);
+%          f1d_analytic_new(i) = sqrt(x_E(i))*f1d_analytic(i);
+%      end
      %loglog(x_E,f1d_new,'-','LineWidth', 3);
      %hold on
 end
      %plot(x,f1d_ic,'--');
-     semilogy(outputs.time_array,energy_vals,'b')
+     %plotting Hinton solution alongside numerical values
+     x = x./x0;
+     loglog(t,x,'r','LineWidth', 2);
      hold on
-     %loglog(x_E,f1d_analytic_new, '-o');
-     semilogy(outputs.time_array,hint_func,'k');
+     loglog(outputs.time_array,energy_vals,'-o','LineWidth',1);
      hold off
+    % hold on
+     %loglog(x_E,f1d_analytic_new, '-o');
+     %semilogy(outputs.time_array,hint_func,'k');
+    % hold off
 %      hold off;
 %     y = nodes{2};
 %     z = nodes{3};
