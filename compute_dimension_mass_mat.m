@@ -9,7 +9,7 @@ dims = pde.dimensions;
 for d = 1:num_dims
     dim = dims{d};
     construction_level = dim.lev;
-    if opts.max_lev_coeffs && ~term_1D.time_dependent
+    if opts.max_lev_coeffs
         construction_level = opts.max_lev;
     end
     g1 = @(x,p,t,d) 0*x+1;
