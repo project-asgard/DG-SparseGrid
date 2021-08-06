@@ -1,33 +1,39 @@
 function plot_mirror_output(nodes, outputs, pde, opts)
 
-      energy_func = @(x) 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
+      params = mirror_parameters();
+      energy_func_v = @(x) 0.5*params.a.m.*x.^2/params.e;
+     % energy_func_z = @(z) sin(z);
       coord = get_realspace_coords(pde,nodes);
       mass_func = @(x) x.*0 + 1;
+      zero_func = @(x) x.*0;
       num_dims = numel(pde.dimensions);
-for d=1:num_dims
-    moment_func_nD{d} = energy_func;
-    mass_func_nD{d} = mass_func;
-end
+      moment_func_nD{1} = energy_func_v;
+      %moment_func_nD{2} = energy_func_z;
+    %mass_func_nD{d} = mass_func;
       x = nodes{1};
-      x_E = 0.5*3.3443*10^-27*x.^2/(1.602*10^-19);
+      y = nodes{2};
+      x_E = 0.5.*params.a.m*x.^2/params.e;
       num_steps = length(outputs.time_array);
-      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
+%      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
       %getting energy density
       lev_vec = [opts.lev, opts.lev];
-      mass = moment_integral(lev_vec, opts.deg, coord, outputs.f_realspace_nD_t{1,1}, moment_func_nD, pde.dimensions);
-      for i = 1:num_steps
-          f = singleD_to_multiD(num_dims,outputs.f_realspace_nD_t{1,i},nodes);
-          energy_vals(i) = moment_integral(lev_vec, opts.deg, coord, f, moment_func_nD, pde.dimensions)./mass;
-  %        vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
-      end
-      %formulating the Hinton solution
-      timespan = [0 1e-2]; %time span in seconds
-      x0 = 3e3; %initial energy in eV
-      y = @(x) sqrt(1.602e-19.*x./(0.5.*3.3443e-27)); %velocity function in terms of energy
-      [t,x] = ode45(@(t,x) -pde.params.nu_E(y(x),pde.params.a,pde.params.b).*x,timespan,x0);
+      ny = numel(y);
+      sy = max(1, floor(3*ny/8));
+      data = struct2cell(outputs);
+      f_data = cell2mat(data{6,1});
+      f_data = reshape(f_data, [num_steps size(f1d_ic)]);
+%      [x_grid, y_grid] = meshgrid(outputs.time_array,x_E);
+      outputs.time_array(1) = 0;
+%      f_data = permute(f_data,[1 3 2]);
+      contour(outputs.time_array',x_E',squeeze(f_data(:,:,sy))');
 for j = 1:num_steps
-    f1d = outputs.f_realspace_nD_t{1,j};
+    %plot(x,f1d);
+    hold on
+    %f1d = reshape(f1d, [numel(f1d) 1]);
+    %mass = moment_integral(lev_vec, opts.deg, coord, f1d, mass_func_nD, pde.dimensions);
+%    energy_vals(j) = moment_integral(lev_vec, opts.deg, coord, f1d, moment_func_nD, pde.dimensions);
+  %        vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
 %    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
      %e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
     %hint_func(j) = energy_vals(1)*exp(-e_hint);
@@ -38,12 +44,17 @@ for j = 1:num_steps
      %loglog(x_E,f1d_new,'-','LineWidth', 3);
      %hold on
 end
+      %formulating the Hinton solution
+      timespan = [0 1e-3]; %time span in seconds
+      x0 = 3e3; %initial energy in eV
+      y = @(x) sqrt(1.602e-19.*x./(0.5.*3.3443e-27)); %velocity function in terms of energy
+      [t,E] = ode45(@(t,E) (-params.nu_E(y(E),params.a,params.b)-params.nu_E(y(E),params.a,params.b2)).*E,timespan,x0);
      %plot(x,f1d_ic,'--');
      %plotting Hinton solution alongside numerical values
-     x = x./x0;
-     loglog(t,x,'r','LineWidth', 2);
+     %x = x./x0;
      hold on
-     loglog(outputs.time_array,energy_vals,'-o','LineWidth',1);
+     plot(t,E,'r','LineWidth', 2);
+    % plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
      hold off
     % hold on
      %loglog(x_E,f1d_analytic_new, '-o');
