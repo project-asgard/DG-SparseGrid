@@ -1,4 +1,4 @@
-function pde = mirror2_velocity(opts)
+function pde = mirror2_velocity_div(opts)
 % Two-dimensional magnetic mirror from the FP paper - evolution of the ion velocity dependence
 % of f in the presence of Coulomb collisions with background electrons
 % Also applied to the 2D test for CQL4D equations
@@ -11,9 +11,18 @@ function pde = mirror2_velocity(opts)
 % div[] = 1/v^2 * d/dv * v^2[] + 1/sin(th) d/dth (sin(th)[]), grad[] =
 % d/dv[],1/v * d/dth[]
 %
+% and the volument_element dV = v^2 sin(th)
+%
+
+% df/dt ==      -d/dv (eE/m cos(th) f) %term1
+%                + eE/m sin(th) 1/v d/dth (v f) %term2
+%                + % sum_b (( 1/v^2 (d/dv (v^2[0.5*nu_par*v^2*d/dv(f)]) %%term3 
+%                 + 1/v^2 (d/dv(v^2[v (m_a/(m_a + m_b))nu_s f)]) %%term4
+%                 + nu_D/(2 sin(z)) d/dth ( sin(th) df/dth )) %%term5 
+%
 % Run with
 %
-% asgard(@mirror2_velocity,'timestep_method','BE','case',3,'dt',1e-6)
+% asgard(@mirror2_velocity_div,'timestep_method','BE','case',3,'dt',1e-6)
 
 params = mirror_parameters();
 
