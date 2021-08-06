@@ -17,7 +17,7 @@ dpitch_file = fopen('dpitch_long_i.txt', 'r');
 
 %z = fscanf(pitch_file, '%f');
 %dz = fscanf(dpitch_file, '%f');
-N = 200;
+N = 300;
 
 % for i = 1:numel(z)-1
 %     z(i) = (z(i+1) + z(i))/2;
@@ -29,14 +29,14 @@ N = 200;
 vdv = @(s,e,d) sort([linspace(s(1),e(1),d(1))  linspace(s(2),e(2),d(2))  linspace(s(3),e(3),d(3))]);
 s = [0 pi/3+0.1 2*pi/3+0.1];
 e = [pi/3 2*pi/3 pi];
-d = [120 60 120];
-z = vdv(s,e,d);
+d = [100 100 100];
+%z = vdv(s,e,d);
 % for i = 1:numel(z)-1
 %     dz(i+1) = z(i+1) - z(i);
 % end
 % dz(1) = 0;
-%z = linspace(0,pi,N);
-%dz = pi/N;
+z = linspace(0,pi,N);
+dz = pi/N;
 % y = myfun(1,z);
 % y2 = myfun(1,z');
 % plot(z,y);
