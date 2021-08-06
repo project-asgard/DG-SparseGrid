@@ -49,9 +49,8 @@ switch opts.case_
         params.a.T_eV = 0.05*params.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
     case 3 
-        params.a.T_eV = 20;
+        params.a.T_eV = 10;
         params.a.E_eV = 3e3; %case with offset and no change in Temperature
-        params.b.m = params.m_e;
 end
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
@@ -101,20 +100,20 @@ BCR = new_md_func(num_dims,{...
 % eq1 :  df/dt == div(A(v) * q)        [pterm1: div (g(v)=A(v),+1, BCL=?, BCR=?)]
 % eq2 :      q == A(v) * grad(f)       [pterm2: grad(g(v)=A(v),-1, BCL=D, BCR=N)]
 
-A = @(v,p) sqrt(0.5.*v.^2.*p.nu_par(v,p.a,p.b));
+A = @(v,p) sqrt(0.5.*v.^2.*(p.nu_par(v,p.a,p.b) + p.nu_par(v,p.a,p.b2)));
 g1 = @(v,p,t,dat) A(v,p);
 g2 = @(v,p,t,dat) A(v,p);
 
 pterm1 = DIV (num_dims,g1,'',+1,'D','N','','','',dV_v);
 pterm2 = GRAD(num_dims,g2,'',-1,'N','D','','','',dV_v);
 term1_v = SD_TERM({pterm1,pterm2});
-term1   = MD_TERM(num_dims,{term1_v});
+term1   = MD_TERM(num_dims,{term1_v,[]});
 
 % term2 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
 %
 % eq1 :  df/dt == div(B(v) * f)       [pterm1: div(g(p)=B(v),+1, BCL=?, BCR=?]
 
-B = @(v,p) v*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
+B = @(v,p) v*p.a.m.*(p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m) + p.nu_s(v,p.a,p.b2)./(p.a.m + p.b2.m));
 g3 = @(v,p,t,dat) B(v,p);
 
 pterm1 = DIV(num_dims,g3,'',-1,'N','D','','','',dV_v);
@@ -125,15 +124,22 @@ pterm1 = DIV(num_dims,g3,'',-1,'N','D','','','',dV_v);
 % eq2 :      q ==  grad(f)  [pterm2: grad(g(v)=C(v),-1, BCL=N, BCR=N]
 
 term2_v = SD_TERM({pterm1});
-term2   = MD_TERM(num_dims,{term2_v});
+term2   = MD_TERM(num_dims,{term2_v,[]});
 
-C = @(v,p) sqrt(p.nu_D(v,p.a,p.b)/2);
+dV_v = @(x,p,t,d) x; %changing for MASS term
+dV_th = @(x,p,t,d) sin(x);
+
+C = @(v,p) sqrt((p.nu_D(v,p.a,p.b) + p.nu_D(v,p.a,p.b2))/2);
 g4 = @(v,p,t,dat) C(v,p);
-g5 = @(v,p,t,dat) C(v,p);
-pterm1 = DIV (num_dims,g4,'',+1,'D','N','','','',dV_th);
+pterm1 = MASS(g4,[],[],dV_v);
+term3_v = SD_TERM({pterm1,pterm1});
+
+D = @(v,p) v.*0 + 1;
+g5 = @(v,p,t,dat) D(v,p);
+pterm1 = DIV (num_dims,g5,'',+1,'D','N','','','',dV_th);
 pterm2 = GRAD(num_dims,g5,'',-1,'N','D','','','',dV_th);
 term3_th = SD_TERM({pterm1,pterm2});
-term3   = MD_TERM(num_dims,{[],term3_th});
+term3   = MD_TERM(num_dims,{term3_v,term3_th});
 
 terms = {term1,term2,term3};
 
