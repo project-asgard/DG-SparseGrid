@@ -3,8 +3,9 @@ function pde = mirror2_velocity_div(opts)
 % of f in the presence of Coulomb collisions with background electrons
 % Also applied to the 2D test for CQL4D equations
 
-% df/dt == -eE/m cos(th) df/dv + eE/m sin(th) df/dth + sum_{b} ( nu_D/(2*sin(th)) d/dth ( sin(th) 1/v d (v f) /dth ) + 
-%  1/v^2 (d/dv(v^2[(m_a/(m_a + m_b))v nu_s f) + 0.5*nu_par*v^2*d/dv(f)])
+% df/dt == -1/v^2 d(v^2 ZeE/m cos(th) f)/dv + 1/(vsin(th)) d(sin(th) ZeE/m sin(th) f)/dth 
+%            + sum_{b} ( nu_D/(2*sin(th)) d/dth ( sin(th) 1/v d (v f) /dth ) + 
+%             1/v^2 (d/dv(v^2[(m_a/(m_a + m_b))v nu_s f) + 0.5*nu_par*v^2*d/dv(f)])
 %
 % v,th are spherical coordinates (v,th,phi), so the div and grad look like 
 %
@@ -14,12 +15,41 @@ function pde = mirror2_velocity_div(opts)
 % and the volument_element dV = v^2 sin(th)
 %
 
-% df/dt ==      -d/dv (eE/m cos(th) f) %term1
-%                + eE/m sin(th) 1/v d/dth (v f) %term2
+% df/dt ==      -1/v^2 d(v^2 ZeE/m cos(th) f)/dv %term1
+%                + 1/(vsin(th)) d(sin(th) ZeE/m sin(th) f)/dth  %term2
 %                + % sum_b (( 1/v^2 (d/dv (v^2[0.5*nu_par*v^2*d/dv(f)]) %%term3 
 %                 + 1/v^2 (d/dv(v^2[v (m_a/(m_a + m_b))nu_s f)]) %%term4
 %                 + nu_D/(2 sin(z)) d/dth ( sin(th) df/dth )) %%term5 
 %
+% split into five div terms (term1,term2, term3, term4, and term5)
+%
+% term1 is done combining mass and div defining F(th) = -ZeE/m cos(th) and
+% G(v) = 1
+%
+% eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
+%
+% term2 is a simple div term, defining K(th) = ZeE/m sin(th)
+%
+% eq1 : df/dt == div(K(th) f)     [pterm1:div(g(th)=K(th),-1, BCL=N,BCR=N)]
+%
+% term3 is done combining mass and div defining C(v) = (nu_D(v)/2) 
+%
+% eq1 :  df/dt == div( q)   [pterm1: div (g(v)=D(v),+1, BCL=D, BCR=D]
+% eq2 :      q ==  C(v) grad(f)  [pterm2: grad(g(v)=D(v),-1, BCL=N, BCR=N]
+%
+% term4 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
+%
+% eq1 :  df/dt == div(B(v) * f)       [pterm1: div(g(p)=B(v),+1, BCL=?, BCR=?]
+%
+%
+% term5 is done using SLDG defining C(v) = sqrt(v*nu_D(v)/2)
+%
+% eq1 :  df/dt == div(C(v) * q)   [pterm1: div (g(v)=C(v),+1, BCL=D, BCR=D]
+% eq2 :      q == C(v) * grad(f)  [pterm2: grad(g(v)=C(v),-1, BCL=N, BCR=N]
+% Run with
+%
+% asgard(@mirror2_velocity_div,'timestep_method','matrix_exponential','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true)
+
 % Run with
 %
 % asgard(@mirror2_velocity_div,'timestep_method','BE','case',3,'dt',1e-6)
@@ -43,21 +73,26 @@ switch opts.case_
         params.b.vth = sqrt(2*temp/m_e);
         params.a.m = m_e; %beam is electrons
         params.b.m = m_e; %background is electrons
+        params.a.Z = -1;
+        params.b.Z = -1;
+        params.e = 4.803*10^-10; %charge in Fr
         params.E = 3.33e-7; %E field in statvolt/cm
-        params.init_cond_v = @(v,p,t) params.maxwell(v,0,a.vth);
+        params.init_cond_v = @(v,p,t) params.maxwell(v,0,p.a.vth);
 end
 
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
  
-dim_v = DIMENSION(0,1e6);
-dim_z = DIMENSION(0,pi);
+dim_v = DIMENSION(0,3.7584e9);
+dV_v = @(x,p,t,d) x.^2;
+dim_v.moment_dV = dV_v;
 
-dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
-dim_z.jacobian = @(z,p,t) sin(z);
+dim_th = DIMENSION(0,pi);
+dV_th = @(x,p,t,d) sin(x);
+dim_th.moment_dV = dV_th;
 
-dimensions = {dim_v, dim_z};
+dimensions = {dim_v, dim_th};
 num_dims = numel(dimensions);
 
 %% Define the analytic solution (optional)
@@ -85,87 +120,86 @@ BCR = new_md_func(num_dims,{...
     params.boundary_cond_z, ...
     params.boundary_cond_t});
 
-
 %% Define the terms of the PDE
 
-% -eE*Z_a/m_a cos(z) d/dv(f)
-
-g1 = @(v,p,t,dat) -p.e.*p.E.*p.a.Z./p.a.m;
-g2 = @(v,p,t,dat) v.*0 + 1;
-
-pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','D',BCL,BCR);
-termE_v = SD_TERM({pterm1,pterm2});
-
-g3 = @(z,p,t,dat) cos(z);
-
-pterm1 = MASS(g3);
-termE_z = SD_TERM({pterm1});
-termE1   = MD_TERM(num_dims,{termE_v,termE_z});
-
-% eE/m sin(z)vdf/dz
-
-g1 = @(v,p,t,dat) p.e.*p.E*v./p.a.m;
-g2 = @(z,p,t,dat) sin(z);
-g3 = @(z,p,t,dat) z.*0 + 1;
-
-pterm1 = MASS(g1);
-pterm2 = MASS(g2);
-pterm3 = GRAD(num_dims,g3,-1,'N','N');
-
-termE_v = SD_TERM({pterm1});
-termE_z = SD_TERM({pterm2,pterm3});
-termE2 = MD_TERM(num_dims,{termE_v,termE_z});
-
-% termC == v.^2.*nu_D/(2*sin(z))*d/dz sin(z)*df/dz
+% term1 is done combining mass and div defining F(th) = (-ZeE/m cos(th)) and
+% G(v) = 1
 %
-% becomes 
+% eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
+
+F = @(v,p) -params.a.Z.*params.e.*params.E.*cos(v)./params.a.m;
+g1 = @(v,p,t,dat) F(v,p);
+pterm1 = MASS(g1,[],[],dV_th);
+term1_th = SD_TERM({pterm1});
+
+G = @(v,p) v.*0 + 1;
+g2 = @(v,p,t,dat) G(v,p);
+pterm1 = DIV(num_dims,g2,'',-1,'N','N','','','',dV_v);
+term1_v = SD_TERM({pterm1});
+term1 = MD_TERM(num_dims,{term1_v,term1_th});
+
+% term2 is a simple div term, defining K(th) = ZeE/m sin(th)
 %
-% termC == g1(v) g2(z) q(z)   [mass, g1(p) = nu_D(v), g2(z) = 1/(2sin(z))  BC N/A]
-%   q(z) == d/dz g3(z) r(z)   [grad, g3(z) =  sin(z), BCL=D,BCR=D]
-%   r(z) == d/dp g4(z) f(z)   [grad, g3(p) = 1,      BCL=N,BCR=N]
+% eq1 : df/dt == div(K(th) f)     [pterm1:div(g(th)=K(th),-1, BCL=N,BCR=N)]
 
-g1 = @(v,p,t,dat) p.nu_D(v,p.a,p.b)/2;
-g2 = @(z,p,t,dat) 1./sin(z);
-g3 = @(z,p,t,dat) sin(z);
-g4 = @(z,p,t,dat) z.*0 + 1;
-pterm1  = MASS(g1);
-pterm2  = MASS(g2);
-pterm3  = GRAD(num_dims,g3,+1,'D','N');
-pterm4  = GRAD(num_dims,g4,-1,'N', 'D',BCL,BCR);
-termC_v = SD_TERM({pterm1});
-termC_z = SD_TERM({pterm2,pterm3,pterm4});
-termC   = MD_TERM(num_dims,{termC_v,termC_z});
+K = @(v,p) params.a.Z.*params.e.*params.E.*sin(v)./params.a.m;
+g1 = @(v,p,t,dat) K(v,p);
 
+pterm1 = DIV(num_dims,g1,'',-1,'N','N','','','',dV_th);
+term2_th = SD_TERM({pterm1});
+term2 = MD_TERM(num_dims,{[],term2_th});
 
-% term V1 == 1/v^2 d/dv(v^3(m_a/(m_a + m_b))nu_s f))
-% term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
-% q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3(m_a/(m_a + m_b))nu_s, BCL= N, BCR=N]
+dV_v = @(x,p,t,d) x.^2;
+dV_th = @(x,p,t,d) sin(x);
 
-g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^3*p.a.m.*p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m);
+%%
+% term3 is done using SLDG defining A(v)= sqrt(0.5*nu_par*v^2)
+%
+% eq1 :  df/dt == div(A(v) * q)        [pterm1: div (g(v)=A(v),+1, BCL=?, BCR=?)]
+% eq2 :      q == A(v) * grad(f)       [pterm2: grad(g(v)=A(v),-1, BCL=D, BCR=N)]
 
-pterm1  = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL, BCR);
-termV_s = SD_TERM({pterm1,pterm2});
-termV1  = MD_TERM(num_dims,{termV_s,[]});
+A = @(v,p) sqrt(0.5.*v.^2.*(p.nu_par(v,p.a,p.b)));%+ p.nu_par(v,p.a,p.b2)));
+g1 = @(v,p,t,dat) A(v,p);
+g2 = @(v,p,t,dat) A(v,p);
 
-% term V2 == 1/v^2 d/dv(v^4*0.5*nu_par*d/dv(f))
-% term V2 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
-% q(v) == d/dv(g2(v)r(v))   [grad, g2(v) = v^4*0.5*nu_par, BCL= D, BCR=D]
-% r(v) = d/dv(g3(v)f)       [grad, g3(v) = 1, BCL=N, BCR=N]
+pterm1 = DIV (num_dims,g1,'',+1,'D','D','','','',dV_v);
+pterm2 = GRAD(num_dims,g2,'',-1,'N','N','','','',dV_v);
+term3_v = SD_TERM({pterm1,pterm2});
+term3  = MD_TERM(num_dims,{term3_v,[]});
 
-g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) v.^4.*0.5.*p.nu_par(v,p.a,p.b);
-g3 = @(v,p,t,dat) v.*0 + 1;
+% term4 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
+%
+% eq1 :  df/dt == div(B(v) * f)       [pterm1: div(g(p)=B(v),+1, BCL=?, BCR=?]
 
-pterm1      = MASS(g1);
-pterm2      = GRAD(num_dims,g2,-1,'D','N');
-pterm3      = GRAD(num_dims,g3,+1,'N','D', BCL, BCR);
-termV_par   = SD_TERM({pterm1,pterm2,pterm3});
-termV2      = MD_TERM(num_dims,{termV_par,[]});
+B = @(v,p) v*p.a.m.*(p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m));% + p.nu_s(v,p.a,p.b2)./(p.a.m + p.b2.m));
+g3 = @(v,p,t,dat) B(v,p);
 
-terms = {termV1,termV2,termC,termE1,termE2};
+pterm1 = DIV(num_dims,g3,'',-1,'N','N','','','',dV_v);
+
+term4_v = SD_TERM({pterm1});
+term4   = MD_TERM(num_dims,{term4_v,[]});
+
+% term5 is done combining mass and div defining C(v) = (nu_D(v)/2) 
+%
+% eq1 :  df/dt == div( q)   [pterm1: div (g(v)=D(v),+1, BCL=D, BCR=D]
+% eq2 :      q ==  C(v) grad(f)  [pterm2: grad(g(v)=D(v),-1, BCL=N, BCR=N]
+
+dV_v = @(x,p,t,d) x; %changing for MASS term
+dV_th = @(x,p,t,d) sin(x);
+
+C = @(v,p) sqrt(p.nu_D(v,p.a,p.b));% + p.nu_D(v,p.a,p.b2))/2);
+g4 = @(v,p,t,dat) C(v,p);
+pterm1 = MASS(g4,[],[],dV_v);
+term5_v = SD_TERM({pterm1,pterm1});
+
+D = @(v,p) v.*0 + 1;
+g5 = @(v,p,t,dat) D(v,p);
+pterm1 = DIV (num_dims,g5,'',+1,'D','D','','','',dV_th);
+pterm2 = GRAD(num_dims,g5,'',-1,'N','N','','','',dV_th);
+term5_th = SD_TERM({pterm1,pterm2});
+term5   = MD_TERM(num_dims,{term5_v,term5_th});
+
+terms = {term1,term2,term3,term4,term5};
 
 
 %% Define sources 
