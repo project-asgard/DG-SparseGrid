@@ -19,14 +19,19 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       %getting energy density
       lev_vec = [opts.lev, opts.lev];
       ny = numel(y);
-      sy = max(1, floor(3*ny/8));
-      data = struct2cell(outputs);
-      f_data = cell2mat(data{6,1});
-      f_data = reshape(f_data, [num_steps size(f1d_ic)]);
+      sy = max(1, floor(2*ny/8));
+     % data = struct2cell(outputs);
+     % f_data = cell2mat(data{6,1});
+     % f_data = reshape(f_data, [num_steps size(f1d_ic)]);
 %      [x_grid, y_grid] = meshgrid(outputs.time_array,x_E);
       outputs.time_array(1) = 0;
+for i = 1:numel(outputs.time_array)
+      f_data(i,:) = outputs.f_realspace_nD_t{i}(23,:);
+end
+      contourf(outputs.time_array,x_E,real(log(f_data))',50);
 %      f_data = permute(f_data,[1 3 2]);
-      contour(outputs.time_array',x_E',squeeze(f_data(:,:,sy))');
+      
+%      contour(outputs.time_array',x',squeeze(f_data(:,:,sy))');
 for j = 1:num_steps
     %plot(x,f1d);
     hold on
