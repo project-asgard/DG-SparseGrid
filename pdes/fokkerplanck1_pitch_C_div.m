@@ -7,8 +7,8 @@ function pde = fokkerplanck1_pitch_C_div(opts)
 %
 % df/dt == d/dz( (1-z^2) df/dz ) becomes
 %
-% eq1 : df/dt ==  div( (1-z^2)^(1/4)q(z) )   [div ,g(z)=(1-z^2)^(1/4),BCL=D,BCR=D]
-% eq2 :  q(z) == grad( (1-z^2)^(1/4)f(z) )   [grad,g(z)=(1-z^2)^(1/4),BCL=N,BCR=N]
+% eq1 : df/dt ==  div( q(z) )   [div ,g(z)=1,BCL=D,BCR=D]
+% eq2 :  q(z) == grad( f(z) )   [grad,g(z)=1,BCL=N,BCR=N]
 %
 % Here div(F\hat(z)) = d/dz(sqrt(1-z^2)F) and 
 %            grad(F) = sqrt(1-z^2)df/dz\hat(z)
@@ -72,7 +72,7 @@ initial_conditions = {ic1};
 % d/dz( (1-z^2) df/dz )
 
 dV_z = @(z,p,t,dat) sqrt(1-z.^2);
-g1 = @(z,p,t,dat) (1-z.^2).^0.25;
+g1 = @(z,p,t,dat) 0*z+1;
 
 pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
 pterm2  = GRAD(num_dims,g1,'',+1,'N','N','','','',dV_z);
