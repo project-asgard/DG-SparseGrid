@@ -109,7 +109,7 @@ if num_dims <=3
     end
     
     % construct the moment function handle list for calculating the mass
-    if opts.calculate_mass       
+    if opts.calculate_mass && ~isempty(pde.solutions)
         [mass,mass_analytic] = calculate_mass(pde,opts,coord,fval_realspace,fval_realspace_analytic);
         mass_t(1) = mass;
     end
@@ -157,7 +157,7 @@ if num_dims <=3
     
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
-    if opts.calculate_mass
+    if opts.calculate_mass && ~isempty(pde.solutions)
         [mass,mass_analytic] = calculate_mass(pde,opts,coord,fval_realspace,fval_realspace_analytic);
         mass_t(1) = mass;
     end
@@ -234,7 +234,7 @@ end
 
 % need to clean up this interface!
 outputs = save_output([],0,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
-outputs.mass_t = mass_t;
+%outputs.mass_t = mass_t;
 
 %% Time Loop
 count=1;
