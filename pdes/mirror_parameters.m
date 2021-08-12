@@ -76,7 +76,7 @@ nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth).^3))
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi(vel_norm(v,b.vth)) - psi(vel_norm(v,b.vth)))./(vel_norm(v,b.vth).^3); %deflection frequency in s^-1
 %nu_E    = @(v,a,b) nu_ab0(a,b).*(2.*(a.m/b.m).*psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth)) - dphidx(vel_norm(v,b.vth))./(vel_norm(v,b.vth)).^2);
 nu_E    = @(v,a,b) nu_ab0(a,b).*(1./vel_norm(v,b.vth).^3).*(a.m/b.m).*(phi(vel_norm(v,b.vth)) - (1 + b.m/a.m).*vel_norm(v,b.vth).*dphidx(vel_norm(v,b.vth))); %Hinton definition of nu_E
-maxwell = @(v,offset,vth) a.n/(pi^3/2.*vth^3).*exp(-((v-offset)/vth).^2);
+maxwell = @(v,offset,vth) a.n/(pi^(3/2).*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x,y,a) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
@@ -115,7 +115,7 @@ advec_time_1D = @(t) exp(-2*vel_test*cos(pitch_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
 
 init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
-init_cond_z = @(z,p,t) gauss(z,a.z0,a.dz0,a);
+init_cond_z = @(z,p,t) z.*0 + 1;%gauss(z,a.z0,a.dz0,a);
 init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
 init_cond_t = @(t,p) t*0 + 1;
 
