@@ -54,37 +54,68 @@ function pde = mirror2_velocity_div(opts)
 %
 % asgard(@mirror2_velocity_div,'timestep_method','BE','case',3,'dt',1e-6)
 
-params = mirror_parameters();
+params_si = mirror_parameters();
 
 switch opts.case_
     case 1 
-        params.a.T_eV = 0.05*params.b.T_eV; %Target temperature in Kelvin\
+        params_si.a.T_eV = 0.05*params_si.b.T_eV; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
     case 2 
-        params.a.T_eV = 0.05*params.b.T_eV;
+        params_si.a.T_eV = 0.05*params_si.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
     case 3 
-        n_o = 8e14; %equilibrium density in cm.^-3
-        m_e = 9.109*10^-28; %electron mass in g
-        temp = 1.6022e-10; %temperature in erg
-        params.a.n = n_o;
-        params.b.n = n_o;
-        params.a.vth = sqrt(2*temp/m_e);
-        params.b.vth = sqrt(2*temp/m_e);
-        params.a.m = m_e; %beam is electrons
-        params.b.m = m_e; %background is electrons
-        params.a.Z = -1;
-        params.b.Z = -1;
-        params.e = 4.803*10^-10; %charge in Fr
-        params.E = 3.33e-7; %E field in statvolt/cm
-        params.init_cond_v = @(v,p,t) params.maxwell(v,0,p.a.vth);
+        n_cgs = 8e14; %equilibrium density in cm.^-3
+        m_e_cgs = 9.109*10^-28; %electron mass in g
+        temp_cgs = 1.6022e-10; %temperature in erg
+        params_cgs.a.n = n_cgs;
+        params_cgs.b.n = n_cgs;
+        params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
+        params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
+        params_cgs.a.m = m_e_cgs; %beam is electrons
+        params_cgs.b.m = m_e_cgs; %background is electrons
+        params_cgs.a.Z = -1;
+        params_cgs.b.Z = -1;
+        params_cgs.e = 4.803*10^-10; %charge in Fr
+        params_cgs.E = -2e-2; %E field in volt/cm
+        params_si.a.n = 10^6*params_cgs.a.n;%converting to m^-3
+        params_si.b.n = 10^6*params_cgs.b.n;
+        params_si.a.vth = 0.01*params_cgs.a.vth; %converting to m/s
+        params_si.b.vth = 0.01*params_cgs.b.vth;
+        params_si.a.m = 0.001*params_cgs.a.m; %converting to kg
+        params_si.b.m = 0.001*params_cgs.b.m; 
+        params_si.a.Z = -1;
+        params_si.b.Z = -1;
+        params_si.E = 100*params_cgs.E; %converting to V/m
+        %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
+        params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
+        params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
+        %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
+        %params.eps0 = 1/(4*pi);
 end
+    function ret = phi(x)
+        ret = erf(x);
+    end
+
+    function ret = dphidx(x)
+        ret = 2./sqrt(pi) * exp(-x.^2);
+    end
+
+    function ret = phi_f(x)
+        ret = (x + 1./(2*x)).*erf(x) + exp(-x.^2)./sqrt(pi);
+    end
+
+    function ret = psi(x)
+        dphi_dx = 2./sqrt(pi) * exp(-x.^2);
+        ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);
+        ix = find(abs(x)<1e-5); % catch singularity at boundary
+        ret(ix) = 0;
+    end
 
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
  
-dim_v = DIMENSION(0,3.7584e9);
+dim_v = DIMENSION(0,3.7584e7);
 dV_v = @(x,p,t,d) x.^2;
 dim_v.moment_dV = dV_v;
 
@@ -98,27 +129,27 @@ num_dims = numel(dimensions);
 %% Define the analytic solution (optional)
 
 soln1 = new_md_func(num_dims,{ ...    
-    params.soln_v, ...
-    params.soln_z, ...
+    params_si.soln_v, ...
+    params_si.soln_z, ...
     });
 solutions = {soln1};
 
 %% Define the initial conditions
 
-ic1 = new_md_func(num_dims,{params.init_cond_v,params.init_cond_z,params.init_cond_t});
+ic1 = new_md_func(num_dims,{params_si.init_cond_v,params_si.init_cond_z,params_si.init_cond_t});
 initial_conditions = {ic1};
 
 %% Define the boundary conditions
 
 BCL = new_md_func(num_dims,{...
     @(v,p,t) v.*0, ...
-    params.boundary_cond_z, ...
-    params.boundary_cond_t});
+    params_si.boundary_cond_z, ...
+    params_si.boundary_cond_t});
 
 BCR = new_md_func(num_dims,{...
-    params.boundary_cond_v, ...
-    params.boundary_cond_z, ...
-    params.boundary_cond_t});
+    params_si.boundary_cond_v, ...
+    params_si.boundary_cond_z, ...
+    params_si.boundary_cond_t});
 
 %% Define the terms of the PDE
 
@@ -127,14 +158,15 @@ BCR = new_md_func(num_dims,{...
 %
 % eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
 
-F = @(v,p) -params.a.Z.*params.e.*params.E.*cos(v)./params.a.m;
-g1 = @(v,p,t,dat) F(v,p);
+
+F = @(x,p) -params_si.a.Z.*params_si.e.*params_si.E.*cos(x)./params_si.a.m;
+g1 = @(x,p,t,dat) F(x,p);
 pterm1 = MASS(g1,[],[],dV_th);
 term1_th = SD_TERM({pterm1});
 
 G = @(v,p) v.*0 + 1;
 g2 = @(v,p,t,dat) G(v,p);
-pterm1 = DIV(num_dims,g2,'',-1,'N','N','','','',dV_v);
+pterm1 = DIV(num_dims,g2,'',-1,'N','D','','','',dV_v);
 term1_v = SD_TERM({pterm1});
 term1 = MD_TERM(num_dims,{term1_v,term1_th});
 
@@ -142,8 +174,8 @@ term1 = MD_TERM(num_dims,{term1_v,term1_th});
 %
 % eq1 : df/dt == div(K(th) f)     [pterm1:div(g(th)=K(th),-1, BCL=N,BCR=N)]
 
-K = @(v,p) params.a.Z.*params.e.*params.E.*sin(v)./params.a.m;
-g1 = @(v,p,t,dat) K(v,p);
+K = @(x,p) params_si.a.Z.*params_si.e.*params_si.E.*sin(x)./params_si.a.m;
+g1 = @(x,p,t,dat) K(x,p);
 
 pterm1 = DIV(num_dims,g1,'',-1,'N','N','','','',dV_th);
 term2_th = SD_TERM({pterm1});
@@ -216,6 +248,6 @@ sources = {};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,[],sources,params_si,@set_dt,[],initial_conditions,solutions);
 
 end
