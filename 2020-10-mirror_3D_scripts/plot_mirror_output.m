@@ -1,43 +1,52 @@
 function plot_mirror_output(nodes, outputs, pde, opts)
 
       params = mirror_parameters();
-      energy_func_v = @(x) 0.5*params.a.m.*x.^2/params.e;
-     % energy_func_z = @(z) sin(z);
+      x = nodes{1};
+      y = nodes{2};
+      nx = numel(x);
+      ny = numel(y);
+      sx = max(1, floor(nx/2));
+      sy = max(1, floor(2*ny/8));
+      energy_func_v = @(x) 0.5*pde.params.a.m.*x.^2/(1.602*10^-19);
+      energy_func_z = @(z) z.*0 + 2*pi;
+      current_func_v = @(x) pde.params.a.Z.*pde.params.e.*x;
+      current_func_z = @(x) cos(x);
       coord = get_realspace_coords(pde,nodes);
-      mass_func = @(x) x.*0 + 1;
+      mass_func = @(x) x.*0 + sqrt(2*pi);
       zero_func = @(x) x.*0;
       num_dims = numel(pde.dimensions);
       moment_func_nD{1} = energy_func_v;
-      %moment_func_nD{2} = energy_func_z;
-    %mass_func_nD{d} = mass_func;
-      x = nodes{1};
-      y = nodes{2};
+      moment_func_nD{2} = energy_func_z;
+      mass_func_nD{1} = mass_func;
+      mass_func_nD{2} = mass_func;
+      current_func_nD{1} = current_func_v;
+      current_func_nD{2} = current_func_z;
       x_E = 0.5.*params.a.m*x.^2/params.e;
       num_steps = length(outputs.time_array);
 %      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
       %getting energy density
       lev_vec = [opts.lev, opts.lev];
-      ny = numel(y);
-      sy = max(1, floor(2*ny/8));
      % data = struct2cell(outputs);
      % f_data = cell2mat(data{6,1});
      % f_data = reshape(f_data, [num_steps size(f1d_ic)]);
 %      [x_grid, y_grid] = meshgrid(outputs.time_array,x_E);
       outputs.time_array(1) = 0;
 for i = 1:numel(outputs.time_array)
-      f_data(i,:) = outputs.f_realspace_nD_t{i}(23,:);
+      f_data(i,:) = outputs.f_realspace_nD_t{i}(ny/4-5,:).*x.^2;
 end
-      contourf(outputs.time_array,x_E,real(log(f_data))',50);
+      %contourf(outputs.time_array,x_E,real(f_data)',50);
 %      f_data = permute(f_data,[1 3 2]);
       
 %      contour(outputs.time_array',x',squeeze(f_data(:,:,sy))');
 for j = 1:num_steps
     %plot(x,f1d);
     hold on
-    %f1d = reshape(f1d, [numel(f1d) 1]);
-    %mass = moment_integral(lev_vec, opts.deg, coord, f1d, mass_func_nD, pde.dimensions);
-%    energy_vals(j) = moment_integral(lev_vec, opts.deg, coord, f1d, moment_func_nD, pde.dimensions);
+    fval_realspace = reshape(outputs.f_realspace_nD_t{j}, [numel(f1d_ic) 1]);
+    mass_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
+    current_vals(j) = moment_integral(lev_vec,opts.deg,coord,fval_realspace, current_func_nD,pde.dimensions);
+    mass = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
+    energy_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, moment_func_nD, pde.dimensions)/mass;
   %        vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
 %    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
      %e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
@@ -57,10 +66,14 @@ end
      %plot(x,f1d_ic,'--');
      %plotting Hinton solution alongside numerical values
      %x = x./x0;
-     hold on
-     plot(t,E,'r','LineWidth', 2);
-    % plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
-     hold off
+     %hold on
+     %plot(t,E,'r','LineWidth', 2);
+     plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
+     figure
+     plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
+     %hold off
+     figure
+     plot(outputs.time_array,current_vals,'-','LineWidth',2);
     % hold on
      %loglog(x_E,f1d_analytic_new, '-o');
      %semilogy(outputs.time_array,hint_func,'k');
