@@ -33,7 +33,8 @@ classdef OPTS
         calculate_mass = true; % calculate and print the mass
         normalize_by_mass = false; % normalize the analytic solution by the initial cond mass
         start_time = 0;
-        num_steps = 5;   
+        num_steps = 5;
+        cmd_args = '';
         
     end
     
@@ -80,6 +81,7 @@ classdef OPTS
                 addOptional(input_parser,'use_connectivity',opts.use_connectivity,@islogical);
                 addOptional(input_parser,'use_sparse_A',opts.use_sparse_A,@islogical);
                 addOptional(input_parser,'case',opts.case_,@isnumeric);
+                addOptional(input_parser,'cmd_args',opts.cmd_args); % can be anything
                 addOptional(input_parser,'calculate_mass',opts.calculate_mass,@islogical);
                 addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
                 
@@ -132,6 +134,7 @@ classdef OPTS
                 opts.use_connectivity = input_parser.Results.use_connectivity;
                 opts.use_sparse_A = input_parser.Results.use_sparse_A;
                 opts.case_ = input_parser.Results.case;
+                opts.cmd_args = input_parser.Results.cmd_args;
                 opts.calculate_mass = input_parser.Results.calculate_mass;
                 opts.normalize_by_mass = input_parser.Results.normalize_by_mass;
                 opts.num_steps = input_parser.Results.num_steps;

@@ -17,7 +17,7 @@ function pde = fokkerplanck1_pitch_CER_div(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck1_pitch_CER_div,'timestep_method','CN','lev',3,'CFL',0.5,'num_steps',50,'case',1)
+% asgard(@fokkerplanck1_pitch_CER_div,'timestep_method','matrix_exponential','lev',3,'deg',4,'dt',1,'num_steps',50,'case',1,'normalize_by_mass',true)
 
 sig = 0.1;
 E = 2.0;
