@@ -1,6 +1,6 @@
 function [term_1D] = sd_term_coeff_matrix(deg,t,dim,term_1D,params,FMWT_blocks,coeff_level)
 
-if ~exist('lev','var') || isempty(coeff_level)
+if isempty(coeff_level) %Removed the lack of 'lev' or 'var' variable?? --SRS
     coeff_level = dim.lev;
 end
 
