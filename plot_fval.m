@@ -63,7 +63,6 @@ if num_dims==2
     end
     
     sx = max(1,floor(nx/2));
-    sx = 2;
     if nx > 2
         sx = sx+2; % just to get off the exact middle
     end

@@ -27,7 +27,7 @@ switch opts.case_
         E = 0.4;
         tau = 10^5;
     case 5 % for the runaway production rate electric field scan
-        delta = 0.042;
+        delta = 0.042*25;
         Z = 1;
         E = opts.cmd_args.E;
         tau = 10^5;    

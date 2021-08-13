@@ -109,8 +109,11 @@ if num_dims <=3
     end
     
     % construct the moment function handle list for calculating the mass
-    if opts.calculate_mass && ~isempty(pde.solutions)
-        [mass,mass_analytic] = calculate_mass(pde,opts,coord,fval_realspace,fval_realspace_analytic);
+    if opts.calculate_mass
+        mass = calculate_mass(pde,opts,coord,fval_realspace);
+        if ~isempty(pde.solutions)
+            mass_analytic = calculate_mass(pde,opts,coord,fval_realspace_analytic);
+        end
         mass_t(1) = mass;
     end
     
@@ -157,8 +160,11 @@ if num_dims <=3
     
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
-    if opts.calculate_mass && ~isempty(pde.solutions)
-        [mass,mass_analytic] = calculate_mass(pde,opts,coord,fval_realspace,fval_realspace_analytic);
+    if opts.calculate_mass
+        mass = calculate_mass(pde,opts,coord,fval_realspace);
+        if ~isempty(pde.solutions)
+            mass_analytic = calculate_mass(pde,opts,coord,fval_realspace_analytic);
+        end
         mass_t(1) = mass;
     end
     
@@ -511,6 +517,9 @@ for L = 1:opts.num_steps
     end
     
 end
+
+outputs.pde = pde;
+outputs.opts = opts;
 
 % delta_mass(1) = 0;
 % for i=1:numel(outputs.mass_t)-1
