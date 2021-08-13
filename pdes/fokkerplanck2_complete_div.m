@@ -200,7 +200,7 @@ dV_z = @(x,p,t,dat) 0*x+1;
 % Term for z>0, then |z| = z and we use standard upwinding.  
 
 g1 = @(x,p,t,dat) 0*x-p.E;
-pterm1   =  DIV(num_dims,g1,'',-1,'D','D','','','',dV_p);
+pterm1   =  DIV(num_dims,g1,'',-1,'D','N','','','',dV_p);
 termE1_p = SD_TERM({pterm1});
 
 g1 = @(x,p,t,dat) x.*(x > 0);
