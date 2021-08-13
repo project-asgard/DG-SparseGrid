@@ -38,7 +38,7 @@ ratio2 = linspace(0.,0.6,N2);
 for i=1:N2
    args.E = ratio2(i)*1;%E_D; 
    disp(i);
-   [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','matrix_exponential','num_steps',1,'dt',10.0,'deg',3,'lev',3,'case',5,'cmd_args',args,'quiet',true);
+   [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',10,'dt',1.0,'deg',5,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true);
    for t=1:numel(outputs(i).time_array)
        pgrid = outputs(i).nodes_t{t}{1};
        zgrid = outputs(i).nodes_t{t}{2};
@@ -47,11 +47,12 @@ for i=1:N2
        p_cutoff = numel(pgrid)/2;
        M1(i,t) = trapz(zgrid,trapz(pgrid,p2d.^2 .* f,2));
        M2(i,t) = trapz(zgrid,trapz(pgrid(p_cutoff:end),p2d(:,p_cutoff:end).^2 .* f(:,p_cutoff:end),2));
-   end   
-%    plot(outputs(i).time_array,M1(i,:));
-%    hold on
-%    plot(outputs(i).time_array,M2(i,:));
-%    hold off
+   end 
+   figure
+   plot(outputs(i).time_array,M1(i,:));
+   hold on
+   plot(outputs(i).time_array,M2(i,:));
+   hold off
 end
 
 figure

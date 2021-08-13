@@ -119,7 +119,7 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                  end
                 ret = exp(-2/delta^2*sqrt(1+delta^2*x.^2))/(2*Q);
             case 5 
-                a = 2;
+                a = 1;
                 ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
         end
     end
