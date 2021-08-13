@@ -66,6 +66,7 @@ switch opts.case_
     case 3 
         n_cgs = 8e14; %equilibrium density in cm.^-3
         m_e_cgs = 9.109*10^-28; %electron mass in g
+        m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
         temp_cgs = 1.6022e-10; %temperature in erg
         params_cgs.a.n = n_cgs;
         params_cgs.b.n = n_cgs;
@@ -73,10 +74,10 @@ switch opts.case_
         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
         params_cgs.a.m = m_e_cgs; %beam is electrons
         params_cgs.b.m = m_e_cgs; %background is electrons
-        params_cgs.a.Z = -1;
+        params_cgs.a.Z = 1;
         params_cgs.b.Z = -1;
         params_cgs.e = 4.803*10^-10; %charge in Fr
-        params_cgs.E = -2e-2; %E field in volt/cm
+        params_cgs.E = 2.6e-5; %E field in statvolt/cm
         params_si.a.n = 10^6*params_cgs.a.n;%converting to m^-3
         params_si.b.n = 10^6*params_cgs.b.n;
         params_si.a.vth = 0.01*params_cgs.a.vth; %converting to m/s
@@ -85,7 +86,7 @@ switch opts.case_
         params_si.b.m = 0.001*params_cgs.b.m; 
         params_si.a.Z = -1;
         params_si.b.Z = -1;
-        params_si.E = 100*params_cgs.E; %converting to V/m
+        params_si.E = 2.9979*10^4*params_cgs.E; %converting to V/m
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
@@ -115,7 +116,7 @@ maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
  
-dim_v = DIMENSION(0,3.7584e7);
+dim_v = DIMENSION(0,10*params_si.a.vth);
 dV_v = @(x,p,t,d) x.^2;
 dim_v.moment_dV = dV_v;
 
@@ -158,6 +159,8 @@ BCR = new_md_func(num_dims,{...
 %
 % eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
 
+% dV_v = @(x,p,t,d) x; %changing for MASS term
+% dV_th = @(x,p,t,d) sin(x);
 
 F = @(x,p) -params_si.a.Z.*params_si.e.*params_si.E.*cos(x)./params_si.a.m;
 g1 = @(x,p,t,dat) F(x,p);
@@ -174,6 +177,9 @@ term1 = MD_TERM(num_dims,{term1_v,term1_th});
 %
 % eq1 : df/dt == div(K(th) f)     [pterm1:div(g(th)=K(th),-1, BCL=N,BCR=N)]
 
+% dV_v = @(x,p,t,d) x.^2; %changing for MASS term
+% dV_th = @(x,p,t,d) sin(x);
+
 K = @(x,p) params_si.a.Z.*params_si.e.*params_si.E.*sin(x)./params_si.a.m;
 g1 = @(x,p,t,dat) K(x,p);
 
@@ -181,8 +187,8 @@ pterm1 = DIV(num_dims,g1,'',-1,'N','N','','','',dV_th);
 term2_th = SD_TERM({pterm1});
 term2 = MD_TERM(num_dims,{[],term2_th});
 
-dV_v = @(x,p,t,d) x.^2;
-dV_th = @(x,p,t,d) sin(x);
+% dV_v = @(x,p,t,d) x.^2;
+% dV_th = @(x,p,t,d) sin(x);
 
 %%
 % term3 is done using SLDG defining A(v)= sqrt(0.5*nu_par*v^2)
