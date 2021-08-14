@@ -10,22 +10,57 @@ cgs.e = 4.803e-10;
 cgs.m_e = 9.109e-28;
 cgs.c = 2.997e10;
 cgs.amu = 1.66e-24;
+cgs.kB = 1.38e-16;
 
-e = 1.6e-19;
-c = 3e8;
-m_e = 9.1e-31;
-T_e = 1e3*e;
-n_e = 5e19;
+SI.e = 1.602e-19;
+SI.c = 3e8;
+SI.m_e = 9.1e-31;
+SI.amu = 1.66e-27;
+SI.eps0 = 8.854e-12;
+SI.kB = 1.38e-23;
+
 Z_b = 1;
-ln_hat_ee = 15;
-th_e = m_e * c^2 / T_e;
-v_th = sqrt(T_e/m_e);
-E_D = 2*pi * e^3 * n_e * ln_hat_ee / (m_e * v_th^2);
-nu_ee = 4*pi * n_e * e^4 * ln_hat_ee / (th_e^(3/2) * m_e^3 * c^3);
-Cn = 0.5e-68;
+T_e_eV = 0.5e3;
+T_e_K = T_e_eV * 11605;
+coulomb_ln = 20;
 
-T1 = @(E,Z_b) Cn .* nu_ee .* (E ./ E_D).^(3/16*Z_b+1);
-T2 = @(E,Z_b) exp(-E_D./(4.*E)-sqrt((1+Z_b).*E_D./E));
+% calculate Dreicer E field in cgs
+
+cgs.n_e = 5e13;
+cgs.ln_hat_ee = coulomb_ln;%23.5-log(cgs.n_e^(1/2)*cgs.T_e_eV^(-5/4))-sqrt(10^-5+((log(cgs.T_e_eV)-2)^2)/16);
+cgs.th_e = cgs.m_e * cgs.c^2 / (T_e_eV);
+% cgs.v_th = 4.19e7*T_e_eV^(1/2);
+cgs.v_th = sqrt(cgs.kB*T_e_K/cgs.m_e);
+cgs.E_D = 4*pi * cgs.e^3 * cgs.n_e * cgs.ln_hat_ee / (cgs.m_e * cgs.v_th^2); % from Connor Hastie 1975
+cgs.E_R = 4*pi*cgs.n_e*cgs.e^3*cgs.ln_hat_ee/(cgs.m_e*cgs.c^2);
+disp(['Dreicer V/m (from cgs): ',num2str(cgs.E_D*300*100)]);
+disp(['E_R V/m (from cgs): ',num2str(cgs.E_R*300*100)]);
+disp(['E_R V/m (from cgs 2): ',num2str(cgs.E_D*300*100*cgs.kB*T_e_K/(cgs.m_e*cgs.c^2))]);
+
+% calculate Dreicer E field in SI
+
+SI.n_e = cgs.n_e*1e6;
+SI.v_th = sqrt(T_e_eV*SI.e/SI.m_e);
+SI.ln_hat_ee = coulomb_ln;
+SI.E_D = 1/(4*pi*SI.eps0^2) * SI.n_e * SI.e^3 * SI.ln_hat_ee / (SI.m_e * SI.v_th^2);
+disp(['Dreicer V/m (from SI): ', num2str(SI.E_D)]);
+
+% calculate the RE production rate
+
+cgs.nu_ee2 = 4*pi * cgs.n_e * cgs.e^4 * cgs.ln_hat_ee / (cgs.th_e^(3/2) * cgs.m_e^3 * cgs.c^3);
+cgs.nu_ee = 4*pi * cgs.n_e * cgs.e^4 * cgs.ln_hat_ee / (cgs.m_e^2 * cgs.v_th^3);
+disp(['nu_ee 1/s (from cgs): ',num2str(cgs.nu_ee)]);
+disp(['nu_ee 1/s (from cgs 2): ',num2str(cgs.nu_ee2)]);
+
+Cn = 1;
+
+% Franz
+T1 = @(E,Z_b) Cn .* cgs.nu_ee .* (E ./ cgs.E_D).^(3/16*Z_b+1);
+T2 = @(E,Z_b) exp(-cgs.E_D./(4.*E)-sqrt((1+Z_b).*cgs.E_D./E));
+
+% Connor & Hastie
+T1 = @(E,Z_b) Cn .* cgs.n_e * cgs.nu_ee * (E/cgs.E_D)^(-3/8);
+T2 = @(E,Z_b) exp(-cgs.E_D/(4*E)-sqrt(2*cgs.E_D/E));
 
 Snr = @(E,Z_b) T1(E,Z_b) .* T2(E,Z_b);
 
@@ -35,9 +70,12 @@ N = 100;
 ratio = linspace(0.,0.6,N);
 Z_b = 1;
 for i=1:N
-   res(i) = Snr(ratio(i)*E_D,Z_b);
+   res(i) = Snr(ratio(i)*cgs.E_D,Z_b);
 end
 
+figure
+semilogy(ratio,res);
+ylim([1e-12 1]);
 
 
 N2 = 25;
@@ -51,7 +89,7 @@ for i=1:N2
        zgrid = outputs(i).nodes_t{t}{2};
        f = outputs(i).f_realspace_nD_t{t};
        p2d = repmat(pgrid',1,numel(f(1,:)))';
-       p_cutoff = numel(pgrid)/2;
+       p_cutoff = numel(pgrid)/3;
        
        coord = get_realspace_coords(outputs(i).pde,outputs(i).nodes_t{t});
        M1(i,t) = calculate_mass(outputs(i).pde,outputs(i).opts,coord,f(:));
@@ -60,11 +98,11 @@ for i=1:N2
        %M1(i,t) = trapz(zgrid,trapz(pgrid,p2d.^2 .* f,2));
        %M2(i,t) = trapz(zgrid,trapz(pgrid(p_cutoff:end),p2d(:,p_cutoff:end).^2 .* f(:,p_cutoff:end),2));
    end 
-   figure
-   plot(outputs(i).time_array,M1(i,:));
-   hold on
-   plot(outputs(i).time_array,M2(i,:));
-   hold off
+%    figure
+%    plot(outputs(i).time_array,M1(i,:));
+%    hold on
+%    plot(outputs(i).time_array,M2(i,:));
+%    hold off
 end
 
 figure
