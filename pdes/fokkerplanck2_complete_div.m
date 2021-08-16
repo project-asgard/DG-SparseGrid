@@ -66,7 +66,7 @@ params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
-dim_p = DIMENSION(0,+24);
+dim_p = DIMENSION(0,opts.cmd_args.p_max);
 dim_z = DIMENSION(-1,+1);
 dim_p.moment_dV = @(x,p,t,dat) x.^2;
 dim_z.moment_dV = @(x,p,t,dat) x.*0+1;
