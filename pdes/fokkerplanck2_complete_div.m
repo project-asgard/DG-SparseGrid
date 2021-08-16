@@ -80,6 +80,7 @@ solutions = {};
 %% Define the initial conditions
 ic_p = @(x,p,t) p.f0_p(x);
 ic_z = @(x,p,t) p.f0_z(x);
+%ic_p = @(x,p,t) 0*x+1; ic_z = @(x,p,t) 0*x+1;
 ic1 = new_md_func(num_dims,{ic_p,ic_z});
 initial_conditions = {ic1};
 
@@ -272,7 +273,7 @@ termR1_z = SD_TERM({pterm1});
 
 termR1   = MD_TERM(num_dims,{termR1_p,termR1_z});
 
-% termR2 == div( F_Rz \hat{z}
+% termR2 == div( F_Rz \hat{z} )
 %       
 % MASS in p and DIV in z
 
@@ -280,7 +281,7 @@ termR1   = MD_TERM(num_dims,{termR1_p,termR1_z});
 dV_p = @(x,p,t,dat) x;
 dV_z = @(x,p,t,dat) sqrt(1-x.^2);
 
-g1 = @(x,p,t,dat) 1./(p.tau.*p.gamma(x));
+g1 = @(x,p,t,dat) x./(p.tau.*p.gamma(x));
 pterm1   = MASS(g1,'','',dV_p);
 termR2_p = SD_TERM({pterm1});
 
@@ -291,7 +292,6 @@ termR2_z = SD_TERM({pterm1});
 termR2 = MD_TERM(num_dims,{termR2_p, termR2_z});
 
 terms = {termC1, termC2, termC3, termE1, termE2, termE3, termR1, termR2};
-%terms = {termR1, termR2};
 
 %% Define sources
 
