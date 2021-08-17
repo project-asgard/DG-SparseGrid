@@ -177,7 +177,7 @@ classdef OPTS
                 
                 if opts.adapt
                     opts.use_oldhash = false;
-                    opts.calculate_mass = false;
+                    %opts.calculate_mass = false;
                     opts.normalize_by_mass = false;
                 end
                 
