@@ -173,7 +173,7 @@ BCR = new_md_func(num_dims,{...
 
 %% Define the terms of the PDE
 
-% term1 is done combining mass and div defining F(th) = (-ZeE/m cos(th)) and
+% term1 is done combining mass and div defining F(th) = (ZeE/m cos(th)) and
 % G(v) = 1
 %
 % eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
@@ -181,12 +181,12 @@ BCR = new_md_func(num_dims,{...
 % dV_v = @(x,p,t,d) x; %changing for MASS term
 % dV_th = @(x,p,t,d) sin(x);
 
-F = @(x,p) params_si.a.Z.*params_si.e.*params_si.E.*cos(x)./params_si.a.m;
+F = @(x,p) cos(x);
 g1 = @(x,p,t,dat) F(x,p).*(x>pi/2);
 pterm1 = MASS(g1,[],[],dV_th);
 term1_th = SD_TERM({pterm1});
 
-G = @(v,p) v.*0 - 1;
+G = @(v,p) v.*0 - params_si.a.Z.*params_si.e.*params_si.E./params_si.a.m;
 g2 = @(v,p,t,dat) G(v,p);
 pterm1 = DIV(num_dims,g2,'',+1,'D','N',BCL,'','',dV_v);
 term1_v = SD_TERM({pterm1});
@@ -195,12 +195,12 @@ term1a = MD_TERM(num_dims,{term1_v,term1_th});
 %term1b is the same form as term1 but accounting for the flow in the
 %opposite direction
 
-F = @(x,p) params_si.a.Z.*params_si.e.*params_si.E.*cos(x)./params_si.a.m;
+F = @(x,p) cos(x);
 g1 = @(x,p,t,dat) F(x,p).*(x<pi/2);
 pterm1 = MASS(g1,[],[],dV_th);
 term1_th = SD_TERM({pterm1});
 
-G = @(v,p) v.*0 - 1;
+G = @(v,p) v.*0 + params_si.a.Z.*params_si.e.*params_si.E./params_si.a.m;
 g2 = @(v,p,t,dat) G(v,p);
 pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
 term1_v = SD_TERM({pterm1});
@@ -285,7 +285,7 @@ pterm2 = GRAD(num_dims,g5,'',-1,'N','N','','','',dV_th);
 term5_th = SD_TERM({pterm1,pterm2});
 term5   = MD_TERM(num_dims,{term5_v,term5_th});
 
-terms = {term1a,term1b};
+terms = {term1b};
 %% Define sources 
 
 sources = {};
