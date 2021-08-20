@@ -9,7 +9,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       sy = max(1, floor(2*ny/8));
       energy_func_v = @(x) 0.5*pde.params.a.m.*x.^2/(1.602*10^-19);
       energy_func_z = @(z) z.*0 + 2*pi;
-      current_func_v = @(x) pde.params.a.Z.*pde.params.e.*x;
+      current_func_v = @(x) pde.params.e.*x;
       current_func_z = @(x) cos(x);
       coord = get_realspace_coords(pde,nodes);
       mass_func = @(x) x.*0 + sqrt(2*pi);
@@ -23,6 +23,8 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       current_func_nD{2} = current_func_z;
       x_E = 0.5.*params.a.m*x.^2/params.e;
       num_steps = length(outputs.time_array);
+      spitzer_conduct = 4*pi*pde.params.eps0^2*(pde.params.a.m*pde.params.a.vth^2)^(3/2) ... 
+          /(pde.params.a.m^(1/2)*pde.params.e^2*pde.params.ln_delt*pde.params.b2.Z);
 %      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
       %getting energy density
@@ -44,9 +46,10 @@ for j = 1:num_steps
     hold on
     fval_realspace = reshape(outputs.f_realspace_nD_t{j}, [numel(f1d_ic) 1]);
     mass_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
-    current_vals(j) = moment_integral(lev_vec,opts.deg,coord,fval_realspace, current_func_nD,pde.dimensions);
     mass = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
-    energy_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, moment_func_nD, pde.dimensions)/mass;
+    conduct_vals(j) = moment_integral(lev_vec,opts.deg,coord,fval_realspace, current_func_nD,pde.dimensions)/(mass*pde.params.E);
+    conduct_vals(j) = conduct_vals(j)/spitzer_conduct;
+    energy_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, moment_func_nD, pde.dimensions)./mass;
   %        vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
 %    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
      %e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
@@ -68,12 +71,12 @@ end
      %x = x./x0;
      %hold on
      %plot(t,E,'r','LineWidth', 2);
-     plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
-     figure
-     plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
+     %plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
+     %figure
+     %plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
      %hold off
-     figure
-     plot(outputs.time_array,current_vals,'-','LineWidth',2);
+     %figure
+     plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
     % hold on
      %loglog(x_E,f1d_analytic_new, '-o');
      %semilogy(outputs.time_array,hint_func,'k');
