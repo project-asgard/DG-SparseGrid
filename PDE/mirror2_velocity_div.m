@@ -200,7 +200,7 @@ g1 = @(x,p,t,dat) F(x,p).*(x<pi/2);
 pterm1 = MASS(g1,[],[],dV_th);
 term1_th = SD_TERM({pterm1});
 
-G = @(v,p) v.*0 + params_si.a.Z.*params_si.e.*params_si.E./params_si.a.m;
+G = @(v,p) v.*0 - params_si.a.Z.*params_si.e.*params_si.E./params_si.a.m;
 g2 = @(v,p,t,dat) G(v,p);
 pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
 term1_v = SD_TERM({pterm1});
