@@ -90,7 +90,7 @@ Snr = @(E,Z_b) T1(E,Z_b) .* T2(E,Z_b);
 
 % Scan over E/E_D (0 to 0.6) for Zb=1 - compare with Fig 9 (pg 68) of Franz
 
-ratio_max = 0.3;
+ratio_max = 0.35;
 N = 100;
 ratio = linspace(0.,ratio_max,N);
 Z_b = 1;
@@ -104,7 +104,7 @@ ylim([1e-12 1]);
 
 
 N2 = 15;
-ratio2 = linspace(0.,ratio_max,N2);
+ratio2 = linspace(0,ratio_max,N2);
 for i=1:N2
    args.E = ratio2(i)*2; % E into asgard is 2*E/E_D per the normalization
    E_cgs = args.E / 300 / 100;
@@ -114,10 +114,11 @@ for i=1:N2
    disp(['v_c (cm/s): ',num2str(v_c_cgs)]);
    disp(['v_c (m/s): ',num2str(v_c_SI)]);
    disp(['v_c (norm): ', num2str(v_c_norm)]);
-   args.p_max = v_c_norm;
+%    args.p_max = v_c_norm;
+   args.p_max = 10;
 
    disp(i);
-   [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',10,'dt',1,'deg',6,'lev',5,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG');
+   [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',20,'dt',10,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
    for t=1:numel(outputs(i).time_array)
        pgrid = outputs(i).nodes_t{t}{1};
        zgrid = outputs(i).nodes_t{t}{2};
@@ -132,20 +133,26 @@ for i=1:N2
        %M1(i,t) = trapz(zgrid,trapz(pgrid,p2d.^2 .* f,2));
        %M2(i,t) = trapz(zgrid,trapz(pgrid(p_cutoff:end),p2d(:,p_cutoff:end).^2 .* f(:,p_cutoff:end),2));
    end 
+   figure
+   plot(outputs(i).time_array,M1(i,:));
+   hold on
+   plot(outputs(i).time_array,M2(i,:));
+   hold off
+   legend('M1(t)','M2(t)');
+   
 %    figure
-%    plot(outputs(i).time_array,M1(i,:));
-%    hold on
-%    plot(outputs(i).time_array,M2(i,:));
-%    hold off
-%    legend('M1(t)','M2(t)');
 %    
-%    figure
-%    semilogy(outputs(i).time_array,abs(1-M1(i,:)))
+%    M3 = 1-M1;
+%    t2 = outputs(i).time_array(2:end);
+% %    dndt = M3(i,2:end)-M3(i,1:end-1);
+% 
+% %    semilogy(outputs(i).time_array,M3(i,:))
 %    hold on
 %    semilogy(outputs(i).time_array,M2(i,:))
+%    semilogy(t2,dndt)
 %    hold off
 %    legend('1-M1','M2');
-%    title('mass error');
+   title('mass error');
    
 end
 
@@ -157,7 +164,6 @@ hold on
 norm_fac = res(N)/M2(N2,end);
 semilogy(ratio2,M2(:,end)*norm_fac);
 
-M3 = 1-M1;
 norm_fac2 = res(N)/M3(N2,end);
 semilogy(ratio2,M3(:,end)*norm_fac2);
 

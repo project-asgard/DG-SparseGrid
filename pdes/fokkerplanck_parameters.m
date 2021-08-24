@@ -30,7 +30,8 @@ switch opts.case_
         delta = 0.044;
         Z = 1;
         E = opts.cmd_args.E;
-        tau = 1.2e5;    
+        tau = 1.2e5;
+        alpha_z = @(z) z.*0;
 end
 
 phi = @phi_;

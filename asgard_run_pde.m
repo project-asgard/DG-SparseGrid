@@ -281,7 +281,7 @@ for L = 1:opts.num_steps
             E = E * pde.Et(t,params);
             Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
         end
-        
+               
         if ~opts.quiet; disp('    Calculate time dependent matrix coeffs'); end
         if num_dims==2
             if (pde.applySpecifiedE || pde.solvePoisson)
@@ -516,6 +516,17 @@ for L = 1:opts.num_steps
         ylim([0,2]);
     end
     
+    % Hack right now to update the params data every time step
+    
+    if opts.update_params_each_timestep
+       
+        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value
+%       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
+        alpha_z = @(z) (pde.params.f0_p(nodes{1}(1))-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
+        pde.params.alpha_z = alpha_z;
+        
+    end
+       
 end
 
 outputs.pde = pde;

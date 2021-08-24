@@ -297,6 +297,19 @@ terms = {termC1, termC2, termC3, termE1, termE2, termE3, termR1, termR2};
 
 sources = {};
 
+    function res = my_alpha(x,p,t)
+%         disp(num2str(p.alpha_z(x)));
+        res = p.alpha_z(x);
+    end
+
+switch opts.case_
+    case 5
+        source1_p = @(x,p,t,d) p.f0_p(x);
+        source1_z = @(x,p,t,d) my_alpha(x,p,t);
+        source1 = new_md_func(num_dims,{source1_p,source1_z});
+        sources = {source1};
+end
+
 %% Define function to set time step
     function dt=set_dt(pde,CFL)      
         dims = pde.dimensions;

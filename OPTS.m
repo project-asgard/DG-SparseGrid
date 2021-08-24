@@ -35,6 +35,7 @@ classdef OPTS
         start_time = 0;
         num_steps = 5;
         cmd_args = '';
+        update_params_each_timestep = false;
         
     end
     
@@ -84,6 +85,8 @@ classdef OPTS
                 addOptional(input_parser,'cmd_args',opts.cmd_args); % can be anything
                 addOptional(input_parser,'calculate_mass',opts.calculate_mass,@islogical);
                 addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
+                addOptional(input_parser,'update_params_each_timestep',opts.update_params_each_timestep,@islogical);
+
                 
                 parse(input_parser,varargin{:}{:})
                 
@@ -139,6 +142,7 @@ classdef OPTS
                 opts.normalize_by_mass = input_parser.Results.normalize_by_mass;
                 opts.num_steps = input_parser.Results.num_steps;
                 opts.start_time = input_parser.Results.start_time;
+                opts.update_params_each_timestep = input_parser.Results.update_params_each_timestep;
                 
                 opts.build_A = false;
                 if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential'}))>0
