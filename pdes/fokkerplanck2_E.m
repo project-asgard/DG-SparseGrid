@@ -221,6 +221,14 @@ switch opts.case_
         sources = {s1,s21,s22,s23,s24,s31,s32,s33,s34};
 end
 
+%% Construct moments
+
+mass_moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
+                                    @(x,p,t) 0*x+1,...
+                                    @(p,t)   0*t+1});
+mass_moment = MOMENT({mass_moment_func});
+moments = {mass_moment};
+
 %% Define function to set time step
     function dt=set_dt(pde,CFL)
         dims = pde.dimensions;
@@ -232,7 +240,7 @@ end
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions,moments);
 
 end
 
