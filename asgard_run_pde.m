@@ -448,32 +448,35 @@ for L = 1:opts.num_steps
         err = err_wavelet;
     end
     
-    %%
-    % Plot results
+    % Reshape realspace solution and plot
     
-    if mod(L,opts.plot_freq)==0 && ~opts.quiet
+    if num_dims <= 3
         
-        if isfield(figs,'solution')
-            figure(figs.solution);          
-        else
-            figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
+        if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
+            f_realspace_nD = ...
+                remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
         end
         
-        if num_dims <= 3
+        f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t+dt);
+        
+        element_coordinates = [];
+        if opts.use_oldhash
+        else
+            element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+        end
+        
+        %%
+        % Plot results
+        
+        if mod(L,opts.plot_freq)==0 && ~opts.quiet
             
-            f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-            if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
-                f_realspace_nD = ...
-                    remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
-            end
-            
-            f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t+dt);
-            
-            element_coordinates = [];
-            if opts.use_oldhash
+            if isfield(figs,'solution')
+                figure(figs.solution);
             else
-                element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+                figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.5,0.5]);
             end
+                       
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
             
             % this is just for the RE paper
@@ -492,8 +495,8 @@ for L = 1:opts.num_steps
                 figure(87)
                 contour(ppar,pper,f2d,levs)
             end
-        end
-        
+                   
+        end       
     end
     
     count=count+1;
@@ -520,10 +523,11 @@ for L = 1:opts.num_steps
     
     if opts.update_params_each_timestep
        
-        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value
+        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
 %       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
         alpha_z = @(z) (pde.params.f0_p(nodes{1}(1))-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
         pde.params.alpha_z = alpha_z;
+        outputs.alpha_t{L+1} = alpha_z(0);
         
     end
        

@@ -44,13 +44,13 @@ if num_dims==2
     if ny > 2
         sy = sy+2; % just to get off the exact middle
     end
-    sy=ny;
+%     sy=ny;
     
     f_slice = f_nD(sy,:);
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
-    semilogy(x,f_slice,'-o');
+    plot(x,f_slice,'-o');
     xlim([0,10])
     ylim([1e-5,1])
     title('1D slice (horizontal)');

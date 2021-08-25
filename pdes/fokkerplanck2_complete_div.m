@@ -73,16 +73,16 @@ dim_z.moment_dV = @(x,p,t,dat) x.*0+1;
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
 
-%% Define the analytic solution (optional)
-
-solutions = {};
-
 %% Define the initial conditions
 ic_p = @(x,p,t) p.f0_p(x);
 ic_z = @(x,p,t) p.f0_z(x);
 %ic_p = @(x,p,t) 0*x+1; ic_z = @(x,p,t) 0*x+1;
 ic1 = new_md_func(num_dims,{ic_p,ic_z});
 initial_conditions = {ic1};
+
+%% Define the analytic solution (optional)
+
+solutions = {ic1};
 
 %% Define the terms of the PDE
 

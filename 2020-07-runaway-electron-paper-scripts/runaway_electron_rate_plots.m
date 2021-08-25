@@ -103,8 +103,9 @@ semilogy(ratio,res);
 ylim([1e-12 1]);
 
 
-N2 = 15;
-ratio2 = linspace(0,ratio_max,N2);
+N2 = 5;
+ratio_max2 = 0.1;
+ratio2 = linspace(0.02,ratio_max2,N2);
 for i=1:N2
    args.E = ratio2(i)*2; % E into asgard is 2*E/E_D per the normalization
    E_cgs = args.E / 300 / 100;
@@ -116,9 +117,12 @@ for i=1:N2
    disp(['v_c (norm): ', num2str(v_c_norm)]);
 %    args.p_max = v_c_norm;
    args.p_max = 10;
+   
+   num_steps = 10;
+   dt = 2./args.E.^2/num_steps;
 
    disp(i);
-   [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',20,'dt',10,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
+   [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
    for t=1:numel(outputs(i).time_array)
        pgrid = outputs(i).nodes_t{t}{1};
        zgrid = outputs(i).nodes_t{t}{2};
@@ -133,41 +137,43 @@ for i=1:N2
        %M1(i,t) = trapz(zgrid,trapz(pgrid,p2d.^2 .* f,2));
        %M2(i,t) = trapz(zgrid,trapz(pgrid(p_cutoff:end),p2d(:,p_cutoff:end).^2 .* f(:,p_cutoff:end),2));
    end 
-   figure
+   alpha(i) = outputs(i).alpha_t{end};
    plot(outputs(i).time_array,M1(i,:));
    hold on
    plot(outputs(i).time_array,M2(i,:));
    hold off
    legend('M1(t)','M2(t)');
-   
-%    figure
-%    
-%    M3 = 1-M1;
-%    t2 = outputs(i).time_array(2:end);
-% %    dndt = M3(i,2:end)-M3(i,1:end-1);
-% 
-% %    semilogy(outputs(i).time_array,M3(i,:))
-%    hold on
-%    semilogy(outputs(i).time_array,M2(i,:))
-%    semilogy(t2,dndt)
-%    hold off
-%    legend('1-M1','M2');
    title('mass error');
    
 end
 
+kruskal_bernstein = @(E) 0.35 .* E.^(-3/8) .* exp(-((2./E).^(1/2)+1./(4*E)));
+
 figure
-semilogy(ratio,res);
-ylim([1e-12 1]);
+% semilogy(ratio,res);
+semilogy(ratio,kruskal_bernstein(ratio),'LineWidth',10,'Color','#E8E7E7');
+ylim([1e-10 1]);
 hold on
 
-norm_fac = res(N)/M2(N2,end);
-semilogy(ratio2,M2(:,end)*norm_fac);
+norm_fac = kruskal_bernstein(ratio2(N2))/alpha(N2);
+semilogy(ratio2,alpha*norm_fac,'Marker','o','MarkerSize',16,'MarkerFaceColor','auto');
 
-norm_fac2 = res(N)/M3(N2,end);
-semilogy(ratio2,M3(:,end)*norm_fac2);
+kulsrud_E1 = [0.04,0.06,0.08,0.1];
+kulsrud_Z1 = [1.914e-6,5.411e-5,3.177e-4,1.004e-3];
 
-legend('analytic','M2','1-M1');
+kulsrud_E2 = [0.06,0.08,0.1];
+kulsrud_Z2 = [2.611e-5,1.735e-4,5.839e-4];
+
+kulsrud_E3 = [0.08,0.1];
+kulsrud_Z3 = [1.047e-4,3.757e-4];
+
+kulsrud_E10 = [0.08,0.1];
+kulsrud_Z10 = [9.0e-6,4.49e-5];
+
+semilogy(kulsrud_E1,kulsrud_Z1,'Marker','s','MarkerSize',16,'MarkerFaceColor','auto');
+
+legend('K-B','alpha(z=0,Z=1)','Kulsrud (Z=1)');
+
 hold off
 
 

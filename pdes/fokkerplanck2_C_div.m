@@ -62,7 +62,7 @@ solutions = {soln1};
 ic_p = @(x,p,t) p.f0_p(x);
 ic_z = @(x,p,t) p.f0_z(x);
 ic1 = new_md_func(num_dims,{ic_p,ic_z});
-initial_conditions = {ic1};
+initial_conditions = {soln1};
 
 %% Define the boundary conditions
 
