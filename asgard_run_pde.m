@@ -44,7 +44,12 @@ else
 end
 
 %% Generate 1D mass matrices in each dimension (used in L2 projections)
+if ~opts.quiet; disp('Calculate 1D mass matricies in each dimesion'); end
 pde = compute_dimension_mass_mat(opts,pde);
+
+%% Generate moment vectors
+if ~opts.quiet; disp('Generate moment vector data'); end
+pde = calculate_moment_data(pde,opts);
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
@@ -114,10 +119,7 @@ if num_dims <=3
     
     % construct the moment function handle list for calculating the mass
     if opts.calculate_mass
-        mass = calculate_mass(pde,opts,fval,hash_table);
-        if ~isempty(pde.solutions)
-            mass_analytic = calculate_mass(pde,opts,coord,fval_realspace_analytic);
-        end
+        [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval,hash_table,t);
         mass_t(1) = mass;
     end
     
@@ -165,10 +167,7 @@ if num_dims <=3
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
     if opts.calculate_mass
-        mass = calculate_mass(pde,opts,fval,hash_table);
-        if ~isempty(pde.solutions) 
-            mass_analytic = calculate_mass(pde,opts,coord,fval_realspace_analytic);
-        end
+        [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval,hash_table,t);
         mass_t(1) = mass;
     end
     
@@ -244,7 +243,7 @@ end
 
 % need to clean up this interface!
 outputs = save_output([],0,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
-%outputs.mass_t = mass_t;
+outputs.mass_t = mass_t;
 
 %% Time Loop
 count=1;
@@ -376,7 +375,7 @@ for L = 1:opts.num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         if opts.calculate_mass
-            mass = calculate_mass(pde,opts,fval,hash_table);
+            [pde,mass,~] = calculate_mass(pde,opts,fval,hash_table,t);
             mass_t(L+1) = mass;
             outputs.mass_t = mass_t;
         end

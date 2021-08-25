@@ -19,6 +19,7 @@ classdef PDE
         % (all PDEs will transition to this soon)
         solutions = {};
         initial_conditions = {};
+        moments = {};
         
         % Old hash table - to be removed when support for oldhashtable is
         % removed
@@ -37,7 +38,7 @@ classdef PDE
             end
         end
         
-        function pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,set_dt,analytic_solutions_1D,initial_conditions_MSC,solutions_MSC)
+        function pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,set_dt,analytic_solutions_1D,initial_conditions_MSC,solutions_MSC,moments_MSC)
             
             pde.dimensions = dimensions;
             pde.terms = terms;
@@ -50,6 +51,7 @@ classdef PDE
             if nargin > 8
                 pde.solutions = solutions_MSC;
                 pde.initial_conditions = initial_conditions_MSC;
+                pde.moments = moments_MSC;
             end
             
             pde.dimensions = set_levels(opts.lev,dimensions);
