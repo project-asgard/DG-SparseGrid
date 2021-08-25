@@ -61,8 +61,41 @@ switch opts.case_
         params_si.a.T_eV = 0.05*params_si.b.T_eV; %Target temperature in Kelvin\
         offset = 10^6; %case with offset and change in Temperature
     case 2 
-        params_si.a.T_eV = 0.05*params_si.b.T_eV;
-        offset = 0; %case with no offset but change in Temperature
+        m_e_cgs = 9.109*10^-28; %electron mass in g
+        m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
+        m_He_cgs = 6.7*10^-24; %helium 4 mass in g 
+        m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
+        temp_cgs = 1.6022e-10; %temperature in erg
+%         params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
+%         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
+        params_cgs.a.m = m_e_cgs; %beam is electrons
+        params_cgs.b.m = m_e_cgs; %background is electrons
+        params_cgs.b2.m = m_D_cgs;
+        params_cgs.a.Z = -1;
+        params_cgs.b.Z = -1;
+        params_cgs.b2.Z = 1;
+        params_cgs.e = 4.803*10^-10; %charge in Fr
+        params_cgs.E = 2.6e-5; %E field in statvolt/cm
+%         params_si.a.vth = 0.01*params_cgs.a.vth; %converting to m/s
+%         params_si.b.vth = 0.01*params_cgs.b.vth;
+        params_si.a.m = 0.001*params_cgs.a.m; %converting to kg
+        params_si.b.m = 0.001*params_cgs.b.m; 
+        params_si.b2.m = 0.001*params_cgs.b2.m;
+        params_si.a.Z = params_cgs.a.Z;
+        params_si.b.Z = params_cgs.b.Z;
+        params_si.b2.Z = params_cgs.b2.Z;
+        params_si.a.n = 5e19;
+        params_si.a.T_eV = 1000;
+        params_si.ln_delt = 20;
+        params_si.a.vth = params_si.v_th(params_si.a.T_eV,params_si.a.m)/sqrt(2);
+        params_si.b.vth = params_si.v_th(params_si.b.T_eV,params_si.b.m)/sqrt(2);
+        E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(4*pi*params_si.eps0^2*params_si.a.m ... 
+            *params_si.a.vth^2);
+        params_si.E = 10^-6*E_dreicer_si;
+        %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
+        params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
+        params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
+        %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
     case 3 
         n_cgs = 8e14; %equilibrium density in cm.^-3
         m_e_cgs = 9.109*10^-28; %electron mass in g
@@ -95,7 +128,7 @@ switch opts.case_
         params_si.b.Z = params_cgs.b.Z;
         params_si.b2.Z = params_cgs.b2.Z;
         %params_si.E = 2.9979*10^4*params_cgs.E; %converting to V/m
-        params_si.a.E_eV = 7.665;
+        params_si.a.E_eV = 100;
         params_si.a.T_eV = 2/3*params_si.a.E_eV;
         params_si.b.T_eV = params_si.a.T_eV;
         params_si.b2.T_eV = params_si.a.T_eV;
@@ -105,7 +138,7 @@ switch opts.case_
         params_si.ln_delt = 15;
         E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(4*pi*params_si.eps0^2*params_si.a.m ... 
             *params_si.a.vth^2);
-        params_si.E = 10^-6*E_dreicer_si;
+        params_si.E = 10^-20*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
@@ -135,7 +168,7 @@ maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
  
-dim_v = DIMENSION(0,10*params_si.a.vth);
+dim_v = DIMENSION(0,15*params_si.a.vth);
 dV_v = @(x,p,t,d) x.^2;
 dim_v.moment_dV = dV_v;
 
@@ -162,8 +195,8 @@ initial_conditions = {ic1};
 %% Define the boundary conditions
 
 BCL = new_md_func(num_dims,{...
-    params_si.init_cond_v, ...
-    params_si.boundary_cond_z, ...
+    params_si.boundary_cond_v, ...
+    params_si.boundary_cond_z, ... %params_si.boundary_cond_z, ...
     params_si.boundary_cond_t});
 
 BCR = new_md_func(num_dims,{...
@@ -184,13 +217,13 @@ BCR = new_md_func(num_dims,{...
 F = @(x,p) cos(x);
 g1 = @(x,p,t,dat) F(x,p).*(x>pi/2);
 pterm1 = MASS(g1,[],[],dV_th);
-term1_th = SD_TERM({pterm1});
+termE1_th = SD_TERM({pterm1});
 
 G = @(v,p) v.*0 - params_si.a.Z.*params_si.e.*params_si.E./params_si.a.m;
 g2 = @(v,p,t,dat) G(v,p);
 pterm1 = DIV(num_dims,g2,'',+1,'D','N',BCL,'','',dV_v);
-term1_v = SD_TERM({pterm1});
-term1a = MD_TERM(num_dims,{term1_v,term1_th});
+termE1_v = SD_TERM({pterm1});
+termE1a = MD_TERM(num_dims,{termE1_v,termE1_th});
 
 %term1b is the same form as term1 but accounting for the flow in the
 %opposite direction
@@ -198,13 +231,13 @@ term1a = MD_TERM(num_dims,{term1_v,term1_th});
 F = @(x,p) cos(x);
 g1 = @(x,p,t,dat) F(x,p).*(x<pi/2);
 pterm1 = MASS(g1,[],[],dV_th);
-term1_th = SD_TERM({pterm1});
+termE1_th = SD_TERM({pterm1});
 
 G = @(v,p) v.*0 - params_si.a.Z.*params_si.e.*params_si.E./params_si.a.m;
 g2 = @(v,p,t,dat) G(v,p);
 pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
-term1_v = SD_TERM({pterm1});
-term1b = MD_TERM(num_dims,{term1_v,term1_th});
+termE1_v = SD_TERM({pterm1});
+termE1b = MD_TERM(num_dims,{termE1_v,termE1_th});
 
 % term2 is a simple div term, defining K(th) = ZeE/m sin(th)
 %
@@ -218,14 +251,14 @@ dV_th = @(x,p,t,d) sin(x);
 
 g1 = @(x,p,t,dat) 0*x+1;
 pterm1   =  MASS(g1,'','',dV_v);
-term2_v = SD_TERM({pterm1});
+termE2_v = SD_TERM({pterm1});
 
 K = @(x,p) params_si.a.Z.*params_si.e.*params_si.E.*sin(x)./params_si.a.m;
 g2 = @(x,p,t,dat) -K(x,p);
 
-pterm1 = DIV(num_dims,g2,'',-1,'N','N','','','',dV_th);
-term2_th = SD_TERM({pterm1});
-term2 = MD_TERM(num_dims,{term2_v,term2_th});
+pterm1 = DIV(num_dims,g2,'',-1,'N','N',BCL,BCR,'',dV_th);
+termE2_th = SD_TERM({pterm1});
+termE2 = MD_TERM(num_dims,{termE2_v,termE2_th});
 
 % dV_v = @(x,p,t,d) x.^2;
 % dV_th = @(x,p,t,d) sin(x);
@@ -246,8 +279,8 @@ g2 = @(v,p,t,dat) A(v,p);
 
 pterm1 = DIV (num_dims,g1,'',+1,'N','D','','','',dV_v);
 pterm2 = GRAD(num_dims,g2,'',-1,'D','N',BCL,BCR,'',dV_v);
-term3_v = SD_TERM({pterm1,pterm2});
-term3 = MD_TERM(num_dims,{term3_v,[]});
+termC1_v = SD_TERM({pterm1,pterm2});
+termC1 = MD_TERM(num_dims,{termC1_v,[]});
 
 % term4 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
 %
@@ -257,13 +290,12 @@ dV_v = @(x,p,t,d) x.^2;
 dV_th = @(x,p,t,d) sin(x);
 
 B = @(v,p) v*p.a.m.*(p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m) + p.nu_s(v,p.a,p.b2)./(p.a.m + p.b2.m));
-g3 = @(v,p,t,dat) -B(v,p);
+g3 = @(v,p,t,dat) B(v,p);
 
 pterm1 = DIV(num_dims,g3,'',-1,'D','N',BCL,'','',dV_v);
 
-term4_v = SD_TERM({pterm1});
-    %     else
-term4   = MD_TERM(num_dims,{term4_v,[]});
+termC2_v = SD_TERM({pterm1});
+termC2   = MD_TERM(num_dims,{termC2_v,[]});
 
 % term5 is done combining mass and div defining C(v) = (nu_D(v)/2) 
 %
@@ -276,16 +308,16 @@ dV_th = @(x,p,t,d) sin(x);
 C = @(v,p) sqrt((p.nu_D(v,p.a,p.b) + p.nu_D(v,p.a,p.b2))/2);
 g4 = @(v,p,t,dat) C(v,p);
 pterm1 = MASS(g4,[],[],dV_v);
-term5_v = SD_TERM({pterm1,pterm1});
+termC3_v = SD_TERM({pterm1,pterm1});
 
 D = @(v,p) v.*0 + 1;
 g5 = @(v,p,t,dat) D(v,p);
 pterm1 = DIV (num_dims,g5,'',+1,'D','D','','','',dV_th);
 pterm2 = GRAD(num_dims,g5,'',-1,'N','N','','','',dV_th);
-term5_th = SD_TERM({pterm1,pterm2});
-term5   = MD_TERM(num_dims,{term5_v,term5_th});
+termC3_th = SD_TERM({pterm1,pterm2});
+termC3   = MD_TERM(num_dims,{termC3_v,termC3_th});
 
-terms = {term1b};
+terms = {termE1a,termE1b,termE2,termC1,termC2,termC3};
 %% Define sources 
 
 sources = {};
