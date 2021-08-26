@@ -23,7 +23,9 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       current_func_nD{2} = current_func_z;
       x_E = 0.5.*params.a.m*x.^2/params.e;
       num_steps = length(outputs.time_array);
-      spitzer_conduct = 4*pi*pde.params.eps0^2*(pde.params.a.m*pde.params.a.vth^2)^(3/2) ... 
+      spitzer_conduct = (3/(4*sqrt(2*pi)))*(4*pi*pde.params.eps0)^2*(1.38e-23*pde.params.a.T_eV*11604)^(3/2)...
+          /(pde.params.b2.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
+      spitzer_conduct2 = 4*pi*pde.params.eps0^2*(pde.params.a.m*pde.params.a.vth^2)^(3/2) ... 
           /(pde.params.a.m^(1/2)*pde.params.e^2*pde.params.ln_delt*pde.params.b2.Z);
 %      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
@@ -47,8 +49,8 @@ for j = 1:num_steps
     fval_realspace = reshape(outputs.f_realspace_nD_t{j}, [numel(f1d_ic) 1]);
     mass_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
     mass = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
-    conduct_vals(j) = moment_integral(lev_vec,opts.deg,coord,fval_realspace, current_func_nD,pde.dimensions)/(mass*pde.params.E);
-    conduct_vals(j) = conduct_vals(j)/spitzer_conduct;
+    conduct_vals(j) = moment_integral(lev_vec,opts.deg,coord,fval_realspace, current_func_nD,pde.dimensions)/(pde.params.E);
+    conduct_vals(j) = conduct_vals(j)/spitzer_conduct2;
     energy_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, moment_func_nD, pde.dimensions)./mass;
   %        vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
 %    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
