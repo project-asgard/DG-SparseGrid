@@ -37,7 +37,7 @@ function pde = mirror2_collision_div(opts)
 % eq2 :      q == C(v) * grad(f)  [pterm2: grad(g(v)=C(v),-1, BCL=N, BCR=N]
 % Run with
 %
-% asgard(@mirror2_collision_div,'timestep_method','matrix_exponential','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true)
+% asgard(@mirror2_collision_div,'timestep_method','BE','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true)
 
 params = mirror_parameters();
 
@@ -100,6 +100,13 @@ BCR = new_md_func(num_dims,{...
 % eq1 :  df/dt == div(A(v) * q)        [pterm1: div (g(v)=A(v),+1, BCL=?, BCR=?)]
 % eq2 :      q == A(v) * grad(f)       [pterm2: grad(g(v)=A(v),-1, BCL=D, BCR=N)]
 
+dV_v = @(x,p,t,d) x.^2; 
+dV_th = @(x,p,t,d) sin(x);
+
+g1 = @(v,p,t,dat) v.*0 + 1;
+pterm1 = MASS(g1,'','',dV_th);
+term1_th = SD_TERM({pterm1,pterm1});
+
 A = @(v,p) sqrt(0.5.*v.^2.*(p.nu_par(v,p.a,p.b) + p.nu_par(v,p.a,p.b2)));
 g1 = @(v,p,t,dat) A(v,p);
 g2 = @(v,p,t,dat) A(v,p);
@@ -107,7 +114,7 @@ g2 = @(v,p,t,dat) A(v,p);
 pterm1 = DIV (num_dims,g1,'',+1,'D','N','','','',dV_v);
 pterm2 = GRAD(num_dims,g2,'',-1,'N','D','','','',dV_v);
 term1_v = SD_TERM({pterm1,pterm2});
-term1   = MD_TERM(num_dims,{term1_v,[]});
+term1   = MD_TERM(num_dims,{term1_v,term1_th});
 
 % term2 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
 %
@@ -126,7 +133,7 @@ pterm1 = DIV(num_dims,g3,'',-1,'N','D','','','',dV_v);
 term2_v = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{term2_v,[]});
 
-dV_v = @(x,p,t,d) x; %changing for MASS term
+dV_v = @(x,p,t,d) x.^2; %changing for MASS term
 dV_th = @(x,p,t,d) sin(x);
 
 C = @(v,p) sqrt((p.nu_D(v,p.a,p.b) + p.nu_D(v,p.a,p.b2))/2);
