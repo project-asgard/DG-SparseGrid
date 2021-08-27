@@ -52,7 +52,7 @@ switch opts.case_
         params_si.ln_delt = 15;
         E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(4*pi*params_si.eps0^2*params_si.a.m ... 
             *params_si.a.vth^2);
-        params_si.E = 10^-6*E_dreicer_si;
+        params_si.E = 10^-3*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
@@ -60,7 +60,7 @@ switch opts.case_
         %params.eps0 = 1/(4*pi);
 end
 
-dim_v = DIMENSION(0,10*params_si.a.vth);
+dim_v = DIMENSION(0,15*params_si.a.vth);
 dV_v = @(x,p,t,d) x.^2;
 dim_v.moment_dV = dV_v;
 
@@ -103,19 +103,22 @@ BCR = new_md_func(num_dims,{...
 %
 % eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
 
+dV_v = @(x,p,t,d) x.^2; %changing for MASS term
+dV_th = @(x,p,t,d) sin(x);
+
 % dV_v = @(x,p,t,d) x; %changing for MASS term
 % dV_th = @(x,p,t,d) sin(x);
 
-F = @(x,p) cos(x);
-g1 = @(x,p,t,dat) F(x,p).*(x>pi/2);
-pterm1 = MASS(g1,[],[],dV_th);
-term1_th = SD_TERM({pterm1});
+g1 = @(x,p,t,dat) x.*0 + 5.3846e+12;
+pterm1   =  MASS(g1,'','',dV_v);
+termE2_v = SD_TERM({pterm1});
 
-G = @(v,p) v.*0 - 1;
-g2 = @(v,p,t,dat) G(v,p);
-pterm1 = DIV(num_dims,g2,'',+1,'D','N',BCL,'','',dV_v);
-term1_v = SD_TERM({pterm1});
-term1a = MD_TERM(num_dims,{term1_v,term1_th});
+K = @(x,p) sin(x);
+g2 = @(x,p,t,dat) K(x,p);
+
+pterm1 = DIV(num_dims,g2,'',-1,'N','N',BCL,BCR,'',dV_th);
+termE2_th = SD_TERM({pterm1});
+termE2 = MD_TERM(num_dims,{termE2_v,termE2_th});
 
 %term1b is the same form as term1 but accounting for the flow in the
 %opposite direction
@@ -131,7 +134,7 @@ pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
 term1_v = SD_TERM({pterm1});
 term1b = MD_TERM(num_dims,{term1_v,term1_th});
 
-terms = {term1b};
+terms = {termE2};
 
 sources = {};
 

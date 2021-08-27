@@ -9,7 +9,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       sy = max(1, floor(2*ny/8));
       energy_func_v = @(x) 0.5*pde.params.a.m.*x.^2/(1.602*10^-19);
       energy_func_z = @(z) z.*0 + 2*pi;
-      current_func_v = @(x) pde.params.e.*x;
+      current_func_v = @(x) pde.params.a.Z.*pde.params.e.*x;
       current_func_z = @(x) cos(x);
       coord = get_realspace_coords(pde,nodes);
       mass_func = @(x) x.*0 + sqrt(2*pi);
@@ -50,7 +50,7 @@ for j = 1:num_steps
     mass_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
     mass = moment_integral(lev_vec, opts.deg, coord, fval_realspace, mass_func_nD, pde.dimensions);
     conduct_vals(j) = moment_integral(lev_vec,opts.deg,coord,fval_realspace, current_func_nD,pde.dimensions)/(pde.params.E);
-    conduct_vals(j) = conduct_vals(j)/spitzer_conduct2;
+    conduct_vals(j) = conduct_vals(j)/spitzer_conduct;
     energy_vals(j) = moment_integral(lev_vec, opts.deg, coord, fval_realspace, moment_func_nD, pde.dimensions)./mass;
   %        vel_vals(i) = sum(outputs.f_realspace_nD_t{1,i}(:).*coord{:,:}*1e-4);
 %    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
