@@ -253,7 +253,7 @@ g1 = @(x,p,t,dat) 0*x+1;
 pterm1   =  MASS(g1,'','',dV_v);
 termE2_v = SD_TERM({pterm1});
 
-K = @(x,p) params_si.a.Z.*params_si.e.*params_si.E.*sin(x)./params_si.a.m;
+K = @(x,p) x.*0 + 1;%params_si.a.Z.*params_si.e.*params_si.E.*sin(x)./params_si.a.m;
 g2 = @(x,p,t,dat) -K(x,p);
 
 pterm1 = DIV(num_dims,g2,'',-1,'N','N',BCL,BCR,'',dV_th);
@@ -317,7 +317,7 @@ pterm2 = GRAD(num_dims,g5,'',-1,'N','N','','','',dV_th);
 termC3_th = SD_TERM({pterm1,pterm2});
 termC3   = MD_TERM(num_dims,{termC3_v,termC3_th});
 
-terms = {termE1a,termE1b,termE2,termC1,termC2,termC3};
+terms = {termE2};
 %% Define sources 
 
 sources = {};
