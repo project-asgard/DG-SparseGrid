@@ -83,10 +83,11 @@ for tt = 1:num_terms % Construct a BC object for each term
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
                             BCL_fList{d2},mass_pterm.dV,pde.params,pde.transform_blocks,time);
                         %Apply inverse mat
-                        bcL{d1}{d2}     = mass_pterm.LHS_mass_mat \ bcL{d1}{d2};
+                        N = numel(bcL{d1}{d2});
+                        bcL{d1}{d2}     = mass_pterm.LHS_mass_mat(1:N,1:N) \ bcL{d1}{d2};
                         %Apply previous pterms
                         for q=1:p-1
-                             bcL{d1}{d2} = term_1D_oth_dim.pterms{q}.mat * bcL{d1}{d2};
+                             bcL{d1}{d2} = term_1D_oth_dim.pterms{q}.mat(1:N,1:N) * bcL{d1}{d2};
                         end
                     end
                     
@@ -105,14 +106,14 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Apply LHS_mass_mat for this pterm
                    
                     M = pterm.LHS_mass_mat;
-                    bcL_tmp = M \ bcL_tmp;
+                    bcL_tmp = M(1:dof,1:dof) \ bcL_tmp;
                     
                     %%
                     % Apply mats from preceeding pterms when chaining (p>1)
                     
                     preceeding_mat = eye(dof);
                     for nn=1:p-1
-                        preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                        preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof,1:dof);
                     end
                     bcL_tmp = preceeding_mat * bcL_tmp;
                     
@@ -138,10 +139,11 @@ for tt = 1:num_terms % Construct a BC object for each term
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
                             BCR_fList{d2},mass_pterm.dV,pde.params,pde.transform_blocks,time);
                         %Apply inverse mat
-                        bcR{d1}{d2}     = mass_pterm.LHS_mass_mat \ bcR{d1}{d2};
+                        N = numel(bcL{d1}{d2});
+                        bcR{d1}{d2}     = mass_pterm.LHS_mass_mat(1:N,1:N) \ bcR{d1}{d2};
                         %Apply previous pterms
                         for q=1:p-1
-                             bcR{d1}{d2} = term_1D_oth_dim.pterms{q}.mat * bcR{d1}{d2};
+                             bcR{d1}{d2} = term_1D_oth_dim.pterms{q}.mat(1:N,1:N) * bcR{d1}{d2};
                         end
                     end
                     
@@ -157,14 +159,14 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Apply LHS_mass_mat for this pterm
                    
                     M = pterm.LHS_mass_mat;
-                    bcR_tmp = M \ bcR_tmp;                
+                    bcR_tmp = M(1:dof,1:dof) \ bcR_tmp;                
                     
                     %%
                     % Apply mats from preceeding terms when chaining (p>1)
                                         
                     preceeding_mat = eye(dof);
                     for nn=1:p-1
-                        preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                        preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat(1:dof,1:dof);
                     end
                     bcR_tmp = preceeding_mat * bcR_tmp;
                     

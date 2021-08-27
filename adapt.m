@@ -408,6 +408,8 @@ for d=1:num_dims
     lev_vec(d) = max(hash_table.elements.lev_p1(:,d)-1);
 end
 
+%pde = compute_dimension_mass_mat(opts,pde);
+
 if opts.max_lev_coeffs
     pde = get_coeff_mats_rechain(pde, deg, lev_vec);
 end

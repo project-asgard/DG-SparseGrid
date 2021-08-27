@@ -31,7 +31,7 @@ function pde = fokkerplanck1_momentum_C_div(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck1_momentum_C_div,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5,'case',1)
+% asgard(@fokkerplanck1_momentum_C_div,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'dt',1.0,'case',1)
 %
 % case = 1 % maxwellian initial condition
 % case = 2 % step function initial condition

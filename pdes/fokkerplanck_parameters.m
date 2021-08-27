@@ -26,6 +26,12 @@ switch opts.case_
         Z = 5;
         E = 0.4;
         tau = 10^5;
+    case 5 % for the runaway production rate electric field scan
+        delta = 0.044;
+        Z = 1;
+        E = opts.cmd_args.E;
+        tau = 1.2e5;
+        alpha_z = @(z) z.*0;
 end
 
 phi = @phi_;
@@ -77,6 +83,8 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                 end
             case 4
                 ret = x.*0 + 1;
+            case 5
+                ret = x.*0 + 1;
         end
     end
 
@@ -111,6 +119,9 @@ Cf = @(p)2*nuEE*vT*psi(vx(p));
                     Q = Q+sum(w.*Fun(xi).*xi.^2);
                  end
                 ret = exp(-2/delta^2*sqrt(1+delta^2*x.^2))/(2*Q);
+            case 5 
+                a = 1;
+                ret = 2/(sqrt(pi)*a^3) * exp(-x.^2/a^2);
         end
     end
 
