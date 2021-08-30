@@ -77,8 +77,11 @@ end
      %figure
      %plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
      %hold off
+     f_slice = outputs.f_realspace_nD_t{1,num_steps};
+     v_norm = x./pde.params.b.vth;
+     plot(v_norm,f_slice);
      %figure
-     plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
+     %plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
     % hold on
      %loglog(x_E,f1d_analytic_new, '-o');
      %semilogy(outputs.time_array,hint_func,'k');
