@@ -139,6 +139,9 @@ soln_s = @solution_s;
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
         ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
     end
 soln_z = @solution_z;
     function ret = solution_z(z,p,~)

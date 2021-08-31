@@ -52,14 +52,14 @@ switch opts.case_
         params.a.v_beam = 0; %case with no beam velocity
         params.init_cond_v = @(v,p,t) params.soln_v(v,p,t);
     case 2 
-        params.a.T_eV = 5*params.b.T_eV;
-        params.a.vth = params.v_th(params.a.T_eV,params.a.m);
-        params.a.v_beam = 0;
-        params.init_cond_v = @(v,p,t) params.maxwell(v,params.a.v_beam,params.a.vth)/pi;
+%         params.a.T_eV = 5*params.b.T_eV;
+%         params.a.vth = params.v_th(params.a.T_eV,params.a.m);
+%         params.a.v_beam = 0;
+        params.init_cond_v = @(v,p,t) params.maxwell(v,0,3e5);
     case 3 
         params.a.T_eV = 50;
         params.a.vth = params.v_th(params.a.T_eV,params.a.m);
-        params.a.E_eV = 1e3; %case with offset and no change in Temperature
+        params.a.E_eV = 3e3; %case with offset and no change in Temperature
         params.init_cond_v = @(v,p,t) params.maxwell(v,params.a.v_beam,params.a.vth);
 end
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
@@ -158,7 +158,7 @@ dV_th = @(x,p,t,d) sin(x);
 
 C = @(v,p) v.*sqrt((p.nu_D(v,p.a,p.b) + p.nu_D(v,p.a,p.b2))/2);
 g4 = @(v,p,t,dat) C(v,p);
-pterm1 = MASS(g4,[],[],dV_v);
+pterm1 = MASS(g4,'','',dV_v);
 term3_v = SD_TERM({pterm1,pterm1});
 
 D = @(v,p) v.*0 + 1;
