@@ -527,8 +527,11 @@ for L = 1:opts.num_steps
 %       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
         alpha_z = @(z) (pde.params.f0_p(nodes{1}(1))-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
         pde.params.alpha_z = alpha_z;
+        z = linspace(-1,1,100);
+        outputs.alpha_t0{L+1} = alpha_z;
+%         outputs.alpha_t{L+1} = sum(alpha_z(z));
         outputs.alpha_t{L+1} = alpha_z(0);
-        
+       
     end
        
 end
@@ -536,15 +539,4 @@ end
 outputs.pde = pde;
 outputs.opts = opts;
 
-% delta_mass(1) = 0;
-% for i=1:numel(outputs.mass_t)-1
-%     z=outputs.nodes_t{end}{2};
-%     f=outputs.f_realspace_nD_t{i+1}(:,end);
-%     dz=abs(z(1)-z(2));
-%     delta_mass(i+1) = sum(f.*z'*.25*outputs.dt*dz);
-% end
-% plot(outputs.mass_t/outputs.mass_t(1));
-% hold on
-% plot(cumsum(delta_mass)/outputs.mass_t(1))
-% plot((outputs.mass_t+cumsum(delta_mass))/outputs.mass_t(1))
 end

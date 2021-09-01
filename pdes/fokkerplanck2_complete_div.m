@@ -66,7 +66,12 @@ params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
-dim_p = DIMENSION(0,opts.cmd_args.p_max);
+p_max = 10;
+if isfield(opts.cmd_args,'p_max')
+    p_max = opts.cmd_args.p_max;
+end
+
+dim_p = DIMENSION(0,p_max);
 dim_z = DIMENSION(-1,+1);
 dim_p.moment_dV = @(x,p,t,dat) x.^2;
 dim_z.moment_dV = @(x,p,t,dat) x.*0+1;
@@ -169,7 +174,7 @@ dV_z = @(x,p,t,dat) sqrt(1-x.^2);
 
 % MASS in p
 
-g1 = @(x,p,t,dat) min(sqrt(p.Cb(x))./x,1e7); %Limiting so we don't get 0/0.
+g1 = @(x,p,t,dat) min(sqrt(p.Cb(x))./1,1e7); %Limiting so we don't get 0/0. **** This is presently HACKED because I'm suspicous of the model correctness ***
 pterm1  = MASS(g1,'','',dV_p);
 term3_p = SD_TERM({pterm1,pterm1});
 
@@ -291,7 +296,11 @@ termR2_z = SD_TERM({pterm1});
 
 termR2 = MD_TERM(num_dims,{termR2_p, termR2_z});
 
-terms = {termC1, termC2, termC3, termE1, termE2, termE3, termR1, termR2};
+%terms = {termC1, termC2, termC3, termE1, termE2, termE3, termR1, termR2};
+%terms = {termC1, termC2, termC3, termR1, termR2};
+terms = {termC1, termC2, termC3, termE1, termE2, termE3};
+%terms = {termC1, termC2, termC3};
+
 
 %% Define sources
 

@@ -102,7 +102,7 @@ solutions = {soln1};
 
 ic_p = @(z,p,t) f0(z);
 ic1 = new_md_func(num_dims,{ic_p});
-initial_conditions = {ic1};
+initial_conditions = {soln1};
 
 %% LHS terms (mass only)
 

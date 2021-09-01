@@ -23,11 +23,11 @@ num_dims = numel(dimensions);
 a_x = @(x,p,t) cos(2*pi*x);
 a_t = @(t,p) sin(t);
 sol1 = new_md_func(num_dims,{a_x,a_t});
-solutions = {sol1};
+solutions = {};
 
 %% Define the initial conditions
 
-ic_x = @(x,p,t) x.*0;
+ic_x = @(x,p,t) cos(2*pi*x);%.*0;
 ic1 = new_md_func(num_dims,{ic_x});
 initial_conditions = {ic1};
 
@@ -69,7 +69,12 @@ s2x = @(x,p,t) sin(2*pi*x);
 s2t = @(t,p) -2*pi*sin(t);
 source2 = {s2x,s2t};
 
-sources = {source1,source2};
+
+s3x = @(x,p,t) cos(1/2*pi*x);
+s3t = @(t,p) sin(2*pi*0.1*t);
+source3 = {s3x,s3t};
+
+sources = {source3};%{source1,source2};
 
 %% Define function to set time step
 
