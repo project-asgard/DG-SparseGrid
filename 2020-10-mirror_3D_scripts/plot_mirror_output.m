@@ -9,7 +9,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       sy = max(1, floor(2*ny/8));
       energy_func_v = @(x) 0.5*pde.params.a.m.*x.^2/(1.602*10^-19);
       energy_func_z = @(z) z.*0 + 2*pi;
-      current_func_v = @(x) pde.params.a.Z.*pde.params.e.*x;
+      current_func_v = @(x) 2*pi*pde.params.a.Z.*pde.params.e.*x;
       current_func_z = @(x) cos(x);
       coord = get_realspace_coords(pde,nodes);
       mass_func = @(x) x.*0 + sqrt(2*pi);
@@ -77,11 +77,11 @@ end
      %figure
      %plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
      %hold off
-     f_slice = outputs.f_realspace_nD_t{1,num_steps};
-     v_norm = x./pde.params.b.vth;
-     plot(v_norm,f_slice);
+     %f_slice = outputs.f_realspace_nD_t{1,num_steps};
+     %v_norm = x./pde.params.b.vth;
+     %plot(v_norm,f_slice);
      %figure
-     %plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
+     plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
     % hold on
      %loglog(x_E,f1d_analytic_new, '-o');
      %semilogy(outputs.time_array,hint_func,'k');
