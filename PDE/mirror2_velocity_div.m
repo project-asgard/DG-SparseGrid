@@ -58,8 +58,10 @@ params_si = mirror_parameters();
 
 switch opts.case_
     case 1 
-        params_si.a.T_eV = 0.05*params_si.b.T_eV; %Target temperature in Kelvin\
-        offset = 10^6; %case with offset and change in Temperature
+        params_si.a.T_eV = 50;
+        params_si.a.vth = params_si.v_th(params_si.a.T_eV,params_si.a.m);
+        params_si.a.E_eV = 3e3; %case with offset and no change in Temperature
+        params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,params_si.a.v_beam,params_si.a.vth);
     case 2 
         m_e_cgs = 9.109*10^-28; %electron mass in g
         m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
@@ -138,10 +140,11 @@ switch opts.case_
         params_si.ln_delt = 15;
         E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(4*pi*params_si.eps0^2*params_si.a.m ... 
             *params_si.a.vth^2);
-        params_si.E = 10^-3*E_dreicer_si;
+        params_si.E = 10^-2*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
+        params_si.soln_v = @(v,p,t) solution_v(v,p,t);
         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
         %params.eps0 = 1/(4*pi);
 end
@@ -164,6 +167,13 @@ end
         ret(ix) = 0;
     end
 
+    function ret = solution_v(v,p,t)
+        ret = params_si.a.n/(pi^3/2.*params_si.v_th(params_si.b.T_eV,params_si.a.m).^3).*...
+            exp(-(v./params_si.v_th(params_si.b.T_eV,params_si.a.m)).^2);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
+    end
 maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
@@ -264,8 +274,7 @@ termE2 = MD_TERM(num_dims,{termE2_v,termE2_th});
 % dV_th = @(x,p,t,d) sin(x);
 
 %%
-% term3 is done using SLDG defining A(v)= sqrt(0.5*nu_par*v^2) and B(th) =
-% -1
+% termC1 is done using SLDG defining A(v)= sqrt(0.5*nu_par*v^2)
 %
 % eq1 :  df/dt == div(A(v) * q)        [pterm1: div (g(v)=A(v),+1, BCL=?, BCR=?)]
 % eq2 :      q == A(v) * grad(f)       [pterm2: grad(g(v)=A(v),-1, BCL=D, BCR=N)]
@@ -277,57 +286,76 @@ g1 = @(v,p,t,dat) v.*0 + 1;
 pterm1 = MASS(g1,'','',dV_th);
 termC1_th = SD_TERM({pterm1,pterm1});
 
-A = @(v,p) sqrt(0.5.*v.^2.*(p.nu_par(v,p.a,p.b)+ p.nu_par(v,p.a,p.b2)));
+A = @(v,p) v.*sqrt(0.5*(p.nu_par(v,p.a,p.b) + p.nu_par(v,p.a,p.b2)));
 g1 = @(v,p,t,dat) A(v,p);
 g2 = @(v,p,t,dat) A(v,p);
 
-pterm1 = DIV (num_dims,g1,'',+1,'N','D','','','',dV_v);
-pterm2 = GRAD(num_dims,g2,'',-1,'D','N','','','',dV_v);
-
+pterm1 = DIV (num_dims,g1,'',+1,'D','N','','','',dV_v);
+pterm2 = GRAD(num_dims,g2,'',-1,'N','D','','','',dV_v);
 termC1_v = SD_TERM({pterm1,pterm2});
-termC1 = MD_TERM(num_dims,{termC1_v,termC1_th});
+termC1   = MD_TERM(num_dims,{termC1_v,termC1_th});
 
-% term4 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
+% termC2 is a div using B(v) = v (m_a/(m_a + m_b))nu_s
 %
 % eq1 :  df/dt == div(B(v) * f)       [pterm1: div(g(p)=B(v),+1, BCL=?, BCR=?]
 
 dV_v = @(x,p,t,d) x.^2; 
 dV_th = @(x,p,t,d) sin(x);
 
-B = @(v,p) v*p.a.m.*(p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m) + p.nu_s(v,p.a,p.b2)./(p.a.m + p.b2.m));
-g3 = @(v,p,t,dat) B(v,p);
+A = @(v,p) v.*0 + 1;
+g1 = @(v,p,t,dat) A(v,p);
 
-pterm1 = DIV(num_dims,g3,'',-1,'N','D','','','',dV_v);
+pterm1 = MASS(g1,'','',dV_th);
 
-termC2_v = SD_TERM({pterm1});
-termC2   = MD_TERM(num_dims,{termC2_v,[]});
+termC2_th = SD_TERM({pterm1});
 
-% term5 is done combining mass and div defining C(v) = (nu_D(v)/2) 
+B = @(v,p) v.*p.a.m.*(p.nu_s(v,p.a,p.b)./(p.a.m + p.b.m) + p.nu_s(v,p.a,p.b2)./(p.a.m + p.b2.m));
+g2 = @(v,p,t,dat) B(v,p);
+
+pterm2 = DIV(num_dims,g2,'',-1,'N','D','','','',dV_v);
+
+term2_v = SD_TERM({pterm2});
+termC2   = MD_TERM(num_dims,{term2_v,termC2_th});
+
+% termC3 is done using SLDG defining C(v) = sqrt(nu_D(v)/2)
 %
-% eq1 :  df/dt == div( q)   [pterm1: div (g(v)=D(v),+1, BCL=D, BCR=D]
-% eq2 :      q ==  C(v) grad(f)  [pterm2: grad(g(v)=D(v),-1, BCL=N, BCR=N]
+% eq1 :  df/dt == div( q)   [pterm1: div (g(v)=C(v),+1, BCL=D, BCR=D]
+% eq2 :      q ==  grad(f)  [pterm2: grad(g(v)=C(v),-1, BCL=N, BCR=N]
+
 
 dV_v = @(x,p,t,d) x; %changing for MASS term
 dV_th = @(x,p,t,d) sin(x);
 
-C = @(v,p) sqrt((p.nu_D(v,p.a,p.b) + p.nu_D(v,p.a,p.b2))/2);
+C = @(v,p) v.*sqrt((p.nu_D(v,p.a,p.b) + p.nu_D(v,p.a,p.b2))/2);
 g4 = @(v,p,t,dat) C(v,p);
-pterm1 = MASS(g4,[],[],dV_v);
+pterm1 = MASS(g4,'','',dV_v);
 termC3_v = SD_TERM({pterm1,pterm1});
 
 D = @(v,p) v.*0 + 1;
 g5 = @(v,p,t,dat) D(v,p);
-pterm1 = DIV (num_dims,g5,'',+1,'D','N','','','',dV_th);
-pterm2 = GRAD(num_dims,g5,'',-1,'N','D','','','',dV_th);
+pterm1 = DIV (num_dims,g5,'',+1,'D','D','','','',dV_th);
+pterm2 = GRAD(num_dims,g5,'',-1,'N','N','','','',dV_th);
 termC3_th = SD_TERM({pterm1,pterm2});
 termC3   = MD_TERM(num_dims,{termC3_v,termC3_th});
 
-terms = {termC1,termC2,termC3};
+terms = {termE1a,termE1b,termE2,termC1,termC2,termC3};
 
 %% Define sources 
 
+    function res = my_alpha(x,p,t)
+%         disp(num2str(p.alpha_z(x)));
+        res = p.alpha_z(x);
+    end
+
 sources = {};
 
+switch opts.case_
+    case 3
+        source1_v = @(x,p,t,d) p.f0_v(x);
+        source1_z = @(x,p,t,d) my_alpha(x,p,t);
+        source1 = new_md_func(num_dims,{source1_v,source1_z});
+        sources = {source1};
+end
 %% Define function to set time step
     function dt=set_dt(pde,CFL)    
         Lmax = pde.dimensions{1}.max;

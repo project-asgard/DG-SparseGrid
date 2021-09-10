@@ -34,6 +34,7 @@ magn_field = mu0*n_turns*current_loop/(2*radius_loop); %magnetic field under cur
 vel_test = 500; %test value for velocity in coefficient
 pitch_test = pi/2 - 1e-6; %test value for pitch angle in coefficient
 advec_space_1D = vel_test*cos(pitch_test); %advection coefficient for 1D in space
+alpha_z = @(z) z.*0;
 coil_nloops  = [+5, +5]*1e3; %number of loops in each coil
 coil_radius  = [radius_loop, radius_loop]; %radii of coils
 coil_coords = [-1.5, 1.5]; %location of coils in physical space
@@ -113,6 +114,11 @@ dB_ds2 = @get_dBds;
 
 advec_time_1D = @(t) exp(-2*vel_test*cos(pitch_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
+
+f0_v = @f_init_v;
+    function res = f_init_v(x)
+        res = maxwell(x,0,a.vth);
+    end
 
 init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
 init_cond_z = @(z,p,t) z.*0 + 1;%gauss(z,a.z0,a.dz0,a);
