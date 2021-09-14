@@ -27,7 +27,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
           /(pde.params.b2.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
       spitzer_conduct2 = 4*pi*pde.params.eps0^2*(pde.params.a.m*pde.params.a.vth^2)^(3/2) ... 
           /(pde.params.a.m^(1/2)*pde.params.e^2*pde.params.ln_delt*pde.params.b2.Z);
-%      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
+      f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
       f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
       %getting energy density
       lev_vec = [opts.lev, opts.lev];
@@ -56,12 +56,12 @@ for j = 1:num_steps
 %    x_hint_t = @(t) -x_hint(t,pde.params.a.vel_vals(j),pde.params.a,pde.params.b);
      %e_hint = integral(x_hint_t, 0, outputs.time_array(j)); 
     %hint_func(j) = energy_vals(1)*exp(-e_hint);
-%      for i = 1:length(x)
-%          f1d_new(i) = sqrt(x_E(i))*f1d(i);
-%          f1d_analytic_new(i) = sqrt(x_E(i))*f1d_analytic(i);
-%      end
-     %loglog(x_E,f1d_new,'-','LineWidth', 3);
-     %hold on
+     for i = 1:length(x)
+          f1d_new(i) = fval_realspace(i);
+          f1d_analytic_new(i) = f1d_analytic(i);
+      end
+     loglog(x_E,f_data,'-','LineWidth', 3);
+     hold on
 end
       %formulating the Hinton solution
       timespan = [0 1e-3]; %time span in seconds
@@ -81,7 +81,7 @@ end
      %v_norm = x./pde.params.b.vth;
      %plot(v_norm,f_slice);
      %figure
-     plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
+     %plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
     % hold on
      %loglog(x_E,f1d_analytic_new, '-o');
      %semilogy(outputs.time_array,hint_func,'k');

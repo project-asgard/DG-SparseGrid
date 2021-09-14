@@ -81,6 +81,8 @@ maxwell = @(v,offset,vth) a.n/(pi^(3/2).*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x,y,a) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
+E_dreicer_si = 1;
+E = 10^-8*E_dreicer_si;
 
 % Vacuum magnetic field function:
 % Function based on simple current loops:

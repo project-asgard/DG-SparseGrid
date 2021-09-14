@@ -140,7 +140,7 @@ switch opts.case_
         params_si.ln_delt = 15;
         E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(4*pi*params_si.eps0^2*params_si.a.m ... 
             *params_si.a.vth^2);
-        params_si.E = 10^-2*E_dreicer_si;
+        params_si.E = 10^-1*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
@@ -354,7 +354,7 @@ switch opts.case_
         source1_v = @(x,p,t,d) p.f0_v(x);
         source1_z = @(x,p,t,d) my_alpha(x,p,t);
         source1 = new_md_func(num_dims,{source1_v,source1_z});
-        sources = {source1};
+        sources = {};
 end
 %% Define function to set time step
     function dt=set_dt(pde,CFL)    
