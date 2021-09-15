@@ -94,6 +94,24 @@ rel_err = err / norm(fval);
 verifyLessThan(testCase,rel_err,1e-5);
 end
 
+function mirror1_space_div_test(testCase)
+
+addpath(genpath(pwd));
+disp('Testing the spatial dimension within mirror1');
+% setup PDE
+args = {'lev',3,'deg',3,'dt',5e-7,'quiet',true,'num_steps',20,'timestep_method','matrix_exponential','normalize_by_mass',false};
+opts = OPTS(args);
+pde = mirror1_space_div(opts);
+
+% modify PDE - not needed here
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-5);
+
+end
+
 function mirror3_pitch_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the pitch dimension within mirror3');

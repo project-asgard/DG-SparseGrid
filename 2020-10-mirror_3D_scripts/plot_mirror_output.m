@@ -60,7 +60,7 @@ for j = 1:num_steps
           f1d_new(i) = fval_realspace(i);
           f1d_analytic_new(i) = f1d_analytic(i);
       end
-     loglog(x_E,f_data,'-','LineWidth', 3);
+     %loglog(x_E,f_data,'-','LineWidth', 3);
      hold on
 end
       %formulating the Hinton solution
@@ -81,7 +81,7 @@ end
      %v_norm = x./pde.params.b.vth;
      %plot(v_norm,f_slice);
      %figure
-     %plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
+     plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
     % hold on
      %loglog(x_E,f1d_analytic_new, '-o');
      %semilogy(outputs.time_array,hint_func,'k');

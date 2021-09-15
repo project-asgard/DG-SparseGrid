@@ -48,7 +48,7 @@ function pde = mirror2_velocity_div(opts)
 % eq2 :      q == C(v) * grad(f)  [pterm2: grad(g(v)=C(v),-1, BCL=N, BCR=N]
 % Run with
 %
-% asgard(@mirror2_velocity_div,'timestep_method','matrix_exponential','case',3, 'lev', 4, 'deg', 3,'num_steps', 60, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true)
+% asgard(@mirror2_velocity_div,'timestep_method','BE','case',3, 'grid_type','SG', 'lev', 3, 'deg', 3,'num_steps', 10, 'dt',5e-5, 'normalize_by_mass', true, 'calculate_mass', true,'save_output',true,'update_params_each_timestep', true)
 
 % Run with
 %
@@ -137,14 +137,16 @@ switch opts.case_
         params_si.a.vth = params_si.v_th(params_si.a.T_eV,params_si.a.m);
         params_si.b.vth = params_si.v_th(params_si.b.T_eV,params_si.b.m);
         params_si.b2.vth = params_si.v_th(params_si.b2.T_eV,params_si.b2.m);
-        params_si.ln_delt = 15;
-        E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(4*pi*params_si.eps0^2*params_si.a.m ... 
+        params_si.ln_delt = 27.0857;
+        E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(2*pi*params_si.eps0^2*params_si.a.m ... 
             *params_si.a.vth^2);
-        params_si.E = 10^-1*E_dreicer_si;
+        frac = 0.3;
+        params_si.E = frac*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
         params_si.soln_v = @(v,p,t) solution_v(v,p,t);
+        params_si.f0_v = @(v) params_si.maxwell(v,0,params_si.a.vth);
         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
         %params.eps0 = 1/(4*pi);
 end
@@ -216,7 +218,7 @@ BCR = new_md_func(num_dims,{...
 
 %% Define the terms of the PDE
 
-% term1 is done combining mass and div defining F(th) = (ZeE/m cos(th)) and
+% termE1a is done combining mass and div defining F(th) = (ZeE/m cos(th)) and
 % G(v) = 1
 %
 % eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
@@ -235,7 +237,7 @@ pterm1 = DIV(num_dims,g2,'',+1,'D','N',BCL,'','',dV_v);
 termE1_v = SD_TERM({pterm1});
 termE1a = MD_TERM(num_dims,{termE1_v,termE1_th});
 
-%term1b is the same form as term1 but accounting for the flow in the
+%termE1b is the same form as term1 but accounting for the flow in the
 %opposite direction
 
 F = @(x,p) cos(x);
@@ -249,7 +251,7 @@ pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
 termE1_v = SD_TERM({pterm1});
 termE1b = MD_TERM(num_dims,{termE1_v,termE1_th});
 
-% term2 is a simple div term, defining K(th) = ZeE/m sin(th)
+% termE2 is a simple div term, defining K(th) = ZeE/m sin(th)
 %
 % eq1 : df/dt == div(K(th) f)     [pterm1:div(g(th)=K(th),-1, BCL=N,BCR=N)]
 
@@ -354,7 +356,7 @@ switch opts.case_
         source1_v = @(x,p,t,d) p.f0_v(x);
         source1_z = @(x,p,t,d) my_alpha(x,p,t);
         source1 = new_md_func(num_dims,{source1_v,source1_z});
-        sources = {};
+        sources = {source1};
 end
 %% Define function to set time step
     function dt=set_dt(pde,CFL)    

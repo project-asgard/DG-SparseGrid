@@ -118,8 +118,8 @@ advec_time_1D = @(t) exp(-2*vel_test*cos(pitch_test)*t);
 uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
 
 f0_v = @f_init_v;
-    function res = f_init_v(x)
-        res = maxwell(x,0,a.vth);
+    function res = f_init_v(v)
+        res = gauss(v,a.v_beam,a.vth,a);
     end
 
 init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
