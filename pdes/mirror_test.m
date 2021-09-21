@@ -5,6 +5,22 @@ tests = functiontests(fh);
 
 end
 
+function mirror1_pitch_div_test(testCase)
+addpath(genpath(pwd));
+disp('Testing the pitch angle dimension within mirror1');
+% setup PDE
+args = {'lev',5,'deg',4,'dt',5e-7,'quiet',true,'num_steps',10,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
+opts = OPTS(args);
+pde = mirror1_pitch_div(opts);
+num_dims = numel(pde.dimensions);
+% modify PDE
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-5);
+end
+
 function mirror1_collision_div_sameTemp_test(testCase)
 addpath(genpath(pwd));
 disp('Testing the collision operator within mirror1');
