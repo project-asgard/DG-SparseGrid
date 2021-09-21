@@ -11,17 +11,19 @@ function pde = mirror1_space_div(opts)
 % implicit
 % asgard(@mirror1_space_div,'timestep_method','BE', 'calculate_mass', true, 'normalize_by_mass', true)
 
-B_func = @(s) exp(s); %magnetic field as a function of spatial coordinate
-dB_ds = @(s) B_func(s); %derivative of magnetic field
+params = mirror_parameters();
 
-vel_test = 1; %test value for velocity in coefficient
-pitch_test = pi/4; %test value for pitch angle in coefficient
-decay_coeff = vel_test*cos(pitch_test);
+params.B_func = @(s) exp(s); %magnetic field as a function of spatial coordinate
+params.dB_ds = @(s) params.B_func(s); %derivative of magnetic field
+
+params.vel_test = 1; %test value for velocity in coefficient
+params.pitch_test = pi/4; %test value for pitch angle in coefficient
+decay_coeff = @(v,z) v.*cos(z);
 
 %% Define the dimensions
 
 dim_s = DIMENSION(-3,3);
-dV_s = @(x,p,t,d) B_func(x); 
+dV_s = @(x,p,t,d) params.B_func(x); 
 dim_s.moment_dV = dV_s;
 dimensions = {dim_s};
 num_dims = numel(dimensions);
@@ -29,7 +31,7 @@ num_dims = numel(dimensions);
 %% Define the analytic solution
 
 sol_s = @(s,p,t) exp(s);
-sol_t = @(t,p) exp(-2*decay_coeff*t);
+sol_t = @(t,p) exp(-2*decay_coeff(params.vel_test,params.pitch_test).*t);
 soln1 = new_md_func(num_dims,{sol_s,sol_t});
 solutions = {soln1};
 
@@ -50,24 +52,36 @@ BCR = soln1;
 
 %% Advection  term
 % -B(s)*d(vtest*cos(ztest)f)/ds
-g1 = @(s,p,t,dat) s.*0 - decay_coeff;
+g1 = @(s,p,t,dat) s.*0 - decay_coeff(p.vel_test,p.pitch_test)*(p.pitch_test > pi/2);
 pterm1 = DIV(num_dims,g1,'',-1,'D','D','','','', dV_s);
 %pterm1 = GRAD(num_dims,g1,-1,'N','N');
-term1_s = SD_TERM({pterm1});
-term1   = MD_TERM(num_dims,{term1_s});
+term1a_s = SD_TERM({pterm1});
+term1a   = MD_TERM(num_dims,{term1a_s});
+
+g1 = @(s,p,t,dat) s.*0 - decay_coeff(p.vel_test,p.pitch_test)*(p.pitch_test < pi/2);
+pterm1 = DIV(num_dims,g1,'',+1,'D','D','','','', dV_s);
+%pterm1 = GRAD(num_dims,g1,-1,'N','N');
+term1b_s = SD_TERM({pterm1});
+term1b   = MD_TERM(num_dims,{term1b_s});
 
 %%
 % Add terms to the pde object
 
 %% Mass term
 % B(s)*(vcosz/B)dB/ds f
-g2 = @(s,p,t,dat) s.*0 - decay_coeff.*dB_ds(s)./B_func(s);
+g2 = @(s,p,t,dat) s.*0 - decay_coeff(p.vel_test,p.pitch_test).*(p.dB_ds(s)./p.B_func(s)).*(p.pitch_test < pi/2).*(p.B_func(s) > 0);
 pterm1   = MASS(g2,'','',dV_s);
-termB1 = SD_TERM({pterm1});
+termB1a = SD_TERM({pterm1});
 
-term2 = MD_TERM(num_dims,{termB1});
+term2a = MD_TERM(num_dims,{termB1a});
 
-terms = {term1,term2};
+g2 = @(s,p,t,dat) s.*0 - decay_coeff(p.vel_test,p.pitch_test).*(p.dB_ds(s)./p.B_func(s)).*(p.pitch_test > pi/2).*(p.B_func(s) < 0);
+pterm1   = MASS(g2,'','',dV_s);
+termB1b = SD_TERM({pterm1});
+
+term2b = MD_TERM(num_dims,{termB1b});
+
+terms = {term1a,term1b,term2a,term2b};
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.

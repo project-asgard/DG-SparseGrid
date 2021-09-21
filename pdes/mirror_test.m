@@ -196,6 +196,26 @@ rel_err = err / norm(fval);
 verifyLessThan(testCase,rel_err,1e-5);
 end
 
+
+function mirror1_space_diffSign_test(testCase)
+addpath(genpath(pwd));
+disp('Testing the 1D spatial dimension by changing the sign through the pitch angle');
+% setup PDE
+args = {'lev',5,'deg',5,'dt',1e-6,'quiet',true,'num_steps',5,'timestep_method','matrix_exponential','normalize_by_mass',true, 'calculate_mass', true};
+opts = OPTS(args);
+pde = mirror1_space_div(opts);
+
+pde.params.pitch_test = 3*pi/4;
+% num_dims = numel(pde.dimensions);
+% ic1 = new_md_func(num_dims,{pde.sol_s});
+% pde.initial_conditions = {ic1};
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = err / norm(fval);
+verifyLessThan(testCase,rel_err,1e-5);
+end
+
 % function mirror3_velocity_test(testCase)
 % 
 % addpath(genpath(pwd));
