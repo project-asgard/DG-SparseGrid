@@ -73,7 +73,7 @@ end
      %x = x./x0;
      %hold on
      %plot(t,E,'r','LineWidth', 2);
-     %plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
+     plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
      %figure
      %plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
      %hold off
@@ -127,18 +127,18 @@ end
 %     moment_func_nD = {energy_func,par_func,space_func};
 %    % v_par_temp = moment_integral(pde.get_lev_vec,deg,coord,f_nD,moment_func_nD,pde.dimensions,subset_dimensions);
 %     %%
-%     % Plot a 1D line through the solution
-%     for i = 1:nx
-%         for j = 1:ny
-%             v_par(i,j) = x(i).*cos(y(j));
-%             v_perp(i,j) = x(i).*sin(y(j));
-%         end
-%     end
+    % Plot a 1D line through the solution
+    for i = 1:nx
+        for j = 1:ny
+            v_par(i,j) = x(i).*cos(y(j));
+            v_perp(i,j) = x(i).*sin(y(j));
+        end
+    end
 %     
 %     sz = numel(f_nD{1,1}(:,1,1))/2 + 1;
 
     
-    %contourf(v_par,v_perp,f_nD{1,1}(:,:,sx));
+    contourf(v_par,v_perp,outputs.f_realspace_nD_t{1,num_steps}(:,sx));
 %     hold on
 %     plot(z,v_perp_temp, 'r');
 %     plot(z,v_par_temp, 'b');

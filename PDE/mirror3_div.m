@@ -2,9 +2,10 @@ function pde = mirror3_div(opts)
 % Three-dimensional magnetic mirror from the FP paper - evolution of the ion velocity and spatial dependence
 % of f in the presence of Coulomb collisions with background electrons
 % 
-% df/dt == -1/v^2 d(v^2 ZeE/m cos(th) f)/dv + 1/(vsin(th)) d(sin(th) ZeE/m sin(th) f)/dth 
+% df/dt == -1/v^2 d(v^2 ZeE/m cos(th) f)/dv  - 1/(vsin(th)) d/dth (sin(th) v^2 sin(th)/2B dBd/s f_a)
+%            + 1/(vsin(th)) d(sin(th) ZeE/m sin(th) f)/dth 
 %           -vcos(z)df/ds + vcos(z)f dB/ds/B + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) + 
-%          1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
+%            1/v^2 (d/dv(v^3[(m_a/(m_a + m_b))nu_s f) + 0.5*nu_par*v*d/dv(f)]))
 %
 % Run with
 %

@@ -87,7 +87,7 @@ switch opts.case_
         params_si.b.Z = params_cgs.b.Z;
         params_si.b2.Z = params_cgs.b2.Z;
         params_si.a.n = 5e19;
-        params_si.a.T_eV = 1000;
+        params_si.a.T_eV = 5111;
         params_si.ln_delt = 20;
         params_si.a.vth = params_si.v_th(params_si.a.T_eV,params_si.a.m)/sqrt(2);
         params_si.b.vth = params_si.v_th(params_si.b.T_eV,params_si.b.m)/sqrt(2);
@@ -131,7 +131,7 @@ switch opts.case_
         params_si.b2.Z = params_cgs.b2.Z;
         %params_si.E = 2.9979*10^4*params_cgs.E; %converting to V/m
         params_si.a.E_eV = 1000;
-        params_si.a.T_eV = 2/3*params_si.a.E_eV;
+        params_si.a.T_eV = 5111;
         params_si.b.T_eV = params_si.a.T_eV;
         params_si.b2.T_eV = params_si.a.T_eV;
         params_si.a.vth = params_si.v_th(params_si.a.T_eV,params_si.a.m);
@@ -140,7 +140,7 @@ switch opts.case_
         params_si.ln_delt = 27.0857;
         E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(2*pi*params_si.eps0^2*params_si.a.m ... 
             *params_si.a.vth^2);
-        frac = 0.3;
+        frac = 0.05;
         params_si.E = frac*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
@@ -340,7 +340,7 @@ pterm2 = GRAD(num_dims,g5,'',-1,'N','N','','','',dV_th);
 termC3_th = SD_TERM({pterm1,pterm2});
 termC3   = MD_TERM(num_dims,{termC3_v,termC3_th});
 
-terms = {termE1a,termE1b,termE2,termC1,termC2,termC3};
+terms = {termC1,termC2,termC3};
 
 %% Define sources 
 
@@ -356,7 +356,7 @@ switch opts.case_
         source1_v = @(x,p,t,d) p.f0_v(x);
         source1_z = @(x,p,t,d) my_alpha(x,p,t);
         source1 = new_md_func(num_dims,{source1_v,source1_z});
-        sources = {source1};
+        sources = {};
 end
 %% Define function to set time step
     function dt=set_dt(pde,CFL)    
