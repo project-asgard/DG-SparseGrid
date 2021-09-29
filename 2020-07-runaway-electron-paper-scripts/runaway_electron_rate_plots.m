@@ -10,7 +10,6 @@ set(groot,'defaultLineLineWidth',2.0)
 set(groot,'defaultAxesFontSize',20)
 set(groot,'defaultLegendFontSize',20)
 
-
 cgs.e = 4.803e-10;
 cgs.m_e = 9.109e-28;
 cgs.c = 2.997e10;
@@ -137,9 +136,8 @@ CH_normfac_nr = 1/(connor_hastie_nr(0.1*cgs.E_D,1)/kulsrud_Z1(end));
 CH_normfac_r = CH_normfac_nr;
 KB_normfac = 1/(kruskal_bernstein(0.1)/kulsrud_Z1(end));
 
-
 % Scan over E/E_D ratio
-do_E_scan = true;
+do_E_scan = false;
 if do_E_scan
     figure
     semilogy(ratio,kruskal_bernstein(ratio)*KB_normfac,'LineWidth',10,'Color','#E8E7E7','DisplayName','K-B (nr)');
@@ -152,7 +150,6 @@ if do_E_scan
     semilogy(kulsrud_E1,kulsrud_Z1,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=1)','color','red');
     semilogy(kulsrud_E2,kulsrud_Z2,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=2)','color','green');
     semilogy(kulsrud_E10,kulsrud_Z10,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=10)','color','blue');
-    %     legend('K-B','C-H (nr)','C-H (r)','Kulsrud (Z=1)','Kulsrud (Z=2)','Kulsrud (Z=10)','ASGarD');
     legend
     
     N2 = 15;
@@ -195,7 +192,7 @@ if do_E_scan
         end
     end
     
-    norm_fac = kulsrud_Z1(end)/alpha_nr(N2,1);    
+    norm_fac = kulsrud_Z1(end)/alpha_nr(N2,1);
     disp(['norm_fac: ',num2str(norm_fac)]);
     hold on
     semilogy(ratio2,alpha_nr(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=1)','color','red');
@@ -207,6 +204,261 @@ if do_E_scan
     semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color','blue','LineStyle',':');
     legend
     hold off
+end
+
+% Compare DoF required for given accuracy in alpha
+
+do_dof_scan = true;
+if do_dof_scan
+    
+    args.p_max = 10;
+    args.v_th = norm.v_th;
+    args.nu_ee = norm.nu_ee;
+    args.tau = norm.tau;
+    args.n = norm.n;
+    args.delta = 0;
+    num_steps = 20;
+    
+    E = [0.1,0.07,0.055];
+    E_string = {'010','007','0055'};
+    
+    for i=1:numel(E)
+        args.E = E(i);
+        dt = 2./args.E.^2/num_steps;
+        deg = 4;
+        lev = 4;
+        if E(i)<0.06
+            lev=4;
+        end
+        lev_str = num2str(lev)
+        
+        % Set this to produce the fullgrid (FG) results - these take
+        % considerable time.
+        do_FG = false;
+        if do_FG
+            [~,~,~,~,~,output_FG_deg4] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            save(['output_FG_E',E_string{i},'_deg4_lev',lev_str','.mat'],'output_FG_deg4');
+            clear output_FG_deg4;
+            
+            [~,~,~,~,~,output_FG_deg5] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',5,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            save(['output_FG_E',E_string{i},'_deg5_lev',lev_str','.mat'],'output_FG_deg5');
+            clear output_FG_deg5;
+                       
+            [~,~,~,~,~,output_FG_deg6] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            save(['output_FG_E',E_string{i},'_deg6_lev',lev_str','.mat'],'output_FG_deg6');
+            clear output_FG_deg6;
+            
+            [~,~,~,~,~,output_FG_deg7] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',7,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            save(['output_FG_E',E_string{i},'_deg7_lev',lev_str','.mat'],'output_FG_deg7');
+            clear output_FG_deg7;
+        end
+        
+        % Set this to produce the sparsegrid (SG) and adaptive (ASG)
+        % results.
+        do_SG = true;
+        if do_SG
+            [~,~,~,~,~,output_SG] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_SG_deg6] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_1em0] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e0,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em1] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-1,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em2] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-2,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em3] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-3,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em4] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-4,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em5] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-5,'output_grid','fixed','adapt_initial_condition',true);
+       
+            alpha_SG(i,:) = cell2mat(output_SG.alpha_t);
+            alpha_SG_deg6(i,:) = cell2mat(output_SG_deg6.alpha_t);
+            alpha_1em0(i,:) = cell2mat(output_1em0.alpha_t);
+            alpha_1em1(i,:) = cell2mat(output_1em1.alpha_t);
+            alpha_1em2(i,:) = cell2mat(output_1em2.alpha_t);
+            alpha_1em3(i,:) = cell2mat(output_1em3.alpha_t);
+            alpha_1em4(i,:) = cell2mat(output_1em4.alpha_t);
+            alpha_1em5(i,:) = cell2mat(output_1em5.alpha_t);
+            
+            dof_SG(i) = numel(output_SG.fval_t{end});
+            dof_SG_deg6(i) = numel(output_SG_deg6.fval_t{end});
+            dof_1em0(i) = numel(output_1em0.fval_t{end});
+            dof_1em1(i) = numel(output_1em1.fval_t{end});
+            dof_1em2(i) = numel(output_1em2.fval_t{end});
+            dof_1em3(i) = numel(output_1em3.fval_t{end});
+            dof_1em4(i) = numel(output_1em4.fval_t{end});
+            dof_1em5(i) = numel(output_1em5.fval_t{end});
+
+        end
+    end
+    
+    set(groot,'defaultLineLineWidth',2.0)
+    set(groot,'defaultAxesFontSize',20)
+    set(groot,'defaultLegendFontSize',14)
+    ms = 12;
+    lw = 2;
+    
+    % Plot the convergence of the FG results to set the "correct" answer to
+    % which the SG and ASG results need to converge to.
+    plot_FG_convergence = false;
+    if plot_FG_convergence
+        load('output_FG_E010_deg4_lev4.mat');
+        output_FG_E010_deg4_lev4 = output_FG_deg4_lev4;
+        load('output_FG_E010_deg5_lev4.mat');
+        output_FG_E010_deg5_lev4 = output_FG_deg5_lev4;
+        load('output_FG_E010_deg6_lev4.mat');
+        output_FG_E010_deg6_lev4 = output_FG_deg6_lev4;
+        
+        load('output_FG_E007_deg4_lev4.mat');
+        output_FG_E007_deg4_lev4 = output_FG_deg4_lev4;
+        load('output_FG_E007_deg5_lev4.mat');
+        output_FG_E007_deg5_lev4 = output_FG_deg5_lev4;
+        load('output_FG_E007_deg6_lev4.mat');
+        output_FG_E007_deg6_lev4 = output_FG_deg6_lev4;
+        load('output_FG_E007_deg7_lev4.mat');
+        output_FG_E007_deg7_lev4 = output_FG_deg7;
+        
+        load('output_FG_E0055_deg4_lev5.mat');
+        output_FG_E0055_deg4_lev5 = output_FG_deg4;
+        load('output_FG_E0055_deg5_lev5.mat');
+        output_FG_E0055_deg5_lev5 = output_FG_deg5;
+        
+        load('output_FG_E0055_deg4_lev4.mat');
+        output_FG_E0055_deg4_lev4 = output_FG_deg4;
+        load('output_FG_E0055_deg5_lev4.mat');
+        output_FG_E0055_deg5_lev4 = output_FG_deg5;
+        load('output_FG_E0055_deg6_lev4.mat');
+        output_FG_E0055_deg6_lev4 = output_FG_deg6;
+        load('output_FG_E0055_deg7_lev4.mat');
+        output_FG_E0055_deg7_lev4 = output_FG_deg7;
+        
+        
+        figure('Position',[0 0 600 600])
+        dof = numel(output_FG_E010_deg4_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E010_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5','LineStyle','-.');
+        xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
+        ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
+        title('Full Grid (FG) Convergence of $\alpha$','Interpreter','latex');
+        hold on
+        dof = numel(output_FG_E010_deg5_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E010_deg5_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=5,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5','LineStyle','--');
+        dof = numel(output_FG_E010_deg6_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E010_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5');
+        
+        dof = numel(output_FG_E007_deg4_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E007_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle','-.');
+        dof = numel(output_FG_E007_deg5_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E007_deg5_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=5,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle','--');
+        dof = numel(output_FG_E007_deg6_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E007_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle',':');
+        dof = numel(output_FG_E007_deg7_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E007_deg7_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=7,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E');
+        
+        dof = numel(output_FG_E0055_deg4_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839','LineStyle','-.');
+        dof = numel(output_FG_E0055_deg5_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg5_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=5,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839','LineStyle','--');
+        dof = numel(output_FG_E0055_deg6_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839','LineStyle',':');
+        dof = numel(output_FG_E0055_deg7_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg7_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=7,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839');
+        
+%         dof = numel(output_FG_E0055_deg4_lev5.fval_t{end});
+%         semilogy(cell2mat(output_FG_E0055_deg4_lev5.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=4,lev=5), DoF=',num2str(dof)],'LineWidth',4,'Color','#A569BD','LineStyle','-.');
+        dof = numel(output_FG_E0055_deg5_lev5.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg5_lev5.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=5,lev=5), DoF=',num2str(dof)],'LineWidth',4,'Color','#A569BD','LineStyle',':');
+        
+        legend('FontSize',10)
+        ylim([10^-8 10^-1])
+         
+        legend
+        hold off
+        
+    end
+    
+    plot_SG = true;
+    if plot_SG
+        if ~exist('output_FG_E010_deg4_lev4')
+            load('output_FG_E010_deg4_lev4.mat');
+            output_FG_E010_deg4_lev4 = output_FG_deg4_lev4;
+            load('output_FG_E007_deg4_lev4.mat');
+            output_FG_E007_deg4_lev4 = output_FG_deg4_lev4;
+            load('output_FG_E007_deg6_lev4.mat');
+            output_FG_E007_deg6_lev4 = output_FG_deg6_lev4;
+            load('output_FG_E0055_deg4_lev4.mat');
+            output_FG_E0055_deg4_lev4 = output_FG_deg4;
+            load('output_FG_E0055_deg6_lev4.mat');
+            output_FG_E0055_deg6_lev4 = output_FG_deg6;
+        end
+        lw=2;
+        ms=12;
+        figure('Position',[0 0 600 600])
+        dof = numel(output_FG_E010_deg4_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E010_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5');
+        xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
+        ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
+        title('Sparse Grid (SG) Convergence of $\alpha$','Interpreter','latex');
+        hold on
+        dof = numel(output_FG_E007_deg4_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E007_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle','--');
+        dof = numel(output_FG_E007_deg6_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E007_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E');
+        dof = numel(output_FG_E0055_deg4_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#A569BD','LineStyle','--');
+        dof = numel(output_FG_E0055_deg6_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#A569BD');
+
+        semilogy(alpha_SG(1,:),'DisplayName',['SG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof_SG(1))],'Color','black','Marker','s','Color','#3D67F5','MarkerSize',ms,'LineStyle','none');
+        semilogy(alpha_SG(2,:),'DisplayName',['SG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof_SG(2))],'Color','black','Marker','s','Color','#52A95E','MarkerSize',ms,'LineStyle','none');
+        semilogy(alpha_SG(3,:),'DisplayName',['SG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof_SG(3))],'Color','black','Marker','s','Color','#A569BD','MarkerSize',ms,'LineStyle','none');
+        semilogy(alpha_SG_deg6(2,:),'DisplayName',['SG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof_SG_deg6(2))],'Color','black','Marker','o','Color','#52A95E','MarkerSize',ms,'LineStyle','none');
+        semilogy(alpha_SG_deg6(3,:),'DisplayName',['SG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof_SG_deg6(3))],'Color','black','Marker','o','Color','#A569BD','MarkerSize',ms,'LineStyle','none');
+        legend('FontSize',10)
+        ylim([10^-8 10^-1])
+        legend
+        hold off
+    end
+    
+    plot_ASG = true;
+    if plot_ASG
+        if ~exist('output_FG_E010_deg4_lev4')
+            load('output_FG_E010_deg4_lev4.mat');
+            output_FG_E010_deg4_lev4 = output_FG_deg4_lev4;
+            load('output_FG_E007_deg6_lev4.mat');
+            output_FG_E007_deg6_lev4 = output_FG_deg6_lev4;
+            load('output_FG_E0055_deg6_lev4.mat');
+            output_FG_E0055_deg6_lev4 = output_FG_deg6;
+        end
+        figure('Position',[0 0 600 600])
+        dof = numel(output_FG_E010_deg4_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E010_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5');
+        xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
+        ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
+        title('Adaptive Sparse Grid (ASG) Convergence of $\alpha$','Interpreter','latex');
+        hold on        
+        dof = numel(output_FG_E007_deg6_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E007_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E');
+        dof = numel(output_FG_E0055_deg6_lev4.fval_t{end});
+        semilogy(cell2mat(output_FG_E0055_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#A569BD');        
+        
+        semilogy(alpha_SG(1,:),'DisplayName',['SG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof_SG(1))],'Color','#3D67F5','LineStyle','--');
+%         semilogy(alpha_1em1(1,:),'DisplayName',['ASG 1e-1 (E/E_D=0.1,deg=4), DoF=',num2str(dof_1em1(1))],'Marker','s','Color','#3D67F5','MarkerSize',ms,'LineStyle',':');
+%         semilogy(alpha_1em2(1,:),'DisplayName',['1e-2 (E/E_D=0.1), DoF=',num2str(dof_1em2(1))],'Marker','o','Color','#3D67F5','MarkerSize',ms);
+        semilogy(alpha_1em3(1,:),'DisplayName',['ASG 1e-3 (E/E_D=0.1,deg=4), DoF=',num2str(dof_1em3(1))],'Marker','d','Color','#3D67F5','MarkerSize',ms);
+%         semilogy(alpha_1em4(1,:),'DisplayName',['1e-4 (E/E_D=0.1), DoF=',num2str(dof_1em4(1))],'Marker','*','Color','#3D67F5','MarkerSize',ms);
+        
+        semilogy(alpha_SG(2,:),'DisplayName',['SG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof_SG(2))],'Color','#52A95E','LineStyle','--');
+%         semilogy(alpha_1em1(2,:),'DisplayName',['ASG 1e-1 (E/E_D=0.07,deg=4), DoF=',num2str(dof_1em1(2))],'Marker','s','Color','#52A95E','MarkerSize',ms,'LineStyle',':');
+%         semilogy(alpha_1em2(2,:),'DisplayName',['1e-2 (E/E_D=0.07), DoF=',num2str(dof_1em2(2))],'Marker','o','Color','#52A95E','MarkerSize',ms);
+%         semilogy(alpha_1em3(2,:),'DisplayName',['1e-3 (E/E_D=0.07), DoF=',num2str(dof_1em3(2))],'Marker','d','Color','#52A95E','MarkerSize',ms);
+        semilogy(alpha_1em4(2,:),'DisplayName',['ASG 1e-4 (E/E_D=0.07,deg=4), DoF=',num2str(dof_1em4(2))],'Marker','*','Color','#52A95E','MarkerSize',ms);
+        
+        semilogy(alpha_SG(3,:),'DisplayName',['SG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof_SG(3))],'Color','#A569BD','LineStyle','--');
+%         semilogy(alpha_1em1(3,:),'DisplayName',['ASG 1e-1 (E/E_D=0.055,deg=4), DoF=',num2str(dof_1em1(3))],'Marker','s','Color','#A569BD','MarkerSize',ms,'LineStyle',':');
+%         semilogy(alpha_1em2(3,:),'DisplayName',['1e-2 (E/E_D=0.055), DoF=',num2str(dof_1em2(3))],'Marker','o','Color','#A569BD','MarkerSize',ms);
+%         semilogy(alpha_1em3(3,:),'DisplayName',['1e-3 (E/E_D=0.055), DoF=',num2str(dof_1em3(3))],'Marker','d','Color','#A569BD','MarkerSize',ms);
+        semilogy(alpha_1em4(3,:),'DisplayName',['ASG 1e-4 (E/E_D=0.055,deg=4), DoF=',num2str(dof_1em4(3))],'Marker','*','Color','#A569BD','MarkerSize',ms);
+%         semilogy(alpha_1em5(3,:),'DisplayName',['1e-5 (E/E_D=0.055), DoF=',num2str(dof_1em5(3))],'Marker','s','Color','#A569BD','MarkerSize',ms);
+        legend('FontSize',10)
+        ylim([10^-8 10^-1])  
+        hold off
+    end
+    
 end
 
 

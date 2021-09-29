@@ -75,7 +75,11 @@ end
 
 for d=1:num_dims
     if strcmp(opts.output_grid,'fixed')
-        num_fixed_grid = 51;
+        if d==1
+            num_fixed_grid = 51;
+        else
+            num_fixed_grid = 21;
+        end
         nodes_nodups{d} = ...
             linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
         [Meval{d},nodes{d},nodes_count{d}] = ...
@@ -525,7 +529,7 @@ for L = 1:opts.num_steps
        
         f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
 %       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
-        alpha_z = @(z) (pde.params.f0_p(nodes{1}(1))-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
+        alpha_z = @(z) (pde.params.f0_p(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_p0,z,'spline','extrap'))/dt;
         pde.params.alpha_z = alpha_z;
         z = linspace(-1,1,100);
         outputs.alpha_t0{L+1} = alpha_z;

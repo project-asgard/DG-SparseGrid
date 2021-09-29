@@ -156,7 +156,7 @@ dV_z = @(x,p,t,dat) sqrt(1-x.^2);
 
 % MASS in p
 
-g1 = @(x,p,t,dat) min(sqrt(p.Cb(x))./x,1e7); %Limiting so we don't get 0/0.
+g1 = @(x,p,t,dat) sqrt(p.Cb(x));
 pterm1  = MASS(g1,'','',dV_p);
 term3_p = SD_TERM({pterm1,pterm1});
 

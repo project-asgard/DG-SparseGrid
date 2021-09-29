@@ -27,7 +27,7 @@ for i=0:n-1
     
     % Get the function foo(x) at the quadrature points.
     
-    fxHere = foo(x, params, t).*dV(x);  
+    fxHere = foo(x, params, t) .* dV(x);  
     
     this_quad = (quad_w .* fxHere);
        

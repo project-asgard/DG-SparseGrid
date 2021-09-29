@@ -112,7 +112,7 @@ if coarsen
         % and is labeled as a leaf
         
         if element_max <= coarsen_threshold ...
-                && min(hash_table.elements.lev_p1(idx,:)>=2) % level must be >= 1 at present
+                && min(hash_table.elements.lev_p1(idx,:)>=1) % level must be >= 0 at present
             %&& hash_table.elements.type(idx) == 2
             
             %%
@@ -441,7 +441,11 @@ A_data = global_matrix(pde,opts,hash_table);
 
 for d=1:num_dims
     if strcmp(opts.output_grid,'fixed')
-        num_fixed_grid = 51;
+        if d==1
+            num_fixed_grid = 51;
+        else
+            num_fixed_grid = 21;
+        end
         nodes_nodups{d} = ...
             linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
         [Meval{d},nodes{d},nodes_count{d}] = ...
@@ -493,7 +497,7 @@ if ~opts.quiet
         subplot(4,3,4)
         f2d = singleD_to_multiD(num_dims,fval_realspace0,nodes0);
         if strcmp(opts.output_grid,'fixed')
-            f2d = remove_duplicates(num_dims,f2d,nodes_nodups,nodes_count);
+            f2d = remove_duplicates(num_dims,f2d,nodes_nodups0,nodes_count0);
         end
         x = nodes_nodups0{1};
         y = nodes_nodups0{2};
