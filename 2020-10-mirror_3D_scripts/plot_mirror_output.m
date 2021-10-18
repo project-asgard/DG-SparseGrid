@@ -24,7 +24,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       x_E = 0.5.*params.a.m*x.^2/params.e;
       num_steps = length(outputs.time_array);
       spitzer_conduct = (3/(4*sqrt(2*pi)))*(4*pi*pde.params.eps0)^2*(1.38e-23*pde.params.a.T_eV*11604)^(3/2)...
-          /(pde.params.b2.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
+          /(pde.params.b.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
       spitzer_conduct2 = 4*pi*pde.params.eps0^2*(pde.params.a.m*pde.params.a.vth^2)^(3/2) ... 
           /(pde.params.a.m^(1/2)*pde.params.e^2*pde.params.ln_delt*pde.params.b2.Z);
       f1d_analytic = outputs.f_realspace_analytic_nD_t{1,num_steps};
@@ -73,7 +73,7 @@ end
      %x = x./x0;
      %hold on
      %plot(t,E,'r','LineWidth', 2);
-     plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
+     %plot(outputs.time_array,energy_vals,'-o','LineWidth',1);
      %figure
      %plot(outputs.time_array,mass_vals,'-o','LineWidth',2);
      %hold off
@@ -138,7 +138,7 @@ end
 %     sz = numel(f_nD{1,1}(:,1,1))/2 + 1;
 
     
-    contourf(v_par,v_perp,outputs.f_realspace_nD_t{1,num_steps}(:,sx));
+%    contourf(v_par,v_perp,outputs.f_realspace_nD_t{1,num_steps}(:,sx));
 %     hold on
 %     plot(z,v_perp_temp, 'r');
 %     plot(z,v_par_temp, 'b');

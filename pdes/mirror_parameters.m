@@ -119,7 +119,9 @@ uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
 
 f0_v = @f_init_v;
     function res = f_init_v(v)
-        res = gauss(v,a.v_beam,a.vth,a);
+        res = zeros(size(v));
+        res = maxwell(v,a.v_beam,a.vth);
+        %res = gauss(v,a.v_beam,a.vth,a);
     end
 
 init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
