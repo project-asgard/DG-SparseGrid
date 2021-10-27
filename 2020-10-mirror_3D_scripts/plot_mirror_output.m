@@ -1,6 +1,26 @@
 function plot_mirror_output(nodes, outputs, pde, opts)
 
-      params = mirror_parameters();
+      n_cgs = 8e14; %equilibrium density in cm.^-3
+      m_e_cgs = 9.109*10^-28; %electron mass in g
+      m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
+      m_He_cgs = 6.7*10^-24; %helium 4 mass in g
+      m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
+      m_Ne_cgs = 3.3509177*10^-23; %Neon mass in g
+      temp_cgs = 1.6022e-10; %temperature in erg
+      params_cgs.a.n = n_cgs;
+      params_cgs.b.n = n_cgs;
+      params_cgs.b2.n = n_cgs;
+      %         params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
+      %         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
+      params_cgs.a.m = m_e_cgs; %beam is electrons
+      params_cgs.b.m = m_D_cgs; %background ions
+      params_cgs.b2.m = m_e_cgs; %background electrons
+      params_cgs.e = 4.803*10^-10; %charge in Fr
+      params_cgs.c = 3*10^10; %speed of light in cm/s
+      params_cgs.a.theta = pde.params.a.T_eV/(params_cgs.a.m*params_cgs.c^2);
+      nu_ee = 4*pi*params_cgs.a.n.*params_cgs.e.^4*pde.params.ln_delt/(params_cgs.a.theta^(3/2)...
+          *params_cgs.a.m^3*params_cgs.c^3);
+      franz_conduct = params_cgs.a.n*params_cgs.e^2/(pde.params.b.Z*params_cgs.a.m*nu_ee);
       x = nodes{1};
       y = nodes{2};
       nx = numel(x);
@@ -21,7 +41,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
       mass_func_nD{2} = mass_func;
       current_func_nD{1} = current_func_v;
       current_func_nD{2} = current_func_z;
-      x_E = 0.5.*params.a.m*x.^2/params.e;
+      x_E = 0.5.*pde.params.a.m*x.^2/pde.params.e;
       num_steps = length(outputs.time_array);
       spitzer_conduct = (3/(4*sqrt(2*pi)))*(4*pi*pde.params.eps0)^2*(1.38e-23*pde.params.a.T_eV*11604)^(3/2)...
           /(pde.params.b.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
