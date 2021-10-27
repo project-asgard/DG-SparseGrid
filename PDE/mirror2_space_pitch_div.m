@@ -64,7 +64,7 @@ termZa_s = SD_TERM({pterm1});
 
 C = @(z) sin(z);
 g2 = @(z,p,t,dat) C(z);
-pterm2 = DIV(num_dims,'',g2,-1,'N','D','',BCR,'',dV_th);
+pterm2 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_th);
 termZa_z = SD_TERM({pterm2});
 
 termZa = MD_TERM(num_dims,{termZa_z,termZa_s});
@@ -83,7 +83,7 @@ termZb_s = SD_TERM({pterm1});
 
 C = @(z)  sin(z);
 g2 = @(z,p,t,dat) C(z);
-pterm2 = DIV(num_dims,'',g2,+1,'D','N',BCL,'','',dV_th);
+pterm2 = DIV(num_dims,g2,'',+1,'D','N',BCL,'','',dV_th);
 termZb_z = SD_TERM({pterm2});
 
 termZb = MD_TERM(num_dims,{termZb_z,termZb_s});
@@ -102,7 +102,7 @@ termSa_z = SD_TERM({pterm1});
 
 H = @(s) s.*0 - 1;
 g3 = @(s,p,t,dat) H(s);
-pterm2 = DIV(num_dims,'',g3,-1,'D','N','',BCR,'',dV_s);
+pterm2 = DIV(num_dims,g3,'',-1,'D','N','',BCR,'',dV_s);
 termSa_s = SD_TERM({pterm2});
 
 termSa  = MD_TERM(num_dims,{termSa_z,termSa_s});
@@ -121,7 +121,7 @@ termSb_z = SD_TERM({pterm1});
 
 H = @(s) s.*0 - 1;
 g3 = @(s,p,t,dat) H(s);
-pterm2 = DIV(num_dims,'',g3,+1,'N','D',BCL,'','',dV_s);
+pterm2 = DIV(num_dims,g3,'',+1,'N','D',BCL,'','',dV_s);
 termSb_s = SD_TERM({pterm2});
 
 termSb  = MD_TERM(num_dims,{termSb_z,termSb_s});

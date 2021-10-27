@@ -236,6 +236,54 @@ rel_err = err / norm(fval);
 verifyLessThan(testCase,rel_err,1e-5);
 end
 
+function mirror2_pitch_space_div_test(testCase)
+
+addpath(genpath(pwd));
+disp('Testing the 2D pitch and spatial advection div equation');
+% setup PDE  
+args = {'lev',5,'deg',3,'dt',1e-6,'calculate_mass',true,'normalize_by_mass',false,'timestep_method','BE','quiet',true,'num_steps',3};
+opts = OPTS(args);
+pde = mirror2_space_pitch_div(opts);
+num_dims = numel(pde.dimensions);
+
+% modify PDE
+ic_th = @(z,p,t,dat) cos(z);
+ic_s = @(s,p,t,dat) s;
+ic1 = new_md_func(num_dims,{ic_th,ic_s});
+pde.initial_conditions = {ic1};
+
+pde.params.B_func = @(s) s.^2;
+pde.params.dB_ds = @(s) 2.*s;
+
+src_th = @(x,p,t,d) (sin(x)).^2 - (cos(x)).^2;
+src = new_md_func(num_dims,{src_th,[]});
+pde.sources = {src};
+
+    function ret = solution_th(z,p,t)
+        ret =  cos(z);
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
+    end
+
+
+    function ret = solution_s(s,p,t)
+        ret =  s;
+        if isfield(p,'norm_fac')
+            ret = p.norm_fac .* ret;
+        end
+    end
+
+soln1 = new_md_func(num_dims,{@solution_th,@solution_s});
+pde.solutions = {soln1};
+
+% run PDE
+[err,fval,fval_realspace,nodes,err_realspace,outputs] = asgard_run_pde(opts,pde);
+% assert on correctness
+rel_err = outputs.rel_err{end};
+verifyLessThan(testCase,rel_err,1.5e-4);
+end
+
 % function mirror3_velocity_test(testCase)
 % 
 % addpath(genpath(pwd));
