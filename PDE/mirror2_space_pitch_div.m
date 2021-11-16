@@ -1,4 +1,4 @@
-function pde = mirror2_space_pitch_div(opts)
+ function pde = mirror2_space_pitch_div(opts)
 
 % Two-dimensional test of spatial and pitch-angle variation in magnetic
 % mirror where f coefficients change signs throughout the domain
