@@ -11,11 +11,7 @@ switch opts.case_
         params_si.a.T_eV = 0.05*params_si.b.T_eV;
         offset = 0; %case with no offset but change in Temperature
     case 3 
-<<<<<<< HEAD
         n_cgs = 5e13; %equilibrium density in cm.^-3
-=======
-        n_cgs = 8e14; %equilibrium density in cm.^-3
->>>>>>> Changed sign of G function in term1b inside mirror2_velocity_div.m. Code appears to be relatively stable up to dt=1e-5. Also created PDE/mirror2_advection_Efield_div.m to test out advection terms from electric field acceleration.
         m_e_cgs = 9.109*10^-28; %electron mass in g
         m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
         m_He_cgs = 6.7*10^-24; %helium 4 mass in g 
@@ -47,11 +43,7 @@ switch opts.case_
         params_si.b2.Z = params_cgs.b2.Z;
         %params_si.E = 2.9979*10^4*params_cgs.E; %converting to V/m
         params_si.a.E_eV = 7.665;
-<<<<<<< HEAD
         params_si.a.T_eV = 1000;%2/3*params_si.a.E_eV;
-=======
-        params_si.a.T_eV = 2/3*params_si.a.E_eV;
->>>>>>> Changed sign of G function in term1b inside mirror2_velocity_div.m. Code appears to be relatively stable up to dt=1e-5. Also created PDE/mirror2_advection_Efield_div.m to test out advection terms from electric field acceleration.
         params_si.b.T_eV = params_si.a.T_eV;
         params_si.b2.T_eV = params_si.a.T_eV;
         params_si.a.vth = params_si.v_th(params_si.a.T_eV,params_si.a.m);
@@ -60,23 +52,15 @@ switch opts.case_
         params_si.ln_delt = 15;
         E_dreicer_si = params_si.a.n.*params_si.e^3*params_si.ln_delt/(4*pi*params_si.eps0^2*params_si.a.m ... 
             *params_si.a.vth^2);
-<<<<<<< HEAD
         params_si.E = 10^-3*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
         params_si.soln_v = @(v,p,t) solution_v(v,p,t);
-=======
-        params_si.E = 10^-6*E_dreicer_si;
-        %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
-        params_si.maxwell = @(v,offset,vth) params_si.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
-        params_si.init_cond_v = @(v,p,t) params_si.maxwell(v,0,params_si.a.vth);
->>>>>>> Changed sign of G function in term1b inside mirror2_velocity_div.m. Code appears to be relatively stable up to dt=1e-5. Also created PDE/mirror2_advection_Efield_div.m to test out advection terms from electric field acceleration.
         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
         %params.eps0 = 1/(4*pi);
 end
 
-<<<<<<< HEAD
     function ret = solution_v(v,p,t)
         ret = params_si.a.n/(pi^3/2.*params_si.v_th(params_si.b.T_eV,params_si.a.m).^3).*...
             exp(-(v./params_si.v_th(params_si.b.T_eV,params_si.a.m)).^2);
@@ -86,9 +70,6 @@ end
     end
 
 dim_v = DIMENSION(0,15*params_si.a.vth);
-=======
-dim_v = DIMENSION(0,10*params_si.a.vth);
->>>>>>> Changed sign of G function in term1b inside mirror2_velocity_div.m. Code appears to be relatively stable up to dt=1e-5. Also created PDE/mirror2_advection_Efield_div.m to test out advection terms from electric field acceleration.
 dV_v = @(x,p,t,d) x.^2;
 dim_v.moment_dV = dV_v;
 
@@ -126,16 +107,11 @@ BCR = new_md_func(num_dims,{...
 
 %% Define the terms of the PDE
 
-<<<<<<< HEAD
 % termE1a is done combining mass and div defining F(th) = (ZeE/m cos(th)) and
-=======
-% term1 is done combining mass and div defining F(th) = (ZeE/m cos(th)) and
->>>>>>> Changed sign of G function in term1b inside mirror2_velocity_div.m. Code appears to be relatively stable up to dt=1e-5. Also created PDE/mirror2_advection_Efield_div.m to test out advection terms from electric field acceleration.
 % G(v) = 1
 %
 % eq1 : df/dt == div(F(th) f)      [pterm1: div(g(v)=G(v),-1, BCL=D,BCR=N)]
 
-<<<<<<< HEAD
  dV_v = @(x,p,t,d) x.^2; 
  dV_th = @(x,p,t,d) sin(x);
 
@@ -151,28 +127,10 @@ termE1_v = SD_TERM({pterm1});
 termE1a = MD_TERM(num_dims,{termE1_v,termE1_th});
 
 %termE1b is the same form as term1 but accounting for the flow in the
-=======
-% dV_v = @(x,p,t,d) x; %changing for MASS term
-% dV_th = @(x,p,t,d) sin(x);
-
-F = @(x,p) cos(x);
-g1 = @(x,p,t,dat) F(x,p).*(x>pi/2);
-pterm1 = MASS(g1,[],[],dV_th);
-term1_th = SD_TERM({pterm1});
-
-G = @(v,p) v.*0 - 1;
-g2 = @(v,p,t,dat) G(v,p);
-pterm1 = DIV(num_dims,g2,'',+1,'D','N',BCL,'','',dV_v);
-term1_v = SD_TERM({pterm1});
-term1a = MD_TERM(num_dims,{term1_v,term1_th});
-
-%term1b is the same form as term1 but accounting for the flow in the
->>>>>>> Changed sign of G function in term1b inside mirror2_velocity_div.m. Code appears to be relatively stable up to dt=1e-5. Also created PDE/mirror2_advection_Efield_div.m to test out advection terms from electric field acceleration.
 %opposite direction
 
 F = @(x,p) cos(x);
 g1 = @(x,p,t,dat) F(x,p).*(x<pi/2);
-<<<<<<< HEAD
 pterm1 = MASS(g1,'','',dV_th);
 termE1_th = SD_TERM({pterm1});
 
@@ -204,18 +162,6 @@ termE2_th = SD_TERM({pterm1});
 termE2 = MD_TERM(num_dims,{termE2_v,termE2_th});
 
 terms = {termE1a,termE1b,termE2};
-=======
-pterm1 = MASS(g1,[],[],dV_th);
-term1_th = SD_TERM({pterm1});
-
-G = @(v,p) v.*0 + 5e9;
-g2 = @(v,p,t,dat) G(v,p);
-pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
-term1_v = SD_TERM({pterm1});
-term1b = MD_TERM(num_dims,{term1_v,term1_th});
-
-terms = {term1b};
->>>>>>> Changed sign of G function in term1b inside mirror2_velocity_div.m. Code appears to be relatively stable up to dt=1e-5. Also created PDE/mirror2_advection_Efield_div.m to test out advection terms from electric field acceleration.
 
 sources = {};
 
