@@ -539,30 +539,30 @@ for L = 1:opts.num_steps
 
         background_species = [pde.params.b, pde.params.b2];
         uVals = nodes{1};
-        for k = 1:numel(background_species)
-%             for i = 1:length(uVals)
-%                 uVal = uVals(i);
-                for j = 1:length(lIndex)
-                    gamma_a = 4*pi*(params.a.Z)^2*e^4/((params.a.m)^2);
-                    %            numerVals = mirror_FokkerPlanckCoeffs(numer_func,uVal,lIndex(j),z,params,background_species(k));
-                    coeffVals = @(x) mirror_FokkerPlanckCoeffs(func,x,lIndex(j),z,params,background_species(k));
-                    test_Avals(j) =  test_Avals(j) + testVals(1);
-                    test_Bvals(j) = test_Bvals(j) + testVals(2);
-                    test_Cvals(j) = test_Cvals(j) + testVals(3);
-                    test_Dvals(j) = test_Dvals(j) + testVals(4);
-                    test_Evals(j) = test_Evals(j) + testVals(5);
-                    test_Fvals(j) = test_Fvals(j) + testVals(6);
-                end
-                %     total_numA(i) = sum(numer_Avals(i,:));
-                %     total_numB(i) = sum(numer_Bvals(i,:));
-                %     total_numC(i) = sum(numer_Cvals(i,:));
-                %     total_numD(i) = sum(numer_Dvals(i,:));
-                %     total_numE(i) = sum(numer_Evals(i,:));
-                %     total_numF(i) = sum(numer_Fvals(i,:));
-                pde.params.fp_Coeffs = coeffVals;
-            end
-%         end
-    end
+%         for k = 1:numel(background_species)
+% %             for i = 1:length(uVals)
+% %                 uVal = uVals(i);
+%                 for j = 1:length(lIndex)
+%                     gamma_a = 4*pi*(params.a.Z)^2*e^4/((params.a.m)^2);
+%                     %            numerVals = mirror_FokkerPlanckCoeffs(numer_func,uVal,lIndex(j),z,params,background_species(k));
+%                     coeffVals = @(x) mirror_FokkerPlanckCoeffs(func,x,lIndex(j),z,params,background_species(k));
+%                     test_Avals(j) =  test_Avals(j) + testVals(1);
+%                     test_Bvals(j) = test_Bvals(j) + testVals(2);
+%                     test_Cvals(j) = test_Cvals(j) + testVals(3);
+%                     test_Dvals(j) = test_Dvals(j) + testVals(4);
+%                     test_Evals(j) = test_Evals(j) + testVals(5);
+%                     test_Fvals(j) = test_Fvals(j) + testVals(6);
+%                 end
+%                 %     total_numA(i) = sum(numer_Avals(i,:));
+%                 %     total_numB(i) = sum(numer_Bvals(i,:));
+%                 %     total_numC(i) = sum(numer_Cvals(i,:));
+%                 %     total_numD(i) = sum(numer_Dvals(i,:));
+%                 %     total_numE(i) = sum(numer_Evals(i,:));
+%                 %     total_numF(i) = sum(numer_Fvals(i,:));
+%                 pde.params.fp_Coeffs = coeffVals;
+%             end
+% %         end
+%     end
        
 end
 

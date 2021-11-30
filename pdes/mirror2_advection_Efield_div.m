@@ -1,6 +1,6 @@
 function pde = mirror2_advection_Efield_div(opts)
 
-params_si = mirror_parameters();
+params_si = mirror_parameters(opts);
 
 
 switch opts.case_

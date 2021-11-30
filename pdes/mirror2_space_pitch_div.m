@@ -9,7 +9,7 @@
 %
 % asgard(@mirror2_space_pitch_div,'timestep_method','BE','case',3,'dt',1e-8,'lev',3,'deg', 3,'num_steps',20)
 
-params = mirror_parameters();
+params = mirror_parameters(opts);
 
 params.B_func = @(s) s.^2;
 params.dB_ds = @(s) 2.*s;

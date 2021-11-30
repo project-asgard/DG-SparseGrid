@@ -11,7 +11,7 @@ function pde = mirror1_space_div(opts)
 % implicit
 % asgard(@mirror1_space_div,'timestep_method','BE', 'calculate_mass', true, 'normalize_by_mass', true)
 
-params = mirror_parameters();
+params = mirror_parameters(opts);
 
 params.B_func = @(s) exp(s); %magnetic field as a function of spatial coordinate
 params.dB_ds = @(s) params.B_func(s); %derivative of magnetic field

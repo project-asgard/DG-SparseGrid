@@ -29,7 +29,7 @@ function pde = mirror1_collision_div(opts)
 %
 % asgard(@mirror1_collision_div,'timestep_method','BE','dt',1e-5,'num_steps',50,'lev',5,'deg',2,'normalize_by_mass',false, 'calculate_mass', false)
 
-params = mirror_parameters();
+params = mirror_parameters(opts);
 
 %% Define the dimensions
 

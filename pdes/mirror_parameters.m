@@ -1,4 +1,4 @@
-function p = mirror_parameters()
+function p = mirror_parameters(opts)
 
 % Common constants and functions for the mirror set of PDEs
 
@@ -82,7 +82,18 @@ gauss   = @(v,x,y,a) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
 E_dreicer_si = 1;
-E = 10^-8*E_dreicer_si;
+
+switch opts.case_
+	case 1
+		E = 10^-6*E_dreicer_si;
+	case 2
+ 		E = 10^-4*E_dreicer_si;
+	case 3
+		if isfield(opts.cmd_args,'E')
+	            E = opts.cmd_args.E;
+        	end
+		disp(['E: ', num2str(E)]);
+end
 
 % Vacuum magnetic field function:
 % Function based on simple current loops:

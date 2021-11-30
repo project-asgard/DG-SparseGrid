@@ -54,7 +54,7 @@ function pde = mirror2_velocity_div(opts)
 %
 % asgard(@mirror2_velocity_div,'timestep_method','BE','case',3,'dt',1e-6)
 
-params = mirror_parameters();
+params = mirror_parameters(opts);
 
 switch opts.case_
     case 1 

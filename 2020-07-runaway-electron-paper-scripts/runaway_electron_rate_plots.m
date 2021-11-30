@@ -61,7 +61,7 @@ cgs.nu_ee = 4*pi * cgs.n_e * cgs.e^4 * cgs.coulomb_ln / (cgs.m_e^2 * cgs.v_th^3)
 disp(['nu_ee 1/s (from cgs): ',num2str(cgs.nu_ee)]);
 disp(['nu_ee 1/s (from cgs 2): ',num2str(cgs.nu_ee2)]);
 
-% normalized (norm) parameters for use in FokkerPlanck2_complete_div
+% normalized (norm) parameters for use in mirror2_velocity_div
 % here we have 3 types of variables ...
 % 1) T,n,v_th - absolute values in SI
 % 2) T_ref, n_ref, v_th_ref - these are the "reference values" (or the "tilde" values in the manuscript)
@@ -137,7 +137,7 @@ CH_normfac_r = CH_normfac_nr;
 KB_normfac = 1/(kruskal_bernstein(0.1)/kulsrud_Z1(end));
 
 % Scan over E/E_D ratio
-do_E_scan = false;
+do_E_scan = true;
 if do_E_scan
     figure
     semilogy(ratio,kruskal_bernstein(ratio)*KB_normfac,'LineWidth',10,'Color','#E8E7E7','DisplayName','K-B (nr)');
@@ -166,13 +166,13 @@ if do_E_scan
     args.delta = 0;
     for Z = [1 2 10]
         for i=1:N2
-            args.E = ratio2(i) * SI.E_D / norm.E; % E into asgard is 2*E/E_D per the normalization
+            args.E = ratio2(i) * SI.E_D ; % E into asgard is 2*E/E_D per the normalization
             args.Z = Z;
-            dt = 2./args.E.^2/num_steps;
+            dt = 1e-4;%2./args.E.^2/num_steps;
             if dt > 2000
                 dt = 2000;
             end
-            [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
+            [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
             alpha_nr(i,Z) = outputs(i).alpha_t{end};
         end
     end
@@ -181,13 +181,13 @@ if do_E_scan
     args.delta = norm.delta;
     for Z = [1 2 10]
         for i=1:N2
-            args.E = ratio2(i) * SI.E_D / norm.E; % E into asgard is 2*E/E_D per the normalization
+            args.E = ratio2(i) * SI.E_D; % E into asgard is 2*E/E_D per the normalization
             args.Z = Z;
-            dt = 2./args.E.^2/num_steps;
+            dt = 1e-4;%2./args.E.^2/num_steps;
             if dt > 2000
                 dt = 2000;
             end
-            [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
+            [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
             alpha_r(i,Z) = outputs(i).alpha_t{end};
         end
     end
@@ -208,7 +208,7 @@ end
 
 % Compare DoF required for given accuracy in alpha
 
-do_dof_scan = true;
+do_dof_scan = false;
 if do_dof_scan
     
     args.p_max = 10;
@@ -236,19 +236,19 @@ if do_dof_scan
         % considerable time.
         do_FG = false;
         if do_FG
-            [~,~,~,~,~,output_FG_deg4] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg4] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg4_lev',lev_str','.mat'],'output_FG_deg4');
             clear output_FG_deg4;
             
-            [~,~,~,~,~,output_FG_deg5] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',5,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg5] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',5,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg5_lev',lev_str','.mat'],'output_FG_deg5');
             clear output_FG_deg5;
                        
-            [~,~,~,~,~,output_FG_deg6] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg6] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg6_lev',lev_str','.mat'],'output_FG_deg6');
             clear output_FG_deg6;
             
-            [~,~,~,~,~,output_FG_deg7] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',7,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg7] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',7,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg7_lev',lev_str','.mat'],'output_FG_deg7');
             clear output_FG_deg7;
         end
@@ -257,14 +257,14 @@ if do_dof_scan
         % results.
         do_SG = true;
         if do_SG
-            [~,~,~,~,~,output_SG] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
-            [~,~,~,~,~,output_SG_deg6] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
-            [~,~,~,~,~,output_1em0] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e0,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em1] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-1,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em2] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-2,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em3] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-3,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em4] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-4,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em5] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-5,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_SG] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_SG_deg6] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_1em0] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e0,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em1] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-1,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em2] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-2,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em3] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-3,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em4] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-4,'output_grid','fixed','adapt_initial_condition',true);
+            [~,~,~,~,~,output_1em5] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-5,'output_grid','fixed','adapt_initial_condition',true);
        
             alpha_SG(i,:) = cell2mat(output_SG.alpha_t);
             alpha_SG_deg6(i,:) = cell2mat(output_SG_deg6.alpha_t);
@@ -497,7 +497,7 @@ if do_Z_scan
         num_steps = 10;
         dt = 2./args.E.^2/num_steps;
         disp(i);
-        [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
+        [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
         alpha_Z(i) = outputs(i).alpha_t{end};
     end
     
