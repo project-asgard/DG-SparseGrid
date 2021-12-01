@@ -1,9 +1,9 @@
-function pde = advection1_spherical(opts)
+function pde = advection1_spherical_div(opts)
 % 1D test case using continuity equation, i.e.,
 %
-% r^2 * df/dt == -d/dr(r^2 * v * r * f(r,t))
+% df/dt == -1/r^2*d/dr(r^2 * v * r * f(r,t))
 %
-% so this is just pure advection in spherical coordinates with flux=v*r
+% so this is just pure advection in spherical coordinates with flux=v*r*f
 %
 % f(r,0) == cos(r)
 %
@@ -14,14 +14,8 @@ function pde = advection1_spherical(opts)
 %
 % Run with
 %
-% asgard(@advection1_spherical,'timestep_method','BE','dt',0.001,'num_steps',20,'case',1)
+% asgard(@advection1_spherical,'timestep_method','BE','dt',0.001,'num_steps',20)
 %
-% case = 1 % the standard approach, i.e., no jacobian application
-%               (working but minor difference near p=0)
-% case = 2 % apply p^2 jacobian to LHS, volume, trace and BC evaluations using g_funcs.
-%               (does not seem to work?)
-% case = 3 % apply p^2 jacobian to LHS, volume, trace and BC evaluations using dim.jacobian.
-%               (does not seem to work?)
 
 %% Define paramaters
 
@@ -30,17 +24,7 @@ params.v = 1;
 %% Define dimensions
 
 dim_x = DIMENSION(0,2*pi);
-
-switch opts.case_
-    case 1 % no jacobian applied
-        dim_x.jacobian = @(x,p,t,d) x.*0+1;
-    case 2 % jacobian applied withing g_funcs
-        dim_x.jacobian = @(x,p,t,d) x.*0+1;
-    case 3 % jacobian applied within dim.jacobian
-        dim_x.jacobian = @(x,p,t,d) x.^2;
-    case 4 % jacobian applied within dim.jacobian
-        dim_x.jacobian = @(x,p,t,d) x.^2;
-end
+dim_x.moment_dV = @(x,p,t,dat) x.^2;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -56,48 +40,16 @@ initial_conditions = {sol1};
 BCL = sol1;
 BCR = sol1;
 
-%% Define LHS PDE terms (only on the d/dt)
-switch opts.case_
-    case 1 % no jacobian applied
-        g1 = @(x,p,t,dat) x.^2;
-    case 2 % jacobian defined within g funcs (weak form before coordinate choice)
-        g1 = @(x,p,t,dat) x.^2;
-    case 3 % jacobian defined within dim.jacobian (weak form before coordinate choice)
-        g1 = @(x,p,t,dat) x.*0+1;
-    case 4 % weak form AFTER coordinate choice
-        g1 = @(x,p,t,dat) x.^2;
-end
-pterm1 = MASS(g1);
-LHS_term_x = SD_TERM({pterm1});
-LHS_term   = MD_TERM(num_dims,{LHS_term_x});
-LHS_terms = {LHS_term}; % still have to include this even if it is I to allow for the jacobian application
+%% Define PDE terms (all other non d/dt terms)
 
-%% Define RHS PDE terms (all other non d/dt terms)
-switch opts.case_
-    case 1 % no jacobian applied
-        % -d/dr (r^2 * v * r * f)
-        g1 = @(x,p,t,dat) -x.^2 .* p.v .* x;
-    case 2 % jacobian defined within g funcs
-        % -int(g*J dr) = -int(v*r * r^2 dr)
-        g1 = @(x,p,t,dat) -p.v .* x .* x.^2;
-    case 3 % jacobian defined within dim.jacobian
-        % -int(g*J dr) = -int(v*r * J dr)
-        g1 = @(x,p,t,dat) -p.v .* x;        
-end
+dV = @(x,p,t,dat) x.^2;
 
-switch opts.case_
-    case {1,2,3}
-        pterm1 = GRAD(num_dims,g1,-1,'D','N',BCL);
-        term1_x = SD_TERM({pterm1});
-        term1   = MD_TERM(num_dims,{term1_x});
-    case 4
-        g = @(x,p,t,d) x.*0-1; 
-        pterm1 = MASS(g);
-        g = @(x,p,t,d) x.^2 .* x .* p.v;
-        pterm2 = GRAD(num_dims,g,-1,'D','N',BCL);
-        term1_x = SD_TERM({pterm1,pterm2});
-        term1   = MD_TERM(num_dims,{term1_x});
-end
+g1 = @(x,p,t,dat) -p.v*x;
+pterm1 = DIV(num_dims,g1,'',-1,'D','N','','','',dV); 
+        %Note left BC does not matter since jacobian is zero there.
+        %Right BC is free since flow is going to the right
+term1_x = SD_TERM({pterm1});
+term1   = MD_TERM(num_dims,{term1_x});
 
 terms = {term1};
 
@@ -116,6 +68,6 @@ sources = {};
     end
 
 %% Construct PDE
-pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end

@@ -1,4 +1,4 @@
-function pde = continuity3(opts)
+function pde = continuity3_div(opts)
 % 3D test case using continuity equation, i.e.,
 %
 % df/dt + v.grad(f)==0 where v={1,1,1}, so
@@ -8,10 +8,10 @@ function pde = continuity3(opts)
 % Run with
 %
 % explicit
-% asgard(@continuity3,'lev',[5,4,3],'calculate_mass',false);
+% asgard(@continuity3_div,'lev',[5,4,3],'calculate_mass',false);
 %
 % implicit
-% asgard(@continuity3,'timestep_method','CN','calculate_mass',false);
+% asgard(@continuity3_div,'timestep_method','CN','calculate_mass',false);
 %
 % NOTES
 % DLG - should be able to turn the mass calculation back on after we merge
@@ -23,14 +23,17 @@ function pde = continuity3(opts)
 
 dim_x = DIMENSION(-1,+1);
 dim_x.name = 'x';
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_x.lev = 5;
 
 dim_y = DIMENSION(-2,+2);
 dim_y.name = 'y';
+dim_y.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_y.lev = 4;
 
 dim_z = DIMENSION(-3,+3);
 dim_z.name = 'z';
+dim_z.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_z.lev = 3;
 
 dimensions = {dim_x,dim_y,dim_z};
@@ -45,11 +48,13 @@ initial_conditions = {ic1};
 %
 % Here we have 3 terms, having only nDims=3 (x,y,z) operators.
 
+dV = @(x,p,t,dat) 0*x+1;
+
 %%
 % -df/dx
 
 g1 = @(x,p,t,dat) x.*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x,[],[]});
 
@@ -57,7 +62,7 @@ term1   = MD_TERM(num_dims,{term1_x,[],[]});
 % -df/fy
 
 g1 = @(y,p,t,dat) y.*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term2_y = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{[],term2_y,[]});
 
@@ -65,7 +70,7 @@ term2   = MD_TERM(num_dims,{[],term2_y,[]});
 % -df/dz
 
 g1 = @(z,p,t,dat) z*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term3_z = SD_TERM({pterm1});
 term3   = MD_TERM(num_dims,{[],[],term3_z});
 
@@ -142,5 +147,6 @@ solutions = {soln1};
 pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
+
 
 

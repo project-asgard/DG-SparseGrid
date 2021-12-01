@@ -1,4 +1,4 @@
-function pde = continuity2(opts)
+function pde = continuity2_div(opts)
 % 2D test case using continuity equation, i.e.,
 %
 % df/dt == -df/dx - df/dy
@@ -6,13 +6,13 @@ function pde = continuity2(opts)
 % Run with
 %
 % explicit
-% asgard(@continuity2,'lev',3,'deg',3,'CFL',0.1)
+% asgard(@continuity2_div,'lev',3,'deg',3,'CFL',0.1)
 %
 % implicit
-% asgard(@continuity2,'timestep_method','CN')
+% asgard(@continuity2_div,'timestep_method','CN')
 %
 % with adaptivity
-% asgard(@continuity2,'timestep_method','CN','adapt',true)
+% asgard(@continuity2_div,'timestep_method','CN','adapt',true)
 
 % pde.CFL = 0.1;
 
@@ -25,7 +25,9 @@ soln_t = @(t)      sin(2*t);
 % Here we setup a 2D problem (x,y)
 
 dim_x = DIMENSION(-1,+1);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_y = DIMENSION(-2,+2);
+dim_y.moment_dV = @(y,p,t,dat) 0*y+1;
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
 
@@ -37,13 +39,15 @@ initial_conditions = {ic1};
 %
 % Here we have 2 terms, having only nDims=2 (x,y) operators.
 
+dV = @(x,p,t,dat) 0*x+1;
+
 %%
 % -df/dx which is 
 %
 % d/dx g1(x) f(x,y)          [grad,g1(x)=-1, BCL=P, BCR=P]
 
 g1 = @(x,p,t,dat) x*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x,[]});
 
@@ -53,7 +57,7 @@ term1   = MD_TERM(num_dims,{term1_x,[]});
 % d/dy g1(y) f(x,y)          [grad,g1(y)=-1, BCL=P, BCR=P]
 
 g1 = @(y,p,t,dat) y*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term2_y = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{[],term2_y});
 

@@ -1,4 +1,4 @@
-function pde = continuity6(opts)
+function pde = continuity6_div(opts)
 % 3D test case using continuity equation, i.e.,
 %
 % df/dt + b.grad_x(f) + a.grad_v(f)==0 where b={1,1,3}, a={4,3,2}
@@ -26,12 +26,18 @@ az=2;
 % Here we setup a 6D problem (x,y,z,vx,vy,vz)
 
 dim_x = DIMENSION(-1,+1);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_y = DIMENSION(-2,+2);
+dim_y.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_z = DIMENSION(-3,+3);
+dim_z.moment_dV = @(x,p,t,dat) 0*x+1;
 
 dim_vx = DIMENSION(-10,+10);
+dim_vx.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_vy = DIMENSION(-20,+20);
+dim_vy.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_vz = DIMENSION(-30,+30);
+dim_vz.moment_dV = @(x,p,t,dat) 0*x+1;
 
 dimensions = {dim_x,dim_y,dim_z,dim_vx,dim_vy,dim_vz};
 num_dims = numel(dimensions);
@@ -45,6 +51,8 @@ initial_conditions = {ic1};
 %
 % Here we have 6 terms, having only nDims=6 (x,y,z,vx,vy,vz) operators.
 
+dV = @(x,p,t,dat) 0*x+1;
+
 %%
 % -bx*df/dx
 
@@ -53,7 +61,7 @@ initial_conditions = {ic1};
 % term2 = term_fill({term2_x,[],[],[],[],[]});
 
 g1 = @(x,p,t,dat) x*0-bx;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x,[],[],[],[],[]});
 
@@ -66,7 +74,7 @@ term1   = MD_TERM(num_dims,{term1_x,[],[],[],[],[]});
 % term3 = term_fill({[],term3_y,[],[],[],[]});
 
 g1 = @(y,p,t,dat) y*0-by;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term2_y = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{[],term2_y,[],[],[],[]});
 
@@ -78,7 +86,7 @@ term2   = MD_TERM(num_dims,{[],term2_y,[],[],[],[]});
 % term4 = term_fill({[],[],term4_z,[],[],[]});
 
 g1 = @(z,p,t,dat) z*0-bz;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term3_z = SD_TERM({pterm1});
 term3   = MD_TERM(num_dims,{[],[],term3_z,[],[],[]});
 
@@ -90,7 +98,7 @@ term3   = MD_TERM(num_dims,{[],[],term3_z,[],[],[]});
 % term5 = term_fill({[],[],[],term5_vx,[],[]});
 
 g1 = @(x,p,t,dat) x*0-ax;
-pterm1   = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term4_vx = SD_TERM({pterm1});
 term4    = MD_TERM(num_dims,{[],[],[],term4_vx,[],[]});
 
@@ -102,7 +110,7 @@ term4    = MD_TERM(num_dims,{[],[],[],term4_vx,[],[]});
 % term6 = term_fill({[],[],[],[],term6_vy,[]});
 
 g1 = @(y,p,t,dat) y*0-ay;
-pterm1   = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term5_vy = SD_TERM({pterm1});
 term5    = MD_TERM(num_dims,{[],[],[],[],term5_vy,[]});
 
@@ -114,7 +122,7 @@ term5    = MD_TERM(num_dims,{[],[],[],[],term5_vy,[]});
 % term7 = term_fill({[],[],[],[],[],term7_vz});
 
 g1 = @(z,p,t,dat) z*0-az;
-pterm1   = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term6_vz = SD_TERM({pterm1});
 term6    = MD_TERM(num_dims,{[],[],[],[],[],term6_vz});
 

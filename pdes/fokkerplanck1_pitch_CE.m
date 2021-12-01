@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_pitch_CE(opts)
+function pde = fokkerplanck1_pitch_CE_div(opts)
 % Problem 4.4 from the RE paper - evolution of the pitch angle dependence
 % of f in the presence of electric field acceleration and collisions 
 % 
@@ -7,10 +7,10 @@ function pde = fokkerplanck1_pitch_CE(opts)
 % Run with
 %
 % explicit 
-% asgard(@fokkerplanck1_pitch_CE,'CFL',0.01,'case',3)
+% asgard(@fokkerplanck1_pitch_CE_div,'CFL',0.01,'case',3)
 %
 % implicit 
-% asgard(@fokkerplanck1_pitch_CE,'timestep_method','BE','num_steps',50,'dt',0.05,'lev',4,'deg',4,'case',1)
+% asgard(@fokkerplanck1_pitch_CE_div,'timestep_method','BE','num_steps',50,'dt',0.05,'lev',4,'deg',4,'case',1)
 
 sig = 0.1;
 E = 4.0;
@@ -45,6 +45,7 @@ C = 1.0;
 %% Define the dimensions
 
 dim_z = DIMENSION(-1,+1);
+dim_z.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_z};
 num_dims = numel(dimensions);
 
@@ -66,19 +67,19 @@ initial_conditions = {ic1};
 
 %% 
 % -E d/dz((1-z^2) f)
+dV_z = @(z,p,t,dat) sqrt(1-z.^2);
 
-g1 = @(z,p,t,dat) -E.*(1-z.^2);
-pterm1  = GRAD(num_dims,g1,-1,'D','D');
+g1 = @(z,p,t,dat) -E.*sqrt(1-z.^2);
+pterm1  = DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
 termE_z = SD_TERM({pterm1});
 termE   = MD_TERM(num_dims,{termE_z});
 
 %% 
 % +C * d/dz( (1-z^2) df/dz )
 
-g1 = @(z,p,t,dat) 1-z.^2;
-g2 = @(z,p,t,dat) z.*0+1;
-pterm1  = GRAD(num_dims,g1,-1,'D','D');
-pterm2  = GRAD(num_dims,g2,+1,'N','N');
+g1 = @(z,p,t,dat) 0*z+1;
+pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
+pterm2  = GRAD(num_dims,g1,'',+1,'N','N','','','',dV_z);
 termC_z = SD_TERM({pterm1,pterm2});
 termC   = MD_TERM(num_dims,{termC_z});
 

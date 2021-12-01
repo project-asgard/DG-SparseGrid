@@ -1,31 +1,37 @@
-function pde = fokkerplanck1_momentum_C(opts)
+function pde = fokkerplanck1_momentum_C_div(opts)
 
 % Test the momentum dynamics for the RE problem for E = R = 0
 %
-% df/dt == 1/x^2 * d/dx * x^2 ( psi(x)/x * df/dx + 2*psi(x)*f )
-%       == 1/x^2 * d/dx*x^2*psi(x)/x*df/dx  +  1/x^2 * d/dx*x^2*2*psi(x)*f
+% df/dt == 1/p^2*d/dp*p^2 ( psi(p)/p*df/dp + 2*psi(p)*f )
+%       == 1/p^2*d/dp*p^2 * (psi(p)/p*df/dp)  +  1/p^2*d/dp*p^2 * (2*psi(p)*f)
 %          \                              /    \                         /
 %           --------- term1 --------------      -------- term2 ----------
-% split into 
 %
-% term1
+% p is a spherical coordinate (p,th,ph), so the div and grad look like 
 %
-% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
-% eq2 :   q(x) == d/dx g(x) p(x)   [grad,g(x)=x^2*psi(x)/x, BCL=D, BCR=N]
-% eq3 :   p(x) == d/dx f(x)        [grad,g(x)=1,            BCL=N, BCR=D]
+% div[] = 1/p^2 * d/dp * p^2[], grad[] = d/dp[]
 %
-% coeff_mat = mat1 * mat2 * mat3
+% and the volument_element dV = p^2
 %
-% term2
+% 
+% split into two div(flux) terms (term1 and term2)
 %
-% eq1 :  df/dt == g(x) q(x)        [mass,g(x)=1/x^2,        BC N/A for mass]
-% eq2 :   q(x) == d/dx g(x) f(x)   [grad,g(x)=x^2*2*psi(x), BCL=N, BCR=D]
+% term1 is done using SLDG defining eta1(p)=sqrt(psi(p)/p)
 %
-% coeff_mat = mat1 * mat2
+% eq1 :  df/dt == div(eta(p) * q)        [pterm1: div (g(p)=eta(p),+1, BCL=?, BCR=?)]
+% eq2 :      q == eta(p) * grad(f)       [pterm2: grad(g(p)=eta(p),-1, BCL=D, BCR=N)]
+%
+% coeff_mat = pterm1.mat * pterm2.mat
+%
+% term2 is just a div
+%
+% eq1 :  df/dt == div(2*psi(p) * f)       [pterm1: div(g(p)=2*psi(p),+1, BCL=?, BCR=?]
+%
+% coeff_mat = pterm1.mat1
 %
 % Run with
 %
-% asgard(@fokkerplanck1_momentum_C,'timestep_method','CN','lev',3,'deg',4,'num_steps',50,'CFL',1.5,'case',1)
+% asgard(@fokkerplanck1_momentum_C_div,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'dt',1.0,'case',1)
 %
 % case = 1 % maxwellian initial condition
 % case = 2 % step function initial condition
@@ -74,77 +80,63 @@ function pde = fokkerplanck1_momentum_C(opts)
         ret = 4/sqrt(pi) * exp(-x.^2);
     end
 
+%% Define some parameters and add to pde object.
+
+params.parameter1 = 0;
+
 %% Define the dimensions
 
-dim_x = DIMENSION(0,+10);
-dim_x.jacobian = @(x,p,t,dat) x.^2;
-dimensions = {dim_x};
+dV_p = @(x,p,t,d) x.^2;
+dim_p = DIMENSION(0,+10);
+dim_p.moment_dV = dV_p;
+dimensions = {dim_p};
 num_dims = numel(dimensions);
 
 %% Define the analytic solution (optional).
 
-soln_z = @(z,p,t) soln(z);
-soln1 = new_md_func(num_dims,{soln_z});
+soln_p = @(x,p,t) soln(x);
+soln1 = new_md_func(num_dims,{soln_p});
 solutions = {soln1};
 
 %% Define initial conditions
 
-ic_x = @(z,p,t) f0(z);
-ic1 = new_md_func(num_dims,{ic_x});
-initial_conditions = {ic1};
+ic_p = @(z,p,t) f0(z);
+ic1 = new_md_func(num_dims,{ic_p});
+initial_conditions = {soln1};
 
-%% Setup the terms of the PDE
+%% LHS terms (mass only)
 
-% LHS terms (mass matrix)
+LHS_terms = {};
 
-gL = @(x,p,t,dat) x.^2;
-ptermL = MASS(gL);
-LHS_term_x = SD_TERM({ptermL});
-LHS_term   = MD_TERM(num_dims,{LHS_term_x});
-LHS_terms = {LHS_term};
+%% RHS terms
 
-% RHS terms
-
-% term1
+% term1 is done using SLDG defining eta(p)=sqrt(psi(p)/p)
 %
-% p^2*df/dt == d/dp(p*psi*df/dp)
+% eq1 :  df/dt == div(eta(p) * q)        [pterm1: div (g1(p)=eta(p),+1, BCL=D, BCR=N)]
+% eq2 :      q == eta(p) * grad(f)       [pterm2: grad(g2(p)=eta(p),-1, BCL=N, BCR=D)]
+
+eta = @(p) sqrt(psi(p)./p);
+g1 = @(x,p,t,dat) eta(x);
+g2 = @(x,p,t,dat) eta(x);
+
+pterm1 = DIV (num_dims,g1,'',+1,'D','N','','','',dV_p);
+pterm2 = GRAD(num_dims,g2,'',-1,'N','D','','','',dV_p);
+
+term1_p = SD_TERM({pterm1,pterm2}); % order here is as in equation
+term1   = MD_TERM(num_dims,{term1_p});
+
+% term2 is just a div
 %
-% (1) :   gL*df/dt == d/dp(g1*w)   [grad,g2=p*psi, BCL=D, BCR=N]
-% (2) :          w == d/dp(g2*f)   [grad,g3=1,        BCL=N, BCR=D]
-%
-% coeff_mat = mat1 * mat2
+% eq1 :  df/dt == div(2*psi(p) * f)       [pterm1: div(g3(p)=2*psi(p),+1, BCL=N, BCR=D]
 
-g1 = @(x,p,t,dat) x_psi(x);
-g2 = @(x,p,t,dat) x.*0+1;
+g3 = @(x,p,t,dat) 2 .* psi(x);
 
-pterm1 = GRAD(num_dims,g1,+1,'D','N');
-pterm2 = GRAD(num_dims,g2,-1,'N','D');
+pterm3 = DIV(num_dims,g3,'',-1,'N','D','','','',dV_p);
 
-term1_x = SD_TERM({pterm1,pterm2}); % order here is as in equation
-term1   = MD_TERM(num_dims,{term1_x});
+term2_p = SD_TERM({pterm3});
+term2   = MD_TERM(num_dims,{term2_p});
 
-% term2
-%
-% p^2*df/dt == d/dp(p^2*2*psi*f)
-%
-% (3) :   gL*df/dt == d/dp(g3*f)   [grad,g3=p^2*2*psi, BCL=N, BCR=D]
-%
-% coeff_mat = mat1 * mat2
-
-g3 = @(x,p,t,dat) 2.*x.*x_psi(x);
-
-pterm3 = GRAD(num_dims,g3,-1,'N','D');
-
-term2_x = SD_TERM({pterm3});
-term2   = MD_TERM(num_dims,{term2_x});
-
-terms = {term1};%,term2};
-
-%% Define some parameters and add to pde object.
-%  These might be used within the various functions below.
-
-params.parameter1 = 0;
-params.parameter2 = 1;
+terms = {term1,term2};
 
 %% Define sources
 
