@@ -30,8 +30,10 @@ function pde = diffusion2_div(opts)
 
 %% Define the dimensions
 
-dim_y = DIMENSION(0,1);
 dim_x = DIMENSION(0,1);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
+dim_y = DIMENSION(0,1);
+dim_y.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
 
@@ -57,6 +59,8 @@ initial_conditions = {soln1};
 %
 % Here we have 1 term, with each term having nDims (x and y) operators.
 
+dV = @(x,p,t,dat) 0*x+1;
+
 %% 
 % Setup the d^2_dx^2 term
 
@@ -70,8 +74,8 @@ initial_conditions = {soln1};
 g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 =  DIV(num_dims,g1,[],+1,'N','N');
-pterm2 = GRAD(num_dims,g2,[],-1,'D','D',BCL,BCR);
+pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV);
+pterm2 = GRAD(num_dims,g2,'',-1,'D','D',BCL,BCR,'',dV);
 term1_x = SD_TERM({pterm1,pterm2});
 
 pterm1 = MASS(g1);
@@ -95,8 +99,8 @@ g2 = @(y,p,t,dat) y.*0+1;
 pterm1 = MASS(g1);
 term2_x = SD_TERM({pterm1,pterm1});
 
-pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL,BCR);
+pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV);
+pterm2 = GRAD(num_dims,g2,'',-1,'D','D',BCL,BCR,'',dV);
 term2_y = SD_TERM({pterm1,pterm2});
 
 term2   = MD_TERM(num_dims,{term2_x,term2_y});
