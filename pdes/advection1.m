@@ -1,4 +1,4 @@
-function pde = advection1(opts)
+function pde = advection1_div(opts)
 % 1D test case using continuity equation, i.e., 
 %
 % df/dt == -2*df/dx - 2*sin(x)
@@ -6,17 +6,18 @@ function pde = advection1(opts)
 % Run with
 %
 % explicit
-% asgard(@advection1)
+% asgard(@advection1_div)
 % asgard(@advection1,'lev',4,'deg',3)
 %
 % implicit
-% asgard(@advection1,'timestep_method','CN')
-% asgard(@advection1,'timestep_method','CN','CFL',0.01)
+% asgard(@advection1_div,'timestep_method','CN')
+% asgard(@advection1_div,'timestep_method','CN','CFL',0.01)
 
 
 %% Define dimensions
 
 dim_x = DIMENSION(0,pi);
+dim_x.moment_dV = @(x,p,t,d) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -45,10 +46,12 @@ BCR_fList = { ...
 
 %% Define PDE terms
 % Here we have 1 term1, having only nDims=1 (x) operators.
+
+dV = @(x,p,t,dat) 0*x+1;
  
 % -2*df/dx
 g1 = @(x,p,t,dat) x.*0-2;
-pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
+pterm1 = GRAD(num_dims,g1,'',-1,'D','N', BCL_fList, '','',dV);
 
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x});
