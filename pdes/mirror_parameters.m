@@ -89,10 +89,80 @@ switch opts.case_
 	case 2
  		E = 10^-4*E_dreicer_si;
 	case 3
-		if isfield(opts.cmd_args,'E')
-	            E = opts.cmd_args.E;
-        	end
-		disp(['E: ', num2str(E)]);
+        n_cgs = 8e14; %equilibrium density in cm.^-3
+        m_e_cgs = 9.109*10^-28; %electron mass in g
+        m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
+        m_He_cgs = 6.7*10^-24; %helium 4 mass in g
+        m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
+        m_Ne_cgs = 3.3509177*10^-23; %Neon mass in g
+        temp_cgs = 1.6022e-10; %temperature in erg
+        params_cgs.a.n = n_cgs;
+        params_cgs.b.n = n_cgs;
+        params_cgs.b2.n = n_cgs;
+        %         params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
+        %         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
+        params_cgs.a.m = m_e_cgs; %beam is electrons
+        params_cgs.b.m = m_D_cgs; %background ions
+        params_cgs.b2.m = m_e_cgs; %background electrons
+        params_cgs.a.Z = -1;
+        params_cgs.b.Z = 1;
+        params_cgs.b2.Z = -1;
+        params_cgs.e = 4.803*10^-10; %charge in Fr
+        params_cgs.E = 2.6e-5; %E field in statvolt/cm
+        a.n = 10^6*params_cgs.a.n;%converting to m^-3
+        b.n = 10^6*params_cgs.b.n;
+        b2.n = 10^6*params_cgs.b2.n;
+        %         params.a.vth = 0.01*params_cgs.a.vth; %converting to m/s
+        %         params.b.vth = 0.01*params_cgs.b.vth;
+        a.m = 0.001*params_cgs.a.m; %converting to kg
+        b.m = 0.001*params_cgs.b.m;
+        b2.m = 0.001*params_cgs.b2.m;
+        a.Z = params_cgs.a.Z;
+        b.Z = params_cgs.b.Z;
+        b2.Z = params_cgs.b2.Z;
+        %params.E = 2.9979*10^4*params_cgs.E; %converting to V/m
+        a.E_eV = 1000;
+        a.T_eV = 5.11*10^3;
+        b.T_eV = a.T_eV;
+        b2.T_eV = a.T_eV;
+        a.vth = v_th(a.T_eV,a.m);
+        b2.vth = v_th(b2.T_eV,b2.m);
+        ln_delt = 15;
+        E_dreicer_si = a.n.*e^3*ln_delt/(2*pi*eps0^2*a.m ...
+            *a.vth^2);
+        frac = 1e-6;
+        %params.E = frac*E_dreicer_si;
+        %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
+        maxwell = @(v,offset,vth) a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
+        soln_v = @(v,p,t) solution_v(v,p,t);
+        f0_v = @(v) maxwell(v,0,a.vth);
+        init_cond_v = @(v,p,t) f0_v(v);
+        %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
+        %params.eps0 = 1/(4*pi);
+        if isfield(opts.cmd_args,'delta')
+            delta = opts.cmd_args.delta;
+        end
+        if isfield(opts.cmd_args,'E')
+            E = opts.cmd_args.E;
+        end
+        if isfield(opts.cmd_args,'Z')
+            b.Z = opts.cmd_args.Z;
+        end
+        if isfield(opts.cmd_args,'tau')
+           tau = opts.cmd_args.tau;
+        end
+        if isfield(opts.cmd_args,'nu_ee')
+            nu_ee = opts.cmd_args.nu_ee;
+        end      
+        if isfield(opts.cmd_args,'m')
+            b.m = opts.cmd_args.m;
+        end
+        if isfield(opts.cmd_args,'n')
+            a.n = opts.cmd_args.n;
+        end
+        b.vth = v_th(b.T_eV,b.m);
+        disp(['E: ', num2str(E)]);
+        disp(['Z: ', num2str(b.Z)]);
 end
 
 % Vacuum magnetic field function:
