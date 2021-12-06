@@ -1,4 +1,4 @@
-function [err,fval,fval_realspace,nodes,err_realspace,outputs] = ...
+function [err,fval,fval_realspace,nodes,err_realspace,outputs,opts] = ...
     asgard_run_pde(opts,pde)
 
 root_directory = get_root_folder();
@@ -506,6 +506,24 @@ for L = 1:opts.num_steps
     count=count+1;
     t1 = toc;
     if ~opts.quiet; disp(['Took ' num2str(t1) ' [s]']); end
+  
+    
+    % Hack right now to update the params data every time step
+    
+    if opts.update_params_each_timestep
+        
+        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
+        %       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
+        alpha_z = @(z) (pde.params.f0_p(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_p0,z,'spline','extrap'))/dt;
+        pde.params.alpha_z = alpha_z;
+        z = linspace(-1,1,100);
+        outputs.alpha_t0{L+1} = alpha_z;
+        %         outputs.alpha_t{L+1} = sum(alpha_z(z));
+        outputs.alpha_t{L+1} = alpha_z(0);
+        
+    end
+    
+    % Save output
     
     outputs = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
     
@@ -523,20 +541,7 @@ for L = 1:opts.num_steps
         ylim([0,2]);
     end
     
-    % Hack right now to update the params data every time step
-    
-    if opts.update_params_each_timestep
-       
-        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
-%       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
-        alpha_z = @(z) (pde.params.f0_p(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_p0,z,'spline','extrap'))/dt;
-        pde.params.alpha_z = alpha_z;
-        z = linspace(-1,1,100);
-        outputs.alpha_t0{L+1} = alpha_z;
-%         outputs.alpha_t{L+1} = sum(alpha_z(z));
-        outputs.alpha_t{L+1} = alpha_z(0);
-       
-    end
+
        
 end
 

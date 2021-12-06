@@ -137,20 +137,9 @@ CH_normfac_r = CH_normfac_nr;
 KB_normfac = 1/(kruskal_bernstein(0.1)/kulsrud_Z1(end));
 
 % Scan over E/E_D ratio
-do_E_scan = false;
+do_E_scan = true;
 if do_E_scan
-    figure
-    semilogy(ratio,kruskal_bernstein(ratio)*KB_normfac,'LineWidth',10,'Color','#E8E7E7','DisplayName','K-B (nr)');
-    ylim([1e-10 1]);
-    hold on
-    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,1)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=1)','color','red');
-    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,1)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=1)','color','red');
-    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,10)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=10)','color','blue');
-    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,10)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=10)','color','blue');
-    semilogy(kulsrud_E1,kulsrud_Z1,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=1)','color','red');
-    semilogy(kulsrud_E2,kulsrud_Z2,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=2)','color','green');
-    semilogy(kulsrud_E10,kulsrud_Z10,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=10)','color','blue');
-    legend
+    
     
     N2 = 15;
     ratio_max2 = 0.1;
@@ -172,8 +161,12 @@ if do_E_scan
             if dt > 2000
                 dt = 2000;
             end
-            [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
-            alpha_nr(i,Z) = outputs(i).alpha_t{end};
+            file_id = ['E_scan_nonrel_E',num2str(args.E),'_Z',num2str(args.Z)];
+            [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'save_output',true,'output_filename_id',file_id);
+            output_filename = create_output_filename(opts);
+            load(output_filename,'outputs');
+            alpha_nr(i,Z) = outputs.alpha_t{end};
+            clear outputs
         end
     end
     
@@ -187,22 +180,46 @@ if do_E_scan
             if dt > 2000
                 dt = 2000;
             end
-            [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
-            alpha_r(i,Z) = outputs(i).alpha_t{end};
+            file_id = ['E_scan_relati_E',num2str(args.E),'_Z',num2str(args.Z)];
+            [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'save_output',true,'output_filename_id',file_id);
+            output_filename = create_output_filename(opts);
+            load(output_filename,'outputs');
+            alpha_r(i,Z) = outputs.alpha_t{end};
+            clear outputs
         end
     end
     
+    set(groot,'defaultLineLineWidth',2.0)
+    set(groot,'defaultAxesFontSize',20)
+    set(groot,'defaultLegendFontSize',14)
+    figure('Position',[0 0 600 600])
+    semilogy(ratio,kruskal_bernstein(ratio)*KB_normfac,'LineWidth',10,'Color','#E8E7E7','DisplayName','K-B (nr)');
+    title('RE production rate benchmark','Interpreter','latex');
+    xlabel('$E/E_D$','Interpreter','latex');
+    ylabel('RE production rate $\alpha$ [arb. units]','Interpreter','latex');
+    ylim([1e-10 1]);
+    hold on
+    red = '#E74C3C';
+    blue = '#2E86C1';
+    green = '#229954';
+    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,1)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=1)','color',red);
+    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,1)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=1)','color',red);
+    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,10)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=10)','color',blue);
+    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,10)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=10)','color',blue);
+    semilogy(kulsrud_E1,kulsrud_Z1,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=1)','color',red);
+    semilogy(kulsrud_E2,kulsrud_Z2,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=2)','color',green);
+    semilogy(kulsrud_E10,kulsrud_Z10,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=10)','color',blue);
     norm_fac = kulsrud_Z1(end)/alpha_nr(N2,1);
     disp(['norm_fac: ',num2str(norm_fac)]);
     hold on
-    semilogy(ratio2,alpha_nr(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=1)','color','red');
-    semilogy(ratio2,alpha_nr(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=2)','color','green');
-    semilogy(ratio2,alpha_nr(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=10)','color','blue');
+    semilogy(ratio2,alpha_nr(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=1)','color',red);
+    semilogy(ratio2,alpha_nr(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=2)','color',green);
+    semilogy(ratio2,alpha_nr(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=10)','color',blue);
     
-    semilogy(ratio2,alpha_r(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=1)','color','red','LineStyle',':');
-    semilogy(ratio2,alpha_r(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=2)','color','green','LineStyle',':');
-    semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color','blue','LineStyle',':');
-    legend
+    semilogy(ratio2,alpha_r(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=1)','color',red,'LineStyle',':');
+    semilogy(ratio2,alpha_r(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=2)','color',green,'LineStyle',':');
+    semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color',blue,'LineStyle',':');
+    legend('FontSize',10)
     hold off
 end
 
@@ -225,12 +242,12 @@ if do_dof_scan
     for i=1:numel(E)
         args.E = E(i);
         dt = 2./args.E.^2/num_steps;
-        deg = 4;
+        deg = 3;
         lev = 4;
         if E(i)<0.06
             lev=4;
         end
-        lev_str = num2str(lev)
+        lev_str = num2str(lev);
         
         % Set this to produce the fullgrid (FG) results - these take
         % considerable time.
