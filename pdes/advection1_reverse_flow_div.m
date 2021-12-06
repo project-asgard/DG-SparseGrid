@@ -1,4 +1,4 @@
-function pde = advection1_reverse_flow(opts)
+function pde = advection1_reverse_flow_div(opts)
 % 1D advection problem with inhomogeneous Dirichlet BC 
 % (flow direction reversed from advection1.m)
 %  

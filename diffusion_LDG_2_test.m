@@ -1,8 +1,8 @@
-function pde = diffusion_LDG_test(opts)
+function pde = diffusion_LDG_2_test(opts)
 
 % Test 2D LDG diffusion in spherical coordinates
 %
-% df/dt == div(grad f) in spherical cordinates
+% df/dt == div(grad f) + S in spherical cordinates
 %
 % (p,th) is a spherical coordinate (p,th,ph), so the div and grad look like 
 %
@@ -16,13 +16,14 @@ function pde = diffusion_LDG_test(opts)
 %
 % Run with
 %
-% asgard(@diffusion_LDG_test,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
+% asgard(@diffusion_LDG_2_test,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
 %
 % or 
 %
-% asgard(@diffusion_LDG_test,'timestep_method','matrix_exponential','lev',2,'deg',4,'grid_type','FG','num_steps',1,'dt',3)
+% asgard(@diffusion_LDG_2_test,'timestep_method','matrix_exponential','lev',2,'deg',4,'grid_type','FG','num_steps',1,'dt',3)
 %
-% Analytic solution: f(r,th,t) = exp(-t)*(sin(r)/r^2-cos(r)/r)*cos(th)
+% Analytic solution: f(r,th,t) = (r-t)^2*(th^2+1) with source provided
+% below
 %   using approprite Dirichlet or Neumann BCs
 
 %% Define some parameters and add to pde object.
@@ -31,11 +32,9 @@ params.parameter1 = 0;
 
 %% Define the dimensions
 dV_p = @(x,p,t,d) x.^2;
-%dim_p = DIMENSION(0,4.49340945790906); %Gives zero dirichlet BCs
-%dim_p = DIMENSION(0,pi);
 dim_p = DIMENSION(0.5,pi);
 dim_p.moment_dV = dV_p;
-%dim_th = DIMENSION(0,pi);
+
 dim_th = DIMENSION(0.5,pi-0.5);
 dim_th.moment_dV = @(x,p,t,d) sin(x);
 dimensions = {dim_p,dim_th};
@@ -45,7 +44,7 @@ num_dims = numel(dimensions);
 
 soln1 = new_md_func(num_dims,{@(x,p,t) soln_p(x,p,t),...
                               @(x,p,t) soln_th(x,p,t),...
-                              @(t,p) exp(-t) });
+                              @(t,p) 0*t+1 });
                           
 % Just f(p,th,t) = 1 used in Neumann Case
 func_one = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
@@ -89,7 +88,7 @@ LHS_terms = {};
 %
 
 % Define gfuncs and surface jacobian: r^2*sin(th)
-g1 = @(x,p,t,dat) 0*x+1;
+g1 = @(x,p,t,dat) x;
 dV_p = @(x,p,t,d) x.^2;
 dV_th = @(x,p,t,d) sin(x);
 
@@ -103,6 +102,7 @@ pterm2 = GRAD(num_dims,g1,'',-1,'D','D',soln1,soln1,'',dV_p);
 
 term1_p = SD_TERM({pterm1,pterm2}); % order here is as in equation
 
+g1 = @(x,p,t,dat) 0*x+1;
 pterm1 = MASS(g1,[],[],dV_th); 
 term1_th = SD_TERM({pterm1,pterm1});
 term1   = MD_TERM(num_dims,{term1_p,term1_th});
@@ -119,14 +119,15 @@ term1   = MD_TERM(num_dims,{term1_p,term1_th});
 %
 
 % Define gfuncs and surface jacobian: r*sin(th)
-g1 = @(x,p,t,dat) 0*x+1;
 dV_p = @(x,p,t,d) x;
 dV_th = @(x,p,t,d) sin(x);
 
+g1 = @(x,p,t,dat) 0*x+1;
 pterm1 = MASS(g1,[],[],dV_p);
 term2_p = SD_TERM({pterm1,pterm1});
 
 % Dirichlet
+g1 = @(x,p,t,dat) x;
 pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV_th);
 pterm2 = GRAD(num_dims,g1,'',-1,'D','D',soln1,soln1,'',dV_th);
 
@@ -140,7 +141,27 @@ terms = {term1,term2};
 
 %% Define sources
 
-sources = {};
+% -2(r-t)(th^2+1)
+source1 = new_md_func(num_dims,{@(x,p,t,dat) 2*(x-t),...
+                                @(x,p,t,dat) soln_th(x,p,t),...
+                                @(t,p) 0*t-1});
+
+% -2r(5r-4t)(th^2+1)
+source2 = new_md_func(num_dims,{@(x,p,t,dat) 2*x.*(5*x-4*t),...
+                                @(x,p,t,dat) x.^2+1,...
+                                @(t,p) 0*t-1});
+
+% -6(r-t)^2 th^2/r^2
+source3 = new_md_func(num_dims,{@(x,p,t,dat) 6*(x-t).^2./(x.^2),...
+                                @(x,p,t,dat) x.^2,...
+                                @(t,p) 0*t-1});
+
+% -2(r-t)^2/r^2 th^3cot(th)
+source4 = new_md_func(num_dims,{@(x,p,t,dat) 2*(x-t).^2./(x.^2),...
+                                @(x,p,t,dat) tmp_func(x,p,t),...
+                                @(t,p) 0*t-1});
+                            
+sources = {source1,source2,source3,source4};
 
 %% Define function to set time step
     function dt=set_dt(pde,CFL)       
@@ -159,18 +180,12 @@ end
 
 % p part of the solution (taylor expansion so there's no division by 0)
 function z = soln_p(x,p,t)
-    if abs(x) < 1e-7
-        z = x/3 - x.^3/30 + x.^5/840; %Taylor expansion truncation near 0
-    else
-        z = sin(x)./(x.^2) - cos(x)./x;
-    end
-    %z = (x > pi/2-0.25).*(x < pi/2+0.25);
+    z = (x-t).^2;
 end
 
 % th part of the solution
 function z = soln_th(x,p,t)
-    z = cos(x);
-    %z = (x > pi/4-0.25).*(x < pi/4+0.25);
+    z = x.^2+1;
 end
 
 
@@ -183,4 +198,10 @@ function z = dsoln_p(x,p,t)
     end
 end
 
-
+function z = tmp_func(x,p,t)
+    if abs(x) < 1e-7
+        z = x.^2 - x.^4/3 - x.^6/45 - 2*x.^8/945;
+    else
+        z = cot(x).*x.^3;
+    end
+end

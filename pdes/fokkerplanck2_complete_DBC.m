@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_complete_div(opts)
+function pde = fokkerplanck2_complete_DBC_div(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Full PDE from the 2D runaway electron paper 
@@ -55,28 +55,27 @@ function pde = fokkerplanck2_complete_div(opts)
 % NOTES
 %
 % For Lin's case the command that should reproduce her results
-% asgard(@fokkerplanck2_complete_div,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000,'time_independent_A',true,'case',1)
+% asgard(@fokkerplanck2_complete_DBC_div,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000,'time_independent_A',true,'case',1)
 %
 % David's adjustment can be run as follows ...
-% asgard(@fokkerplanck2_complete_div,'timestep_method','BE','lev',3,'deg',6,'dt',1,'num_steps',50,'grid_type','FG','time_independent_A',true,'case',1)
+% asgard(@fokkerplanck2_complete_DBC_div,'timestep_method','BE','lev',3,'deg',6,'dt',1,'num_steps',50,'grid_type','FG','time_independent_A',true,'case',1)
 % or, run with the high order time integrator ...
-% asgard(f@okkerplanck2_complete_div,'timestep_method','ode15s','lev',3,'deg',5,'dt',50,'num_steps',1,'grid_type','SG','case',1)
+% asgard(f@okkerplanck2_complete_DBC_div,'timestep_method','ode15s','lev',3,'deg',5,'dt',50,'num_steps',1,'grid_type','SG','case',1)
 
 params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions 
 
-p_max = 10;
-if isfield(opts.cmd_args,'p_max')
-    p_max = opts.cmd_args.p_max;
-end
-
-dim_p = DIMENSION(0,p_max);
+dim_p = DIMENSION(0,opts.cmd_args.p_max);
 dim_z = DIMENSION(-1,+1);
 dim_p.moment_dV = @(x,p,t,dat) x.^2;
 dim_z.moment_dV = @(x,p,t,dat) x.*0+1;
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
+
+%% Define the analytic solution (optional)
+
+solutions = {};
 
 %% Define the initial conditions
 ic_p = @(x,p,t) p.f0_p(x);
@@ -85,9 +84,7 @@ ic_z = @(x,p,t) p.f0_z(x);
 ic1 = new_md_func(num_dims,{ic_p,ic_z});
 initial_conditions = {ic1};
 
-%% Define the analytic solution (optional)
-
-solutions = {ic1};
+BC1 = new_md_func(num_dims,{@(x,p,t) 0*x+1,@(x,p,t) 0*x+1,@(t,p) 0*t+1});
 
 %% Define the terms of the PDE
 
@@ -110,13 +107,18 @@ solutions = {ic1};
 %           (secnd eqn)             [mass, g1(z) = 1, BC=NA] 
 
 % Surface jacobian is for p constant is p^2
-dV_p = @(x,p,t,dat) x.^2;
+DBC_tol = 1e-5;
+lim0val = 1; %%% This needs to be set to lim_{p\to 0} C_A(p)*p^2 
+             %%% which should be a constant.
+dV_p1 = @(x,p,t,dat) x.^2;
+dV_p2 = @(x,p,t,dat) x.^2.*(x > DBC_tol) + 1*(x <= DBC_tol);
 dV_z = @(x,p,t,dat) 0*x+1;
 
 % LDG in p
-g1 = @(x,p,t,dat) sqrt(p.Ca(x));
-pterm1  =  DIV(num_dims,g1,'',+1,'D','N','','','',dV_p);
-pterm2  = GRAD(num_dims,g1,'',-1,'N','D','','','',dV_p);
+g1 = @(x,p,t,dat) 0*x+1;
+g2 = @(x,p,t,dat) p.Ca(x).*(x > DBC_tol) + lim0val*(x <= DBC_tol);
+pterm1  =  DIV(num_dims,g1,'',+1,'N','N','','','',dV_p1);
+pterm2  = GRAD(num_dims,g2,'',-1,'D','D',BC1,'','',dV_p2);
 term1_p = SD_TERM({pterm1,pterm2});
 
 % MASS in z
@@ -174,7 +176,7 @@ dV_z = @(x,p,t,dat) sqrt(1-x.^2);
 
 % MASS in p
 
-g1 = @(x,p,t,dat) sqrt(p.Cb(x));
+g1 = @(x,p,t,dat) min(sqrt(p.Cb(x))./x,1e7); %Limiting so we don't get 0/0.
 pterm1  = MASS(g1,'','',dV_p);
 term3_p = SD_TERM({pterm1,pterm1});
 
@@ -296,28 +298,11 @@ termR2_z = SD_TERM({pterm1});
 
 termR2 = MD_TERM(num_dims,{termR2_p, termR2_z});
 
-%terms = {termC1, termC2, termC3, termE1, termE2, termE3, termR1, termR2};
-%terms = {termC1, termC2, termC3, termR1, termR2};
-terms = {termC1, termC2, termC3, termE1, termE2, termE3};
-%terms = {termC1, termC2, termC3};
-
+terms = {termC1, termC2, termC3, termE1, termE2, termE3, termR1, termR2};
 
 %% Define sources
 
 sources = {};
-
-    function res = my_alpha(x,p,t)
-%         disp(num2str(p.alpha_z(x)));
-        res = p.alpha_z(x);
-    end
-
-switch opts.case_
-    case 5
-        source1_p = @(x,p,t,d) p.f0_p(x);
-        source1_z = @(x,p,t,d) my_alpha(x,p,t);
-        source1 = new_md_func(num_dims,{source1_p,source1_z});
-        sources = {source1};
-end
 
 %% Define function to set time step
     function dt=set_dt(pde,CFL)      

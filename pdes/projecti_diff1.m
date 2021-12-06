@@ -1,4 +1,4 @@
-function pde = projecti_diff1(opts)
+function pde = projecti_diff1_div(opts)
 % Example PDE using the 1D Diffusion Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition.
@@ -39,6 +39,7 @@ switch opts.case_
     otherwise
         dim_x = DIMENSION(0,2);        
 end
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -75,6 +76,8 @@ initial_conditions = {ic1};
 %
 % coeff_mat = mat1 * mat2
 
+dV = @(x,p,t,dat) 0*x+1;
+
 g1 = @(x,p,t,dat) x.*0+nu;
 g2 = @(x,p,t,dat) x.*0+1;
 
@@ -83,23 +86,23 @@ BCR = soln1;
 
 switch opts.case_
     case 1
-        pterm1 = GRAD(num_dims,g1,0,'N','N'); % Q = k*cos(k*x) => Q(x) = k, Q'(x) = -k^2*sin(k*x) == 0 
-        pterm2 = GRAD(num_dims,g2,0,'D','D'); % f = sin(k*x) => Q(x)=0
+        pterm1 =  DIV(num_dims,g1,'',0,'N','N','',dV); % Q = k*cos(k*x) => Q(x) = k, Q'(x) = -k^2*sin(k*x) == 0 
+        pterm2 = GRAD(num_dims,g2,'',0,'D','D',BCL,BCR,'',dV); % f = sin(k*x) => Q(x)=0
     case 2
-        pterm1 = GRAD(num_dims,g1,+1,'D','D');
-        pterm2 = GRAD(num_dims,g2,-1,'N','N');
+        pterm1 =  DIV(num_dims,g1,'',+1,'D','D',BCL,BCR,'',dV);
+        pterm2 = GRAD(num_dims,g2,'',-1,'N','N','','','',dV);
     case 3
-        pterm1 = GRAD(num_dims,g1,+1,'D','N'); % if you switch the signs of the fluxes this will fail on the right
-        pterm2 = GRAD(num_dims,g2,-1,'N','D');
+        pterm1 =  DIV(num_dims,g1,'',+1,'D','N',BCL,'','',dV); % if you switch the signs of the fluxes this will fail on the right
+        pterm2 = GRAD(num_dims,g2,'',-1,'N','D','',BCR,'',dV);
     case 4
-        pterm1 = GRAD(num_dims,g1,-1,'N','D'); % if you switch the signs of the fluxes this will pass
-        pterm2 = GRAD(num_dims,g2,+1,'D','N');
+        pterm1 =  DIV(num_dims,g1,'',-1,'N','D','',BCR,'',dV); % if you switch the signs of the fluxes this will pass
+        pterm2 = GRAD(num_dims,g2,'',+1,'D','N',BCL,'','',dV);
     case 5 
-        pterm1 = GRAD(num_dims,g1,0,'D','N');
-        pterm2 = GRAD(num_dims,g2,0,'N','D');
+        pterm1 =  DIV(num_dims,g1,'',0,'D','N',BCL,'','',dV);
+        pterm2 = GRAD(num_dims,g2,'',0,'N','D','',BCR,'',dV);
     case 6
-        pterm1 = GRAD(num_dims,g1,0,'N','D');
-        pterm2 = GRAD(num_dims,g2,0,'D','N');
+        pterm1 =  DIV(num_dims,g1,'',0,'N','D','',BCR,'',dV);
+        pterm2 = GRAD(num_dims,g2,'',0,'D','N',BCL,'','',dV);
 end
 
 term1_x = SD_TERM({pterm1,pterm2});
@@ -130,5 +133,6 @@ sources = {};
 pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
+
 
 

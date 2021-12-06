@@ -1,4 +1,4 @@
-function pde = projecti_adv_diff1(opts)
+function pde = projecti_adv_diff1_div(opts)
 % Example PDE using the 1D Diffusion Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 
@@ -28,6 +28,7 @@ function pde = projecti_adv_diff1(opts)
 %% Define the dimensions
 
 dim_x = DIMENSION(-1,+3);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -61,11 +62,13 @@ initial_conditions = {ic1};
 %
 % coeff_mat = mat1 * mat2
 
+dV = @(x,p,t,dat) 0*x+1;
+
 g1 = @(x,p,t,dat) x.*0+nu;
 g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,-1,'P','P');
+pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV);
+pterm2 = GRAD(num_dims,g2,'',-1,'D','D',soln1,soln1,'',dV);
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
@@ -79,7 +82,7 @@ term1   = MD_TERM(num_dims,{term1_x});
 
 g1 = @(x,p,t,dat) x.*0-v;
 
-pterm1 = GRAD(num_dims,g1,-1,'P','P');
+pterm1 = DIV(num_dims,g1,'',-1,'D','N',soln1,'','',dV);
 
 term2_x = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{term2_x});

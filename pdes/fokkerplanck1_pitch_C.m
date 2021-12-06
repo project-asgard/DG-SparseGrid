@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_pitch_C(opts)
+function pde = fokkerplanck1_pitch_C_div(opts)
 % 1D pitch angle collisional term 
 % df/dt == d/dz ( (1-z^2) df/dz ) 
 % 
@@ -7,17 +7,19 @@ function pde = fokkerplanck1_pitch_C(opts)
 %
 % df/dt == d/dz( (1-z^2) df/dz ) becomes
 %
-% eq1 : df/dt == d/dz g(z) q(z)       [grad,g(z)=1-z^2,BCL=D,BCR=D]
-% eq2 :  q(z) == d/dz g(z) f(z)       [grad,g(z)=1,BCL=N,BCR=N]
+% eq1 : df/dt ==  div( q(z) )   [div ,g(z)=1,BCL=D,BCR=D]
+% eq2 :  q(z) == grad( f(z) )   [grad,g(z)=1,BCL=N,BCR=N]
 %
+% Here div(F\hat(z)) = d/dz(sqrt(1-z^2)F) and 
+%            grad(F) = sqrt(1-z^2)df/dz\hat(z)
 %
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck1_pitch_C);
+% asgard(@fokkerplanck1_pitch_C_div);
 %
 % implicit use in FP paper
-% asgard(@fokkerplanck1_pitch_C,'timestep_method','CN','num_steps',20,'lev',3,'deg',3);
+% asgard(@fokkerplanck1_pitch_C_div,'timestep_method','matrix_exponential','dt',1,'lev',3,'deg',3);
 
     function ret = soln(z,t)
         
@@ -44,6 +46,7 @@ function pde = fokkerplanck1_pitch_C(opts)
 %% Define the dimensions
 
 dim_z = DIMENSION(-1,+1);
+dim_z.moment_dV = @(x,p,t) 0*x+1;
 dimensions = {dim_z};
 num_dims = numel(dimensions);
 
@@ -68,10 +71,11 @@ initial_conditions = {ic1};
 %
 % d/dz( (1-z^2) df/dz )
 
-g1 = @(z,p,t,dat) 1-z.^2;
-g2 = @(z,p,t,dat) z.*0+1;
-pterm1  = GRAD(num_dims,g1,-1,'D','D');
-pterm2  = GRAD(num_dims,g2,+1,'N','N');
+dV_z = @(z,p,t,dat) sqrt(1-z.^2);
+g1 = @(z,p,t,dat) 0*z+1;
+
+pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
+pterm2  = GRAD(num_dims,g1,'',+1,'N','N','','','',dV_z);
 termC_z = SD_TERM({pterm1,pterm2});
 termC   = MD_TERM(num_dims,{termC_z});
 
@@ -104,4 +108,5 @@ sources = {};
 pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
+
 
