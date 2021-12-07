@@ -1,4 +1,4 @@
-function pde = advection1_spherical_div(opts)
+function pde = advection1_spherical(opts)
 % 1D test case using continuity equation, i.e.,
 %
 % df/dt == -1/r^2*d/dr(r^2 * v * r * f(r,t))

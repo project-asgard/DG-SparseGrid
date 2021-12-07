@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_complete_div(opts)
+function pde = fokkerplanck2_complete(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Full PDE from the 2D runaway electron paper 
@@ -44,13 +44,13 @@ function pde = fokkerplanck2_complete_div(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck2_complete_div,'CFL',0.01,'case',1)
+% asgard(@fokkerplanck2_complete,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_complete_div,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
+% asgard(@fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
 %
 % with adaptivity
-% asgard(@fokkerplanck2_complete_div,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true,'case',1)
+% asgard(@fokkerplanck2_complete,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true,'case',1)
 %
 % NOTES
 %

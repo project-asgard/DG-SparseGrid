@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_pitch_CER_div(opts)
+function pde = fokkerplanck1_pitch_CER(opts)
 % Problem 4.5 from the RE paper - evolution of the pitch angle dependence
 % of f in the presence of electric field acceleration and collisions and
 % radiation damping
@@ -17,7 +17,7 @@ function pde = fokkerplanck1_pitch_CER_div(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck1_pitch_CER_div,'timestep_method','matrix_exponential','lev',3,'deg',4,'dt',1,'num_steps',50,'case',1,'normalize_by_mass',true)
+% asgard(@fokkerplanck1_pitch_CER,'timestep_method','matrix_exponential','lev',3,'deg',4,'dt',1,'num_steps',50,'case',1,'normalize_by_mass',true)
 
 sig = 0.1;
 E = 2.0;

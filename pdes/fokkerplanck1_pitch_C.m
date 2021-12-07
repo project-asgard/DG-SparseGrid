@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_pitch_C_div(opts)
+function pde = fokkerplanck1_pitch_C(opts)
 % 1D pitch angle collisional term 
 % df/dt == d/dz ( (1-z^2) df/dz ) 
 % 
@@ -16,10 +16,10 @@ function pde = fokkerplanck1_pitch_C_div(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck1_pitch_C_div);
+% asgard(@fokkerplanck1_pitch_C);
 %
 % implicit use in FP paper
-% asgard(@fokkerplanck1_pitch_C_div,'timestep_method','matrix_exponential','dt',1,'lev',3,'deg',3);
+% asgard(@fokkerplanck1_pitch_C,'timestep_method','matrix_exponential','dt',1,'lev',3,'deg',3);
 
     function ret = soln(z,t)
         

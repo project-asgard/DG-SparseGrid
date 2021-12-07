@@ -1,4 +1,4 @@
-function pde = continuity2_div(opts)
+function pde = continuity2(opts)
 % 2D test case using continuity equation, i.e.,
 %
 % df/dt == -df/dx - df/dy
@@ -49,7 +49,12 @@ dV = @(x,p,t,dat) 0*x+1;
 g1 = @(x,p,t,dat) x*0-1;
 pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term1_x = SD_TERM({pterm1});
-term1   = MD_TERM(num_dims,{term1_x,[]});
+
+g1 = @(x,p,t,dat) 0*x+1;
+pterm1 = MASS(g1,'','',dV);
+term1_y = SD_TERM({pterm1});
+
+term1   = MD_TERM(num_dims,{term1_x,term1_y});
 
 %%
 % -df/dy which is

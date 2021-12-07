@@ -1,4 +1,4 @@
-function pde = continuity1_div(opts)
+function pde = continuity1(opts)
 % 1D test case using continuity equation, i.e., 
 %
 % df/dt == -df/dx
@@ -6,10 +6,10 @@ function pde = continuity1_div(opts)
 % Run with
 %
 % explicit
-% asgard(@continuity1_div,'lev',4,'deg',3)
+% asgard(@continuity1,'lev',4,'deg',3)
 %
 % implicit
-% asgard(@continuity1_div,'timestep_method','CN')
+% asgard(@continuity1,'timestep_method','CN')
 
 %% Define the dimensions
 

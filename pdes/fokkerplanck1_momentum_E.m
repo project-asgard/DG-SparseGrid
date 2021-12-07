@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_momentum_E_div(opts)
+function pde = fokkerplanck1_momentum_E(opts)
 % Combining momentum and pitch angle dynamics for the E term
 %
 % d/dt f(p,z) == -div(flux_E)
@@ -24,7 +24,7 @@ function pde = fokkerplanck1_momentum_E_div(opts)
 %
 % Run with
 %
-% asgard(@fokkerplanck1_momentum_E_div,'timestep_method','matrix_exponential','dt',0.1,'num_steps',10,'case',2,'lev',4,'deg',4,'calculate_mass',true)
+% asgard(@fokkerplanck1_momentum_E,'timestep_method','matrix_exponential','dt',0.1,'num_steps',10,'case',2,'lev',4,'deg',4,'calculate_mass',true)
 %
 % case = 1 % flat initial condition
 % case = 2 % maxwellian initial condition
