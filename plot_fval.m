@@ -40,9 +40,9 @@ if num_dims==2
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(ny/2));
+    sy = max(1,floor(ny));
     if ny > 2
-        sy = sy+2; % just to get off the exact middle
+        sy = sy-1; % just to get off the exact middle
     end
 %     sy=ny;
     

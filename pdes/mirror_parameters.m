@@ -40,34 +40,6 @@ coil_radius  = [radius_loop, radius_loop]; %radii of coils
 coil_coords = [-1.5, 1.5]; %location of coils in physical space
 coil_i  = [+1.5,1.5]*1e2; %current going through each coil in amps
 
-% species b: electrons in background
-b.n = 4e19; %number density of background species in m^-3
-b.E_eV = 0;%energy of background species
-b.T_eV = 50;%temperature/spread of background species
-b.Z = -1;%atomic number of species
-b.m = m_e; %mass of background
-b.vth = v_th(b.T_eV,b.m);%thermal velocity of background
-
-%species b2: deuterium in background
-b2.n = 4e19;
-b2.E_eV = 0;
-b2.T_eV = 50;
-b2.Z = 1;
-b2.m = m_D;
-b2.vth = v_th(b2.T_eV,b2.m);
-
-% species a: species in beam
-a.n = 4e19;
-a.E_eV = 3e3; %energy of beam species
-a.T_eV = 20; %temperature/spread of beam species
-a.Z = 1;
-a.z0 = pi/4; %location of beam injection in pitch angle (radians)
-a.dz0 = sqrt(a.T_eV/a.E_eV); %spread of beam in pitch angle
-a.s0 = 0; %location of beam in space (m)
-a.ds0 = 2.5; %spread of beam in space (m)
-a.m = m_D;
-a.vth = v_th(a.T_eV,a.m);
-a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
 
 vel_norm       = @(v,vth) v./vth; %normalized velocity to thermal velocity
 space_norm      = @(s,R_mag) s/R_mag; %normalized spatial coordinate to radius of magnetic coil
@@ -85,7 +57,34 @@ E_dreicer_si = 1;
 
 switch opts.case_
 	case 1
-		E = 10^-6*E_dreicer_si;
+        % species b: electrons in background
+        b.n = 4e19; %number density of background species in m^-3
+        b.E_eV = 0;%energy of background species
+        b.T_eV = 50;%temperature/spread of background species
+        b.Z = -1;%atomic number of species
+        b.m = m_e; %mass of background
+        b.vth = v_th(b.T_eV,b.m);%thermal velocity of background
+        
+        %species b2: deuterium in background
+        b2.n = 4e19;
+        b2.E_eV = 0;
+        b2.T_eV = 50;
+        b2.Z = 1;
+        b2.m = m_D;
+        b2.vth = v_th(b2.T_eV,b2.m);
+        
+        % species a: species in beam
+        a.n = 4e19;
+        a.E_eV = 3e3; %energy of beam species
+        a.T_eV = 50; %temperature/spread of beam species
+        a.Z = 1;
+        a.z0 = pi/4; %location of beam injection in pitch angle (radians)
+        a.dz0 = sqrt(a.T_eV/a.E_eV); %spread of beam in pitch angle
+        a.s0 = 0; %location of beam in space (m)
+        a.ds0 = 2.5; %spread of beam in space (m)
+        a.m = m_D;
+        a.vth = v_th(a.T_eV,a.m);
+a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
 	case 2
  		E = 10^-4*E_dreicer_si;
 	case 3
@@ -96,19 +95,21 @@ switch opts.case_
         m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
         m_Ne_cgs = 3.3509177*10^-23; %Neon mass in g
         temp_cgs = 1.6022e-10; %temperature in erg
-        params_cgs.a.n = n_cgs;
-        params_cgs.b.n = n_cgs;
-        params_cgs.b2.n = n_cgs;
+        ln_delt = 18; %Coulomb logarithm
         %         params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
         %         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
         params_cgs.a.m = m_e_cgs; %beam is electrons
-        params_cgs.b.m = m_D_cgs; %background ions
+        params_cgs.b.m = m_Ne_cgs; %background ions
         params_cgs.b2.m = m_e_cgs; %background electrons
         params_cgs.a.Z = -1;
-        params_cgs.b.Z = 1;
+        params_cgs.b.Z = 10;
         params_cgs.b2.Z = -1;
+        params_cgs.a.n = n_cgs;
+        params_cgs.b.n = n_cgs/params_cgs.b.Z;
+        params_cgs.b2.n = n_cgs;
         params_cgs.e = 4.803*10^-10; %charge in Fr
-        params_cgs.E = 2.6e-5; %E field in statvolt/cm
+        params_cgs.E = 2.6e-7; %E field in statvolt/cm
+        params_cgs.v_c = @(E_cgs) sqrt(4*pi*params_cgs.e^3 * params_cgs.a.n * ln_delt / (params_cgs.a.m * E_cgs));
         a.n = 10^6*params_cgs.a.n;%converting to m^-3
         b.n = 10^6*params_cgs.b.n;
         b2.n = 10^6*params_cgs.b2.n;
@@ -120,22 +121,22 @@ switch opts.case_
         a.Z = params_cgs.a.Z;
         b.Z = params_cgs.b.Z;
         b2.Z = params_cgs.b2.Z;
-        %params.E = 2.9979*10^4*params_cgs.E; %converting to V/m
+        %E = 2.9979*10^4*params_cgs.E; %converting to V/m
         a.E_eV = 1000;
         a.T_eV = 5.11*10^3;
         b.T_eV = a.T_eV;
         b2.T_eV = a.T_eV;
         a.vth = v_th(a.T_eV,a.m);
+        a.v_beam = 0;%a.vth/6;
         b2.vth = v_th(b2.T_eV,b2.m);
-        ln_delt = 15;
         E_dreicer_si = a.n.*e^3*ln_delt/(2*pi*eps0^2*a.m ...
             *a.vth^2);
-        frac = 1e-6;
-        %params.E = frac*E_dreicer_si;
+        frac = 0.1;
+        E = frac*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         maxwell = @(v,offset,vth) a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         soln_v = @(v,p,t) solution_v(v,p,t);
-        f0_v = @(v) maxwell(v,0,a.vth);
+        f0_v = @(v) maxwell(v,a.v_beam,a.vth);
         init_cond_v = @(v,p,t) f0_v(v);
         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
         %params.eps0 = 1/(4*pi);
@@ -163,6 +164,7 @@ switch opts.case_
         b.vth = v_th(b.T_eV,b.m);
         disp(['E: ', num2str(E)]);
         disp(['Z: ', num2str(b.Z)]);
+        disp(['E/E_D:', num2str(E/E_dreicer_si)]);
 end
 
 % Vacuum magnetic field function:
@@ -200,12 +202,12 @@ uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
 
 f0_v = @f_init_v;
     function res = f_init_v(v)
-        res = zeros(size(v));
+        %res = zeros(size(v));
         res = maxwell(v,a.v_beam,a.vth);
         %res = gauss(v,a.v_beam,a.vth,a);
     end
 
-init_cond_v = @(v,p,t) gauss(v,a.v_beam,a.vth,a);
+init_cond_v = @(v,p,t) maxwell(v,a.v_beam,a.vth);
 init_cond_z = @(z,p,t) z.*0 + 1;%gauss(z,a.z0,a.dz0,a);
 init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
 init_cond_t = @(t,p) t*0 + 1;
@@ -229,7 +231,9 @@ soln_s = @solution_s;
     end
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
-        ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
+%        ret = init_cond_v(v);
+         ret = maxwell(v,0,a.vth);
+%        ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
         end

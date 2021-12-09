@@ -528,14 +528,15 @@ for L = 1:opts.num_steps
         f_v0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
 %        alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
 %        alpha_z = @(z) (pde.params.f0_v(nodes{1}(1))-interp1(nodes{2},f_v0,z,'spline','extrap'))/dt;
+%        pde.params.f0_v(nodes_nodups{1}(1))-f_v0
         alpha_z = @(z) (pde.params.f0_v(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_v0,z,'spline','extrap'))/dt;
-%        alpha_z =  @(z) z.*0 + f_v0(1)./dt;
+%        alpha_z =  @(z) z.*0; %+ f_v0(1)./dt;
         pde.params.alpha_z = alpha_z;
-        z = linspace(0,pi,100);
+%        z = linspace(0,pi,100);
         outputs.alpha_t0{L+1} = alpha_z;
 %        outputs.alpha_t{L+1} = sum(alpha_z(z));
         outputs.alpha_t{L+1} = alpha_z(0);
-%        alpha_z(0)
+        alpha_z(0)
 
         background_species = [pde.params.b, pde.params.b2];
         uVals = nodes{1};

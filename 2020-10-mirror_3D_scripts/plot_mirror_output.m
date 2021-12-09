@@ -57,7 +57,7 @@ function plot_mirror_output(nodes, outputs, pde, opts)
 %      [x_grid, y_grid] = meshgrid(outputs.time_array,x_E);
       outputs.time_array(1) = 0;
 for i = 1:numel(outputs.time_array)
-      f_data(i,:) = outputs.f_realspace_nD_t{i}(ny/4-5,:).*x.^2;
+      f_data(i,:) = outputs.f_realspace_nD_t{i}(ny/2,:);
 end
       %contourf(outputs.time_array,x_E,real(f_data)',50);
 %      f_data = permute(f_data,[1 3 2]);
@@ -79,15 +79,18 @@ for j = 1:num_steps
      for i = 1:length(x)
           f1d_new(i) = fval_realspace(i);
           f1d_analytic_new(i) = f1d_analytic(i);
-      end
-     %loglog(x_E,f_data,'-','LineWidth', 3);
+     end
+     time = outputs.dt*j;
+     %loglog(x,f_data(j,:),'DisplayName',[num2str(time)]);
      hold on
 end
+legend();
+hold off
       %formulating the Hinton solution
-      timespan = [0 1e-3]; %time span in seconds
-      x0 = 3e3; %initial energy in eV
-      y = @(x) sqrt(1.602e-19.*x./(0.5.*3.3443e-27)); %velocity function in terms of energy
-      [t,E] = ode45(@(t,E) (-params.nu_E(y(E),params.a,params.b)-params.nu_E(y(E),params.a,params.b2)).*E,timespan,x0);
+     % timespan = [0 1e-3]; %time span in seconds
+     % x0 = 3e3; %initial energy in eV
+     % y = @(x) sqrt(1.602e-19.*x./(0.5.*3.3443e-27)); %velocity function in terms of energy
+     % [t,E] = ode45(@(t,E) (-params.nu_E(y(E),params.a,params.b)-params.nu_E(y(E),params.a,params.b2)).*E,timespan,x0);
      %plot(x,f1d_ic,'--');
      %plotting Hinton solution alongside numerical values
      %x = x./x0;
@@ -102,7 +105,7 @@ end
      %plot(v_norm,f_slice);
      %figure
      plot(outputs.time_array,conduct_vals,'-','LineWidth',2);
-    % hold on
+     hold on
      %loglog(x_E,f1d_analytic_new, '-o');
      %semilogy(outputs.time_array,hint_func,'k');
     % hold off
@@ -160,6 +163,7 @@ end
     
 %    contourf(v_par,v_perp,outputs.f_realspace_nD_t{1,num_steps}(:,sx));
 %     hold on
+%plot(v_par,fval_realspace);
 %     plot(z,v_perp_temp, 'r');
 %     plot(z,v_par_temp, 'b');
 %     hold off

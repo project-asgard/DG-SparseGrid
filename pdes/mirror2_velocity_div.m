@@ -56,132 +56,10 @@ function pde = mirror2_velocity_div(opts)
 
 params = mirror_parameters(opts);
 
-% switch opts.case_
-%     case 1 
-%         params.a.T_eV = 50;
-%         params.a.vth = params.v_th(params.a.T_eV,params.a.m);
-%         params.a.E_eV = 3e3; %case with offset and no change in Temperature
-%         params.init_cond_v = @(v,p,t) params.maxwell(v,params.a.v_beam,params.a.vth);
-%     case 2 
-%         m_e_cgs = 9.109*10^-28; %electron mass in g
-%         m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
-%         m_He_cgs = 6.7*10^-24; %helium 4 mass in g 
-%         m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
-%         temp_cgs = 1.6022e-10; %temperature in erg
-% %         params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
-% %         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
-%         params_cgs.a.m = m_e_cgs; %beam is electrons
-%         params_cgs.b.m = m_e_cgs; %background is electrons
-%         params_cgs.b2.m = m_D_cgs;
-%         params_cgs.a.Z = -1;
-%         params_cgs.b.Z = -1;
-%         params_cgs.b2.Z = 1;
-%         params_cgs.e = 4.803*10^-10; %charge in Fr
-%         params_cgs.E = 2.6e-5; %E field in statvolt/cm
-% %         params.a.vth = 0.01*params_cgs.a.vth; %converting to m/s
-% %         params.b.vth = 0.01*params_cgs.b.vth;
-%         params.a.m = 0.001*params_cgs.a.m; %converting to kg
-%         params.b.m = 0.001*params_cgs.b.m; 
-%         params.b2.m = 0.001*params_cgs.b2.m;
-%         params.a.Z = params_cgs.a.Z;
-%         params.b.Z = params_cgs.b.Z;
-%         params.b2.Z = params_cgs.b2.Z;
-%         params.a.n = 5e19;
-%         params.a.T_eV = 5111;
-%         params.ln_delt = 20;
-%         params.a.vth = params.v_th(params.a.T_eV,params.a.m)/sqrt(2);
-%         params.b.vth = params.v_th(params.b.T_eV,params.b.m)/sqrt(2);
-%         E_dreicer_si = params.a.n.*params.e^3*params.ln_delt/(4*pi*params.eps0^2*params.a.m ... 
-%             *params.a.vth^2);
-%         params.E = -10^-4*E_dreicer_si;
-%         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
-%         params.maxwell = @(v,offset,vth) params.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
-%         params.init_cond_v = @(v,p,t) params.maxwell(v,0,params.a.vth);
-%         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
-%     case 3 
-%         n_cgs = 8e14; %equilibrium density in cm.^-3
-%         m_e_cgs = 9.109*10^-28; %electron mass in g
-%         m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
-%         m_He_cgs = 6.7*10^-24; %helium 4 mass in g 
-%         m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
-%         m_Ne_cgs = 3.3509177*10^-23; %Neon mass in g
-%         temp_cgs = 1.6022e-10; %temperature in erg
-%         params_cgs.a.n = n_cgs;
-%         params_cgs.b.n = n_cgs;
-%         params_cgs.b2.n = n_cgs;
-% %         params_cgs.a.vth = sqrt(2*temp_cgs/m_e_cgs);
-% %         params_cgs.b.vth = sqrt(2*temp_cgs/m_e_cgs);
-%         params_cgs.a.m = m_e_cgs; %beam is electrons
-%         params_cgs.b.m = m_D_cgs; %background ions
-%         params_cgs.b2.m = m_e_cgs; %background electrons
-%         params_cgs.a.Z = -1;
-%         params_cgs.b.Z = 1;
-%         params_cgs.b2.Z = -1;
-%         params_cgs.e = 4.803*10^-10; %charge in Fr
-%         params_cgs.E = 2.6e-5; %E field in statvolt/cm
-%         params.a.n = 10^6*params_cgs.a.n;%converting to m^-3
-%         params.b.n = 10^6*params_cgs.b.n;
-%         params.b2.n = 10^6*params_cgs.b2.n;
-% %         params.a.vth = 0.01*params_cgs.a.vth; %converting to m/s
-% %         params.b.vth = 0.01*params_cgs.b.vth;
-%         params.a.m = 0.001*params_cgs.a.m; %converting to kg
-%         params.b.m = 0.001*params_cgs.b.m; 
-%         params.b2.m = 0.001*params_cgs.b2.m;
-%         params.a.Z = params_cgs.a.Z;
-%         params.b.Z = params_cgs.b.Z;
-%         params.b2.Z = params_cgs.b2.Z;
-%         %params.E = 2.9979*10^4*params_cgs.E; %converting to V/m
-%         params.a.E_eV = 1000;
-%         params.a.T_eV = 5.11*10^3;
-%         params.b.T_eV = params.a.T_eV;
-%         params.b2.T_eV = params.a.T_eV;
-%         params.a.vth = params.v_th(params.a.T_eV,params.a.m);
-%         params.b.vth = params.v_th(params.b.T_eV,params.b.m);
-%         params.b2.vth = params.v_th(params.b2.T_eV,params.b2.m);
-%         params.ln_delt = 15;
-%         E_dreicer_si = params.a.n.*params.e^3*params.ln_delt/(2*pi*params.eps0^2*params.a.m ... 
-%             *params.a.vth^2);
-%         frac = 1e-6;
-%         params.E = frac*E_dreicer_si;
-%         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
-%         params.maxwell = @(v,offset,vth) params.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
-%         params.soln_v = @(v,p,t) solution_v(v,p,t);
-%         params.f0_v = @(v) params.maxwell(v,0,params.a.vth);
-%         params.init_cond_v = @(v,p,t) params.f0_v(v);
-%         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
-%         %params.eps0 = 1/(4*pi);
-% end
-    function ret = phi(x)
-        ret = erf(x);
-    end
-
-    function ret = dphidx(x)
-        ret = 2./sqrt(pi) * exp(-x.^2);
-    end
-
-    function ret = phi_f(x)
-        ret = (x + 1./(2*x)).*erf(x) + exp(-x.^2)./sqrt(pi);
-    end
-
-    function ret = psi(x)
-        dphi_dx = 2./sqrt(pi) * exp(-x.^2);
-        ret = 1./(2*x.^2) .* (phi(x) - x.*dphi_dx);
-        ix = find(abs(x)<1e-5); % catch singularity at boundary
-        ret(ix) = 0;
-    end
-
-    function ret = solution_v(v,p,t)
-        ret = params.a.n/(pi^3/2.*params.v_th(params.b.T_eV,params.a.m).^3).*...
-            exp(-(v./params.v_th(params.b.T_eV,params.a.m)).^2);
-        if isfield(p,'norm_fac')
-            ret = p.norm_fac .* ret;
-        end
-    end
-maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 
 %% Define the dimensions
  
-dim_v = DIMENSION(0,6*params.a.vth);
+dim_v = DIMENSION(0,4*params.a.vth);
 dV_v = @(x,p,t,d) x.^2;
 dim_v.moment_dV = dV_v;
 
@@ -213,7 +91,7 @@ BCL = new_md_func(num_dims,{...
     params.boundary_cond_t});
 
 BCR = new_md_func(num_dims,{...
-    @(v,p,t) v.*0, ...
+    params.boundary_cond_v, ...
     params.boundary_cond_z, ...
     params.boundary_cond_t});
 
@@ -227,28 +105,28 @@ BCR = new_md_func(num_dims,{...
  dV_v = @(x,p,t,d) x.^2; 
  dV_th = @(x,p,t,d) sin(x);
 
-F = @(x,p) -cos(x).*params.a.Z.*params.e.*params.E./params.a.m;
+F = @(x,p) -cos(x).*p.a.Z.*p.e.*p.E./p.a.m;
 g1 = @(x,p,t,dat) F(x,p).*(x>pi/2);
 pterm1 = MASS(g1,'','',dV_th);
 termE1_th = SD_TERM({pterm1});
 
 G = @(v,p) v.*0 + 1;
 g2 = @(v,p,t,dat) G(v,p);
-pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
+pterm1 = DIV(num_dims,g2,'',+1,'D','N',BCL,'','',dV_v);
 termE1_v = SD_TERM({pterm1});
 termE1a = MD_TERM(num_dims,{termE1_v,termE1_th});
 
 %termE1b is the same form as term1 but accounting for the flow in the
 %opposite direction
 
-F = @(x,p) -cos(x).*params.a.Z.*params.e.*params.E./params.a.m;
+F = @(x,p) -cos(x).*p.a.Z.*p.e.*p.E./p.a.m;
 g1 = @(x,p,t,dat) F(x,p).*(x<pi/2);
 pterm1 = MASS(g1,'','',dV_th);
 termE1_th = SD_TERM({pterm1});
 
 G = @(v,p) v.*0 + 1;
 g2 = @(v,p,t,dat) G(v,p);
-pterm1 = DIV(num_dims,g2,'',+1,'D','N','',BCR,'',dV_v);
+pterm1 = DIV(num_dims,g2,'',-1,'N','D','',BCR,'',dV_v);
 termE1_v = SD_TERM({pterm1});
 termE1b = MD_TERM(num_dims,{termE1_v,termE1_th});
 
@@ -262,11 +140,11 @@ termE1b = MD_TERM(num_dims,{termE1_v,termE1_th});
 dV_v = @(x,p,t,d) x; %changing for MASS term
 dV_th = @(x,p,t,d) sin(x);
 
-g1 = @(x,p,t,dat) 0*x+1;
+g1 = @(x,p,t,dat) x.*0+1;
 pterm1   =  MASS(g1,'','',dV_v);
 termE2_v = SD_TERM({pterm1});
 
-K = @(x,p) params.a.Z.*params.e.*params.E.*sin(x)./params.a.m;
+K = @(x,p) p.a.Z.*p.e.*p.E.*sin(x)./p.a.m;
 g2 = @(x,p,t,dat) K(x,p);
 
 pterm1 = DIV(num_dims,g2,'',-1,'N','N','','','',dV_th);

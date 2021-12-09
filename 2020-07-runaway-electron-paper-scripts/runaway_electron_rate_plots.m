@@ -50,7 +50,8 @@ disp(['v_th m/s (from cgs): ',num2str(cgs.v_th/100)]);
 SI.n_e = cgs.n_e*1e6;
 SI.v_th = sqrt(T_e_eV*SI.e/SI.m_e);
 SI.coulomb_ln = coulomb_ln;
-SI.E_D = 1/(4*pi*SI.eps0^2) * SI.n_e * SI.e^3 * SI.coulomb_ln / (SI.m_e * SI.v_th^2);
+SI.E_D = SI.n_e * SI.e^3*SI.coulomb_ln/(2*pi*SI.eps0^2*SI.m_e ...
+            *SI.v_th^2);%1/(4*pi*SI.eps0^2) * SI.n_e * SI.e^3 * SI.coulomb_ln / (SI.m_e * SI.v_th^2);
 disp(['E_D V/m (from SI): ', num2str(SI.E_D)]);
 disp(['v_th m/s (from SI): ',num2str(SI.v_th)]);
 
@@ -93,9 +94,9 @@ disp(['n: ', num2str(norm.n)]);
 
 % Scan over E/E_D (0 to 0.6) for Zb=1 - compare with Fig 9 (pg 68) of Franz
 
-ratio_max = 0.2;
-N = 100;
-ratio = linspace(0.,ratio_max,N);
+ratio_max = 0.1;
+N = 15;
+ratio = linspace(0.02,ratio_max,N);
 
 % Franz
 Cn = 1/SI.n_e;
@@ -156,52 +157,70 @@ if do_E_scan
     ratio_max2 = 0.1;
     ratio2 = linspace(0.02,ratio_max2,N2);
     args.p_max = 10;
-    args.v_th = norm.v_th;
+    args.v_th = ref.v_th;
     args.nu_ee = norm.nu_ee;
     args.tau = norm.tau;
-    args.n = norm.n;
+    args.n = ref.n_e_m3;
     num_steps = 10;
+    
+    m_D = 3.3443*10^-27; %Deuterium mass in kg
+    m_He = 6.7*10^-27; %helium 4 mass in kg 
+    m_Ne = 3.3509177*10^-26; %neon 20 in kg
     
     % Non-relativistic
     args.delta = 0;
-    for Z = [1 2 10]
-        for i=1:N2
-            args.E = ratio2(i) * SI.E_D ; % E into asgard is 2*E/E_D per the normalization
-            args.Z = Z;
-            dt = 1e-4;%2./args.E.^2/num_steps;
-            if dt > 2000
-                dt = 2000;
+        for Z = [1]
+            for i=1:N2
+                args.E = 0.5*ratio2(i) * SI.E_D ; % E into asgard is 2*E/E_D per the normalization
+                args.Z = Z;
+                if Z == 1
+                    args.m = m_D;
+                elseif Z == 2
+                    args.m = m_He;
+                else
+                    args.m = m_Ne;
+                end
+                dt = 1e-7/(args.E)^2;
+                if dt > 2000
+                    dt = 2000;
+                end
+                [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',5,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'normalize_by_mass',true);
+                alpha_nr(i,Z) = outputs(i).alpha_t{end};
             end
-            [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
-            alpha_nr(i,Z) = outputs(i).alpha_t{end};
         end
-    end
     
-    % Relativistic
-    args.delta = norm.delta;
-    for Z = [1 2 10]
-        for i=1:N2
-            args.E = ratio2(i) * SI.E_D; % E into asgard is 2*E/E_D per the normalization
-            args.Z = Z;
-            dt = 1e-4;%2./args.E.^2/num_steps;
-            if dt > 2000
-                dt = 2000;
-            end
-            [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
-            alpha_r(i,Z) = outputs(i).alpha_t{end};
-        end
-    end
+%     % Relativistic
+%     args.delta = norm.delta;
+%     for Z = [1 2 10]
+%         for i=1:N2
+%             args.E = ratio2(i) * SI.E_D; % E into asgard is 2*E/E_D per the normalization
+%             args.Z = Z;
+%             if Z == 1
+%                 args.m = m_D;
+%             elseif Z == 2
+%                 args.m = m_He;
+%             else
+%                 args.m = m_Ne;
+%             end
+%             dt = 1e-4;%2./args.E.^2/num_steps;
+%             if dt > 2000
+%                 dt = 2000;
+%             end
+%             [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
+%             alpha_r(i,Z) = outputs(i).alpha_t{end};
+%         end
+%     end
     
     norm_fac = kulsrud_Z1(end)/alpha_nr(N2,1);
     disp(['norm_fac: ',num2str(norm_fac)]);
     hold on
     semilogy(ratio2,alpha_nr(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=1)','color','red');
-    semilogy(ratio2,alpha_nr(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=2)','color','green');
-    semilogy(ratio2,alpha_nr(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=10)','color','blue');
+  %  semilogy(ratio2,alpha_nr(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=2)','color','green');
+  %  semilogy(ratio2,alpha_nr(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=10)','color','blue');
     
-    semilogy(ratio2,alpha_r(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=1)','color','red','LineStyle',':');
-    semilogy(ratio2,alpha_r(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=2)','color','green','LineStyle',':');
-    semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color','blue','LineStyle',':');
+%     semilogy(ratio2,alpha_r(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=1)','color','red','LineStyle',':');
+%     semilogy(ratio2,alpha_r(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=2)','color','green','LineStyle',':');
+%     semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color','blue','LineStyle',':');
     legend
     hold off
 end
@@ -236,19 +255,19 @@ if do_dof_scan
         % considerable time.
         do_FG = false;
         if do_FG
-            [~,~,~,~,~,output_FG_deg4] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg4] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',lev,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg4_lev',lev_str','.mat'],'output_FG_deg4');
             clear output_FG_deg4;
             
-            [~,~,~,~,~,output_FG_deg5] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',5,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg5] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',5,'lev',lev,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg5_lev',lev_str','.mat'],'output_FG_deg5');
             clear output_FG_deg5;
                        
-            [~,~,~,~,~,output_FG_deg6] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg6] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg6_lev',lev_str','.mat'],'output_FG_deg6');
             clear output_FG_deg6;
             
-            [~,~,~,~,~,output_FG_deg7] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',7,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
+            [~,~,~,~,~,output_FG_deg7] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',7,'lev',lev,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
             save(['output_FG_E',E_string{i},'_deg7_lev',lev_str','.mat'],'output_FG_deg7');
             clear output_FG_deg7;
         end
