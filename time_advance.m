@@ -208,16 +208,19 @@ else
     f1 = expm(A*dt)*f0;
 end
 
-    function ret = rhs_integrand(u)
-        s = source_vector(pde,opts,hash_table,u);
-        bc = boundary_condition_vector(pde,opts,hash_table,u);
-        uu = t+dt-u;
-        if applyLHS
-            ret = ALHS\(expm(uu*(ALHS\A)) * (s+bc));
-        else
-            ret = expm(uu*A) * (s+bc);
-        end
+Q = A*f0;
+
+
+function ret = rhs_integrand(u)
+    s = source_vector(pde,opts,hash_table,u);
+    bc = boundary_condition_vector(pde,opts,hash_table,u);
+    uu = t+dt-u;
+    if applyLHS
+        ret = ALHS\(expm(uu*(ALHS\A)) * (s+bc));
+    else
+        ret = expm(uu*A) * (s+bc);
     end
+end
 
 rhs_integral = integral(@rhs_integrand,t,t+dt,'ArrayValued',true);%,'RelTol',1e-5,'AbsTol',1e-5);
 f1 = f1 + rhs_integral;

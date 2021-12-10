@@ -90,7 +90,12 @@ pterm1   = MASS(g1,'','',dV_p);
 termE2_p = SD_TERM({pterm1});
 termE2   = MD_TERM(num_dims,{termE2_p});
 
-terms = {termE1};%,termE2};
+switch opts.case_
+    case 1
+        terms = {termE1,termE2};
+    case 2
+        terms = {termE1};
+end
 
 %% Define sources
 

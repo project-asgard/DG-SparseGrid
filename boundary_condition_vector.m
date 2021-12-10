@@ -75,13 +75,16 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     %%
                     % Get boundary functions for all dims
+                    % The d2=d1 index of this loop is overwritten. All
+                    % other dims will have a mass term. 
                     
                     for d2=1:num_dims
                         sd_term_oth_dim = md_term.terms_1D{d2};
                         mass_pterm      = sd_term_oth_dim.pterms{p};
+                        BC_func = @(x,p,t) BCL_fList{d2}(x,p,t).*mass_pterm.g(x,p,t);
                         bcL{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
-                            BCL_fList{d2},mass_pterm.dV,pde.params,pde.transform_blocks,time);
+                            BC_func,mass_pterm.dV,pde.params,pde.transform_blocks,time);
                         %Apply inverse mat
                         N = numel(bcL{d1}{d2});
                         bcL{d1}{d2}     = mass_pterm.LHS_mass_mat(1:N,1:N) \ bcL{d1}{d2};
@@ -131,13 +134,16 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     %%
                     % Get boundary functions for all dims
+                    % The d2=d1 index of this loop is overwritten. All
+                    % other dims will have mass term.  
                     
                     for d2=1:num_dims
                         sd_term_oth_dim = md_term.terms_1D{d2};
                         mass_pterm      = sd_term_oth_dim.pterms{p};
+                        BC_func = @(x,p,t) BCR_fList{d2}(x,p,t).*mass_pterm.g(x,p,t);
                         bcR{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
-                            BCR_fList{d2},mass_pterm.dV,pde.params,pde.transform_blocks,time);
+                            BC_func,mass_pterm.dV,pde.params,pde.transform_blocks,time);
                         %Apply inverse mat
                         N = numel(bcL{d1}{d2});
                         bcR{d1}{d2}     = mass_pterm.LHS_mass_mat(1:N,1:N) \ bcR{d1}{d2};

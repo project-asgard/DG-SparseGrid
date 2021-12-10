@@ -15,7 +15,7 @@ pde = fokkerplanck1_pitch_C(opts);
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,1e-5);
+verifyLessThan(testCase,rel_err,3e-4);
 end
 
 function fp1_E_pitch_test(testCase)
@@ -46,7 +46,7 @@ pde = fokkerplanck1_pitch_E(opts);
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,1e-4);
+verifyLessThan(testCase,rel_err,3e-5);
 end
 
 function fp1_R_pitch_test(testCase)
@@ -112,7 +112,7 @@ pde = fokkerplanck1_pitch_CE(opts);
 [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,1e-5);
+verifyLessThan(testCase,rel_err,4e-5);
 
 % setup PDE - case 2
 args = {'lev',4,'deg',6,'dt',50e-1,'quiet',true,'num_steps',10,'timestep_method','matrix_exponential','case',2};
@@ -162,7 +162,7 @@ pde = fokkerplanck1_pitch_CER(opts);
 [err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = output.rel_err{end};
-verifyLessThan(testCase,rel_err,1e-5);
+verifyLessThan(testCase,rel_err,3e-5);
 
 end
 
@@ -194,14 +194,14 @@ verifyLessThan(testCase,rel_err,2e-4);
 
 end
 
-function fp1_C_momentum_LHS_test(testCase)
+function fp1_C_momentum_test_2(testCase)
 addpath(genpath(pwd));
-disp('Testing the momentum dimension for C terms within fokkerplanck1_LHS');
+disp('Testing the momentum dimension for C terms within fokkerplanck1');
 
 % setup PDE - case 1 (Maxwellian initial condition)
 args = {'lev',4,'deg',4,'dt',2,'quiet',true,'num_steps',50,'timestep_method','BE','case',1,'normalize_by_mass',false};
 opts = OPTS(args);
-pde = fokkerplanck1_momentum_C_LHS(opts);
+pde = fokkerplanck1_momentum_C(opts);
 % modify PDE - not needed here
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
@@ -212,7 +212,7 @@ verifyLessThan(testCase,rel_err,2e-4);
 % setup PDE - case 2 (step function initial condition)
 args = {'lev',4,'deg',4,'dt',2,'quiet',true,'num_steps',50,'timestep_method','BE','case',2,'normalize_by_mass',false};
 opts = OPTS(args);
-pde = fokkerplanck1_momentum_C_LHS(opts);
+pde = fokkerplanck1_momentum_C(opts);
 % modify PDE - not needed here
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
@@ -227,7 +227,7 @@ addpath(genpath(pwd));
 disp('Testing the momentum and pitch dimensions for term C within fokkerplanck2_C');
 
 % setup PDE - case 1 (Step function initial condition)
-args = {'lev',4,'deg',5,'dt',500,'quiet',true,'num_steps',1,'timestep_method','matrix_exponential','case',1,'normalize_by_mass',false};
+args = {'lev',4,'deg',5,'dt',500,'quiet',true,'num_steps',1,'timestep_method','matrix_exponential','case',1,'normalize_by_mass',true};
 opts = OPTS(args);
 pde = fokkerplanck2_C(opts);
 % modify PDE - not needed here
@@ -263,7 +263,7 @@ pde = fokkerplanck1_momentum_E(opts);
 [err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = output.rel_err{end};
-verifyLessThan(testCase,rel_err,1e-4);
+verifyLessThan(testCase,rel_err,1e-10);
 
 % setup PDE - case 2 (Maxwellian initial condition)
 args = {'lev',4,'deg',5,'dt',0.1,'quiet',true,'num_steps',1,'timestep_method','matrix_exponential','case',2,'normalize_by_mass',false};
@@ -274,7 +274,7 @@ pde = fokkerplanck1_momentum_E(opts);
 [err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
 % assert on correctness
 rel_err = output.rel_err{end};
-verifyLessThan(testCase,rel_err,1e-4);
+verifyLessThan(testCase,rel_err,1e-5);
 
 end
 
@@ -294,37 +294,9 @@ rel_err = output.rel_err{end};
 verifyLessThan(testCase,rel_err,1e-12);
 
 % setup PDE - case 3 (manufactured solution)
-args = {'lev',4,'deg',4,'dt',0.01,'quiet',false,'num_steps',1,'timestep_method','BE','case',3,'normalize_by_mass',false};
+args = {'lev',4,'deg',4,'dt',0.01,'quiet',true,'num_steps',1,'timestep_method','BE','case',3,'normalize_by_mass',false};
 opts = OPTS(args);
 pde = fokkerplanck2_E(opts);
-% modify PDE - not needed here
-% run PDE
-[err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
-% assert on correctness
-rel_err = output.rel_err{end};
-verifyLessThan(testCase,rel_err,1e-5);
-
-end
-
-function fp2_E_LHS_test(testCase)
-addpath(genpath(pwd));
-disp('Testing term E in 2D within fokkerplanck2_E');
-
-% setup PDE - case 1 (flat function initial condition - solution does not change)
-args = {'lev',4,'deg',4,'dt',0.01,'quiet',true,'num_steps',1,'timestep_method','matrix_exponential','case',1,'normalize_by_mass',false};
-opts = OPTS(args);
-pde = fokkerplanck2_E_LHS(opts);
-% modify PDE - not needed here
-% run PDE
-[err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);
-% assert on correctness
-rel_err = output.rel_err{end};
-verifyLessThan(testCase,rel_err,1e-12);
-
-% setup PDE - case 3 (manufactured solution)
-args = {'lev',4,'deg',4,'dt',0.01,'quiet',false,'num_steps',1,'timestep_method','BE','case',3,'normalize_by_mass',false};
-opts = OPTS(args);
-pde = fokkerplanck2_E_LHS(opts);
 % modify PDE - not needed here
 % run PDE
 [err,fval,fval_realspace,nodes,err_realspace,output] = asgard_run_pde(opts,pde);

@@ -1,0 +1,158 @@
+results = runtests('fokkerplanck_test.m');
+Running fokkerplanck_test
+Testing the pitch dimension for C term within fokkerplanck1
+.Testing the pitch dimension for E term within fokkerplanck1
+.Testing the pitch dimension for R term within fokkerplanck1
+.Testing the pitch dimension for C and E terms within fokkerplanck1
+.Testing the pitch dimension for C, E and R terms within fokkerplanck1
+.Testing the momentum dimension for C terms within fokkerplanck1
+.Testing the momentum and pitch dimensions for term C within fokkerplanck2_C
+
+================================================================================
+<strong>Verification failed in fokkerplanck_test/fp2_C_test.</strong>
+    ---------------------
+    Framework Diagnostic:
+    ---------------------
+    <a href="matlab:helpPopup matlab.unittest.TestCase.verifyLessThan" style="font-weight:bold">verifyLessThan</a> failed.
+    --> The value must be less than the maximum value.
+    
+    Actual Value:
+       0.052420522127303
+    Maximum Value (Exclusive):
+         1.000000000000000e-04
+    ------------------
+    Stack Information:
+    ------------------
+    In <a href="matlab:opentoline('/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m',238,1)">/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m (fp2_C_test) at 238</a>
+================================================================================
+.Testing the momentum dimensions for term E within fokkerplanck1_momentum_E
+
+================================================================================
+<strong>Verification failed in fokkerplanck_test/fp1_E_momentum_test.</strong>
+    ---------------------
+    Framework Diagnostic:
+    ---------------------
+    <a href="matlab:helpPopup matlab.unittest.TestCase.verifyLessThan" style="font-weight:bold">verifyLessThan</a> failed.
+    --> The value must be less than the maximum value.
+    
+    Actual Value:
+       0.020793931602002
+    Maximum Value (Exclusive):
+         1.000000000000000e-04
+    ------------------
+    Stack Information:
+    ------------------
+    In <a href="matlab:opentoline('/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m',266,1)">/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m (fp1_E_momentum_test) at 266</a>
+================================================================================
+.Testing term E in 2D within fokkerplanck2_E
+
+================================================================================
+<strong>Verification failed in fokkerplanck_test/fp2_E_test.</strong>
+    ---------------------
+    Framework Diagnostic:
+    ---------------------
+    <a href="matlab:helpPopup matlab.unittest.TestCase.verifyLessThan" style="font-weight:bold">verifyLessThan</a> failed.
+    --> The value must be less than the maximum value.
+    
+    Actual Value:
+         5.974709426970267e-07
+    Maximum Value (Exclusive):
+         1.000000000000000e-12
+    ------------------
+    Stack Information:
+    ------------------
+    In <a href="matlab:opentoline('/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m',294,1)">/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m (fp2_E_test) at 294</a>
+================================================================================
+dt = 0.01
+Constructing hash and inverse hash tables
+Calculate 2D initial condition on the sparse-grid
+Calculate time independent matrix coefficients
+Generate A_encode data structure for time independent coefficients
+Construct matrix for Poisson solve
+Number of DOF : 768
+    num_dof : 768
+    wavelet space absolute err : 0
+    wavelet space relative err : 0 %
+    wavelet space absolute err (2-norm) : 0
+    real space absolute err : 0.00022366
+    real space relative err : 0.011206 %
+    real space absolute err (2-norm) : 0.014314
+Advancing time ...
+Step 1 of 1 at 0.000000 seconds
+    Calculate time dependent matrix coeffs
+    Time step (dt=0.01)
+Building A ...
+DONE
+    total integrated mass : 0.87745
+    num_dof : 768
+    wavelet space absolute err : 2.6982e-06
+    wavelet space relative err : 0.0004448 %
+t: 0
+dt: 0.01
+    real space absolute err : 0.00021842
+    real space relative err : 0.011054 %
+Took 0.67535 [s]
+.Testing term E in 2D within fokkerplanck2_E
+
+================================================================================
+<strong>Verification failed in fokkerplanck_test/fp2_E_LHS_test.</strong>
+    ---------------------
+    Framework Diagnostic:
+    ---------------------
+    <a href="matlab:helpPopup matlab.unittest.TestCase.verifyLessThan" style="font-weight:bold">verifyLessThan</a> failed.
+    --> The value must be less than the maximum value.
+    
+    Actual Value:
+         5.974709426970267e-07
+    Maximum Value (Exclusive):
+         1.000000000000000e-12
+    ------------------
+    Stack Information:
+    ------------------
+    In <a href="matlab:opentoline('/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m',322,1)">/Users/7r9/Documents/MATLAB/DG-SparseGrid/pdes/fokkerplanck_test.m (fp2_E_LHS_test) at 322</a>
+================================================================================
+dt = 0.01
+Constructing hash and inverse hash tables
+Calculate 2D initial condition on the sparse-grid
+Calculate time independent matrix coefficients
+Generate A_encode data structure for time independent coefficients
+Construct matrix for Poisson solve
+Number of DOF : 768
+    num_dof : 768
+    wavelet space absolute err : 0
+    wavelet space relative err : 0 %
+    wavelet space absolute err (2-norm) : 0
+    real space absolute err : 0.00022366
+    real space relative err : 0.011206 %
+    real space absolute err (2-norm) : 0.014314
+Advancing time ...
+Step 1 of 1 at 0.000000 seconds
+    Calculate time dependent matrix coeffs
+    Time step (dt=0.01)
+Building A ...
+DONE
+    total integrated mass : 0.87745
+    num_dof : 768
+    wavelet space absolute err : 2.6982e-06
+    wavelet space relative err : 0.0004448 %
+t: 0
+dt: 0.01
+    real space absolute err : 0.00021842
+    real space relative err : 0.011054 %
+Took 0.48441 [s]
+.
+Done fokkerplanck_test
+__________
+
+Failure Summary:
+
+     Name                                   Failed  Incomplete  Reason(s)
+    ====================================================================================
+     fokkerplanck_test/fp2_C_test             X                 Failed by verification.
+    ------------------------------------------------------------------------------------
+     fokkerplanck_test/fp1_E_momentum_test    X                 Failed by verification.
+    ------------------------------------------------------------------------------------
+     fokkerplanck_test/fp2_E_test             X                 Failed by verification.
+    ------------------------------------------------------------------------------------
+     fokkerplanck_test/fp2_E_LHS_test         X                 Failed by verification.
+diary off
