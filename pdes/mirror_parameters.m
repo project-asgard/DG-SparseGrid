@@ -160,6 +160,8 @@ a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
         end
         if isfield(opts.cmd_args,'n')
             a.n = opts.cmd_args.n;
+            b.n = opts.cmd_args.n/opts.cmd_args.Z;
+            b2.n = opts.cmd_args.n;
         end
         b.vth = v_th(b.T_eV,b.m);
         disp(['E: ', num2str(E)]);

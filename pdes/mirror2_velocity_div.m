@@ -59,7 +59,7 @@ params = mirror_parameters(opts);
 
 %% Define the dimensions
  
-dim_v = DIMENSION(0,4*params.a.vth);
+dim_v = DIMENSION(0,10*params.a.vth);
 dV_v = @(x,p,t,d) x.^2;
 dim_v.moment_dV = dV_v;
 

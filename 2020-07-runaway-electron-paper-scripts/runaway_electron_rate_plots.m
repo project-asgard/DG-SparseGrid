@@ -45,12 +45,13 @@ disp(['E_R V/m (from cgs 2): ',num2str(cgs.E_D*300*100*cgs.kB*T_e_K/(cgs.m_e*cgs
 disp(['E_D / E_R : ', num2str(cgs.E_D/cgs.E_R)]);
 disp(['v_th m/s (from cgs): ',num2str(cgs.v_th/100)]);
 
+
 % calculate Dreicer E field in SI
 
 SI.n_e = cgs.n_e*1e6;
 SI.v_th = sqrt(T_e_eV*SI.e/SI.m_e);
 SI.coulomb_ln = coulomb_ln;
-SI.E_D = SI.n_e * SI.e^3*SI.coulomb_ln/(2*pi*SI.eps0^2*SI.m_e ...
+SI.E_D = SI.n_e*SI.e^3*SI.coulomb_ln/(2*pi*SI.eps0^2*SI.m_e ...
             *SI.v_th^2);%1/(4*pi*SI.eps0^2) * SI.n_e * SI.e^3 * SI.coulomb_ln / (SI.m_e * SI.v_th^2);
 disp(['E_D V/m (from SI): ', num2str(SI.E_D)]);
 disp(['v_th m/s (from SI): ',num2str(SI.v_th)]);
@@ -67,6 +68,7 @@ disp(['nu_ee 1/s (from cgs 2): ',num2str(cgs.nu_ee2)]);
 % 1) T,n,v_th - absolute values in SI
 % 2) T_ref, n_ref, v_th_ref - these are the "reference values" (or the "tilde" values in the manuscript)
 % 3) T_norm, n_norm, v_th_norm - these are T_norm = T / T_ref
+
 
 ref.energy_eV = 20e3;
 ref.T_eV = 2/3*ref.energy_eV;
@@ -94,7 +96,7 @@ disp(['n: ', num2str(norm.n)]);
 
 % Scan over E/E_D (0 to 0.6) for Zb=1 - compare with Fig 9 (pg 68) of Franz
 
-ratio_max = 0.1;
+ratio_max = 0.3;
 N = 15;
 ratio = linspace(0.02,ratio_max,N);
 
@@ -153,9 +155,9 @@ if do_E_scan
     semilogy(kulsrud_E10,kulsrud_Z10,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=10)','color','blue');
     legend
     
-    N2 = 15;
-    ratio_max2 = 0.1;
-    ratio2 = linspace(0.02,ratio_max2,N2);
+    N2 = 3;
+    ratio_max2 = 0.3;
+    ratio2 = linspace(0.2,ratio_max2,N2);
     args.p_max = 10;
     args.v_th = ref.v_th;
     args.nu_ee = norm.nu_ee;
@@ -169,25 +171,28 @@ if do_E_scan
     
     % Non-relativistic
     args.delta = 0;
-        for Z = [1]
+    args.Z = 1;
+    args.m = m_D;
+ %       for Z = [1 2 10]
             for i=1:N2
-                args.E = 0.5*ratio2(i) * SI.E_D ; % E into asgard is 2*E/E_D per the normalization
-                args.Z = Z;
-                if Z == 1
-                    args.m = m_D;
-                elseif Z == 2
-                    args.m = m_He;
-                else
-                    args.m = m_Ne;
-                end
-                dt = 1e-7/(args.E)^2;
+                args.E = ratio2(i) * SI.E_D ; % E into asgard is 2*E/E_D per the normalization
+                args.E_D = SI.E_D;
+                %args.Z = Z;
+%                 if Z == 1
+%                     args.m = m_D;
+%                 elseif Z == 2
+%                     args.m = m_He;
+%                 else
+%                     args.m = m_Ne;
+%                 end
+                dt = 1e-4;
                 if dt > 2000
                     dt = 2000;
                 end
-                [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',5,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'normalize_by_mass',true);
-                alpha_nr(i,Z) = outputs(i).alpha_t{end};
+                [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'normalize_by_mass',true);
+                alpha_nr(i,1) = outputs(i).alpha_t{end};
             end
-        end
+%        end
     
 %     % Relativistic
 %     args.delta = norm.delta;
