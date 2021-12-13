@@ -22,12 +22,22 @@ v_th = 0.2;
 pde.dimensions{1}.min = 0;
 pde.dimensions{1}.max = 1;
 
+
 pde.dimensions{2}.min = 0;
 pde.dimensions{2}.max = pi;
 
 % with jacobian
 pde.dimensions{1}.jacobian = @(v,p,t) v;
 pde.dimensions{2}.jacobian = @(z,p,t) z.*0+1;
+
+
+
+
+
+
+
+
+
 
 % overwrite the initial conditions for this test
 

@@ -2,6 +2,8 @@ function pde = fokkerplanck1_pitch_R(opts)
 % Problem 4.3 from the RE paper - radiation damping term  
 % df/dt == -d/dz ( z(1-z^2)f )
 %
+% df/dt = -div( z*sqrt(1-z^2)f\hat{z} ) 
+%
 % Run with
 %
 % explicit
@@ -44,6 +46,7 @@ sig = 0.1;
     end
 
 dim_z = DIMENSION(-1,+1);
+dim_z.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_z};
 num_dims = numel(dimensions);
 
@@ -66,8 +69,9 @@ initial_conditions = {ic1};
 %% 
 % -d/dz ( z(1-z^2)f )
 
-g1 = @(z,p,t,dat) -z.*(1-z.^2);
-pterm1  = GRAD(num_dims,g1,-1,'D','D');
+g1 = @(z,p,t,dat) -z.*sqrt(1-z.^2);
+dV = @(z,p,t,dat) sqrt(1-z.^2);
+pterm1  = DIV(num_dims,g1,'',-1,'D','D','','','',dV);
 term1_z = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_z});
 

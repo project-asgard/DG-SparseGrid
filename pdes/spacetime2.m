@@ -10,7 +10,9 @@ function pde = spacetime2(opts)
 %% Define the dimensions
 
 dim_x = DIMENSION(0,+1);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_y = DIMENSION(0,+1);
+dim_y.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
 
@@ -35,13 +37,15 @@ BCL = new_md_func(num_dims,{ ...
 %
 % Here we have 2 terms, having only nDims=2 (x,y) operators.
 
+dV = @(x,p,t,dat) 0*x+1;
+
 %%
 % -df/dx which is 
 %
 % d/dx g1(x) f(x,y)          [grad,g1(x)=-1, BCL=D, BCR=N]
 
 g1 = @(x,p,t,dat) x*0-1;
-pterm1  = GRAD(num_dims,g1,0,'D','N');
+pterm1  =  DIV(num_dims,g1,'',0,'D','N',BCL,'','',dV);
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x,[]});
 
@@ -52,7 +56,7 @@ term1   = MD_TERM(num_dims,{term1_x,[]});
 % 
 
 g1 = @(y,p,t,dat) y*0-1;
-pterm1  = GRAD(num_dims,g1,0,'D','N',BCL);
+pterm1  =  DIV(num_dims,g1,'',0,'D','N',BCL,'','',dV);
 term2_y = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{[],term2_y});
 

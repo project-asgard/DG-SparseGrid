@@ -32,8 +32,8 @@ maxwell = @(v,x,y) a.n/(pi^3/2.*y^3).*exp(-((v-x)/y).^2);
 dim_v = DIMENSION(0,3e7);
 dim_z = DIMENSION(0,pi);
 
-dim_v.jacobian = @(v,p,t) 2.*pi.*v.^2;
-dim_z.jacobian = @(z,p,t) sin(z);
+dim_v.moment_dV = @(v,p,t) 2.*pi.*v.^2;
+dim_z.moment_dV = @(z,p,t) sin(z);
 
 dimensions = {dim_v, dim_z};
 num_dims = numel(dimensions);

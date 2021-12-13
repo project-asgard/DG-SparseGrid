@@ -1,4 +1,4 @@
-function pde = diffusion_LDG_test(opts)
+function pde = diffusion2_spherical(opts)
 
 % Test 2D LDG diffusion in spherical coordinates
 %
@@ -16,11 +16,11 @@ function pde = diffusion_LDG_test(opts)
 %
 % Run with
 %
-% asgard(@diffusion_LDG_test,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
+% asgard(@diffusion2_spherical,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
 %
 % or 
 %
-% asgard(@diffusion_LDG_test,'timestep_method','matrix_exponential','lev',2,'deg',4,'grid_type','FG','num_steps',1,'dt',3)
+% asgard(@diffusion2_spherical,'timestep_method','matrix_exponential','lev',2,'deg',4,'grid_type','SG','num_steps',1,'dt',3)
 %
 % Analytic solution: f(r,th,t) = exp(-t)*(sin(r)/r^2-cos(r)/r)*cos(th)
 %   using approprite Dirichlet or Neumann BCs
@@ -32,11 +32,9 @@ params.parameter1 = 0;
 %% Define the dimensions
 dV_p = @(x,p,t,d) x.^2;
 %dim_p = DIMENSION(0,4.49340945790906); %Gives zero dirichlet BCs
-%dim_p = DIMENSION(0,pi);
-dim_p = DIMENSION(0.5,pi);
+dim_p = DIMENSION(0,pi);
 dim_p.moment_dV = dV_p;
-%dim_th = DIMENSION(0,pi);
-dim_th = DIMENSION(0.5,pi-0.5);
+dim_th = DIMENSION(0,pi);
 dim_th.moment_dV = @(x,p,t,d) sin(x);
 dimensions = {dim_p,dim_th};
 num_dims = numel(dimensions);
@@ -94,8 +92,8 @@ dV_p = @(x,p,t,d) x.^2;
 dV_th = @(x,p,t,d) sin(x);
 
 % Dirichlet
-pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV_p);
-pterm2 = GRAD(num_dims,g1,'',-1,'D','D',soln1,soln1,'',dV_p);
+pterm1 =  DIV(num_dims,g1,'',-1,'N','N','','','',dV_p);
+pterm2 = GRAD(num_dims,g1,'',+1,'D','D',soln1,soln1,'',dV_p);
 
 % Neumann
 %pterm1 =  DIV(num_dims,g1,'',+1,'D','D',dsoln_dp,dsoln_dp,'',dV_p);
@@ -127,8 +125,8 @@ pterm1 = MASS(g1,[],[],dV_p);
 term2_p = SD_TERM({pterm1,pterm1});
 
 % Dirichlet
-pterm1 =  DIV(num_dims,g1,'',+1,'N','N','','','',dV_th);
-pterm2 = GRAD(num_dims,g1,'',-1,'D','D',soln1,soln1,'',dV_th);
+pterm1 =  DIV(num_dims,g1,'',-1,'N','N','','','',dV_th);
+pterm2 = GRAD(num_dims,g1,'',+1,'D','D',soln1,soln1,'',dV_th);
 
 % Neumann
 %pterm1 =  DIV(num_dims,g1,'',+1,'D','D',dsoln_dth,dsoln_dth,'',dV_th);
@@ -164,13 +162,11 @@ function z = soln_p(x,p,t)
     else
         z = sin(x)./(x.^2) - cos(x)./x;
     end
-    %z = (x > pi/2-0.25).*(x < pi/2+0.25);
 end
 
 % th part of the solution
 function z = soln_th(x,p,t)
     z = cos(x);
-    %z = (x > pi/4-0.25).*(x < pi/4+0.25);
 end
 
 

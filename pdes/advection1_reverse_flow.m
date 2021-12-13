@@ -17,7 +17,7 @@ function pde = advection1_reverse_flow(opts)
 %% Define dimensions
 
 dim_x = DIMENSION(0,pi);
-dim_x.init_cond_fn = @(x,p,t) cos(x);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 
 dimensions = {dim_x};
 num_dims = numel(dimensions);
@@ -47,9 +47,10 @@ BCR_fList = { ...
 %% Define PDE terms
 % Here the term is df/dx, which is opposite the direction in advection1.m
 
-g1 = @(x,p,t,dat) x.*0 + 2;
-pterm = GRAD(num_dims,g1,-1,'D','D', BCL_fList, BCR_fList);
+dV = @(x,p,t,dat) 0*x+1;
 
+g1 = @(x,p,t,dat) x.*0 + 2;
+pterm =  DIV(num_dims,g1,'',-1,'N','D', '', BCR_fList,'',dV);
 term_x = SD_TERM({pterm});
 term1 = MD_TERM(num_dims, {term_x});
 

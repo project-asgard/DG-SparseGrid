@@ -1,14 +1,15 @@
 function pde = fokkerplanck2_E(opts)
 % Combining momentum and pitch angle dynamics for the E term
 %
-% d/dt f(p,z) == -div(flux_E)
+% d/dt f(p,z) == div( F_p(f)\hat{p} + F_z(f)\hat{z} )
 %
-% flux_E is the flux due to E accleration
+% where 
 %
-% -div(flux_E) == termE1 + termE2
+% F_p(f) = -Ezf    and    F_z(f) = -Esqrt(1-z^2)f
 %
-% termE1 == -E*z*f(z) * 1/p^2 (d/dp p^2 f(p))
-% termE2 == -E/p*f(p) * d/dz (1-z^2) f(z)
+% Here
+%
+% div( A_p\hat{p} + A_z\hat{z} ) = 1/p^2*d/dp( p^2*A_p ) + 1/p*d/dz( sqrt(1-z^2)A_z )
 %
 % Run with
 %
@@ -29,8 +30,8 @@ end
 
 dim_p = DIMENSION(0,+10);
 dim_z = DIMENSION(-1,+1);
-dim_p.jacobian = @(x,p,t) x.^2;
-dim_z.jacobian = @(x,p,t) x.*0+1;
+dim_p.moment_dV = @(x,p,t) x.^2;
+dim_z.moment_dV = @(x,p,t) x.*0+1;
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
 
@@ -71,58 +72,103 @@ switch opts.case_
 end
 initial_conditions = {ic1};
 
+%% Boundary Conditions
+
+switch opts.case_
+    case 1
+        BCL = soln1;
+        BCR = soln1;
+    case 2
+        BCL = '';
+        BCR = '';
+    case 3
+        BCL = soln1;
+        BCR = soln1;
+end
 
 %% Define the terms of the PDE
 
-%% -div(flux_E) == termE1 + termE2
+%% 
 
-% termE1 == -E*z*f(z) * 1/p^2 (d/dp p^2 f(p))
-%        == r(z) * q(p)
-%   r(z) == g1(z) f(z)       [mass, g1(z) = -E*z,  BC N/A]
-%   q(p) == g2(p) u(p)       [mass, g2(p) = 1/p^2, BC N/A]
-%   u(p) == d/dp g3(p) f(p)  [grad, g3(p) = p^2,   BCL=N,BCR=D]
+% termE1+E2 == div( F_p(f)\hat{p} )
+%
+% DIV in p and MASS in z
+%
+% Since z changes sign on [-1,1] we have to split the term into two terms
+% and upwind based on the sign of z.
 
-cap = 1e2;
+% Surface jacobian for p constant is p^2
+dV_p = @(x,p,t,dat) x.^2;
+dV_z = @(x,p,t,dat) 0*x+1;
 
-g1 = @(z,p,t,dat) -p.E .* z;
-g2 = @(x,p,t,dat) min(1./x.^2,cap);
-g3 = @(x,p,t,dat) x.^2;
-pterm1   = MASS(g1);
+% Term for z>0, then |z| = z and we use standard upwinding.  
+
+g1 = @(x,p,t,dat) 0*x-p.E;
+pterm1   =  DIV(num_dims,g1,'',-1,'D','N',BCR,'','',dV_p);
+termE1_p = SD_TERM({pterm1});
+
+g1 = @(x,p,t,dat) x.*(x > 0);
+pterm1   = MASS(g1,'','',dV_z);
 termE1_z = SD_TERM({pterm1});
-pterm1   = MASS(g2);
-pterm2   = GRAD(num_dims,g3,0,'N','N'); % central flux due to change of z sign within domain
-termE1_p = SD_TERM({pterm1,pterm2});
+
 termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
 
-figure(50)
-p = 0:.001:10;
-plot(p,g1(p,params,[],[]));
-hold on
-plot(p,g2(p,params,[],[]));
-plot(p,g3(p,params,[],[]));
-hold off
+% Term for z<0.  
+% If z < 0, then |z| = -z.  
+% Assume f(p,z) = f_p(p)f_z(z) and v(p,z) = v_p(p)v_z(z).
+% Let <.,.>_p be the edge integral in p and (.,.)_z be the volume integral
+% in z.  
+% Standard upwinding jump flux becomes
+%  <|Ez|[f],[v]>_{z,p} =  <|E|[f_p],[v_p]>_p(|z|f_z,v_z)_z
+%                      = -<|E|[f_p],[v_p]>_p( z f_z,v_z)_z
+% So we downwind in p when z is negative.
 
-% termE2 == -E/p*f(p) * d/dz (1-z^2) f(z)
-%        == q(p) * r(z)
-%   q(p) == g1(p) f(p)       [mass, g1(p) = -E*p,  BC N/A]
-%   r(z) == d/dz g2(z) f(z)  [grad, g2(z) = 1-z^2, BCL=N,BCR=N]
-
-g1 = @(x,p,t,dat) -p.E * min(1 ./ x,cap);
-g2 = @(z,p,t,dat) 1-z.^2;
-pterm1   = MASS(g1);
+g1 = @(x,p,t,dat) 0*x-p.E;
+pterm1   =  DIV(num_dims,g1,'',+1,'N','D','',BCL,'',dV_p);
 termE2_p = SD_TERM({pterm1});
-pterm1   = GRAD(num_dims,g2,0,'N','N'); % central flux due to change of z sign within domain
+
+g1 = @(x,p,t,dat) x.*(x < 0);
+pterm1   = MASS(g1,'','',dV_z);
 termE2_z = SD_TERM({pterm1});
-termE2= MD_TERM(num_dims,{termE2_p,termE2_z});
 
-figure(51)
-p = 0:.001:10;
-plot(p,g1(p,params,[],[]));
-hold on
-plot(p,g2(p,params,[],[]));
-hold off
+termE2 = MD_TERM(num_dims,{termE2_p,termE2_z});
 
-terms = {termE1,termE2};
+
+%%%%%%
+g1 = @(x,p,t,dat) 0*x-p.E;
+pterm1   =  DIV(num_dims,g1,'',-1,'N','N','','','',dV_p);
+termE4_p = SD_TERM({pterm1});
+
+g1 = @(x,p,t,dat) x;
+pterm1   = MASS(g1,'','',dV_z);
+termE4_z = SD_TERM({pterm1});
+termE4 = MD_TERM(num_dims,{termE4_p,termE4_z});
+
+%%
+
+% termE3 == div( F_z(f)\hat{z} )
+%
+% MASS in p and DIV in z
+%
+%
+
+% Surface jacobian for z constant is p*sqrt(1-z^2)
+dV_p = @(x,p,t,dat) x;
+dV_z = @(x,p,t,dat) sqrt(1-x.^2);
+
+g1 = @(x,p,t,dat) 0*x+1;
+pterm1   =  MASS(g1,'','',dV_p);
+termE3_p = SD_TERM({pterm1});
+
+g1 = @(x,p,t,dat) -p.E*sqrt(1-x.^2);
+pterm1   =   DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
+termE3_z = SD_TERM({pterm1});
+termE3 = MD_TERM(num_dims,{termE3_p,termE3_z});
+
+%%
+
+terms = {termE1,termE2,termE3};
+%terms = {termE4,termE3};
 
 %% Define sources
 

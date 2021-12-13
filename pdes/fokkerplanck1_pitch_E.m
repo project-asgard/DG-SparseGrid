@@ -2,8 +2,13 @@ function pde = fokkerplanck1_pitch_E(opts)
 % 1D test case using continuity equation, i.e., 
 % df/dt == -d/dz ( (1-z^2)f )
 %
+% df/dt = -div( sqrt(1-z^2)f\hat{z} )
+%
 % Problem is left to right convection, so we can upwind and only require
-% one boundary condition, which is neumann on the left.
+% one boundary condition, which is Dirichlet on the left.
+%
+% When the domain is [-1,1] then the BC don't really matter (as they will
+% be annihilated) 
 %
 % Run with
 %
@@ -40,6 +45,7 @@ function pde = fokkerplanck1_pitch_E(opts)
 %% Define the dimensions
 
 dim_z = DIMENSION(-1,+1);
+dim_z.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_z};
 num_dims = numel(dimensions);
 
@@ -62,8 +68,10 @@ initial_conditions = {ic1};
 %% 
 %  -d/dz ( (1-z^2)*f )
 
-g1 = @(z,p,t,dat) -1.*(1-z.^2);
-pterm1  = GRAD(num_dims,g1,-1,'N','N');
+g1 = @(z,p,t,dat) -sqrt(1-z.^2);
+dV_z = @(z,p,t,dat) sqrt(1-z.^2);
+
+pterm1  = DIV(num_dims,g1,'',-1,'N','N','','','',dV_z);
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x});
 

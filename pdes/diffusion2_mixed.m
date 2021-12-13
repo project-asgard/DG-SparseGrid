@@ -1,4 +1,4 @@
-function pde = diffusion2_mixed_div(opts)
+function pde = diffusion2_mixed(opts)
 % Example PDE using the 2D diffusion with anisotropic diffusion tensor. 
 % This example PDE is
 % time dependent (although not all the terms are time dependent). This
@@ -33,7 +33,7 @@ function pde = diffusion2_mixed_div(opts)
 % Run with
 %
 % implicit
-% asgard(@diffusion2_mixed_div,'timestep_method','BE','dt',0.001,'num_steps',20)
+% asgard(@diffusion2_mixed,'timestep_method','BE','dt',0.001,'num_steps',20)
 
 %% Define the dimensions
 

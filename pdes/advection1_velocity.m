@@ -22,6 +22,7 @@ soln = @(v,p,t) (m_a*nu_s/(m_a + m_b))*(v+t);
 %% Define dimensions
 
 dim_v = DIMENSION(0.01,10^2);
+dim_v.moment_dV = @(x,p,t) x.^2;
 dim_v.init_cond_fn = @(v,p,t) soln(v,p,t);
 
 BCFunc_R = @(v,p,t) soln(v,p,t);
@@ -61,12 +62,12 @@ initial_conditions = {ic1};
 % term V1 == g(v) q(v)      [mass, g(v) = 1/v^2,  BC N/A]
 % q(v) == d/dv(g2(v)f(v))   [grad, g2(v) = v^3, BCL= N, BCR=N]
 
-g1 = @(v,p,t,dat) 1./v.^2;
-g2 = @(v,p,t,dat) (m_a*nu_s/(m_a + m_b))*v.^3;
+dV = @(x,p,t,dat) x.^2;
 
-pterm1 = MASS(g1);
-pterm2  = GRAD(num_dims,g2,-1,'N','D', BCL_fList, BCR_fList);
-termV_s = SD_TERM({pterm1,pterm2});
+g1 = @(v,p,t,dat) (m_a*nu_s/(m_a + m_b))*v;
+
+pterm1  = DIV(num_dims,g1,'',-1,'N','D', '', BCR_fList,'',dV);
+termV_s = SD_TERM({pterm1});
 termV1   = MD_TERM(num_dims,{termV_s});
 
 terms = {termV1};
@@ -106,3 +107,4 @@ solutions = {soln1};
 pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
+
