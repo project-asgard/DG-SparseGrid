@@ -1,4 +1,4 @@
-function pde = diffusion2_spherical_div(opts)
+function pde = diffusion2_spherical(opts)
 
 % Test 2D LDG diffusion in spherical coordinates
 %
@@ -16,11 +16,11 @@ function pde = diffusion2_spherical_div(opts)
 %
 % Run with
 %
-% asgard(@diffusion2_spherical_div,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
+% asgard(@diffusion2_spherical,'timestep_method','BE','lev',3,'deg',4,'num_steps',50,'CFL',1.5)
 %
 % or 
 %
-% asgard(@diffusion2_spherical_div,'timestep_method','matrix_exponential','lev',2,'deg',4,'grid_type','SG','num_steps',1,'dt',3)
+% asgard(@diffusion2_spherical,'timestep_method','matrix_exponential','lev',2,'deg',4,'grid_type','SG','num_steps',1,'dt',3)
 %
 % Analytic solution: f(r,th,t) = exp(-t)*(sin(r)/r^2-cos(r)/r)*cos(th)
 %   using approprite Dirichlet or Neumann BCs

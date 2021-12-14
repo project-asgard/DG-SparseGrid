@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_pitch_E_div(opts)
+function pde = fokkerplanck1_pitch_E(opts)
 % 1D test case using continuity equation, i.e., 
 % df/dt == -d/dz ( (1-z^2)f )
 %
@@ -13,10 +13,10 @@ function pde = fokkerplanck1_pitch_E_div(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck1_pitch_E_div,'case',1)
+% asgard(@fokkerplanck1_pitch_E,'case',1)
 
 % implicit
-% asgard(@fokkerplanck1_pitch_E_div,'lev',5,'deg',3,'timestep_method','CN','CFL',0.1,'num_steps',30,'case',1)
+% asgard(@fokkerplanck1_pitch_E,'lev',5,'deg',3,'timestep_method','CN','CFL',0.1,'num_steps',30,'case',1)
 %
 % case = 1; % flat initial condition
 % case = 2; % gaussian initial condition

@@ -1,4 +1,4 @@
-function pde = diffusion2_div(opts)
+function pde = diffusion2(opts)
 % Example PDE using the 2D (1x-1y) Heat Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 

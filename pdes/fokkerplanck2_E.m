@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_E_div(opts)
+function pde = fokkerplanck2_E(opts)
 % Combining momentum and pitch angle dynamics for the E term
 %
 % d/dt f(p,z) == div( F_p(f)\hat{p} + F_z(f)\hat{z} )
@@ -9,11 +9,11 @@ function pde = fokkerplanck2_E_div(opts)
 %
 % Here
 %
-% div( A_p\hat{p} + A_z\hat{z} ) = 1/p^2*d/dp( p^2*A_p ) + 1/p*d/dz( sqrt(1-z^2)f )
+% div( A_p\hat{p} + A_z\hat{z} ) = 1/p^2*d/dp( p^2*A_p ) + 1/p*d/dz( sqrt(1-z^2)A_z )
 %
 % Run with
 %
-% asgard(@fokkerplanck2_E_div,'timestep_method','BE','dt',0.01,'num_steps',10,'case',3,'lev',4,'deg',4)
+% asgard(@fokkerplanck2_E,'timestep_method','BE','dt',0.01,'num_steps',10,'case',3,'lev',4,'deg',4)
 %
 % case = 1 % flat initial condition, solution stays the same
 % case = 2 % made up initial conditions, no known solution
@@ -72,6 +72,19 @@ switch opts.case_
 end
 initial_conditions = {ic1};
 
+%% Boundary Conditions
+
+switch opts.case_
+    case 1
+        BCL = soln1;
+        BCR = soln1;
+    case 2
+        BCL = '';
+        BCR = '';
+    case 3
+        BCL = soln1;
+        BCR = soln1;
+end
 
 %% Define the terms of the PDE
 
@@ -91,7 +104,7 @@ dV_z = @(x,p,t,dat) 0*x+1;
 % Term for z>0, then |z| = z and we use standard upwinding.  
 
 g1 = @(x,p,t,dat) 0*x-p.E;
-pterm1   =  DIV(num_dims,g1,'',-1,'D','N','','','',dV_p);
+pterm1   =  DIV(num_dims,g1,'',-1,'D','N',BCR,'','',dV_p);
 termE1_p = SD_TERM({pterm1});
 
 g1 = @(x,p,t,dat) x.*(x > 0);
@@ -111,7 +124,7 @@ termE1 = MD_TERM(num_dims,{termE1_p,termE1_z});
 % So we downwind in p when z is negative.
 
 g1 = @(x,p,t,dat) 0*x-p.E;
-pterm1   =  DIV(num_dims,g1,'',+1,'N','D','','','',dV_p);
+pterm1   =  DIV(num_dims,g1,'',+1,'N','D','',BCL,'',dV_p);
 termE2_p = SD_TERM({pterm1});
 
 g1 = @(x,p,t,dat) x.*(x < 0);
@@ -119,6 +132,17 @@ pterm1   = MASS(g1,'','',dV_z);
 termE2_z = SD_TERM({pterm1});
 
 termE2 = MD_TERM(num_dims,{termE2_p,termE2_z});
+
+
+%%%%%%
+g1 = @(x,p,t,dat) 0*x-p.E;
+pterm1   =  DIV(num_dims,g1,'',-1,'N','N','','','',dV_p);
+termE4_p = SD_TERM({pterm1});
+
+g1 = @(x,p,t,dat) x;
+pterm1   = MASS(g1,'','',dV_z);
+termE4_z = SD_TERM({pterm1});
+termE4 = MD_TERM(num_dims,{termE4_p,termE4_z});
 
 %%
 
@@ -137,13 +161,14 @@ pterm1   =  MASS(g1,'','',dV_p);
 termE3_p = SD_TERM({pterm1});
 
 g1 = @(x,p,t,dat) -p.E*sqrt(1-x.^2);
-pterm1   =   DIV(num_dims,g1,'',-1,'N','N','','','',dV_z);
+pterm1   =   DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
 termE3_z = SD_TERM({pterm1});
 termE3 = MD_TERM(num_dims,{termE3_p,termE3_z});
 
 %%
 
 terms = {termE1,termE2,termE3};
+%terms = {termE4,termE3};
 
 %% Define sources
 

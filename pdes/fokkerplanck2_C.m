@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_C_div(opts)
+function pde = fokkerplanck2_C(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Problems 6.1, 6.2, and 6.3 from the RE paper.
@@ -30,10 +30,10 @@ function pde = fokkerplanck2_C_div(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck2_C_div,'CFL',0.01,'case',1)
+% asgard(@fokkerplanck2_C,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_C_div,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
+% asgard(@fokkerplanck2_C,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
 %
 % case = 1 % step function in momentum
 % case = 2 %

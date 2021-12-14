@@ -1,4 +1,4 @@
-function pde = fokkerplanck2_complete_DBC_div(opts)
+function pde = fokkerplanck2_complete_DBC(opts)
 % Combining momentum and pitch angle dynamics
 %
 % Full PDE from the 2D runaway electron paper 
@@ -44,23 +44,23 @@ function pde = fokkerplanck2_complete_DBC_div(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck2_complete_div,'CFL',0.01,'case',1)
+% asgard(@fokkerplanck2_complete_DBC,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_complete_div,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
+% asgard(@fokkerplanck2_complete_DBC,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
 %
 % with adaptivity
-% asgard(@fokkerplanck2_complete_div,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true,'case',1)
+% asgard(@fokkerplanck2_complete_DBC,'timestep_method','CN','num_steps',20,'CFL',1.0,'deg',3,'lev',4, 'adapt', true,'case',1)
 %
 % NOTES
 %
 % For Lin's case the command that should reproduce her results
-% asgard(@fokkerplanck2_complete_DBC_div,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000,'time_independent_A',true,'case',1)
+% asgard(@fokkerplanck2_complete_DBC,'timestep_method','BE','lev',6,'deg',5,'dt',0.01,'num_steps',3000,'time_independent_A',true,'case',1)
 %
 % David's adjustment can be run as follows ...
-% asgard(@fokkerplanck2_complete_DBC_div,'timestep_method','BE','lev',3,'deg',6,'dt',1,'num_steps',50,'grid_type','FG','time_independent_A',true,'case',1)
+% asgard(@fokkerplanck2_complete_DBC,'timestep_method','BE','lev',3,'deg',6,'dt',1,'num_steps',50,'grid_type','FG','time_independent_A',true,'case',1)
 % or, run with the high order time integrator ...
-% asgard(f@okkerplanck2_complete_DBC_div,'timestep_method','ode15s','lev',3,'deg',5,'dt',50,'num_steps',1,'grid_type','SG','case',1)
+% asgard(f@okkerplanck2_complete_DBC,'timestep_method','ode15s','lev',3,'deg',5,'dt',50,'num_steps',1,'grid_type','SG','case',1)
 
 params = fokkerplanck_parameters(opts);
 

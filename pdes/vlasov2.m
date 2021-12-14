@@ -1,24 +1,24 @@
-function pde = continuity2(opts)
+function pde = vlasov2(opts)
 % 2D test case using continuity equation, i.e.,
 %
-% df/dt == -df/dx - df/dy
+% df/dt == -ydf/dx
 %
 % Run with
 %
 % explicit
-% asgard(@continuity2,'lev',3,'deg',3,'CFL',0.1)
+% asgard(@vlasov2,'lev',3,'deg',3,'CFL',0.1)
 %
 % implicit
-% asgard(@continuity2,'timestep_method','CN')
+% asgard(@vlasov2,'timestep_method','CN')
 %
 % with adaptivity
-% asgard(@continuity2,'timestep_method','CN','adapt',true)
+% asgard(@vlasov2,'timestep_method','CN','adapt',true)
 
 % pde.CFL = 0.1;
 
-soln_x = @(x,p,t)  cos(pi*x);
-soln_y = @(y,p,t)  sin(2*pi*y);
-soln_t = @(t)      sin(2*t);
+soln_x = @(x,p,t)  0*x+1;
+soln_y = @(y,p,t)  0*y+1;
+soln_t = @(t,p)    0*t+1;
 
 %% Define the dimensions
 %
@@ -26,14 +26,22 @@ soln_t = @(t)      sin(2*t);
 
 dim_x = DIMENSION(-1,+1);
 dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
-dim_y = DIMENSION(-2,+2);
+dim_y = DIMENSION(-1,+1);
 dim_y.moment_dV = @(y,p,t,dat) 0*y+1;
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
 
+%% Define the analytic solution (optional).
+
+soln1 = new_md_func(num_dims,{soln_x,soln_y,soln_t});
+solutions = {soln1};
+
 %% Initial conditions
 ic1 = new_md_func(num_dims,{soln_x,soln_y,soln_t});
 initial_conditions = {ic1};
+
+BCL = soln1;
+BCR = soln1;
 
 %% Define the terms of the PDE
 %
@@ -47,10 +55,10 @@ dV = @(x,p,t,dat) 0*x+1;
 % d/dx g1(x) f(x,y)          [grad,g1(x)=-1, BCL=P, BCR=P]
 
 g1 = @(x,p,t,dat) x*0-1;
-pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
+pterm1  =  DIV(num_dims,g1,'',-1,'D','N',BCL,'','',dV);
 term1_x = SD_TERM({pterm1});
 
-g1 = @(x,p,t,dat) 0*x+1;
+g1 = @(x,p,t,dat) x.*(x>0);
 pterm1 = MASS(g1,'','',dV);
 term1_y = SD_TERM({pterm1});
 
@@ -61,10 +69,15 @@ term1   = MD_TERM(num_dims,{term1_x,term1_y});
 %
 % d/dy g1(y) f(x,y)          [grad,g1(y)=-1, BCL=P, BCR=P]
 
-g1 = @(y,p,t,dat) y*0-1;
-pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
+g1 = @(x,p,t,dat) x*0-1;
+pterm1  =  DIV(num_dims,g1,'',+1,'N','D','',BCR,'',dV);
+term2_x = SD_TERM({pterm1});
+
+g1 = @(x,p,t,dat) x.*(x<0);
+pterm1 = MASS(g1,'','',dV);
 term2_y = SD_TERM({pterm1});
-term2   = MD_TERM(num_dims,{[],term2_y});
+
+term2   = MD_TERM(num_dims,{term2_x,term2_y});
 
 terms = {term1,term2};
 
@@ -76,36 +89,7 @@ params.parameter2 = 1;
 
 %% Define sources
 
-%%
-% Source term 1
-source1 = { ...
-    @(x,p,t) cos(pi*x),   ...   % s1x
-    @(y,p,t) sin(2*pi*y), ...   % s1y
-    @(t)   2*cos(2*t)   ...   % s1t
-    };
-
-%%
-% Source term 2
-source2 = { ...
-    @(x,p,t)  cos(pi*x),    ...   % s2x
-    @(y,p,t)  cos(2*pi*y),  ...   % s2y
-    @(t)    2*pi*sin(2*t) ...   % s2t
-    };
-
-%%
-% Source term 3
-source3 = { ...
-    @(x,p,t)  sin(pi*x),   ...  % s3x
-    @(y,p,t)  sin(2*pi*y), ...  % s3y
-    @(t)    -pi*sin(2*t) ...  % s3t
-    };
-
-sources = {source1,source2,source3};
-
-%% Define the analytic solution (optional).
-
-soln1 = new_md_func(num_dims,{soln_x,soln_y,soln_t});
-solutions = {soln1};
+sources = {};
 
 %% Define function to set dt
 

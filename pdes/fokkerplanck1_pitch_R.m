@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_pitch_R_div(opts)
+function pde = fokkerplanck1_pitch_R(opts)
 % Problem 4.3 from the RE paper - radiation damping term  
 % df/dt == -d/dz ( z(1-z^2)f )
 %
@@ -7,10 +7,10 @@ function pde = fokkerplanck1_pitch_R_div(opts)
 % Run with
 %
 % explicit
-% asgard(@fokkerplanck1_pitch_R_div,'CFL',0.01)
+% asgard(@fokkerplanck1_pitch_R,'CFL',0.01)
 %
 % implicit
-% asgard(@fokkerplanck1_pitch_R_div,'timestep_method','matrix_exponential','lev',4,'deg',4,'num_steps',20,'dt',0.01)
+% asgard(@fokkerplanck1_pitch_R,'timestep_method','matrix_exponential','lev',4,'deg',4,'num_steps',20,'dt',0.01)
 
 sig = 0.1;
 

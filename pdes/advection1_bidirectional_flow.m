@@ -1,4 +1,4 @@
-function pde = advection1_bidirectional_flow_div(opts)
+function pde = advection1_bidirectional_flow(opts)
 % 1D test case for where the sign of advection changes within the domain 
 %
 % df/dt == -d/dx (x*f)

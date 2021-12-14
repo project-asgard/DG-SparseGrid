@@ -1,4 +1,4 @@
-function pde = fokkerplanck1_pitch_CE_div(opts)
+function pde = fokkerplanck1_pitch_CE(opts)
 % Problem 4.4 from the RE paper - evolution of the pitch angle dependence
 % of f in the presence of electric field acceleration and collisions 
 % 
@@ -7,10 +7,10 @@ function pde = fokkerplanck1_pitch_CE_div(opts)
 % Run with
 %
 % explicit 
-% asgard(@fokkerplanck1_pitch_CE_div,'CFL',0.01,'case',3)
+% asgard(@fokkerplanck1_pitch_CE,'CFL',0.01,'case',3)
 %
 % implicit 
-% asgard(@fokkerplanck1_pitch_CE_div,'timestep_method','BE','num_steps',50,'dt',0.05,'lev',4,'deg',4,'case',1)
+% asgard(@fokkerplanck1_pitch_CE,'timestep_method','BE','num_steps',50,'dt',0.05,'lev',4,'deg',4,'case',1)
 
 sig = 0.1;
 E = 4.0;

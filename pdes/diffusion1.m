@@ -1,4 +1,4 @@
-function pde = diffusion1_div(opts)
+function pde = diffusion1(opts)
 % Example PDE using the 1D Diffusion Equation. This example PDE is
 % time dependent (although not all the terms are time dependent). This
 % implies the need for an initial condition. 

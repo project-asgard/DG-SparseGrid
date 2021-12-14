@@ -1,4 +1,4 @@
-function pde = continuity3_div(opts)
+function pde = continuity3(opts)
 % 3D test case using continuity equation, i.e.,
 %
 % df/dt + v.grad(f)==0 where v={1,1,1}, so
@@ -8,10 +8,10 @@ function pde = continuity3_div(opts)
 % Run with
 %
 % explicit
-% asgard(@continuity3_div,'lev',[5,4,3],'calculate_mass',false);
+% asgard(@continuity3,'lev',[5,4,3],'calculate_mass',false);
 %
 % implicit
-% asgard(@continuity3_div,'timestep_method','CN','calculate_mass',false);
+% asgard(@continuity3,'timestep_method','CN','calculate_mass',false);
 %
 % NOTES
 % DLG - should be able to turn the mass calculation back on after we merge

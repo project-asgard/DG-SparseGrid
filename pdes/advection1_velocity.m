@@ -1,4 +1,4 @@
-function pde = advection1_velocity_div(opts)
+function pde = advection1_velocity(opts)
 %This is a test advection equation to help with the mirror velocity
 %equation, which has the general form
 %
@@ -6,7 +6,7 @@ function pde = advection1_velocity_div(opts)
 %
 % Run with
 %
-%  asgard(@advection1_velocity_div,'timestep_method','BE', 'dt', 1, 'num_steps', 50, 'lev', 3, 'deg', 4)
+%  asgard(@advection1_velocity,'timestep_method','BE', 'dt', 1, 'num_steps', 50, 'lev', 3, 'deg', 4)
 
 % pde.CFL = 0.01;
 
