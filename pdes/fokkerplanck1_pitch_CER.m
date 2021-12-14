@@ -5,9 +5,19 @@ function pde = fokkerplanck1_pitch_CER(opts)
 %
 % df/dt == -E d/dz((1-z^2) f) + C d/dz((1-z^2) df/dz) - R d/dz(z(1-z^2) f)
 %
+% df/dt == -div( (F_E + F_C + F_R)\hat{z} )
+%
+% where
+%
+% F_E = E*sqrt(1-z^2)f
+%
+% F_C = C*grad(f)
+%
+% F_R = R*z*sqrt(1-z^2)f
+%
 % Run with
 %
-% asgard(@fokkerplanck1_pitch_CER,'timestep_method','CN','lev',3,'CFL',0.5,'num_steps',50,'case',1)
+% asgard(@fokkerplanck1_pitch_CER,'timestep_method','matrix_exponential','lev',3,'deg',4,'dt',1,'num_steps',50,'case',1,'normalize_by_mass',true)
 
 sig = 0.1;
 E = 2.0;
@@ -37,6 +47,7 @@ R = 2.0;
 %% Define the dimensions
 
 dim_z = DIMENSION(-1,+1);
+dim_z.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_z};
 num_dims = numel(dimensions);
 
@@ -47,30 +58,30 @@ ic1 = new_md_func(num_dims,{ic_z});
 initial_conditions = {ic1};
 
 %% Define the terms of the PDE
+dV_z = @(z,p,t,dat) sqrt(1-z.^2);
 
 %%
 % -E d/dz((1-z^2) f)
 
-g1 = @(z,p,t,dat) -E.*(1-z.^2);
-pterm1  = GRAD(num_dims,g1,-1,'D','D');
+g1 = @(z,p,t,dat) -E.*sqrt(1-z.^2);
+pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
 termE_z = SD_TERM({pterm1});
 termE   = MD_TERM(num_dims,{termE_z});
 
 %%
 % +C * d/dz( (1-z^2) df/dz )
 
-g1 = @(z,p,t,dat) 1-z.^2;
-g2 = @(z,p,t,dat) z.*0+1;
-pterm1  = GRAD(num_dims,g1,-1,'D','D');
-pterm2  = GRAD(num_dims,g2,+1,'N','N');
+g1 = @(z,p,t,dat) 0*z+1;
+pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
+pterm2  = GRAD(num_dims,g1,'',+1,'N','N','','','',dV_z);
 termC_z = SD_TERM({pterm1,pterm2});
 termC   = MD_TERM(num_dims,{termC_z});
 
 %%
 % - R d/dz(z(1-z^2) f)
 
-g1 = @(z,p,t,dat) -R * z.*(1-z.^2);
-pterm1  = GRAD(num_dims,g1,-1,'D','D');
+g1 = @(z,p,t,dat) -R * z.*sqrt(1-z.^2);
+pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV_z);
 termR_z = SD_TERM({pterm1});
 termR   = MD_TERM(num_dims,{termR_z});
 

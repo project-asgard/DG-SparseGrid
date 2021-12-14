@@ -6,10 +6,10 @@ function pde = mirror1_pitch(opts)
 % distribution that has a Maxwellian form. 
 % PDE:
 % 
-% df/dt == nu_D/(2*sin(z)) d/dz ( sin(z) df/dz )
+% df/dt  == -cos(z)*f + nu_D/(2*sin(z)) d/dz ( sin(z) df/dz ) 
 %
 % nu_D is the deflection frequency
-% Domain is [-pi,pi]
+% Domain is [0,pi]
 % Homogeneous Neumann boundary condition 
 % Code will be added to equation involving velocity dimension
 %
@@ -19,7 +19,7 @@ function pde = mirror1_pitch(opts)
 % Run with
 %
 % implicit
-% asgard(@mirror1_pitch,'timestep_method','matrix_exponential','dt',5e-7,'num_steps',20,'lev',3,'deg',3);
+% asgard(@mirror1_pitch,'timestep_method','BE','dt',5e-7,'num_steps',20,'lev',3,'deg',3, 'calculate_mass', true, 'normalize_by_mass', true);
 %
 
     function ret = psi(x)
@@ -31,29 +31,29 @@ function pde = mirror1_pitch(opts)
     end
 
 %Background Parameters
-k_b = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
+boltz = 1.380*10^-23; %Boltzmann constant in Joules/Kelvin
 n_b = 10^19; %background density in SI units (particles/m.^3)
-T_b = 116050; %background temperature in Kelvin
-z_b = 1; %atomic number of background specie
+temp_b = 116050; %background temperature in Kelvin
+% z_b = 1; %atomic number of background specie
 m_b = 9.109*10^-31; %background mass in kg 
-v_b = sqrt(2*k_b*T_b/m_b); %background velocity in m/s
-eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
-
-%Target Specie Parameters
-z_a = 1;
-e = 1.602*10^-19; %charge in Coulombs
-ln_Delt = 10; %Coulomb logarithm
-m_a = 1.6726*10^-27; %target mass in kg
-L_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
+v_b = sqrt(2*boltz*temp_b/m_b); %background velocity in m/s
+% eps_o = 8.85*10^-12; %permittivity of free space in Farad/m
+% 
+% %Target Specie Parameters
+% z_a = 1;
+% e = 1.602*10^-19; %charge in Coulombs
+% ln_Delt = 10; %Coulomb logarithm
+% m_a = 1.6726*10^-27; %target mass in kg
+% coeff_ab = (e^2/(m_a*eps_o))^2; %Coefficient accounting for Coluomb force
 nu_D = 10^4; %deflection frequency in s^-1
 
 %Initial parameters for target specie
-n_o = 0.5*n_b; %initial number density for specie at specific velocity
-v_o = 0.5*v_b; %initial known velocity
+ n_o = 0.5*n_b; %initial number density for specie at specific velocity
+ v_o = 0.5*v_b; %initial known velocity
 
 %% Define the dimensions
 
-dim_z = DIMENSION(0,pi/2);
+dim_z = DIMENSION(0,pi);
 dim_z.jacobian = @(z,p,t) sin(z);
 dimensions = {dim_z};
 num_dims = numel(dimensions);
@@ -83,15 +83,30 @@ BCR = soln1;
 % Here we have 1 term1, having only nDims=1 (x) operators.
 
 %% 
-% termC == nu_D/(2*sin(z))*d/dz sin(z)*df/dz
+
+% LHS_term == df/dt sin(z)
+g1 = @(z,p,t,dat) dim_z.jacobian(z,p,t);
+pterm1 = MASS(g1);
+LHS_term_z = SD_TERM({pterm1});
+LHS_term = MD_TERM(num_dims,{LHS_term_z});
+LHS_terms = {LHS_term};
+
+%term V2 == -cos(z)*f
+%term V2 == g1(v)*f [mass, g1(v) = -cos(z), BC = N/A]
+g1 = @(z,p,t,dat) -cos(z);
+pterm1 = MASS(g1);
+termM_z = SD_TERM({pterm1});
+termM= MD_TERM(num_dims,{termM_z});
+
+% termC == nu_D/(2sin(z))*d/dz sin(z)*df/dz
 %
 % becomes 
 %
-% termC == g1(z) q(z)        [mass, g1(p) = nu_D/(2*sin(z)),  BC N/A]
+% termC == g1(z) q(z)        [mass, g1(p) = nu_D/2,  BC N/A]
 %   q(p) == d/dz g2(z) r(z)   [grad, g2(p) = sin(z), BCL=N,BCR=D]
 %   r(p) == d/dp g3(z) f(z)   [grad, g3(p) = 1,      BCL=D,BCR=N]
 
-g1 = @(z,p,t,dat) nu_D./(2*sin(z));
+g1 = @(z,p,t,dat) nu_D./(2.*sin(z));
 g2 = @(z,p,t,dat) sin(z);
 g3 = @(z,p,t,dat) z.*0 + 1;
 pterm1  = MASS(g1);
@@ -100,7 +115,7 @@ pterm3 = GRAD(num_dims,g3,-1,'N','D', BCL, BCR);
 termC_z = SD_TERM({pterm1,pterm2,pterm3});
 termC   = MD_TERM(num_dims,{termC_z});
 
-terms = {termC};
+terms = {termM,termC};
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.

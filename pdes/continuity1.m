@@ -6,16 +6,15 @@ function pde = continuity1(opts)
 % Run with
 %
 % explicit
-% asgard(@continuity1)
 % asgard(@continuity1,'lev',4,'deg',3)
 %
 % implicit
 % asgard(@continuity1,'timestep_method','CN')
-% asgard(@continuity1,'timestep_method','CN','CFL',0.1)
 
 %% Define the dimensions
 
 dim_x = DIMENSION(-1,+1);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -29,9 +28,7 @@ solutions = {sol1};
 
 %% Define the initial conditions
 
-ic_x = @(x,p,t) x.*0;
-ic1 = new_md_func(num_dims,{ic_x});
-initial_conditions = {ic1};
+initial_conditions = {sol1};
 
 %% Define the terms of the PDE
 %
@@ -40,8 +37,10 @@ initial_conditions = {ic1};
 %% 
 % -df/dx
 
+dV = @(x,p,t,dat) 0*x+1;
+
 g1 = @(x,p,t,dat) x.*0-1;
-pterm1 = GRAD(num_dims,g1,0,'P','P');
+pterm1 = DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x});
@@ -63,13 +62,17 @@ params.parameter2 = 1;
 % Source 1
 s1x = @(x,p,t) cos(2*pi*x);
 s1t = @(t,p) cos(t);
-source1 = {s1x,s1t};
+source1 = new_md_func(num_dims,{s1x,s1t});
 
 %%
 % Source 2
 s2x = @(x,p,t) sin(2*pi*x);
 s2t = @(t,p) -2*pi*sin(t);
-source2 = {s2x,s2t};
+source2 = new_md_func(num_dims,{s2x,s2t});
+
+s3x = @(x,p,t) cos(1/2*pi*x);
+s3t = @(t,p) sin(2*pi*0.1*t);
+source3 = new_md_func(num_dims,{s3x,s3t});
 
 sources = {source1,source2};
 

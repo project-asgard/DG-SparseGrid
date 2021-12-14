@@ -27,7 +27,7 @@ function pde = diffusion1(opts)
 % asgard(@diffusion1,'CFL',0.01);
 %
 % implicit
-% asgard(@diffusion1,'timestep_method','CN');
+% asgard(@diffusion1,'timestep_method','BE');
 %
 % Notes
 %
@@ -42,6 +42,7 @@ function pde = diffusion1(opts)
 % Here we setup a 1D problem (x,y)
 nu = pi/2; %coefficient set to be very small to allow for stability % DLG - WTF is this?
 soln_x = @(x,p,t) cos(nu*x);
+%soln_x = @(x,p,t) sin(nu*x);
 soln_t = @(t,p) exp(-2*nu^2*t);
 
 BCFunc = @(x,p,t) soln_x(x,p,t);
@@ -62,6 +63,7 @@ BCR_fList = { ...
     };
 
 dim_x = DIMENSION(0,1);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -79,21 +81,40 @@ initial_conditions = {ic1};
 
 % term1
 %
-% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [grad,g1(x)=1, BCL=N, BCR=D]
+% eq1 :  df/dt   == d/dx g1(x) q(x,y)   [div ,g1(x)=1, BCL=N, BCR=D]
 % eq2 :   q(x,y) == d/dx g2(x) f(x,y)   [grad,g2(x)=1, BCL=D, BCR=D]
 %
 % coeff_mat = mat1 * mat2
 
+dV = @(x,p,t,dat) 0*x+1;
+
 g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 = GRAD(num_dims,g1,+1,'N','N');
-pterm2 = GRAD(num_dims,g2,-1,'D','D',BCL_fList,BCR_fList);
+pterm1 =   DIV(num_dims,g1,'',-1,'N','N','','','',dV);
+pterm2 =  GRAD(num_dims,g2,'',+1,'D','D',BCL_fList,BCR_fList,'',dV);
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
 
-terms = {term1};
+%% Hack for interior penalty
+pen = 0;
+g3 = @(x,p,t,dat) 0.*x+pen;
+g4 = @(x,p,t,dat) 0.*x-pen;
+
+pterm1 = DIV(num_dims,g3,'',-1,'D','D','','','',dV);
+term2_x = SD_TERM({pterm1});
+term2 = MD_TERM(num_dims,{term2_x});
+
+pterm1 = DIV(num_dims,g4,'', 0,'D','D','','','',dV);
+term3_x = SD_TERM({pterm1});
+term3 = MD_TERM(num_dims,{term3_x});
+
+%%% With penalty
+terms = {term1,term2,term3};
+
+%%% Without penalty
+%terms = {term1};
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -105,8 +126,9 @@ params.parameter2 = 1;
 
 s1x = @(x,p,t) -nu^2*cos(nu*x);
 s1t = @(t,p) exp(-2*nu^2*t);
-source1 = {s1x, s1t};
+source1 = new_md_func(num_dims,{s1x, s1t});
 
+%sources = {};
 sources = {source1};
 
 %% Define the analytic solution (optional).

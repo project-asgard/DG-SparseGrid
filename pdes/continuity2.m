@@ -25,7 +25,9 @@ soln_t = @(t)      sin(2*t);
 % Here we setup a 2D problem (x,y)
 
 dim_x = DIMENSION(-1,+1);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_y = DIMENSION(-2,+2);
+dim_y.moment_dV = @(y,p,t,dat) 0*y+1;
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
 
@@ -37,15 +39,22 @@ initial_conditions = {ic1};
 %
 % Here we have 2 terms, having only nDims=2 (x,y) operators.
 
+dV = @(x,p,t,dat) 0*x+1;
+
 %%
 % -df/dx which is 
 %
 % d/dx g1(x) f(x,y)          [grad,g1(x)=-1, BCL=P, BCR=P]
 
 g1 = @(x,p,t,dat) x*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term1_x = SD_TERM({pterm1});
-term1   = MD_TERM(num_dims,{term1_x,[]});
+
+g1 = @(x,p,t,dat) 0*x+1;
+pterm1 = MASS(g1,'','',dV);
+term1_y = SD_TERM({pterm1});
+
+term1   = MD_TERM(num_dims,{term1_x,term1_y});
 
 %%
 % -df/dy which is
@@ -53,7 +62,7 @@ term1   = MD_TERM(num_dims,{term1_x,[]});
 % d/dy g1(y) f(x,y)          [grad,g1(y)=-1, BCL=P, BCR=P]
 
 g1 = @(y,p,t,dat) y*0-1;
-pterm1  = GRAD(num_dims,g1,0,'P','P');
+pterm1  =  DIV(num_dims,g1,'',-1,'P','P','','','',dV);
 term2_y = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{[],term2_y});
 

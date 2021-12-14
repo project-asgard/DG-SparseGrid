@@ -28,12 +28,12 @@ bcVec = zeros(deg^num_dims*num_elements,1);
 
 for tt = 1:num_terms % Construct a BC object for each term
     
-    term_nD = terms{tt};
+    md_term = terms{tt};
     
     for d1 = 1:num_dims
         
         dim = dims{d1};
-        term_1D = term_nD.terms_1D{d1};
+        sd_term = md_term.terms_1D{d1};
         
         xMin = dim.min;
         xMax = dim.max;
@@ -41,9 +41,9 @@ for tt = 1:num_terms % Construct a BC object for each term
         lev = dim.lev;
         dof = deg * 2^lev;
         
-        for p=1:numel(term_1D.pterms)
+        for p=1:numel(sd_term.pterms)
             
-            pterm = term_1D.pterms{p};
+            pterm = sd_term.pterms{p};
             this_type = pterm.type;
             this_g = pterm.g;
             
@@ -75,12 +75,27 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     %%
                     % Get boundary functions for all dims
+                    % The d2=d1 index of this loop is overwritten. All
+                    % other dims will have a mass term. 
                     
                     for d2=1:num_dims
+                        sd_term_oth_dim = md_term.terms_1D{d2};
+                        mass_pterm      = sd_term_oth_dim.pterms{p};
+                        BC_func = @(x,p,t) BCL_fList{d2}(x,p,t).*mass_pterm.g(x,p,t);
                         bcL{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
-                            BCL_fList{d2},pde.params,pde.transform_blocks,time);
+                            BC_func,mass_pterm.dV,pde.params,pde.transform_blocks,time);
+                        %Apply inverse mat
+                        N = numel(bcL{d1}{d2});
+                        bcL{d1}{d2}     = mass_pterm.LHS_mass_mat(1:N,1:N) \ bcL{d1}{d2};
+                        %Apply previous pterms
+                        for q=1:p-1
+                             bcL{d1}{d2} = sd_term_oth_dim.pterms{q}.mat(1:N,1:N) * bcL{d1}{d2};
+                        end
                     end
+                    
+                    
+                    
                     
                     %%
                     % Overwrite the trace (boundary) value just for this dim
@@ -94,14 +109,14 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Apply LHS_mass_mat for this pterm
                    
                     M = pterm.LHS_mass_mat;
-                    bcL_tmp = inv(M) * bcL_tmp;
+                    bcL_tmp = M(1:dof,1:dof) \ bcL_tmp;
                     
                     %%
                     % Apply mats from preceeding pterms when chaining (p>1)
                     
                     preceeding_mat = eye(dof);
                     for nn=1:p-1
-                        preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                        preceeding_mat = preceeding_mat * sd_term.pterms{nn}.mat(1:dof,1:dof);
                     end
                     bcL_tmp = preceeding_mat * bcL_tmp;
                     
@@ -119,11 +134,23 @@ for tt = 1:num_terms % Construct a BC object for each term
                     
                     %%
                     % Get boundary functions for all dims
+                    % The d2=d1 index of this loop is overwritten. All
+                    % other dims will have mass term.  
                     
                     for d2=1:num_dims
+                        sd_term_oth_dim = md_term.terms_1D{d2};
+                        mass_pterm      = sd_term_oth_dim.pterms{p};
+                        BC_func = @(x,p,t) BCR_fList{d2}(x,p,t).*mass_pterm.g(x,p,t);
                         bcR{d1}{d2} = forward_wavelet_transform(opts.deg,pde.dimensions{d2}.lev,...
                             pde.dimensions{d2}.min,pde.dimensions{d2}.max,...
-                            BCR_fList{d2},pde.params,pde.transform_blocks,time);
+                            BC_func,mass_pterm.dV,pde.params,pde.transform_blocks,time);
+                        %Apply inverse mat
+                        N = numel(bcL{d1}{d2});
+                        bcR{d1}{d2}     = mass_pterm.LHS_mass_mat(1:N,1:N) \ bcR{d1}{d2};
+                        %Apply previous pterms
+                        for q=1:p-1
+                             bcR{d1}{d2} = sd_term_oth_dim.pterms{q}.mat(1:N,1:N) * bcR{d1}{d2};
+                        end
                     end
                     
                     %%
@@ -138,14 +165,14 @@ for tt = 1:num_terms % Construct a BC object for each term
                     % Apply LHS_mass_mat for this pterm
                    
                     M = pterm.LHS_mass_mat;
-                    bcR_tmp = inv(M) * bcR_tmp;                
+                    bcR_tmp = M(1:dof,1:dof) \ bcR_tmp;                
                     
                     %%
                     % Apply mats from preceeding terms when chaining (p>1)
                                         
                     preceeding_mat = eye(dof);
                     for nn=1:p-1
-                        preceeding_mat = preceeding_mat * term_1D.pterms{nn}.mat;
+                        preceeding_mat = preceeding_mat * sd_term.pterms{nn}.mat(1:dof,1:dof);
                     end
                     bcR_tmp = preceeding_mat * bcR_tmp;
                     

@@ -17,34 +17,4 @@ pde = projecti_diff1(opts);
 rel_err = err / norm(fval);
 verifyLessThan(testCase,rel_err,1e-5);
 
-opts.case_=2;
-pde = projecti_diff1(opts);
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
-rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,1e-5);
-
-opts.case_=3;
-pde = projecti_diff1(opts);
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
-rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,1e-5);
-
-opts.case_=4;
-pde = projecti_diff1(opts);
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
-rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,1e-5);
-
-opts.case_=5;
-pde = projecti_diff1(opts);
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
-rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,2e-5);
-
-opts.case_=6;
-pde = projecti_diff1(opts);
-[err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
-rel_err = err / norm(fval);
-verifyLessThan(testCase,rel_err,2e-5);
-
 end

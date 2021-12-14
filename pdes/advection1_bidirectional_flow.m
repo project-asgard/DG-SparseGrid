@@ -12,6 +12,7 @@ function pde = advection1_bidirectional_flow(opts)
 %% Define dimensions
 
 dim_x = DIMENSION(-pi,+pi);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -26,16 +27,13 @@ solutions = {sol1};
 ic1 = sol1;
 initial_conditions = {ic1};
 
-%% Define boundary conditions
-
-BCL = sol1;
-BCR = sol1;
-
 %% Define PDE terms
+
+dV = @(x,p,t,dat) 0*x+1;
  
 % -d/dx (x*f)
 g1 = @(x,p,t,dat) -x;
-pterm1 = GRAD(num_dims,g1,-1,'D','D', BCL, BCR);
+pterm1 =  DIV(num_dims,g1,'',-1,'N','N','','','',dV);
 
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x});

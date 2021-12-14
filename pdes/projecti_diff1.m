@@ -27,18 +27,8 @@ function pde = projecti_diff1(opts)
 
 
 %% Define the dimensions
-switch opts.case_
-    case 3
-        dim_x = DIMENSION(0,3);
-    case 4 
-        dim_x = DIMENSION(-1,2);
-    case 5
-        dim_x = DIMENSION(0,3);
-    case 6 
-        dim_x = DIMENSION(-1,2);
-    otherwise
-        dim_x = DIMENSION(0,2);        
-end
+dim_x = DIMENSION(0,2); 
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
@@ -46,12 +36,7 @@ num_dims = numel(dimensions);
 
 k = pi/2;
 nu = 0.01;
-switch opts.case_
-    case 1
-        soln_x = @(x,p,t) sin(k*x);
-    otherwise
-        soln_x = @(x,p,t) cos(k*x);
-end
+soln_x = @(x,p,t) sin(k*x);
 soln_t = @(t,p) exp(-nu*k^2*t);
 soln1 = new_md_func(num_dims,{soln_x,soln_t});
 solutions = {soln1};
@@ -75,32 +60,16 @@ initial_conditions = {ic1};
 %
 % coeff_mat = mat1 * mat2
 
+dV = @(x,p,t,dat) 0*x+1;
+
 g1 = @(x,p,t,dat) x.*0+nu;
 g2 = @(x,p,t,dat) x.*0+1;
 
 BCL = soln1;
 BCR = soln1;
 
-switch opts.case_
-    case 1
-        pterm1 = GRAD(num_dims,g1,0,'N','N'); % Q = k*cos(k*x) => Q(x) = k, Q'(x) = -k^2*sin(k*x) == 0 
-        pterm2 = GRAD(num_dims,g2,0,'D','D'); % f = sin(k*x) => Q(x)=0
-    case 2
-        pterm1 = GRAD(num_dims,g1,+1,'D','D');
-        pterm2 = GRAD(num_dims,g2,-1,'N','N');
-    case 3
-        pterm1 = GRAD(num_dims,g1,+1,'D','N'); % if you switch the signs of the fluxes this will fail on the right
-        pterm2 = GRAD(num_dims,g2,-1,'N','D');
-    case 4
-        pterm1 = GRAD(num_dims,g1,-1,'N','D'); % if you switch the signs of the fluxes this will pass
-        pterm2 = GRAD(num_dims,g2,+1,'D','N');
-    case 5 
-        pterm1 = GRAD(num_dims,g1,0,'D','N');
-        pterm2 = GRAD(num_dims,g2,0,'N','D');
-    case 6
-        pterm1 = GRAD(num_dims,g1,0,'N','D');
-        pterm2 = GRAD(num_dims,g2,0,'D','N');
-end
+pterm1 =  DIV(num_dims,g1,'',0,'N','N','',dV); 
+pterm2 = GRAD(num_dims,g2,'',0,'D','D',BCL,BCR,'',dV);
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
@@ -130,5 +99,6 @@ sources = {};
 pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
 
 end
+
 
 

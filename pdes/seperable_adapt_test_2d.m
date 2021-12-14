@@ -21,7 +21,9 @@ C = 1.0;
 %% Define the dimensions
 
 dim_x = DIMENSION(-10,+10);
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dim_y = DIMENSION(-1,+1);
+dim_y.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
 
@@ -54,8 +56,10 @@ initial_conditions = {solution1,solution2};
 %
 % d/dx g1(x) f(x,y)          [grad,g1(x)=-1, BCL=P, BCR=P]
 
+dV = @(x,p,t,dat) 0*x+1;
+
 g1 = @(x,p,t,dat) x*0-1;
-pterm1  = GRAD(num_dims,g1,0,'D','D');
+pterm1  =  DIV(num_dims,g1,'',0,'D','D','','','',dV);
 term1_x = SD_TERM({pterm1});
 term1   = MD_TERM(num_dims,{term1_x,[]});
 

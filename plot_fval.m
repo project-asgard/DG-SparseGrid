@@ -40,16 +40,19 @@ if num_dims==2
     %%
     % Plot a 1D line through the solution
     
-    sy = max(1,floor(ny/2));
+    sy = max(1,floor(ny));
     if ny > 2
-        sy = sy+2; % just to get off the exact middle
+        sy = sy-1; % just to get off the exact middle
     end
+%     sy=ny;
     
     f_slice = f_nD(sy,:);
     x = nodes{1};
     y = nodes{2};
     ax1 = subplot(2,2,1);
     plot(x,f_slice,'-o');
+    %xlim([0,10])
+    %ylim([1e-5,1])
     title('1D slice (horizontal)');
     
     %%
@@ -63,7 +66,6 @@ if num_dims==2
     end
     
     sx = max(1,floor(nx/2));
-    sx = 2;
     if nx > 2
         sx = sx+2; % just to get off the exact middle
     end

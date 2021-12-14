@@ -144,6 +144,7 @@ end
 
 if user_provided_nodes
     assert(numel(nodes_count)==numel(input_nodes));
+    assert(numel(Meval(:,1))==sum(nodes_count));
 end
 %%
 % Transform back to real space from wavelet space

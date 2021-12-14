@@ -8,6 +8,7 @@ classdef DIMENSION
         lev = 3;
         init_cond_fn = @(x,p) x.*0;
         moment_dV = @(x,p,t,d) x.*0 + 1;
+        mass_mat = [];
         
     end
     

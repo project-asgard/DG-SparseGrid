@@ -1,0 +1,59 @@
+function spitzer_test()
+
+m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
+m_He_cgs = 6.7*10^-24; %helium 4 mass in g
+m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
+m_Ne_cgs = 3.3509177*10^-23; %Neon mass in g
+m_vals = [m_D_cgs,m_He_cgs,m_B_cgs,m_Ne_cgs]/1000;
+
+z_vals = [1,2,5,10];
+dt = 0.001;
+
+for i = 1:length(z_vals)
+    args = {'timestep_method','BE','dt',dt,'lev',4,'deg', 3,'num_steps',3,'update_params_each_timestep', true,'save_output',true,'quiet',true};
+    opts = OPTS(args);
+    pde = mirror2_velocity_div(opts);
+    lev_vec = [opts.lev, opts.lev];
+    pde.params.a.m = 9.1093*10^-31;
+    pde.params.b.m = m_vals(i);
+    pde.params.b.Z = z_vals(i);
+    pde.params.a.T_eV = 1000;
+    pde.params.b.T_eV = pde.params.a.T_eV;
+    pde.params.b2.T_eV = pde.params.a.T_eV;
+    pde.params.a.vth = pde.params.v_th(pde.params.a.T_eV,pde.params.a.m);
+    pde.params.b.vth = pde.params.v_th(pde.params.b.T_eV,pde.params.b.m);
+    pde.params.b2.vth = pde.params.v_th(pde.params.b2.T_eV,pde.params.b2.m);
+    pde.params.ln_delt = 15;
+    pde.params.a.n = 8e20;
+    pde.params.e = 1.602*10^-19; %charge in Coulombs
+    E_dreicer_si = pde.params.a.n.*pde.params.e^3*pde.params.ln_delt/(2*pi*pde.params.eps0^2*pde.params.a.m ...
+        *pde.params.a.vth^2);
+    frac = 1e-3;
+    pde.params.E = frac*E_dreicer_si;
+    %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
+    pde.params.maxwell = @(v,offset,vth) pde.params.a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
+    pde.params.soln_v = @(v,p,t) solution_v(v,p,t);
+    pde.params.f0_v = @(v) pde.params.maxwell(v,0,pde.params.a.vth);
+    pde.params.init_cond_v = @(v,p,t) pde.params.f0_v(v);
+    [err,fval,fval_realspace,nodes,err_realspace] = asgard_run_pde(opts,pde);
+    close all;
+    load('asgard-out-l'+ lev_vec(1) + '-d'+ opts.deg(1) +'-SG-dt'+dt+'-adapt-n.mat');
+    num_steps = length(outputs.time_array);
+    coord = get_realspace_coords(pde,nodes);
+    f1d_ic = outputs.f_realspace_analytic_nD_t{1,1};
+    fval_realspace = reshape(outputs.f_realspace_nD_t{num_steps}, [numel(f1d_ic) 1]);
+    current_func_v = @(x) 2*pi*pde.params.a.Z.*pde.params.e.*x;
+    current_func_z = @(x) cos(x);
+    current_func_nD{1} = current_func_v;
+    current_func_nD{2} = current_func_z;
+    conduct_vals(i) = moment_integral(lev_vec,opts.deg,coord,fval_realspace, current_func_nD,pde.dimensions)/(pde.params.E);
+    func = (1 + 1.198*pde.params.b.Z + 0.222*pde.params.b.Z^2)/(1 + 2.966*pde.params.b.Z + 0.753*pde.params.b.Z^2);
+    spitzer_conduct = func*(3/(4*sqrt(2*pi)))*(4*pi*pde.params.eps0)^2*(1.38e-23*pde.params.a.T_eV*11604)^(3/2)...
+          /(pde.params.b.Z*pde.params.e^2*pde.params.a.m^(1/2)*pde.params.ln_delt);
+    conduct_vals(i) = conduct_vals(i)/spitzer_conduct;
+end
+
+plot(z_vals,conduct_vals);
+
+
+end
