@@ -1,9 +1,10 @@
-function [err,fval,fval_realspace,nodes,err_realspace,outputs] = ...
+function [err,fval,fval_realspace,nodes,err_realspace,outputs,opts] = ...
     asgard_run_pde(opts,pde)
 
 root_directory = get_root_folder();
 
 tic
+figs = [];
 
 num_dims = numel(pde.dimensions);
 
@@ -42,6 +43,8 @@ else
     connectivity = [];
 end
 
+%% Generate 1D mass matrices in each dimension (used in L2 projections)
+pde = compute_dimension_mass_mat(opts,pde);
 
 %% Generate initial conditions (both 1D and multi-D).
 if ~opts.quiet; disp('Calculate 2D initial condition on the sparse-grid'); end
@@ -72,7 +75,11 @@ end
 
 for d=1:num_dims
     if strcmp(opts.output_grid,'fixed')
-        num_fixed_grid = 51;
+        if d==1
+            num_fixed_grid = 51;
+        else
+            num_fixed_grid = 21;
+        end
         nodes_nodups{d} = ...
             linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
         [Meval{d},nodes{d},nodes_count{d}] = ...
@@ -107,14 +114,9 @@ if num_dims <=3
     
     % construct the moment function handle list for calculating the mass
     if opts.calculate_mass
-        mass_func = @(x,p,t) x.*0+1;
-        for d=1:num_dims
-            moment_func_nD{d} = mass_func;
-        end
-        
-        mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD, pde.dimensions);
+        mass = calculate_mass(pde,opts,coord,fval_realspace);
         if ~isempty(pde.solutions)
-            mass_analytic = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace_analytic,moment_func_nD,pde.dimensions);
+            mass_analytic = calculate_mass(pde,opts,coord,fval_realspace_analytic);
         end
         mass_t(1) = mass;
     end
@@ -123,7 +125,6 @@ if num_dims <=3
         pde.params.norm_fac = mass / mass_analytic;
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
-        mass_analytic = moment_integral(opts.lev,opts.deg,coord,fval_realspace_analytic,moment_func_nD, pde.dimensions);
     end
     
     f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
@@ -152,6 +153,8 @@ if num_dims <=3
     end
     
     if norm(fval_realspace) > 0 && ~opts.quiet
+        figs.ic = figure('Name','Initial Condition','Units','normalized','Position',[0.7,0.1,0.3,0.3]);
+
         if opts.use_oldhash
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
         else
@@ -160,6 +163,14 @@ if num_dims <=3
     end
     
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
+    
+    if opts.calculate_mass
+        mass = calculate_mass(pde,opts,coord,fval_realspace);
+        if ~isempty(pde.solutions)
+            mass_analytic = calculate_mass(pde,opts,coord,fval_realspace_analytic);
+        end
+        mass_t(1) = mass;
+    end
     
 end
 
@@ -231,6 +242,10 @@ if num_dims <=3
     end
 end
 
+% need to clean up this interface!
+outputs = save_output([],0,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
+%outputs.mass_t = mass_t;
+
 %% Time Loop
 count=1;
 err = 1e9;
@@ -270,7 +285,7 @@ for L = 1:opts.num_steps
             E = E * pde.Et(t,params);
             Emax = max(abs(Meval{2}*E)); % TODO : this clearly is problem dependent
         end
-        
+               
         if ~opts.quiet; disp('    Calculate time dependent matrix coeffs'); end
         if num_dims==2
             if (pde.applySpecifiedE || pde.solvePoisson)
@@ -361,8 +376,9 @@ for L = 1:opts.num_steps
         
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         if opts.calculate_mass
-            mass = moment_integral(pde.get_lev_vec,opts.deg,coord,fval_realspace,moment_func_nD,pde.dimensions);
+            mass = calculate_mass(pde,opts,coord,fval_realspace);
             mass_t(L+1) = mass;
+            outputs.mass_t = mass_t;
         end
         
         %%
@@ -390,6 +406,10 @@ for L = 1:opts.num_steps
     
     %%
     % Check against known solution
+    
+    if opts.calculate_mass && ~opts.quiet
+        disp(['    total integrated mass : ', num2str(mass)]);
+    end
     if ~isempty(pde.solutions)
         
         %%
@@ -422,9 +442,6 @@ for L = 1:opts.num_steps
             if ~opts.quiet
                 disp(['    real space absolute err : ', num2str(err_realspace)]);
                 disp(['    real space relative err : ', num2str(err_realspace/max(abs(fval_realspace_analytic(:)))*100), ' %']);
-                if opts.calculate_mass
-                    disp(['    total integrated mass : ', num2str(mass)]);
-                end
             end
         end
         
@@ -435,28 +452,35 @@ for L = 1:opts.num_steps
         err = err_wavelet;
     end
     
-    %%
-    % Plot results
+    % Reshape realspace solution and plot
     
-    if mod(L,opts.plot_freq)==0 && ~opts.quiet
+    if num_dims <= 3
         
-        figure(1000)
+        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
+        if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
+            f_realspace_nD = ...
+                remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
+        end
         
-        if num_dims <= 3
+        f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t+dt);
+        
+        element_coordinates = [];
+        if opts.use_oldhash
+        else
+            element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+        end
+        
+        %%
+        % Plot results
+        
+        if mod(L,opts.plot_freq)==0 && ~opts.quiet
             
-            f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-            if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
-                f_realspace_nD = ...
-                    remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
-            end
-            
-            f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t+dt);
-            
-            element_coordinates = [];
-            if opts.use_oldhash
+            if isfield(figs,'solution')
+                figure(figs.solution);
             else
-                element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+                figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.5,0.5]);
             end
+                       
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
             
             % this is just for the RE paper
@@ -475,56 +499,53 @@ for L = 1:opts.num_steps
                 figure(87)
                 contour(ppar,pper,f2d,levs)
             end
-        end
-        
+                   
+        end       
     end
     
     count=count+1;
     t1 = toc;
     if ~opts.quiet; disp(['Took ' num2str(t1) ' [s]']); end
+  
     
-    %%
-    % Save output
+    % Hack right now to update the params data every time step
     
-    if opts.save_output && (mod(L,opts.save_freq)==0 || L==num_steps)
-        [status, msg, msgID] = mkdir([root_directory,'/output']);
-        if isempty(opts.output_filename_id)
-            adapt_str = 'n';
-            if opts.adapt; adapt_str=num2str(opts.adapt_threshold,'%1.1e'); end
-            filename_str = ['-l',replace(num2str(opts.lev),' ','') ...
-                '-d',num2str(opts.deg),'-',opts.grid_type,'-dt',num2str(dt),...
-                '-adapt-',adapt_str];
-        else
-            filename_str = opts.output_filename_id;
-        end
-        output_file_name = append(root_directory,"/output/asgard-out",filename_str,".mat");
-        outputs.output_file_name = output_file_name;
+    if opts.update_params_each_timestep
         
-        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-        if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
-            f_realspace_nD = ...
-                remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
-        end
-        
-        if num_dims <= 3
-            f_realspace_nD_t{L+1} = f_realspace_nD;
-            f_realspace_analytic_nD_t{L+1} = f_realspace_analytic_nD;
-        else
-            error('Save output for num_dimensions >3 not yet implemented');
-        end
-        fval_t{L+1} = fval;
-        nodes_t{L+1} = nodes_nodups;
-        time_array(L+1) = t+dt;
-        wall_clock_time(L+1) = toc;
-        
-        save(output_file_name,'pde','opts','dt','f_realspace_analytic_nD_t','f_realspace_nD_t','fval_t','nodes','time_array','hash_table','wall_clock_time','nodes_t');
+        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
+        %       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
+        alpha_z = @(z) (pde.params.f0_p(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_p0,z,'spline','extrap'))/dt;
+        pde.params.alpha_z = alpha_z;
+        z = linspace(-1,1,100);
+        outputs.alpha_t0{L+1} = alpha_z;
+        %         outputs.alpha_t{L+1} = sum(alpha_z(z));
+        outputs.alpha_t{L+1} = alpha_z(0);
         
     end
     
+    % Save output
+    
+    outputs = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
+    
     t = t + dt;
+       
+    if opts.calculate_mass && ~opts.quiet
+        if isfield(figs,'mass')
+            figure(figs.mass);
+        else
+            figs.mass = figure('Name','mass(t)','Units','normalized','Position',[0.7,0.5,0.2,0.3]);
+        end
+        plot(outputs.mass_t/outputs.mass_t(1));
+        xtitle='timestep';
+        ytitle='mass/mass(t=0)';
+        ylim([0,2]);
+    end
     
-    outputs.dt = dt;
-    
+
+       
 end
+
+outputs.pde = pde;
+outputs.opts = opts;
 
 end

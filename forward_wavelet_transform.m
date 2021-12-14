@@ -1,4 +1,4 @@
-function [f] = forward_wavelet_transform(deg,lev,Lmin,Lmax,foo,params,blocks,t)
+function [f] = forward_wavelet_transform(deg,lev,Lmin,Lmax,foo,dV,params,blocks,t)
 
 %% Decompose a 1D function into the multiwavelet basis 
 
@@ -27,7 +27,7 @@ for i=0:n-1
     
     % Get the function foo(x) at the quadrature points.
     
-    fxHere = foo(x, params, t);  
+    fxHere = foo(x, params, t) .* dV(x);  
     
     this_quad = (quad_w .* fxHere);
        

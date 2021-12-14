@@ -20,11 +20,13 @@ num_dims = numel(pde.dimensions);
 
 pde.dimensions{1}.min = 0;
 pde.dimensions{1}.max = 1;
-pde.dimensions{1}.jacobian = @(v,p,t) v.^2;
+pde.dimensions{1}.moment_dV = @(v,p,t) v.^2;
 
 pde.dimensions{2}.min = 0;
 pde.dimensions{2}.max = pi;
-pde.dimensions{2}.jacobian = @(z,p,t) sin(z);
+pde.dimensions{2}.moment_dV = @(z,p,t) sin(z);
+
+pde = compute_dimension_mass_mat(opts,pde);
 
 % overwrite the initial conditions for this test
 

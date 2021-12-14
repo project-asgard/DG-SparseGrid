@@ -32,9 +32,6 @@ function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
 clear strCR;
 
 applyLHS = ~isempty(pde.termsLHS);
-if applyLHS
-    error('ERROR: Matlab ODE integrators not yet implemented for LHS=true');
-end
 
 %     function res = fun_for_jacobianest(x)
 %     res = explicit_ode(t0,x);
@@ -44,8 +41,13 @@ end
     function dfdt = explicit_ode(t,f)
         bc = boundary_condition_vector(pde,opts,hash_table,t);
         source = source_vector(pde,opts,hash_table,t);
-        f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
-        dfdt = f1 + source + bc;
+        if applyLHS
+            [f1,~,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+            dfdt = ALHS\(f1 + source + bc);       
+        else
+            f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+            dfdt = f1 + source + bc;       
+        end
     end
 
     function res = implicit_ode(t,f,dfdt)
@@ -85,30 +87,34 @@ elseif strcmp(opts.timestep_method,'ode15s')
     
     % call ode15s
     stats = 'off';
-    output_func = '';   
+    output_func = '';
     if(~opts.quiet)
         disp('Using ode15s');
         stats = 'on';
-        output_func = @odetpbar;       
+        output_func = @odetpbar;
     end
     options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
         'Stats',stats,'OutputFcn',output_func,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
     [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
-
+    
 elseif strcmp(opts.timestep_method,'ode23s')
     
     % call ode23s
     stats = 'off';
-    output_func = '';   
+    output_func = '';
     if(~opts.quiet)
         disp('Using ode23s');
         stats = 'on';
-        output_func = @odetpbar;       
+        output_func = @odetpbar;
     end
     options = odeset('Stats',stats,'OutputFcn',output_func);
     [tout,fout] = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
     
 elseif strcmp(opts.timestep_method,'ode15i')
+
+    if applyLHS
+        error('ERROR: ode15i not yet implemented for LHS=true');
+    end
     
     dfdt0 = f0.*0;
     [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
@@ -192,24 +198,32 @@ end
 %% Matrix Exponential
 function f1 = matrix_exponential(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
-% Note that this is not implemented for source terms, so is only here for
-% testing purposed. Adding sources terms requires adding another term,
-% i.e., 
-% f1 = expm(t*A) * int_0^t exp(-u*A) s(t) du  + expm(t*A)*f0
-% as well as something for the boundary terms - that integral looks like a
-% pain.
-
-s0 = source_vector(pde,opts,hash_table,t+dt);
-bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
-
 applyLHS = ~isempty(pde.termsLHS);
 
 if applyLHS
-    error('apply LHS not implemented for FE');
+    [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+    f1 = expm(dt*(ALHS\A))*f0;
 else
-    [~,A] = apply_A(pde,opts,A_data,f0,deg);
-    f1 = expm(A*dt)*f0; 
+    [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
+    f1 = expm(A*dt)*f0;
 end
+
+Q = A*f0;
+
+
+function ret = rhs_integrand(u)
+    s = source_vector(pde,opts,hash_table,u);
+    bc = boundary_condition_vector(pde,opts,hash_table,u);
+    uu = t+dt-u;
+    if applyLHS
+        ret = ALHS\(expm(uu*(ALHS\A)) * (s+bc));
+    else
+        ret = expm(uu*A) * (s+bc);
+    end
+end
+
+rhs_integral = integral(@rhs_integrand,t,t+dt,'ArrayValued',true);%,'RelTol',1e-5,'AbsTol',1e-5);
+f1 = f1 + rhs_integral;
 
 end
 
@@ -279,10 +293,10 @@ if opts.time_independent_A % relies on inv() so is no good for poorly conditione
         end
         f1 = AA_inv * b;
     end
-   
+    
 else % use the backslash operator instead
     if applyLHS
-        if opts.time_independent_build_A 
+        if opts.time_independent_build_A
             if isempty(A);[~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);end
         else
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
@@ -315,82 +329,82 @@ else % use the backslash operator instead
         f1 = AA \ b;
     end
     
-%     % Pre-kron solve
-%     num_terms = numel(pde.terms);
-%     num_dims = numel(pde.dimensions);
-%     for d=1:num_dims
-%         dim_mat_list{d} = zeros(size(pde.terms{1}.terms_1D{1}.mat));
-%         for t=1:num_terms           
-%             dim_mat_list{d} = dim_mat_list{d} + pde.terms{t}.terms_1D{d}.mat;
-%         end
-%     end
-%     for d=1:num_dims
-%         A = dim_mat_list{d};
-%         I = speye(numel(diag(A)));
-%         AA_d =  I - dt*A;
-%         dim_mat_inv_list{d} = inv(AA_d);
-%     end
-%     use_kronmultd = true;
-%     if use_kronmultd
-%         f1a = kron_multd(num_dims,dim_mat_inv_list,b);
-%     else
-%         f1a = kron_multd_full(num_dims,dim_mat_inv_list,b);
-%     end
+    %     % Pre-kron solve
+    %     num_terms = numel(pde.terms);
+    %     num_dims = numel(pde.dimensions);
+    %     for d=1:num_dims
+    %         dim_mat_list{d} = zeros(size(pde.terms{1}.terms_1D{1}.mat));
+    %         for t=1:num_terms
+    %             dim_mat_list{d} = dim_mat_list{d} + pde.terms{t}.terms_1D{d}.mat;
+    %         end
+    %     end
+    %     for d=1:num_dims
+    %         A = dim_mat_list{d};
+    %         I = speye(numel(diag(A)));
+    %         AA_d =  I - dt*A;
+    %         dim_mat_inv_list{d} = inv(AA_d);
+    %     end
+    %     use_kronmultd = true;
+    %     if use_kronmultd
+    %         f1a = kron_multd(num_dims,dim_mat_inv_list,b);
+    %     else
+    %         f1a = kron_multd_full(num_dims,dim_mat_inv_list,b);
+    %     end
     
-%     % Iterative solve
-%     restart = [];
-%     tol=1e-6;
-%     maxit=1000;
-%     tic;
-%     [f10,flag,relres,iter,resvec] = gmres(AA,b,restart,tol,maxit);
-%     t_gmres = toc;
-%     figure(67)
-%     semilogy(resvec);
-%   
-%     % Direct solve - LU approach to reducing repeated work   
-%     [L,U,P] = lu(AA);
-%     n=size(AA,1);
-%     ip = P*reshape(1:n,n,1); % generate permutation vector
-%     err = norm(AA(ip,:)-L*U,1); % err should be small
-%     tol = 1e-9;
-%     isok = (err <= tol * norm(AA,1) ); % just a check
-%     disp(['isok for LU: ', num2str(isok)]);
-%     % to solve   a linear system    A * x = b, we have   P * A * x = P*b
-%     % then from LU factorization, we have (L * U) * x = (P*b),  so    x  = U \ (L \ ( P*b))
-%     f1_LU =   U \ (L \  (P*b));
-%     
-%     % Direct solve - QR reduced rank
-%     n=size(AA,1);
-%     [Q,R,P] = qr(AA); % A*P = Q*R
-%     % where R is upper triangular,   Q is orthogonal, Q’*Q is identity, P is column permutation
-%     err = norm( AA*P - Q*R,1);
-%     tol=1e-9;
-%     isok = (err <= tol * norm(AA,1));  % just a check
-%     disp(['isok for QR: ', num2str(isok)]);
-%     % to solve   A * x = b,   we have A * P * (P’*x) = b, (Q*R) * (P’*x) = b
-%     % y =   R\(Q’*b),   P*y = x
-%     tol=1e-9;
-%     is_illcond = abs(R(n,n)) <= tol * abs(R(1,1));
-%     if(is_illcond)
-%         disp('is_illcond == true');
-%         bhat = Q'*b;
-%         y = zeros(n,1);
-%         yhat =  R(1:(n-1), 1:(n-1)) \ bhat(1:(n-1));  % solve with smaller system
-%         y(1:(n-1)) = yhat(1:(n-1));
-%         y(n) = 0;  % force last component to be zero
-%         f1_QR = P * y;
-%     else
-%         disp('is_illcond == false');
-%         f1_QR = P * (R \ (Q'*b));
-%     end
-%       
-%     disp(['f1-f10:  ',num2str(norm(f1-f10)/norm(f1))]);
-%     disp(['f1-f1_LU:  ',num2str(norm(f1-f1_LU)/norm(f1))]);
-%     disp(['f1-f1_QR:  ',num2str(norm(f1-f1_QR)/norm(f1))]);
-%     disp(['direct runtime: ', num2str(t_direct)]);
-%     disp(['gmres runtime: ', num2str(t_gmres)]);
-%     
-%     f1 = f1_QR;
+    %     % Iterative solve
+    %     restart = [];
+    %     tol=1e-6;
+    %     maxit=1000;
+    %     tic;
+    %     [f10,flag,relres,iter,resvec] = gmres(AA,b,restart,tol,maxit);
+    %     t_gmres = toc;
+    %     figure(67)
+    %     semilogy(resvec);
+    %
+    %     % Direct solve - LU approach to reducing repeated work
+    %     [L,U,P] = lu(AA);
+    %     n=size(AA,1);
+    %     ip = P*reshape(1:n,n,1); % generate permutation vector
+    %     err = norm(AA(ip,:)-L*U,1); % err should be small
+    %     tol = 1e-9;
+    %     isok = (err <= tol * norm(AA,1) ); % just a check
+    %     disp(['isok for LU: ', num2str(isok)]);
+    %     % to solve   a linear system    A * x = b, we have   P * A * x = P*b
+    %     % then from LU factorization, we have (L * U) * x = (P*b),  so    x  = U \ (L \ ( P*b))
+    %     f1_LU =   U \ (L \  (P*b));
+    %
+    %     % Direct solve - QR reduced rank
+    %     n=size(AA,1);
+    %     [Q,R,P] = qr(AA); % A*P = Q*R
+    %     % where R is upper triangular,   Q is orthogonal, Q’*Q is identity, P is column permutation
+    %     err = norm( AA*P - Q*R,1);
+    %     tol=1e-9;
+    %     isok = (err <= tol * norm(AA,1));  % just a check
+    %     disp(['isok for QR: ', num2str(isok)]);
+    %     % to solve   A * x = b,   we have A * P * (P’*x) = b, (Q*R) * (P’*x) = b
+    %     % y =   R\(Q’*b),   P*y = x
+    %     tol=1e-9;
+    %     is_illcond = abs(R(n,n)) <= tol * abs(R(1,1));
+    %     if(is_illcond)
+    %         disp('is_illcond == true');
+    %         bhat = Q'*b;
+    %         y = zeros(n,1);
+    %         yhat =  R(1:(n-1), 1:(n-1)) \ bhat(1:(n-1));  % solve with smaller system
+    %         y(1:(n-1)) = yhat(1:(n-1));
+    %         y(n) = 0;  % force last component to be zero
+    %         f1_QR = P * y;
+    %     else
+    %         disp('is_illcond == false');
+    %         f1_QR = P * (R \ (Q'*b));
+    %     end
+    %
+    %     disp(['f1-f10:  ',num2str(norm(f1-f10)/norm(f1))]);
+    %     disp(['f1-f1_LU:  ',num2str(norm(f1-f1_LU)/norm(f1))]);
+    %     disp(['f1-f1_QR:  ',num2str(norm(f1-f1_QR)/norm(f1))]);
+    %     disp(['direct runtime: ', num2str(t_direct)]);
+    %     disp(['gmres runtime: ', num2str(t_gmres)]);
+    %
+    %     f1 = f1_QR;
     
 end
 end
@@ -436,12 +450,12 @@ if opts.time_independent_A % uses inv() so no good for poorly conditioned system
         
         AA_inv = inv(AA);
         f1 = AA_inv * b;
-    else        
+    else
         if applyLHS
             b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
         else
             b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
-        end    
+        end
         f1 = AA_inv * b;
     end
     
