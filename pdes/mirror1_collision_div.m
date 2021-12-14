@@ -49,7 +49,7 @@ num_dims = numel(dimensions);
 %     end
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
-        ret = p.maxwell(v,0,p.v_th(p.b.T_eV,p.a.m))./p.a.n;
+        ret = p.maxwell(v,0,p.v_th(p.b.T_eV,p.a.m),p.a)./p.a.n;
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
         end

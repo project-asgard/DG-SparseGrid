@@ -49,7 +49,7 @@ nu_par  = @(v,a,b) nu_ab0(a,b).*(psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth).^3))
 nu_D    = @(v,a,b) nu_ab0(a,b).*(phi(vel_norm(v,b.vth)) - psi(vel_norm(v,b.vth)))./(vel_norm(v,b.vth).^3); %deflection frequency in s^-1
 %nu_E    = @(v,a,b) nu_ab0(a,b).*(2.*(a.m/b.m).*psi(vel_norm(v,b.vth))./(vel_norm(v,b.vth)) - dphidx(vel_norm(v,b.vth))./(vel_norm(v,b.vth)).^2);
 nu_E    = @(v,a,b) nu_ab0(a,b).*(1./vel_norm(v,b.vth).^3).*(a.m/b.m).*(phi(vel_norm(v,b.vth)) - (1 + b.m/a.m).*vel_norm(v,b.vth).*dphidx(vel_norm(v,b.vth))); %Hinton definition of nu_E
-maxwell = @(v,offset,vth) a.n/(pi^(3/2).*vth^3).*exp(-((v-offset)/vth).^2);
+maxwell = @(v,offset,vth,a) a.n/(pi^(3/2).*vth^3).*exp(-((v-offset)/vth).^2);
 gauss   = @(v,x,y,a) a.n/(sqrt(2*pi)*y)*exp(-0.5*((v - x)/y).^2);
 B_func = @(s) exp(s); % %magnetic field as a function of spatial coordinate
 dB_ds = @(s) exp(s); 
@@ -134,9 +134,9 @@ a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
         frac = 0.05;
         E = frac*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
-        maxwell = @(v,offset,vth) a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
+        maxwell = @(v,offset,vth,a) a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
         soln_v = @(v,p,t) solution_v(v,p,t);
-        f0_v = @(v) maxwell(v,a.v_beam,a.vth);
+        f0_v = @(v) maxwell(v,a.v_beam,a.vth,a);
         init_cond_v = @(v,p,t) f0_v(v);
         %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
         %params.eps0 = 1/(4*pi);
@@ -172,6 +172,51 @@ a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
         disp(['E: ', num2str(E)]);
         disp(['Z: ', num2str(b.Z)]);
         disp(['E/E_D:', num2str(frac)]);
+    case 4
+        n_cgs = 5e13; %equilibrium density in cm.^-3
+        m_e_cgs = 9.109*10^-28; %electron mass in g
+        m_D_cgs = 3.3443*10^-24; %Deuterium mass in g
+        m_He_cgs = 6.7*10^-24; %helium 4 mass in g
+        m_B_cgs = 1.82*10^-23; %Boron 11 mass in g
+        temp_cgs = 1.6022e-10; %temperature in erg
+        params_cgs.a.n = n_cgs;
+        params_cgs.b.n = n_cgs;
+        params_cgs.b2.n = n_cgs;
+        params_cgs.a.m = m_e_cgs; %beam is electrons
+        params_cgs.b.m = m_e_cgs; %background is electrons
+        params_cgs.b2.m = m_B_cgs;
+        params_cgs.a.Z = -1;
+        params_cgs.b.Z = -1;
+        params_cgs.b2.Z = 1;
+        params_cgs.e = 4.803*10^-10; %charge in Fr
+        params_cgs.E = 2.6e-5; %E field in statvolt/cm
+        a.n = 10^6*params_cgs.a.n;%converting to m^-3
+        b.n = 10^6*params_cgs.b.n;
+        b2.n = 10^6*params_cgs.b2.n;
+        
+        a.m = 0.001*params_cgs.a.m; %converting to kg
+        b.m = 0.001*params_cgs.b.m;
+        b2.m = 0.001*params_cgs.b2.m;
+        a.Z = params_cgs.a.Z;
+        b.Z = params_cgs.b.Z;
+        b2.Z = params_cgs.b2.Z;
+        ln_delt = 27.0857;
+        a.T_eV = 1.33e4;%2/3*params.a.E_eV;
+        b.T_eV = a.T_eV;
+        b2.T_eV = a.T_eV;
+        a.v_beam = 0;
+        a.vth = v_th(a.T_eV,a.m);
+        b.vth = v_th(b.T_eV,b.m);
+        b2.vth = v_th(b2.T_eV,b2.m);
+        E_dreicer_si = a.n.*e^3*ln_delt/(2*pi*eps0^2*a.m ...
+            *a.vth^2);
+        E = 10^-2*E_dreicer_si;
+        %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
+        maxwell = @(v,offset,vth,a) a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
+        init_cond_v = @(v,p,t) maxwell(v,0,a.vth,a);
+        soln_v = @(v,p,t) solution_v(v,p,t);
+        %params_cgs.nu_ab0  = @(a,b) b.n * params_cgs.e^4 * a.Z^2 * b.Z^2 * params_cgs.ln_delt / (pi^3/2.*a.m^2*b.vth^3); %scaling coefficient
+        %params.eps0 = 1/(4*pi);
 end
 
 % Vacuum magnetic field function:
@@ -210,16 +255,16 @@ uniform = @(x,p,t) x.*0 + 1; %uniiform condition if needed
 f0_v = @f_init_v;
     function res = f_init_v(v)
         %res = zeros(size(v));
-        res = maxwell(v,a.v_beam,a.vth);
+        res = maxwell(v,a.v_beam,a.vth,a);
         %res = gauss(v,a.v_beam,a.vth,a);
     end
 
-init_cond_v = @(v,p,t) maxwell(v,a.v_beam,a.vth);
+init_cond_v = @(v,p,t) maxwell(v,a.v_beam,a.vth,a);
 init_cond_z = @(z,p,t) z.*0 + 1;%gauss(z,a.z0,a.dz0,a);
 init_cond_s = @(s,p,t) gauss(s,a.s0,a.ds0,a);
 init_cond_t = @(t,p) t*0 + 1;
 
-boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth);%exp(-nu_D(v,a,b).*t);
+boundary_cond_v = @(v,p,t) maxwell(v,0,b.vth,a);%exp(-nu_D(v,a,b).*t);
 boundary_cond_z = @(z,p,t) z.*0 + 1;
 boundary_cond_s = @(s,p,t) s.*0;
 boundary_cond_t = @(t,p) t.*0 + 1;
@@ -239,7 +284,7 @@ soln_s = @solution_s;
 soln_v = @solution_v;
     function ret = solution_v(v,p,t)
 %        ret = init_cond_v(v);
-         ret = maxwell(v,0,a.vth);
+         ret = maxwell(v,0,a.vth,a);
 %        ret = a.n/(pi^3/2.*v_th(b.T_eV,a.m).^3).*exp(-(v./v_th(b.T_eV,a.m)).^2);
         if isfield(p,'norm_fac')
             ret = p.norm_fac .* ret;
