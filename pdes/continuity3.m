@@ -40,8 +40,8 @@ dimensions = {dim_x,dim_y,dim_z};
 num_dims = numel(dimensions);
 
 %% Initial conditions
-
-ic1 = new_md_func(num_dims); % set to all zero
+ic_x = @(x,p,t) x.*0;
+ic1 = new_md_func(num_dims,{ic_x,ic_x,ic_x}); % set to all zero
 initial_conditions = {ic1};
 
 %% Define the terms of the PDE

@@ -1,4 +1,4 @@
-function [err,fval,fval_realspace,nodes,err_realspace,outputs] = ...
+function [err,fval,fval_realspace,nodes,err_realspace,outputs,opts] = ...
     asgard_run_pde(opts,pde)
 
 root_directory = get_root_folder();
@@ -504,6 +504,12 @@ for L = 1:opts.num_steps
     count=count+1;
     t1 = toc;
     if ~opts.quiet; disp(['Took ' num2str(t1) ' [s]']); end
+  
+    
+    % Hack right now to update the params data every time step
+
+    
+    % Save output
     
     outputs = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
     
@@ -521,6 +527,7 @@ for L = 1:opts.num_steps
         ylim([0,2]);
     end
     
+
     % Hack right now to update the params data every time step
     
     if opts.update_params_each_timestep

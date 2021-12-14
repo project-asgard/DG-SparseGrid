@@ -142,18 +142,7 @@ KB_normfac = 1/(kruskal_bernstein(0.1)/kulsrud_Z1(end));
 % Scan over E/E_D ratio
 do_E_scan = true;
 if do_E_scan
-    figure
-    semilogy(ratio,kruskal_bernstein(ratio)*KB_normfac,'LineWidth',10,'Color','#E8E7E7','DisplayName','K-B (nr)');
-    ylim([1e-10 1]);
-    hold on
-    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,1)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=1)','color','red');
-    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,1)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=1)','color','red');
-    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,10)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=10)','color','blue');
-    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,10)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=10)','color','blue');
-    semilogy(kulsrud_E1,kulsrud_Z1,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=1)','color','red');
-    semilogy(kulsrud_E2,kulsrud_Z2,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=2)','color','green');
-    semilogy(kulsrud_E10,kulsrud_Z10,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=10)','color','blue');
-    legend
+    
     
     N2 = 15;
     ratio_max2 = 0.1;
@@ -195,6 +184,7 @@ if do_E_scan
                 alpha_nr(i,1) = outputs(i).alpha_t{end};
                 dt_nr(i,1) = dt;
             end
+
 %        end
 %        semilogy(dt_nr,alpha_nr(:,1));
 %     % Relativistic
@@ -218,10 +208,38 @@ if do_E_scan
 %             alpha_r(i,Z) = outputs(i).alpha_t{end};
 %         end
 %     end
+
+        end
+    end
     
+    % Relativistic
+    args.delta = norm.delta;
+
+    
+    set(groot,'defaultLineLineWidth',2.0)
+    set(groot,'defaultAxesFontSize',20)
+    set(groot,'defaultLegendFontSize',14)
+    figure('Position',[0 0 600 600])
+    semilogy(ratio,kruskal_bernstein(ratio)*KB_normfac,'LineWidth',10,'Color','#E8E7E7','DisplayName','K-B (nr)');
+    title('RE production rate benchmark','Interpreter','latex');
+    xlabel('$E/E_D$','Interpreter','latex');
+    ylabel('RE production rate $\alpha$ [arb. units]','Interpreter','latex');
+    ylim([1e-10 1]);
+    hold on
+    red = '#E74C3C';
+    blue = '#2E86C1';
+    green = '#229954';
+    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,1)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=1)','color',red);
+    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,1)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=1)','color',red);
+    semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,10)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=10)','color',blue);
+    semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,10)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=10)','color',blue);
+    semilogy(kulsrud_E1,kulsrud_Z1,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=1)','color',red);
+    semilogy(kulsrud_E2,kulsrud_Z2,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=2)','color',green);
+    semilogy(kulsrud_E10,kulsrud_Z10,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=10)','color',blue);
     norm_fac = kulsrud_Z1(end)/alpha_nr(N2,1);
     disp(['norm_fac: ',num2str(norm_fac)]);
     hold on
+<<<<<<< HEAD
    semilogy(ratio2,alpha_nr(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=1)','color','red');
   % semilogy(ratio2,alpha_nr(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=2)','color','green');
   % semilogy(ratio2,alpha_nr(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=10)','color','blue');
@@ -230,6 +248,7 @@ if do_E_scan
     %semilogy(ratio2,alpha_r(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=2)','color','green','LineStyle',':');
     %semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color','blue','LineStyle',':');
     legend
+
     hold off
 end
 
@@ -252,12 +271,12 @@ if do_dof_scan
     for i=1:numel(E)
         args.E = E(i);
         dt = 2./args.E.^2/num_steps;
-        deg = 4;
+        deg = 3;
         lev = 4;
         if E(i)<0.06
             lev=4;
         end
-        lev_str = num2str(lev)
+        lev_str = num2str(lev);
         
         % Set this to produce the fullgrid (FG) results - these take
         % considerable time.

@@ -44,7 +44,8 @@ num_dims = numel(dimensions);
 
 %% Initial conditions
 
-ic1 = new_md_func(num_dims); % all zero
+ic_x = @(x,p,t) x.*0;
+ic1 = new_md_func(num_dims,{ic_x,ic_x,ic_x,ic_x,ic_x,ic_x}); % set to all zero
 initial_conditions = {ic1};
 
 %% Define the terms of the PDE
@@ -241,7 +242,6 @@ soln_vx = @(vx,p,t) cos(vxarg*vx);
 soln_vy = @(vy,p,t) sin(vyarg*vy);
 soln_vz = @(vz,p,t) cos(vzarg*vz);
 soln_t = @(t)   sin(targ*t);
-
 soln1 = new_md_func(num_dims,{soln_x,soln_y,soln_z,soln_vx,soln_vy,soln_vz,soln_t});
 solutions = {soln1};
 

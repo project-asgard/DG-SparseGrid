@@ -5,6 +5,7 @@ function [outputs] = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace
     outputs.time_array(L+1) = t+dt;
     outputs.wall_clock_time(L+1) = toc;
     outputs.dt = dt;
+    outputs.hash_table = hash_table;
 
     f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
     if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
@@ -21,19 +22,9 @@ function [outputs] = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace
     
     if opts.save_output && (mod(L,opts.save_freq)==0 || L==opts.num_steps)
         [status, msg, msgID] = mkdir([root_directory,'/output']);
-        if isempty(opts.output_filename_id)
-            adapt_str = 'n';
-            if opts.adapt; adapt_str=num2str(opts.adapt_threshold,'%1.1e'); end
-            filename_str = ['-l',replace(num2str(opts.lev),' ','') ...
-                '-d',num2str(opts.deg),'-',opts.grid_type,'-dt',num2str(dt),...
-                '-adapt-',adapt_str];
-        else
-            filename_str = opts.output_filename_id;
-        end
-        output_file_name = append(root_directory,"/output/asgard-out",filename_str,".mat");
-        outputs.output_file_name = output_file_name;
-     
-        save(output_file_name,'pde','opts','outputs','nodes','hash_table');
+
+        outputs.output_file_name = create_output_filename(opts);
+        save(outputs.output_file_name,'pde','opts','outputs');
         
     end
 
