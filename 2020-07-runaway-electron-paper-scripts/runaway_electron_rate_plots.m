@@ -98,7 +98,7 @@ disp(['n: ', num2str(norm.n)]);
 
 ratio_max = 0.3;
 N = 15;
-ratio = linspace(0.02,ratio_max,N);
+ratio = linspace(0.2,ratio_max,N);
 
 % Franz
 Cn = 1/SI.n_e;
@@ -155,9 +155,9 @@ if do_E_scan
     semilogy(kulsrud_E10,kulsrud_Z10,'Marker','s','MarkerSize',26,'MarkerFaceColor','auto','DisplayName','Kulsrud (nr, Z=10)','color','blue');
     legend
     
-    N2 = 3;
-    ratio_max2 = 0.3;
-    ratio2 = linspace(0.2,ratio_max2,N2);
+    N2 = 15;
+    ratio_max2 = 0.1;
+    ratio2 = linspace(0.002,ratio_max2,N2);
     args.p_max = 10;
     args.v_th = ref.v_th;
     args.nu_ee = norm.nu_ee;
@@ -175,9 +175,10 @@ if do_E_scan
     args.m = m_D;
  %       for Z = [1 2 10]
             for i=1:N2
-                args.E = ratio2(i) * SI.E_D ; % E into asgard is 2*E/E_D per the normalization
+               % args.E = 0.2*ratio2(i) * SI.E_D ; % E into asgard is 2*E/E_D per the normalization
                 args.E_D = SI.E_D;
-                %args.Z = Z;
+                args.frac = 0.005*ratio2(i);
+                %args.Z = Z6
 %                 if Z == 1
 %                     args.m = m_D;
 %                 elseif Z == 2
@@ -185,15 +186,17 @@ if do_E_scan
 %                 else
 %                     args.m = m_Ne;
 %                 end
-                dt = 1e-4;
+                dt = 6.125e-04;
                 if dt > 2000
                     dt = 2000;
                 end
+                num_steps = 1;
                 [~,~,~,~,~,outputs(i)] = asgard(@mirror2_velocity_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',3,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'normalize_by_mass',true);
                 alpha_nr(i,1) = outputs(i).alpha_t{end};
+                dt_nr(i,1) = dt;
             end
 %        end
-    
+%        semilogy(dt_nr,alpha_nr(:,1));
 %     % Relativistic
 %     args.delta = norm.delta;
 %     for Z = [1 2 10]
@@ -219,13 +222,13 @@ if do_E_scan
     norm_fac = kulsrud_Z1(end)/alpha_nr(N2,1);
     disp(['norm_fac: ',num2str(norm_fac)]);
     hold on
-    semilogy(ratio2,alpha_nr(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=1)','color','red');
-  %  semilogy(ratio2,alpha_nr(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=2)','color','green');
-  %  semilogy(ratio2,alpha_nr(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=10)','color','blue');
+   semilogy(ratio2,alpha_nr(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=1)','color','red');
+  % semilogy(ratio2,alpha_nr(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=2)','color','green');
+  % semilogy(ratio2,alpha_nr(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (nr, Z=10)','color','blue');
     
-%     semilogy(ratio2,alpha_r(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=1)','color','red','LineStyle',':');
-%     semilogy(ratio2,alpha_r(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=2)','color','green','LineStyle',':');
-%     semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color','blue','LineStyle',':');
+  %  semilogy(ratio2,alpha_r(:,1)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=1)','color','red','LineStyle',':');
+    %semilogy(ratio2,alpha_r(:,2)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=2)','color','green','LineStyle',':');
+    %semilogy(ratio2,alpha_r(:,10)*norm_fac,'LineWidth',5,'DisplayName','ASGarD (r, Z=10)','color','blue','LineStyle',':');
     legend
     hold off
 end

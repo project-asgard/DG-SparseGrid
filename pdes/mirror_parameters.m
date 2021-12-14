@@ -102,7 +102,7 @@ a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
         params_cgs.b.m = m_Ne_cgs; %background ions
         params_cgs.b2.m = m_e_cgs; %background electrons
         params_cgs.a.Z = -1;
-        params_cgs.b.Z = 10;
+        params_cgs.b.Z = 1;
         params_cgs.b2.Z = -1;
         params_cgs.a.n = n_cgs;
         params_cgs.b.n = n_cgs/params_cgs.b.Z;
@@ -131,7 +131,7 @@ a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
         b2.vth = v_th(b2.T_eV,b2.m);
         E_dreicer_si = a.n.*e^3*ln_delt/(2*pi*eps0^2*a.m ...
             *a.vth^2);
-        frac = 0.1;
+        frac = 0.05;
         E = frac*E_dreicer_si;
         %vel_norm = @(v,vth) v./vth; %normalized velocity to thermal velocity
         maxwell = @(v,offset,vth) a.n/(pi.^(3/2)*vth^3).*exp(-((v-offset)/vth).^2);
@@ -146,6 +146,10 @@ a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
         if isfield(opts.cmd_args,'E')
             E = opts.cmd_args.E;
         end
+        if isfield(opts.cmd_args,'frac')
+            frac = opts.cmd_args.frac;
+        end
+        
         if isfield(opts.cmd_args,'Z')
             b.Z = opts.cmd_args.Z;
         end
@@ -163,10 +167,11 @@ a.v_beam = sqrt(2*e.*a.E_eV./a.m); %velocity of beam species
             b.n = opts.cmd_args.n/opts.cmd_args.Z;
             b2.n = opts.cmd_args.n;
         end
+        E = frac*E_dreicer_si;
         b.vth = v_th(b.T_eV,b.m);
         disp(['E: ', num2str(E)]);
         disp(['Z: ', num2str(b.Z)]);
-        disp(['E/E_D:', num2str(E/E_dreicer_si)]);
+        disp(['E/E_D:', num2str(frac)]);
 end
 
 % Vacuum magnetic field function:
