@@ -21,15 +21,15 @@ for m=1:num_moments
     moment_values(m) = moment.vector'*fval;
     
     %Store with previous moments
-    %moment.moment_fval_integral = [moment.moment_fval_integral moment_values(m)];
+    moment.moment_fval_integral = [moment.moment_fval_integral moment_values(m)];
     
     if ~isempty(pde.solutions)
         %Calculate actual moment through dot product
         moment_analytic_values(m) = moment.vector'*soln;
         
         %Store with previous moments
-        %moment.moment_analytic_integral = [moment.moment_analytic_integral ...
-        %                    moment_analytic_values(m)];
+        moment.moment_analytic_integral = [moment.moment_analytic_integral ...
+                            moment_analytic_values(m)];
     end
     
     pde.moments{m} = moment;

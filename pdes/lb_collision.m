@@ -21,10 +21,6 @@ function pde = lb_collision(opts)
 
 %% Define the dimensions
 
-params.n = 2;
-params.u = 0;
-params.th = 1;
-
 dim_x = DIMENSION(-5,5);
 dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
@@ -45,10 +41,31 @@ BCR = new_md_func(num_dims,{@(x,p,t,dat) 0*x,@(t,p) 0*t+1});
 
 %% Initial conditions
 
-ic_x = @(x,p,t,d) (x > -3) - (x > -1);
+ic_x = @(x,p,t,d) (x > -1) - (x > 1);
 ic_t = @(t,p) 0*t+1; 
 ic = new_md_func(num_dims,{ic_x,ic_t});
 initial_conditions = {ic};
+
+% Define the moments of this IC
+params.n = 2.011002829992263;
+params.u = -4.369869711974849e-16/params.n;
+params.th = 0.663189552514513/params.n+params.u.^2;
+
+%% Construct moments
+
+%mass moment
+moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,@(p,t)   0*t+1});
+moment0 = MOMENT({moment_func});
+
+%momentum moment
+moment_func = new_md_func(num_dims,{@(x,p,t) x-p.n*p.u,@(p,t)   0*t+1});
+moment1 = MOMENT({moment_func});
+
+%energy moment
+moment_func = new_md_func(num_dims,{@(x,p,t) x.^2-(p.n*p.th+p.u^2),@(p,t)   0*t+1});
+moment2 = MOMENT({moment_func});
+
+moments = {moment0,moment1,moment2};
 
 %% Define the terms of the PDE
 %
@@ -108,7 +125,7 @@ sources = {};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions,moments);
 
 end
 
