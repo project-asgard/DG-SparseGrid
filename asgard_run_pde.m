@@ -120,11 +120,11 @@ if num_dims <=3
     % construct the moment function handle list for calculating the mass
     if opts.calculate_mass
         [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval,hash_table,t);
-        mass_t(1) = mass;
+        mass_t(1) = mass(1);
     end
     
     if opts.normalize_by_mass && ~isempty(pde.solutions)
-        pde.params.norm_fac = mass / mass_analytic;
+        pde.params.norm_fac = mass / mass_analytic(1);
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
     end
@@ -168,7 +168,7 @@ if num_dims <=3
     
     if opts.calculate_mass
         [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval,hash_table,t);
-        mass_t(1) = mass;
+        mass_t(1) = mass(1);
     end
     
 end
@@ -376,7 +376,7 @@ for L = 1:opts.num_steps
         fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         if opts.calculate_mass
             [pde,mass,~] = calculate_mass(pde,opts,fval,hash_table,t);
-            mass_t(L+1) = mass;
+            mass_t(L+1) = mass(1);
             outputs.mass_t = mass_t;
         end
         
@@ -407,7 +407,7 @@ for L = 1:opts.num_steps
     % Check against known solution
     
     if opts.calculate_mass && ~opts.quiet
-        disp(['    total integrated mass : ', num2str(mass)]);
+        disp(['    total integrated mass : ', num2str(mass(1))]);
     end
     if ~isempty(pde.solutions)
         
@@ -532,12 +532,10 @@ for L = 1:opts.num_steps
         if isfield(figs,'mass')
             figure(figs.mass);
         else
-            figs.mass = figure('Name','mass(t)','Units','normalized','Position',[0.7,0.5,0.2,0.3]);
+            figs.mass = figure('Name','Moments','Units','normalized','Position',[0.7,0.5,0.2,0.3]);
         end
-        plot(outputs.mass_t/outputs.mass_t(1));
-        xtitle='timestep';
-        ytitle='mass/mass(t=0)';
-        ylim([0,2]);
+        plot_val = get_moments_for_plot(pde);
+        semilogy(abs(plot_val));
     end
     
 

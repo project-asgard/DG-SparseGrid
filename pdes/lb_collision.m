@@ -58,11 +58,11 @@ moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,@(p,t)   0*t+1});
 moment0 = MOMENT({moment_func});
 
 %momentum moment
-moment_func = new_md_func(num_dims,{@(x,p,t) x-p.n*p.u,@(p,t)   0*t+1});
+moment_func = new_md_func(num_dims,{@(x,p,t) x,@(p,t)   0*t+1});
 moment1 = MOMENT({moment_func});
 
 %energy moment
-moment_func = new_md_func(num_dims,{@(x,p,t) x.^2-(p.n*p.th+p.u^2),@(p,t)   0*t+1});
+moment_func = new_md_func(num_dims,{@(x,p,t) x.^2,@(p,t)   0*t+1});
 moment2 = MOMENT({moment_func});
 
 moments = {moment0,moment1,moment2};
