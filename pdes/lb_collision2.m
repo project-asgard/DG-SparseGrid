@@ -14,19 +14,19 @@ function pde = lb_collision2(opts)
 % Run with
 %
 % explicit
-% asgard(@lb_collision2,'CFL',0.01);
+% asgard(@lb_collision2D,'CFL',0.01);
 %
 % implicit
-% asgard(@lb_collision2,'timestep_method','BE','dt',0.001,'num_steps',20)
-
-%% Initial profile
-
-InitialProfile = 'Square';
+% asgard(@lb_collision2,'timestep_method','BE','dt',0.2,'num_steps',20,'case',2,'lev',4,'deg',3,'grid_type','SG')
+%
+% case = 1 % Initial Condition: Square
+% case = 2 % Initial Condition: Maxwellian
+% case = 3 % Initial Condition: Double Maxwellian
 
 %% Define the parameters
 
-switch InitialProfile
-    case 'Square'
+switch opts.case_
+    case 1
         params.n  = 1.0; % Density
         params.ux = 0.0; % Velocity (x)
         params.uy = 0.0; % Velocity (y)
@@ -35,7 +35,7 @@ switch InitialProfile
         vx_max = +4.0;
         vy_min = -4.0;
         vy_max = +4.0;
-    case 'Maxwellian'
+    case 2
         params.n  = 1.0; % Density
         params.ux = 1.0; % Velocity (x)
         params.uy = 1.0; % Velocity (y)
@@ -44,7 +44,7 @@ switch InitialProfile
         vx_max = +5.0;
         vy_min = -5.0;
         vy_max = +5.0;
-    case 'DoubleMaxwellian'
+    case 3
         params.n  = 2.0; % Density
         params.ux = 1.0; % Velocity (x)
         params.uy = 1.0; % Velocity (y)
@@ -67,18 +67,18 @@ num_dims = numel(dimensions);
 
 %% Define the analytic solution (optional).
 
-switch InitialProfile
-    case 'Square'
+switch opts.case_
+    case 1
         soln_x = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
         soln_y = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_x,soln_y,soln_t});
-    case 'Maxwellian'
+    case 2
         soln_x = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
         soln_y = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_x,soln_y,soln_t});
-    case 'DoubleMaxwellian'
+    case 3
         soln_x = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
         soln_y = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
         soln_t = @(t,p) 0*t+1;
@@ -95,20 +95,20 @@ BCR = new_md_func(num_dims,{@(x,p,t,dat) 0*x,@(y,p,t) 0*y,@(t,p) 0*t+1});
 
 %% Initial conditions
 
-switch InitialProfile
-    case 'Square'
+switch opts.case_
+    case 1
         ic_x = @(x,p,t,d) 0.5.*((x > -1.0) - (x > +1.0));
         ic_y = @(x,p,t,d) 0.5.*((x > -1.0) - (x > +1.0));
         ic_t = @(t,p) 0*t+1;
         ic = new_md_func(num_dims,{ic_x,ic_y,ic_t});
         initial_conditions = {ic};
-    case 'Maxwellian'
+    case 2
         ic_x = soln_x;
         ic_y = soln_y;
         ic_t = soln_t;
         ic = new_md_func(num_dims,{ic_x,ic_y,ic_t});
         initial_conditions = {ic};
-    case 'DoubleMaxwellian'
+    case 3
         ic1_x = @(x,p,t) 1.0/sqrt(pi)*exp(-(x-1.0).^2);
         ic1_y = @(y,p,t) 1.0/sqrt(pi)*exp(-(y-0.0).^2);
         ic2_x = @(x,p,t) 1.0/sqrt(pi)*exp(-(x-0.0).^2);
