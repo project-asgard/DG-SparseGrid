@@ -30,7 +30,7 @@ switch opts.case_
         params.n  = 1.0; % Density
         params.ux = 0.0; % Velocity (x)
         params.uy = 0.0; % Velocity (y)
-        params.th = 4.0/3.0; % Temperature
+        params.th = 1.0/3.0; % Temperature
         vx_min = -4.0;
         vx_max = +4.0;
         vy_min = -4.0;
@@ -125,6 +125,43 @@ switch opts.case_
         initial_conditions = {ic};
 end
 
+%% Construct moments
+
+% Mass Moment
+moment_x = @(x,p,t) 0*x+1;
+moment_y = @(y,p,t) 0*y+1;
+moment_t = @(p,t)   0*t+1;
+moment_func = new_md_func(num_dims,{moment_x,moment_y,moment_t});
+moment0 = MOMENT({moment_func});
+
+% Momentum Moment (x)
+
+moment_x = @(x,p,t) x;
+moment_y = @(y,p,t) 0*y+1;
+moment_t = @(p,t)   0*t+1;
+moment_func = new_md_func(num_dims,{moment_x,moment_y,moment_t});
+moment1 = MOMENT({moment_func});
+
+% Momentum Moment (y)
+
+moment_x = @(x,p,t) 0*x+1;
+moment_y = @(y,p,t) y;
+moment_t = @(p,t)   0*t+1;
+moment_func = new_md_func(num_dims,{moment_x,moment_y,moment_t});
+moment2 = MOMENT({moment_func});
+
+% Energy Moment
+
+moment_x1 = @(x,p,t) x.^2;
+moment_y1 = @(y,p,t) 0*y+1;
+moment_x2 = @(x,p,t) 0*x+1;
+moment_y2 = @(y,p,t) y.^2;
+moment_t  = @(p,t)   0*t+1;
+moment_func1 = new_md_func(num_dims,{moment_x1,moment_y1,moment_t});
+moment_func2 = new_md_func(num_dims,{moment_x2,moment_y2,moment_t});
+moment3 = MOMENT({moment_func1,moment_func2});
+
+moments = {moment0,moment1,moment2,moment3};
 
 %% Define the terms of the PDE
 %
@@ -219,6 +256,6 @@ sources = {};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions,moments);
 
 end
