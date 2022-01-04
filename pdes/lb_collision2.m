@@ -23,6 +23,10 @@ function pde = lb_collision2(opts)
 % case = 2 % Initial Condition: Maxwellian
 % case = 3 % Initial Condition: Double Maxwellian
 
+%% Macro-Micro?
+
+MM = false;
+
 %% Define the parameters
 
 switch opts.case_
@@ -69,8 +73,13 @@ num_dims = numel(dimensions);
 
 switch opts.case_
     case 1
-        soln_x = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
-        soln_y = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
+        if MM
+            soln_x = @(x,p,t) 0*x;
+            soln_y = @(y,p,t) 0*y;
+        else
+            soln_x = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
+            soln_y = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
+        end
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_x,soln_y,soln_t});
     case 2
@@ -98,10 +107,18 @@ BCR = new_md_func(num_dims,{@(x,p,t,dat) 0*x,@(y,p,t) 0*y,@(t,p) 0*t+1});
 switch opts.case_
     case 1
         ic_x = @(x,p,t,d) 0.5.*((x > -1.0) - (x > +1.0));
-        ic_y = @(x,p,t,d) 0.5.*((x > -1.0) - (x > +1.0));
+        ic_y = @(y,p,t,d) 0.5.*((y > -1.0) - (y > +1.0));
         ic_t = @(t,p) 0*t+1;
-        ic = new_md_func(num_dims,{ic_x,ic_y,ic_t});
-        initial_conditions = {ic};
+        ic1 = new_md_func(num_dims,{ic_x,ic_y,ic_t});
+        if MM
+            ic_x = @(x,p,t,d) - sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
+            ic_y = @(y,p,t,d)   sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
+        else
+            ic_x = @(x,p,t,d) 0*x;
+            ic_y = @(y,p,t,d) 0*y;
+        end
+        ic2 = new_md_func(num_dims,{ic_x,ic_y,ic_t});
+        initial_conditions = {ic1,ic2};
     case 2
         ic_x = soln_x;
         ic_y = soln_y;
