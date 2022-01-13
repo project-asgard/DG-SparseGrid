@@ -66,6 +66,26 @@ pde = get_coeff_mats(pde,opts,t,TD);
 if ~opts.quiet; disp('Generate A_encode data structure for time independent coefficients'); end
 A_data = global_matrix(pde,opts,hash_table);
 
+%% Construct Moment Matrices
+
+if numel(pde.dimensions) >= 2
+moment_mat = cell(numel(pde.moments),1);
+for i=1:numel(pde.moments)
+    moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
+end
+end
+%moment_mat = {moment_reduced_matrix(opts,pde,A_data,1),...
+%              moment_reduced_matrix(opts,pde,A_data,2),...
+%              moment_reduced_matrix(opts,pde,A_data,3)};
+
+%% Create 1D pde file 
+
+if opts.update_params_each_timestep
+    
+     
+    
+end
+
 %% Construct Poisson matrix
 if ~opts.quiet; disp('Construct matrix for Poisson solve'); end
 if pde.solvePoisson
@@ -511,14 +531,16 @@ for L = 1:opts.num_steps
     
     if opts.update_params_each_timestep
         
-        f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
+        %f_p0 = f_realspace_nD(:,1); % get the f(0,z) value (or as close to p=0 as the nodes allow)
         %       alpha_z = @(z) (2/sqrt(pi)-interp1(nodes{2},f_p0,z,'spline','extrap'))/dt;
-        alpha_z = @(z) (pde.params.f0_p(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_p0,z,'spline','extrap'))/dt;
-        pde.params.alpha_z = alpha_z;
-        z = linspace(-1,1,100);
-        outputs.alpha_t0{L+1} = alpha_z;
+        %alpha_z = @(z) (pde.params.f0_p(nodes_nodups{1}(1))-interp1(nodes_nodups{2},f_p0,z,'spline','extrap'))/dt;
+        %pde.params.alpha_z = alpha_z;
+        %z = linspace(-1,1,100);
+        %outputs.alpha_t0{L+1} = alpha_z;
         %         outputs.alpha_t{L+1} = sum(alpha_z(z));
-        outputs.alpha_t{L+1} = alpha_z(0);
+        %outputs.alpha_t{L+1} = alpha_z(0);
+        
+        mom0 = moment_mat{1}*f; %integral of (f,1)_v
         
     end
     
