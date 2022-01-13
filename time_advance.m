@@ -256,44 +256,34 @@ if opts.time_independent_A || opts.time_independent_build_A
 end
 
 if opts.time_independent_A % relies on inv() so is no good for poorly conditioned problems
-    persistent AA_inv;
-    persistent ALHS_inv;
+    persistent L;
+    persistent U;
+    persistent P;
+    persistent ALHS;
     
-    if isempty(AA_inv)
+    %
+    % System is (ALHS-dt*A)f^{n+1} = A_Lf^{n} + dt*S
+    %
+    %Create A and ALHS 
+    
+    if isempty(L)
         if applyLHS
             [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-            I = speye(numel(diag(A)));
-            ALHS_inv = inv(ALHS);
-            AA = I - dt*(ALHS_inv * A);
-            b = f0 + dt*(ALHS_inv * (s0 + bc0));
         else
             [~,A] = apply_A(pde,opts,A_data,f0,deg);
-            I = speye(numel(diag(A)));
-            AA = I - dt*A;
-            b = f0 + dt*(s0 + bc0);
+            ALHS = speye(numel(diag(A)));
         end
-        
-        if numel(AA(:,1)) <= 4096
-            condAA = condest(AA);
-            if ~opts.quiet; disp(['    condest(AA) : ', num2str(condAA,'%.1e')]); end
-            
-            if condAA > 1e6
-                disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
-                disp(['WARNING: cond(A) = ', num2str(condAA,'%.1e')]);
-            end
-        end
-        
-        AA_inv = inv(AA);
-        f1 = AA_inv * b;
-    else
-        if applyLHS
-            b = f0 + dt*(ALHS_inv * (s0 + bc0));
-        else
-            b = f0 + dt*(s0 + bc0);
-        end
-        f1 = AA_inv * b;
+        %Build LU factorization with vector permutation matrix
+        [L,U,P] = lu(ALHS-dt*A,'vector');
     end
-    
+            
+    % Get RHS
+    b = ALHS*f0 + dt*(s0 + bc0);
+
+    %Solve using LU factors
+    f_temp = L\b(P);
+    f1 = U\f_temp;
+        
 else % use the backslash operator instead
     if applyLHS
         if opts.time_independent_build_A
