@@ -540,7 +540,51 @@ for L = 1:opts.num_steps
         %         outputs.alpha_t{L+1} = sum(alpha_z(z));
         %outputs.alpha_t{L+1} = alpha_z(0);
         
-        mom0 = moment_mat{1}*f; %integral of (f,1)_v
+        %Get 1D hash
+        hash_table_1D = hash_table_2D_to_1D(hash_table,opts);
+        
+        %Make fake pde file
+        pde_1d.dimensions = pde.dimensions(1);
+        
+        
+        mom0 = moment_mat{1}*fval; %integral of (f,1)_v
+        mom0_real = wavelet_to_realspace(pde_1d,opts,Meval(1),mom0,hash_table_1D);
+        %mom0_vals = singleD_to_multiD(num_dims-1,mom0_real,nodes(1));
+        pde.params.n  = @(x) interp1(nodes{1},mom0_real,x,'nearest','extrap');
+        
+        mom1 = moment_mat{2}*fval; %integral of (f,v)_v
+        mom1_real = wavelet_to_realspace(pde_1d,opts,Meval(1),mom1,hash_table_1D);
+        pde.params.u  = @(x) interp1(nodes{1},mom1_real,x,'nearest','extrap')./pde.params.n(x);
+        
+        mom2 = moment_mat{3}*fval; %integral of (f,v^2)_v
+        mom2_real = wavelet_to_realspace(pde_1d,opts,Meval(1),mom2,hash_table_1D);
+        pde.params.th = @(x) interp1(nodes{1},mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+        
+        figure(1000);
+        subplot(2,2,1);
+        plot(nodes{1},pde.params.n(nodes{1}));
+        title('n_f');
+        subplot(2,2,2);
+        plot(nodes{1},pde.params.u(nodes{1}));
+        title('u_f');
+        subplot(2,2,3);
+        plot(nodes{1},pde.params.th(nodes{1}));
+        title('th_f');
+        sgtitle('Fluid Variables');
+        
+        figure(1001);
+        subplot(2,2,1);
+        plot(nodes{1},mom0_real);
+        title('(f,1)_v');
+        subplot(2,2,2);
+        plot(nodes{1},mom1_real);
+        title('(f,v)_v');
+        subplot(2,2,3);
+        plot(nodes{1},mom2_real);
+        title('(f,v^2)_v');
+        sgtitle('Moments');
+        
+        
         
     end
     

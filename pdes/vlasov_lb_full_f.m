@@ -57,8 +57,8 @@ moments = {moment0,moment1,moment2};
 %% Construct (n,u,theta)
 
 params.n  = @(x) 0.5*(1-0.5*cos(0.5*x));
-params.u  = @(x) 0*x+1;
-params.th = @(x) 0.75*(1-0.5*cos(0.5*x));
+params.u  = @(x) 0./params.n(x);
+params.th = @(x) 0.75*(1-0.5*cos(0.5*x))./params.n(x) - params.u(x).^2;
 
 %% Define the analvtic solution (optional).
 
@@ -168,9 +168,9 @@ sources = {};
 
     function dt=set_dt(pde,CFL)
         
-        Lmax = pde.dimensions{1}.max;
-        Lmin = pde.dimensions{1}.min;
-        LevX = pde.dimensions{1}.lev;
+        Lmax = pde.dimensions{2}.max;
+        Lmin = pde.dimensions{2}.min;
+        LevX = pde.dimensions{2}.lev;
         dt = (Lmax-Lmin)/2^LevX*CFL;
     end
 
