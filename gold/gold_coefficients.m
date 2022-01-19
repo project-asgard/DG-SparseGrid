@@ -30,8 +30,8 @@ generate_data( @fokkerplanck1_pitch_CER, levels, 'fokkerplanck1_4p5', 'deg', 5 )
 
 % non-uniform level
 % note fp2 must be calculated with modified x domain [1,20] to avoid singularity problem
-levels = [2, 310];
-generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'deg', 3 );
+%levels = [2, 310];
+%generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'deg', 3 );
 levels = [4, 2];
 generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'lev', 4, 'deg', 4 );
 levels = [4, 5];
@@ -70,16 +70,17 @@ for d=1:length(pde.dimensions)
     lev_string = lev_string + int2str(lev_vec(d)) + "_";
 end
 
+pde = compute_dimension_mass_mat(opts, pde);
+pde = get_coeff_mats(pde, opts, 1.0, 0);
+
 degree = opts.deg;
 time = 1.0;
 for t=1:length(pde.terms)
     for d=1:length(pde.dimensions)
+        dof = degree * 2^pde.dimensions{d}.lev;
         sd_term = pde.terms{t}.terms_1D{d};
-        sd_term_out = ...
-        coeff_matrix(numel(pde.dimensions),opts.deg,time,pde.dimensions{d},sd_term,pde.params, ...
-                     transform_blocks, opts.max_lev);
-        coeff_mat = sd_term_out.mat;
-        unrotated = sd_term_out.mat_unrotated;
+        coeff_mat = sd_term.mat(1:dof, 1:dof);
+        unrotated = sd_term.mat_unrotated(1:dof, 1:dof);
         write_octave_like_output(sprintf(out_format,lev_string,degree,t,d), full(coeff_mat));
         write_octave_like_output(sprintf(out_format_unrot,lev_string,degree,t,d), full(unrotated));
     end
