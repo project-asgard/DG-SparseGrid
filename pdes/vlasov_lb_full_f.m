@@ -25,9 +25,9 @@ soln_t = @(t,p)    0*t+1;
 %
 % Here we setup a 2D problem (x,v)
 
-dim_x = DIMENSION(-2*pi,+2*pi);
+dim_x = DIMENSION(-1,+1);
 dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
-dim_v = DIMENSION(-2*pi,+2*pi);
+dim_v = DIMENSION(-6,+6);
 dim_v.moment_dV = @(v,p,t,dat) 0*v+1;
 dimensions = {dim_x,dim_v};
 num_dims = numel(dimensions);
@@ -56,9 +56,10 @@ moments = {moment0,moment1,moment2};
 
 %% Construct (n,u,theta)
 
-params.n  = @(x) 0.5*(1-0.5*cos(0.5*x));
-params.u  = @(x) 0*x+1;
-params.th = @(x) 0.75*(1-0.5*cos(0.5*x));
+params.n  = @(x) 1*(x<-0.5) + 1/8*(x >= -0.5).*(x <= 0.5) + 1*(x>0.5);
+params.u  = @(x) 0;
+params.th = @(x) 1*(x<-0.5) + 5/4*(x >= -0.5).*(x <= 0.5) + 1*(x>0.5);
+params.nu = 1e-3;
 
 %% Define the analvtic solution (optional).
 
@@ -68,10 +69,13 @@ params.th = @(x) 0.75*(1-0.5*cos(0.5*x));
 solutions = {};
 
 %% Initial conditions
-ic1 = new_md_func(num_dims,{@(x,p,t) 1-0.5*cos(0.5*x),...
-                            @(v,p,t) v.^2/sqrt(pi).*exp(-v.^2),...
+ic1 = new_md_func(num_dims,{@(x,p,t) (abs(x) > 0.5),...
+                            @(v,p,t) 1/sqrt(2*pi)*exp(-v.^2/2),...
                             @(t,p) 0*t+1});
-initial_conditions = {ic1};
+ic2 = new_md_func(num_dims,{@(x,p,t) (abs(x) <= 0.5),...
+                            @(v,p,t) (1/8)/sqrt(2*pi*5/4)*exp(-v.^2/(2*5/4)),...
+                            @(t,p) 0*t+1});                        
+initial_conditions = {ic1,ic2};
 
 %% Define the terms of the PDE
 %
@@ -111,7 +115,7 @@ term2   = MD_TERM(num_dims,{term_x,term_v});
 % v\cdot\grad_v f
 %
 
-g1 = @(x,p,t,dat) x*0+1;
+g1 = @(x,p,t,dat) x*0+1/p.nu;
 pterm1 = MASS(g1,'','',dV);
 term_x = SD_TERM({pterm1});
 
@@ -129,7 +133,7 @@ g1 = @(x,p,t,dat) -p.u(x);
 pterm1 = MASS(g1,'','',dV);
 term_x = SD_TERM({pterm1});
 
-g1 = @(x,p,t,dat) 0*x+1;
+g1 = @(x,p,t,dat) 0*x+1/p.nu;
 pterm1  =  DIV(num_dims,g1,'',0,'D','D','','','',dV);
 term_v = SD_TERM({pterm1});
 
@@ -143,8 +147,8 @@ term4   = MD_TERM(num_dims,{term_x,term_v});
 % div_v(th q)
 % q = \grad_v f
 
-g1 = @(x,p,t,dat) p.th(x);
-g2 = @(x,p,t,dat) 0*x+1;
+g1 = @(x,p,t,dat) 1/p.nu;
+g2 = @(x,p,t,dat) 0*x+p.th(x);
 pterm1 = MASS(g1,'','',dV);
 pterm2 = MASS(g2,'','',dV);
 term_x = SD_TERM({pterm1,pterm2});
@@ -158,7 +162,7 @@ term_v = SD_TERM({pterm1,pterm2});
 term5   = MD_TERM(num_dims,{term_x,term_v});
 
 %% Combine terms
-terms = {term1,term2,term3,term4};
+terms = {term1,term2,term3,term4,term5};
 
 %% Define sources
 
@@ -168,9 +172,9 @@ sources = {};
 
     function dt=set_dt(pde,CFL)
         
-        Lmax = pde.dimensions{1}.max;
-        Lmin = pde.dimensions{1}.min;
-        LevX = pde.dimensions{1}.lev;
+        Lmax = pde.dimensions{2}.max;
+        Lmin = pde.dimensions{2}.min;
+        LevX = pde.dimensions{2}.lev;
         dt = (Lmax-Lmin)/2^LevX*CFL;
     end
 
