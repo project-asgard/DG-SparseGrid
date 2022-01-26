@@ -6,6 +6,8 @@ root_directory = get_root_folder();
 tic
 figs = [];
 
+icomp = 1;
+
 num_dims = numel(pde.dimensions);
 
 %% Reset any persistent variables
@@ -131,7 +133,7 @@ if num_dims <=3
     %%
     % Get the real space solution
     
-    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{1},hash_table);
+    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{icomp},hash_table);
     if ~isempty(pde.solutions)
         fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace),1);
@@ -139,7 +141,7 @@ if num_dims <=3
     
     % construct the moment function handle list for calculating the mass
     if opts.calculate_mass
-        [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval{1},hash_table,t);
+        [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval{icomp},hash_table,t);
         mass_t(1) = mass(1);
     end
     
@@ -187,7 +189,7 @@ if num_dims <=3
     %     fval_realspace_SG = real_space_solution_at_coordinates_irregular(pde,fval,coordinates);
     
     if opts.calculate_mass
-        [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval{1},hash_table,t);
+        [pde,mass,mass_analytic] = calculate_mass(pde,opts,fval{icomp},hash_table,t);
         mass_t(1) = mass(1);
     end
     
@@ -242,16 +244,16 @@ else
 end
 
 fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
-err_wavelet = sqrt(mean((fval{1}(:) - fval_analytic(:)).^2));
+err_wavelet = sqrt(mean((fval{icomp}(:) - fval_analytic(:)).^2));
 if ~opts.quiet
-    disp(['    num_dof : ', num2str(numel(fval{1}))]);
+    disp(['    num_dof : ', num2str(numel(fval{icomp}))]);
     disp(['    wavelet space absolute err : ', num2str(err_wavelet)]);
     disp(['    wavelet space relative err : ', num2str(err_wavelet/max(abs(fval_analytic(:)))*100), ' %']);
-    disp(['    wavelet space absolute err (2-norm) : ', num2str(norm(fval{1}-fval_analytic))]);
+    disp(['    wavelet space absolute err (2-norm) : ', num2str(norm(fval{icomp}-fval_analytic))]);
 end
 
 if num_dims <=3
-    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{1},hash_table);
+    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{icomp},hash_table);
     fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
     err_realspace = sqrt(mean((fval_realspace(:) - fval_realspace_analytic(:)).^2));
     if ~opts.quiet
@@ -340,7 +342,7 @@ for L = 1:opts.num_steps
         
         fval_unstepped = fval;
         fval = time_advance(pde,opts,A_data,fval,t,dt,opts.deg,hash_table,[],[]);
-        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{1},hash_table);
+        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{icomp},hash_table);
         
         %%
         % Refine Grid - determine which elements to add, but reset fval to
@@ -386,16 +388,16 @@ for L = 1:opts.num_steps
     
     %%
     % Write the present fval to file.
-    if write_fval; write_fval_to_file(fval{1},lev,deg,L); end
+    if write_fval; write_fval_to_file(fval{icomp},lev,deg,L); end
     
     if num_dims <=3
         
         %%
         % Get the real space solution
         
-        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{1},hash_table);
+        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval{icomp},hash_table);
         if opts.calculate_mass
-            [pde,mass,~] = calculate_mass(pde,opts,fval{1},hash_table,t);
+            [pde,mass,~] = calculate_mass(pde,opts,fval{icomp},hash_table,t);
             mass_t(L+1) = mass(1);
             outputs.mass_t = mass_t;
         end
@@ -411,7 +413,7 @@ for L = 1:opts.num_steps
                 LminB(d) = pde.dimensions{d}.min;
                 LmaxB(d) = pde.dimensions{d}.max;
             end
-            fval_realspaceB = convert_to_real_space(pde,num_dims,lev,deg,gridType,LminB,LmaxB,fval{1},lev);
+            fval_realspaceB = convert_to_real_space(pde,num_dims,lev,deg,gridType,LminB,LmaxB,fval{icomp},lev);
             % fval_realspace = fval_realspaceB;
         end
         
@@ -590,7 +592,7 @@ for L = 1:opts.num_steps
     
     % Save output
     
-    outputs = save_output(outputs,L,pde,opts,num_dims,fval{1},fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
+    outputs = save_output(outputs,L,pde,opts,num_dims,fval{icomp},fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
     
     t = t + dt;
        
