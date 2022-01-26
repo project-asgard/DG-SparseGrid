@@ -7,6 +7,36 @@ dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
 
+%% Initial Conditions
+
+U_0 = 1.0e-0;
+T_0 = 1.0e-6;
+
+% rho_1:
+ic_x = @(x,p,t,d) 0.5*sin(2*pi.*x)+1.0;
+ic_t = @(t,p) 0*t+1; 
+ic_rho_1 = {new_md_func(num_dims,{ic_x,ic_t})};
+
+% rho_2:
+ic_x = @(x,p,t,d) (0.5*sin(2*pi.*x)+1.0).*U_0;
+ic_t = @(t,p) 0*t+1; 
+ic_rho_2 = {new_md_func(num_dims,{ic_x,ic_t})};
+
+% rho_3:
+ic_x = @(x,p,t,d) 0.5*(0.5*sin(2*pi.*x)+1.0).*(U_0^2+T_0);
+ic_t = @(t,p) 0*t+1; 
+ic_rho_3 = {new_md_func(num_dims,{ic_x,ic_t})};
+
+initial_conditions = {ic_rho_1,ic_rho_2,ic_rho_3};
+
+%% Construct moments
+
+%mass moment
+moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,@(p,t)   0*t+1});
+moment0 = MOMENT({moment_func});
+
+moments = {moment0};
+
 lev = opts.lev;
 deg = opts.deg;
 h = (dim_x.max-dim_x.min)/2^lev;
@@ -34,10 +64,19 @@ for i = 1 : deg*2^lev
 end
 rho = {rho_1,rho_2,rho_3};
 
-pde = {};
-%pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions,moments);
+nlinterms = {@(pde,opts,rho) euler_dg_eval_rhs(pde,opts,rho)};
 
-F = euler_dg_eval_F(pde,opts,rho);
+%% Define a function to set dt
+
+function dt=set_dt(pde,CFL)
+    dims = pde.dimensions;      
+    % for hyperbolic equation: dt = C * dx
+    lev = dims{1}.lev;
+    dx = 1/2^lev;
+    dt = CFL*dx;
+end
+
+pde = PDE(opts,dimensions,[],nlinterms,[],[],[],@set_dt,[],initial_conditions,[],moments);
 
 end
 

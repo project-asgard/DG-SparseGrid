@@ -8,6 +8,7 @@ classdef PDE
         set_dt = @(pde,CFL) 1; % Function which accepts the pde (after being updated with CMD args).
         dimensions = {};
         terms = {};
+        nlinterms = {};
         params = {};
         sources = {};
         termsLHS = {};
@@ -38,10 +39,11 @@ classdef PDE
             end
         end
         
-        function pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,set_dt,analytic_solutions_1D,initial_conditions_MSC,solutions_MSC,moments_MSC)
+        function pde = PDE(opts,dimensions,terms,nlinterms,LHS_terms,sources,params,set_dt,analytic_solutions_1D,initial_conditions_MSC,solutions_MSC,moments_MSC)
             
             pde.dimensions = dimensions;
             pde.terms = terms;
+            pde.nlinterms = nlinterms;
             pde.termsLHS = LHS_terms;
             pde.sources = sources;
             pde.analytic_solutions_1D = analytic_solutions_1D;

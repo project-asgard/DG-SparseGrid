@@ -1,7 +1,7 @@
-function [ rhs_W ] = euler_dg_eval_F( pde, opts, rho_W )
+function [ rhs_W ] = euler_dg_eval_rhs( pde, opts, rho_W )
 
-dim.min = 0.0;
-dim.max = 1.0;
+dim = pde.dimensions{1};
+
 d_v = 1.0; % Velocity space dimensions hard coded.
 
 lev = opts.lev;
@@ -30,7 +30,12 @@ p_R = lin_legendre(+1,deg) * 1/sqrt(h);
 
 %% Convert from wavelet space to real space
 
-rho_real = rho_W; % Need to do this properly
+FMWT = OperatorTwoScale_wavelet2(deg,lev);
+
+rho_real = cell(numel(rho_W),1);
+for i = 1 : numel(rho_W)
+  rho_real{i} = FMWT' * rho_W{i};
+end
 
 rhs_1_real = zeros(dof_1D,1);
 rhs_2_real = zeros(dof_1D,1);
@@ -150,7 +155,10 @@ rhs_real = {rhs_1_real,rhs_2_real,rhs_3_real};
 
 %% Convert from real space to wavelet space
 
-rhs_W = rhs_real; % Need to do this properly
+rhs_W = cell(numel(rho_W),1);
+for i = 1 : numel(rho_W)
+  rhs_W{i} = FMWT * rhs_real{i};
+end
 
 end
 
@@ -166,7 +174,7 @@ function [ F_1, F_2, F_3 ] = FluxVector( N, U, T, d_v )
 
 F_1 = N .* U;
 F_2 = N .* ( U.^2 + T );
-F_3 = 0.5 * N .* ( U.^2 + (d_v+2) * T ) .* U;
+F_3 = 0.5 .* N .* ( U.^2 + (d_v+2) * T ) .* U;
 
 end
 
