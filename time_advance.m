@@ -6,6 +6,12 @@ if strcmp(opts.timestep_method,'BE')
 elseif strcmp(opts.timestep_method,'FE')
     % Forward Euler (FE) first order
     f = forward_euler(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'SSPRK2')
+    % Strong stability-preserving Runge-Kutta Method (also Heun's Method)
+    f = ssprk2(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'SSPRK3')
+    % Strong stability-preserving Runge-Kutta Method (also Heun's Method)
+    f = ssprk3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'matrix_exponential')
     % Matrix Exponential (ME) all order
     f = matrix_exponential(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -243,6 +249,52 @@ else
     rhs = pde.nlinterms{1}(pde,opts,f0);
     for i = 1 : numel(f0)
         f1{i} = f0{i} + dt * rhs{i};
+    end
+end
+
+end
+
+%% SSPRK2
+function f1 = ssprk2(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+applyLHS = ~isempty(pde.termsLHS);
+
+if applyLHS
+    error('apply LHS not implemented for SSPRK2');
+else
+    f1 = cell(numel(f0),1);
+    rhs0 = pde.nlinterms{1}(pde,opts,f0);
+    for i = 1 : numel(f0)
+        f1{i} = f0{i} + dt * rhs0{i};
+    end
+    rhs1 = pde.nlinterms{1}(pde,opts,f1);
+    for i = 1 : numel(f0)
+        f1{i} = f0{i} + 0.5 * dt * ( rhs0{i} + rhs1{i} );
+    end
+end
+
+end
+
+%% SSPRK3
+function f1 = ssprk3(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+applyLHS = ~isempty(pde.termsLHS);
+
+if applyLHS
+    error('apply LHS not implemented for SSPRK3');
+else
+    f1 = cell(numel(f0),1);
+    rhs0 = pde.nlinterms{1}(pde,opts,f0);
+    for i = 1 : numel(f0)
+        f1{i} = f0{i} + dt * rhs0{i};
+    end
+    rhs1 = pde.nlinterms{1}(pde,opts,f1);
+    for i = 1 : numel(f0)
+        f1{i} = f0{i} + 0.25 * dt * ( rhs0{i} + rhs1{i} );
+    end
+    rhs2 = pde.nlinterms{1}(pde,opts,f1);
+    for i = 1 : numel(f0)
+        f1{i} = f0{i} + dt * ( rhs0{i} + rhs1{i} + 4.0 * rhs2{i} ) / 6.0;
     end
 end
 
