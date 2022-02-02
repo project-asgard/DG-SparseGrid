@@ -536,7 +536,7 @@ for L = 1:opts.num_steps
         else
             figs.mass = figure('Name','mass(t)','Units','normalized','Position',[0.7,0.5,0.2,0.3]);
         end
-        plot(outputs.mass_t/outputs.mass_t(1));
+        plot(mass_t/mass_t(1));
         xtitle='timestep';
         ytitle='mass/mass(t=0)';
         ylim([0,2]);
