@@ -157,11 +157,33 @@ disp('Testing continuity2 (BE)');
 verifyLessThan(testCase,err,1e-4);
 end
 
+function asgard_continuity2_implicit_FG_BE_fast_matrix_test(testCase)
+addpath(genpath(pwd));
+disp('Testing continuity2 (FG/BE) with fast_matrix_assembly');
+[err1] = asgard(@continuity2,'quiet',true,...
+    'timestep_method', 'BE','lev',3,'deg',3,'num_steps',2,...
+    'grid_type','FG','fast_FG_matrix_assembly',false);
+verifyLessThan(testCase,err1,1.5e-6);
+[err2] = asgard(@continuity2,'quiet',true,...
+    'timestep_method', 'BE','lev',3,'deg',3,'num_steps',2,...
+    'grid_type','FG','fast_FG_matrix_assembly',true);
+verifyLessThan(testCase,err2,1.5e-6);
+verifyLessThan(testCase,norm(err1-err2),1e-12);
+end
+
 function asgard_continuity2_adapt_test(testCase)
 addpath(genpath(pwd));
 disp('Testing continuity2 (CN/adapt)');
 [err,act_f,act_frs] = asgard(@continuity2,'quiet',true,...
     'timestep_method', 'CN','lev',4,'deg',3,'num_steps',2,'adapt',true);
+verifyLessThan(testCase,err,1e-4);
+end
+
+function asgard_continuity2_adapt_BE_test(testCase)
+addpath(genpath(pwd));
+disp('Testing continuity2 (BE/adapt)');
+[err,act_f,act_frs] = asgard(@continuity2,'quiet',true,...
+    'timestep_method', 'BE','lev',4,'deg',3,'num_steps',2,'adapt',true);
 verifyLessThan(testCase,err,1e-4);
 end
 

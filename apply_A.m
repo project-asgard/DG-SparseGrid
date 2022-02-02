@@ -36,14 +36,14 @@ if opts.use_connectivity
     end
     num_A = num_A * element_DOF^2;
 else
-    num_A = total_DOF * total_DOF; 
+    num_A = total_DOF * total_DOF;
 end
 
 ALHS = 0;
 A = 0;
 if opts.build_A
     if opts.use_sparse_A
-        A_s1 = zeros(num_A,1); 
+        A_s1 = zeros(num_A,1);
         A_s2 = zeros(num_A,1);
         A_s3 = zeros(num_A,1);
     else
@@ -57,141 +57,178 @@ end
 cnt = 1;
 
 if opts.build_A && ~opts.quiet; disp('Building A ...'); end
-for elem=1:num_elem
 
-    if opts.use_connectivity
-        num_connected = numel(connectivity{elem});
-    else
-        num_connected = num_elem; % Simply assume all are connected.
+if opts.build_A && opts.fast_FG_matrix_assembly
+    
+    opts.use_sparse_A = false;
+    
+    assert(num_dims==2,'-fast_matrix_assembly option is only available in 2D');
+    
+    % Get SG <-> FG conversion
+    [~,iperm,~] = sg_to_fg_mapping_2d(pde,opts,A_data);
+    
+    % Construct full-grid A and ALHS
+    A_F = 0;
+    for i=1:numel(pde.terms)
+        A_F = A_F + kron(pde.terms{i}.terms_1D{1}.mat,...
+            pde.terms{i}.terms_1D{2}.mat);
+    end
+    A = A_F(iperm,iperm);
+    
+    if num_terms_LHS > 0
+        ALHS_F = 0;
+        for i=1:numel(pde.termsLHS)
+            ALHS_F = ALHS_F + kron(pde.termsLHS{i}.terms_1D{1}.mat,...
+                pde.terms{i}.terms_1D{2}.mat);
+        end
+        ALHS = ALHS_F(iperm,iperm);
     end
     
-    for d=1:num_dims
-        element_idx1D_D{d} = A_data.element_local_index_D{d}(elem);
-    end
+else % do not use fast_FG_matrix_assembly
     
-    % Expand out the local and global indicies for this compressed item
-    
-    global_row = element_DOF*(elem-1) + [1:element_DOF]';
-%     global_1D_row = deg*(elem-1) + [1:deg]';
-    
-    for d=1:num_dims
-        myDeg = opts.deg;
-        Index_I{d} = (element_idx1D_D{d}-1)*myDeg + [1:myDeg]';
-    end
-    
-    for j=1:num_connected
-              
-        if opts.use_connectivity
-            connected_col_j = connectivity{elem}(j);  
-        else
-            connected_col_j = j;
-        end   
+    for elem=1:num_elem
         
-        for d=1:num_dims
-            connected_idx1D_D{d} = A_data.element_local_index_D{d}(connected_col_j);
+        if opts.use_connectivity
+            num_connected = numel(connectivity{elem});
+        else
+            num_connected = num_elem; % Simply assume all are connected.
         end
         
-        % Expand out the global col indicies for this compressed
-        % connected item.
+        for d=1:num_dims
+            element_idx1D_D{d} = A_data.element_local_index_D{d}(elem);
+        end
         
-        global_col = element_DOF*(connected_col_j-1) + [1:element_DOF]';
+        % Expand out the local and global indicies for this compressed item
+        
+        global_row = element_DOF*(elem-1) + [1:element_DOF]';
+        %     global_1D_row = deg*(elem-1) + [1:deg]';
         
         for d=1:num_dims
             myDeg = opts.deg;
-            Index_J{d} = (connected_idx1D_D{d}-1)*myDeg + [1:myDeg]';
+            Index_I{d} = (element_idx1D_D{d}-1)*myDeg + [1:myDeg]';
         end
         
-        %%
-        % Apply operator matrices to present state using the pde spec
-        % Y = A * X
-        % where A is tensor product encoded.
- 
-        if opts.build_A && opts.use_sparse_A
-            num_view = element_DOF * element_DOF;
-            [gr,gc] = meshgrid(global_col,global_row);
-            A_s1(cnt:cnt+num_view-1) = gr(:);
-            A_s2(cnt:cnt+num_view-1) = gc(:);
-        end
-        
-        for t=1:num_terms
+        for j=1:num_connected
             
-            %%
-            % Construct the list of matrices for the kron_mult for this
-            % operator (which has dimension many entries).
-            for d=1:num_dims
-                idx_i = Index_I{d};
-                idx_j = Index_J{d};
-                tmp = pde.terms{t}.terms_1D{d}.mat;
-                kron_mat_list{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
-            end
-            
-            if opts.build_A
-                
-                %%
-                % Apply krond to return A (for hand coded implicit time advance)
-                
-                view = krond(num_dims,kron_mat_list);
-                if opts.use_sparse_A
-                    A_s3(cnt:cnt+num_view-1) = A_s3(cnt:cnt+num_view-1) + view(:);                  
-                else
-                    A(global_row,global_col) = A(global_row,global_col) + view;
-                end
+            if opts.use_connectivity
+                connected_col_j = connectivity{elem}(j);
             else
-                
-                %%
-                % Apply kron_mult to return A*Y (explicit time advance)
-                X = f(global_col);
-                if use_kronmultd
-                    Y = kron_multd(num_dims,kron_mat_list,X);
-                else
-                    Y = kron_multd_full(num_dims,kron_mat_list,X);
-                end
-                
-                use_globalRow = 0;
-                if (use_globalRow)
-                    ftmpA(global_row) = ftmpA(global_row) + Y;
-                else
-                    % ------------------------------------------------------
-                    % globalRow = elementDOF*(workItem-1) + [1:elementDOF]';
-                    % ------------------------------------------------------
-                    i1 = element_DOF*(elem-1) + 1;
-                    i2 = element_DOF*(elem-1) + element_DOF;
-                    ftmpA(i1:i2) = ftmpA(i1:i2) + Y;
-                end
-                
+                connected_col_j = j;
             end
             
-        end
-        
-        %%
-        % Construct the mat list for a non-identity LHS mass matrix
-        for t=1:num_terms_LHS
             for d=1:num_dims
-                idx_i = Index_I{d};
-                idx_j = Index_J{d};
-                tmp = pde.termsLHS{t}.terms_1D{d}.mat;
-                kronMatListLHS{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
+                connected_idx1D_D{d} = A_data.element_local_index_D{d}(connected_col_j);
+            end
+            
+            % Expand out the global col indicies for this compressed
+            % connected item.
+            
+            global_col = element_DOF*(connected_col_j-1) + [1:element_DOF]';
+            
+            for d=1:num_dims
+                myDeg = opts.deg;
+                Index_J{d} = (connected_idx1D_D{d}-1)*myDeg + [1:myDeg]';
             end
             
             %%
-            % Apply krond to return A (recall this term requires inversion)
+            % Apply operator matrices to present state using the pde spec
+            % Y = A * X
+            % where A is tensor product encoded.
             
-            ALHS(global_row,global_col) = ALHS(global_row,global_col) + krond(num_dims,kronMatListLHS);
+            if opts.build_A && opts.use_sparse_A
+                num_view = element_DOF * element_DOF;
+                [gr,gc] = meshgrid(global_col,global_row);
+                A_s1(cnt:cnt+num_view-1) = gr(:);
+                A_s2(cnt:cnt+num_view-1) = gc(:);
+            end
+            
+            for t=1:num_terms
+                
+                %%
+                % Construct the list of matrices for the kron_mult for this
+                % operator (which has dimension many entries).
+                for d=1:num_dims
+                    idx_i = Index_I{d};
+                    idx_j = Index_J{d};
+                    tmp = pde.terms{t}.terms_1D{d}.mat;
+                    kron_mat_list{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
+                end
+                
+                if opts.build_A
+                    
+                    %%
+                    % Apply krond to return A (for hand coded implicit time advance)
+                    
+                    view = krond(num_dims,kron_mat_list);
+                    if opts.use_sparse_A
+                        A_s3(cnt:cnt+num_view-1) = A_s3(cnt:cnt+num_view-1) + view(:);
+                    else
+                        A(global_row,global_col) = A(global_row,global_col) + view;
+                    end
+                else
+                    
+                    %%
+                    % Apply kron_mult to return A*Y (explicit time advance)
+                    X = f(global_col);
+                    if use_kronmultd
+                        Y = kron_multd(num_dims,kron_mat_list,X);
+                    else
+                        Y = kron_multd_full(num_dims,kron_mat_list,X);
+                    end
+                    
+                    use_globalRow = 0;
+                    if (use_globalRow)
+                        ftmpA(global_row) = ftmpA(global_row) + Y;
+                    else
+                        % ------------------------------------------------------
+                        % globalRow = elementDOF*(workItem-1) + [1:elementDOF]';
+                        % ------------------------------------------------------
+                        i1 = element_DOF*(elem-1) + 1;
+                        i2 = element_DOF*(elem-1) + element_DOF;
+                        ftmpA(i1:i2) = ftmpA(i1:i2) + Y;
+                    end
+                    
+                end
+                
+            end
+            
+            %%
+            % Construct the mat list for a non-identity LHS mass matrix
+            for t=1:num_terms_LHS
+                for d=1:num_dims
+                    idx_i = Index_I{d};
+                    idx_j = Index_J{d};
+                    tmp = pde.termsLHS{t}.terms_1D{d}.mat;
+                    kronMatListLHS{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
+                end
+                
+                %%
+                % Apply krond to return A (recall this term requires inversion)
+                
+                ALHS(global_row,global_col) = ALHS(global_row,global_col) + krond(num_dims,kronMatListLHS);
+                
+            end
+            
+            
+            %%
+            % Overwrite previous approach with PDE spec approch
+            ftmp = ftmpA;
+            
+            if opts.use_sparse_A; cnt = cnt + num_view; end
             
         end
         
+        assert(elem==elem);
         
-        %%
-        % Overwrite previous approach with PDE spec approch
-        ftmp = ftmpA;
-        
-        if opts.use_sparse_A; cnt = cnt + num_view; end
-                
     end
-    
-    assert(elem==elem);
-    
 end
+
+% if opts.build_A
+%     assert(norm(A-AA)<=1e-12)
+%     if num_terms_LHS > 0
+%         assert(norm(ALHS-AALHS<=1e-12))
+%     end
+% end
 
 if opts.build_A && opts.use_sparse_A
     A = sparse(A_s2,A_s1,A_s3,total_DOF,total_DOF);
