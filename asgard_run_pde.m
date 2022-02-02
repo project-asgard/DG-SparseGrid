@@ -255,9 +255,11 @@ if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:opts.num_steps
     
     tic;
-    timeStr = sprintf('Step %i of %i (t= %f) (dof=%i)',L,opts.num_steps,t,numel(fval));
+    if ~opts.quiet
+        timeStr = sprintf('Step %i of %i (t= %f) (dof=%i)',L,opts.num_steps,t,numel(fval));
+        disp(timeStr);
+    end
     
-    disp(timeStr);
     Emax = 0;
     
     % Coarsen Grid

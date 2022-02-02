@@ -9,6 +9,7 @@ classdef OPTS
         dt = 0;
         quiet = false;
         grid_type = 'SG'; % 'SG', 'FG'
+        fast_FG_matrix_assembly = false;
         timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent','matrix_exponential'
         build_A = false;
         adapt = false;
@@ -86,6 +87,7 @@ classdef OPTS
                 addOptional(input_parser,'calculate_mass',opts.calculate_mass,@islogical);
                 addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
                 addOptional(input_parser,'update_params_each_timestep',opts.update_params_each_timestep,@islogical);
+                addOptional(input_parser,'fast_FG_matrix_assembly',opts.fast_FG_matrix_assembly,@islogical);
 
                 
                 parse(input_parser,varargin{:}{:})
@@ -198,6 +200,10 @@ classdef OPTS
                     disp('Extra inputs:')
                     disp(input_parser.Unmatched)
                     error('Unrecognised input.')
+                end
+                
+                if ~strcmp(opts.grid_type,'FG') && opts.fast_FG_matrix_assembly
+                    error("Do not set fast_FG_matrix_assembly unless using 'grid_type','FG'");
                 end
                 
             end
