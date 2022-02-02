@@ -199,7 +199,9 @@ if write_fval; write_fval_to_file(fval,lev,deg,0); end
 
 %% Check to see if initial resolution meets requested accuracy
 if opts.adapt
-    figs.adapt = figure();
+    if ~opts.quiet
+        figs.adapt = figure();
+    end
     if opts.adapt_initial_condition
         if ~opts.quiet; disp('Adapting initial for requested accuracy ...'); end
         
@@ -272,9 +274,11 @@ if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:opts.num_steps
     
     tic;
-    timeStr = sprintf('Step %i of %i at %f seconds',L,opts.num_steps,t);
+    if ~opts.quiet
+        timeStr = sprintf('Step %i of %i (t= %f) (dof=%i)',L,opts.num_steps,t,numel(fval));
+        disp(timeStr);
+    end
     
-    if ~opts.quiet; disp(timeStr); end
     Emax = 0;
     
     % Coarsen Grid
@@ -521,12 +525,7 @@ for L = 1:opts.num_steps
                    
         end       
     end
-    
-    count=count+1;
-    t1 = toc;
-    if ~opts.quiet; disp(['Took ' num2str(t1) ' [s]']); end
-  
-    
+      
     % Hack right now to update the params data every time step
     
     if opts.update_params_each_timestep
@@ -589,8 +588,12 @@ for L = 1:opts.num_steps
     end
     
     % Save output
-    
-    outputs = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
+        
+    count=count+1;
+    t1 = toc;
+    if ~opts.quiet; disp(['Took ' num2str(t1) ' [s]']); end
+       
+    outputs = save_output(outputs,L,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,t1,root_directory,hash_table);
     
     t = t + dt;
        
