@@ -1,4 +1,6 @@
-function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+function [f,sol] = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+
+sol = 0;
 
 if strcmp(opts.timestep_method,'BE')
     % Backward Euler (BE) first order
@@ -17,7 +19,7 @@ elseif strcmp(opts.timestep_method,'CN')
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45','ode23s'}))>0
     % One of the atlab ODE integrators.
-    f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    [f,sol] = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 else
     % RK3 TVD
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -27,7 +29,18 @@ end
 
 %% Use Matlab ODE solvers
 
-function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
+function [fout,sol] = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
+
+% when using the matlab ODE integrators we just pass them the start and
+% final time (when 'time_independent_A','true') and have it return the
+% intermeadiate times
+
+if opts.time_independent_build_A
+    tf = (opts.num_steps+1) * dt; % the +1 here is to account for very small deviations in the end time requested from sol
+    times = [t0:dt:tf];
+else
+    times = [t0,t0+dt];
+end
 
 clear strCR;
 
@@ -65,7 +78,8 @@ if strcmp(opts.timestep_method,'ode45')
         stats = 'on';
     end
     options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats',stats);
-    [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
+    sol = ode45(@explicit_ode,[t0 t0+dt],f0,options);
+    fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode15s')
     
@@ -95,7 +109,9 @@ elseif strcmp(opts.timestep_method,'ode15s')
     end
     options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
         'Stats',stats,'OutputFcn',output_func,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
-    [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+%      [tout,fout0] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+     sol = ode15s(@explicit_ode,times,f0,options);
+     fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode23s')
     
@@ -108,7 +124,8 @@ elseif strcmp(opts.timestep_method,'ode23s')
         output_func = @odetpbar;
     end
     options = odeset('Stats',stats,'OutputFcn',output_func);
-    [tout,fout] = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
+    sol = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
+    fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode15i')
 
@@ -119,11 +136,11 @@ elseif strcmp(opts.timestep_method,'ode15i')
     dfdt0 = f0.*0;
     [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
     if(~opts.quiet);disp('Using ode15i');end
-    [tout,fout] = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
-    
+    sol = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
+    fout = deval(sol,t0+dt);
 end
 
-fval = reshape(fout(end,:),size(f0));
+% fval = reshape(fout(end,:),size(f0));
 
 end
 
