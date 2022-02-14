@@ -30,8 +30,8 @@ generate_data( @fokkerplanck1_pitch_CER, levels, 'fokkerplanck1_4p5', 'deg', 5 )
 
 % non-uniform level
 % note fp2 must be calculated with modified x domain [1,20] to avoid singularity problem
-%levels = [2, 310];
-%generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'deg', 3 );
+levels = [2, 3];
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'deg', 3 );
 levels = [4, 2];
 generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'lev', 4, 'deg', 4 );
 levels = [4, 5];
