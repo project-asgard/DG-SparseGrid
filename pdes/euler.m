@@ -16,7 +16,7 @@ switch opts.case_
     case 1
         
         U_0 = 1.0e-0;
-        T_0 = 1.0e-6;
+        T_0 = 1.0e-10;
 
         % rho_1:
         ic_x = @(x,p,t,d) 0.5*sin(2*pi.*x)+1.0;
@@ -57,8 +57,7 @@ switch opts.case_
         
     case 3
         
-        x_L = 40/128;
-        x_R = 88/128;
+        x_D = 64/128;
         
         N_L = 1.0;
         U_L = 0.0;
@@ -77,17 +76,17 @@ switch opts.case_
         rho_3_R = 0.5 * N_R * (U_R^2+T_R);
         
         % rho_1:
-        ic_x = @(x,p,t,d) rho_1_R + (rho_1_L-rho_1_R).*((x > x_L) - (x > x_R));
+        ic_x = @(x,p,t,d) rho_1_R + (rho_1_L-rho_1_R).*(x <= x_D);
         ic_t = @(t,p) 0*t+1; 
         ic_rho_1 = {new_md_func(num_dims,{ic_x,ic_t})};
         
         % rho_2:
-        ic_x = @(x,p,t,d) rho_2_R + (rho_2_L-rho_2_R).*((x > x_L) - (x > x_R));
+        ic_x = @(x,p,t,d) rho_2_R + (rho_2_L-rho_2_R).*(x <= x_D);
         ic_t = @(t,p) 0*t+1; 
         ic_rho_2 = {new_md_func(num_dims,{ic_x,ic_t})};
 
         % rho_3:
-        ic_x = @(x,p,t,d) rho_3_R + (rho_3_L-rho_3_R).*((x > x_L) - (x > x_R));
+        ic_x = @(x,p,t,d) rho_3_R + (rho_3_L-rho_3_R).*(x <= x_D);
         ic_t = @(t,p) 0*t+1; 
         ic_rho_3 = {new_md_func(num_dims,{ic_x,ic_t})};
         
