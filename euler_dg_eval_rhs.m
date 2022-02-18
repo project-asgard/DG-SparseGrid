@@ -4,6 +4,8 @@ dim = pde.dimensions{1};
 
 d_v = 1.0; % Velocity space dimensions hard coded.
 
+BCs = 'HOMOGENEOUS'; % Boundary conditions hard coded (Options: 'PERIODIC', 'HOMOGENEOUS')
+
 lev = opts.lev;
 deg = opts.deg;
 
@@ -78,13 +80,27 @@ for i = 1 : N + 1
     last  = (N-1)*deg+1:N*deg;
     
     if i == 1
-        left = last;
+        switch BCs
+            case 'PERIODIC'
+                left = last;
+            case 'HOMOGENEOUS'
+                left = first;
+            otherwise
+                left = last;
+        end
     else
         left = (i-2)*deg+1:(i-1)*deg;
     end
 
     if i == N + 1
-        right = first;
+        switch BCs
+            case 'PERIODIC'
+                right = first;
+            case 'HOMOGENEOUS'
+                right = last;
+            otherwise
+                right = first;
+        end
     else
         right = (i-1)*deg+1:i*deg;
     end
