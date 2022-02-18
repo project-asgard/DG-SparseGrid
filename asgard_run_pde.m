@@ -400,6 +400,9 @@ for L = 1:opts.num_steps
             [pde,mass,~] = calculate_mass(pde,opts,fval{icomp},hash_table,t);
             mass_t(L+1) = mass(1);
             outputs.mass_t = mass_t;
+            outputs.rho_1{L+1} = wavelet_to_realspace(pde,opts,Meval,fval{1},hash_table);
+            outputs.rho_2{L+1} = wavelet_to_realspace(pde,opts,Meval,fval{2},hash_table);
+            outputs.rho_3{L+1} = wavelet_to_realspace(pde,opts,Meval,fval{3},hash_table);
         end
         
         %%
