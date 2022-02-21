@@ -9,7 +9,7 @@ figs = [];
 num_dims = numel(pde.dimensions);
 
 %% Reset any persistent variables
-if opts.time_independent_A | opts.time_independent_build_A
+if opts.time_independent_A || opts.time_independent_build_A || strcmp(opts.timestep_method,'IMEX')
     clear time_advance
 end
 
@@ -65,18 +65,6 @@ pde = get_coeff_mats(pde,opts,t,TD);
 %% Construct A_encode / A_data time independent data structures.
 if ~opts.quiet; disp('Generate A_encode data structure for time independent coefficients'); end
 A_data = global_matrix(pde,opts,hash_table);
-
-%% Construct Moment Matrices
-
-if numel(pde.dimensions) >= 2
-moment_mat = cell(numel(pde.moments),1);
-for i=1:numel(pde.moments)
-    moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
-end
-end
-%moment_mat = {moment_reduced_matrix(opts,pde,A_data,1),...
-%              moment_reduced_matrix(opts,pde,A_data,2),...
-%              moment_reduced_matrix(opts,pde,A_data,3)};
 
 %% Create 1D pde file 
 
