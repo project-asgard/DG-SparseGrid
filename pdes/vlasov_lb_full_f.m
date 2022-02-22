@@ -8,14 +8,10 @@ function pde = vlasov_lb_full_f(opts)
 %
 % Run with
 %
-% explicit
-% asgard(@vlasov_lb_full_f,'lev',3,'deg',3,'CFL',0.1)
 %
 % implicit
-% asgard(@vlasov_lb_full_f,'timestep_method','BE','deg',3,'lev',3,'dt',0.1)
+% asgard(@vlasov_lb_full_f,'timestep_method','IMEX','deg',3,'lev',[8 3],'dt',0.0002,'num_steps',500,'grid_type','FG','fast_FG_matrix_assembly',true,'output_grid','interp')
 %
-% with adaptivitv
-% asgard(@vlasov_lb_full_f,'timestep_method','CN','adapt',true)
 
 soln_x = @(x,p,t)  0*x+1;
 soln_v = @(v,p,t)  0*v+1;
