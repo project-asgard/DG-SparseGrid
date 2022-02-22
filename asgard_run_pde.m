@@ -13,6 +13,9 @@ if opts.time_independent_A || opts.time_independent_build_A || strcmp(opts.times
     clear time_advance
 end
 
+%% Reset fast multiply
+clear fast_2d_matrix_apply
+
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
 if opts.dt_set_at_runtime
@@ -253,7 +256,9 @@ end
 
 % need to clean up this interface!
 outputs = save_output([],0,pde,opts,num_dims,fval,fval_realspace,f_realspace_analytic_nD,nodes,nodes_nodups,nodes_count,t,dt,toc,root_directory,hash_table);
-outputs.mass_t = mass_t;
+if opts.calculate_mass
+    outputs.mass_t = mass_t;
+end
 
 %% Time Loop
 count=1;
@@ -489,7 +494,8 @@ for L = 1:opts.num_steps
             if isfield(figs,'solution')
                 figure(figs.solution);
             else
-                figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+                %figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+                figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.3,0.3]);
             end
                        
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);

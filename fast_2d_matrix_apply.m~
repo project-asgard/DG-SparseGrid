@@ -1,0 +1,22 @@
+function [f1] = fast_2d_matrix_apply(opts,pde,A_data,f0)
+%Applys stiffness matrix-vector multiply f1=Af0 using the identity
+%
+% (B^T\kron A)*vec(X) = vec(AXB) where vec(X) = X(:);
+%
+
+persistent perm iperm pvec
+
+if isempty(perm)
+    [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+end
+
+%Convert to standard FG index
+f0_F = zeros(size(f0,1),1);
+f0_F(pvec) = f0(perm(pvec));
+
+%Convert to matrix
+f0_M = reshape(
+
+
+end
+

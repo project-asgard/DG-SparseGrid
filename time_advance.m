@@ -525,7 +525,7 @@ assert(isempty(pde.termsLHS),'LHS terms not supported by IMEX');
 
 I = speye(size(A_ex));
 
-BEFE = 0;
+BEFE = 1;
 
 if BEFE
 
@@ -611,15 +611,15 @@ else %%Trying imex deg 2 version
     mom0 = moment_mat{1}*f_2s; %integral of (f,1)_v
     mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
     %mom0_vals = singleD_to_multiD(num_dims-1,mom0_real,nodes(1));
-    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'linear','extrap');
+    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
 
     mom1 = moment_mat{2}*f_2s; %integral of (f,v)_v
     mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
-    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'linear','extrap')./pde.params.n(x);
+    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
 
     mom2 = moment_mat{3}*f_2s; %integral of (f,v^2)_v
     mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
-    pde.params.th = @(x) interp1(nodes,mom2_real,x,'linear','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+    pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
     
     b_2s = [mom0;mom1;mom2];
     
@@ -649,15 +649,15 @@ else %%Trying imex deg 2 version
     mom0 = moment_mat{1}*f_3s; %integral of (f,1)_v
     mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
     %mom0_vals = singleD_to_multiD(num_dims-1,mom0_real,nodes(1));
-    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'linear','extrap');
+    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
 
     mom1 = moment_mat{2}*f_3s; %integral of (f,v)_v
     mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
-    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'linear','extrap')./pde.params.n(x);
+    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
 
     mom2 = moment_mat{3}*f_3s; %integral of (f,v^2)_v
     mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
-    pde.params.th = @(x) interp1(nodes,mom2_real,x,'linear','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+    pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
     
     b_3s = [mom0;mom1;mom2];
     
@@ -678,7 +678,9 @@ else %%Trying imex deg 2 version
     
     f1 = f_3;
     
-    figure(1000);
+    fig1 = figure(1000);
+    fig1.Units = 'Normalized';
+    fig1.Position = [0.1 0.5 0.3 0.3];
     subplot(2,2,1);
     plot(nodes,pde.params.n(nodes));
     title('n_f');
@@ -690,7 +692,9 @@ else %%Trying imex deg 2 version
     title('th_f');
     sgtitle('Fluid Variables');
 
-    figure(1001);
+    fig2 = figure(1001);
+    fig2.Units = 'Normalized';
+    fig2.Position = [0.5 0.5 0.3 0.3];
     subplot(2,2,1);
     plot(nodes,mom0_real);
     title('(f,1)_v');

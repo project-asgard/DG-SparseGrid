@@ -13,6 +13,8 @@ classdef MD_TERM
                 for d=1:num_dims
                     terms_1D_{d} = SD_TERM();
                 end
+            end
+            if nargin<3
                 imex_ = 'N';
             end
             
