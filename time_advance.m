@@ -490,6 +490,8 @@ persistent nodes
 persistent Meval
 persistent A_ex
 
+BEFE = 0;
+
 if isempty(moment_mat)
     
     if numel(pde.dimensions) >= 2
@@ -516,7 +518,9 @@ if isempty(moment_mat)
     [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
     
     %Get explicit A
-    [~,A_ex,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'E');
+    if BEFE
+        [~,A_ex,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'E');
+    end
         
 end
 
@@ -524,8 +528,6 @@ assert(isempty(pde.termsLHS),'LHS terms not supported by IMEX');
 %Ignoring sources for now
 
 I = speye(size(A_ex));
-
-BEFE = 1;
 
 if BEFE
 
@@ -604,7 +606,8 @@ else %%Trying imex deg 2 version
     %%%%%
     
     %Explicit step
-    f_2s = f0 + dt*(A_ex*f0);
+    %f_2s = f0 + dt*(A_ex*f0);
+    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
     fprintf('Norm check: |f_1| = %e, |f_2s| = %e\n',norm(f0),norm(f_2s));
     
     %Create rho_2s
@@ -627,10 +630,15 @@ else %%Trying imex deg 2 version
     pde = get_coeff_mats(pde,opts,t,0);
 
     %Get implicit A
-    [~,A_LB_2s,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'I');
+    %[~,A_LB_2s,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'I');
     
     %f2 now
-    f_2 = (I-dt*A_LB_2s)\f_2s;
+    %f_2 = (I-dt*A_LB_2s)\f_2s;
+    [f_2,flag,relres] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_2s,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
     fprintf('Norm check: |f_2s| = %e, |f_2| = %e\n',norm(f_2s),norm(f_2));
     
     fprintf('Conservation Error Stage 2: %e\n',norm(M*f_2-b_2s));
@@ -642,7 +650,9 @@ else %%Trying imex deg 2 version
     %%% Third stage
     %%%%%
     
-    f_3s = f0 + 0.5*dt*(A_ex*(f0 + f_2)) + 0.5*dt*(A_LB_2s*f_2);
+    %f_3s = f0 + 0.5*dt*(A_ex*(f0 + f_2)) + 0.5*dt*(A_LB_2s*f_2);
+    f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
+              + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
     fprintf('Norm check: |f_2| = %e, |f_3s| = %e\n',norm(f_2),norm(f_3s));
     
     %Create rho_3s
@@ -665,9 +675,14 @@ else %%Trying imex deg 2 version
     pde = get_coeff_mats(pde,opts,t,0);
 
     %Get implicit A
-    [~,A_LB_3s,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'I');
+    %[~,A_LB_3s,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'I');
     
-    f_3 = (I-dt*0.5*A_LB_3s)\f_3s;
+    %f_3 = (I-dt*0.5*A_LB_3s)\f_3s;
+    [f_3,flag,relres] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
     fprintf('Norm check: |f_3s| = %e, |f_3| = %e\n',norm(f_3s),norm(f_3));
     fprintf('Norm check: |f_n| = %e, |f_(n+1)| = %e\n',norm(f0),norm(f_3));
     
