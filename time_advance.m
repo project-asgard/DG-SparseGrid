@@ -490,7 +490,7 @@ persistent nodes
 persistent Meval
 persistent A_ex
 
-BEFE = 0;
+BEFE = 1;
 
 if isempty(moment_mat)
     
@@ -511,14 +511,14 @@ if isempty(moment_mat)
     
     [~,S,V] = svd(full(M));
     S = diag(S);
-    nn = sum(S < 1e-12);
+    nn = sum(S > 1e-12);
     
-    P = V(:,nn+1:end);
+    P = V(:,nn+1:end)*V(:,nn+1:end)';
     
     [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
     
     %Get explicit A
-    if BEFE
+    if 0
         [~,A_ex,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'E');
     end
         
@@ -527,12 +527,17 @@ end
 assert(isempty(pde.termsLHS),'LHS terms not supported by IMEX');
 %Ignoring sources for now
 
-I = speye(size(A_ex));
+I = speye(numel(f0));
 
 if BEFE
 
     %Update Advection by...
-    f_E = (I-dt*A_ex)\f0; %%
+    %f_E = (I-dt*A_ex)\f0; %%
+    [f_E,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'E'),f0,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
     %f_E = (I-0.5*dt*A_ex)\(f0+0.5*dt*A_ex*f0); %%CN
 
     %f_RK1 = f0+dt*(A_ex*f0); %%SSP-RK2
@@ -562,7 +567,7 @@ if BEFE
     subplot(2,2,3);
     plot(nodes,pde.params.th(nodes));
     title('th_f');
-    sgtitle('Fluid Variables');
+    sgtitle("Fluid Variables. t = "+num2str(t));
 
     figure(1001);
     subplot(2,2,1);
@@ -574,7 +579,7 @@ if BEFE
     subplot(2,2,3);
     plot(nodes,mom2_real);
     title('(f,v^2)_v');
-    sgtitle('Moments');
+    sgtitle("Moments. t = "+num2str(t));
 
     b = [mom0;mom1;mom2];
 
@@ -584,13 +589,18 @@ if BEFE
     %Get implicit A
     [~,A_im,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'I');
 
-    f1 = (I-dt*A_im)\f_E;
+    %f1 = (I-dt*A_im)\f_E;
+    [f1,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_E,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
     %f1 = (I-0.5*dt*A_im)\(f_E+0.5*dt*A_im*f_E);
 
-    fprintf('Conservation Error if %e\n',norm(M*f1-b));
+    fprintf('Conservation Error: %e\n',norm(M*f1-b));
 
     %Project
-    %f1 = f_E + (I-P*P')*(f1-f_E);
+    f1 = f_E + P*(f1-f_E); fprintf('Conservation Error (AC): %e\n',norm(M*f1-b));
 
 else %%Trying imex deg 2 version
     %Here f1 = f^{n+1}, f0 = f^n
@@ -608,7 +618,7 @@ else %%Trying imex deg 2 version
     %Explicit step
     %f_2s = f0 + dt*(A_ex*f0);
     f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
-    fprintf('Norm check: |f_1| = %e, |f_2s| = %e\n',norm(f0),norm(f_2s));
+    %fprintf('Norm check: |f_1| = %e, |f_2s| = %e\n',norm(f0),norm(f_2s));
     
     %Create rho_2s
     mom0 = moment_mat{1}*f_2s; %integral of (f,1)_v
@@ -634,17 +644,17 @@ else %%Trying imex deg 2 version
     
     %f2 now
     %f_2 = (I-dt*A_LB_2s)\f_2s;
-    [f_2,flag,relres] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_2s,1e-12,numel(f0));
+    [f_2,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_2s,1e-12,numel(f0));
     if flag ~= 0
         fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
         assert(relres < 1e-10)
     end
-    fprintf('Norm check: |f_2s| = %e, |f_2| = %e\n',norm(f_2s),norm(f_2));
+    %fprintf('Norm check: |f_2s| = %e, |f_2| = %e\n',norm(f_2s),norm(f_2));
     
     fprintf('Conservation Error Stage 2: %e\n',norm(M*f_2-b_2s));
     
     %Project
-    %f_2 = f_2s + (I-P*P')*(f_2-f_2s);
+    f_2 = f_2s + P*(f_2-f_2s); fprintf('Conservation Error (AC): %e\n',norm(M*f_2-b_2s));
     
     %%%%%
     %%% Third stage
@@ -653,7 +663,7 @@ else %%Trying imex deg 2 version
     %f_3s = f0 + 0.5*dt*(A_ex*(f0 + f_2)) + 0.5*dt*(A_LB_2s*f_2);
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
               + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
-    fprintf('Norm check: |f_2| = %e, |f_3s| = %e\n',norm(f_2),norm(f_3s));
+    %fprintf('Norm check: |f_2| = %e, |f_3s| = %e\n',norm(f_2),norm(f_3s));
     
     %Create rho_3s
     mom0 = moment_mat{1}*f_3s; %integral of (f,1)_v
@@ -678,18 +688,18 @@ else %%Trying imex deg 2 version
     %[~,A_LB_3s,~] = apply_A(pde,opts,A_data,f0,deg,[],[],'I');
     
     %f_3 = (I-dt*0.5*A_LB_3s)\f_3s;
-    [f_3,flag,relres] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f0));
+    [f_3,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f0));
     if flag ~= 0
         fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
         assert(relres < 1e-10)
     end
-    fprintf('Norm check: |f_3s| = %e, |f_3| = %e\n',norm(f_3s),norm(f_3));
-    fprintf('Norm check: |f_n| = %e, |f_(n+1)| = %e\n',norm(f0),norm(f_3));
+    %fprintf('Norm check: |f_3s| = %e, |f_3| = %e\n',norm(f_3s),norm(f_3));
+    %fprintf('Norm check: |f_n| = %e, |f_(n+1)| = %e\n',norm(f0),norm(f_3));
     
     fprintf('Conservation Error Stage 2: %e\n',norm(M*f_3-b_3s));
     
     %Project
-    %f_3 = f_3s + (I-P*P')*(f_3-f_3s);
+    f_3 = f_3s + P*(f_3-f_3s); fprintf('Conservation Error (AC): %e\n',norm(M*f_3-b_3s));
     
     f1 = f_3;
     
