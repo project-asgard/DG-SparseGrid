@@ -702,35 +702,38 @@ else %%Trying imex deg 2 version
     f_3 = f_3s + P*(f_3-f_3s); fprintf('Conservation Error (AC): %e\n',norm(M*f_3-b_3s));
     
     f1 = f_3;
-    
-    fig1 = figure(1000);
-    fig1.Units = 'Normalized';
-    fig1.Position = [0.1 0.5 0.3 0.3];
-    subplot(2,2,1);
-    plot(nodes,pde.params.n(nodes));
-    title('n_f');
-    subplot(2,2,2);
-    plot(nodes,pde.params.u(nodes));
-    title('u_f');
-    subplot(2,2,3);
-    plot(nodes,pde.params.th(nodes));
-    title('th_f');
-    sgtitle('Fluid Variables');
-
-    fig2 = figure(1001);
-    fig2.Units = 'Normalized';
-    fig2.Position = [0.5 0.5 0.3 0.3];
-    subplot(2,2,1);
-    plot(nodes,mom0_real);
-    title('(f,1)_v');
-    subplot(2,2,2);
-    plot(nodes,mom1_real);
-    title('(f,v)_v');
-    subplot(2,2,3);
-    plot(nodes,mom2_real);
-    title('(f,v^2)_v');
-    sgtitle('Moments');
-    drawnow
+    if ~opts.quiet
+        
+        fig1 = figure(1000);
+        fig1.Units = 'Normalized';
+        fig1.Position = [0.1 0.5 0.3 0.3];
+        subplot(2,2,1);
+        plot(nodes,pde.params.n(nodes));
+        title('n_f');
+        subplot(2,2,2);
+        plot(nodes,pde.params.u(nodes));
+        title('u_f');
+        subplot(2,2,3);
+        plot(nodes,pde.params.th(nodes));
+        title('th_f');
+        sgtitle('Fluid Variables');
+        
+        fig2 = figure(1001);
+        fig2.Units = 'Normalized';
+        fig2.Position = [0.5 0.5 0.3 0.3];
+        subplot(2,2,1);
+        plot(nodes,mom0_real);
+        title('(f,1)_v');
+        subplot(2,2,2);
+        plot(nodes,mom1_real);
+        title('(f,v)_v');
+        subplot(2,2,3);
+        plot(nodes,mom2_real);
+        title('(f,v^2)_v');
+        sgtitle('Moments');
+        drawnow
+        
+    end
     
 end
 
