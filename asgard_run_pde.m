@@ -607,5 +607,6 @@ end
 
 outputs.pde = pde;
 outputs.opts = opts;
+save fval
 
 end
