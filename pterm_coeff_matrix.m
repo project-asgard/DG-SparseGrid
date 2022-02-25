@@ -8,18 +8,19 @@ function [pterm] = pterm_coeff_matrix(deg,t,dim,pterm,params, ...
 % Get the LHS mass matrix (M) for this pterm
 % this mass matrix needs to have the volume jacobian incorporated instead
 % of the possibly different surface jacobian.
-lhs_mass_pterm = MASS(pterm.LHS_mass_g,'','',dim.moment_dV);
-[M,M_not_rotated] = coeff_matrix(deg,t,dim,lhs_mass_pterm,params,FMWT_blocks,coeff_level); 
+if isempty(pterm.LHS_mass_mat)
+    lhs_mass_pterm = MASS(pterm.LHS_mass_g,'','',dim.moment_dV);
+    [M,M_not_rotated] = coeff_matrix(deg,t,dim,lhs_mass_pterm,params,FMWT_blocks,coeff_level); 
+    pterm.LHS_mass_mat = full(M);
+    pterm.LHS_mass_mat_unrotated = full(M_not_rotated);
+end
 
 % Move M to the RHS
 
-pterm.mat = inv(M) * L;
-pterm.mat_unrotated = inv(M_not_rotated) * L_not_rotated;
+pterm.mat = pterm.LHS_mass_mat\L;
+pterm.mat_unrotated = pterm.LHS_mass_mat_unrotated\L_not_rotated;
 
 
 % Store M for use in application to the BC
-
-pterm.LHS_mass_mat = M;
-pterm.LHS_mass_mat_unrotated = M_not_rotated;
 
 end

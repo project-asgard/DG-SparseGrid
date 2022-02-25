@@ -511,10 +511,10 @@ if isempty(moment_mat)
     
     %Build projection matrix.  This can be made faster (Following null
     %space method for now)
-    [~,S,V] = svd(full(M));
-    S = diag(S);
-    nn = sum(S > 1e-12);   
-    P = V(:,nn+1:end)*V(:,nn+1:end)';
+    %[~,S,V] = svd(full(M));
+    %S = diag(S);
+    %nn = sum(S > 1e-12);   
+    %P = V(:,nn+1:end)*V(:,nn+1:end)';
     
     [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
     
@@ -652,10 +652,10 @@ else %%Trying imex deg 2 version
     end
     %fprintf('Norm check: |f_2s| = %e, |f_2| = %e\n',norm(f_2s),norm(f_2));
     
-    fprintf('Conservation Error Stage 2: %e\n',norm(M*f_2-b_2s));
+    %fprintf('Conservation Error Stage 2: %e\n',norm(M*f_2-b_2s));
     
     %Project
-    f_2 = f_2s + P*(f_2-f_2s); fprintf('Conservation Error (AC): %e\n',norm(M*f_2-b_2s));
+    %f_2 = f_2s + P*(f_2-f_2s); fprintf('Conservation Error (AC): %e\n',norm(M*f_2-b_2s));
     
     %%%%%
     %%% Third stage
@@ -663,7 +663,7 @@ else %%Trying imex deg 2 version
     
     %f_3s = f0 + 0.5*dt*(A_ex*(f0 + f_2)) + 0.5*dt*(A_LB_2s*f_2);
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
-              + 0.5*dt*P*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
+              + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
     %fprintf('Norm check: |f_2| = %e, |f_3s| = %e\n',norm(f_2),norm(f_3s));
     
     %Create rho_3s
@@ -697,17 +697,17 @@ else %%Trying imex deg 2 version
     %fprintf('Norm check: |f_3s| = %e, |f_3| = %e\n',norm(f_3s),norm(f_3));
     %fprintf('Norm check: |f_n| = %e, |f_(n+1)| = %e\n',norm(f0),norm(f_3));
     
-    fprintf('Conservation Error Stage 3: %e\n',norm(M*f_3-b_3s));
+    %fprintf('Conservation Error Stage 3: %e\n',norm(M*f_3-b_3s));
     
     %Project
-    f_3 = f_3s + P*(f_3-f_3s); fprintf('Conservation Error (AC): %e\n',norm(M*f_3-b_3s));
+    %f_3 = f_3s + P*(f_3-f_3s); fprintf('Conservation Error (AC): %e\n',norm(M*f_3-b_3s));
     
     f1 = f_3;
     %if ~opts.quiet
         
         fig1 = figure(1000);
         fig1.Units = 'Normalized';
-        fig1.Position = [0.1 0.5 0.3 0.3];
+        fig1.Position = [0.5 0.5 0.3 0.3];
         subplot(2,2,1);
         plot(nodes,pde.params.n(nodes));
         title('n_f');
@@ -717,21 +717,7 @@ else %%Trying imex deg 2 version
         subplot(2,2,3);
         plot(nodes,pde.params.th(nodes));
         title('th_f');
-        sgtitle("Fluid Variables. t = "+num2str(t));
-        
-        fig2 = figure(1001);
-        fig2.Units = 'Normalized';
-        fig2.Position = [0.5 0.5 0.3 0.3];
-        subplot(2,2,1);
-        plot(nodes,mom0_real);
-        title('(f,1)_v');
-        subplot(2,2,2);
-        plot(nodes,mom1_real);
-        title('(f,v)_v');
-        subplot(2,2,3);
-        plot(nodes,mom2_real);
-        title('(f,v^2)_v');
-        sgtitle("Moments. t = "+num2str(t));
+        sgtitle("Fluid Variables. t = "+num2str(t+dt));
         drawnow
         
     %end

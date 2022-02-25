@@ -10,6 +10,8 @@ classdef OPTS
         quiet = false;
         grid_type = 'SG'; % 'SG', 'FG'
         fast_FG_matrix_assembly = false;
+        build_realspace_output = true;
+        unit_jacobian = false;
         timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent','matrix_exponential','IMEX'
         build_A = false;
         adapt = false;
@@ -88,7 +90,7 @@ classdef OPTS
                 addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
                 addOptional(input_parser,'update_params_each_timestep',opts.update_params_each_timestep,@islogical);
                 addOptional(input_parser,'fast_FG_matrix_assembly',opts.fast_FG_matrix_assembly,@islogical);
-
+                addOptional(input_parser,'build_realspace_output',opts.build_realspace_output,@islogical); %False will not construct realspace variables
                 
                 parse(input_parser,varargin{:}{:})
                 
@@ -146,6 +148,7 @@ classdef OPTS
                 opts.start_time = input_parser.Results.start_time;
                 opts.update_params_each_timestep = input_parser.Results.update_params_each_timestep;
                 opts.fast_FG_matrix_assembly = input_parser.Results.fast_FG_matrix_assembly;
+                opts.build_realspace_output = input_parser.Results.build_realspace_output;
                 
                 opts.build_A = false;
                 if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential','IMEX'}))>0
