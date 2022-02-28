@@ -481,8 +481,6 @@ end
 
 function f1 = imex(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
-persistent moment_mat
-persistent hash_table_1D
 persistent pde_1d
 persistent nodes
 persistent Meval
@@ -505,37 +503,37 @@ persistent Meval
 %Switch for IMEX iteration: 
 % 1 : Backward Euler in explicit terms 'E',
 %     Backward Euler in implicit terms 'I'.
-% 0 : SSP-RK2 IMEX.  'E' are actually handled explicitly.
+% 0 : SSP-RK2 IMEX.  'E' terms are actually handled explicitly.
 
 %%% C++ : Focus on the case BEFE = 0
 
 BEFE = 0;
 
-if isempty(moment_mat)
-    
-    %Create moment matrices that take DG function in (x,v) and transfer it
-    %to DG function in x.
-    %Pre-allocation will not work with adaptivty
-    
-    if numel(pde.dimensions) >= 2
-        moment_mat = cell(numel(pde.moments),1);
-        for i=1:numel(pde.moments)
-            moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
-        end
-    end
-    
-    hash_table_1D = hash_table_2D_to_1D(hash_table,opts);
+if isempty(Meval)
+    %Compute everything that will not change per time iteration
 
-    %Make fake pde file for use in physical realspace transformation
-    pde_1d.dimensions = pde.dimensions(1);
-    
     %Get quadrature points in realspace stiffness matrix calculation
     [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
+    
+    %Make fake pde file for use in physical realspace transformation
+    pde_1d.dimensions = pde.dimensions(1);
         
 end
 
-assert(isempty(pde.termsLHS),'LHS terms not supported by IMEX');
+%Create moment matrices that take DG function in (x,v) and transfer it
+%to DG function in x.
+if numel(pde.dimensions) >= 2
+    moment_mat = cell(numel(pde.moments),1);
+    for i=1:numel(pde.moments)
+        moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
+    end
+end
+
+hash_table_1D = hash_table_2D_to_1D(hash_table,opts);
+
+assert(isempty(pde.termsLHS),'LHS terms currently not supported by IMEX');
 %Ignoring sources for now
+assert(isempty(pde.sources),'Sources currently not supported by IMEX');
 
 if BEFE
 
@@ -656,7 +654,7 @@ else %%Trying imex deg 2 version
     f1 = f_3;
     
     %Plot moments
-    if ~opts.quiet
+    if ~opts.quiet || 1
         
         fig1 = figure(1000);
         fig1.Units = 'Normalized';

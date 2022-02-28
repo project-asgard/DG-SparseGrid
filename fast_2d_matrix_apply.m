@@ -28,7 +28,7 @@ n = size(pde.terms{1}.terms_1D{1}.mat,1);
 m = size(pde.terms{1}.terms_1D{2}.mat,1);
 
 %Convert to standard FG index
-f0_F = zeros(size(f0,1),1);
+f0_F = zeros(numel(perm),1);
 f0_F(pvec) = f0(perm(pvec));
 
 %Convert to matrix
