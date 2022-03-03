@@ -8,14 +8,10 @@ function pde = vlasov_lb_full_f(opts)
 %
 % Run with
 %
-% explicit
-% asgard(@vlasov_lb_full_f,'lev',3,'deg',3,'CFL',0.1)
 %
 % implicit
-% asgard(@vlasov_lb_full_f,'timestep_method','BE','deg',3,'lev',3,'dt',0.1)
+% asgard(@vlasov_lb_full_f,'timestep_method','IMEX','deg',3,'lev',[8 3],'dt',0.0002,'num_steps',500,'grid_type','FG','fast_FG_matrix_assembly',true,'output_grid','interp')
 %
-% with adaptivitv
-% asgard(@vlasov_lb_full_f,'timestep_method','CN','adapt',true)
 
 soln_x = @(x,p,t)  0*x+1;
 soln_v = @(v,p,t)  0*v+1;
@@ -58,8 +54,12 @@ moments = {moment0,moment1,moment2};
 
 params.n  = @(x) 1*(x<-0.5) + 1/8*(x >= -0.5).*(x <= 0.5) + 1*(x>0.5);
 params.u  = @(x) 0;
-params.th = @(x) 1*(x<-0.5) + 5/4*(x >= -0.5).*(x <= 0.5) + 1*(x>0.5);
-params.nu = 1e-3;
+params.th = @(x) 1*(x<-0.5) + 4/5*(x >= -0.5).*(x <= 0.5) + 1*(x>0.5);
+
+%params.n = @(x) 0*x+1;
+%params.u = @(x) 0*x;
+%params.th = @(x) 0*x+1;
+params.nu = 1e3;
 
 %% Define the analvtic solution (optional).
 
@@ -70,12 +70,17 @@ solutions = {};
 
 %% Initial conditions
 ic1 = new_md_func(num_dims,{@(x,p,t) (abs(x) > 0.5),...
-                            @(v,p,t) 1/sqrt(2*pi)*exp(-v.^2/2),...
-                            @(t,p) 0*t+1});
+                           @(v,p,t) 1/sqrt(2*pi)*exp(-v.^2/2),...
+                           @(t,p) 0*t+1});
 ic2 = new_md_func(num_dims,{@(x,p,t) (abs(x) <= 0.5),...
-                            @(v,p,t) (1/8)/sqrt(2*pi*5/4)*exp(-v.^2/(2*5/4)),...
-                            @(t,p) 0*t+1});                        
+                           @(v,p,t) (1/8)/sqrt(2*pi*4/5)*exp(-v.^2/(2*4/5)),...
+                           @(t,p) 0*t+1});                        
 initial_conditions = {ic1,ic2};
+
+%ic1 = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
+%                            @(v,p,t) 1/sqrt(2*pi)*exp(-v.^2/2),...
+%                            @(t,p) 0*t+1});
+%initial_conditions = {ic1};
 
 %% Define the terms of the PDE
 %
@@ -95,7 +100,7 @@ g1 = @(x,p,t,dat) x.*(x>0);
 pterm1 = MASS(g1,'','',dV);
 term_v = SD_TERM({pterm1});
 
-term1   = MD_TERM(num_dims,{term_x,term_v});
+term1   = MD_TERM(num_dims,{term_x,term_v},'E');
 
 %% Term 2
 % -v\cdot\grad_x f for v < 0
@@ -109,13 +114,13 @@ g1 = @(x,p,t,dat) x.*(x<0);
 pterm1 = MASS(g1,'','',dV);
 term_v = SD_TERM({pterm1});
 
-term2   = MD_TERM(num_dims,{term_x,term_v});
+term2   = MD_TERM(num_dims,{term_x,term_v},'E');
 
 %% Term 3
 % v\cdot\grad_v f
 %
 
-g1 = @(x,p,t,dat) x*0+1/p.nu;
+g1 = @(x,p,t,dat) x*0+p.nu;
 pterm1 = MASS(g1,'','',dV);
 term_x = SD_TERM({pterm1});
 
@@ -123,7 +128,7 @@ g1 = @(x,p,t,dat) x;
 pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV);
 term_v = SD_TERM({pterm1});
 
-term3   = MD_TERM(num_dims,{term_x,term_v});
+term3   = MD_TERM(num_dims,{term_x,term_v},'I');
 
 %% Term 4
 % -u\cdot\grad_v f
@@ -133,11 +138,11 @@ g1 = @(x,p,t,dat) -p.u(x);
 pterm1 = MASS(g1,'','',dV);
 term_x = SD_TERM({pterm1});
 
-g1 = @(x,p,t,dat) 0*x+1/p.nu;
+g1 = @(x,p,t,dat) 0*x+p.nu;
 pterm1  =  DIV(num_dims,g1,'',0,'D','D','','','',dV);
 term_v = SD_TERM({pterm1});
 
-term4   = MD_TERM(num_dims,{term_x,term_v});
+term4   = MD_TERM(num_dims,{term_x,term_v},'I');
 
 %% Term 5
 % div_v(th\grad_v f)
@@ -147,19 +152,19 @@ term4   = MD_TERM(num_dims,{term_x,term_v});
 % div_v(th q)
 % q = \grad_v f
 
-g1 = @(x,p,t,dat) 1/p.nu;
-g2 = @(x,p,t,dat) 0*x+p.th(x);
+g1 = @(x,p,t,dat) 1;
+g2 = @(x,p,t,dat) 0*x+p.th(x)*p.nu;
 pterm1 = MASS(g1,'','',dV);
 pterm2 = MASS(g2,'','',dV);
 term_x = SD_TERM({pterm1,pterm2});
 
 g1 = @(x,p,t,dat) 0*x+1;
 g2 = @(x,p,t,dat) 0*x+1;
-pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV);
-pterm2  = GRAD(num_dims,g2,'',+1,'N','N','','','',dV);
+pterm1  =  DIV(num_dims,g1,'',0,'D','D','','','',dV);
+pterm2  = GRAD(num_dims,g2,'',0,'D','D','','','',dV);
 term_v = SD_TERM({pterm1,pterm2});
 
-term5   = MD_TERM(num_dims,{term_x,term_v});
+term5   = MD_TERM(num_dims,{term_x,term_v},'I');
 
 %% Combine terms
 terms = {term1,term2,term3,term4,term5};

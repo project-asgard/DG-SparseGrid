@@ -6,9 +6,15 @@
 
 clear all;
 
-set(groot,'defaultLineLineWidth',2.0)
-set(groot,'defaultAxesFontSize',20)
-set(groot,'defaultLegendFontSize',20)
+root_folder = get_root_folder();
+
+set(groot,'defaultLineLineWidth',2.0);
+set(groot,'defaultAxesFontSize',20);
+set(groot,'defaultLegendFontSize',20);
+
+red = '#E74C3C';
+blue = '#2E86C1';
+green = '#229954';
 
 cgs.e = 4.803e-10;
 cgs.m_e = 9.109e-28;
@@ -136,58 +142,84 @@ CH_normfac_nr = 1/(connor_hastie_nr(0.1*cgs.E_D,1)/kulsrud_Z1(end));
 CH_normfac_r = CH_normfac_nr;
 KB_normfac = 1/(kruskal_bernstein(0.1)/kulsrud_Z1(end));
 
+args.p_max = 10;
+args.v_th = norm.v_th;
+args.nu_ee = norm.nu_ee;
+args.tau = norm.tau;
+args.n = norm.n;
+
 % Scan over E/E_D ratio
 do_E_scan = true;
 if do_E_scan
     
-    
     N2 = 15;
     ratio_max2 = 0.1;
     ratio2 = linspace(0.02,ratio_max2,N2);
-    args.p_max = 10;
-    args.v_th = norm.v_th;
-    args.nu_ee = norm.nu_ee;
-    args.tau = norm.tau;
-    args.n = norm.n;
     num_steps = 10;
+    deg = 4;
+    lev = 4;
     
-    % Non-relativistic
-    args.delta = 0;
-    for Z = [1 2 10]
-        for i=1:N2
-            args.E = ratio2(i) * SI.E_D / norm.E; % E into asgard is 2*E/E_D per the normalization
-            args.Z = Z;
-            dt = 2./args.E.^2/num_steps;
-            if dt > 2000
-                dt = 2000;
+    alphas_filename = [root_folder,'/output/alpha_E_scan.mat'];
+    load_alphas = true;
+    if load_alphas
+        load(alphas_filename);
+    else
+        
+        % generate or load asgard run output
+        
+        get_file_id = @(str,E,Z) [str,num2str(E,'%1.3f'),'_Z',num2str(Z)];
+        
+        % non-relativistic
+        args.delta = 0;
+        for Z = [1 2 10]
+            for i=1:N2
+                args.E = ratio2(i) * SI.E_D / norm.E; % E into asgard is 2*E/E_D per the normalization
+                args.Z = Z;
+                dt = 2./args.E.^2/num_steps;
+                if dt > 2000
+                    dt = 2000;
+                end
+                file_id = get_file_id('E_scan_nonrel_E',args.E,args.Z);
+                [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete,...
+                    'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,...
+                    'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG',...
+                    'update_params_each_timestep',true,'save_output',true,'output_filename_id',file_id,...
+                    'save_freq',num_steps);
+                output_filename = create_output_filename(opts);
+                load(output_filename,'outputs');
+                alpha_nr(i,Z) = outputs.alpha_t{end};
+                clear outputs
             end
-            file_id = ['E_scan_nonrel_E',num2str(args.E),'_Z',num2str(args.Z)];
-            [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'save_output',true,'output_filename_id',file_id);
-            output_filename = create_output_filename(opts);
-            load(output_filename,'outputs');
-            alpha_nr(i,Z) = outputs.alpha_t{end};
-            clear outputs
         end
+        
+        % relativistic
+        args.delta = norm.delta;
+        for Z = [1 2 10]
+            for i=1:N2
+                args.E = ratio2(i) * SI.E_D / norm.E; % E into asgard is 2*E/E_D per the normalization
+                args.Z = Z;
+                dt = 2./args.E.^2/num_steps;
+                if dt > 2000
+                    dt = 2000;
+                end
+                file_id = get_file_id('E_scan_relati_E',args.E,args.Z);
+                [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete,...
+                    'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,...
+                    'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG',...
+                    'update_params_each_timestep',true,'save_output',true,'output_filename_id',file_id,...
+                    'save_freq',num_steps);
+                output_filename = create_output_filename(opts);
+                load(output_filename,'outputs');
+                alpha_r(i,Z) = outputs.alpha_t{end};
+                clear outputs
+            end
+        end
+        
+        save(alphas_filename,'alpha_r','alpha_nr');
+        
     end
     
-    % Relativistic
-    args.delta = norm.delta;
-    for Z = [1 2 10]
-        for i=1:N2
-            args.E = ratio2(i) * SI.E_D / norm.E; % E into asgard is 2*E/E_D per the normalization
-            args.Z = Z;
-            dt = 2./args.E.^2/num_steps;
-            if dt > 2000
-                dt = 2000;
-            end
-            file_id = ['E_scan_relati_E',num2str(args.E),'_Z',num2str(args.Z)];
-            [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'save_output',true,'output_filename_id',file_id);
-            output_filename = create_output_filename(opts);
-            load(output_filename,'outputs');
-            alpha_r(i,Z) = outputs.alpha_t{end};
-            clear outputs
-        end
-    end
+    % plot the results for the loaded data
     
     set(groot,'defaultLineLineWidth',2.0)
     set(groot,'defaultAxesFontSize',20)
@@ -199,9 +231,7 @@ if do_E_scan
     ylabel('RE production rate $\alpha$ [arb. units]','Interpreter','latex');
     ylim([1e-10 1]);
     hold on
-    red = '#E74C3C';
-    blue = '#2E86C1';
-    green = '#229954';
+    
     semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,1)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=1)','color',red);
     semilogy(ratio,connor_hastie_r(ratio*cgs.E_D,1)*CH_normfac_r,'LineStyle',':','DisplayName','C-H (r, Z=1)','color',red);
     semilogy(ratio,connor_hastie_nr(ratio*cgs.E_D,10)*CH_normfac_nr,'LineStyle','--','DisplayName','C-H (nr, Z=10)','color',blue);
@@ -225,304 +255,312 @@ end
 
 % Compare DoF required for given accuracy in alpha
 
+args.delta = 0;
+args.Z = 1;
+deg_span_FG = [2,3,4];
+lev_span_FG = [4,5];
+num_steps = 20;
+E = [0.1,0.07,0.055];
+E_string = {'010','007','0055'};
+
+
 do_dof_scan = true;
 if do_dof_scan
     
-    args.p_max = 10;
-    args.v_th = norm.v_th;
-    args.nu_ee = norm.nu_ee;
-    args.tau = norm.tau;
-    args.n = norm.n;
-    args.delta = 0;
-    num_steps = 20;
+    get_file_id = @(str,Estr,lev,deg) [str,Estr,'_lev',num2str(lev),'_deg',num2str(deg)];
     
-    E = [0.1,0.07,0.055];
-    E_string = {'010','007','0055'};
+    % generate (or load) the FG reference data (both to demonstrate a convergence in
+    % the FG results, and to use as a "correct" answer to compare SG and
+    % ASG to).
     
-    for i=1:numel(E)
-        args.E = E(i);
-        dt = 2./args.E.^2/num_steps;
-        deg = 3;
-        lev = 4;
-        if E(i)<0.06
-            lev=4;
-        end
-        lev_str = num2str(lev);
-        
-        % Set this to produce the fullgrid (FG) results - these take
-        % considerable time.
-        do_FG = false;
-        if do_FG
-            [~,~,~,~,~,output_FG_deg4] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
-            save(['output_FG_E',E_string{i},'_deg4_lev',lev_str','.mat'],'output_FG_deg4');
-            clear output_FG_deg4;
+    alphas_filename = [root_folder,'/output/alpha_FG.mat'];
+    load_alphas = true;
+    if load_alphas
+        load(alphas_filename);
+    else
+        load(alphas_filename); % load so we can add to it
+        for i=1:numel(E)
+            args.E = E(i);
+            dt = 2./args.E.^2/num_steps;
             
-            [~,~,~,~,~,output_FG_deg5] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',5,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
-            save(['output_FG_E',E_string{i},'_deg5_lev',lev_str','.mat'],'output_FG_deg5');
-            clear output_FG_deg5;
-                       
-            [~,~,~,~,~,output_FG_deg6] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
-            save(['output_FG_E',E_string{i},'_deg6_lev',lev_str','.mat'],'output_FG_deg6');
-            clear output_FG_deg6;
+            for lev=lev_span_FG
+                for deg=deg_span_FG
+                    if isempty(alpha_FG{i,lev,deg})
+                        file_id = get_file_id('FG_',E_string{i},lev,deg)
+                        [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete,...
+                            'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,...
+                            'cmd_args',args,'quiet',false,'calculate_mass',true,'grid_type','FG',...
+                            'update_params_each_timestep',true,'output_grid','fixed',...
+                            'save_output',true,'output_filename_id',file_id,'time_independent_build_A',false,...
+                            'save_freq',num_steps);
+                        output_filename = create_output_filename(opts);
+                        load(output_filename,'outputs');
+                        alpha_FG{i,lev,deg} = outputs.alpha_t;
+                        dof_FG{i,lev,deg} = numel(outputs.fval_t{end});
+                        time_FG{i,lev,deg} = outputs.time_array;
+                        clear outputs
+                        save(alphas_filename,'alpha_FG','dof_FG','time_FG');
+                    end
+                end
+            end
             
-            [~,~,~,~,~,output_FG_deg7] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',7,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','FG','update_params_each_timestep',true,'output_grid','fixed');
-            save(['output_FG_E',E_string{i},'_deg7_lev',lev_str','.mat'],'output_FG_deg7');
-            clear output_FG_deg7;
+            
         end
         
-        % Set this to produce the sparsegrid (SG) and adaptive (ASG)
-        % results.
-        do_SG = true;
-        if do_SG
-            [~,~,~,~,~,output_SG] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
-            [~,~,~,~,~,output_SG_deg6] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',6,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed');
-            [~,~,~,~,~,output_1em0] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e0,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em1] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-1,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em2] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-2,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em3] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-3,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em4] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-4,'output_grid','fixed','adapt_initial_condition',true);
-            [~,~,~,~,~,output_1em5] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true,'adapt',true,'adapt_threshold',1e-5,'output_grid','fixed','adapt_initial_condition',true);
-       
-            alpha_SG(i,:) = cell2mat(output_SG.alpha_t);
-            alpha_SG_deg6(i,:) = cell2mat(output_SG_deg6.alpha_t);
-            alpha_1em0(i,:) = cell2mat(output_1em0.alpha_t);
-            alpha_1em1(i,:) = cell2mat(output_1em1.alpha_t);
-            alpha_1em2(i,:) = cell2mat(output_1em2.alpha_t);
-            alpha_1em3(i,:) = cell2mat(output_1em3.alpha_t);
-            alpha_1em4(i,:) = cell2mat(output_1em4.alpha_t);
-            alpha_1em5(i,:) = cell2mat(output_1em5.alpha_t);
-            
-            dof_SG(i) = numel(output_SG.fval_t{end});
-            dof_SG_deg6(i) = numel(output_SG_deg6.fval_t{end});
-            dof_1em0(i) = numel(output_1em0.fval_t{end});
-            dof_1em1(i) = numel(output_1em1.fval_t{end});
-            dof_1em2(i) = numel(output_1em2.fval_t{end});
-            dof_1em3(i) = numel(output_1em3.fval_t{end});
-            dof_1em4(i) = numel(output_1em4.fval_t{end});
-            dof_1em5(i) = numel(output_1em5.fval_t{end});
-
-        end
     end
+    
+    
+    % plot the convergence of the FG results
     
     set(groot,'defaultLineLineWidth',2.0)
     set(groot,'defaultAxesFontSize',20)
     set(groot,'defaultLegendFontSize',14)
     ms = 12;
     lw = 2;
+    linestyles = {'--',':','-.','-','--'};
+    linecolors = {red,blue,green};
     
-    % Plot the convergence of the FG results to set the "correct" answer to
-    % which the SG and ASG results need to converge to.
-    plot_FG_convergence = false;
+    plot_FG_convergence = true;
     if plot_FG_convergence
-        load('output_FG_E010_deg4_lev4.mat');
-        output_FG_E010_deg4_lev4 = output_FG_deg4_lev4;
-        load('output_FG_E010_deg5_lev4.mat');
-        output_FG_E010_deg5_lev4 = output_FG_deg5_lev4;
-        load('output_FG_E010_deg6_lev4.mat');
-        output_FG_E010_deg6_lev4 = output_FG_deg6_lev4;
-        
-        load('output_FG_E007_deg4_lev4.mat');
-        output_FG_E007_deg4_lev4 = output_FG_deg4_lev4;
-        load('output_FG_E007_deg5_lev4.mat');
-        output_FG_E007_deg5_lev4 = output_FG_deg5_lev4;
-        load('output_FG_E007_deg6_lev4.mat');
-        output_FG_E007_deg6_lev4 = output_FG_deg6_lev4;
-        load('output_FG_E007_deg7_lev4.mat');
-        output_FG_E007_deg7_lev4 = output_FG_deg7;
-        
-        load('output_FG_E0055_deg4_lev5.mat');
-        output_FG_E0055_deg4_lev5 = output_FG_deg4;
-        load('output_FG_E0055_deg5_lev5.mat');
-        output_FG_E0055_deg5_lev5 = output_FG_deg5;
-        
-        load('output_FG_E0055_deg4_lev4.mat');
-        output_FG_E0055_deg4_lev4 = output_FG_deg4;
-        load('output_FG_E0055_deg5_lev4.mat');
-        output_FG_E0055_deg5_lev4 = output_FG_deg5;
-        load('output_FG_E0055_deg6_lev4.mat');
-        output_FG_E0055_deg6_lev4 = output_FG_deg6;
-        load('output_FG_E0055_deg7_lev4.mat');
-        output_FG_E0055_deg7_lev4 = output_FG_deg7;
-        
         
         figure('Position',[0 0 600 600])
-        dof = numel(output_FG_E010_deg4_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E010_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5','LineStyle','-.');
+        
+        for i=1:numel(E)
+            args.E = E(i);
+            
+            for deg=4:7
+                alpha_t = alpha_FG{i,4,deg};
+                dof = dof_FG{i,4,deg};
+                this_lw = lw;
+                if (i==1&&deg==4) || (i==2&&deg==5) || (i==3&&deg==6)
+                    this_lw=6;
+                end
+                p = semilogy(time_FG{i,4,deg}(2:end),cell2mat(alpha_FG{i,4,deg}),'DisplayName',['FG (E/E_D=',num2str(E(i),'%1.3f'),' deg=',num2str(deg),',lev=',num2str(lev), ', DoF=',num2str(dof)],'LineWidth',this_lw,'Color',linecolors{i},'LineStyle',linestyles{deg-4+1});
+                hold off
+                if (i==1&&deg==4) || (i==2&&deg==5) || (i==3&&deg==6)
+                    p.Color(4) = 0.5;
+                end
+                hold on
+            end
+            
+        end
         xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
         ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
         title('Full Grid (FG) Convergence of $\alpha$','Interpreter','latex');
-        hold on
-        dof = numel(output_FG_E010_deg5_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E010_deg5_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=5,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5','LineStyle','--');
-        dof = numel(output_FG_E010_deg6_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E010_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5');
-        
-        dof = numel(output_FG_E007_deg4_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E007_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle','-.');
-        dof = numel(output_FG_E007_deg5_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E007_deg5_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=5,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle','--');
-        dof = numel(output_FG_E007_deg6_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E007_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle',':');
-        dof = numel(output_FG_E007_deg7_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E007_deg7_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=7,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E');
-        
-        dof = numel(output_FG_E0055_deg4_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839','LineStyle','-.');
-        dof = numel(output_FG_E0055_deg5_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg5_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=5,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839','LineStyle','--');
-        dof = numel(output_FG_E0055_deg6_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839','LineStyle',':');
-        dof = numel(output_FG_E0055_deg7_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg7_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=7,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#EE1839');
-        
-%         dof = numel(output_FG_E0055_deg4_lev5.fval_t{end});
-%         semilogy(cell2mat(output_FG_E0055_deg4_lev5.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=4,lev=5), DoF=',num2str(dof)],'LineWidth',4,'Color','#A569BD','LineStyle','-.');
-        dof = numel(output_FG_E0055_deg5_lev5.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg5_lev5.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=5,lev=5), DoF=',num2str(dof)],'LineWidth',4,'Color','#A569BD','LineStyle',':');
-        
         legend('FontSize',10)
-        ylim([10^-8 10^-1])
-         
+        ylim([10^-8 10^-2])
+        xlim([0 500])
         legend
         hold off
         
     end
     
-    plot_SG = true;
-    if plot_SG
-        if ~exist('output_FG_E010_deg4_lev4')
-            load('output_FG_E010_deg4_lev4.mat');
-            output_FG_E010_deg4_lev4 = output_FG_deg4_lev4;
-            load('output_FG_E007_deg4_lev4.mat');
-            output_FG_E007_deg4_lev4 = output_FG_deg4_lev4;
-            load('output_FG_E007_deg6_lev4.mat');
-            output_FG_E007_deg6_lev4 = output_FG_deg6_lev4;
-            load('output_FG_E0055_deg4_lev4.mat');
-            output_FG_E0055_deg4_lev4 = output_FG_deg4;
-            load('output_FG_E0055_deg6_lev4.mat');
-            output_FG_E0055_deg6_lev4 = output_FG_deg6;
+    
+    % now look at how the SG solution converges to the "correct" solution
+    
+    deg_span_SG = [2,3,4];
+    lev_span_SG = [4,5,6];
+    
+    alphas_filename = [root_folder,'/output/alpha_SG.mat'];
+    load_alphas = true;
+    if load_alphas
+        load(alphas_filename);
+    else
+        
+        for i=1:numel(E)
+            args.E = E(i);
+            dt = 2./args.E.^2/num_steps;
+            
+            for lev=lev_span_SG
+                for deg=deg_span_SG
+                    file_id = get_file_id('SG_',E_string{i},lev,deg);
+                    [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete,...
+                        'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',deg,'lev',lev,'case',5,...
+                        'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG',...
+                        'update_params_each_timestep',true,'output_grid','fixed',...
+                        'save_output',true,'output_filename_id',file_id,'time_independent_build_A',true,...
+                        'save_freq',num_steps);
+                    output_filename = create_output_filename(opts);
+                    load(output_filename,'outputs');
+                    alpha_SG{i,lev,deg} = outputs.alpha_t;
+                    dof_SG{i,lev,deg} = numel(outputs.fval_t{end});
+                    time_SG{i,lev,deg} = outputs.time_array;
+                    clear outputs
+                end
+            end
+            
         end
-        lw=2;
-        ms=12;
-        figure('Position',[0 0 600 600])
-        dof = numel(output_FG_E010_deg4_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E010_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5');
-        xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
-        ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
-        title('Sparse Grid (SG) Convergence of $\alpha$','Interpreter','latex');
-        hold on
-        dof = numel(output_FG_E007_deg4_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E007_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E','LineStyle','--');
-        dof = numel(output_FG_E007_deg6_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E007_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E');
-        dof = numel(output_FG_E0055_deg4_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#A569BD','LineStyle','--');
-        dof = numel(output_FG_E0055_deg6_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#A569BD');
-
-        semilogy(alpha_SG(1,:),'DisplayName',['SG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof_SG(1))],'Color','black','Marker','s','Color','#3D67F5','MarkerSize',ms,'LineStyle','none');
-        semilogy(alpha_SG(2,:),'DisplayName',['SG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof_SG(2))],'Color','black','Marker','s','Color','#52A95E','MarkerSize',ms,'LineStyle','none');
-        semilogy(alpha_SG(3,:),'DisplayName',['SG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof_SG(3))],'Color','black','Marker','s','Color','#A569BD','MarkerSize',ms,'LineStyle','none');
-        semilogy(alpha_SG_deg6(2,:),'DisplayName',['SG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof_SG_deg6(2))],'Color','black','Marker','o','Color','#52A95E','MarkerSize',ms,'LineStyle','none');
-        semilogy(alpha_SG_deg6(3,:),'DisplayName',['SG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof_SG_deg6(3))],'Color','black','Marker','o','Color','#A569BD','MarkerSize',ms,'LineStyle','none');
-        legend('FontSize',10)
-        ylim([10^-8 10^-1])
-        legend
-        hold off
+        
+        save(alphas_filename,'alpha_SG','dof_SG','time_SG');
+        
     end
     
-    plot_ASG = true;
-    if plot_ASG
-        if ~exist('output_FG_E010_deg4_lev4')
-            load('output_FG_E010_deg4_lev4.mat');
-            output_FG_E010_deg4_lev4 = output_FG_deg4_lev4;
-            load('output_FG_E007_deg6_lev4.mat');
-            output_FG_E007_deg6_lev4 = output_FG_deg6_lev4;
-            load('output_FG_E0055_deg6_lev4.mat');
-            output_FG_E0055_deg6_lev4 = output_FG_deg6;
+    plot_SG_convergence = true;
+    if plot_SG_convergence
+        
+        load([root_folder,'/output/alpha_FG.mat']);
+        
+        for deg=deg_span_SG
+            
+            for lev=4:5
+                
+                figure('Position',[0 0 600 600])
+                
+                for i=1:numel(E)
+                    args.E = E(i);
+                    
+                    % include "correct" FG results for comparison
+                    
+                    this_lw = lw;
+                    switch i
+                        case 1
+                            deg_FG=4;
+                        case 2
+                            deg_FG=5;
+                        case 3
+                            deg_FG=6;
+                    end
+                    alpha_t = alpha_FG{i,4,deg_FG};
+                    dof = dof_FG{i,4,deg_FG};
+                    p = semilogy(time_FG{i,4,deg_FG}(2:end),cell2mat(alpha_FG{i,4,deg_FG}),'DisplayName',['Converged Solution (E/E_D=',num2str(E(i),'%1.3f'),' FG deg=',num2str(deg_FG),',lev=',num2str(lev), ', DoF=',num2str(dof)],'LineWidth',6,'Color',linecolors{i},'LineStyle','-');
+                    hold on
+                    p.Color(4) = 0.5;
+                    
+                    % now overlay SG results
+                    alpha_t = alpha_SG{i,lev,deg};
+                    dof = dof_SG{i,lev,deg};
+                    this_lw = lw;
+                    this_alpha = cell2mat(alpha_SG{i,lev,deg});
+                    this_alpha(this_alpha<1e-8)=1e-8; % just for plotting purposes on the log scale
+                    p = semilogy(time_SG{i,lev,deg}(2:end),this_alpha,'DisplayName',['SG (E/E_D=',num2str(E(i),'%1.3f'),' deg=',num2str(deg),',lev=',num2str(lev), ', DoF=',num2str(dof)],'LineWidth',this_lw,'Color',linecolors{i},'LineStyle','--');
+                    if lev==4 || lev==5% overlay FG
+                        alpha_t = alpha_FG{i,lev,deg};
+                        dof = dof_FG{i,lev,deg};
+                        p = semilogy(time_FG{i,lev,deg}(2:end),cell2mat(alpha_FG{i,lev,deg}),'DisplayName',['FG (E/E_D=',num2str(E(i),'%1.3f'),' deg=',num2str(deg),',lev=',num2str(lev), ', DoF=',num2str(dof)],'LineWidth',this_lw,'Color',linecolors{i},'LineStyle','-');
+                    end
+                    
+                end
+                
+                xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
+                ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
+                title(['Sparse Grid (SG) Convergence of $\alpha$ for deg=',num2str(deg),' lev=',num2str(lev)],'Interpreter','latex');
+                legend('FontSize',10)
+                ylim([10^-8 10^-2])
+                xlim([0 500])
+                legend
+                hold off
+                
+            end
+            
         end
-        figure('Position',[0 0 600 600])
-        dof = numel(output_FG_E010_deg4_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E010_deg4_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#3D67F5');
-        xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
-        ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
-        title('Adaptive Sparse Grid (ASG) Convergence of $\alpha$','Interpreter','latex');
-        hold on        
-        dof = numel(output_FG_E007_deg6_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E007_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.07,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#52A95E');
-        dof = numel(output_FG_E0055_deg6_lev4.fval_t{end});
-        semilogy(cell2mat(output_FG_E0055_deg6_lev4.alpha_t),'DisplayName',['FG (E/E_D=0.055,deg=6,lev=4), DoF=',num2str(dof)],'LineWidth',lw,'Color','#A569BD');        
         
-        semilogy(alpha_SG(1,:),'DisplayName',['SG (E/E_D=0.1,deg=4,lev=4), DoF=',num2str(dof_SG(1))],'Color','#3D67F5','LineStyle','--');
-%         semilogy(alpha_1em1(1,:),'DisplayName',['ASG 1e-1 (E/E_D=0.1,deg=4), DoF=',num2str(dof_1em1(1))],'Marker','s','Color','#3D67F5','MarkerSize',ms,'LineStyle',':');
-%         semilogy(alpha_1em2(1,:),'DisplayName',['1e-2 (E/E_D=0.1), DoF=',num2str(dof_1em2(1))],'Marker','o','Color','#3D67F5','MarkerSize',ms);
-        semilogy(alpha_1em3(1,:),'DisplayName',['ASG 1e-3 (E/E_D=0.1,deg=4), DoF=',num2str(dof_1em3(1))],'Marker','d','Color','#3D67F5','MarkerSize',ms);
-%         semilogy(alpha_1em4(1,:),'DisplayName',['1e-4 (E/E_D=0.1), DoF=',num2str(dof_1em4(1))],'Marker','*','Color','#3D67F5','MarkerSize',ms);
-        
-        semilogy(alpha_SG(2,:),'DisplayName',['SG (E/E_D=0.07,deg=4,lev=4), DoF=',num2str(dof_SG(2))],'Color','#52A95E','LineStyle','--');
-%         semilogy(alpha_1em1(2,:),'DisplayName',['ASG 1e-1 (E/E_D=0.07,deg=4), DoF=',num2str(dof_1em1(2))],'Marker','s','Color','#52A95E','MarkerSize',ms,'LineStyle',':');
-%         semilogy(alpha_1em2(2,:),'DisplayName',['1e-2 (E/E_D=0.07), DoF=',num2str(dof_1em2(2))],'Marker','o','Color','#52A95E','MarkerSize',ms);
-%         semilogy(alpha_1em3(2,:),'DisplayName',['1e-3 (E/E_D=0.07), DoF=',num2str(dof_1em3(2))],'Marker','d','Color','#52A95E','MarkerSize',ms);
-        semilogy(alpha_1em4(2,:),'DisplayName',['ASG 1e-4 (E/E_D=0.07,deg=4), DoF=',num2str(dof_1em4(2))],'Marker','*','Color','#52A95E','MarkerSize',ms);
-        
-        semilogy(alpha_SG(3,:),'DisplayName',['SG (E/E_D=0.055,deg=4,lev=4), DoF=',num2str(dof_SG(3))],'Color','#A569BD','LineStyle','--');
-%         semilogy(alpha_1em1(3,:),'DisplayName',['ASG 1e-1 (E/E_D=0.055,deg=4), DoF=',num2str(dof_1em1(3))],'Marker','s','Color','#A569BD','MarkerSize',ms,'LineStyle',':');
-%         semilogy(alpha_1em2(3,:),'DisplayName',['1e-2 (E/E_D=0.055), DoF=',num2str(dof_1em2(3))],'Marker','o','Color','#A569BD','MarkerSize',ms);
-%         semilogy(alpha_1em3(3,:),'DisplayName',['1e-3 (E/E_D=0.055), DoF=',num2str(dof_1em3(3))],'Marker','d','Color','#A569BD','MarkerSize',ms);
-        semilogy(alpha_1em4(3,:),'DisplayName',['ASG 1e-4 (E/E_D=0.055,deg=4), DoF=',num2str(dof_1em4(3))],'Marker','*','Color','#A569BD','MarkerSize',ms);
-%         semilogy(alpha_1em5(3,:),'DisplayName',['1e-5 (E/E_D=0.055), DoF=',num2str(dof_1em5(3))],'Marker','s','Color','#A569BD','MarkerSize',ms);
-        legend('FontSize',10)
-        ylim([10^-8 10^-1])  
-        hold off
     end
     
-end
-
-
-% Scan over Z
-do_Z_scan = false;
-if do_Z_scan
-    Z = linspace(1,10,100);
-    E_ED = 0.08;
-    figure
-    semilogy(Z,connor_hastie_nr(E_ED*cgs.E_D,Z));
-    hold on
-    semilogy(Z,connor_hastie_r(E_ED*cgs.E_D,Z));
-    norm_fac = connor_hastie_nr(E_ED*cgs.E_D,1)/kulsrud_Z008(1);
-    semilogy(kulsrud_E008,kulsrud_Z008*norm_fac,'Marker','s','MarkerSize',16,'MarkerFaceColor','auto');
-    % ylim([1e-10 1]);
+    % now look at how the ASG solution converges to the "correct" solution
     
-    Z2 = 1:10;
-    for i=1:numel(Z2)
-        args.E = E_ED * SI.E_D / norm.E; % E into asgard is 2*E/E_D per the normalization
-        args.Z = Z2(i);
-        args.p_max = 10;
-        args.v_th = norm.v_th;
-        args.delta = 0;
-        args.nu_ee = norm.nu_ee;
-        args.tau = norm.tau;
-        args.n = norm.n;
-        
-        E_cgs = args.E / 300 / 100;
-        v_c_cgs = cgs.v_c(E_cgs+1e-6);
-        v_c_SI = v_c_cgs/100;
-        v_c_norm = v_c_SI * SI.m_e / norm.p;
-        disp(['v_c (cm/s): ',num2str(v_c_cgs)]);
-        disp(['v_c (m/s): ',num2str(v_c_SI)]);
-        disp(['v_c (norm): ', num2str(v_c_norm)]);
-        
-        num_steps = 10;
-        dt = 2./args.E.^2/num_steps;
-        disp(i);
-        [~,~,~,~,~,outputs(i)] = asgard(@fokkerplanck2_complete_div,'timestep_method','BE','num_steps',num_steps,'dt',dt,'deg',4,'lev',4,'case',5,'cmd_args',args,'quiet',true,'calculate_mass',true,'grid_type','SG','update_params_each_timestep',true);
-        alpha_Z(i) = outputs(i).alpha_t{end};
+    deg_span_ASG = [3];
+    lev_span_ASG = [5,6]; % lev for the ASG refers to the adaptivity threshold, i.e., 10^-lev
+    lev = 3;
+    
+    alphas_filename = [root_folder,'/output/alpha_ASG.mat'];
+    load_alphas = false;
+    if load_alphas
+        load(alphas_filename);
+    else
+        if exist(alphas_filename,'file')            
+            load(alphas_filename);
+        end
+        for i=1:numel(E)
+            args.E = E(i);
+            dt = 2./args.E.^2/num_steps;
+                        
+            for lev=lev_span_ASG
+                for deg=deg_span_ASG
+                    empty = true;
+                    try
+                        if ~isempty(alpha_ASG{i,lev,deg});empty=false;end
+                    catch
+                    end
+                    if empty
+                        file_id = get_file_id('ASG_',E_string{i},lev,deg);
+                        [~,~,~,~,~,~,opts] = asgard(@fokkerplanck2_complete,'timestep_method','BE','num_steps',num_steps,...
+                            'dt',dt,'deg',deg,'lev',3,'case',5,'cmd_args',args,'quiet',false,'calculate_mass',true,...
+                            'grid_type','SG','update_params_each_timestep',true,'output_grid','fixed','save_output',true,...
+                            'output_filename_id',file_id,'time_independent_build_A',false,...
+                            'adapt',true,'adapt_initial_condition',true,'adapt_threshold',1*10^(-lev),...
+                            'max_lev',8,'max_lev_coeffs',true,'save_freq',num_steps);
+                        output_filename = create_output_filename(opts);
+                        load(output_filename,'outputs');
+                        alpha_ASG{i,lev,deg} = outputs.alpha_t;
+                        dof_ASG{i,lev,deg} = numel(outputs.fval_t{end});
+                        time_ASG{i,lev,deg} = outputs.time_array;
+                        clear outputs
+                        save(alphas_filename,'alpha_ASG','dof_ASG','time_ASG');
+                    end
+                end
+            end
+            
+        end
     end
     
-    norm_fac = connor_hastie_nr(E_ED*cgs.E_D,1)/alpha_Z(1);
-    semilogy(Z2,alpha_Z*norm_fac,'Marker','none','MarkerSize',16,'MarkerFaceColor','auto');
-    legend('C-H (nr)','C-H (r)','kulsrud (E/E_D=0.08)', 'alpha(Z)');
-    hold off
+    plot_ASG_convergence = true;
+    if plot_ASG_convergence
+        
+        load([root_folder,'/output/alpha_FG.mat']);
+        
+        for deg=deg_span_ASG
+            
+            
+            figure('Position',[0 0 600 600])
+            
+            for i=1:numel(E)
+                args.E = E(i);
+                
+                % include "correct" FG results for comparison
+                
+                this_lw = lw;
+                switch i
+                    case 1
+                        deg_FG=4;
+                    case 2
+                        deg_FG=5;
+                    case 3
+                        deg_FG=6;
+                end
+                alpha_t = alpha_FG{i,4,deg_FG};
+                dof = dof_FG{i,4,deg_FG};
+                p = semilogy(time_FG{i,4,deg_FG}(2:end),cell2mat(alpha_FG{i,4,deg_FG}),'DisplayName',['Converged Solution (E/E_D=',num2str(E(i),'%1.3f'),' FG deg=',num2str(deg_FG),',lev=',num2str(lev), ', DoF=',num2str(dof)],'LineWidth',6,'Color',linecolors{i},'LineStyle','-');
+                hold on
+                p.Color(4) = 0.5;
+                
+                % now overlay ASG results
+                for lev=lev_span_ASG
+                    alpha_t = alpha_ASG{i,lev,deg};
+                    dof = dof_ASG{i,lev,deg};
+                    this_lw = lw;
+                    this_alpha = cell2mat(alpha_ASG{i,lev,deg});
+                    this_alpha(this_alpha<1e-8)=1e-8; % just for plotting purposes on the log scale
+                    p = semilogy(time_ASG{i,lev,deg}(2:end),this_alpha,...
+                        'DisplayName',['ASG (E/E_D=',num2str(E(i),'%1.3f'),' deg=',num2str(deg),...
+                        ', ASG Threshold=',num2str(1*10^(-lev),'%1.0e'), ...
+                        ', DoF=',num2str(dof)],'LineWidth',this_lw,'Color',linecolors{i},'LineStyle',linestyles{lev-2+1});
+                end
+                
+            end
+            
+            xlabel('{Normalized Time ($\tilde{t}=t/\tilde{\nu}_{ee}$)}','Interpreter','latex');
+            ylabel('{RE Production Rate ($\alpha(\tilde{t}))$ [arb. units]}','Interpreter','latex');
+            title(['{Adaptive Sparse Grid (ASG) Convergence of $\alpha$ for deg=',num2str(deg),'}'],'Interpreter','latex');
+            legend('FontSize',10)
+            ylim([10^-8 10^-2])
+            xlim([0 500])
+            legend
+            hold off
+            
+        end
+        
+    end
+        
 end
-
 disp('');
 

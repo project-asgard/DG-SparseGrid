@@ -9,7 +9,10 @@ classdef OPTS
         dt = 0;
         quiet = false;
         grid_type = 'SG'; % 'SG', 'FG'
-        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent','matrix_exponential'
+        fast_FG_matrix_assembly = false;
+        build_realspace_output = true;
+        unit_jacobian = false;
+        timestep_method = 'RK3'; % 'RK3', 'FE', 'BE', 'ode15s', 'ode15i', 'ode45', 'time_independent','matrix_exponential','IMEX'
         build_A = false;
         adapt = false;
         use_connectivity = false;
@@ -50,9 +53,9 @@ classdef OPTS
                 
                 valid_grid_types = {'SG','FG'};
                 check_grid_type = @(x) any(validatestring(x,valid_grid_types));
-                valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode23s','ode45','RK3','FE','time_independent','matrix_exponential'};
+                valid_timestep_methods = {'BE','CN','ode15i','ode15s','ode23s','ode45','RK3','FE','time_independent','matrix_exponential','IMEX'};
                 check_timestep_method = @(x) any(strcmp(x,valid_timestep_methods));
-                valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points','dual_valued','elements'};
+                valid_output_grids = {'quadrature','fixed','uniform','quadrature_with_end_points','dual_valued','elements','interp'};
                 check_output_grid = @(x) any(strcmp(x,valid_output_grids));
                 
                 addOptional(input_parser,'lev',opts.lev, @isnumeric);
@@ -86,7 +89,8 @@ classdef OPTS
                 addOptional(input_parser,'calculate_mass',opts.calculate_mass,@islogical);
                 addOptional(input_parser,'normalize_by_mass',opts.normalize_by_mass,@islogical);
                 addOptional(input_parser,'update_params_each_timestep',opts.update_params_each_timestep,@islogical);
-
+                addOptional(input_parser,'fast_FG_matrix_assembly',opts.fast_FG_matrix_assembly,@islogical);
+                addOptional(input_parser,'build_realspace_output',opts.build_realspace_output,@islogical); %False will not construct realspace variables
                 
                 parse(input_parser,varargin{:}{:})
                 
@@ -143,9 +147,11 @@ classdef OPTS
                 opts.num_steps = input_parser.Results.num_steps;
                 opts.start_time = input_parser.Results.start_time;
                 opts.update_params_each_timestep = input_parser.Results.update_params_each_timestep;
+                opts.fast_FG_matrix_assembly = input_parser.Results.fast_FG_matrix_assembly;
+                opts.build_realspace_output = input_parser.Results.build_realspace_output;
                 
                 opts.build_A = false;
-                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential'}))>0
+                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential','IMEX'}))>0
                     opts.build_A = true;
                 end
                 
@@ -199,6 +205,10 @@ classdef OPTS
                     disp(input_parser.Unmatched)
                     error('Unrecognised input.')
                 end
+                
+                %if ~strcmp(opts.grid_type,'FG') && opts.fast_FG_matrix_assembly
+                %    error("Do not set fast_FG_matrix_assembly unless using 'grid_type','FG'");
+                %end
                 
             end
             
