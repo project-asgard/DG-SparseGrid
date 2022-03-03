@@ -6,6 +6,8 @@ d_v = 1.0; % Velocity space dimensions hard coded.
 
 BCs = 'HOMOGENEOUS'; % Boundary conditions hard coded (Options: 'PERIODIC', 'HOMOGENEOUS')
 
+NumFlux = 'KiU'; % Numerical Flux Function (Options: 'LLF', 'KiU' )
+
 lev = opts.lev;
 deg = opts.deg;
 
@@ -113,9 +115,10 @@ for i = 1 : N + 1
     
     [ D_L, U_L, T_L ] = Primitive( rho_1_L, rho_2_L, rho_3_L, d_v );
     
-    Cs_L = sqrt( (2.0+d_v) * T_L / d_v );
-    
-    Lambda_L = max( [ abs(U_L+Cs_L), abs(U_L-Cs_L) ] );
+    if( strcmp( NumFlux, 'LLF' ) )
+      Cs_L = sqrt( (2.0+d_v) * T_L / d_v );
+      Lambda_L = max( [ abs(U_L+Cs_L), abs(U_L-Cs_L) ] );
+    end
     
     [ F_1_L, F_2_L, F_3_L ] = FluxVector( D_L, U_L, T_L, d_v );
     
@@ -127,19 +130,37 @@ for i = 1 : N + 1
     
     [ D_R, U_R, T_R ] = Primitive( rho_1_R, rho_2_R, rho_3_R, d_v );
     
-    Cs_R = sqrt( (2.0+d_v) * T_R / d_v );
-    
-    Lambda_R = max( [ abs(U_R+Cs_R), abs(U_R-Cs_R) ] );
+    if( strcmp( NumFlux, 'LLF' ) )
+      Cs_R = sqrt( (2.0+d_v) * T_R / d_v );
+      Lambda_R = max( [ abs(U_R+Cs_R), abs(U_R-Cs_R) ] );
+    end
     
     [ F_1_R, F_2_R, F_3_R ] = FluxVector( D_R, U_R, T_R, d_v );
     
     %% Numerical Flux
     
-    alpha = max( [ Lambda_L, Lambda_R ] );
-    
-    F_1_Num(i) = NumericalFlux_LLF( rho_1_L, rho_1_R, F_1_L, F_1_R, alpha );
-    F_2_Num(i) = NumericalFlux_LLF( rho_2_L, rho_2_R, F_2_L, F_2_R, alpha );
-    F_3_Num(i) = NumericalFlux_LLF( rho_3_L, rho_3_R, F_3_L, F_3_R, alpha );
+    if( strcmp( NumFlux, 'LLF' ) )
+      
+      alpha = max( [ Lambda_L, Lambda_R ] );
+      
+      [ F_1_Num(i), F_2_Num(i), F_3_Num(i) ]...
+        = NumericalFlux_LLF...
+            ( [ rho_1_L, rho_2_L, rho_3_L ],...
+              [ rho_1_R, rho_2_R, rho_3_R ],...
+              [ F_1_L, F_2_L, F_3_L ],...
+              [ F_1_R, F_2_R, F_3_R ],...
+              alpha );
+      
+    else
+      
+      [ F_1_Num(i), F_2_Num(i), F_3_Num(i) ]...
+        = NumericalFlux_KineticUpwind...
+            ( [ D_L, U_L, T_L ],...
+              [ D_R, U_R, T_R ],...
+              [ F_1_L, F_2_L, F_3_L ],...
+              [ F_1_R, F_2_R, F_3_R ] );
+      
+    end
     
 end
 
@@ -180,22 +201,58 @@ end
 
 function [ N, U, T ] = Primitive( rho_1, rho_2, rho_3, d_v )
 
-N = rho_1;
-U = rho_2 ./ rho_1;
-T = ( 2.0 * rho_3 - rho_2.^2 ./ rho_1 ) ./ ( d_v * rho_1 );
+  N = rho_1;
+  U = rho_2 ./ rho_1;
+  T = max(( 2.0 * rho_3 - rho_2.^2 ./ rho_1 ) ./ ( d_v * rho_1 ),1.0e-8);
 
 end
 
 function [ F_1, F_2, F_3 ] = FluxVector( N, U, T, d_v )
 
-F_1 = N .* U;
-F_2 = N .* ( U.^2 + T );
-F_3 = 0.5 .* N .* ( U.^2 + (d_v+2) * T ) .* U;
+  F_1 = N .* U;
+  F_2 = N .* ( U.^2 + T );
+  F_3 = 0.5 .* N .* ( U.^2 + (d_v+2) * T ) .* U;
 
 end
 
-function [ F_Num ] = NumericalFlux_LLF( rho_L, rho_R, F_L, F_R, alpha )
+function [ F_Num_1, F_Num_2, F_Num_3 ]...
+  = NumericalFlux_LLF( rho_L, rho_R, F_L, F_R, alpha )
 
-F_Num = 0.5 .* ( F_R + F_L - alpha .* ( rho_R - rho_L ) );
+  F_Num_1 = 0.5 .* ( F_R(1) + F_L(1) - alpha .* ( rho_R(1) - rho_L(1) ) );
+  F_Num_2 = 0.5 .* ( F_R(2) + F_L(2) - alpha .* ( rho_R(2) - rho_L(2) ) );
+  F_Num_3 = 0.5 .* ( F_R(3) + F_L(3) - alpha .* ( rho_R(3) - rho_L(3) ) );
+
+end
+
+function [ F_Num_1, F_Num_2, F_Num_3 ]...
+  = NumericalFlux_KineticUpwind( P_L, P_R, F_L, F_R )
+
+  % --- (P(1),P(2),P(3)) = (N,U,T) ---
+
+  [ U_1_L, U_2_L, U_3_L ] = MaxwellMoments( P_L(1), P_L(2), P_L(3) );
+  [ U_1_R, U_2_R, U_3_R ] = MaxwellMoments( P_R(1), P_R(2), P_R(3) );
+
+  F_Num_1 = 0.5 .* ( F_R(1) + F_L(1) - ( U_1_R - U_1_L ) );
+  F_Num_2 = 0.5 .* ( F_R(2) + F_L(2) - ( U_2_R - U_2_L ) );
+  F_Num_3 = 0.5 .* ( F_R(3) + F_L(3) - ( U_3_R - U_3_L ) );
+
+end
+
+function [ U_1, U_2, U_3 ] = MaxwellMoments( N, U, T )
+
+  % --- Note: Assumes d_v = 1 ---
+
+  assert( N >= 0.0, 'MaxwellMoments: N<0' )
+  assert( T >= 0.0, 'MaxwellMoments: T<0' )
+  
+  term_a = sqrt( 2.0 * pi * T );
+  term_b = N / term_a;
+  term_c = U / sqrt( 2.0 * T );
+  term_d = exp( - term_c^2 );
+  term_e = erf(   term_c );
+  
+  U_1 = term_b * ( 2.0 * T               * term_d +                     U * term_a * term_e );
+  U_2 = term_b * ( 2.0 * T *           U * term_d +               (U^2+T) * term_a * term_e );
+  U_3 = term_b * ( 2.0 * T * (0.5*U^2+T) * term_d + 0.5 * (U^2+3.0*T) * U * term_a * term_e );
 
 end
