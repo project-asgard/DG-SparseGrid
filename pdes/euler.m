@@ -1,4 +1,4 @@
-function pde = euler_soundwaves(opts)
+function pde = euler(opts)
 
 %% Define the dimensions
 
