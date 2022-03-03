@@ -10,7 +10,7 @@ function pde = vlasov_lb_full_f(opts)
 %
 %
 % implicit
-% asgard(@vlasov_lb_full_f,'timestep_method','IMEX','deg',3,'lev',[8 3],'dt',0.0002,'num_steps',500,'grid_type','FG','fast_FG_matrix_assembly',true,'output_grid','interp')
+% asgard(@vlasov_lb_full_f,'timestep_method','IMEX','deg',3,'lev',[8 3],'dt',0.0002,'num_steps',500,'grid_type','FG','output_grid','interp','quiet',true,'build_realspace_output',false)
 %
 
 soln_x = @(x,p,t)  0*x+1;
