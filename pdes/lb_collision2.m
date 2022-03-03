@@ -2,7 +2,7 @@ function pde = lb_collision2(opts)
 % Lenard-Bernstein Equation in 2D
 %
 % PDE:
-% 
+%
 % df/dt = div( (v-u)f + th\grad f)
 %
 % Domain is [vx_min,vx_max]x[vy_min,vy_max]
@@ -19,9 +19,13 @@ function pde = lb_collision2(opts)
 % implicit
 % asgard(@lb_collision2,'timestep_method','BE','dt',0.2,'num_steps',20,'case',2,'lev',4,'deg',3,'grid_type','SG')
 %
+% cyclotron motion test case
+% asgard(@lb_collision2,'timestep_method','BE','dt',0.2,'num_steps',10,'case',4,'lev',3,'deg',6,'grid_type','SG','time_independent_build_A',true)
+%
 % case = 1 % Initial Condition: Square
 % case = 2 % Initial Condition: Maxwellian
 % case = 3 % Initial Condition: Double Maxwellian
+% case = 4 % Cyclotron motion only
 
 %% Macro-Micro?
 
@@ -57,6 +61,16 @@ switch opts.case_
         vx_max = +5.0;
         vy_min = -5.0;
         vy_max = +5.0;
+    case 4
+        params.Bz = 2;
+        params.n  = 1.0; % Density
+        params.ux = 0.0; % Velocity (x)
+        params.uy = 0.0; % Velocity (y)
+        params.th = 1.0/3.0; % Temperature
+        vx_min = -4.0;
+        vx_max = +4.0;
+        vy_min = -4.0;
+        vy_max = +4.0;
     otherwise
 end
 
@@ -90,6 +104,16 @@ switch opts.case_
     case 3
         soln_x = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
         soln_y = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
+        soln_t = @(t,p) 0*t+1;
+        soln1  = new_md_func(num_dims,{soln_x,soln_y,soln_t});
+    case 4
+        if MM
+            soln_x = @(x,p,t) 0*x;
+            soln_y = @(y,p,t) 0*y;
+        else
+            soln_x = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
+            soln_y = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
+        end
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_x,soln_y,soln_t});
     otherwise
@@ -134,6 +158,13 @@ switch opts.case_
         ic1   = new_md_func(num_dims,{ic1_x,ic1_y,ic_t});
         ic2   = new_md_func(num_dims,{ic2_x,ic2_y,ic_t});
         initial_conditions = {ic1,ic2};
+    case 4
+        sig = 0.5;
+        ic1_x = @(x,p,t) 1.0/sqrt(pi)*exp(-(x-1.0).^2/sig);
+        ic1_y = @(y,p,t) 1.0/sqrt(pi)*exp(-(y-0.0).^2/sig);
+        ic_t  = @(t,p) 0*t+1;
+        ic1   = new_md_func(num_dims,{ic1_x,ic1_y,ic_t});
+        initial_conditions = {ic1};
     otherwise
         ic_x = soln_x;
         ic_y = soln_y;
@@ -188,7 +219,7 @@ dV = @(x,p,t,dat) 0*x+1;
 %%
 % Setup the advection terms div( (v-u)f ) = d/dx((vx-ux)f) + d/dy((vy-uy)f)
 
-%% 
+%%
 % d/dx((vx-ux)f)
 
 g1 = @(x,p,t,dat) x-p.ux;
@@ -203,7 +234,7 @@ pterm1  = DIV(num_dims,g1,'',-1,'D','D',BCL,BCR,'',dV);
 term2_y = SD_TERM({pterm1});
 term2   = MD_TERM(num_dims,{[],term2_y});
 
-%% 
+%%
 % Setup the diffusion term div(theta\grad f) term
 %
 % div(theta\grad f) is the system
@@ -249,7 +280,55 @@ term4_y = SD_TERM({pterm1,pterm2});
 
 term4 = MD_TERM(num_dims,{term4_x,term4_y});
 
-terms = {term1,term2,term3,term4};
+%%
+% v x B transport (cyclotron motion around a prescribed B vector B=Bz*zhat
+% DLG Note: we have to split each single dimension advection term up into 
+%           2 terms to allow for upwinding of different signs, resulting in 4 terms
+%           (term5a,term5b and term6a,term6b)
+
+% -d/dvx(vy*Bz*f) => vy*Bz * d/dvx(f)
+
+g = @(vx,p,t,d) vx.*0+1;
+pterm = DIV(num_dims,g,'',-1,'N','D',BCL,BCR,'',dV);
+term5_vx = SD_TERM({pterm});
+g = @(vy,p,t,d) (-vy.*p.Bz) .* (vy<=0);
+pterm = MASS(g);
+term5_vy = SD_TERM({pterm});
+term5a = MD_TERM(num_dims,{term5_vx,term5_vy});
+
+g = @(vx,p,t,d) vx.*0+1;
+pterm = DIV(num_dims,g,'',+1,'D','N',BCL,BCR,'',dV);
+term5_vx = SD_TERM({pterm});
+g = @(vy,p,t,d) (-vy.*p.Bz) .* (vy>0);
+pterm = MASS(g);
+term5_vy = SD_TERM({pterm});
+term5b = MD_TERM(num_dims,{term5_vx,term5_vy});
+
+% +d/dvy(vx*Bz*f) => vx*Bz * d/dvy(f)
+
+g = @(vx,p,t,d) (vx.*p.Bz) .* (vx>=0);
+pterm = MASS(g);
+term6_vx = SD_TERM({pterm});
+g = @(vy,p,t,d) vy.*0 + 1;
+pterm = DIV(num_dims,g,'',-1,'N','D',BCL,BCR,'',dV);
+term6_vy = SD_TERM({pterm});
+term6a = MD_TERM(num_dims,{term6_vx,term6_vy});
+
+g = @(vx,p,t,d) (vx.*p.Bz) .* (vx<0);
+pterm = MASS(g);
+term6_vx = SD_TERM({pterm});
+g = @(vy,p,t,d) vy.*0 + 1;
+pterm = DIV(num_dims,g,'',+1,'D','N',BCL,BCR,'',dV);
+term6_vy = SD_TERM({pterm});
+term6b = MD_TERM(num_dims,{term6_vx,term6_vy});
+
+switch opts.case_
+    case 4
+        terms = {term5a,term5b,term6a,term6b};
+    otherwise
+        terms = {term1,term2,term3,term4};
+end
+
 
 %% Define some parameters and add to pde object.
 %  These might be used within the various functions below.
@@ -264,7 +343,7 @@ sources = {};
 %% Define a function to set dt
 
     function dt=set_dt(pde,CFL)
-        dims = pde.dimensions;      
+        dims = pde.dimensions;
         % for Diffusion equation: dt = C * dx^2
         lev = dims{1}.lev;
         dx = 1/2^lev;

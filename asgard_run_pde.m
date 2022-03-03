@@ -275,6 +275,7 @@ end
 %% Time Loop
 count=1;
 err = 1e9;
+sol = 0;
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:opts.num_steps
     
@@ -348,7 +349,17 @@ for L = 1:opts.num_steps
         if write_A_data && L==1; write_A_data_to_file(A_data,lev,deg); end
         
         fval_unstepped = fval;
-        fval = time_advance(pde,opts,A_data,fval,t,dt,opts.deg,hash_table,[],[]);
+        if strcmp(opts.timestep_method,'ode15s') && L>1
+            disp('L>1 using sol');
+            if L == opts.num_steps
+                disp('');
+            end
+            fval = deval(sol,t+dt);
+        else
+            disp('L==1 generating sol');
+            [fval,sol] = time_advance(pde,opts,A_data,fval,t,dt,opts.deg,hash_table,[],[]);
+        end
+
         if opts.build_realspace_output
             fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
         end
