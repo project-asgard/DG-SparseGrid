@@ -37,7 +37,8 @@ for i=1:num_elements
     else
     end
     
-    clear kronMatList;
+    %clear kronMatList;
+    kron_mat_list = cell(nDims,1);
     for d=1:nDims
         
         if opts.use_oldhash

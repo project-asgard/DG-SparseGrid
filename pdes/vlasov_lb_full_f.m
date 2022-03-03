@@ -160,8 +160,8 @@ term_x = SD_TERM({pterm1,pterm2});
 
 g1 = @(x,p,t,dat) 0*x+1;
 g2 = @(x,p,t,dat) 0*x+1;
-pterm1  =  DIV(num_dims,g1,'',-1,'D','D','','','',dV);
-pterm2  = GRAD(num_dims,g2,'',+1,'N','N','','','',dV);
+pterm1  =  DIV(num_dims,g1,'',0,'D','D','','','',dV);
+pterm2  = GRAD(num_dims,g2,'',0,'D','D','','','',dV);
 term_v = SD_TERM({pterm1,pterm2});
 
 term5   = MD_TERM(num_dims,{term_x,term_v},'I');
