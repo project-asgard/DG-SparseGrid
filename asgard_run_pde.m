@@ -350,13 +350,8 @@ for L = 1:opts.num_steps
         
         fval_unstepped = fval;
         if strcmp(opts.timestep_method,'ode15s') && L>1
-            disp('L>1 using sol');
-            if L == opts.num_steps
-                disp('');
-            end
             fval = deval(sol,t+dt);
         else
-            disp('L==1 generating sol');
             [fval,sol] = time_advance(pde,opts,A_data,fval,t,dt,opts.deg,hash_table,[],[]);
         end
 
