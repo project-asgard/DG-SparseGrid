@@ -1,4 +1,4 @@
-function [ftmp, A, ALHS] = apply_A (pde,opts,A_data,f,deg,Vmax,Emax)
+function [ftmp, A, ALHS] = apply_A (pde,opts,A_data,f,deg,Vmax,Emax,imex_flag)
 
 %-----------------------------------
 % Multiply Matrix A by Vector f
@@ -15,6 +15,19 @@ use_kronmultd = 1;
 num_terms     = numel(pde.terms);
 num_terms_LHS = numel(pde.termsLHS);
 num_dims      = numel(pde.dimensions);
+
+if nargin < 8
+    imex_flag = 'N';
+end
+
+term_vec = [];
+for i=1:num_terms
+    if strcmp(imex_flag,pde.terms{i}.imex)
+        term_vec = [term_vec i];
+    end
+end
+
+num_terms = numel(term_vec);
 
 %%
 % Tensor product encoding over DOF within an element, i.e., over "deg" (A_Data),
@@ -69,9 +82,9 @@ if opts.build_A && opts.fast_FG_matrix_assembly
     
     % Construct full-grid A and ALHS
     A_F = 0;
-    for i=1:numel(pde.terms)
-        A_F = A_F + kron(pde.terms{i}.terms_1D{1}.mat,...
-            pde.terms{i}.terms_1D{2}.mat);
+    for i=1:num_terms
+        A_F = A_F + kron(pde.terms{term_vec(i)}.terms_1D{1}.mat,...
+            pde.terms{term_vec(i)}.terms_1D{2}.mat);
     end
     A = A_F(iperm,iperm);
     
@@ -150,7 +163,7 @@ else % do not use fast_FG_matrix_assembly
                 for d=1:num_dims
                     idx_i = Index_I{d};
                     idx_j = Index_J{d};
-                    tmp = pde.terms{t}.terms_1D{d}.mat;
+                    tmp = pde.terms{term_vec(t)}.terms_1D{d}.mat;
                     kron_mat_list{d} = tmp(idx_i,idx_j); % List of tmpA, tmpB, ... tmpD used in kron_mult
                 end
                 

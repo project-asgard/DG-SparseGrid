@@ -148,7 +148,7 @@ for i=0:N-1
     
     %%
     % div matrix u . v'
-    G1 = pterm.g(quad_xi,params,t,dat_R_quad) .* pterm.dV(quad_xi,params,t);
+    %G1 = pterm.g(quad_xi,params,t,dat_R_quad) .* pterm.dV(quad_xi,params,t);
     val_div  = -Dp_val'* (G1 .* p_val .* quad_w) * Jacobi;
     
     assert(~isnan(norm(G1)))
@@ -160,13 +160,13 @@ for i=0:N-1
     
     % this is just here demonstrate a more intuituve way to do this
     % += operation across an aribtray set on indices
-    mass_not_rotated = full(mass);
-    linear_idx = sub2ind(size(mass_not_rotated),Iu',Iu);
-    mass_not_rotated(linear_idx) = val_mass;
+    %mass_not_rotated = full(mass);
+    %linear_idx = sub2ind(size(mass_not_rotated),Iu',Iu);
+    %mass_not_rotated(linear_idx) = val_mass;
     
-    div_not_rotated = full(mass);
-    linear_idx = sub2ind(size(div_not_rotated),Iu',Iu);
-    div_not_rotated(linear_idx) = val_div;
+    %div_not_rotated = full(mass);
+    %linear_idx = sub2ind(size(div_not_rotated),Iu',Iu);
+    %div_not_rotated(linear_idx) = val_div;
     
     assert(~isnan(sum(mass,'all')))
     assert(~isnan(sum(div,'all')))
@@ -310,8 +310,8 @@ for i=0:N-1
         
         % this is just here demonstrate a more intuituve way to do this
         % += operation across an aribtray set on indices
-        linear_idx = sub2ind(size(div_not_rotated),Iu,Iv);
-        div_not_rotated(linear_idx) = div_not_rotated(linear_idx) + Val;
+        %linear_idx = sub2ind(size(div_not_rotated),Iu,Iv);
+        %div_not_rotated(linear_idx) = div_not_rotated(linear_idx) + Val;
         
         div = div + sparse(Iu,Iv,Val,dof_1D,dof_1D);
         assert(~isnan(sum(div,'all')))
@@ -332,17 +332,27 @@ grad_not_rotated = grad;
 %% Transform coeff_mat to wavelet space
 % mat = FMWT * mat * FMWT';
 
-left_notrans = 'LN';
-right_trans  = 'RT';
+%% This is slow in matlab (not in C++).  Using old version for speed.
+%% DO NOT ADD TO C++ VERSION 
 
-mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, mass, left_notrans);
-mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, mass,  right_trans);
+FMWT = OperatorTwoScale_wavelet2(deg,coeff_level);
 
-div  = apply_FMWT_blocks(coeff_level, FMWT_blocks,  div, left_notrans);
-div  = apply_FMWT_blocks(coeff_level, FMWT_blocks,  div,  right_trans);
+mass = FMWT*mass*FMWT';
+div = FMWT*div*FMWT';
+grad = FMWT*grad*FMWT';
 
-grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, grad, left_notrans);
-grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, grad,  right_trans);
+%% USE THIS VERSION
+% left_notrans = 'LN';
+% right_trans  = 'RT';
+%
+% mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, mass, left_notrans);
+% mass = apply_FMWT_blocks(coeff_level, FMWT_blocks, mass,  right_trans);
+% 
+% div  = apply_FMWT_blocks(coeff_level, FMWT_blocks,  div, left_notrans);
+% div  = apply_FMWT_blocks(coeff_level, FMWT_blocks,  div,  right_trans);
+% 
+% grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, grad, left_notrans);
+% grad = apply_FMWT_blocks(coeff_level, FMWT_blocks, grad,  right_trans);
 
 assert(~isnan(sum(mass,'all')))
 assert(~isnan(sum( div,'all')))

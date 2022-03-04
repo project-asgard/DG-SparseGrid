@@ -31,6 +31,16 @@ dim_y.moment_dV = @(y,p,t,dat) 0*y+1;
 dimensions = {dim_x,dim_y};
 num_dims = numel(dimensions);
 
+%% Construct moments
+
+%mass moment
+moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
+                                    @(x,p,t) 0*x+1,...
+                                    @(p,t)   0*t+1});
+moment0 = MOMENT({moment_func});
+
+moments = {moment0};
+
 %% Initial conditions
 ic1 = new_md_func(num_dims,{soln_x,soln_y,soln_t});
 initial_conditions = {ic1};
@@ -119,7 +129,7 @@ solutions = {soln1};
 
 %% Construct PDE
 
-pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions);
+pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions,moments);
 
 end
 

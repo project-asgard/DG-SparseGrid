@@ -20,7 +20,7 @@ else
     error('Save output for num_dimensions >3 not yet implemented');
 end
 
-store_alpha_only = true;
+store_alpha_only = false;
 if store_alpha_only
     outputs_all = outputs;
     clear outputs;

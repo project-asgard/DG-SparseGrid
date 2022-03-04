@@ -19,6 +19,7 @@ classdef PDE
         % (all PDEs will transition to this soon)
         solutions = {};
         initial_conditions = {};
+        moments = {};
         
         % Old hash table - to be removed when support for oldhashtable is
         % removed
@@ -37,7 +38,7 @@ classdef PDE
             end
         end
         
-        function pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,set_dt,analytic_solutions_1D,initial_conditions_MSC,solutions_MSC)
+        function pde = PDE(opts,dimensions,terms,LHS_terms,sources,params,set_dt,analytic_solutions_1D,initial_conditions_MSC,solutions_MSC,moments_MSC)
             
             pde.dimensions = dimensions;
             pde.terms = terms;
@@ -50,6 +51,19 @@ classdef PDE
             if nargin > 8
                 pde.solutions = solutions_MSC;
                 pde.initial_conditions = initial_conditions_MSC;
+            end
+            if nargin > 10                
+                %Add moments from input
+                pde.moments = moments_MSC; 
+            else
+                %Create mass moment for asgard run
+                num_dims = numel(dimensions);
+                moment_cell = cell(num_dims+1,1);
+                for i=1:num_dims
+                    moment_cell{i} = @(x,p,t) 0*x+1; %Initialize to 1
+                end
+                moment_cell{num_dims+1} = @(t,p) 0*t+1;
+                pde.moments = {MOMENT({new_md_func(num_dims,moment_cell)})};
             end
             
             pde.dimensions = set_levels(opts.lev,dimensions);

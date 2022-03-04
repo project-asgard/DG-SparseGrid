@@ -1,4 +1,6 @@
-function f = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+function [f,sol] = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+
+sol = 0;
 
 if strcmp(opts.timestep_method,'BE')
     % Backward Euler (BE) first order
@@ -15,9 +17,12 @@ elseif strcmp(opts.timestep_method,'time_independent')
 elseif strcmp(opts.timestep_method,'CN')
     % Crank Nicolson (CN) second order
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+elseif strcmp(opts.timestep_method,'IMEX')
+    % IMEX
+    f = imex(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45','ode23s'}))>0
     % One of the atlab ODE integrators.
-    f = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    [f,sol] = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 else
     % RK3 TVD
     f = RungeKutta3(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -27,7 +32,18 @@ end
 
 %% Use Matlab ODE solvers
 
-function fval = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
+function [fout,sol] = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
+
+% when using the matlab ODE integrators we just pass them the start and
+% final time (when 'time_independent_A','true') and have it return the
+% intermeadiate times
+
+if opts.time_independent_build_A
+    tf = (opts.num_steps+1) * dt; % the +1 here is to account for very small deviations in the end time requested from sol
+    times = [t0:dt:tf];
+else
+    times = [t0,t0+dt];
+end
 
 clear strCR;
 
@@ -65,7 +81,8 @@ if strcmp(opts.timestep_method,'ode45')
         stats = 'on';
     end
     options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats',stats);
-    [tout,fout] = ode45(@explicit_ode,[t0 t0+dt],f0,options);
+    sol = ode45(@explicit_ode,[t0 t0+dt],f0,options);
+    fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode15s')
     
@@ -95,7 +112,9 @@ elseif strcmp(opts.timestep_method,'ode15s')
     end
     options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
         'Stats',stats,'OutputFcn',output_func,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
-    [tout,fout] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+%      [tout,fout0] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
+     sol = ode15s(@explicit_ode,times,f0,options);
+     fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode23s')
     
@@ -108,7 +127,8 @@ elseif strcmp(opts.timestep_method,'ode23s')
         output_func = @odetpbar;
     end
     options = odeset('Stats',stats,'OutputFcn',output_func);
-    [tout,fout] = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
+    sol = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
+    fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode15i')
 
@@ -119,11 +139,11 @@ elseif strcmp(opts.timestep_method,'ode15i')
     dfdt0 = f0.*0;
     [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
     if(~opts.quiet);disp('Using ode15i');end
-    [tout,fout] = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
-    
+    sol = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
+    fout = deval(sol,t0+dt);
 end
 
-fval = reshape(fout(end,:),size(f0));
+% fval = reshape(fout(end,:),size(f0));
 
 end
 
@@ -472,6 +492,204 @@ else % use the backslash operator for time_indepent_A = false
         b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
     end
     f1 = AA \ b;
+end
+
+end
+
+function f1 = imex(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+
+persistent pde_1d
+persistent nodes
+persistent Meval
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% C++ Implementation Notes %%%%%%%%%%%%%%%%%%%%%%%
+
+% the fast_2d_matrix_apply routine should not be 
+% implemented in the C++ version.  It is only there to
+% make the MATLAB version viable for 1+1 runs.
+
+% Use the standard apply_A routine instead.  It will need
+% to be modified to incorporate the imex_flags.  This is
+% already done in the matlab version.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%Switch for IMEX iteration: 
+% 1 : Backward Euler in explicit terms 'E',
+%     Backward Euler in implicit terms 'I'.
+% 0 : SSP-RK2 IMEX.  'E' terms are actually handled explicitly.
+
+%%% C++ : Focus on the case BEFE = 0
+
+BEFE = 0;
+
+if isempty(Meval)
+    %Compute everything that will not change per time iteration
+
+    %Get quadrature points in realspace stiffness matrix calculation
+    [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
+    
+    %Make fake pde file for use in physical realspace transformation
+    pde_1d.dimensions = pde.dimensions(1);
+        
+end
+
+%Create moment matrices that take DG function in (x,v) and transfer it
+%to DG function in x.
+if numel(pde.dimensions) >= 2
+    moment_mat = cell(numel(pde.moments),1);
+    for i=1:numel(pde.moments)
+        moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
+    end
+end
+
+hash_table_1D = hash_table_2D_to_1D(hash_table,opts);
+
+assert(isempty(pde.termsLHS),'LHS terms currently not supported by IMEX');
+%Ignoring sources for now
+assert(isempty(pde.sources),'Sources currently not supported by IMEX');
+
+if BEFE
+
+    %Explicit Update
+    [f_E,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'E'),f0,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
+
+    %Now get moments
+    mom0 = moment_mat{1}*f_E; %integral of (f,1)_v
+    mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
+    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'linear','extrap');
+
+    mom1 = moment_mat{2}*f_E; %integral of (f,v)_v
+    mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
+    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'linear','extrap')./pde.params.n(x);
+
+    mom2 = moment_mat{3}*f_E; %integral of (f,v^2)_v
+    mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
+    pde.params.th = @(x) interp1(nodes,mom2_real,x,'linear','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+
+    if ~opts.quiet
+        figure(1000);
+        subplot(2,2,1);
+        plot(nodes,pde.params.n(nodes));
+        title('n_f');
+        subplot(2,2,2);
+        plot(nodes,pde.params.u(nodes));
+        title('u_f');
+        subplot(2,2,3);
+        plot(nodes,pde.params.th(nodes));
+        title('th_f');
+        sgtitle("Fluid Variables. t = "+num2str(t+dt));
+    end
+
+    %Update coefficients
+    pde = get_coeff_mats(pde,opts,t,0);
+
+    %Implicit Update
+    [f1,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_E,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
+
+else %%Trying imex deg 2 version
+    %Here f1 = f^{n+1}, f0 = f^n
+    
+    %%%%%
+    %%% First stage
+    %%%%%
+    
+    % nothing happens  f_1 = f_n
+    
+    %%%%%
+    %%% Second stage
+    %%%%%
+    
+    %Explicit step
+    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
+    
+    %Create rho_2s
+    mom0 = moment_mat{1}*f_2s; %integral of (f,1)_v
+    mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
+    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
+
+    mom1 = moment_mat{2}*f_2s; %integral of (f,v)_v
+    mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
+    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
+
+    mom2 = moment_mat{3}*f_2s; %integral of (f,v^2)_v
+    mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
+    pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+        
+    %Update coefficients
+    pde = get_coeff_mats(pde,opts,t,0);
+    
+    %f2 now
+    [f_2,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_2s,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
+    
+    %%%%%
+    %%% Third stage
+    %%%%%
+    
+    f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
+              + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
+    
+    %Create rho_3s
+    mom0 = moment_mat{1}*f_3s; %integral of (f,1)_v
+    mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
+    %mom0_vals = singleD_to_multiD(num_dims-1,mom0_real,nodes(1));
+    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
+
+    mom1 = moment_mat{2}*f_3s; %integral of (f,v)_v
+    mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
+    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
+
+    mom2 = moment_mat{3}*f_3s; %integral of (f,v^2)_v
+    mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
+    pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+        
+    %Update coefficients
+    pde = get_coeff_mats(pde,opts,t,0);
+
+    [f_3,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f0));
+    if flag ~= 0
+        fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
+        assert(relres < 1e-10)
+    end
+    
+    %Update timestep to final stage
+    f1 = f_3;
+    
+    %Plot moments
+    if ~opts.quiet || 1
+        
+        fig1 = figure(1000);
+        fig1.Units = 'Normalized';
+        fig1.Position = [0.5 0.5 0.3 0.3];
+        subplot(2,2,1);
+        plot(nodes,pde.params.n(nodes));
+        title('n_f');
+        subplot(2,2,2);
+        plot(nodes,pde.params.u(nodes));
+        title('u_f');
+        subplot(2,2,3);
+        plot(nodes,pde.params.th(nodes));
+        title('th_f');
+        sgtitle("Fluid Variables. t = "+num2str(t+dt));
+        drawnow
+        
+    end
+    
 end
 
 end

@@ -67,6 +67,11 @@ elseif strcmp(opts.output_grid,'dual_valued')
     quad_x_interior_element  = [-1 quad_x_interior_element' +1]';
     dof = numel(quad_x_interior_element);
     Meval = sparse(dof*n,dof_1D);
+elseif strcmp(opts.output_grid,'interp')
+    % output on quadrature points (quad_x) used in matrix construction
+    [quad_x_interior_element,~]=lgwt(default_quad_number(deg),-1,1);
+    dof = numel(quad_x_interior_element);
+    Meval = sparse(dof*n,dof_1D);
 else   
     % output on quadrature points (quad_x) without end points
     [quad_x_interior_element,~]=lgwt(deg,-1,1);
