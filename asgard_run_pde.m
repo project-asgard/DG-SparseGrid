@@ -276,6 +276,10 @@ end
 count=1;
 err = 1e9;
 sol = 0;
+if opts.record_video
+    v = VideoWriter('video.avi','MPEG-4');
+    open(v);
+end
 if ~opts.quiet; disp('Advancing time ...'); end
 for L = 1:opts.num_steps
     
@@ -522,6 +526,11 @@ for L = 1:opts.num_steps
                        
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
             
+            if opts.record_video
+                frame = getframe(gcf);
+                writeVideo(v,frame);
+            end
+            
             % this is just for the RE paper
             plot_fval_in_cyl = false;
             if plot_fval_in_cyl
@@ -626,9 +635,11 @@ for L = 1:opts.num_steps
         plot_val = get_moments_for_plot(pde);
         semilogy(abs(plot_val));
     end
-    
+         
+end
 
-       
+if opts.record_video
+   close(v); 
 end
 
 outputs.pde = pde;

@@ -39,6 +39,7 @@ classdef OPTS
         num_steps = 5;
         cmd_args = '';
         update_params_each_timestep = false;
+        record_video = false;
         
     end
     
@@ -91,7 +92,8 @@ classdef OPTS
                 addOptional(input_parser,'update_params_each_timestep',opts.update_params_each_timestep,@islogical);
                 addOptional(input_parser,'fast_FG_matrix_assembly',opts.fast_FG_matrix_assembly,@islogical);
                 addOptional(input_parser,'build_realspace_output',opts.build_realspace_output,@islogical); %False will not construct realspace variables
-                
+                addOptional(input_parser,'record_video',opts.record_video,@islogical); 
+
                 parse(input_parser,varargin{:}{:})
                 
                 % CFL priority
@@ -149,7 +151,8 @@ classdef OPTS
                 opts.update_params_each_timestep = input_parser.Results.update_params_each_timestep;
                 opts.fast_FG_matrix_assembly = input_parser.Results.fast_FG_matrix_assembly;
                 opts.build_realspace_output = input_parser.Results.build_realspace_output;
-                
+                opts.record_video = input_parser.Results.record_video;
+      
                 opts.build_A = false;
                 if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential','IMEX'}))>0
                     opts.build_A = true;
