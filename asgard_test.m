@@ -320,11 +320,11 @@ disp('Testing fokkerplanck1_momentum_C (BE)');
 verifyLessThan(testCase,err,5.4e-2);
 end
 
-function asgard_fokkerplanck1_momentum_C_implicit_BE_TIA_test(testCase)
+function asgard_fokkerplanck1_momentum_C_implicit_BE_TIBA_test(testCase)
 addpath(genpath(pwd));
-disp('Testing fokkerplanck1_momentum_C (BE / TIA)');
+disp('Testing fokkerplanck1_momentum_C (BE / TIBA)');
 [err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,'timestep_method','BE', ...
-    'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_A',true);
+    'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_build_A',true);
 verifyLessThan(testCase,err,5.4e-2);
 end
 
@@ -341,6 +341,14 @@ addpath(genpath(pwd));
 disp('Testing fokkerplanck1_momentum_C (CN / TIA)');
 [err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,'timestep_method','CN', ...
     'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_A',true);
+verifyLessThan(testCase,err,5.4e-2);
+end
+
+function asgard_fokkerplanck1_momentum_C_implicit_CN_TIBA_test(testCase)
+addpath(genpath(pwd));
+disp('Testing fokkerplanck1_momentum_C (CN / TIBA)');
+[err,act_f,act_frs] = asgard(@fokkerplanck1_momentum_C,'timestep_method','CN', ...
+    'lev',3,'num_steps',30,'CFL',1.5,'quiet',true,'time_independent_build_A',true);
 verifyLessThan(testCase,err,5.4e-2);
 end
 

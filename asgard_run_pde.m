@@ -414,9 +414,9 @@ for L = 1:opts.num_steps
     if num_dims <=3 && opts.build_realspace_output
         
         %%
-        % Get the real space solution
+        % Get the real space solution 
         
-        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);       
         if opts.calculate_mass
             [pde,mass,~] = calculate_mass(pde,opts,fval,hash_table,t);
             mass_t(L+1) = mass(1);

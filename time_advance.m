@@ -271,162 +271,62 @@ applyLHS = ~isempty(pde.termsLHS);
 s0 = source_vector(pde,opts,hash_table,t+dt);
 bc0 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-if opts.time_independent_A || opts.time_independent_build_A
-    persistent A;
+build_A = true;
+persistent dA dALHS A ALHS;
+
+if opts.time_independent_A
+    if ~isempty(dA)
+        build_A = false;
+    end
+end
+if opts.time_independent_build_A
+    if ~isempty(A)
+        build_A = false;
+    end
 end
 
-if opts.time_independent_A % relies on inv() so is no good for poorly conditioned problems
-    persistent AA_inv;
-    persistent ALHS_inv;
-    
-    if isempty(AA_inv)
-        if applyLHS
-            [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-            I = speye(numel(diag(A)));
-            ALHS_inv = inv(ALHS);
-            AA = I - dt*(ALHS_inv * A);
-            b = f0 + dt*(ALHS_inv * (s0 + bc0));
-        else
-            [~,A] = apply_A(pde,opts,A_data,f0,deg);
-            I = speye(numel(diag(A)));
-            AA = I - dt*A;
-            b = f0 + dt*(s0 + bc0);
-        end
-        
-        if numel(AA(:,1)) <= 4096
-            condAA = condest(AA);
-            if ~opts.quiet; disp(['    condest(AA) : ', num2str(condAA,'%.1e')]); end
-            
-            if condAA > 1e6
-                disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
-                disp(['WARNING: cond(A) = ', num2str(condAA,'%.1e')]);
-            end
-        end
-        
-        AA_inv = inv(AA);
-        f1 = AA_inv * b;
-    else
-        if applyLHS
-            b = f0 + dt*(ALHS_inv * (s0 + bc0));
-        else
-            b = f0 + dt*(s0 + bc0);
-        end
-        f1 = AA_inv * b;
-    end
-    
-else % use the backslash operator instead
+if build_A
     if applyLHS
-        if opts.time_independent_build_A
-            if isempty(A);[~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);end
-        else
-            [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-        end
-        I = speye(numel(diag(A)));
-        AA = I - dt*(ALHS \ A);
-        b = f0 + dt*(ALHS \ (s0 + bc0));
+        [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);       
     else
-        if opts.time_independent_build_A
-            if isempty(A);[~,A] = apply_A(pde,opts,A_data,f0,deg);end
-        else
-            [~,A] = apply_A(pde,opts,A_data,f0,deg);
-        end
+        [~,A] = apply_A(pde,opts,A_data,f0,deg);
+    end
+else
+end
+
+if ~opts.time_independent_A || isempty(dA)
+    if applyLHS
+        AA = ALHS - dt*A;
+    else
         I = speye(numel(diag(A)));
         AA = I - dt*A;
-        b = f0 + dt*(s0 + bc0);
     end
-    
-    % Direct solve
-    rescale = false;
-    if rescale
-        %     [AA_rescaled,diag_scaling] = rescale2(AA);
-        %     AA_thresholded = sparsify(AA_rescaled,1e-5);
-        [P,R,C] = equilibrate(AA);
-        AA_rescaled = R*P*AA*C;
-        b_rescaled = R*P*b;
-        f1 = AA_rescaled \ b_rescaled;
-        f1 = C*f1;
-    else
-        f1 = AA \ b;
-    end
-    
-    %     % Pre-kron solve
-    %     num_terms = numel(pde.terms);
-    %     num_dims = numel(pde.dimensions);
-    %     for d=1:num_dims
-    %         dim_mat_list{d} = zeros(size(pde.terms{1}.terms_1D{1}.mat));
-    %         for t=1:num_terms
-    %             dim_mat_list{d} = dim_mat_list{d} + pde.terms{t}.terms_1D{d}.mat;
-    %         end
-    %     end
-    %     for d=1:num_dims
-    %         A = dim_mat_list{d};
-    %         I = speye(numel(diag(A)));
-    %         AA_d =  I - dt*A;
-    %         dim_mat_inv_list{d} = inv(AA_d);
-    %     end
-    %     use_kronmultd = true;
-    %     if use_kronmultd
-    %         f1a = kron_multd(num_dims,dim_mat_inv_list,b);
-    %     else
-    %         f1a = kron_multd_full(num_dims,dim_mat_inv_list,b);
-    %     end
-    
-    %     % Iterative solve
-    %     restart = [];
-    %     tol=1e-6;
-    %     maxit=1000;
-    %     tic;
-    %     [f10,flag,relres,iter,resvec] = gmres(AA,b,restart,tol,maxit);
-    %     t_gmres = toc;
-    %     figure(67)
-    %     semilogy(resvec);
-    %
-    %     % Direct solve - LU approach to reducing repeated work
-    %     [L,U,P] = lu(AA);
-    %     n=size(AA,1);
-    %     ip = P*reshape(1:n,n,1); % generate permutation vector
-    %     err = norm(AA(ip,:)-L*U,1); % err should be small
-    %     tol = 1e-9;
-    %     isok = (err <= tol * norm(AA,1) ); % just a check
-    %     disp(['isok for LU: ', num2str(isok)]);
-    %     % to solve   a linear system    A * x = b, we have   P * A * x = P*b
-    %     % then from LU factorization, we have (L * U) * x = (P*b),  so    x  = U \ (L \ ( P*b))
-    %     f1_LU =   U \ (L \  (P*b));
-    %
-    %     % Direct solve - QR reduced rank
-    %     n=size(AA,1);
-    %     [Q,R,P] = qr(AA); % A*P = Q*R
-    %     % where R is upper triangular,   Q is orthogonal, Q’*Q is identity, P is column permutation
-    %     err = norm( AA*P - Q*R,1);
-    %     tol=1e-9;
-    %     isok = (err <= tol * norm(AA,1));  % just a check
-    %     disp(['isok for QR: ', num2str(isok)]);
-    %     % to solve   A * x = b,   we have A * P * (P’*x) = b, (Q*R) * (P’*x) = b
-    %     % y =   R\(Q’*b),   P*y = x
-    %     tol=1e-9;
-    %     is_illcond = abs(R(n,n)) <= tol * abs(R(1,1));
-    %     if(is_illcond)
-    %         disp('is_illcond == true');
-    %         bhat = Q'*b;
-    %         y = zeros(n,1);
-    %         yhat =  R(1:(n-1), 1:(n-1)) \ bhat(1:(n-1));  % solve with smaller system
-    %         y(1:(n-1)) = yhat(1:(n-1));
-    %         y(n) = 0;  % force last component to be zero
-    %         f1_QR = P * y;
-    %     else
-    %         disp('is_illcond == false');
-    %         f1_QR = P * (R \ (Q'*b));
-    %     end
-    %
-    %     disp(['f1-f10:  ',num2str(norm(f1-f10)/norm(f1))]);
-    %     disp(['f1-f1_LU:  ',num2str(norm(f1-f1_LU)/norm(f1))]);
-    %     disp(['f1-f1_QR:  ',num2str(norm(f1-f1_QR)/norm(f1))]);
-    %     disp(['direct runtime: ', num2str(t_direct)]);
-    %     disp(['gmres runtime: ', num2str(t_gmres)]);
-    %
-    %     f1 = f1_QR;
-    
 end
+
+if applyLHS
+    b  = ALHS * (f0 + dt*(s0 + bc0));  
+else
+    b  = f0 + dt*(s0 + bc0);   
+end
+
+if opts.time_independent_A
+    if isempty(dA)
+        if ~opts.quiet;disp(['   Precomputing matrix decomposition ...']);end
+        if ~opts.quiet;disp(['     nnz/numel*100 (before droptol) = ', num2str(nnz(AA)/numel(AA)*100,'%2.0f'),'%']);end
+        AA(abs(AA)<1e-16)=0;
+        if ~opts.quiet;disp(['     nnz/numel*100  (after droptol) = ', num2str(nnz(AA)/numel(AA)*100,'%2.0f'),'%']);end
+        dA = decomposition(AA);
+        clear A AA;
+        if ~opts.quiet;disp('    DONE');end
+    end
+end
+
+if opts.time_independent_A
+    f1 = dA \ b;
+else
+    f1 = AA \ b;
+end
+ 
 end
 
 
@@ -441,56 +341,58 @@ s1 = source_vector(pde,opts,hash_table,t+dt);
 bc0 = boundary_condition_vector(pde,opts,hash_table,t);
 bc1 = boundary_condition_vector(pde,opts,hash_table,t+dt);
 
-if opts.time_independent_A % uses inv() so no good for poorly conditioned systems
-    persistent A;
-    persistent AA_inv;
-    persistent ALHS_inv;
-    
-    if isempty(AA_inv)
-        if applyLHS
-            [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-            I = speye(numel(diag(A)));
-            ALHS_inv = inv(ALHS);
-            AA = 2*I - dt*(ALHS_inv * A);
-            b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
-        else
-            [~,A] = apply_A(pde,opts,A_data,f0,deg);
-            I = speye(numel(diag(A)));
-            AA = 2*I - dt*A;
-            b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
-        end
-        
-        rcondAA = rcond(AA);
-        if ~opts.quiet; disp(['    rcond(AA) : ', num2str(rcondAA)]); end
-        
-        if 1/rcondAA > 1e6
-            disp(['WARNING: Using time_independent_A=true for poorly conditioned system not recommended']);
-            disp(['WARNING: cond(A) = ', num2str(rcondAA)]);
-        end
-        
-        AA_inv = inv(AA);
-        f1 = AA_inv * b;
-    else
-        if applyLHS
-            b = 2*f0 + dt*(ALHS_inv * A)*f0 + dt*(ALHS_inv * (s0+s1+bc0+bc1));
-        else
-            b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
-        end
-        f1 = AA_inv * b;
+build_A = true;
+persistent dA dALHS A ALHS;
+
+if opts.time_independent_A
+    if ~isempty(dA)
+        build_A = false;
     end
-    
-else % use the backslash operator for time_indepent_A = false
+end
+if opts.time_independent_build_A
+    if ~isempty(A)
+        build_A = false;
+    end
+end
+
+if build_A
     if applyLHS
         [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg);
-        I = speye(numel(diag(A)));
-        AA = 2*I - dt*(ALHS \ A);
-        b = 2*f0 + dt*(ALHS \ A)*f0 + dt*(ALHS \ (s0+s1+bc0+bc1));
     else
-        [~,A] = apply_A(pde,opts,A_data,f0,deg);
-        I = speye(numel(diag(A)));
-        AA = 2*I - dt*A;
-        b = 2*f0 + dt*A*f0 + dt*(s0+s1) + dt*(bc0+bc1);
+        [~,A] = apply_A(pde,opts,A_data,f0,deg);      
     end
+end
+
+if ~opts.time_independent_A || isempty(dA)
+if applyLHS
+    AA = 2*ALHS - dt*A;
+else
+    I = speye(numel(diag(A)));
+    AA = 2*I - dt*A;
+end
+end
+
+if applyLHS
+    b  = ALHS * (2*f0 + dt*A*f0 + dt*(s0+s1+bc0+bc1));  
+else
+    b  = 2*f0 + dt*A*f0 + dt*(s0+s1+bc0+bc1);  
+end
+
+if opts.time_independent_A
+    if isempty(dA)
+        if ~opts.quiet;disp(['   Precomputing matrix decomposition ...']);end
+        if ~opts.quiet;disp(['     nnz/numel*100 (before droptol) = ', num2str(nnz(AA)/numel(AA)*100,'%2.0f'),'%']);end
+        AA(abs(AA)<1e-16)=0;
+        if ~opts.quiet;disp(['     nnz/numel*100  (after droptol) = ', num2str(nnz(AA)/numel(AA)*100,'%2.0f'),'%']);end
+        dA = decomposition(AA);
+        clear AA;
+        if ~opts.quiet;disp('    DONE');end
+    end
+end
+
+if opts.time_independent_A
+    f1 = dA \ b;
+else
     f1 = AA \ b;
 end
 
