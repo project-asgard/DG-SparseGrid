@@ -277,7 +277,11 @@ count=1;
 err = 1e9;
 sol = 0;
 if opts.record_video
-    v = VideoWriter('video.avi','MPEG-4');
+    video_filename = create_output_filename(opts);
+    [path,name,ext] = fileparts(video_filename);
+    if ~exist(path); mkdir(path); end
+    video_filename = path+"/"+name+".mj2";
+    v = VideoWriter(video_filename,'Archival');
     open(v);
 end
 if ~opts.quiet; disp('Advancing time ...'); end
