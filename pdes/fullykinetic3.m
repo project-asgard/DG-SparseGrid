@@ -62,7 +62,17 @@ switch opts.case_
         vy_min = -5.0;
         vy_max = +5.0;
     case {4}
-        params.Bz = 2;
+        params.Bz = @(x) x.*0+2;
+        params.n  = 1.0; % Density
+        params.ux = 0.0; % Velocity (x)
+        params.uy = 0.0; % Velocity (y)
+        params.th = 1.0/3.0; % Temperature
+        vx_min = -4.0;
+        vx_max = +4.0;
+        vy_min = -4.0;
+        vy_max = +4.0;
+    case {5}
+        params.Bz = @(x) (1-cos(pi*x))/2+0.5;
         params.n  = 1.0; % Density
         params.ux = 0.0; % Velocity (x)
         params.uy = 0.0; % Velocity (y)
@@ -98,16 +108,19 @@ switch opts.case_
         end
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_vx,soln_vy,soln_t});
+        solutions = {soln1};
     case 2
         soln_vx = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
         soln_vy = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_vx,soln_vy,soln_t});
+        solutions = {soln1};
     case 3
         soln_vx = @(x,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(x-p.ux).^2/(2*p.th));
         soln_vy = @(y,p,t) sqrt(p.n/(2*pi*p.th))*exp(-(y-p.uy).^2/(2*p.th));
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_vx,soln_vy,soln_t});
+        solutions = {soln1};
     case 4
         if MM
             soln_vx = @(x,p,t) 0*x;
@@ -119,10 +132,11 @@ switch opts.case_
         end
         soln_t = @(t,p) 0*t+1;
         soln1  = new_md_func(num_dims,{soln_x,soln_vx,soln_vy,soln_t});
+        solutions = {soln1};
     otherwise
+        solutions = {};
 end
 
-solutions = {soln1};
 
 %% Define the boundary conditions
 
@@ -170,6 +184,15 @@ switch opts.case_
         ic_t  = @(t,p) 0*t+1;
         ic1   = new_md_func(num_dims,{ic1_x,ic1_vx,ic1_vy,ic_t});
         initial_conditions = {ic1};
+    case 5
+        sig_x  = 0.05;
+        sig_v  = 2;
+        ic1_x  = @(x,p,t)  1.0/sqrt(pi)*exp(-( x-0.5).^2/sig_x);
+        ic1_vx = @(vx,p,t) 1.0/sqrt(pi)*exp(-(vx-0.0).^2/sig_v);
+        ic1_vy = @(vy,p,t) 1.0/sqrt(pi)*exp(-(vy-0.0).^2/sig_v);
+        ic_t   = @(t,p) 0*t+1;
+        ic1    = new_md_func(num_dims,{ic1_x,ic1_vx,ic1_vy,ic_t});
+        initial_conditions = {ic1};
     otherwise
         ic_vx = soln_vx;
         ic_vy = soln_vy;
@@ -188,7 +211,6 @@ moment_func = new_md_func(num_dims,{moment_x,moment_y,moment_t});
 moment0 = MOMENT({moment_func});
 
 % Momentum Moment (x)
-
 moment_x = @(x,p,t) x;
 moment_y = @(y,p,t) 0*y+1;
 moment_t = @(p,t)   0*t+1;
@@ -196,7 +218,6 @@ moment_func = new_md_func(num_dims,{moment_x,moment_y,moment_t});
 moment1 = MOMENT({moment_func});
 
 % Momentum Moment (y)
-
 moment_x = @(x,p,t) 0*x+1;
 moment_y = @(y,p,t) y;
 moment_t = @(p,t)   0*t+1;
@@ -204,7 +225,6 @@ moment_func = new_md_func(num_dims,{moment_x,moment_y,moment_t});
 moment2 = MOMENT({moment_func});
 
 % Energy Moment
-
 moment_x1 = @(x,p,t) x.^2;
 moment_y1 = @(y,p,t) 0*y+1;
 moment_x2 = @(x,p,t) 0*x+1;
@@ -292,41 +312,53 @@ term4 = MD_TERM(num_dims,{[],term4_vx,term4_vy});
 %           2 terms to allow for upwinding of different signs, resulting in 4 terms
 %           (term5a,term5b and term6a,term6b)
 
-% -d/dvx(vy*Bz*f) => vy*Bz * d/dvx(f)
+% -d/dvx(vy*Bz*f) => -vy*Bz * d/dvx(f)
 
 g = @(vx,p,t,d) vx.*0+1;
 pterm = DIV(num_dims,g,'',-1,'N','D',BCL,BCR,'',dV);
 term5_vx = SD_TERM({pterm});
-g = @(vy,p,t,d) (-vy.*p.Bz) .* (vy<=0);
+g = @(vy,p,t,d) (-vy) .* (vy<=0);
 pterm = MASS(g);
 term5_vy = SD_TERM({pterm});
-term5a = MD_TERM(num_dims,{[],term5_vx,term5_vy});
+g = @(x,p,t,d) p.Bz(x);
+pterm = MASS(g);
+term5_x = SD_TERM({pterm});
+term5a = MD_TERM(num_dims,{term5_x,term5_vx,term5_vy});
 
 g = @(vx,p,t,d) vx.*0+1;
 pterm = DIV(num_dims,g,'',+1,'D','N',BCL,BCR,'',dV);
 term5_vx = SD_TERM({pterm});
-g = @(vy,p,t,d) (-vy.*p.Bz) .* (vy>0);
+g = @(vy,p,t,d) (-vy) .* (vy>0);
 pterm = MASS(g);
 term5_vy = SD_TERM({pterm});
-term5b = MD_TERM(num_dims,{[],term5_vx,term5_vy});
+g = @(x,p,t,d) p.Bz(x);
+pterm = MASS(g);
+term5_x = SD_TERM({pterm});
+term5b = MD_TERM(num_dims,{term5_x,term5_vx,term5_vy});
 
 % +d/dvy(vx*Bz*f) => vx*Bz * d/dvy(f)
 
-g = @(vx,p,t,d) (vx.*p.Bz) .* (vx>=0);
+g = @(vx,p,t,d) (vx) .* (vx>=0);
 pterm = MASS(g);
 term6_vx = SD_TERM({pterm});
 g = @(vy,p,t,d) vy.*0 + 1;
 pterm = DIV(num_dims,g,'',-1,'N','D',BCL,BCR,'',dV);
 term6_vy = SD_TERM({pterm});
-term6a = MD_TERM(num_dims,{[],term6_vx,term6_vy});
+g = @(x,p,t,d) p.Bz(x);
+pterm = MASS(g);
+term6_x = SD_TERM({pterm});
+term6a = MD_TERM(num_dims,{term6_x,term6_vx,term6_vy});
 
-g = @(vx,p,t,d) (vx.*p.Bz) .* (vx<0);
+g = @(vx,p,t,d) (vx) .* (vx<0);
 pterm = MASS(g);
 term6_vx = SD_TERM({pterm});
 g = @(vy,p,t,d) vy.*0 + 1;
 pterm = DIV(num_dims,g,'',+1,'D','N',BCL,BCR,'',dV);
 term6_vy = SD_TERM({pterm});
-term6b = MD_TERM(num_dims,{[],term6_vx,term6_vy});
+g = @(x,p,t,d) p.Bz(x);
+pterm = MASS(g);
+term6_x = SD_TERM({pterm});
+term6b = MD_TERM(num_dims,{term6_x,term6_vx,term6_vy});
 
 
 %% Spatial Advection
@@ -353,7 +385,7 @@ term7b  = MD_TERM(num_dims,{term_x,term_vx,[]});
 
 
 switch opts.case_
-    case 4
+    case {4,5}
         terms = {term5a,term5b,term6a,term6b,term7a,term7b};
     otherwise
         terms = {term1,term2,term3,term4};
