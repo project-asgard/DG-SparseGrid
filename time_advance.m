@@ -38,21 +38,30 @@ function [fout,sol] = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
 % final time (when 'time_independent_A','true') and have it return the
 % intermeadiate times
 
-if opts.time_independent_build_A
+% if opts.time_independent_build_A
     tf = (opts.num_steps+1) * dt; % the +1 here is to account for very small deviations in the end time requested from sol
     times = [t0:dt:tf];
-else
-    times = [t0,t0+dt];
-end
+% else
+%     times = [t0,t0+dt];
+% end
 
 clear strCR;
 
-applyLHS = ~isempty(pde.termsLHS);
+stats = 'off';
+output_func = '';
+if(~opts.quiet)
+    stats = 'on';
+    output_func = @odetpbar;
+end
 
-%     function res = fun_for_jacobianest(x)
-%     res = explicit_ode(t0,x);
-%     disp('calling ode');
-%     end
+applyLHS = ~isempty(pde.termsLHS);
+if applyLHS
+    [f1,A,ALHS] = apply_A(pde,opts,A_data,f0,deg,Vmax,Emax);
+else
+    [f1,A] = apply_A(pde,opts,A_data,f0,deg,Vmax,Emax);
+end
+
+options = odeset('RelTol',1e-6,'AbsTol',1e-8,'Stats',stats,'OutputFcn',output_func,'Jacobian',A);
 
     function dfdt = explicit_ode(t,f)
         bc = boundary_condition_vector(pde,opts,hash_table,t);
@@ -61,7 +70,7 @@ applyLHS = ~isempty(pde.termsLHS);
             [f1,~,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
             dfdt = ALHS\(f1 + source + bc);       
         else
-            f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+            [f1] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
             dfdt = f1 + source + bc;       
         end
     end
@@ -75,58 +84,16 @@ applyLHS = ~isempty(pde.termsLHS);
 
 if strcmp(opts.timestep_method,'ode45')
     
-    stats = 'off';
-    if(~opts.quiet)
-        disp('Using ode45');
-        stats = 'on';
-    end
-    options = odeset('RelTol',1e-3,'AbsTol',1e-6,'Stats',stats);
     sol = ode45(@explicit_ode,[t0 t0+dt],f0,options);
     fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode15s')
     
-    %     % estimate Jacobian
-    %     numjacopts.diffvar = 2;
-    %     numjacopts.vectvars = [];
-    %     numjacopts.thresh = 1e-10;
-    %     numjacopts.fac = [];
-    
-    %     disp('running odenumjac')
-    %     rhs = feval(@explicit_ode,t0,f0);
-    %     J = odenumjac(@explicit_ode,{t0 f0},rhs,numjacopts);
-    %     S = sparse(J~=0.0);
-    %     disp('done')
-    
-    %     disp('running jacobianest')
-    %     [J2,err] = jacobianest(@fun_for_jacobianest,f0);
-    %     disp('done');
-    
-    % call ode15s
-    stats = 'off';
-    output_func = '';
-    if(~opts.quiet)
-        disp('Using ode15s');
-        stats = 'on';
-        output_func = @odetpbar;
-    end
-    options = odeset('RelTol',1e-6,'AbsTol',1e-8,...
-        'Stats',stats,'OutputFcn',output_func,'Refine',20);%,'Jacobian', J2);%'JPattern',S);
-%      [tout,fout0] = ode15s(@explicit_ode,[t0 t0+dt],f0,options);
      sol = ode15s(@explicit_ode,times,f0,options);
      fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode23s')
     
-    % call ode23s
-    stats = 'off';
-    output_func = '';
-    if(~opts.quiet)
-        disp('Using ode23s');
-        stats = 'on';
-        output_func = @odetpbar;
-    end
-    options = odeset('Stats',stats,'OutputFcn',output_func);
     sol = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
     fout = deval(sol,t0+dt);
     
@@ -138,12 +105,9 @@ elseif strcmp(opts.timestep_method,'ode15i')
     
     dfdt0 = f0.*0;
     [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
-    if(~opts.quiet);disp('Using ode15i');end
     sol = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
     fout = deval(sol,t0+dt);
 end
-
-% fval = reshape(fout(end,:),size(f0));
 
 end
 

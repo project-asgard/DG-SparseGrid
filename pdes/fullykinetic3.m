@@ -72,7 +72,17 @@ switch opts.case_
         vy_min = -4.0;
         vy_max = +4.0;
     case {5}
-        params.Bz = @(x) (1-cos(pi*x))/2+0.5;
+        params.Bz = @(x) x.*0+1.5; % constant
+        params.n  = 1.0; % Density
+        params.ux = 0.0; % Velocity (x)
+        params.uy = 0.0; % Velocity (y)
+        params.th = 1.0/3.0; % Temperature
+        vx_min = -4.0;
+        vx_max = +4.0;
+        vy_min = -4.0;
+        vy_max = +4.0;
+    case {6}
+        params.Bz = @(x) -0.5*x+1.5; % constant gradient
         params.n  = 1.0; % Density
         params.ux = 0.0; % Velocity (x)
         params.uy = 0.0; % Velocity (y)
@@ -184,15 +194,36 @@ switch opts.case_
         ic_t  = @(t,p) 0*t+1;
         ic1   = new_md_func(num_dims,{ic1_x,ic1_vx,ic1_vy,ic_t});
         initial_conditions = {ic1};
-    case 5
+    case {5,6}
+        sig_x  = 0.01;
+        sig_v  = 0.01;
+        ic1_x  = @(x,p,t)  x.*0+1;%1.0/sqrt(pi)*exp(-( x-0.0).^2/sig_x);
+        ic1_vx = @(vx,p,t) 1.0/sqrt(pi)*exp(-(vx-2.0).^2/sig_v);
+        ic1_vy = @(vy,p,t) 1.0/sqrt(pi)*exp(-(vy-2.0).^2/sig_v);
+        %         ic1_x  = @(x,p,t) 1 .* (-0.125<x & x<0.125);
+        %         ic1_vx  = @(vx,p,t) 1 .* (0.5<vx & vx<1.5);
+        %         ic1_vy  = @(vy,p,t) 1 .* (0.5<vy & vy<1.5);
+        ic_t   = @(t,p) 0*t+1;
+        ic1    = new_md_func(num_dims,{ic1_x,ic1_vx,ic1_vy,ic_t});
+        initial_conditions = {ic1};
+    case 7
         sig_x  = 0.05;
         sig_v  = 2;
-        ic1_x  = @(x,p,t)  1.0/sqrt(pi)*exp(-( x-0.5).^2/sig_x);
+        ic1_x  = @(x,p,t)  x.*0+1.0;%/sqrt(pi)*exp(-( x-0.0).^2/sig_x);
         ic1_vx = @(vx,p,t) 1.0/sqrt(pi)*exp(-(vx-0.0).^2/sig_v);
         ic1_vy = @(vy,p,t) 1.0/sqrt(pi)*exp(-(vy-0.0).^2/sig_v);
         ic_t   = @(t,p) 0*t+1;
         ic1    = new_md_func(num_dims,{ic1_x,ic1_vx,ic1_vy,ic_t});
-        initial_conditions = {ic1};
+        
+        sig_x  = 0.05;
+        sig_v  = 1.5;
+        ic2_x  = @(x,p,t)  x.*0+1.0;%/sqrt(pi)*exp(-( x-0.0).^2/sig_x);
+        ic2_vx = @(vx,p,t) -1.0/sqrt(pi)*exp(-(vx-0.0).^2/sig_v);
+        ic2_vy = @(vy,p,t) +1.0/sqrt(pi)*exp(-(vy-0.0).^2/sig_v);
+        ic_t   = @(t,p) 0*t+1;
+        ic2    = new_md_func(num_dims,{ic2_x,ic2_vx,ic2_vy,ic_t});
+        
+        initial_conditions = {ic1,ic2};
     otherwise
         ic_vx = soln_vx;
         ic_vy = soln_vy;

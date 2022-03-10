@@ -180,6 +180,8 @@ end
 
 if num_dims==3
     
+    colormap(flipud(pink));
+    
 %    figure(1000);
     
     %%
@@ -230,45 +232,57 @@ if num_dims==3
     %%
     % Plot a 2D xy plane
     
-    ax1 = subplot(2,3,1);
-    contourf(z,y,f_nD(:,:,sx)');
+    ax1 = subplot(3,3,1);
+    pcolor(z,y,f_nD(:,:,sx)');
     title('2D slice through 3D numeric');
     
+    ax1s = subplot(3,3,4);
+    pcolor(z,y,squeeze(sum(f_nD,3))');
+    title('Sum over dim 3');
+    
     if ~isempty(pde.solutions)
-        ax2 = subplot(2,3,4);
-        contourf(z,y,f_nD_analytic(:,:,sx)');
+        ax2 = subplot(3,3,7);
+        pcolor(z,y,f_nD_analytic(:,:,sx)');
         title('2D slice through 3D analytic');
     end
     
     %%
     % Plot a 2D xz plane
     
-    ax3 = subplot(2,3,2);
-    contourf(z,x,squeeze(f_nD(:,sy,:))');
+    ax3 = subplot(3,3,2);
+    pcolor(z,x,squeeze(f_nD(:,sy,:))');
     title('2D slice through 3D numeric');
     
+    ax3s = subplot(3,3,5);
+    pcolor(z,x,squeeze(sum(f_nD,2))');
+    title('Sum over dim 2');
+    
     if ~isempty(pde.solutions)
-        ax3 = subplot(2,3,5);
-        contourf(z,x,squeeze(f_nD_analytic(:,sy,:))');
+        ax3 = subplot(3,3,8);
+        pcolor(z,x,squeeze(f_nD_analytic(:,sy,:))');
         title('2D slice through 3D analytic');
     end
     
     %%
     % Plot a 2D yz plane
     
-    ax3 = subplot(2,3,3);
-    contourf(y,x,squeeze(f_nD(sz,:,:))');
+    ax3 = subplot(3,3,3);
+    pcolor(y,x,squeeze(f_nD(sz,:,:))');
     title('2D slice through 3D numeric');
     
+    ax3s = subplot(3,3,6);
+    pcolor(y,x,squeeze(sum(f_nD,1))');
+    title('Sum over dim 1');
+    
     if ~isempty(pde.solutions)
-        ax3 = subplot(2,3,6);
-        contourf(y,x,squeeze(f_nD_analytic(sz,:,:))');
+        ax3 = subplot(3,3,9);
+        pcolor(y,x,squeeze(f_nD_analytic(sz,:,:))');
         title('2D slice through 3D analytic');
     end
     
     
 end
 
-pause (0.01)
+%pause (0.01)
 
 end
