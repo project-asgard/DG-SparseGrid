@@ -40,10 +40,24 @@ function pde = diffusion1(opts)
 %% Define the dimensions
 % 
 % Here we setup a 1D problem (x,y)
-nu = pi/2; %coefficient set to be very small to allow for stability % DLG - WTF is this?
+
+
+switch opts.case_
+    case 1
+        dim_x = DIMENSION(0,1);
+    case 2
+        dim_x = DIMENSION(0,0.2);      
+end
+dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
+dimensions = {dim_x};
+num_dims = numel(dimensions);
+
+nu = pi/2;
 soln_x = @(x,p,t) cos(nu*x);
-%soln_x = @(x,p,t) sin(nu*x);
 soln_t = @(t,p) exp(-2*nu^2*t);
+
+switch opts.case_
+    case 1
 
 BCFunc = @(x,p,t) soln_x(x,p,t);
 BCFunc_t = @(t,p) soln_t(t,p);
@@ -62,14 +76,20 @@ BCR_fList = { ...
     @(t,p) BCFunc_t(t,p)
     };
 
-dim_x = DIMENSION(0,1);
-dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
-dimensions = {dim_x};
-num_dims = numel(dimensions);
+    case 2
+        BCL = new_md_func(num_dims,{@(x,p,t,d) x.*0+0.1, @(t,d) t.*0+1});
+        BCR = new_md_func(num_dims,{@(x,p,t,d) x.*0, @(t,d) t.*0+1});
+end
 
 %% Initial conditions
-
-ic1 = new_md_func(num_dims,{soln_x,soln_t});
+switch opts.case_
+    case 1
+        ic1 = new_md_func(num_dims,{soln_x,soln_t});
+    case 2
+        ic_x = @(x,p,t) x.*0;
+        ic_t = @(t,p) 1;
+        ic1 = new_md_func(num_dims,{ic_x,ic_t});
+end
 initial_conditions = {ic1};
 
 %% Define the terms of the PDE
@@ -91,8 +111,14 @@ dV = @(x,p,t,dat) 0*x+1;
 g1 = @(x,p,t,dat) x.*0+1;
 g2 = @(x,p,t,dat) x.*0+1;
 
-pterm1 =   DIV(num_dims,g1,'',-1,'N','N','','','',dV);
-pterm2 =  GRAD(num_dims,g2,'',+1,'D','D',BCL_fList,BCR_fList,'',dV);
+switch opts.case_
+    case 1
+        pterm1 =   DIV(num_dims,g1,'',-1,'N','N','','','',dV);
+        pterm2 =  GRAD(num_dims,g2,'',+1,'D','D',BCL_fList,BCR_fList,'',dV);
+    case 2
+        pterm1 =   DIV(num_dims,g1,'',-1,'N','N','','','',dV);
+        pterm2 =  GRAD(num_dims,g2,'',+1,'D','D',BCL,BCR,'',dV);
+end
 
 term1_x = SD_TERM({pterm1,pterm2});
 term1   = MD_TERM(num_dims,{term1_x});
@@ -111,7 +137,7 @@ term3_x = SD_TERM({pterm1});
 term3 = MD_TERM(num_dims,{term3_x});
 
 %%% With penalty
-terms = {term1,term2,term3};
+terms = {term1};%,term2,term3};
 
 %%% Without penalty
 %terms = {term1};
@@ -134,8 +160,13 @@ sources = {source1};
 %% Define the analytic solution (optional).
 % This requires nDims+time function handles.
 
-soln1 = new_md_func(num_dims,{soln_x,soln_t});
-solutions = {soln1};
+switch opts.case_
+    case 1
+        soln1 = new_md_func(num_dims,{soln_x,soln_t});
+        solutions = {soln1};
+    case 2
+        solutions = {};
+end
 
     function dt=set_dt(pde,CFL)
         

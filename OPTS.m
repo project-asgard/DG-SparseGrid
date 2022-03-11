@@ -154,7 +154,7 @@ classdef OPTS
                 opts.record_video = input_parser.Results.record_video;
       
                 opts.build_A = false;
-                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential','IMEX'}))>0
+                if sum(strcmp(opts.timestep_method,{'BE','CN','time_independent','matrix_exponential','IMEX','ode15i','ode15s','ode23s','ode45'}))>0
                     opts.build_A = true;
                 end
                 

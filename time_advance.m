@@ -34,16 +34,15 @@ end
 
 function [fout,sol] = ODEm(pde,opts,A_data,f0,t0,dt,deg,hash_table,Vmax,Emax)
 
+assert(opts.time_independent_A,...
+    'Since get_coeff_mats is not called within the ode RHS function this presently only works for time_independent_A,true');
+
 % when using the matlab ODE integrators we just pass them the start and
 % final time (when 'time_independent_A','true') and have it return the
 % intermeadiate times
 
-% if opts.time_independent_build_A
-    tf = (opts.num_steps+1) * dt; % the +1 here is to account for very small deviations in the end time requested from sol
-    times = [t0:dt:tf];
-% else
-%     times = [t0,t0+dt];
-% end
+tf = (opts.num_steps+1) * dt; % the +1 here is to account for very small deviations in the end time requested from sol
+times = [t0:dt:tf];
 
 clear strCR;
 
@@ -55,10 +54,11 @@ if(~opts.quiet)
 end
 
 applyLHS = ~isempty(pde.termsLHS);
+
 if applyLHS
-    [f1,A,ALHS] = apply_A(pde,opts,A_data,f0,deg,Vmax,Emax);
+    [~,A,ALHS] = apply_A(pde,opts,A_data,f0,deg,Vmax,Emax);
 else
-    [f1,A] = apply_A(pde,opts,A_data,f0,deg,Vmax,Emax);
+    [~,A] = apply_A(pde,opts,A_data,f0,deg,Vmax,Emax);
 end
 
 options = odeset('RelTol',1e-6,'AbsTol',1e-8,'Stats',stats,'OutputFcn',output_func,'Jacobian',A);
@@ -67,10 +67,12 @@ options = odeset('RelTol',1e-6,'AbsTol',1e-8,'Stats',stats,'OutputFcn',output_fu
         bc = boundary_condition_vector(pde,opts,hash_table,t);
         source = source_vector(pde,opts,hash_table,t);
         if applyLHS
-            [f1,~,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+%             [f1,~,ALHS] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+            f1 = ALHS\(A*f + source + bc);
             dfdt = ALHS\(f1 + source + bc);       
         else
-            [f1] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+%             [f1] = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+            f1 = A*f;
             dfdt = f1 + source + bc;       
         end
     end
@@ -78,13 +80,14 @@ options = odeset('RelTol',1e-6,'AbsTol',1e-8,'Stats',stats,'OutputFcn',output_fu
     function res = implicit_ode(t,f,dfdt)
         bc = boundary_condition_vector(pde,opts,hash_table,t);
         source = source_vector(pde,opts,hash_table,t);
-        f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+%         f1 = apply_A(pde,opts,A_data,f,deg,Vmax,Emax);
+        f1 = A*f;
         res = dfdt - (f1 + source + bc);
     end
 
 if strcmp(opts.timestep_method,'ode45')
     
-    sol = ode45(@explicit_ode,[t0 t0+dt],f0,options);
+    sol = ode45(@explicit_ode,times,f0,options);
     fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode15s')
@@ -94,7 +97,7 @@ elseif strcmp(opts.timestep_method,'ode15s')
     
 elseif strcmp(opts.timestep_method,'ode23s')
     
-    sol = ode23s(@explicit_ode,[t0 t0+dt],f0,options);
+    sol = ode23s(@explicit_ode,times,f0,options);
     fout = deval(sol,t0+dt);
     
 elseif strcmp(opts.timestep_method,'ode15i')
@@ -105,7 +108,7 @@ elseif strcmp(opts.timestep_method,'ode15i')
     
     dfdt0 = f0.*0;
     [f0,dfdt0,resnrm] = decic(@implicit_ode,t0,f0,f0.*0+1,dfdt0,[]);
-    sol = ode15i(@implicit_ode,[t0 t0+dt],f0,dfdt0);
+    sol = ode15i(@implicit_ode,times,f0,dfdt0);
     fout = deval(sol,t0+dt);
 end
 

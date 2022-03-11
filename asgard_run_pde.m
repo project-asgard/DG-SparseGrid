@@ -89,7 +89,7 @@ end
 
 %% Construct transforms back to realspace for plotting
 
-if opts.build_realspace_output
+if opts.build_realspace_output || opts.plot_freq>0
     for d=1:num_dims
         if strcmp(opts.output_grid,'fixed')
             if d==1
@@ -115,7 +115,7 @@ if opts.build_realspace_output
 end
 
 %% Construct a n-D coordinate array
-if opts.build_realspace_output
+if opts.build_realspace_output || opts.plot_freq>0
     coord = get_realspace_coords(pde,nodes);
     coord_nodups = get_realspace_coords(pde,nodes_nodups);
 end
@@ -415,7 +415,7 @@ for L = 1:opts.num_steps
     % Write the present fval to file.
     if write_fval; write_fval_to_file(fval,lev,deg,L); end
     
-    if num_dims <=3 && opts.build_realspace_output
+    if num_dims <=3 && (opts.build_realspace_output || (mod(L,opts.plot_freq)==0 && ~opts.quiet))
         
         %%
         % Get the real space solution 
@@ -500,7 +500,7 @@ for L = 1:opts.num_steps
     
     % Reshape realspace solution and plot
     
-    if num_dims <= 3 && opts.build_realspace_output
+    if num_dims <= 3 && (opts.build_realspace_output || (mod(L,opts.plot_freq)==0 && ~opts.quiet))
         
         f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
         if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
