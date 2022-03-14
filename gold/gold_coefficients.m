@@ -79,8 +79,22 @@ for t=1:length(pde.terms)
     for d=1:length(pde.dimensions)
         dof = degree * 2^pde.dimensions{d}.lev;
         sd_term = pde.terms{t}.terms_1D{d};
-        coeff_mat = sd_term.mat(1:dof, 1:dof);
-        unrotated = sd_term.mat_unrotated(1:dof, 1:dof);
+
+        % chain together pterms manually - C++ chains with DOF, Matlab with
+        % size of pterms matrix (usually dim.level)
+        mat = eye(dof);
+        mat_unrotated = mat;
+        for i=1:numel(sd_term.pterms)
+            mat = mat * sd_term.pterms{i}.mat(1:dof, 1:dof);
+            mat_unrotated = mat_unrotated * sd_term.pterms{i}.mat_unrotated(1:dof, 1:dof);
+        end
+
+        coeff_mat = mat;
+        unrotated = mat_unrotated;
+
+        coeff_mat(abs(coeff_mat) < 1e-10) = 0;
+        unrotated(abs(unrotated) < 1e-10) = 0;
+
         write_octave_like_output(sprintf(out_format,lev_string,degree,t,d), full(coeff_mat));
         write_octave_like_output(sprintf(out_format_unrot,lev_string,degree,t,d), full(unrotated));
     end
