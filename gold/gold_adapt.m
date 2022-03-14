@@ -65,6 +65,7 @@ function run_adapt(pde_handle, fval_gen, out_format, varargin)
   opts.max_lev_coeffs = 0;
   
   pde = pde_handle( opts );
+  pde = compute_dimension_mass_mat(opts, pde);
   lev_vec = get_lev_vec(pde);
   num_dims = length(lev_vec);
 
@@ -125,6 +126,7 @@ function run_initial(pde_handle, out_string, varargin)
   pde = pde_handle( opts );
   t = 0;
   TD = 0;
+  pde = compute_dimension_mass_mat(opts, pde);
   pde = get_coeff_mats(pde,opts,t,TD,opts.use_oldcoeffmat);
 
   lev_vec = get_lev_vec(pde);
