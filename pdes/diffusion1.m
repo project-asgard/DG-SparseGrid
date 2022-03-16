@@ -37,6 +37,18 @@ function pde = diffusion1(opts)
 % equation assumes nu = 1 since it is not present in g1 or g2, but nu is
 % specified as != 1 below?
 
+%% Define some parameters and add to pde object.
+%  These might be used within the various functions below.
+
+switch opts.case_
+    case 1     
+        params.parameter1 = 0;
+        params.parameter2 = 1;
+    case 2
+%         params.D = @(x) x<0.1;
+        params.D = @(x) x.*0+1;
+end
+
 %% Define the dimensions
 % 
 % Here we setup a 1D problem (x,y)
@@ -78,6 +90,7 @@ BCR_fList = { ...
 
     case 2
         BCL = new_md_func(num_dims,{@(x,p,t,d) x.*0+0.1, @(t,d) t.*0+1});
+%         BCR = new_md_func(num_dims,{@(x,p,t,d) x.*0, @(t,d) t.*0+1});
         BCR = new_md_func(num_dims,{@(x,p,t,d) x.*0, @(t,d) t.*0+1});
 end
 
@@ -108,15 +121,16 @@ initial_conditions = {ic1};
 
 dV = @(x,p,t,dat) 0*x+1;
 
-g1 = @(x,p,t,dat) x.*0+1;
-g2 = @(x,p,t,dat) x.*0+1;
-
 switch opts.case_
     case 1
+        g1 = @(x,p,t,dat) x.*0+1;
+        g2 = @(x,p,t,dat) x.*0+1;
         pterm1 =   DIV(num_dims,g1,'',-1,'N','N','','','',dV);
         pterm2 =  GRAD(num_dims,g2,'',+1,'D','D',BCL_fList,BCR_fList,'',dV);
     case 2
-        pterm1 =   DIV(num_dims,g1,'',-1,'N','N','','','',dV);
+        g1 = @(x,p,t,dat) x.*0+1;
+        g2 = @(x,p,t,dat) x.*0+(1.*p.D(x));
+        pterm1 =   DIV(num_dims,g1,'',-1,'N','N', '', '','',dV);
         pterm2 =  GRAD(num_dims,g2,'',+1,'D','D',BCL,BCR,'',dV);
 end
 
@@ -141,12 +155,6 @@ terms = {term1};%,term2,term3};
 
 %%% Without penalty
 %terms = {term1};
-
-%% Define some parameters and add to pde object.
-%  These might be used within the various functions below.
-
-params.parameter1 = 0;
-params.parameter2 = 1;
 
 %% Define sources
 
