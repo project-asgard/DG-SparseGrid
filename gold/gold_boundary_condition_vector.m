@@ -2,6 +2,8 @@ generate_data( @diffusion1, 'diffusion1', 'lev', [2], 'deg', 2);
 generate_data( @diffusion1, 'diffusion1', 'lev', [4], 'deg', 4);
 generate_data( @diffusion1, 'diffusion1', 'lev', [5], 'deg', 5);
 
+generate_data( @diffusion2, 'diffusion2', 'lev', [3,3], 'deg', 3);
+
 function [ bcv ] = generate_data(pde_handle, pde_name, varargin)
 
 data_dir = strcat("generated-inputs/boundary_conditions/");
@@ -14,7 +16,7 @@ opts = OPTS(varargin);
 opts.quiet = 1;
 opts.use_oldcoeffmat = 0;
 opts.use_oldhash = 0;
-opts.max_lev_coeffs = 0;
+opts.max_lev_coeffs = 1;
 %pde = check_pde(pde,opts);
 pde = pde_handle( opts );
 

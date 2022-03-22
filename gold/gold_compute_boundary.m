@@ -2,6 +2,8 @@ generate_data( @diffusion1, 'diffusion1', 'lev', [2], 'deg', 2);
 generate_data( @diffusion1, 'diffusion1', 'lev', [4], 'deg', 4);
 generate_data( @diffusion1, 'diffusion1', 'lev', [5], 'deg', 5);
 
+generate_data( @diffusion2, 'diffusion2', 'lev', [3,3], 'deg', 3);
+
 function [ bcL, bcR ] = generate_data(pde_handle, pde_name, varargin)
 data_dir = strcat("generated-inputs/boundary_conditions/");
 out_format = strcat(data_dir, "compute_%s_%s_%dd_%dl_%dt_%ddim_%dp.dat");
