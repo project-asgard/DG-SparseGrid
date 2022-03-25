@@ -14,7 +14,7 @@ run_adapt(@continuity3,@fval_gen_2, out_format, ...
 % initial condition adapt
 out_string = strcat(data_dir, 'diffusion2_l2_d3_initial.dat');
 run_initial(@diffusion2,out_string, ...
-     'lev',2,'deg',3,'grid_type','SG');
+     'lev',[2,2],'deg',3,'grid_type','SG');
 out_string = strcat(data_dir, 'diffusion1_l3_d4_initial.dat');
 run_initial(@diffusion1,out_string, ...
      'lev',3,'deg',4,'grid_type','SG');  
@@ -66,6 +66,7 @@ function run_adapt(pde_handle, fval_gen, out_format, varargin)
   
   pde = pde_handle( opts );
   pde = compute_dimension_mass_mat(opts, pde);
+  pde = get_coeff_mats(pde,opts,0,0,0);
   lev_vec = get_lev_vec(pde);
   num_dims = length(lev_vec);
 
