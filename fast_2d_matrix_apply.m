@@ -9,6 +9,9 @@ persistent perm iperm pvec
 if isempty(perm)
     [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
 end
+if opts.adapt
+    [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+end
 
 %
 if strcmp(opts.timestep_method,'IMEX')
@@ -24,8 +27,10 @@ else
 end
 
 %Get dimensions
-n = size(pde.terms{1}.terms_1D{1}.mat,1);
-m = size(pde.terms{1}.terms_1D{2}.mat,1);
+%n = size(pde.terms{1}.terms_1D{1}.mat,1);
+%m = size(pde.terms{1}.terms_1D{2}.mat,1);
+n = 2^pde.dimensions{1}.lev*opts.deg;
+m = 2^pde.dimensions{2}.lev*opts.deg;
 
 %Convert to standard FG index
 f0_F = zeros(numel(perm),1);
@@ -37,7 +42,7 @@ f0_M = reshape(f0_F,m,n);
 %Evaluate sum of krons
 f1_M = zeros(size(f0_M));
 for i=1:numel(term_idx)
-    f1_M = f1_M + pde.terms{term_idx(i)}.terms_1D{2}.mat*f0_M*pde.terms{term_idx(i)}.terms_1D{1}.mat';
+    f1_M = f1_M + pde.terms{term_idx(i)}.terms_1D{2}.mat(1:m,1:m)*f0_M*pde.terms{term_idx(i)}.terms_1D{1}.mat(1:n,1:n)';
 end
 
 %Convert to vector

@@ -23,8 +23,8 @@ g_vec = pde.moments{moment_idx}.fList{v_dim};
 
 
 
-%Get row-dim of M
-rows = max(A_data.element_local_index_D{x_dim}*deg);
+%Get row-dim of M -- Assuming a full grid output here
+rows = deg*2^ceil(log2(max(A_data.element_local_index_D{x_dim})));
 
 %Containers for sparse matrix
 I = zeros(deg^2*num_ele,1); %Square is hardcoded.  Needs to change 
