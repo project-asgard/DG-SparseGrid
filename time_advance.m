@@ -628,24 +628,24 @@ else %%Trying imex deg 2 version
     pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
     
             %Plot moments
-    if ~opts.quiet || 1
-        
-        fig1 = figure(1000);
-        fig1.Units = 'Normalized';
-        fig1.Position = [0.5 0.5 0.3 0.3];
-        subplot(2,2,1);
-        plot(nodes,pde.params.n(nodes));
-        title('n_f');
-        subplot(2,2,2);
-        plot(nodes,pde.params.u(nodes));
-        title('u_f');
-        subplot(2,2,3);
-        plot(nodes,pde.params.th(nodes));
-        title('th_f');
-        sgtitle("Fluid Variables. t = "+num2str(t+dt));
-        drawnow
-        
-    end
+%     if ~opts.quiet || 1
+%         
+%         fig1 = figure(1000);
+%         fig1.Units = 'Normalized';
+%         fig1.Position = [0.5 0.5 0.3 0.3];
+%         subplot(2,2,1);
+%         plot(nodes,pde.params.n(nodes));
+%         title('n_f');
+%         subplot(2,2,2);
+%         plot(nodes,pde.params.u(nodes));
+%         title('u_f');
+%         subplot(2,2,3);
+%         plot(nodes,pde.params.th(nodes));
+%         title('th_f');
+%         sgtitle("Fluid Variables. t = "+num2str(t+dt));
+%         drawnow
+%         
+%     end
         
     %Update coefficients
     pde = get_coeff_mats(pde,opts,t,0);
@@ -692,8 +692,44 @@ else %%Trying imex deg 2 version
     %Update timestep to final stage
     f1 = f_3;
     
-    %Plot moments
-    if ~opts.quiet || 1
+    
+    if opts.case_ == 2
+        %Get analytic solution at t_{n+1}
+        fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
+        
+        %Get analytic moments
+        
+        %n 
+        mom0_a = moment_mat{1}*fval_analytic;
+        mom0_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom0_a,hash_table_1D);
+        analytic_moments.n = mom0_a_r;
+        
+        %u
+        mom1_a = moment_mat{2}*fval_analytic;
+        mom1_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom1_a,hash_table_1D);
+        analytic_moments.u = mom1_a_r./mom0_a_r;
+        
+        %T
+        mom2_a = moment_mat{3}*fval_analytic;
+        mom2_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom2_a,hash_table_1D);
+        analytic_moments.T = mom2_a_r./mom0_a_r - (analytic_moments.u).^2;
+        
+        fig1 = figure(1000);
+        fig1.Units = 'Normalized';
+        fig1.Position = [0.5 0.5 0.3 0.3];
+        subplot(2,2,1);
+        plot(nodes,pde.params.n(nodes),nodes,analytic_moments.n);
+        title('n_f');
+        subplot(2,2,2);
+        plot(nodes,pde.params.u(nodes),nodes,analytic_moments.u);
+        title('u_f');
+        subplot(2,2,3);
+        plot(nodes,pde.params.th(nodes),nodes,analytic_moments.T);
+        title('th_f');
+        sgtitle("Fluid Variables. t = "+num2str(t+dt));
+        drawnow
+    else
+        %Plot moments
         
         fig1 = figure(1000);
         fig1.Units = 'Normalized';
