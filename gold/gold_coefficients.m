@@ -1,3 +1,6 @@
+levels = [4, 4];
+generate_data( @fokkerplanck2_complete, levels, 'fokkerplanck2_complete', 'case', 4, 'lev', 4, 'deg', 4 );
+
 % uniform level
 % note fp2 must be calculated with modified x domain [1,20] to avoid singularity problem
 levels = [3, 3];

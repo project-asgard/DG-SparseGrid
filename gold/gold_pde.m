@@ -35,6 +35,13 @@ run_pde(@continuity6, out_format, domain, t);
 out_format = strcat( data_dir, "fokkerplanck2_complete_" );
 gfunc_test(@fokkerplanck2_complete, out_format, domain, t, 'case', 4);
 
+out_format = strcat( data_dir, "diffusion_2_" );
+gfunc_test(@diffusion2, out_format, domain, t);
+
+out_format = strcat( data_dir, "fokkerplanck2_complete_" );
+lhsmass_test(@fokkerplanck2_complete, out_format, domain, t, 'case', 4, 'lev', [4,4], 'deg', 4);
+
+
 function run_pde(pde_handle, out_format, x, t, varargin)
 
   opts = OPTS(varargin);  
@@ -82,7 +89,6 @@ function gfunc_test(pde_handle, out_format, x, t, varargin)
   pde = get_coeff_mats(pde, opts, t, 0);
   
   gfuncs = [];
-  lhs_mass = [];
   dvfuncs = [];
   
   for d=1:length(pde.dimensions)
@@ -91,17 +97,43 @@ function gfunc_test(pde_handle, out_format, x, t, varargin)
         sd_term = md_term.terms_1D{d};
         for p=1:length(sd_term.pterms)
             gfunc = sd_term.pterms{p}.g(x, pde.params, t, sd_term.pterms{p}.dat);
-            mass = sd_term.pterms{p}.LHS_mass_mat;
             dvfunc = sd_term.pterms{p}.dV(x, pde.params, t, sd_term.pterms{p}.dat);
             
             gfuncs = [gfuncs; gfunc];
-            lhs_mass = [lhs_mass; mass];
             dvfuncs = [dvfuncs; dvfunc];
         end
     end
   end
   
   write_octave_like_output(strcat(out_format, 'gfuncs.dat'), gfuncs);
-  write_octave_like_output(strcat(out_format, 'lhsmass.dat'), lhs_mass);
   write_octave_like_output(strcat(out_format, 'dvfuncs.dat'), dvfuncs);
+end
+
+function lhsmass_test(pde_handle, out_format, x, t, varargin)
+  opts = OPTS(varargin);
+  opts.quiet = 1;
+  opts.CFL = 1;
+  pde = pde_handle( opts );
+
+  pde = get_coeff_mats(pde, opts, t, 0);
+
+  pterm_mats = [];
+  lhs_mass = [];
+  for d=1:length(pde.dimensions)
+    for t=1:length(pde.terms)
+        md_term = pde.terms{t};
+        sd_term = md_term.terms_1D{d};
+        for p=1:length(sd_term.pterms)
+            mass = sd_term.pterms{p}.LHS_mass_mat;
+
+            lhs_mass = [lhs_mass; mass];
+
+            mat = sd_term.pterms{p}.mat;
+            pterm_mats = [pterm_mats; mat];
+        end
+    end
+  end
+
+  write_octave_like_output(strcat(out_format, 'lhsmass.dat'), lhs_mass);
+  write_octave_like_output(strcat(out_format, 'pterm_mats.dat'), pterm_mats);
 end
