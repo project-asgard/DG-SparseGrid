@@ -2,7 +2,8 @@ function pde_system = diffusion_system2()
 
 %
 opts = OPTS( {} );
-
+opts.lev=6;
+opts.fast_FG_matrix_assembly = true;
 %
 %% First Component: d_t u = - d_x sigma_x - d_y sigma_y + f(u)
 
@@ -19,8 +20,8 @@ num_dims_1 = numel(dimensions_1);
 
 %% Define the analytic solution (optional).
 
-soln_x_1 = @(x,p,t) cos(pi*x);
-soln_y_1 = @(y,p,t) cos(pi*y);
+soln_x_1 = @(x,p,t) cos(pi*x)*pi^2;
+soln_y_1 = @(y,p,t) 0*y+1;%cos(pi*y);
 soln_t_1 = @(t,p)   exp(-2*pi^2*t);
 soln_1_1 = new_md_func(num_dims_1,{soln_x_1,soln_y_1,soln_t_1});
 
@@ -37,7 +38,8 @@ initial_conditions_1 = {soln_1_1};
 
 %% Solution Vector
 
-u = PDE_SOLUTIONS( opts, dimensions_1, soln_1, initial_conditions_1 );
+u = UNKNOWN( opts, dimensions_1, num_funcs_1, soln_1, initial_conditions_1 );
+u.set_initial_conditions( opts );
 
 %
 %% Second Component: (sigma_x,sigma_y) = - (d_x u,d_y u)
@@ -58,7 +60,7 @@ num_dims_2 = numel(dimensions_2);
 %% Define the analytic solution (optional).
 
 soln_x_1 = @(x,p,t) sin(pi*x)*pi;
-soln_y_1 = @(y,p,t) cos(pi*y);
+soln_y_1 = @(y,p,t) 0*y+1;%cos(pi*y);
 soln_t_1 = @(t,p)   exp(-2*pi^2*t);
 soln_2_1 = new_md_func(num_dims_2,{soln_x_1,soln_y_1,soln_t_1});
 
@@ -80,7 +82,12 @@ initial_conditions_2 = {soln_2_1,soln_2_2};
 
 %% Solution Vector
 
-sigma = PDE_SOLUTIONS( opts, dimensions_2, soln_2, initial_conditions_2 );
+sigma = UNKNOWN( opts, dimensions_2, num_funcs_2, soln_2, initial_conditions_2 );
+sigma.set_initial_conditions( opts );
+
+%% Global Solution Vector
+
+Q = {u,sigma};
 
 %% Define the terms of the PDE system
 
@@ -91,23 +98,39 @@ gp = @(x,p,t,dat) x.*0+1;
 
 % d_x sigma_x:
 
-pterm_x = DIV(num_dims_2,gp,'',+1,'N','N','','','',dV); % num_dims_2 because it is applied to sigma (think about this?)
+subterm_11 = 'ZERO';
+
+pterm_x = DIV(num_dims_2,gp,'',-1,'N','N','','','',dV); % num_dims_2 because it is applied to sigma (think about this?)
 pterm_y = MASS(gp);
 term_x  = SD_TERM({pterm_x}); % Maybe remove?
 term_y  = SD_TERM({pterm_y}); % Maybe remove?
-data_1.term      = MD_TERM(num_dims_2,{term_x,term_y});
-data_1.input_id  = [2,1]; %Meaning apply term to system 2, component 1 [system,component]
-data_1.output_id = [1,1]; %Meaning put result on System 1, component 1 [system,component]
+subterm_21 = MD_TERM(num_dims_2,{term_x,term_y});
+subterm_22 = 'ZERO';
+
+descriptor = {{subterm_11},{subterm_21,subterm_22}};
+
+term_1 = TERM( u, Q, descriptor );
+
+out = term_1.driver( opts, 0.0 );% Hack to test driver
+
+norm(out-u.fval)
 
 % d_y sigma_y:
+
+subterm_11 = 'ZERO';
 
 pterm_x = MASS(gp);
 pterm_y = DIV(num_dims_2,gp,'',+1,'N','N','','','',dV); % num_dims_2 because it is applied to sigma (think about this?)
 term_x  = SD_TERM({pterm_x}); % Maybe remove?
 term_y  = SD_TERM({pterm_y}); % Maybe remove?
-data_2.term     = MD_TERM(num_dims_2,{term_x,term_y});
-data_2.input_id  = [2,2]; %Meaning apply term to system 2, component 2
-data_2.output_id = [1,1]; %Meaning put result on System 1, component 1
+subterm_21 = 'ZERO';
+subterm_22 = MD_TERM(num_dims_2,{term_x,term_y});
+
+descriptor = {{subterm_11},{subterm_21,subterm_22}};
+
+term_2 = TERM( u, Q, descriptor );
+
+% --- Create Equation 1 with term_1 and term_2 here?
 
 % grad_x u
 
@@ -115,9 +138,7 @@ pterm_x = GRAD(num_dims_1,gp,'',-1,'D','D',BCL_2{1},BCR_2{1},'',dV);
 pterm_y = MASS(gp);
 term_x  = SD_TERM({pterm_x});
 term_y  = SD_TERM({pterm_y});
-data_3.term = MD_TERM(num_dims_2,{term_x,term_y});
-data_3.input_id = [1,1];
-data_3.imput_id = [2,1];
+subterm_11 = MD_TERM(num_dims_2,{term_x,term_y});
 
 % mass sigma_x
 
@@ -125,9 +146,10 @@ pterm_x = MASS(gp);
 pterm_y = MASS(gp);
 term_x  = SD_TERM({pterm_x});
 term_y  = SD_TERM({pterm_y});
-data_4.term = MD_TERM(num_dims_2,{term_x,term_y});
-data_4.input_id  = [2,1];
-data_4.output_id = [2,1];
+subterm_21 = MD_TERM(num_dims_2,{term_x,term_y});
+subterm_22 = 'ZERO';
+
+descriptor = {{subterm_11},{subterm_21,subterm_22}};
 
 % grad_y u
 
@@ -135,9 +157,7 @@ pterm_x = MASS(gp);
 pterm_y = GRAD(num_dims_1,gp,'',-1,'D','D',BCL_2{2},BCR_2{2},'',dV);
 term_x  = SD_TERM({pterm_x});
 term_y  = SD_TERM({pterm_y});
-data_5.term = MD_TERM(num_dims_2,{term_x,term_y});
-data_5.input_id  = [1,1];
-data_5.output_id = [2,2];
+subterm_11 = MD_TERM(num_dims_2,{term_x,term_y});
 
 % mass sigma_y
 
@@ -145,9 +165,10 @@ pterm_x = MASS(gp);
 pterm_y = MASS(gp);
 term_x  = SD_TERM({pterm_x});
 term_y  = SD_TERM({pterm_y});
-data_6.term = MD_TERM(num_dims_2,{term_x,term_y});
-data_6.input_id  = [2,2];
-data_6.output_id = [2,2];
+subterm_21 = 'ZERO';
+subterm_22 = MD_TERM(num_dims_2,{term_x,term_y});
+
+descriptor = {{subterm_11},{subterm_21,subterm_22}};
 
 % assemble PDE terms data
 

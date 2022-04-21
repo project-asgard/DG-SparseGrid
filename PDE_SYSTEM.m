@@ -19,17 +19,11 @@ classdef PDE_SYSTEM < handle
             
         end
         
-        function lev_vec = get_lev_vec(obj)
-            num_dims = numel(obj.pde_solutions{1}.dimensions); % This must be changed for multiple solutions!
-            for d=1:num_dims
-                lev_vec(d,1) = obj.pde_solutions{1}.dimensions{d}.lev; % This must be changed for multiple solutions!
-            end
-        end
+        
         
         function initialize( obj )
             
-            [obj.hash_table.elements, obj.hash_table.elements_idx]...
-                = hash_table_sparse_nD( obj.get_lev_vec, obj.opts.max_lev, obj.opts.grid_type );
+            
             
             for i = 1 : obj.num_comps
                 

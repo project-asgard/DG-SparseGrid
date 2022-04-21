@@ -1,4 +1,4 @@
-function [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data)
+function [perm,iperm,pvec] = sg_to_fg_mapping_2d(md_term,opts,A_data)
 % Maps the sparse_grid index to standard tensor product full_grid index.
 % This to allow multiplication by the full-grid kronecker sum stiffness
 % matrix.  
@@ -38,7 +38,7 @@ function [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data)
 %         A = A_F(iperm,iperm);
 
 %Checking for only 2 dimensions
-assert(numel(pde.dimensions) == 2);
+assert(numel(md_term.terms_1D) == 2);
 
 deg = opts.deg;
 
@@ -46,8 +46,8 @@ num_sparse_ele = numel(A_data.element_local_index_D{1}); %Number of sparse eleme
 iperm = zeros(num_sparse_ele*deg^2,1);
 
 %Get FG_dof for each direction
-max_x_dof = size(pde.terms{1}.terms_1D{1}.mat,1);
-max_y_dof = size(pde.terms{1}.terms_1D{2}.mat,1);
+max_x_dof = size(md_term.terms_1D{1}.mat,1);
+max_y_dof = size(md_term.terms_1D{2}.mat,1);
 perm = nan(max_x_dof*max_y_dof,1);
 
 idx = 1; %Keep track of index
