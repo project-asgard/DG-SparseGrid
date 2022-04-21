@@ -2,8 +2,9 @@ function pde_system = diffusion_system2()
 
 %
 opts = OPTS( {} );
-opts.lev=6;
+opts.lev=4;
 opts.fast_FG_matrix_assembly = true;
+opts.grid_type = 'FG';
 %
 %% First Component: d_t u = - d_x sigma_x - d_y sigma_y + f(u)
 
@@ -20,8 +21,8 @@ num_dims_1 = numel(dimensions_1);
 
 %% Define the analytic solution (optional).
 
-soln_x_1 = @(x,p,t) cos(pi*x)*pi^2;
-soln_y_1 = @(y,p,t) 0*y+1;%cos(pi*y);
+soln_x_1 = @(x,p,t) -(x < 1/16) + (x > 1/16);%cos(pi*x)*pi^2;
+soln_y_1 = @(y,p,t) cos(pi*y);
 soln_t_1 = @(t,p)   exp(-2*pi^2*t);
 soln_1_1 = new_md_func(num_dims_1,{soln_x_1,soln_y_1,soln_t_1});
 
@@ -59,8 +60,8 @@ num_dims_2 = numel(dimensions_2);
 
 %% Define the analytic solution (optional).
 
-soln_x_1 = @(x,p,t) sin(pi*x)*pi;
-soln_y_1 = @(y,p,t) 0*y+1;%cos(pi*y);
+soln_x_1 = @(x,p,t) abs(x-1/16);%sin(pi*x)*pi;
+soln_y_1 = @(y,p,t) cos(pi*y);
 soln_t_1 = @(t,p)   exp(-2*pi^2*t);
 soln_2_1 = new_md_func(num_dims_2,{soln_x_1,soln_y_1,soln_t_1});
 
@@ -100,7 +101,7 @@ gp = @(x,p,t,dat) x.*0+1;
 
 subterm_11 = 'ZERO';
 
-pterm_x = DIV(num_dims_2,gp,'',-1,'N','N','','','',dV); % num_dims_2 because it is applied to sigma (think about this?)
+pterm_x = DIV(num_dims_2,gp,'',0,'N','N','','','',dV); % num_dims_2 because it is applied to sigma (think about this?)
 pterm_y = MASS(gp);
 term_x  = SD_TERM({pterm_x}); % Maybe remove?
 term_y  = SD_TERM({pterm_y}); % Maybe remove?
@@ -113,6 +114,7 @@ term_1 = TERM( u, Q, descriptor );
 
 out = term_1.driver( opts, 0.0 );% Hack to test driver
 
+%%%%  Change opts.lev from 3 to 4 to see drop in error
 norm(out-u.fval)
 
 % d_y sigma_y:

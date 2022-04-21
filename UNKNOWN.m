@@ -30,9 +30,13 @@ classdef UNKNOWN < handle
             
             unknown.dimensions           = dimensions;
             unknown.num_funcs            = num_funcs;
-            unknown.deg                = opts.deg;
+            unknown.deg                  = opts.deg;
             unknown.analytic_solutions   = analytic_solutions;
             unknown.initial_conditions   = initial_conditions;
+            
+            for i=1:numel(unknown.dimensions)
+                unknown.dimensions{i}.lev = opts.lev;
+            end
             
             [unknown.hash_table.elements, unknown.hash_table.elements_idx]...
                 = hash_table_sparse_nD( unknown.get_lev_vec, opts.max_lev, opts.grid_type );

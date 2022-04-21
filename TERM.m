@@ -56,7 +56,7 @@ classdef TERM < handle
                 dim = obj.output_unknown.dimensions{d};
                 term_1D = md_term.terms_1D{d};
 
-                construction_level = dim.lev;
+                construction_level = opts.lev;
                 if opts.max_lev_coeffs && ~term_1D.time_dependent
                     construction_level = opts.max_lev;
                 end
