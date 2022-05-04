@@ -16,10 +16,10 @@ classdef PDE_SYSTEM < handle
             
             pde_system.num_eqs = numel( pde_system.equations );
             
-            unknowns = cell( pde_system.num_eqs );
-            for i = pde_system.num_eqs
+            pde_system.unknowns = cell( pde_system.num_eqs, 1 );
+            for i = 1 : pde_system.num_eqs
                 
-                unknowns{i} = pde_system.equations{i}.unknown;
+                pde_system.unknowns{i} = pde_system.equations{i}.unknown;
                 
             end
             
