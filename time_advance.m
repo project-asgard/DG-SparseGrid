@@ -664,6 +664,7 @@ else %%Trying imex deg 2 version
     
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
               + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
+    %f_3s = f0;
     
     %Create rho_3s
     mom0 = moment_mat{1}*f_3s; %integral of (f,1)_v
@@ -693,9 +694,10 @@ else %%Trying imex deg 2 version
     f1 = f_3;
     
     
-    if opts.case_ == 2
+    if opts.case_ == 2 && 0
         %Get analytic solution at t_{n+1}
         fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
+        %fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
         
         %Get analytic moments
         
@@ -718,13 +720,13 @@ else %%Trying imex deg 2 version
         fig1.Units = 'Normalized';
         fig1.Position = [0.5 0.5 0.3 0.3];
         subplot(2,2,1);
-        plot(nodes,pde.params.n(nodes),nodes,analytic_moments.n);
+        plot(nodes,pde.params.n(nodes)-analytic_moments.n');
         title('n_f');
         subplot(2,2,2);
-        plot(nodes,pde.params.u(nodes),nodes,analytic_moments.u);
+        plot(nodes,pde.params.u(nodes)-analytic_moments.u');
         title('u_f');
         subplot(2,2,3);
-        plot(nodes,pde.params.th(nodes),nodes,analytic_moments.T);
+        plot(nodes,pde.params.th(nodes)-analytic_moments.T');
         title('th_f');
         sgtitle("Fluid Variables. t = "+num2str(t+dt));
         drawnow
