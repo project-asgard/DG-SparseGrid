@@ -2,34 +2,24 @@ classdef PDE_SYSTEM < handle
     
     properties
         opts;
-        hash_table;
-        num_comps = 0;
-        pde_solutions = {};
-        pde_terms = {};
+        num_eqs;
+        unknowns;
+        equations;
     end
     
     methods
         
-        function pde_system = PDE_SYSTEM( opts, pde_solutions, pde_terms )
+        function pde_system = PDE_SYSTEM( opts, equations )
  
-            pde_system.opts          = OPTS( opts );
-            pde_system.num_comps     = numel(pde_solutions);
-            pde_system.pde_solutions = pde_solutions;
-            pde_system.pde_terms     = pde_terms;
+            pde_system.opts      = opts;
+            pde_system.equations = equations;
             
-        end
-        
-        
-        
-        function initialize( obj )
+            pde_system.num_eqs = numel( pde_system.equations );
             
-            
-            
-            for i = 1 : obj.num_comps
+            unknowns = cell( num_eqs );
+            for i = num_eqs
                 
-                obj.pde_solutions{i}.set_initial_conditions( obj.opts, obj.hash_table )
-                
-                obj.pde_solutions{i}.initialize_auxiliary()
+                unknowns{i} = pde_system.equations{i}.unknown;
                 
             end
             

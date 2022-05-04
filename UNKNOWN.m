@@ -16,20 +16,15 @@ classdef UNKNOWN < handle
         
         function set_initial_conditions( obj, opts )
             
-            for i = 1 : obj.num_funcs
-                
-                obj.fval(:,i)...
-                    = md_eval_function( opts, opts.deg, obj.dimensions,[],...
-                                        obj.initial_conditions(i), obj.hash_table, obj.transform_blocks, 0.0 );
-                
-            end
+            obj.fval = md_eval_function( opts, opts.deg, obj.dimensions,[],...
+                                         obj.initial_conditions, obj.hash_table,...
+                                         obj.transform_blocks, 0.0 );
             
         end
         
-        function unknown = UNKNOWN( opts, dimensions, num_funcs, analytic_solutions, initial_conditions )
+        function unknown = UNKNOWN( opts, dimensions, analytic_solutions, initial_conditions )
             
             unknown.dimensions           = dimensions;
-            unknown.num_funcs            = num_funcs;
             unknown.deg                  = opts.deg;
             unknown.analytic_solutions   = analytic_solutions;
             unknown.initial_conditions   = initial_conditions;

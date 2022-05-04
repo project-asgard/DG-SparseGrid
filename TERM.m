@@ -22,27 +22,23 @@ classdef TERM < handle
                 
                 obj.A_data{i} = matrix_assembly_data( obj.input_unknowns{i}, obj.output_unknown, opts );
                 
-                for j = 1 : obj.input_unknowns{i}.num_funcs
-                    
-                    if( isa( obj.descriptor{i}{j}, 'MD_TERM' ) )
+                if( isa( obj.descriptor{i}, 'MD_TERM' ) )
                         
-                        if( obj.time_dependent )
-                            
-                            obj.descriptor{i}{j}...
-                                = obj.get_coeff_MATS( opts, obj.descriptor{i}{j}, t ); % Needs to have same cell structure as input unknowns
-                            
-                            % Generates 1D stiffness matrix for each dimension
-                            %   Assumes input and output variables have the
-                            %   same dimensionality.
-                            
-                            F = F + apply_A_term( opts, obj.descriptor{i}{j}, obj.A_data{i}, obj.input_unknowns{i}.fval(:,j), obj.output_unknown.deg );
-                            
-                        else % --- time independent
-                            
-                        end
-                        
+                    if( obj.time_dependent )
+
+                        obj.descriptor{i}...
+                            = obj.get_coeff_MATS( opts, obj.descriptor{i}, t ); % Needs to have same cell structure as input unknowns
+
+                        % Generates 1D stiffness matrix for each dimension
+                        %   Assumes input and output variables have the
+                        %   same dimensionality.
+
+                        F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, obj.input_unknowns{i}.fval, obj.output_unknown.deg );
+
+                    else % --- time independent
+
                     end
-                    
+                        
                 end
             end
             
