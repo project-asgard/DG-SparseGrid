@@ -16,8 +16,8 @@ classdef PDE_SYSTEM < handle
             
             pde_system.num_eqs = numel( pde_system.equations );
             
-            unknowns = cell( num_eqs );
-            for i = num_eqs
+            unknowns = cell( pde_system.num_eqs );
+            for i = pde_system.num_eqs
                 
                 unknowns{i} = pde_system.equations{i}.unknown;
                 
