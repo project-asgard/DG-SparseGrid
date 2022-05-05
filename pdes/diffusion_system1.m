@@ -67,7 +67,7 @@ analytic_solution = {soln};
 
 %% Solution Vector
 
-q = UNKNOWN( opts, dimensions, soln, initial_conditions );
+q = UNKNOWN( opts, dimensions, analytic_solution, initial_conditions );
 q.set_initial_conditions( opts );
 
 %% Global Solution Vector
