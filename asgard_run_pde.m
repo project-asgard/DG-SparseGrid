@@ -89,36 +89,33 @@ end
 
 %% Construct transforms back to realspace for plotting
 
-if opts.build_realspace_output
-    for d=1:num_dims
-        if strcmp(opts.output_grid,'fixed')
-            if d==1
-                num_fixed_grid = 51;
-            else
-                num_fixed_grid = 21;
-            end
-            nodes_nodups{d} = ...
-                linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
-            [Meval{d},nodes{d},nodes_count{d}] = ...
-                matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
-        elseif strcmp(opts.output_grid,'elements')
-            [element_coordinates,element_coordinates_deg] = get_sparse_grid_coordinates(pde,opts,hash_table);
-            nodes_nodups{d} = unique(sort(element_coordinates_deg(d,:)));
-            [Meval{d},nodes{d},nodes_count{d}] = ...
-                matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
+for d=1:num_dims
+    if strcmp(opts.output_grid,'fixed')
+        if d==1
+            num_fixed_grid = 51;
         else
-            [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
-            nodes_nodups{d} = nodes{d};
-            nodes_count{d} = nodes{d}.*0+1;
+            num_fixed_grid = 21;
         end
+        nodes_nodups{d} = ...
+            linspace(pde.dimensions{d}.min,pde.dimensions{d}.max,num_fixed_grid);
+        [Meval{d},nodes{d},nodes_count{d}] = ...
+            matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
+    elseif strcmp(opts.output_grid,'elements')
+        [element_coordinates,element_coordinates_deg] = get_sparse_grid_coordinates(pde,opts,hash_table);
+        nodes_nodups{d} = unique(sort(element_coordinates_deg(d,:)));
+        [Meval{d},nodes{d},nodes_count{d}] = ...
+            matrix_plot_D(pde,opts,pde.dimensions{d},nodes_nodups{d});
+    else
+        [Meval{d},nodes{d}] = matrix_plot_D(pde,opts,pde.dimensions{d});
+        nodes_nodups{d} = nodes{d};
+        nodes_count{d} = nodes{d}.*0+1;
     end
 end
 
+
 %% Construct a n-D coordinate array
-if opts.build_realspace_output
-    coord = get_realspace_coords(pde,nodes);
-    coord_nodups = get_realspace_coords(pde,nodes_nodups);
-end
+coord = get_realspace_coords(pde,nodes);
+coord_nodups = get_realspace_coords(pde,nodes_nodups);
 
 %% Plot initial condition
 if num_dims <=3
@@ -126,13 +123,12 @@ if num_dims <=3
     %%
     % Get the real space solution
     
-    if opts.build_realspace_output
-        fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
-        if ~isempty(pde.solutions)
-            fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
-            fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace),1);
-        end
+    fval_realspace = wavelet_to_realspace(pde,opts,Meval,fval,hash_table);
+    if ~isempty(pde.solutions)
+        fval_realspace_analytic = get_analytic_realspace_solution_D(pde,opts,coord,t);
+        fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace),1);
     end
+
     
     % construct the moment function handle list for calculating the mass
     if opts.calculate_mass
@@ -146,40 +142,38 @@ if num_dims <=3
         fval_realspace_analytic = reshape(fval_realspace_analytic, length(fval_realspace), 1);
     end
     
-    if opts.build_realspace_output
-        f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
-        if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
-            f_realspace_nD = ...
-                remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
-        end
+    f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
+    if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
+        f_realspace_nD = ...
+            remove_duplicates(num_dims,f_realspace_nD,nodes_nodups,nodes_count);
+    end
 
-        if isempty(pde.solutions)
-            f_realspace_analytic_nD = [];
+    if isempty(pde.solutions)
+        f_realspace_analytic_nD = [];
+    else
+        f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
+    end
+
+    if opts.save_output
+        if num_dims <= 3
+            f_realspace_nD_t{1} = f_realspace_nD;
         else
-            f_realspace_analytic_nD = get_analytic_realspace_solution_D(pde,opts,coord_nodups,t);
+            error('Save output for num_dimensions >3 not yet implemented');
         end
-    
-        if opts.save_output
-            if num_dims <= 3
-                f_realspace_nD_t{1} = f_realspace_nD;
-            else
-                error('Save output for num_dimensions >3 not yet implemented');
-            end
-        end
+    end
+
+    if opts.use_oldhash
+    else
+        element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
+    end
+
+    if ~opts.quiet
+        figs.ic = figure('Name','Initial Condition','Units','normalized','Position',[0.7,0.1,0.3,0.3]);
 
         if opts.use_oldhash
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
         else
-            element_coordinates = get_sparse_grid_coordinates(pde,opts,hash_table);
-        end
-
-        if norm(fval_realspace) > 0 && ~opts.quiet
-            figs.ic = figure('Name','Initial Condition','Units','normalized','Position',[0.7,0.1,0.3,0.3]);
-
-            if opts.use_oldhash
-                plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
-            else
-                plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
-            end
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
         end
     end
     
@@ -407,7 +401,7 @@ for L = 1:opts.num_steps
     % Write the present fval to file.
     if write_fval; write_fval_to_file(fval,lev,deg,L); end
     
-    if num_dims <=3 && opts.build_realspace_output
+    if num_dims <=3 && ( opts.build_realspace_output || (mod(L,opts.plot_freq) == 0) )
         
         %%
         % Get the real space solution
@@ -492,7 +486,7 @@ for L = 1:opts.num_steps
     
     % Reshape realspace solution and plot
     
-    if num_dims <= 3 && opts.build_realspace_output
+    if num_dims <= 3 && (opts.build_realspace_output || (mod(L,opts.plot_freq) == 0) )
         
         f_realspace_nD = singleD_to_multiD(num_dims,fval_realspace,nodes);
         if strcmp(opts.output_grid,'fixed') || strcmp(opts.output_grid,'elements')
@@ -520,7 +514,8 @@ for L = 1:opts.num_steps
                 figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.3,0.3]);
             end
                        
-            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
+            %plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
             
             % this is just for the RE paper
             plot_fval_in_cyl = false;

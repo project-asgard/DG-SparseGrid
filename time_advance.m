@@ -694,7 +694,7 @@ else %%Trying imex deg 2 version
     f1 = f_3;
     
     
-    if opts.case_ == 2 && 0
+    if opts.case_ == 2 
         %Get analytic solution at t_{n+1}
         fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
         %fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
