@@ -693,10 +693,11 @@ else %%Trying imex deg 2 version
     %Update timestep to final stage
     f1 = f_3;
     
-    
-    if opts.case_ == 2 
+    time = t+dt;
+    if opts.case_ == 2 && (abs(pde.params.nu) < 1e-8)
         %Get analytic solution at t_{n+1}
-        fval_analytic = exact_solution_vector(pde,opts,hash_table,t+dt);
+
+        fval_analytic = exact_solution_vector(pde,opts,hash_table,time);
         %fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
         
         %Get analytic moments
@@ -728,7 +729,7 @@ else %%Trying imex deg 2 version
         subplot(2,2,3);
         plot(nodes,pde.params.th(nodes)-analytic_moments.T');
         title('th_f');
-        sgtitle("Fluid Variables. t = "+num2str(t+dt));
+        sgtitle("Fluid Variables. t = "+num2str(time));
         drawnow
     else
         %Plot moments
@@ -745,7 +746,7 @@ else %%Trying imex deg 2 version
         subplot(2,2,3);
         plot(nodes,pde.params.th(nodes));
         title('th_f');
-        sgtitle("Fluid Variables. t = "+num2str(t+dt));
+        sgtitle("Fluid Variables. t = "+num2str(time));
         drawnow
         
     end
