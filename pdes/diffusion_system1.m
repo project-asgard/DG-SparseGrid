@@ -2,9 +2,10 @@ function pde_system = diffusion_system1()
 
 %
 opts = OPTS( {} );
-opts.lev=4;
+opts.lev=5;
 opts.deg=2;
-opts.grid_type = 'FG';
+opts.grid_type = 'SG';
+opts.fast_FG_matrix_assembly = true;
 opts.timestep_method = 'BE';
 %
 
@@ -89,7 +90,7 @@ md_term_x = MD_TERM(num_dims,{sd_term_x});
 
 descriptor = {md_term_x};
 
-term_u = TERM( u, {q}, descriptor );
+term_u = TERM( u, {q}, descriptor, true, false );
 
 equation_u = EQUATION( u, {term_u}, 'evolution', '' );
 
@@ -101,7 +102,7 @@ md_term_x = MD_TERM(num_dims,{sd_term_x});
 
 descriptor = {md_term_x};
 
-term_q = TERM( q, {u}, descriptor );
+term_q = TERM( q, {u}, descriptor, true, false );
 
 equation_q = EQUATION( q, {term_q}, 'closure', '' );
 
@@ -111,14 +112,20 @@ fvals_0 = pde_system.get_fvals();
 
 t   = 0.0;
 t_f = 0.1;
-dt  = 0.25/((2*opts.deg-1)*(2^opts.lev)^2);
+if strcmp(opts.timestep_method,'FE')
+    dt  = 0.25/((2*opts.deg-1)*(2^opts.lev)^2);
+elseif strcmp(opts.timestep_method,'BE')
+    dt  = 0.1/(2^opts.lev);
+end
 
+t_cnt = 0;
 while t < t_f
     
     time_stepper( pde_system, t, dt );
     
     t = t + dt;
-    
+    t_cnt = t_cnt + 1;
+    if mod(t_cnt,100); fprintf('t = %f\n',t); end
 end
 
 fvals_1 = pde_system.get_fvals();

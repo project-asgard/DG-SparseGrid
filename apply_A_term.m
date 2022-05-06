@@ -43,17 +43,40 @@ if opts.fast_FG_matrix_assembly
     
     opts.use_sparse_A = false;
     
-    assert(num_dims==2,'-fast_matrix_assembly option is only available in 2D');
+    if num_dims == 1
+        
+        assert(opts.adapt == false,"'fast_FG_matrix_assembly' is not supported for adaptivity and dim = 1");
+        %In this case FG == SG
+        
+        iperm = zeros(dof,1);
+        perm = zeros(dof,1);
+        for i=1:deg
+            iperm(i:deg:end) = deg*(A_data.element_local_index_D{1}-1)+i;
+        end
+        perm(iperm) = 1:dof;
+        
+        f_F = f(perm);
+        Af_F = md_term.terms_1D{1}.mat*f_F;
+        Af = Af_F(iperm);
+        
+        
+    elseif num_dims == 2
     
-    % Get SG <-> FG conversion
-    [perm,iperm,pvec] = sg_to_fg_mapping_2d(md_term,opts,A_data);
+        % Get SG <-> FG conversion
+        [perm,iperm,pvec] = sg_to_fg_mapping_2d(md_term,opts,A_data);
+
+        f_F = zeros(size(perm,1),1);
+        f_F(pvec) = f(perm(pvec));
+        Af_F = md_term.terms_1D{2}.mat * reshape(f_F,size(md_term.terms_1D{1}.mat,1),[]) * (md_term.terms_1D{1}.mat');
+        Af_F = reshape(Af_F,[],1);
+
+        Af = Af_F(iperm);
     
-    f_F = zeros(size(perm,1),1);
-    f_F(pvec) = f(perm(pvec));
-    Af_F = md_term.terms_1D{2}.mat * reshape(f_F,size(md_term.terms_1D{1}.mat,1),[]) * (md_term.terms_1D{1}.mat');
-    Af_F = reshape(Af_F,[],1);
-    
-    Af = Af_F(iperm);
+    else
+       
+       error("'fast_FG_matrix_assembly' only applies to 1 and 2 dimension problems."); 
+        
+    end
     
 else % do not use fast_FG_matrix_assembly
     
