@@ -53,6 +53,31 @@ classdef EQUATION < handle
             
         end
         
+        function [] = EvaluateClosure( obj, opts, time )
+            
+            assert( strcmp( obj.type, 'closure' ), 'must be closure equation' )
+            
+            fval = zeros(size(obj.unknown.fval));
+            for i = 1 : numel( obj.terms )
+                
+                fval = fval + obj.terms{i}.driver( opts, time );
+                
+            end
+            
+            obj.InvertMassMatrix( opts, time, fval )
+            
+        end
+        
+        function [] = InvertMassMatrix( obj, opts, time, fval )
+            
+            Mx = @(x) obj.LHS_term.driver( opts, time, {x} );
+            
+            [ obj.unknown.fval, ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
+            
+            assert( relres < 1e-9, 'EvaluateClosure: pcg failed' )
+            
+        end
+        
     end
 end
 

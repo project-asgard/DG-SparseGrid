@@ -25,6 +25,16 @@ classdef PDE_SYSTEM < handle
             
         end
         
+        function [ fvals ] = get_fvals( obj )
+            
+            for i = 1 : numel(obj.unknowns)
+                
+                fvals{i} = obj.unknowns{i}.fval;
+                
+            end
+            
+        end
+        
     end
 end
 

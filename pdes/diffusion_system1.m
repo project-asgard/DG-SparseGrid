@@ -3,11 +3,13 @@ function pde_system = diffusion_system1()
 %
 opts = OPTS( {} );
 opts.lev=4;
+opts.deg=2;
 opts.grid_type = 'FG';
+opts.timestep_method = 'FE';
 %
 
 %
-%% Solving the heat equation u_t + u_xx = 0 as a system:
+%% Solving the heat equation u_t - u_xx = 0 as a system:
 %  u_t + q_x = 0
 %    q + u_x = 0
 
@@ -23,7 +25,7 @@ num_dims = numel(dimensions);
 %% Define the analytic solution (optional).
 
 soln_x = @(x,p,t) sin(pi*x);
-soln_t = @(t,p)   exp(-2*pi^2*t);
+soln_t = @(t,p)   exp(-pi^2*t);
 soln   = new_md_func(num_dims,{soln_x,soln_t});
 
 %%  Define the boundary conditions
@@ -49,8 +51,8 @@ u.set_initial_conditions( opts );
 %% Define the analytic solution (optional).
 
 soln_x = @(x,p,t) cos(pi*x)*pi;
-soln_t = @(t,p)   exp(-2*pi^2*t);
-soln = new_md_func(num_dims,{soln_x,soln_t});
+soln_t = @(t,p)   exp(-pi^2*t);
+soln   = new_md_func(num_dims,{soln_x,soln_t});
 
 %%  Define the boundary conditions
 
@@ -93,7 +95,7 @@ equation_u = EQUATION( u, {term_u}, 'evolution', '' );
 
 % d_x u
 
-pterm_x   = GRAD(num_dims,gp,'',0,'N','N','','','',dV);
+pterm_x   = GRAD(num_dims,gp,'',0,'D','D','','','',dV);
 sd_term_x = SD_TERM({pterm_x});
 md_term_x = MD_TERM(num_dims,{sd_term_x});
 
@@ -105,23 +107,32 @@ equation_q = EQUATION( q, {term_q}, 'closure', '' );
 
 pde_system = PDE_SYSTEM( opts, {equation_u,equation_q} );
 
-tic
-out = term_u.driver( opts, 0.0 );% Hack to test driver
-toc
+fvals_0 = pde_system.get_fvals();
 
-%%%%  Change opts.lev from 3 to 4 to see drop in error
-norm(out-u.fval)
+t   = 0.0;
+t_f = 0.1;
+dt  = 0.25/((2*opts.deg-1)*(2^opts.lev)^2);
 
-tic
-out = equation_u.LHS_term.driver( opts, 0 );
-toc
+while t < t_f
+    
+    time_stepper( pde_system, t, dt );
+    
+    t = t + dt;
+    
+end
 
-norm(out-u.fval)
+fvals_1 = pde_system.get_fvals();
+
+x_A  = linspace( 0.0, 1.0, 1024 );
+u0_A = u.analytic_solutions{1}{1}(x_A,1.0,0.0).*u.analytic_solutions{1}{2}(0.0,1);
+uf_A = u.analytic_solutions{1}{1}(x_A,1.0,  t).*u.analytic_solutions{1}{2}(  t,1);
+q0_A = q.analytic_solutions{1}{1}(x_A,1.0,0.0).*q.analytic_solutions{1}{2}(0.0,1);
+qf_A = q.analytic_solutions{1}{1}(x_A,1.0,  t).*q.analytic_solutions{1}{2}(  t,1);
 
 %%% Hack to plot initial condition %%%
 
 for d=1:num_dims
-    num_fixed_grid = 51;
+    num_fixed_grid = 257;
     nodes_nodups{d}...
         = linspace( pde_system.unknowns{1}.dimensions{d}.min,...
                     pde_system.unknowns{1}.dimensions{d}.max,...
@@ -136,10 +147,16 @@ u_rs...
   = wavelet_to_realspace( pde_system.unknowns{1}, pde_system.opts, Meval,...
                           pde_system.unknowns{1}.fval, pde_system.unknowns{1}.hash_table );
 
+close all
+
+fig_1 = figure( 1 );
+
 subplot(2,1,1)
 
-plot( nodes{1}, u_rs, '-k', 'linewidth', 2 )
-title( '$u_0$', 'interpreter', 'latex' )
+plot( x_A     , u0_A, ':k', 'linewidth', 2 ); hold on
+plot( x_A     , uf_A, '-k', 'linewidth', 2 )
+plot( nodes{1}, u_rs, '-r', 'linewidth', 2 )
+title( '$u$', 'interpreter', 'latex' )
 
 q_rs...
   = wavelet_to_realspace( pde_system.unknowns{2}, pde_system.opts, Meval,...
@@ -147,8 +164,12 @@ q_rs...
 
 subplot(2,1,2)
 
-plot( nodes{1}, q_rs, '-k', 'linewidth', 2 )
-title( '$q_0$', 'interpreter', 'latex' )
+plot( x_A     , q0_A, ':k', 'linewidth', 2 ); hold on
+plot( x_A     , qf_A, '-k', 'linewidth', 2 )
+plot( nodes{1}, q_rs, '-r', 'linewidth', 2 )
+title( '$q$', 'interpreter', 'latex' )
+
+exportgraphics( fig_1, 'diffusion_system1.pdf' )
 
 %%% End Hack %%%
 
