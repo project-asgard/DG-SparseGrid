@@ -5,7 +5,7 @@ opts = OPTS( {} );
 opts.lev=4;
 opts.deg=2;
 opts.grid_type = 'FG';
-opts.timestep_method = 'FE';
+opts.timestep_method = 'BE';
 %
 
 %

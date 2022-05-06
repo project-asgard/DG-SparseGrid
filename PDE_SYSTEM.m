@@ -23,6 +23,39 @@ classdef PDE_SYSTEM < handle
                 
             end
             
+            % --- Create global to local map ---
+            
+            num_unknowns = numel( pde_system.unknowns );
+            for i = 1 : pde_system.num_eqs
+                
+                equation = pde_system.equations{i};
+                
+                for j = 1 : numel( equation.terms )
+                    
+                    term = equation.terms{j};
+                    
+                    num_input_unknowns = numel( term.input_unknowns );
+                    
+                    term.input_g2l = int32(zeros(size(num_input_unknowns,1)));
+                    
+                    for k = 1 : num_input_unknowns
+                        
+                        for l = 1 : num_unknowns
+                            
+                            if( pde_system.unknowns{l} == term.input_unknowns{k} )
+                                
+                                term.input_g2l(k) = l;
+                                
+                            end
+                            
+                        end
+                        
+                    end
+                    
+                end
+                
+            end
+            
         end
         
         function [ fvals ] = get_fvals( obj )

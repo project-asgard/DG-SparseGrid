@@ -74,7 +74,7 @@ classdef EQUATION < handle
             
             [ obj.unknown.fval, ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
             
-            assert( relres < 1e-9, 'EvaluateClosure: pcg failed' )
+            assert( relres < 1e-9, 'InvertMassMatrix: pcg failed' )
             
         end
         

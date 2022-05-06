@@ -6,6 +6,7 @@ classdef TERM < handle
         time_dependent = true;
         output_unknown;
         input_unknowns;
+        input_g2l; % --- global to local map for unknowns input to term
         descriptor;
         A_data;
     end
