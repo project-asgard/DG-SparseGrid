@@ -49,7 +49,9 @@ classdef EQUATION < handle
             
             md_term = MD_TERM( num_dims, sd_terms );
             
-            equation.LHS_term = TERM( unknown, {unknown}, {md_term} );
+            %For now asssume mass matrix is time independent
+            time_dep = false;
+            equation.LHS_term = TERM( unknown, {unknown}, {md_term}, true, time_dep );
             
         end
         
