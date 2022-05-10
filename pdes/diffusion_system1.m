@@ -72,10 +72,6 @@ analytic_solution = {soln};
 q = UNKNOWN( opts, dimensions, analytic_solution, initial_conditions );
 q.set_initial_conditions( opts );
 
-%% Global Solution Vector
-
-Q = {u,q};
-
 %% Define the terms of the PDE system
 
 dV = @(x,p,t,dat) x.*0+1;
