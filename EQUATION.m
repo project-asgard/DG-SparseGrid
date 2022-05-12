@@ -55,24 +55,48 @@ classdef EQUATION < handle
             
         end
         
-        function [] = EvaluateClosure( obj, opts, time )
+        function [] = update_terms( obj, opts, t )
+            
+            obj.update_LHS_terms( opts, t )
+            
+            obj.update_RHS_terms( opts, t )
+            
+        end
+        
+        function [] = update_LHS_terms( obj, opts, t )
+            
+            obj.LHS_term.evaluate_coefficient_matrices( opts, t )
+            
+        end
+        
+        function [] = update_RHS_terms( obj, opts, t )
+            
+            for i = 1 : numel( obj.terms )
+                
+                obj.terms{i}.evaluate_coefficient_matrices( opts, t )
+                
+            end
+            
+        end
+        
+        function [] = EvaluateClosure( obj, opts, t )
             
             assert( strcmp( obj.type, 'closure' ), 'must be closure equation' )
             
             fval = zeros(size(obj.unknown.fval));
             for i = 1 : numel( obj.terms )
                 
-                fval = fval + obj.terms{i}.driver( opts, time );
+                fval = fval + obj.terms{i}.driver( opts, t );
                 
             end
             
-            obj.InvertMassMatrix( opts, time, fval )
+            obj.InvertMassMatrix( opts, t, fval )
             
         end
         
-        function [] = InvertMassMatrix( obj, opts, time, fval )
+        function [] = InvertMassMatrix( obj, opts, t, fval )
             
-            Mx = @(x) obj.LHS_term.driver( opts, time, {x} );
+            Mx = @(x) obj.LHS_term.driver( opts, t, {x} );
             
             [ obj.unknown.fval, ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
             

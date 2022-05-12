@@ -32,38 +32,30 @@ classdef TERM < handle
                 
                 obj.A_data{i} = matrix_assembly_data( obj.input_unknowns{i}, obj.output_unknown, opts );
                 
-                if( isa( obj.descriptor{i}, 'MD_TERM' ) )
-                        
-                    if( obj.time_dependent )
-
-                        obj.descriptor{i}...
-                            = obj.get_coeff_MATS( opts, obj.descriptor{i}, t ); % Needs to have same cell structure as input unknowns
-
-                        % Generates 1D stiffness matrix for each dimension
-                        %   Assumes input and output variables have the
-                        %   same dimensionality.
-                        if( apply_to_x )
-                            F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, x{i}                      , obj.output_unknown.deg );
-                        else
-                            F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, obj.input_unknowns{i}.fval, obj.output_unknown.deg );
-                        end
-
-                    else % --- time independent
-                        
-                        if isempty(obj.descriptor{i}.terms_1D{1}.mat)
-                            obj.descriptor{i}...
-                                = obj.get_coeff_MATS( opts, obj.descriptor{i}, t ); % Needs to have same cell structure as input unknowns
-                        end
-                        
-                        if( apply_to_x )
-                            F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, x{i}                      , obj.output_unknown.deg );
-                        else
-                            F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, obj.input_unknowns{i}.fval, obj.output_unknown.deg );
-                        end
-
-                    end
-                        
+                if( apply_to_x )
+                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, x{i}                      , obj.output_unknown.deg );
+                else
+                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, obj.input_unknowns{i}.fval, obj.output_unknown.deg );
                 end
+                
+            end
+            
+        end
+        
+        function evaluate_coefficient_matrices( obj, opts, t )
+            
+            for i = 1 : numel(obj.input_unknowns)
+                
+                if( isa( obj.descriptor{i}, 'MD_TERM' ) )
+                    
+                    if( or( obj.time_dependent, isempty(obj.descriptor{i}.terms_1D{1}.mat) ) )
+                        
+                        obj.descriptor{i} = obj.get_coeff_MATS( opts, obj.descriptor{i}, t ); % Needs to have same cell structure as input unknowns
+                        
+                    end
+                    
+                end
+                
             end
             
         end

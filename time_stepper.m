@@ -24,6 +24,8 @@ function [] = ForwardEuler( pde_system, t, dt )
         
         equation = pde_system.equations{i};
         
+        equation.update_terms( pde_system.opts, t )
+        
         if( strcmp(equation.type,'evolution') )
             
             RHS{i} = zeros(size(equation.unknown.fval));
@@ -86,6 +88,8 @@ function [] = BackwardEuler( pde_system, t, dt )
     for i = 1 : num_eqs
         
         equation = pde_system.equations{i};
+        
+        equation.update_terms( pde_system.opts, t )
         
         if( strcmp( equation.type, 'evolution' ) )
             

@@ -2,8 +2,8 @@ function pde_system = diffusion_system1()
 
 %
 opts = OPTS( {} );
-opts.lev=5;
-opts.deg=2;
+opts.lev=4;
+opts.deg=3;
 opts.grid_type = 'SG';
 opts.fast_FG_matrix_assembly = true;
 opts.timestep_method = 'BE';
@@ -108,10 +108,10 @@ fvals_0 = pde_system.get_fvals();
 
 t   = 0.0;
 t_f = 0.1;
-if strcmp(opts.timestep_method,'FE')
-    dt  = 0.25/((2*opts.deg-1)*(2^opts.lev)^2);
+if     strcmp(opts.timestep_method,'FE')
+    dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
 elseif strcmp(opts.timestep_method,'BE')
-    dt  = 0.1/(2^opts.lev);
+    dt = 0.1/(2^opts.lev);
 end
 
 t_cnt = 0;
@@ -126,12 +126,6 @@ end
 
 fvals_1 = pde_system.get_fvals();
 
-x_A  = linspace( 0.0, 1.0, 1024 );
-u0_A = u.analytic_solutions{1}{1}(x_A,1.0,0.0).*u.analytic_solutions{1}{2}(0.0,1);
-uf_A = u.analytic_solutions{1}{1}(x_A,1.0,  t).*u.analytic_solutions{1}{2}(  t,1);
-q0_A = q.analytic_solutions{1}{1}(x_A,1.0,0.0).*q.analytic_solutions{1}{2}(0.0,1);
-qf_A = q.analytic_solutions{1}{1}(x_A,1.0,  t).*q.analytic_solutions{1}{2}(  t,1);
-
 %%% Hack to plot initial condition %%%
 
 for d=1:num_dims
@@ -145,6 +139,12 @@ for d=1:num_dims
                          pde_system.unknowns{1}.dimensions{d},...
                          nodes_nodups{d} );
 end
+
+x_A  = nodes{1}';
+u0_A = u.analytic_solutions{1}{1}(x_A,1.0,0.0).*u.analytic_solutions{1}{2}(0.0,1);
+uf_A = u.analytic_solutions{1}{1}(x_A,1.0,  t).*u.analytic_solutions{1}{2}(  t,1);
+q0_A = q.analytic_solutions{1}{1}(x_A,1.0,0.0).*q.analytic_solutions{1}{2}(0.0,1);
+qf_A = q.analytic_solutions{1}{1}(x_A,1.0,  t).*q.analytic_solutions{1}{2}(  t,1);
 
 u_rs...
   = wavelet_to_realspace( pde_system.unknowns{1}, pde_system.opts, Meval,...
@@ -173,6 +173,9 @@ plot( nodes{1}, q_rs, '-r', 'linewidth', 2 )
 title( '$q$', 'interpreter', 'latex' )
 
 exportgraphics( fig_1, 'diffusion_system1.pdf' )
+
+norm( u_rs - uf_A )
+norm( q_rs - qf_A )
 
 %%% End Hack %%%
 
