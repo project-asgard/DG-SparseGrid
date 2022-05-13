@@ -34,9 +34,16 @@ classdef UNKNOWN < handle
         
         function set_initial_conditions( obj, opts )
             
-            obj.fval = md_eval_function( opts, opts.deg, obj.dimensions,[],...
-                                         obj.initial_conditions, obj.hash_table,...
-                                         obj.transform_blocks, 0.0 );
+            obj.fval = obj.get_initial_conditions( opts );
+            
+        end
+        
+        function fval_initial = get_initial_conditions( obj, opts )
+            
+            fval_initial...
+                = md_eval_function( opts, opts.deg, obj.dimensions,[],...
+                                    obj.initial_conditions, obj.hash_table,...
+                                    obj.transform_blocks, 0.0 );
             
         end
         
