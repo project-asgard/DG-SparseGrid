@@ -111,7 +111,7 @@ t_f = 0.1;
 if     strcmp(opts.timestep_method,'FE')
     dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
 elseif strcmp(opts.timestep_method,'BE')
-    dt = 0.1/(2^opts.lev);
+    dt = 0.1/((2*opts.deg-1)*(2^opts.lev));
 end
 
 t_cnt = 0;
