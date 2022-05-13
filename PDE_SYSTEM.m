@@ -5,6 +5,7 @@ classdef PDE_SYSTEM < handle
         num_eqs;
         unknowns;
         equations;
+        solution_vector;
     end
     
     methods
@@ -23,12 +24,43 @@ classdef PDE_SYSTEM < handle
                 
             end
             
-            % --- Create global to local map ---
+            pde_system.solution_vector...
+                = GLOBAL_SOLUTION_VECTOR( pde_system.unknowns );
             
-            num_unknowns = numel( pde_system.unknowns );
-            for i = 1 : pde_system.num_eqs
+            pde_system.set_initial_conditions;
+            
+            pde_system.create_global_to_local_map;
+            
+        end
+        
+        function [ fvals ] = get_fvals( obj )
+            
+            for i = 1 : numel(obj.unknowns)
                 
-                equation = pde_system.equations{i};
+                fvals{i} = obj.unknowns{i}.fval;
+                
+            end
+            
+        end
+        
+        function set_initial_conditions( obj )
+            
+            sv = obj.solution_vector;
+            for i = 1 : numel( obj.unknowns )
+                
+                sv.fvec(sv.unknown_index_lo(i):sv.unknown_index_hi(i))...
+                    = obj.unknowns{i}.get_initial_conditions( obj.opts );
+                
+            end
+            
+        end
+        
+        function create_global_to_local_map( obj )
+            
+            num_unknowns = numel( obj.unknowns );
+            for i = 1 : obj.num_eqs
+                
+                equation = obj.equations{i};
                 
                 for j = 1 : numel( equation.terms )
                     
@@ -42,7 +74,7 @@ classdef PDE_SYSTEM < handle
                         
                         for l = 1 : num_unknowns
                             
-                            if( pde_system.unknowns{l} == term.input_unknowns{k} )
+                            if( obj.unknowns{l} == term.input_unknowns{k} )
                                 
                                 term.input_g2l(k) = l;
                                 
@@ -58,16 +90,7 @@ classdef PDE_SYSTEM < handle
             
         end
         
-        function [ fvals ] = get_fvals( obj )
-            
-            for i = 1 : numel(obj.unknowns)
-                
-                fvals{i} = obj.unknowns{i}.fval;
-                
-            end
-            
-        end
-        
     end
+    
 end
 
