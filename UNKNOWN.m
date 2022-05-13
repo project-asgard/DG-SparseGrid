@@ -14,6 +14,24 @@ classdef UNKNOWN < handle
     
     methods
         
+        function [ sz ] = size( obj, use_oldhash )
+            
+            if( nargin < 2 )
+                use_oldhash = false;
+            end
+            
+            num_dims = numel(obj.dimensions);
+            
+            if( use_oldhash )
+                num_elements = numel(obj.hash_table);
+            else
+                num_elements = numel(obj.hash_table.elements_idx);
+            end
+            
+            sz = obj.deg^num_dims * num_elements;
+            
+        end
+        
         function set_initial_conditions( obj, opts )
             
             obj.fval = md_eval_function( opts, opts.deg, obj.dimensions,[],...
