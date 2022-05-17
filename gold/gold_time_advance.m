@@ -6,6 +6,22 @@ data_dir = strcat("generated-inputs", "/", "time_advance", "/");
 root = get_root_folder();
 [stat,msg] = mkdir ([root,'/gold/',char(data_dir)]);
 
+
+out_format = strcat(data_dir,'diffusion2_ad_sg_l3_d4_t%d.dat');
+run_time_advance(@diffusion2,out_format, ...
+    'CFL',0.01,'lev',[3,3],'deg',4,'grid_type','SG','timestep_method','RK3', 'adapt', true, ...
+    'adapt_initial_condition', true, 'adapt_threshold', 0.5e-1);
+
+out_format = strcat(data_dir,'diffusion2_ad_implicit_sg_l3_d4_t%d.dat');
+run_time_advance(@diffusion2,out_format, ...
+    'CFL',0.01,'lev',[3,3],'deg',4,'grid_type','SG','timestep_method','BE', 'adapt', true, ...
+    'adapt_initial_condition', true, 'adapt_threshold', 0.5e-1);
+
+out_format = strcat(data_dir,'diffusion2_implicit_sg_l3_d3_t%d.dat');
+run_time_advance(@diffusion2,out_format, ...
+    'CFL',0.01,'lev',[3,3],'deg',3,'grid_type','SG',...
+    'timestep_method', 'BE');
+
 %% adaptive time advance testing
 
 out_format = strcat(data_dir,'fokkerplanck1_pitch_E_case2_ad_sg_l4_d4_t%d.dat');
@@ -280,6 +296,7 @@ function run_time_advance(pde_handle, out_format, varargin)
 
   t = 0;
   TD = 0;
+  pde = compute_dimension_mass_mat(opts, pde);
   pde = get_coeff_mats(pde,opts,t,TD,opts.use_oldcoeffmat);
 
   A_data = global_matrix(pde,opts,hash_table);
@@ -328,6 +345,7 @@ end
         
         % construct the TD coeff_mats.
         TD = 1;
+        %pde = compute_dimension_mass_mat(opts, pde);
         pde = get_coeff_mats(pde,opts,t,TD);
 
         

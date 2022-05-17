@@ -98,8 +98,9 @@ level = 2;
 l_min = -1.0;
 l_max = 1.0;
 double_it = @(x,p,t) (x*2);
+dv = @(x, p, t) (x*0.1);
 [~, transform_blocks] = OperatorTwoScale_wavelet2(degree, max_lev);
-vect = forward_wavelet_transform(degree, level, l_min, l_max, double_it,...
+vect = forward_wavelet_transform(degree, level, l_min, l_max, double_it, dv, ...
                                  [], transform_blocks, 0);
 write_octave_like_output(filename, full(vect));
 
@@ -111,7 +112,7 @@ l_min = -2.0;
 l_max = 2.0;
 double_plus = @(x,p,t) (x + x*2);
 [~, transform_blocks] = OperatorTwoScale_wavelet2(degree, max_lev);
-vect = forward_wavelet_transform(degree, level, l_min, l_max, double_plus,...
+vect = forward_wavelet_transform(degree, level, l_min, l_max, double_plus, dv, ...
                                  [], transform_blocks, 0);
 write_octave_like_output(filename, full(vect));
 
