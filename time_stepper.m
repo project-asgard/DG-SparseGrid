@@ -4,7 +4,11 @@ function [] = time_stepper( pde_system, t, dt )
         
         case 'FE'
             
-            ForwardEuler( pde_system, t, dt );
+            ForwardEuler_NEW( pde_system, t, dt );
+        
+        case 'SSPRK2'
+            
+            SSP_RK2( pde_system, t, dt );
             
         case 'BE'
             
@@ -62,7 +66,7 @@ function [] = ForwardEuler( pde_system, t, dt )
         
         equation = pde_system.equations{i};
         
-        if( strcmp(equation.type,'closure') )
+        if( strcmp( equation.type, 'closure' ) )
             
             equation.EvaluateClosure( pde_system.opts, sv, t );
             
@@ -72,13 +76,99 @@ function [] = ForwardEuler( pde_system, t, dt )
 
 end
 
-function [ RHS ] = ComputeRHS( pde_system, t )
+function [] = ForwardEuler_NEW( pde_system, t, dt )
 
-    RHS = zeros(pde_system.solution_vector.size_evolution_unknowns(),1);
+    sv = pde_system.solution_vector;
+
+    u = sv.copy_evolution_unknowns();
+
+    RHS = ComputeRHS( pde_system, u, t );
+    
+    u = u + dt * RHS;
+    
+    sv.insert_evolution_unknowns( u );
+    
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
 
 end
 
-function [] = EvaluateClosure( )
+function [] = SSP_RK2( pde_system, t, dt )
+
+    sv = pde_system.solution_vector;
+
+    u_0 = sv.copy_evolution_unknowns();
+
+    RHS_0 = ComputeRHS( pde_system, u_0, t );
+    
+    u_1 = u_0 + dt * RHS_0;
+    
+    RHS_1 = ComputeRHS( pde_system, u_1, t );
+    
+    u_1 = u_0 + 0.5 * dt * ( RHS_0 + RHS_1 );
+    
+    sv.insert_evolution_unknowns( u_1 );
+    
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
+
+end
+
+function [ RHS ] = ComputeRHS( pde_system, u, t )
+
+    sv_util = GLOBAL_SOLUTION_VECTOR_UTILITIES( );
+    
+    sv = sv_util.checkout_evolution( pde_system.solution_vector, u );
+    
+    [ sv ] = EvaluateClosure( pde_system, sv, t );
+    
+    RHS = zeros(sv.size_evolution_unknowns(),1);
+    
+    os = 0;
+    for i = 1 : pde_system.num_eqs
+        
+        equation = pde_system.equations{i};
+        
+        if( strcmp( equation.type, 'evolution' ) )
+            
+            equation.update_terms( pde_system.opts, t )
+            
+            unknown_size = equation.unknown.size();
+            
+            for j = 1 : numel( equation.terms )
+                
+                RHS(os+1:os+unknown_size)...
+                    = RHS(os+1:os+unknown_size)...
+                        + equation.terms{j}.driver( pde_system.opts, sv, t );
+                
+            end
+            
+            RHS(os+1:os+unknown_size)...
+                = equation.MultiplyInverseMassMatrix( pde_system.opts, sv, RHS(os+1:os+unknown_size), t );
+            
+            os = os + unknown_size;
+            
+        end
+        
+    end
+    
+    sv.delete;
+
+end
+
+function [ sv ] = EvaluateClosure( pde_system, sv, t )
+
+    for i = 1 : pde_system.num_eqs
+        
+        equation = pde_system.equations{i};
+        
+        if( strcmp( equation.type, 'closure' ) )
+            
+            equation.update_terms( pde_system.opts, t )
+            
+            equation.EvaluateClosure( pde_system.opts, sv, t );
+            
+        end
+        
+    end
 
 end
 
