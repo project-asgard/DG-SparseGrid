@@ -17,10 +17,7 @@ classdef GLOBAL_SOLUTION_VECTOR < handle
             
             gsv.num_unknowns = numel(gsv.unknowns);
             
-            gsv.fvec_size = 0;
-            for i = 1 : gsv.num_unknowns
-                gsv.fvec_size = gsv.fvec_size + gsv.unknowns{i}.size();
-            end
+            gsv.fvec_size = gsv.size();
             
             gsv.fvec = zeros( gsv.fvec_size, 1 );
             
@@ -42,6 +39,15 @@ classdef GLOBAL_SOLUTION_VECTOR < handle
                 obj.lbounds(i) = os + 1;
                 obj.ubounds(i) = os + obj.unknowns{i}.size();
                 os = obj.ubounds(i);
+            end
+            
+        end
+        
+        function [ sz ] = size( obj )
+            
+            sz = 0;
+            for i = 1 : numel(obj.unknowns)
+                sz = sz + obj.unknowns{i}.size();
             end
             
         end
@@ -74,9 +80,59 @@ classdef GLOBAL_SOLUTION_VECTOR < handle
             
         end
         
+        function out = copy_evolution_unknowns( obj )
+            
+            out = zeros(obj.size_evolution_unknowns(),1);
+            
+            os = 0;
+            for i = 1 : numel(obj.unknowns)
+                
+                unknown = obj.unknowns{i};
+                
+                if( strcmp( unknown.type, 'evolution') )
+                    
+                    unknown_size = unknown.size();
+                    lo = unknown.lo_global;
+                    hi = unknown.hi_global;
+                    out(os+1:os+unknown_size) = obj.fvec(lo:hi);
+                    os = os + unknown_size;
+                    
+                end
+                
+            end
+            
+        end
+        
+        function insert_evolution_unknowns( obj, u_evol )
+            
+            os = 0;
+            for i = 1 : numel(obj.unknowns)
+                
+                unknown = obj.unknowns{i};
+                
+                if( strcmp( unknown.type, 'evolution' ) )
+                    
+                    unknown_size = unknown.size();
+                    lo = unknown.lo_global;
+                    hi = unknown.hi_global;
+                    obj.fvec(lo:hi) = u_evol(os+1:os+unknown_size);
+                    os = os + unknown_size;
+                    
+                end
+                
+            end
+            
+        end
+        
         function out = zeros( obj )
             
             out = zeros(size(obj.fvec));
+            
+        end
+        
+        function out = zeros_evolution( obj )
+            
+            out = zeros(obj.size_evolution_unknowns(),1);
             
         end
         

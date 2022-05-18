@@ -10,17 +10,17 @@ classdef GLOBAL_SOLUTION_VECTOR_UTILITIES
             
             gsv_evol = GLOBAL_SOLUTION_VECTOR( gsv.unknowns );
             
-            index_lo = gsv.unknown_index_lo;
-            index_hi = gsv.unknown_index_hi;
+            lo = gsv_evol.lbounds;
+            hi = gsv_evol.ubounds;
             
             os = 0;
-            for i = 1 : numel(gsv.unknowns)
+            for i = 1 : numel(gsv_evol.unknowns)
                 
-                if( strcmp(gsv.unknowns{i}.type,'evolution') )
+                if( strcmp(gsv_evol.unknowns{i}.type,'evolution') )
                     
-                    unknown_size = gsv.unknowns{i}.size();
+                    unknown_size = gsv_evol.unknowns{i}.size();
                     
-                    gsv_evol.fvec(index_lo(i):index_hi(i))...
+                    gsv_evol.fvec(lo(i):hi(i))...
                         = u_evol(os+1:os+unknown_size);
                     
                     os = os + unknown_size;
