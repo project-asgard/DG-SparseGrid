@@ -17,10 +17,9 @@ end
 function [] = ForwardEuler( pde_system, t, dt )
 
     num_eqs = pde_system.num_eqs;
+    sv      = pde_system.solution_vector;
     
-    RHS = cell( num_eqs, 1 );
-    
-    sv = pde_system.solution_vector;
+    RHS = zeros(size(sv.fvec));
     
     for i = 1 : num_eqs
         
@@ -30,11 +29,12 @@ function [] = ForwardEuler( pde_system, t, dt )
         
         if( strcmp(equation.type,'evolution') )
             
-            RHS{i} = zeros(equation.unknown.size(),1);
+            lo = equation.unknown.lo_global;
+            hi = equation.unknown.hi_global;
             
             for j = 1 : numel( equation.terms )
                 
-                RHS{i} = RHS{i} + equation.terms{j}.driver( pde_system.opts, sv, t );
+                RHS(lo:hi) = RHS(lo:hi) + equation.terms{j}.driver( pde_system.opts, sv, t );
                 
             end
             
@@ -48,8 +48,11 @@ function [] = ForwardEuler( pde_system, t, dt )
         
         if( strcmp(equation.type,'evolution') )
             
+            lo = equation.unknown.lo_global;
+            hi = equation.unknown.hi_global;
+            
             equation.InvertMassMatrix...
-                ( pde_system.opts, sv, equation.LHS_term.driver( pde_system.opts, sv, t ) + dt * RHS{i}, t );
+                ( pde_system.opts, sv, equation.LHS_term.driver( pde_system.opts, sv, t ) + dt * RHS(lo:hi), t );
             
         end
         
@@ -83,19 +86,12 @@ function [] = BackwardEuler( pde_system, t, dt )
 
     num_eqs = pde_system.num_eqs;
     
-    lo = uint64(zeros(num_eqs,1));
-    hi = uint64(zeros(num_eqs,1));
-    
-    os = 0;
-    for i = 1 : num_eqs
-        lo(i) = os + 1;
-        hi(i) = os + numel(pde_system.unknowns{i}.fval);
-        os = hi(i);
-    end
+    lo = pde_system.solution_vector.lbounds;
+    hi = pde_system.solution_vector.ubounds;
     
     Ax = @(x) BE_LHS( pde_system, t, dt, x, lo, hi );
     
-    b = zeros(hi(end),1);
+    b = zeros(size(pde_system.solution_vector.fvec));
     
     for i = 1 : num_eqs
         
@@ -105,7 +101,7 @@ function [] = BackwardEuler( pde_system, t, dt )
         
         if( strcmp( equation.type, 'evolution' ) )
             
-            b(lo(i):hi(i)) = equation.LHS_term.driver( pde_system.opts, t );
+            b(lo(i):hi(i)) = equation.LHS_term.driver( pde_system.opts, pde_system.solution_vector, t );
             
         end
         
@@ -117,7 +113,7 @@ function [] = BackwardEuler( pde_system, t, dt )
     
     for i = 1 : num_eqs
         
-        pde_system.unknowns{i}.fval = x(lo(i):hi(i));
+        pde_system.solution_vector.fvec(lo(i):hi(i)) = x(lo(i):hi(i));
         
     end
 
@@ -126,22 +122,21 @@ end
 function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
 
     opts = pde_system.opts;
+    sv   = pde_system.solution_vector;
     
     num_eqs = pde_system.num_eqs;
     
-    x_cell = cell(num_eqs,1);
-    for i = 1 : num_eqs
-        
-        x_cell{i} = x(lo(i):hi(i));
-        
-    end
+    % --- Hack ---
+    tmp=sv.fvec;
+    sv.fvec = x;
+    % --- End Hack ---
     
     Ax = zeros(size(x));
     for i = 1 : num_eqs
         
         equation = pde_system.equations{i};
         
-        Ax(lo(i):hi(i)) = equation.LHS_term.driver( opts, t+dt, x_cell(i) );
+        Ax(lo(i):hi(i)) = equation.LHS_term.driver( opts, sv, t+dt, x(lo(i):hi(i)) );
         
         alpha = dt;
         if( strcmp(equation.type,'closure') )
@@ -152,10 +147,14 @@ function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
             
             term = equation.terms{j};
             
-            Ax(lo(i):hi(i)) = Ax(lo(i):hi(i)) - alpha * term.driver( opts, t+dt, x_cell(term.input_g2l) );
+            Ax(lo(i):hi(i)) = Ax(lo(i):hi(i)) - alpha * term.driver( opts, sv, t+dt );
             
         end
         
     end
-
+    
+    % --- Hack ---
+    sv.fvec=tmp;
+    % --- End Hack ---
+    
 end
