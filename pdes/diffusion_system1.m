@@ -108,6 +108,8 @@ t   = 0.0;
 t_f = 0.1;
 if     strcmp(opts.timestep_method,'FE')
     dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
+elseif strcmp(opts.timestep_method,'SSPRK2')
+    dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
 elseif strcmp(opts.timestep_method,'BE')
     dt = 0.1/((2*opts.deg-1)*(2^opts.lev));
 end
