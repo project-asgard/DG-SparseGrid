@@ -2,39 +2,26 @@ classdef UNKNOWN < handle
     
     properties
         dimensions = {};
-        num_funcs;
         deg;
+        type = 'evolution';
         params = {};
         analytic_solutions = {};
         initial_conditions = {};
-        fval;
         hash_table;
         transform_blocks;
+        lo_global; % Start index of unknown in global solution vector
+        hi_global; % End   index of unknown in global solution vector
     end
     
     methods
         
-        function [ sz ] = size( obj, use_oldhash )
-            
-            if( nargin < 2 )
-                use_oldhash = false;
-            end
+        function [ sz ] = size( obj )
             
             num_dims = numel(obj.dimensions);
             
-            if( use_oldhash )
-                num_elements = numel(obj.hash_table);
-            else
-                num_elements = numel(obj.hash_table.elements_idx);
-            end
+            num_elements = numel(obj.hash_table.elements_idx);
             
             sz = obj.deg^num_dims * num_elements;
-            
-        end
-        
-        function set_initial_conditions( obj, opts )
-            
-            obj.fval = obj.get_initial_conditions( opts );
             
         end
         
@@ -67,12 +54,17 @@ classdef UNKNOWN < handle
             
         end
         
-        function lev_vec = get_lev_vec(obj)
+        function lev_vec = get_lev_vec( obj )
             num_dims = numel(obj.dimensions);
             lev_vec  = zeros(num_dims,1);
             for d=1:num_dims
                 lev_vec(d,1) = obj.dimensions{d}.lev;
             end
+        end
+        
+        function set_bounds( obj, lo, hi )
+            obj.lo_global = lo;
+            obj.hi_global = hi;
         end
         
     end

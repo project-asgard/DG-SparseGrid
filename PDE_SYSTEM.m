@@ -6,6 +6,7 @@ classdef PDE_SYSTEM < handle
         unknowns;
         equations;
         solution_vector;
+        solution_vector_utilities;
     end
     
     methods
@@ -27,19 +28,10 @@ classdef PDE_SYSTEM < handle
             pde_system.solution_vector...
                 = GLOBAL_SOLUTION_VECTOR( pde_system.unknowns );
             
-            pde_system.set_initial_conditions;
+            pde_system.solution_vector_utilities...
+                = GLOBAL_SOLUTION_VECTOR_UTILITIES( );
             
             pde_system.create_global_to_local_map;
-            
-        end
-        
-        function [ fvals ] = get_fvals( obj )
-            
-            for i = 1 : numel(obj.unknowns)
-                
-                fvals{i} = obj.unknowns{i}.fval;
-                
-            end
             
         end
         
@@ -48,7 +40,7 @@ classdef PDE_SYSTEM < handle
             sv = obj.solution_vector;
             for i = 1 : numel( obj.unknowns )
                 
-                sv.fvec(sv.unknown_index_lo(i):sv.unknown_index_hi(i))...
+                sv.fvec(sv.lbounds(i):sv.ubounds(i))...
                     = obj.unknowns{i}.get_initial_conditions( obj.opts );
                 
             end

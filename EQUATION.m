@@ -15,9 +15,10 @@ classdef EQUATION < handle
             assert(strcmp(type,'evolution') || strcmp(type,'closure'),...
                    "equation type must be 'evolution' or 'closure' " )
             
-            equation.unknown = unknown;
-            equation.terms   = terms;
-            equation.type    = type;
+            equation.unknown      = unknown;
+            equation.terms        = terms;
+            equation.type         = type;
+            equation.unknown.type = equation.type;
             
             if( isempty(LHS_func) )
                 
@@ -49,7 +50,7 @@ classdef EQUATION < handle
             
             md_term = MD_TERM( num_dims, sd_terms );
             
-            %For now asssume mass matrix is time independent
+            %For now assume mass matrix is time independent
             time_dep = false;
             equation.LHS_term = TERM( unknown, {unknown}, {md_term}, true, time_dep );
             
@@ -79,26 +80,30 @@ classdef EQUATION < handle
             
         end
         
-        function [] = EvaluateClosure( obj, opts, t )
+        function EvaluateClosure( obj, opts, sv, t )
             
             assert( strcmp( obj.type, 'closure' ), 'must be closure equation' )
             
-            fval = zeros(size(obj.unknown.fval));
+            fval = zeros(obj.unknown.size(),1);
+            
             for i = 1 : numel( obj.terms )
                 
-                fval = fval + obj.terms{i}.driver( opts, t );
+                fval = fval + obj.terms{i}.driver( opts, sv, t );
                 
             end
             
-            obj.InvertMassMatrix( opts, t, fval )
+            obj.InvertMassMatrix( opts, sv, fval, t );
             
         end
         
-        function [] = InvertMassMatrix( obj, opts, t, fval )
+        function InvertMassMatrix( obj, opts, sv, fval, t )
             
-            Mx = @(x) obj.LHS_term.driver( opts, t, {x} );
+            Mx = @(x) obj.LHS_term.driver( opts, sv, t, x );
             
-            [ obj.unknown.fval, ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
+            lo = obj.unknown.lo_global;
+            hi = obj.unknown.hi_global;
+            
+            [ sv.fvec(lo:hi), ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
             
             assert( relres < 1e-9, 'InvertMassMatrix: pcg failed' )
             

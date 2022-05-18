@@ -6,7 +6,7 @@ opts.lev=4;
 opts.deg=3;
 opts.grid_type = 'SG';
 opts.fast_FG_matrix_assembly = true;
-opts.timestep_method = 'BE';
+opts.timestep_method = 'FE';
 %
 
 %
@@ -45,7 +45,6 @@ analytic_solution = {soln};
 %% Solution Vector
 
 u = UNKNOWN( opts, dimensions, analytic_solution, initial_conditions );
-u.set_initial_conditions( opts );
 
 %% Second unknown (q):
 
@@ -71,7 +70,6 @@ analytic_solution = {soln};
 %% Solution Vector
 
 q = UNKNOWN( opts, dimensions, analytic_solution, initial_conditions );
-q.set_initial_conditions( opts );
 
 %% Define the terms of the PDE system
 
@@ -104,7 +102,7 @@ equation_q = EQUATION( q, {term_q}, 'closure', '' );
 
 pde_system = PDE_SYSTEM( opts, {equation_u,equation_q} );
 
-fvals_0 = pde_system.get_fvals();
+pde_system.set_initial_conditions;
 
 t   = 0.0;
 t_f = 0.1;
@@ -123,8 +121,6 @@ while t < t_f
     t_cnt = t_cnt + 1;
     if mod(t_cnt,100); fprintf('t = %f\n',t); end
 end
-
-fvals_1 = pde_system.get_fvals();
 
 %%% Hack to plot initial condition %%%
 
@@ -146,9 +142,11 @@ uf_A = u.analytic_solutions{1}{1}(x_A,1.0,  t).*u.analytic_solutions{1}{2}(  t,1
 q0_A = q.analytic_solutions{1}{1}(x_A,1.0,0.0).*q.analytic_solutions{1}{2}(0.0,1);
 qf_A = q.analytic_solutions{1}{1}(x_A,1.0,  t).*q.analytic_solutions{1}{2}(  t,1);
 
+lo = pde_system.solution_vector.lbounds(1);
+hi = pde_system.solution_vector.ubounds(1);
 u_rs...
   = wavelet_to_realspace( pde_system.unknowns{1}, pde_system.opts, Meval,...
-                          pde_system.unknowns{1}.fval, pde_system.unknowns{1}.hash_table );
+                          pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{1}.hash_table );
 
 close all
 
@@ -161,9 +159,11 @@ plot( x_A     , uf_A, '-k', 'linewidth', 2 )
 plot( nodes{1}, u_rs, '-r', 'linewidth', 2 )
 title( '$u$', 'interpreter', 'latex' )
 
+lo = pde_system.solution_vector.lbounds(2);
+hi = pde_system.solution_vector.ubounds(2);
 q_rs...
   = wavelet_to_realspace( pde_system.unknowns{2}, pde_system.opts, Meval,...
-                          pde_system.unknowns{2}.fval, pde_system.unknowns{2}.hash_table );
+                          pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{2}.hash_table );
 
 subplot(2,1,2)
 

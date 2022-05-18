@@ -20,6 +20,8 @@ function [] = ForwardEuler( pde_system, t, dt )
     
     RHS = cell( num_eqs, 1 );
     
+    sv = pde_system.solution_vector;
+    
     for i = 1 : num_eqs
         
         equation = pde_system.equations{i};
@@ -28,11 +30,11 @@ function [] = ForwardEuler( pde_system, t, dt )
         
         if( strcmp(equation.type,'evolution') )
             
-            RHS{i} = zeros(size(equation.unknown.fval));
+            RHS{i} = zeros(equation.unknown.size(),1);
             
             for j = 1 : numel( equation.terms )
                 
-                RHS{i} = RHS{i} + equation.terms{j}.driver( pde_system.opts, t );
+                RHS{i} = RHS{i} + equation.terms{j}.driver( pde_system.opts, sv, t );
                 
             end
             
@@ -47,7 +49,7 @@ function [] = ForwardEuler( pde_system, t, dt )
         if( strcmp(equation.type,'evolution') )
             
             equation.InvertMassMatrix...
-              ( pde_system.opts, t, equation.LHS_term.driver(pde_system.opts,t) + dt * RHS{i} );
+                ( pde_system.opts, sv, equation.LHS_term.driver( pde_system.opts, sv, t ) + dt * RHS{i}, t );
             
         end
         
@@ -59,11 +61,21 @@ function [] = ForwardEuler( pde_system, t, dt )
         
         if( strcmp(equation.type,'closure') )
             
-            equation.EvaluateClosure( pde_system.opts, t );
+            equation.EvaluateClosure( pde_system.opts, sv, t );
             
         end
         
     end
+
+end
+
+function [ RHS ] = ComputeRHS( pde_system, t )
+
+    RHS = zeros(pde_system.solution_vector.size_evolution_unknowns(),1);
+
+end
+
+function [] = EvaluateClosure( )
 
 end
 

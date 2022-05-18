@@ -13,29 +13,29 @@ classdef TERM < handle
     
     methods
         
-        function [ F ] = driver( obj, opts, t, x )
+        function [ F ] = driver( obj, opts, sv, t, x )
             
-            if( nargin < 4 )
+            if( nargin < 5 )
                 apply_to_x = false;
             else
                 apply_to_x = true;
-                for i = 1 : numel( obj.input_unknowns )
-                    assert( all(size(x{i}) == size(obj.input_unknowns{i}.fval)) )
-                end
             end
             
             % --- Called by Time-Stepper ---
             
-            F = zeros(size(obj.output_unknown.fval));
+            F = zeros(obj.output_unknown.size(),1);
             
             for i = 1 : numel(obj.input_unknowns)
+                
+                lo = obj.input_unknowns{i}.lo_global;
+                hi = obj.input_unknowns{i}.hi_global;
                 
                 obj.A_data{i} = matrix_assembly_data( obj.input_unknowns{i}, obj.output_unknown, opts );
                 
                 if( apply_to_x )
-                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, x{i}                      , obj.output_unknown.deg );
+                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, x             , obj.output_unknown.deg );
                 else
-                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, obj.input_unknowns{i}.fval, obj.output_unknown.deg );
+                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, sv.fvec(lo:hi), obj.output_unknown.deg );
                 end
                 
             end
