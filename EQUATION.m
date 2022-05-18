@@ -109,6 +109,16 @@ classdef EQUATION < handle
             
         end
         
+        function [ invMfval ] = MultiplyInverseMassMatrix( obj, opts, sv, fval, t )
+            
+            Mx = @(x) obj.LHS_term.driver( opts, sv, t, x );
+            
+            [ invMfval, ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
+            
+            assert( relres < 1e-9, 'MultiplyInverseMassMatrix: pcg failed' )
+            
+        end
+        
     end
 end
 
