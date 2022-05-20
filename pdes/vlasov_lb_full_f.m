@@ -10,8 +10,7 @@ function pde = vlasov_lb_full_f(opts)
 %
 %
 % implicit
-% asgard(@vlasov_lb_full_f,'timestep_method','IMEX','deg',3,'lev',[8 3],'dt',0.0002,'num_steps',500,'grid_type','FG','output_grid','interp','quiet',true,'build_realspace_output',false)
-%
+%asgard(@vlasov_lb_full_f,'timestep_method','IMEX','deg',3,'lev',[6 5],'dt',0.0004,'num_steps',250,'grid_type','SG','output_grid','interp','quiet',false,'build_realspace_output',false,'case',2,'plot_freq',50)
 
 %% Define the dimensions
 %
@@ -118,6 +117,9 @@ switch opts.case_
         ic1 = new_md_func(num_dims,{@(x,p,t) (0.5*sin(2*pi*x)+1)./sqrt(2*pi*T_0),...
                                    @(v,p,t) exp(-(v-U_0).^2/(2*T_0)),...
                                    @(t,p) 0*t+1});
+        ic2 = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
+                                   @(v,p,t) 0*v+1,...
+                                   @(t,p) 0*t+1});          
         initial_conditions = {ic1};
 end
 

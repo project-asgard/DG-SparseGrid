@@ -512,7 +512,10 @@ function f1 = imex(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-persistent P
+persistent hash_table_FG A_data_FG perm_FG iperm_FG pvec_FG
+persistent perm_SG iperm_SG pvec_SG
+persistent per iper %Conversion for limiters
+persistent FMWT_2D
 
 %Switch for IMEX iteration: 
 % 1 : Backward Euler in explicit terms 'E',
@@ -529,6 +532,21 @@ BEFE = 0;
 %Make fake pde file for use in physical realspace transformation
 pde_1d.dimensions = pde.dimensions(1);
 
+if isempty(hash_table_FG)
+    %hash_table_FG = hash_table_nD(pde.get_lev_vec(),'FG');
+    [hash_table_FG.elements, hash_table_FG.elements_idx]  = hash_table_sparse_nD (pde.get_lev_vec, opts.max_lev, 'FG');
+    A_data_FG = global_matrix(pde,opts,hash_table_FG);
+    [perm_FG,iperm_FG,pvec_FG] = sg_to_fg_mapping_2d(pde,opts,A_data_FG);
+    [perm_SG,iperm_SG,pvec_SG] = sg_to_fg_mapping_2d(pde,opts,A_data);
+    x = pde.dimensions{1}.min:(pde.dimensions{1}.max-pde.dimensions{1}.min)/2^pde.dimensions{1}.lev:pde.dimensions{1}.max;
+    v = pde.dimensions{2}.min:(pde.dimensions{2}.max-pde.dimensions{2}.min)/2^pde.dimensions{2}.lev:pde.dimensions{2}.max;
+    per = reshape(convertVectoMat(x,v,opts.deg-1,1:(numel(x)-1)*(numel(v)-1)*(opts.deg)^2),[],1);
+    iper(per) = 1:numel(per);
+    FMWT_x = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{1}.lev);
+    FMWT_v = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{2}.lev);
+    FMWT_2D = kron(FMWT_x,FMWT_v);
+end
+
 
 %Create moment matrices that take DG function in (x,v) and transfer it
 %to DG function in x.
@@ -544,7 +562,7 @@ end
 %    [~,S,V] = svd(full(M),'econ');
 %    P = V(:,1:sum(diag(S) > 1e-12));
 %end
-
+    
 hash_table_1D = hash_table_2D_to_1D(hash_table,opts);
 
 assert(isempty(pde.termsLHS),'LHS terms currently not supported by IMEX');
@@ -611,8 +629,16 @@ else %%Trying imex deg 2 version
     %%%%%
     
     %Explicit step
-    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');   
+    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');  
     %f_2s = f0;
+    %f_2sl = zeros(size(pvec_SG)); f_2sl(pvec_SG) = f_2s(perm_SG(pvec_SG)); f_2sl = f_2sl(iperm_FG);
+    
+    %%%%%% Testing slope limiters for SG functions.  
+    %%%%%%  C++ do not implement %%%%%%%%%
+    %f_2sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_2s);
+    %%%%%% END %%%%%%
+    
+    
     
     %Create rho_2s
     mom0 = moment_mat{1}*f_2s; %integral of (f,1)_v
@@ -664,6 +690,7 @@ else %%Trying imex deg 2 version
     
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
               + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
+    f_3sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_3s);
     %f_3s = f0;
     
     %Create rho_3s
