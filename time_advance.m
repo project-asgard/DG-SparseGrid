@@ -690,7 +690,7 @@ else %%Trying imex deg 2 version
     
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
               + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
-    f_3sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_3s);
+    %f_3sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_3s);
     %f_3s = f0;
     
     %Create rho_3s
