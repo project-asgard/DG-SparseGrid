@@ -4,7 +4,7 @@ function [] = time_stepper( pde_system, t, dt )
         
         case 'FE'
             
-            ForwardEuler_NEW( pde_system, t, dt );
+            ForwardEuler( pde_system, t, dt );
         
         case 'SSPRK2'
             
@@ -19,64 +19,6 @@ function [] = time_stepper( pde_system, t, dt )
 end
 
 function [] = ForwardEuler( pde_system, t, dt )
-
-    num_eqs = pde_system.num_eqs;
-    sv      = pde_system.solution_vector;
-    
-    RHS = zeros(size(sv.fvec));
-    
-    for i = 1 : num_eqs
-        
-        equation = pde_system.equations{i};
-        
-        equation.update_terms( pde_system.opts, t )
-        
-        if( strcmp(equation.type,'evolution') )
-            
-            lo = equation.unknown.lo_global;
-            hi = equation.unknown.hi_global;
-            
-            for j = 1 : numel( equation.terms )
-                
-                RHS(lo:hi) = RHS(lo:hi) + equation.terms{j}.driver( pde_system.opts, sv, t );
-                
-            end
-            
-        end
-        
-    end
-    
-    for i = 1 : num_eqs
-        
-        equation = pde_system.equations{i};
-        
-        if( strcmp(equation.type,'evolution') )
-            
-            lo = equation.unknown.lo_global;
-            hi = equation.unknown.hi_global;
-            
-            equation.InvertMassMatrix...
-                ( pde_system.opts, sv, equation.LHS_term.driver( pde_system.opts, sv, t ) + dt * RHS(lo:hi), t );
-            
-        end
-        
-    end
-    
-    for i = 1 : num_eqs
-        
-        equation = pde_system.equations{i};
-        
-        if( strcmp( equation.type, 'closure' ) )
-            
-            equation.EvaluateClosure( pde_system.opts, sv, t );
-            
-        end
-        
-    end
-
-end
-
-function [] = ForwardEuler_NEW( pde_system, t, dt )
 
     sv = pde_system.solution_vector;
 
