@@ -62,7 +62,7 @@ function [ RHS ] = ComputeRHS( pde_system, u, t )
     
     [ sv ] = EvaluateClosure( pde_system, sv, t );
     
-    RHS = zeros(sv.size_evolution_unknowns(),1);
+    RHS = sv.zeros_evolution();
     
     os = 0;
     for i = 1 : pde_system.num_eqs
@@ -123,7 +123,7 @@ function [] = BackwardEuler( pde_system, t, dt )
     
     Ax = @(x) BE_LHS( pde_system, t, dt, x, lo, hi );
     
-    b = zeros(size(pde_system.solution_vector.fvec));
+    b = pde_system.solution_vector.zeros();
     
     for i = 1 : num_eqs
         
@@ -158,20 +158,17 @@ function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
     
     num_eqs = pde_system.num_eqs;
     
-    % --- Hack ---
-    tmp=sv.fvec;
     sv.fvec = x;
-    % --- End Hack ---
     
     Ax = zeros(size(x));
     for i = 1 : num_eqs
         
         equation = pde_system.equations{i};
         
-        Ax(lo(i):hi(i)) = equation.LHS_term.driver( opts, sv, t+dt, x(lo(i):hi(i)) );
+        Ax(lo(i):hi(i)) = equation.LHS_term.driver( opts, sv, t+dt );
         
         alpha = dt;
-        if( strcmp(equation.type,'closure') )
+        if( strcmp( equation.type, 'closure' ) )
             alpha = 1.0;
         end
         
@@ -184,9 +181,5 @@ function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
         end
         
     end
-    
-    % --- Hack ---
-    sv.fvec=tmp;
-    % --- End Hack ---
     
 end

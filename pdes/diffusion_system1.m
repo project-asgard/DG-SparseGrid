@@ -6,7 +6,7 @@ opts.lev=4;
 opts.deg=3;
 opts.grid_type = 'SG';
 opts.fast_FG_matrix_assembly = true;
-opts.timestep_method = 'FE';
+opts.timestep_method = 'BE';
 %
 
 %
