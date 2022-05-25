@@ -77,14 +77,16 @@ function [ RHS ] = ComputeRHS( pde_system, u, t )
             
             for j = 1 : numel( equation.terms )
                 
+                Q = sv.get_input_unknowns( equation.terms{j}.input_unknowns );
+                
                 RHS(os+1:os+unknown_size)...
                     = RHS(os+1:os+unknown_size)...
-                        + equation.terms{j}.driver( pde_system.opts, sv, t );
+                        + equation.terms{j}.driver( pde_system.opts, Q, t );
                 
             end
             
             RHS(os+1:os+unknown_size)...
-                = equation.MultiplyInverseMassMatrix( pde_system.opts, sv, RHS(os+1:os+unknown_size), t );
+                = equation.MultiplyInverseMassMatrix( pde_system.opts, RHS(os+1:os+unknown_size), t );
             
             os = os + unknown_size;
             
@@ -98,6 +100,8 @@ end
 
 function [ sv ] = EvaluateClosure( pde_system, sv, t )
 
+    % --- Assumes Closure Unknowns Only Depend on Evolution Unknowns ---
+
     for i = 1 : pde_system.num_eqs
         
         equation = pde_system.equations{i};
@@ -106,7 +110,22 @@ function [ sv ] = EvaluateClosure( pde_system, sv, t )
             
             equation.update_terms( pde_system.opts, t )
             
-            equation.EvaluateClosure( pde_system.opts, sv, t );
+            lo = equation.unknown.lo_global;
+            hi = equation.unknown.hi_global;
+            
+            sv.fvec(lo:hi) = 0.0;
+            for j = 1 : numel( equation.terms )
+                
+                term = equation.terms{j};
+                
+                Q = sv.get_input_unknowns( term.input_unknowns );
+                
+                sv.fvec(lo:hi) = sv.fvec(lo:hi) + term.driver( pde_system.opts, Q, t );
+                
+            end
+            
+            sv.fvec(lo:hi)...
+                = equation.MultiplyInverseMassMatrix( pde_system.opts, sv.fvec(lo:hi), t );
             
         end
         
@@ -117,13 +136,14 @@ end
 function [] = BackwardEuler( pde_system, t, dt )
 
     num_eqs = pde_system.num_eqs;
+    sv      = pde_system.solution_vector;
     
-    lo = pde_system.solution_vector.lbounds;
-    hi = pde_system.solution_vector.ubounds;
+    lo = sv.lbounds;
+    hi = sv.ubounds;
     
     Ax = @(x) BE_LHS( pde_system, t, dt, x, lo, hi );
     
-    b = pde_system.solution_vector.zeros();
+    b = sv.zeros();
     
     for i = 1 : num_eqs
         
@@ -133,21 +153,15 @@ function [] = BackwardEuler( pde_system, t, dt )
         
         if( strcmp( equation.type, 'evolution' ) )
             
-            b(lo(i):hi(i)) = equation.LHS_term.driver( pde_system.opts, pde_system.solution_vector, t );
+            b(lo(i):hi(i)) = equation.LHS_term.driver( pde_system.opts, {sv.fvec(lo(i):hi(i))}, t );
             
         end
         
     end
     
-    [ x, ~, relres, iter ] = bicgstabl( Ax, b, 1e-10, numel(b) );
+    [ sv.fvec, ~, relres, iter ] = bicgstabl( Ax, b, 1e-10, numel(b) );
     
     assert( relres < 1e-7, 'BackwardEuler: bicgstabl failed' )
-    
-    for i = 1 : num_eqs
-        
-        pde_system.solution_vector.fvec(lo(i):hi(i)) = x(lo(i):hi(i));
-        
-    end
 
 end
 
@@ -158,14 +172,12 @@ function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
     
     num_eqs = pde_system.num_eqs;
     
-    sv.fvec = x;
-    
     Ax = zeros(size(x));
     for i = 1 : num_eqs
         
         equation = pde_system.equations{i};
         
-        Ax(lo(i):hi(i)) = equation.LHS_term.driver( opts, sv, t+dt );
+        Ax(lo(i):hi(i)) = equation.LHS_term.driver( opts, {x(lo(i):hi(i))}, t+dt );
         
         alpha = dt;
         if( strcmp( equation.type, 'closure' ) )
@@ -176,7 +188,9 @@ function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
             
             term = equation.terms{j};
             
-            Ax(lo(i):hi(i)) = Ax(lo(i):hi(i)) - alpha * term.driver( opts, sv, t+dt );
+            Q = sv.get_input_unknowns( term.input_unknowns, x );
+            
+            Ax(lo(i):hi(i)) = Ax(lo(i):hi(i)) - alpha * term.driver( opts, Q, t+dt );
             
         end
         

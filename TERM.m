@@ -13,13 +13,9 @@ classdef TERM < handle
     
     methods
         
-        function [ F ] = driver( obj, opts, sv, t, x )
+        function [ F ] = driver( obj, opts, Q, t )
             
-            if( nargin < 5 )
-                apply_to_x = false;
-            else
-                apply_to_x = true;
-            end
+            assert( numel(Q) == numel(obj.input_unknowns) )
             
             % --- Called by Time-Stepper ---
             
@@ -27,16 +23,9 @@ classdef TERM < handle
             
             for i = 1 : numel(obj.input_unknowns)
                 
-                lo = obj.input_unknowns{i}.lo_global;
-                hi = obj.input_unknowns{i}.hi_global;
-                
                 obj.A_data{i} = matrix_assembly_data( obj.input_unknowns{i}, obj.output_unknown, opts );
                 
-                if( apply_to_x )
-                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, x             , obj.output_unknown.deg );
-                else
-                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, sv.fvec(lo:hi), obj.output_unknown.deg );
-                end
+                F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, Q{i}, obj.output_unknown.deg );
                 
             end
             

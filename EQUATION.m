@@ -80,38 +80,9 @@ classdef EQUATION < handle
             
         end
         
-        function EvaluateClosure( obj, opts, sv, t )
+        function [ invMfval ] = MultiplyInverseMassMatrix( obj, opts, fval, t )
             
-            assert( strcmp( obj.type, 'closure' ), 'must be closure equation' )
-            
-            fval = zeros(obj.unknown.size(),1);
-            
-            for i = 1 : numel( obj.terms )
-                
-                fval = fval + obj.terms{i}.driver( opts, sv, t );
-                
-            end
-            
-            obj.InvertMassMatrix( opts, sv, fval, t );
-            
-        end
-        
-        function InvertMassMatrix( obj, opts, sv, fval, t )
-            
-            Mx = @(x) obj.LHS_term.driver( opts, sv, t, x );
-            
-            lo = obj.unknown.lo_global;
-            hi = obj.unknown.hi_global;
-            
-            [ sv.fvec(lo:hi), ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
-            
-            assert( relres < 1e-9, 'InvertMassMatrix: pcg failed' )
-            
-        end
-        
-        function [ invMfval ] = MultiplyInverseMassMatrix( obj, opts, sv, fval, t )
-            
-            Mx = @(x) obj.LHS_term.driver( opts, sv, t, x );
+            Mx = @(x) obj.LHS_term.driver( opts, {x}, t );
             
             [ invMfval, ~, relres ] = pcg( Mx, fval, 1e-10, numel( fval ), [], [], fval );
             

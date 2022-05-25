@@ -136,6 +136,49 @@ classdef GLOBAL_SOLUTION_VECTOR < handle
             
         end
         
+        function [ Qvec ] = get_input_unknowns( obj, Q, x )
+            
+            if( nargin < 3 )
+                use_input_vector = false;
+            else
+                use_input_vector = true;
+                assert( numel( obj.fvec ) == numel( x ) )
+            end
+            
+            num_Q = numel(Q);
+            
+            Qvec = cell(num_Q,1);
+            
+            for i = 1 : num_Q
+                
+                lo = Q{i}.lo_global;
+                hi = Q{i}.hi_global;
+                
+                if( use_input_vector )
+                    Qvec{i} = x(lo:hi);
+                else
+                    Qvec{i} = obj.fvec(lo:hi);
+                end
+                
+            end
+            
+        end
+        
+        function put_output_unknowns( obj, Q, Qvec )
+            
+            num_Q = numel(Q);
+            
+            for i = 1 : num_Q
+                
+                lo = Q{i}.lo_global;
+                hi = Q{i}.hi_global;
+                
+                obj.fvec(lo:hi) = Qvec{i};
+                
+            end
+            
+        end
+        
     end
 end
 
