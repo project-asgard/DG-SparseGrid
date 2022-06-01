@@ -4,9 +4,9 @@ function pde_system = diffusion_system1()
 opts = OPTS( {} );
 opts.lev=4;
 opts.deg=3;
-opts.grid_type = 'SG';
+opts.grid_type = 'FG';
 opts.fast_FG_matrix_assembly = true;
-opts.timestep_method = 'BE';
+opts.timestep_method = 'CrankNicolson';
 %
 
 %
@@ -106,11 +106,9 @@ pde_system.set_initial_conditions;
 
 t   = 0.0;
 t_f = 0.1;
-if     strcmp(opts.timestep_method,'FE')
+if     any(strcmp(opts.timestep_method,{'FE','SSPRK2'}))
     dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
-elseif strcmp(opts.timestep_method,'SSPRK2')
-    dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
-elseif strcmp(opts.timestep_method,'BE')
+elseif any(strcmp(opts.timestep_method,{'BE','CrankNicolson'}))
     dt = 0.1/((2*opts.deg-1)*(2^opts.lev));
 end
 
@@ -176,8 +174,8 @@ title( '$q$', 'interpreter', 'latex' )
 
 exportgraphics( fig_1, 'diffusion_system1.pdf' )
 
-norm( u_rs - uf_A )
-norm( q_rs - qf_A )
+norm( u_rs - uf_A )/numel(nodes{1})
+norm( q_rs - qf_A )/numel(nodes{1})
 
 %%% End Hack %%%
 
