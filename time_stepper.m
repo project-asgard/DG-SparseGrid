@@ -14,6 +14,10 @@ function [] = time_stepper( pde_system, t, dt )
             
             BackwardEuler( pde_system, t, dt );
             
+        case 'CrankNicolson'
+            
+            CrankNicolson( pde_system, t, dt );
+            
     end
 
 end
@@ -24,7 +28,7 @@ function [] = ForwardEuler( pde_system, t, dt )
 
     u = sv.copy_evolution_unknowns();
 
-    RHS = ComputeRHS( pde_system, u, t );
+    RHS = ComputeRHS_Explicit( pde_system, u, t );
     
     u = u + dt * RHS;
     
@@ -40,11 +44,11 @@ function [] = SSP_RK2( pde_system, t, dt )
 
     u_0 = sv.copy_evolution_unknowns();
 
-    RHS_0 = ComputeRHS( pde_system, u_0, t );
+    RHS_0 = ComputeRHS_Explicit( pde_system, u_0, t );
     
     u_1 = u_0 + dt * RHS_0;
     
-    RHS_1 = ComputeRHS( pde_system, u_1, t );
+    RHS_1 = ComputeRHS_Explicit( pde_system, u_1, t + dt );
     
     u_1 = u_0 + 0.5 * dt * ( RHS_0 + RHS_1 );
     
@@ -54,7 +58,43 @@ function [] = SSP_RK2( pde_system, t, dt )
 
 end
 
-function [ RHS ] = ComputeRHS( pde_system, u, t )
+function [] = BackwardEuler( pde_system, t, dt )
+
+    sv = pde_system.solution_vector;
+
+    u = sv.copy_evolution_unknowns();
+
+    RHS = ComputeRHS_Implicit( pde_system, u, t, dt );
+    
+    u = u + dt * RHS;
+    
+    sv.insert_evolution_unknowns( u );
+    
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
+
+end
+
+function [] = CrankNicolson( pde_system, t, dt )
+
+    sv = pde_system.solution_vector;
+
+    u = sv.copy_evolution_unknowns();
+
+    RHS = ComputeRHS_Explicit( pde_system, u, t );
+    
+    u = u + 0.5 * dt * RHS;
+    
+    RHS = ComputeRHS_Implicit( pde_system, u, t + 0.5 * dt, 0.5 * dt );
+    
+    u = u + 0.5 * dt * RHS;
+    
+    sv.insert_evolution_unknowns( u );
+    
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
+
+end
+
+function [ RHS ] = ComputeRHS_Explicit( pde_system, u, t )
 
     sv_util = GLOBAL_SOLUTION_VECTOR_UTILITIES( );
     
@@ -62,39 +102,35 @@ function [ RHS ] = ComputeRHS( pde_system, u, t )
     
     [ sv ] = EvaluateClosure( pde_system, sv, t );
     
-    RHS = sv.zeros_evolution();
-    
-    os = 0;
-    for i = 1 : pde_system.num_eqs
-        
-        equation = pde_system.equations{i};
-        
-        if( strcmp( equation.type, 'evolution' ) )
-            
-            equation.update_terms( pde_system.opts, t )
-            
-            unknown_size = equation.unknown.size();
-            
-            for j = 1 : numel( equation.terms )
-                
-                Q = sv.get_input_unknowns( equation.terms{j}.input_unknowns );
-                
-                RHS(os+1:os+unknown_size)...
-                    = RHS(os+1:os+unknown_size)...
-                        + equation.terms{j}.driver( pde_system.opts, Q, t );
-                
-            end
-            
-            RHS(os+1:os+unknown_size)...
-                = equation.MultiplyInverseMassMatrix( pde_system.opts, RHS(os+1:os+unknown_size), t );
-            
-            os = os + unknown_size;
-            
-        end
-        
-    end
+    RHS = EvaluateRHS( pde_system, sv, t );
     
     sv.delete;
+
+end
+
+function [ RHS ] = ComputeRHS_Implicit( pde_system, u, t, dt )
+
+    if( dt == 0.0 )
+        
+        RHS = zeros( size( u ) );
+        
+    else
+        
+        RHS = - u;
+        
+        sv_util = GLOBAL_SOLUTION_VECTOR_UTILITIES( );
+        
+        sv = sv_util.checkout_evolution( pde_system.solution_vector, u );
+    
+        [ sv ] = EvaluateClosure( pde_system, sv, t );
+        
+        BackwardEuler_Solve( pde_system, sv, t, dt );
+        
+        RHS = ( RHS + sv.copy_evolution_unknowns() ) ./ dt;
+        
+        sv.delete;
+        
+    end
 
 end
 
@@ -133,19 +169,49 @@ function [ sv ] = EvaluateClosure( pde_system, sv, t )
 
 end
 
-function [] = BackwardEuler( pde_system, t, dt )
+function [ RHS ] = EvaluateRHS( pde_system, sv, t )
 
-    num_eqs = pde_system.num_eqs;
-    sv      = pde_system.solution_vector;
+    RHS = sv.zeros_evolution();
     
-    lo = sv.lbounds;
-    hi = sv.ubounds;
-    
-    Ax = @(x) BE_LHS( pde_system, t, dt, x, lo, hi );
+    os = 0;
+    for i = 1 : pde_system.num_eqs
+        
+        equation = pde_system.equations{i};
+        
+        if( strcmp( equation.type, 'evolution' ) )
+            
+            equation.update_terms( pde_system.opts, t )
+            
+            unknown_size = equation.unknown.size();
+            
+            for j = 1 : numel( equation.terms )
+                
+                Q = sv.get_input_unknowns( equation.terms{j}.input_unknowns );
+                
+                RHS(os+1:os+unknown_size)...
+                    = RHS(os+1:os+unknown_size)...
+                        + equation.terms{j}.driver( pde_system.opts, Q, t );
+                
+            end
+            
+            RHS(os+1:os+unknown_size)...
+                = equation.MultiplyInverseMassMatrix( pde_system.opts, RHS(os+1:os+unknown_size), t );
+            
+            os = os + unknown_size;
+            
+        end
+        
+    end
+
+end
+
+function [] = BackwardEuler_Solve( pde_system, sv, t, dt )
+
+    Ax = @(x) BE_LHS( pde_system, x, t, dt );
     
     b = sv.zeros();
     
-    for i = 1 : num_eqs
+    for i = 1 : pde_system.num_eqs
         
         equation = pde_system.equations{i};
         
@@ -153,7 +219,10 @@ function [] = BackwardEuler( pde_system, t, dt )
         
         if( strcmp( equation.type, 'evolution' ) )
             
-            b(lo(i):hi(i)) = equation.LHS_term.driver( pde_system.opts, {sv.fvec(lo(i):hi(i))}, t );
+            lo = sv.lbounds(i);
+            hi = sv.ubounds(i);
+            
+            b(lo:hi) = equation.LHS_term.driver( pde_system.opts, {sv.fvec(lo:hi)}, t );
             
         end
         
@@ -165,19 +234,19 @@ function [] = BackwardEuler( pde_system, t, dt )
 
 end
 
-function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
+function [ Ax ] = BE_LHS( pde_system, x, t, dt )
 
     opts = pde_system.opts;
-    sv   = pde_system.solution_vector;
-    
-    num_eqs = pde_system.num_eqs;
     
     Ax = zeros(size(x));
-    for i = 1 : num_eqs
+    for i = 1 : pde_system.num_eqs
         
         equation = pde_system.equations{i};
         
-        Ax(lo(i):hi(i)) = equation.LHS_term.driver( opts, {x(lo(i):hi(i))}, t+dt );
+        lo = pde_system.solution_vector.lbounds(i);
+        hi = pde_system.solution_vector.ubounds(i);
+        
+        Ax(lo:hi) = equation.LHS_term.driver( opts, {x(lo:hi)}, t+dt );
         
         alpha = dt;
         if( strcmp( equation.type, 'closure' ) )
@@ -188,9 +257,9 @@ function [ Ax ] = BE_LHS( pde_system, t, dt, x, lo, hi )
             
             term = equation.terms{j};
             
-            Q = sv.get_input_unknowns( term.input_unknowns, x );
+            Q = pde_system.solution_vector.get_input_unknowns( term.input_unknowns, x );
             
-            Ax(lo(i):hi(i)) = Ax(lo(i):hi(i)) - alpha * term.driver( opts, Q, t+dt );
+            Ax(lo:hi) = Ax(lo:hi) - alpha * term.driver( opts, Q, t+dt );
             
         end
         
