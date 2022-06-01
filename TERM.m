@@ -21,11 +21,19 @@ classdef TERM < handle
             
             F = zeros(obj.output_unknown.size(),1);
             
-            for i = 1 : numel(obj.input_unknowns)
+            if( obj.linear )
                 
-                obj.A_data{i} = matrix_assembly_data( obj.input_unknowns{i}, obj.output_unknown, opts );
+                for i = 1 : numel(obj.input_unknowns)
+                    
+                    obj.A_data{i} = matrix_assembly_data( obj.input_unknowns{i}, obj.output_unknown, opts );
+                    
+                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, Q{i}, obj.output_unknown.deg );
+                    
+                end
                 
-                F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, Q{i}, obj.output_unknown.deg );
+            else
+                
+                assert( not( obj.linear ), 'Nonlinear Term Driver Not Implemented' )
                 
             end
             
