@@ -3,11 +3,13 @@ classdef UNKNOWN < handle
     properties
         dimensions = {};
         deg;
+        lev;
         type = 'evolution';
         params = {};
         analytic_solutions = {};
         initial_conditions = {};
         hash_table;
+        FMWT;
         transform_blocks;
         lo_global; % Start index of unknown in global solution vector
         hi_global; % End   index of unknown in global solution vector
@@ -36,19 +38,22 @@ classdef UNKNOWN < handle
         
         function unknown = UNKNOWN( opts, dimensions, analytic_solutions, initial_conditions )
             
-            unknown.dimensions           = dimensions;
-            unknown.deg                  = opts.deg;
-            unknown.analytic_solutions   = analytic_solutions;
-            unknown.initial_conditions   = initial_conditions;
+            unknown.dimensions         = dimensions;
+            unknown.deg                = opts.deg;
+            unknown.lev                = opts.lev;
+            unknown.analytic_solutions = analytic_solutions;
+            unknown.initial_conditions = initial_conditions;
             
             for i=1:numel(unknown.dimensions)
                 unknown.dimensions{i}.lev = opts.lev;
             end
             
-            [unknown.hash_table.elements, unknown.hash_table.elements_idx]...
+            [ unknown.hash_table.elements, unknown.hash_table.elements_idx ]...
                 = hash_table_sparse_nD( unknown.get_lev_vec, opts.max_lev, opts.grid_type );
             
-            [~,unknown.transform_blocks] = OperatorTwoScale_wavelet2( opts.deg, opts.max_lev );
+            [ ~, unknown.transform_blocks ] = OperatorTwoScale_wavelet2( opts.deg, opts.max_lev ); % Why max_lev here?
+            
+            [ unknown.FMWT, ~ ] = OperatorTwoScale_wavelet2( opts.deg, opts.lev );
             
             compute_dimension_mass_mat( opts, unknown );
             
@@ -65,6 +70,18 @@ classdef UNKNOWN < handle
         function set_bounds( obj, lo, hi )
             obj.lo_global = lo;
             obj.hi_global = hi;
+        end
+        
+        function f_rs = convert_to_realspace( obj, f_w )
+            
+            f_rs = obj.FMWT' * f_w;
+            
+        end
+        
+        function f_w = convert_to_wavelet( obj, f_rs )
+            
+            f_w = obj.FMWT * f_rs;
+            
         end
         
     end

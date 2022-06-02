@@ -33,7 +33,19 @@ classdef TERM < handle
                 
             else
                 
-                assert( not( obj.linear ), 'Nonlinear Term Driver Not Implemented' )
+                Q_rs = cell(numel(Q),1);
+                
+                for i = 1 : numel(obj.input_unknowns)
+                    
+                    unknown = obj.input_unknowns{i};
+                    
+                    Q_rs{i} = unknown.convert_to_realspace( Q{i} );
+                    
+                end
+                
+                F_rs = obj.descriptor{1}( opts, Q_rs, t, obj.output_unknown );
+                
+                F = obj.output_unknown.convert_to_wavelet( F_rs );
                 
             end
             
