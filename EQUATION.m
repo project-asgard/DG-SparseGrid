@@ -74,7 +74,13 @@ classdef EQUATION < handle
             
             for i = 1 : numel( obj.terms )
                 
-                obj.terms{i}.evaluate_coefficient_matrices( opts, t )
+                term = obj.terms{i};
+                
+                if( term.linear )
+                    
+                    term.evaluate_coefficient_matrices( opts, t )
+                    
+                end
                 
             end
             
