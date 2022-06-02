@@ -10,6 +10,10 @@ function [] = time_stepper( pde_system, t, dt )
             
             SSP_RK2( pde_system, t, dt );
             
+        case 'SSPRK3'
+            
+            SSP_RK3( pde_system, t, dt );
+            
         case 'BE'
             
             BackwardEuler( pde_system, t, dt );
@@ -51,6 +55,30 @@ function [] = SSP_RK2( pde_system, t, dt )
     RHS_1 = ComputeRHS_Explicit( pde_system, u_1, t + dt );
     
     u_1 = u_0 + 0.5 * dt * ( RHS_0 + RHS_1 );
+    
+    sv.insert_evolution_unknowns( u_1 );
+    
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
+
+end
+
+function [] = SSP_RK3( pde_system, t, dt )
+
+    sv = pde_system.solution_vector;
+
+    u_0 = sv.copy_evolution_unknowns();
+
+    RHS_0 = ComputeRHS_Explicit( pde_system, u_0, t );
+    
+    u_1 = u_0 + dt * RHS_0;
+    
+    RHS_1 = ComputeRHS_Explicit( pde_system, u_1, t + dt );
+    
+    u_1 = u_0 + 0.25 * dt * ( RHS_0 + RHS_1 );
+    
+    RHS_2 = ComputeRHS_Explicit( pde_system, u_1, t + 0.25 * dt );
+    
+    u_1 = u_0 + (2.0/3.0) * dt * ( 0.25 * ( RHS_0 + RHS_1 ) + RHS_2 );
     
     sv.insert_evolution_unknowns( u_1 );
     
