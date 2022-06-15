@@ -27,12 +27,26 @@ classdef UNKNOWN < handle
             
         end
         
-        function fval_initial = get_initial_conditions( obj, opts )
+        function fval_initial = get_initial_conditions( obj, opts, t )
+            
+            if ~exist( 't', 'var' )
+                t = 0.0;
+            end
             
             fval_initial...
                 = md_eval_function( opts, opts.deg, obj.dimensions,[],...
                                     obj.initial_conditions, obj.hash_table,...
-                                    obj.transform_blocks, 0.0 );
+                                    obj.transform_blocks, t );
+            
+        end
+        
+        function fval_error = compute_error( obj, opts, fval_N, t )
+            
+            fval_A = md_eval_function( opts, opts.deg, obj.dimensions,[],...
+                                       obj.analytic_solutions, obj.hash_table,...
+                                       obj.transform_blocks, t );
+            
+            fval_error = sqrt( mean( ( fval_A(:) - fval_N(:) ).^2 ) );
             
         end
         
