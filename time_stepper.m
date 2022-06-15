@@ -18,7 +18,7 @@ function [] = time_stepper( pde_system, t, dt )
             
             BackwardEuler( pde_system, t, dt );
             
-        case 'CrankNicolson'
+        case 'CN'
             
             CrankNicolson( pde_system, t, dt );
             
