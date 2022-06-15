@@ -1,13 +1,4 @@
-function pde_system = diffusion_system1()
-
-%
-opts = OPTS( {} );
-opts.lev=4;
-opts.deg=3;
-opts.grid_type = 'FG';
-opts.fast_FG_matrix_assembly = true;
-opts.timestep_method = 'CrankNicolson';
-%
+function pde_system = diffusion_system1( opts )
 
 %
 %% Solving the heat equation u_t - u_xx = 0 as a system:
@@ -100,82 +91,92 @@ term_q = TERM( q, {u}, descriptor, true, false );
 
 equation_q = EQUATION( q, {term_q}, 'closure', '' );
 
-pde_system = PDE_SYSTEM( opts, {equation_u,equation_q} );
+    function [ dt ] = set_dt( pde_system, CFL )
+        lev  = pde_system.opts.lev;
+        deg  = pde_system.opts.deg;
+        dim  = pde_system.unknowns{1}.dimensions{1};
+        xMax = dim.max;
+        xMin = dim.min;
+        dx   = ( xMax - xMin ) / ( 2^lev );
+        dt   = CFL * dx^2 / ( 2 * deg - 1 );
+    end
 
-pde_system.set_initial_conditions;
+pde_system = PDE_SYSTEM( opts, {equation_u,equation_q}, @set_dt );
 
-t   = 0.0;
-t_f = 0.1;
-if     any(strcmp(opts.timestep_method,{'FE','SSPRK2'}))
-    dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
-elseif any(strcmp(opts.timestep_method,{'BE','CrankNicolson'}))
-    dt = 0.1/((2*opts.deg-1)*(2^opts.lev));
-end
-
-t_cnt = 0;
-while t < t_f
-    
-    time_stepper( pde_system, t, dt );
-    
-    t = t + dt;
-    t_cnt = t_cnt + 1;
-    if mod(t_cnt,100); fprintf('t = %f\n',t); end
-end
+% t   = 0.0;
+% t_f = 0.1;
+% if     any(strcmp(opts.timestep_method,{'FE','SSPRK2'}))
+%     dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
+% elseif any(strcmp(opts.timestep_method,{'BE','CrankNicolson'}))
+%     dt = 0.1/((2*opts.deg-1)*(2^opts.lev));
+% end
+% 
+% t_cnt = 0;
+% while t < t_f
+%     
+%     time_stepper( pde_system, t, dt );
+%     
+%     t = t + dt;
+%     t_cnt = t_cnt + 1;
+%     if mod(t_cnt,100); fprintf('t = %f\n',t); end
+% end
 
 %%% Hack to plot initial condition %%%
-
-for d=1:num_dims
-    num_fixed_grid = 257;
-    nodes_nodups{d}...
-        = linspace( pde_system.unknowns{1}.dimensions{d}.min,...
-                    pde_system.unknowns{1}.dimensions{d}.max,...
-                    num_fixed_grid );
-    [ Meval{d}, nodes{d}, nodes_count{d} ]...
-        = matrix_plot_D( pde_system.unknowns{1}, pde_system.opts,...
-                         pde_system.unknowns{1}.dimensions{d},...
-                         nodes_nodups{d} );
-end
-
-x_A  = nodes{1}';
-u0_A = u.analytic_solutions{1}{1}(x_A,1.0,0.0).*u.analytic_solutions{1}{2}(0.0,1);
-uf_A = u.analytic_solutions{1}{1}(x_A,1.0,  t).*u.analytic_solutions{1}{2}(  t,1);
-q0_A = q.analytic_solutions{1}{1}(x_A,1.0,0.0).*q.analytic_solutions{1}{2}(0.0,1);
-qf_A = q.analytic_solutions{1}{1}(x_A,1.0,  t).*q.analytic_solutions{1}{2}(  t,1);
-
-lo = pde_system.solution_vector.lbounds(1);
-hi = pde_system.solution_vector.ubounds(1);
-u_rs...
-  = wavelet_to_realspace( pde_system.unknowns{1}, pde_system.opts, Meval,...
-                          pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{1}.hash_table );
-
-close all
-
-fig_1 = figure( 1 );
-
-subplot(2,1,1)
-
-plot( x_A     , u0_A, ':k', 'linewidth', 2 ); hold on
-plot( x_A     , uf_A, '-k', 'linewidth', 2 )
-plot( nodes{1}, u_rs, '-r', 'linewidth', 2 )
-title( '$u$', 'interpreter', 'latex' )
-
-lo = pde_system.solution_vector.lbounds(2);
-hi = pde_system.solution_vector.ubounds(2);
-q_rs...
-  = wavelet_to_realspace( pde_system.unknowns{2}, pde_system.opts, Meval,...
-                          pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{2}.hash_table );
-
-subplot(2,1,2)
-
-plot( x_A     , q0_A, ':k', 'linewidth', 2 ); hold on
-plot( x_A     , qf_A, '-k', 'linewidth', 2 )
-plot( nodes{1}, q_rs, '-r', 'linewidth', 2 )
-title( '$q$', 'interpreter', 'latex' )
-
-exportgraphics( fig_1, 'diffusion_system1.pdf' )
-
-norm( u_rs - uf_A )/numel(nodes{1})
-norm( q_rs - qf_A )/numel(nodes{1})
+% 
+% t=0.0;
+% 
+% for d=1:num_dims
+%     num_fixed_grid = 257;
+%     nodes_nodups{d}...
+%         = linspace( pde_system.unknowns{1}.dimensions{d}.min,...
+%                     pde_system.unknowns{1}.dimensions{d}.max,...
+%                     num_fixed_grid );
+%     [ Meval{d}, nodes{d}, nodes_count{d} ]...
+%         = matrix_plot_D( pde_system.unknowns{1}, pde_system.opts,...
+%                          pde_system.unknowns{1}.dimensions{d},...
+%                          nodes_nodups{d} );
+% end
+% 
+% x_A  = nodes{1}';
+% u0_A = u.analytic_solutions{1}{1}(x_A,1.0,0.0).*u.analytic_solutions{1}{2}(0.0,1);
+% uf_A = u.analytic_solutions{1}{1}(x_A,1.0,  t).*u.analytic_solutions{1}{2}(  t,1);
+% q0_A = q.analytic_solutions{1}{1}(x_A,1.0,0.0).*q.analytic_solutions{1}{2}(0.0,1);
+% qf_A = q.analytic_solutions{1}{1}(x_A,1.0,  t).*q.analytic_solutions{1}{2}(  t,1);
+% 
+% lo = pde_system.solution_vector.lbounds(1);
+% hi = pde_system.solution_vector.ubounds(1);
+% u_rs...
+%   = wavelet_to_realspace( pde_system.unknowns{1}, pde_system.opts, Meval,...
+%                           pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{1}.hash_table );
+% 
+% close all
+% 
+% fig_1 = figure( 1 );
+% 
+% subplot(2,1,1)
+% 
+% plot( x_A     , u0_A, ':k', 'linewidth', 2 ); hold on
+% plot( x_A     , uf_A, '-k', 'linewidth', 2 )
+% plot( nodes{1}, u_rs, '-r', 'linewidth', 2 )
+% title( '$u$', 'interpreter', 'latex' )
+% 
+% lo = pde_system.solution_vector.lbounds(2);
+% hi = pde_system.solution_vector.ubounds(2);
+% q_rs...
+%   = wavelet_to_realspace( pde_system.unknowns{2}, pde_system.opts, Meval,...
+%                           pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{2}.hash_table );
+% 
+% subplot(2,1,2)
+% 
+% plot( x_A     , q0_A, ':k', 'linewidth', 2 ); hold on
+% plot( x_A     , qf_A, '-k', 'linewidth', 2 )
+% plot( nodes{1}, q_rs, '-r', 'linewidth', 2 )
+% title( '$q$', 'interpreter', 'latex' )
+% 
+% exportgraphics( fig_1, 'diffusion_system1.pdf' )
+% 
+% norm( u_rs - uf_A )/numel(nodes{1})
+% norm( q_rs - qf_A )/numel(nodes{1})
 
 %%% End Hack %%%
 
