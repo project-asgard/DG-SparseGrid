@@ -43,7 +43,7 @@ classdef TERM < handle
                     
                 end
                 
-                F_rs = obj.descriptor{1}( opts, Q_rs, t, obj.output_unknown );
+                F_rs = obj.descriptor{1}( opts, Q_rs, t );
                 
                 F = obj.output_unknown.convert_to_wavelet( F_rs );
                 

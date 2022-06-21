@@ -61,7 +61,7 @@ classdef EULER_1D
             
         end
         
-        function rhs_1 = evaluate_rhs_1( obj, opts, Q, t, output_unknown )
+        function rhs_1 = evaluate_rhs_1( obj, opts, Q, t )
             
             dim = obj.dim;
             lev = obj.lev;
@@ -152,7 +152,7 @@ classdef EULER_1D
             
         end
         
-        function rhs_2 = evaluate_rhs_2( obj, opts, Q, t, output_unknown )
+        function rhs_2 = evaluate_rhs_2( obj, opts, Q, t )
             
             dim = obj.dim;
             lev = obj.lev;
@@ -243,7 +243,7 @@ classdef EULER_1D
             
         end
         
-        function rhs_3 = evaluate_rhs_3( obj, opts, Q, t, output_unknown )
+        function rhs_3 = evaluate_rhs_3( obj, opts, Q, t )
             
             dim = obj.dim;
             lev = obj.lev;
