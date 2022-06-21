@@ -103,24 +103,6 @@ equation_q = EQUATION( q, {term_q}, 'closure', '' );
 
 pde_system = PDE_SYSTEM( opts, {equation_u,equation_q}, @set_dt );
 
-% t   = 0.0;
-% t_f = 0.1;
-% if     any(strcmp(opts.timestep_method,{'FE','SSPRK2'}))
-%     dt = 0.1/((2*opts.deg-1)*(2^opts.lev)^2);
-% elseif any(strcmp(opts.timestep_method,{'BE','CrankNicolson'}))
-%     dt = 0.1/((2*opts.deg-1)*(2^opts.lev));
-% end
-% 
-% t_cnt = 0;
-% while t < t_f
-%     
-%     time_stepper( pde_system, t, dt );
-%     
-%     t = t + dt;
-%     t_cnt = t_cnt + 1;
-%     if mod(t_cnt,100); fprintf('t = %f\n',t); end
-% end
-
 %%% Hack to plot initial condition %%%
 % 
 % t=0.0;
