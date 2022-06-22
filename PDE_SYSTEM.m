@@ -33,8 +33,6 @@ classdef PDE_SYSTEM < handle
             pde_system.solution_vector_utilities...
                 = GLOBAL_SOLUTION_VECTOR_UTILITIES( );
             
-            pde_system.create_global_to_local_map;
-            
         end
         
         function set_initial_conditions( obj, t )
@@ -44,41 +42,6 @@ classdef PDE_SYSTEM < handle
                 
                 sv.fvec(sv.lbounds(i):sv.ubounds(i))...
                     = obj.unknowns{i}.get_initial_conditions( obj.opts, t );
-                
-            end
-            
-        end
-        
-        function create_global_to_local_map( obj )
-            
-            num_unknowns = numel( obj.unknowns );
-            for i = 1 : obj.num_eqs
-                
-                equation = obj.equations{i};
-                
-                for j = 1 : numel( equation.terms )
-                    
-                    term = equation.terms{j};
-                    
-                    num_input_unknowns = numel( term.input_unknowns );
-                    
-                    term.input_g2l = int32(zeros(size(num_input_unknowns,1)));
-                    
-                    for k = 1 : num_input_unknowns
-                        
-                        for l = 1 : num_unknowns
-                            
-                            if( obj.unknowns{l} == term.input_unknowns{k} )
-                                
-                                term.input_g2l(k) = l;
-                                
-                            end
-                            
-                        end
-                        
-                    end
-                    
-                end
                 
             end
             
