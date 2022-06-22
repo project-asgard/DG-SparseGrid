@@ -3,14 +3,23 @@ function [f1] = fast_2d_matrix_apply(opts,pde,A_data,f0,imex_flag)
 %
 % (B\kron A)*vec(X) = vec(AXB') where vec(X) = X(:);
 %
-persistent perm iperm pvec
+persistent perm iperm pvec A_data_size
 
 %Preallocate these
+% if isempty(perm)
+%     [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+% end
+% if opts.adapt
+%     [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+% end
 if isempty(perm)
     [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+    A_data_size = numel(A_data.element_global_row_index);
 end
-if opts.adapt
+
+if A_data_size ~= numel(A_data.element_global_row_index) %recompute
     [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+    A_data_size = numel(A_data.element_global_row_index);
 end
 
 %

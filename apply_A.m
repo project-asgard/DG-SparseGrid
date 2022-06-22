@@ -20,10 +20,14 @@ if nargin < 8
     imex_flag = 'N';
 end
 
-term_vec = [];
-for i=1:num_terms
-    if strcmp(imex_flag,pde.terms{i}.imex)
-        term_vec = [term_vec i];
+if strcmp(imex_flag,'N')
+    term_vec = 1:num_terms;
+else
+    term_vec = [];
+    for i=1:num_terms
+        if strcmp(imex_flag,pde.terms{i}.imex)
+            term_vec = [term_vec i];
+        end
     end
 end
 

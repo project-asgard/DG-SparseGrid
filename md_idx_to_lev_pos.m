@@ -19,7 +19,7 @@ end
 assert(min(lev_vec)>=0);
 assert(min(pos_vec)>=0);
 
-assert(max(lev_vec)<max_lev,'not sure why this doesnt work, but just increase max_lev');
+%assert(max(lev_vec)<=max_lev,'not sure why this doesnt work, but just increase max_lev');
 
 end
 

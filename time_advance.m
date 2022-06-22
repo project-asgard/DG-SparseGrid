@@ -1,4 +1,4 @@
-function [f,sol] = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
+function [f,sol,hash_table] = time_advance(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax)
 
 sol = 0;
 
@@ -19,7 +19,7 @@ elseif strcmp(opts.timestep_method,'CN')
     f = crank_nicolson(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif strcmp(opts.timestep_method,'IMEX')
     % IMEX
-    f = imex(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
+    [f,hash_table] = imex(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
 elseif sum(strcmp(opts.timestep_method,{'ode15i','ode15s','ode45','ode23s'}))>0
     % One of the atlab ODE integrators.
     [f,sol] = ODEm(pde,opts,A_data,f,t,dt,deg,hash_table,Vmax,Emax);
@@ -496,7 +496,7 @@ end
 
 end
 
-function f1 = imex(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
+function [f1,hash_table] = imex(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% C++ Implementation Notes %%%%%%%%%%%%%%%%%%%%%%%
@@ -513,9 +513,14 @@ function f1 = imex(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 persistent hash_table_FG A_data_FG perm_FG iperm_FG pvec_FG
-persistent perm_SG iperm_SG pvec_SG
-persistent per iper %Conversion for limiters
-persistent FMWT_2D
+persistent B B0
+persistent hash 
+persistent x v FMWT_x
+persistent output
+%persistent perm_SG iperm_SG pvec_SG
+%persistent per iper %Conversion for limiters
+%persistent FMWT_2D
+%persistent B0 B M FMWT_x x
 
 %Switch for IMEX iteration: 
 % 1 : Backward Euler in explicit terms 'E',
@@ -525,6 +530,9 @@ persistent FMWT_2D
 %%% C++ : Focus on the case BEFE = 0
 
 BEFE = 0;
+
+pos_adapt = true;
+pos_tol = -1e-2;
 
 %Get quadrature points in realspace stiffness matrix calculation
 [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
@@ -537,32 +545,15 @@ if isempty(hash_table_FG)
     [hash_table_FG.elements, hash_table_FG.elements_idx]  = hash_table_sparse_nD (pde.get_lev_vec, opts.max_lev, 'FG');
     A_data_FG = global_matrix(pde,opts,hash_table_FG);
     [perm_FG,iperm_FG,pvec_FG] = sg_to_fg_mapping_2d(pde,opts,A_data_FG);
-    [perm_SG,iperm_SG,pvec_SG] = sg_to_fg_mapping_2d(pde,opts,A_data);
     x = pde.dimensions{1}.min:(pde.dimensions{1}.max-pde.dimensions{1}.min)/2^pde.dimensions{1}.lev:pde.dimensions{1}.max;
     v = pde.dimensions{2}.min:(pde.dimensions{2}.max-pde.dimensions{2}.min)/2^pde.dimensions{2}.lev:pde.dimensions{2}.max;
-    per = reshape(convertVectoMat(x,v,opts.deg-1,1:(numel(x)-1)*(numel(v)-1)*(opts.deg)^2),[],1);
-    iper(per) = 1:numel(per);
     FMWT_x = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{1}.lev);
-    FMWT_v = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{2}.lev);
-    FMWT_2D = kron(FMWT_x,FMWT_v);
 end
 
+moment_flag = (numel(pde.moments) == 3);
 
-%Create moment matrices that take DG function in (x,v) and transfer it
-%to DG function in x.
-if numel(pde.dimensions) >= 2
-    moment_mat = cell(numel(pde.moments),1);
-    for i=1:numel(pde.moments)
-        moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
-    end
-end
 
-%if isempty(P)   
-%    M = [moment_mat{1};moment_mat{2};moment_mat{3}];
-%    [~,S,V] = svd(full(M),'econ');
-%    P = V(:,1:sum(diag(S) > 1e-12));
-%end
-    
+
 hash_table_1D = hash_table_2D_to_1D(hash_table,opts);
 
 assert(isempty(pde.termsLHS),'LHS terms currently not supported by IMEX');
@@ -617,7 +608,7 @@ if BEFE
 
 else %%Trying imex deg 2 version
     %Here f1 = f^{n+1}, f0 = f^n
-    
+        
     %%%%%
     %%% First stage
     %%%%%
@@ -628,31 +619,100 @@ else %%Trying imex deg 2 version
     %%% Second stage
     %%%%%
     
-    %Explicit step
-    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');  
-    %f_2s = f0;
-    %f_2sl = zeros(size(pvec_SG)); f_2sl(pvec_SG) = f_2s(perm_SG(pvec_SG)); f_2sl = f_2sl(iperm_FG);
+    if isempty(hash)
+        hash = hash_table;
+    end
+    A_data = global_matrix(pde,opts,hash);
+    if moment_flag
+        moment_mat = cell(numel(pde.moments),1);
+        for i=1:numel(pde.moments)
+            moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
+        end
+    end
     
+    f0_hash = hash;
+    
+    %Explicit step
+    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
+    
+    if isempty(B)
+        [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+    end
+    
+    if isempty(output)
+        output.data_vec = numel(hash.elements_idx);
+        output.min_vec = min(B0*f0);
+        output.max_vec = max(B0*f0);
+        output.T = 0;
+    end
+    
+    Q = B0*f_2s;
+    fprintf('min(B0*f_2s) = %e.  ',min(Q))
+    if pos_adapt
+        pos_bool = true;
+        while pos_bool
+        %%% Adaptivity stuff       
+            if min(Q) < pos_tol
+                [hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                fprintf('Add %d dof.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
+            else
+                pos_bool = false;
+                hash_pos = hash;
+            end
+            %Check to see if hash_table has changed
+            if numel(hash.elements_idx) ~= numel(hash_pos.elements_idx)
+                f0 = fill_from_hash_table(pde,opts,f0_hash,hash_pos,f0);
+                f0_hash = hash_pos;
+                hash = hash_pos;
+                A_data = A_pos;
+                [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+
+                %Update moment matrices
+                if moment_flag
+                    for i=1:numel(pde.moments)
+                        moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash,i);
+                    end
+                end
+                hash_table_1D = hash_table_2D_to_1D(hash,opts);
+                f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
+                Q = B0*f_2s;
+                fprintf('Updated f_2s: min(B0*f_2s) = %e.  ',min(Q));
+            else
+                pos_bool = false;
+            end
+        end
+    end
+    fprintf('\n');
+    
+    output.data_vec = [output.data_vec;numel(hash.elements_idx)];
+    output.min_vec = [output.min_vec;min(Q)];
+    output.max_vec = [output.max_vec;max(Q)];
+    output.T = [output.T;t+0.5*dt];
+        
     %%%%%% Testing slope limiters for SG functions.  
     %%%%%%  C++ do not implement %%%%%%%%%
     %f_2sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_2s);
     %%%%%% END %%%%%%
     
     
-    
-    %Create rho_2s
-    mom0 = moment_mat{1}*f_2s; %integral of (f,1)_v
-    mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
-    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
+    if moment_flag
+        %Create rho_2s
+        mom0 = moment_mat{1}*f_2s; %integral of (f,1)_v
+        %mom0 = FMWT_x*slopeLimiter(x,deg-1,FMWT_x'*mom0,1,1);
+        mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
+        pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
 
-    mom1 = moment_mat{2}*f_2s; %integral of (f,v)_v
-    mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
-    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
+        mom1 = moment_mat{2}*f_2s; %integral of (f,v)_v
+        %mom1 = FMWT_x*slopeLimiter(x,deg-1,FMWT_x'*mom1,1,1);
+        mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
+        pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
 
-    mom2 = moment_mat{3}*f_2s; %integral of (f,v^2)_v
-    mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
-    pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
-    
+        mom2 = moment_mat{3}*f_2s; %integral of (f,v^2)_v
+        %mom2 = FMWT_x*slopeLimiter(x,deg-1,FMWT_x'*mom2,1,1);
+        mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
+        pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+    end
+        
             %Plot moments
 %     if ~opts.quiet || 1
 %         
@@ -677,12 +737,12 @@ else %%Trying imex deg 2 version
     pde = get_coeff_mats(pde,opts,t,0);
     
     %f2 now
-    [f_2,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_2s,1e-12,numel(f0));
+    [f_2,flag,relres,iter1] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_2s,1e-12,numel(f0));
+    %[f_2,flag,relres,iter1] = gmres(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_2s,10,1e-12,numel(f_2s)/10);
     if flag ~= 0
         fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
         assert(relres < 1e-10)
     end
-    %f_2 = f_2 - P*(P'*(f_2-f_2s));
     
     %%%%%
     %%% Third stage
@@ -690,96 +750,153 @@ else %%Trying imex deg 2 version
     
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
               + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
-    %f_3sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_3s);
-    %f_3s = f0;
+          
+    Q = B0*f_3s;
+    fprintf('min(B0*f_3s) = %e.  ',min(Q))    
+    if pos_adapt
+        pos_bool = true;
+        while pos_bool
+            if min(Q) < pos_tol
+                [hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                fprintf('Adding %d elements.    ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
+            else
+                hash_pos = hash;
+                pos_bool = false;
+            end
+            %Check to see if hash_table has changed
+            if numel(hash.elements_idx) ~= numel(hash_pos.elements_idx)
+                f_2 = fill_from_hash_table(pde,opts,hash,hash_pos,f_2);
+                f0  = fill_from_hash_table(pde,opts,f0_hash,hash_pos,f0);
+                f0_hash = hash_pos;
+                hash = hash_pos;
+                A_data = A_pos;
+                [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+
+                %Update moment matrices
+                if moment_flag
+                    for i=1:numel(pde.moments)
+                        moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash,i);
+                    end
+                end
+                hash_table_1D = hash_table_2D_to_1D(hash,opts);
+                f_3s = f0  + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
+                           + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
+                Q = B0*f_3s;
+                fprintf('Updated f_3s: min(B0*f_3s) = %e.  ',min(Q));
+            else
+                pos_bool = false;
+            end
+        end
+    end
+    fprintf('\n');
     
-    %Create rho_3s
-    mom0 = moment_mat{1}*f_3s; %integral of (f,1)_v
-    mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
-    %mom0_vals = singleD_to_multiD(num_dims-1,mom0_real,nodes(1));
-    pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
+    output.data_vec = [output.data_vec;numel(hash.elements_idx)];
+    output.min_vec = [output.min_vec;min(Q)];
+    output.max_vec = [output.max_vec;max(Q)];
+    output.T = [output.T;t+dt];
+    
+    if moment_flag
+        %Create rho_3s
+        mom0 = moment_mat{1}*f_3s; %integral of (f,1)_v
+        %mom0 = FMWT_x*slopeLimiter(x,deg-1,FMWT_x'*mom0,1,1);
+        mom0_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom0,hash_table_1D);
+        pde.params.n  = @(x) interp1(nodes,mom0_real,x,'nearest','extrap');
 
-    mom1 = moment_mat{2}*f_3s; %integral of (f,v)_v
-    mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
-    pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
+        mom1 = moment_mat{2}*f_3s; %integral of (f,v)_v
+        %mom1 = FMWT_x*slopeLimiter(x,deg-1,FMWT_x'*mom1,1,1);
+        mom1_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom1,hash_table_1D);
+        pde.params.u  = @(x) interp1(nodes,mom1_real,x,'nearest','extrap')./pde.params.n(x);
 
-    mom2 = moment_mat{3}*f_3s; %integral of (f,v^2)_v
-    mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
-    pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
-        
+        mom2 = moment_mat{3}*f_3s; %integral of (f,v^2)_v
+        %mom2 = FMWT_x*slopeLimiter(x,deg-1,FMWT_x'*mom2,1,1);
+        mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
+        pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+    end
+            
     %Update coefficients
     pde = get_coeff_mats(pde,opts,t,0);
 
-    [f_3,flag,relres,iter] = bicgstabl(@(x) x - dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f0));
+    [f_3,flag,relres,iter2] = bicgstabl(@(x) x - 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f0));
+    %[f_3,flag,relres,iter2] = gmres(@(x) x - 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,10,1e-12,numel(f_3s)/10);
     if flag ~= 0
         fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
         assert(relres < 1e-10)
     end
-    %f_3 = f_3 - P*(P'*(f_3-f_3s));
     
     %Update timestep to final stage
     f1 = f_3;
     
-    time = t+dt;
-    if opts.case_ == 2 && (abs(pde.params.nu) < 1e-8)
-        %Get analytic solution at t_{n+1}
+    if moment_flag
+        time = t+dt;
+        if opts.case_ == 2 && (abs(pde.params.nu) < 1e-8)
+            %Get analytic solution at t_{n+1}
 
-        fval_analytic = exact_solution_vector(pde,opts,hash_table,time);
-        %fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
-        
-        %Get analytic moments
-        
-        %n 
-        mom0_a = moment_mat{1}*fval_analytic;
-        mom0_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom0_a,hash_table_1D);
-        analytic_moments.n = mom0_a_r;
-        
-        %u
-        mom1_a = moment_mat{2}*fval_analytic;
-        mom1_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom1_a,hash_table_1D);
-        analytic_moments.u = mom1_a_r./mom0_a_r;
-        
-        %T
-        mom2_a = moment_mat{3}*fval_analytic;
-        mom2_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom2_a,hash_table_1D);
-        analytic_moments.T = mom2_a_r./mom0_a_r - (analytic_moments.u).^2;
-        
-        fig1 = figure(1000);
-        fig1.Units = 'Normalized';
-        fig1.Position = [0.5 0.5 0.3 0.3];
-        subplot(2,2,1);
-        plot(nodes,pde.params.n(nodes)-analytic_moments.n');
-        title('n_f');
-        subplot(2,2,2);
-        plot(nodes,pde.params.u(nodes)-analytic_moments.u');
-        title('u_f');
-        subplot(2,2,3);
-        plot(nodes,pde.params.th(nodes)-analytic_moments.T');
-        title('th_f');
-        sgtitle("Fluid Variables. t = "+num2str(time));
-        drawnow
-    else
-        %Plot moments
-        
-        fig1 = figure(1000);
-        fig1.Units = 'Normalized';
-        fig1.Position = [0.5 0.5 0.3 0.3];
-        subplot(2,2,1);
-        plot(nodes,pde.params.n(nodes));
-        title('n_f');
-        subplot(2,2,2);
-        plot(nodes,pde.params.u(nodes));
-        title('u_f');
-        subplot(2,2,3);
-        plot(nodes,pde.params.th(nodes));
-        title('th_f');
-        sgtitle("Fluid Variables. t = "+num2str(time));
-        drawnow
-        
+            fval_analytic = exact_solution_vector(pde,opts,hash_table,time);
+            %fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
+
+            %Get analytic moments
+
+            %n 
+            mom0_a = moment_mat{1}*fval_analytic;
+            mom0_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom0_a,hash_table_1D);
+            analytic_moments.n = mom0_a_r;
+
+            %u
+            mom1_a = moment_mat{2}*fval_analytic;
+            mom1_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom1_a,hash_table_1D);
+            analytic_moments.u = mom1_a_r./mom0_a_r;
+
+            %T
+            mom2_a = moment_mat{3}*fval_analytic;
+            mom2_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom2_a,hash_table_1D);
+            analytic_moments.T = mom2_a_r./mom0_a_r - (analytic_moments.u).^2;
+
+            fig1 = figure(1000);
+            fig1.Units = 'Normalized';
+            fig1.Position = [0.5 0.5 0.3 0.3];
+            subplot(2,2,1);
+            plot(nodes,pde.params.n(nodes)-analytic_moments.n');
+            title('n_f');
+            subplot(2,2,2);
+            plot(nodes,pde.params.u(nodes)-analytic_moments.u');
+            title('u_f');
+            subplot(2,2,3);
+            plot(nodes,pde.params.th(nodes)-analytic_moments.T');
+            title('th_f');
+            sgtitle("Fluid Variables. t = "+num2str(time));
+            drawnow
+        else
+            %Plot moments
+
+            fig1 = figure(1000);
+            fig1.Units = 'Normalized';
+            fig1.Position = [0.5 0.5 0.3 0.3];
+            subplot(2,2,1);
+            plot(nodes,pde.params.n(nodes));
+            title('n_f');
+            subplot(2,2,2);
+            plot(nodes,pde.params.u(nodes));
+            title('u_f');
+            subplot(2,2,3);
+            plot(nodes,pde.params.th(nodes));
+            title('th_f');
+            sgtitle("Fluid Variables. t = "+num2str(time));
+            drawnow
+
+        end
     end
     
-    %fprintf("Norm Check t = %f, |f1|_2 = %f\n",t+dt,norm(f1));
+    if pos_adapt && 0
+        [pde,hash_new,f1,A_data] = adapt_stripped(pde,opts,hash,f1,'c');
+        %Check to see if hash has changed
+        if numel(hash_new.elements_idx) ~= numel(hash.elements_idx)
+            fprintf('Coarsened mesh by %d elements\n',numel(hash.elements_idx)-numel(hash_new.elements_idx));
+            hash = hash_new;
+            [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+        end
+    end
     
+    hash_table = hash;
 end
 
 end

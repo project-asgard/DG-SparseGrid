@@ -2,7 +2,7 @@
 
 function [err,fval,fval_realspace,nodes,err_realspace,outputs,opts] = asgard(pde_handle,varargin)
 
-format short e
+%format short e
 folder = fileparts(which(mfilename));
 addpath(genpath(folder));
 

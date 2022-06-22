@@ -165,7 +165,7 @@ classdef OPTS
                     end
                     opts.time_independent_A = false;
                 else
-                    opts.max_lev_coeffs = false;
+                    %opts.max_lev_coeffs = false;
                 end
                 
                 if opts.use_connectivity

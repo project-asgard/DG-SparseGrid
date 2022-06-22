@@ -14,7 +14,7 @@ if opts.time_independent_A || opts.time_independent_build_A || strcmp(opts.times
 end
 
 %% Reset fast multiply
-clear fast_2d_matrix_apply
+clear fast_2d_matrix_apply addNegativeElements
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);
@@ -174,6 +174,8 @@ if num_dims <=3
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
         else
             plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
+            %subplot(2,2,4)
+            %plot_adapt_triangle(pde,opts,hash_table);
         end
     end
     
@@ -346,7 +348,7 @@ for L = 1:opts.num_steps
         if strcmp(opts.timestep_method,'ode15s') && L>1
             fval = deval(sol,t+dt);
         else
-            [fval,sol] = time_advance(pde,opts,A_data,fval,t,dt,opts.deg,hash_table,[],[]);
+            [fval,sol,hash_table] = time_advance(pde,opts,A_data,fval,t,dt,opts.deg,hash_table,[],[]);
         end
 
         if opts.build_realspace_output
@@ -514,8 +516,10 @@ for L = 1:opts.num_steps
                 figs.solution = figure('Name','Solution','Units','normalized','Position',[0.1,0.1,0.3,0.3]);
             end
                        
-            %plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
-            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
+            plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD,element_coordinates);
+            %subplot(2,2,4)
+            %plot_adapt_triangle(pde,opts,hash_table);
+            %plot_fval(pde,nodes_nodups,f_realspace_nD,f_realspace_analytic_nD);
             
             % this is just for the RE paper
             plot_fval_in_cyl = false;
