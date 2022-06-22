@@ -20,11 +20,6 @@ soln_x = @(x,p,t) sin(pi*x);
 soln_t = @(t,p)   exp(-pi^2*t);
 soln   = new_md_func(num_dims,{soln_x,soln_t});
 
-%%  Define the boundary conditions
-
-BCL = {soln};
-BCR = {soln};
-
 %% Initial conditions
 
 initial_conditions = {soln};
@@ -44,11 +39,6 @@ u = UNKNOWN( opts, dimensions, analytic_solution, initial_conditions );
 soln_x = @(x,p,t) cos(pi*x)*pi;
 soln_t = @(t,p)   exp(-pi^2*t);
 soln   = new_md_func(num_dims,{soln_x,soln_t});
-
-%%  Define the boundary conditions
-
-BCL = {soln};
-BCR = {soln};
 
 %% Initial conditions
 
