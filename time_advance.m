@@ -532,7 +532,7 @@ persistent output
 BEFE = 0;
 
 pos_adapt = true;
-pos_tol = -1e-2;
+pos_tol = -1e-8;
 
 %Get quadrature points in realspace stiffness matrix calculation
 [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
@@ -629,6 +629,7 @@ else %%Trying imex deg 2 version
             moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
         end
     end
+    init_dof = numel(f0);
     
     f0_hash = hash;
     
@@ -646,6 +647,10 @@ else %%Trying imex deg 2 version
         output.T = 0;
     end
     
+    %one = new_md_func(2,{@(x,p,t,dat) 0*x+1,@(v,t,p,dat) 0*v+1, @(t,p) 0*t+1});
+    %f_2s = md_eval_function(opts, opts.deg, pde.dimensions, ...
+    %pde.params, {one}, hash_table, pde.transform_blocks, t);
+    
     Q = B0*f_2s;
     fprintf('min(B0*f_2s) = %e.  ',min(Q))
     if pos_adapt
@@ -653,7 +658,8 @@ else %%Trying imex deg 2 version
         while pos_bool
         %%% Adaptivity stuff       
             if min(Q) < pos_tol
-                [hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                %[hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                [hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_2s,hash,A_data,-1e-10);
                 fprintf('Add %d dof.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
             else
                 pos_bool = false;

@@ -8,6 +8,7 @@ function pde = pos_advection(opts)
 %
 % explicit
 % asgard(@pos_advection,'lev',6,'deg',1,'grid_type','FG','timestep_method','IMEX','dt',0.01,'num_steps',50,'quiet',false,'build_realspace_output',false,'plot_freq',10,'adapt_threshold',1e-3,'calculate_mass',false,'max_lev',6,'fast_FG_matrix_assembly',true)
+% asgard(@pos_advection,'lev',6,'deg',1,'grid_type','SG','timestep_method','IMEX','dt',0.005,'num_steps',50,'quiet',false,'build_realspace_output',false,'plot_freq',10,'calculate_mass',false,'max_lev',6,'fast_FG_matrix_assembly',true)
 
 % pde.CFL = 0.1;
 
