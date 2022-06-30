@@ -1,4 +1,4 @@
-function [pde,hash_table,fval,A_data] ...
+function [pde,hash_table,fval,A_data,elements_modified] ...
     = adapt_stripped(pde,opts,hash_table,fval,coarsen_or_refine)
 
 num_elements    = numel(hash_table.elements_idx);
@@ -42,6 +42,8 @@ if refine_threshold <= 0 % just don't do anything for zero valued functions
     refine = 0;
     refine_previous = 0;
 end
+
+elements_modified = [];
 
 assert(numel(find(hash_table.elements_idx))==numel(hash_table.elements_idx));
 
@@ -106,7 +108,8 @@ if coarsen
             end
             
             num_remove = num_remove + 1;
-            elements_to_remove(num_remove) = n;
+            elements_to_remove(:,num_remove) = n;
+            elements_modified(:,num_remove) = [n;idx];
             
             %%
             % determine level above leaf nodes and label them
@@ -151,7 +154,7 @@ if coarsen
         %%
         % Add this elements DOF to the list to be removed from fval
         
-        nn = elements_to_remove(n);
+        nn = elements_to_remove(1,n);
         
         i1 = (nn-1)*element_DOF+1; % Get the start and end global row indices of the element
         i2 = (nn)*element_DOF;
@@ -170,6 +173,12 @@ if coarsen
     if ~opts.quiet
         fprintf('    Final number of elements: %i\n', numel(hash_table.elements_idx));
         fprintf('    Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
+    end
+    
+    %Sort elements removed
+    if num_remove > 0
+        [~,I] = sort(elements_modified(2,:));
+        elements_modified = elements_modified(:,I);
     end
     
     %%
@@ -264,6 +273,7 @@ if refine
     
     num_try_to_add = cnt;
     num_elements_added = 0;
+    added = false(1,num_try_to_add);
     for i=1:num_try_to_add
         
         idx = new_elements_idx(i);
@@ -279,6 +289,8 @@ if refine
         
         [lev_vec, pos_vec] = md_idx_to_lev_pos(num_dims, opts.max_lev, idx);
         if hash_table.elements.type(idx) == 0 && all(lev_vec <= pde_lev_vec) % element not already enabled and level does not grow
+            
+            added(i) = true;
             
             num_elements_added = num_elements_added + 1;
             position_in_elements_idx = num_elements+num_elements_added;
@@ -317,6 +329,9 @@ if refine
         fprintf('    Final number of DOFs: %i\n', numel(hash_table.elements_idx)*deg^num_dims);
     end
     
+    elements_modified(2,:) = new_elements_idx(added);
+    elements_modified(1,:) = num_elements+(1:num_elements_added);
+    
 end
 
 %%
@@ -339,22 +354,22 @@ elements_idx0 = hash_table.elements_idx;
 
 %% Update dims and coeffs
 % Update the time-indepedent coeff mats to the new size
-lev_vec = zeros(num_dims, 1);
-for d=1:num_dims
-    lev_vec(d) = max(hash_table.elements.lev_p1(:,d)-1);
-end
+% lev_vec = zeros(num_dims, 1);
+% for d=1:num_dims
+%     lev_vec(d) = max(hash_table.elements.lev_p1(:,d)-1);
+% end
 
 %pde = compute_dimension_mass_mat(opts,pde);
 
-if opts.max_lev_coeffs
-    pde = get_coeff_mats_rechain(pde, deg, lev_vec);
-end
+% if opts.max_lev_coeffs
+%     pde = get_coeff_mats_rechain(pde, deg, lev_vec);
+% end
+% 
+% for d=1:num_dims
+%     pde.dimensions{d}.lev = lev_vec(d);
+% end
 
-for d=1:num_dims
-    pde.dimensions{d}.lev = lev_vec(d);
-end
-
-assert(norm(pde.get_lev_vec-lev_vec)==0);
+%assert(norm(pde.get_lev_vec-lev_vec)==0);
 
 % If we don't want to store the max lev coeffs, regen them
 if ~opts.max_lev_coeffs

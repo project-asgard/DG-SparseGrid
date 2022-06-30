@@ -25,8 +25,10 @@ num_dims = numel(dimensions);
 
 %% Solution
 
-soln_x = @(x,p,t) (x-t > 0).*(x-t < 0.25);
-soln_y = @(y,p,t) (y-t > -0.25).*(y-t < 0);
+%soln_x = @(x,p,t) (x-t > 0).*(x-t < 0.25);
+%soln_y = @(y,p,t) (y-t > -0.25).*(y-t < 0);
+soln_x = @(x,p,t) (keep_bound(x-t) > 0).*(keep_bound(x-t) < 0.25);
+soln_y = @(y,p,t) (keep_bound(y-t) > -0.25).*(keep_bound(y-t) < 0);
 soln_t = @(t,p) 0*t+1;
 
 %% Construct moments
@@ -107,5 +109,11 @@ solutions = {soln1};
 pde = PDE(opts,dimensions,terms,[],sources,params,@set_dt,[],initial_conditions,solutions,moments);
 
 end
+
+function z = keep_bound(y)
+    zeta = floor(y/2+0.5);
+    z = y - 2*zeta;
+end
+
 
 

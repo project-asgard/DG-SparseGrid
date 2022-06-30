@@ -6,6 +6,7 @@ persistent FG2DG Ix
 %Need to create hierarchical FG to realspace DG constant transfer matrix
 %for each level
 pde_lev_vec = [pde.dimensions{1}.lev,pde.dimensions{2}.lev];
+pde_lev_max = max(pde_lev_vec);
 deg = opts.deg;
 
 hash_new = hash_table;
@@ -14,23 +15,26 @@ A_new = A_data;
 
 %Compute persistent values for speed
 if isempty(FG2DG)
-    FG2DG = cell(max(pde_lev_vec),1);
+    FG2DG = cell(max(pde_lev_vec));
     Ix = cell(max(pde_lev_vec),1);
     
     
-    for l=1:max(pde_lev_vec) %Level 0 is always in the space.
-        lev_vec = min([l l; pde_lev_vec]);
+    for l=1:pde_lev_vec(1) %Level 0 is always in the space.
+        for k=1:pde_lev_vec(2)
+            lev_vec = [l k];
         
-        %Build restriction matrices to lower level space
-        R_x = speye(2^lev_vec(1)*deg,2^pde_lev_vec(1)*deg);
-        R_v = speye(2^lev_vec(2)*deg,2^pde_lev_vec(2)*deg);
-        R   = kron(R_x,R_v);
-        FMWT_x = OperatorTwoScale_wavelet2(deg,lev_vec(1));
-        FMWT_v = OperatorTwoScale_wavelet2(deg,lev_vec(2));
-        FMWT_2D = kron(FMWT_x',FMWT_v');
-        fg2dg    = kronrealspace2DtoDG(lev_vec,deg,1)*FMWT_2D;
-        FG2DG{l} = fg2dg*R*sqrt(2^(lev_vec(1)-1)*2^(lev_vec(2)-1));
-        
+            %Build restriction matrices to lower level space
+            R_x = speye(2^lev_vec(1)*deg,2^pde_lev_vec(1)*deg);
+            R_v = speye(2^lev_vec(2)*deg,2^pde_lev_vec(2)*deg);
+            R   = kron(R_x,R_v);
+            FMWT_x = OperatorTwoScale_wavelet2(deg,lev_vec(1));
+            FMWT_v = OperatorTwoScale_wavelet2(deg,lev_vec(2));
+            FMWT_2D = kron(FMWT_x',FMWT_v');
+            fg2dg    = kronrealspace2DtoDG(lev_vec,deg,1)*FMWT_2D;
+            FG2DG{l,k} = fg2dg*R*sqrt(2^(lev_vec(1)-1)*2^(lev_vec(2)-1));
+
+
+        end
         %Lastly construst wavelet passthrough for representing local
         %elements in the hierarchical wavelet space
         [Ix{l},~] = find(OperatorTwoScale_wavelet2(1,l));
@@ -46,21 +50,52 @@ f_FG = zeros(size(pvec));
 f_FG(pvec) = f(perm(pvec));
 
 %Map to cell averages on coarse grids
-for l=1:max(pde_lev_vec)
-    lev_vec = min([l l; pde_lev_vec]);
+% for l=1:max(pde_lev_vec)
+%     lev_vec = min([l l; pde_lev_vec]);
+%     
+%     Q = FG2DG{l,l}*f_FG;
+%     fprintf('Level %d.  min(Q) = %e\n',l,min(Q));
+%     
+%     %Add elements if negative on this level
+%     if min(Q) < pos_tol
+%         hash_new = addHierNegativeElements(lev_vec,pde_lev_vec,opts,hash_table,Q,Ix{lev_vec(1)},Ix{lev_vec(2)},pos_tol);
+%         A_new = global_matrix(pde,opts,hash_new);
+%         break
+%     end
+% end
+
+[A,B] = meshgrid(1:pde_lev_vec(1),1:pde_lev_vec(2));
+C = cat(2,A',B');
+C = reshape(C,[],2);
+
+%Sort method 1
+% [s_sort,I] = sort(sum(C,2));
+% pos_lev_pde = C(I,:);
+% pos_lev_pde(s_sort <= max(pde_lev_vec),:) = [];
+
+%Sort method 2
+[~,I] = sort(sum(C,2)*(pde_lev_max+1)+abs(diff(C,1,2)));
+pos_lev_pde = C(I,:);
+%pos_lev_pde(sum(pos_lev_pde,2) <= max(pde_lev_vec),:) = [];
+for l=1:size(pos_lev_pde,1)
+    %lev_vec = min([l l; pde_lev_vec]);
+    %lev_vec = min([np2(l,:); pde_lev_vec]);
+    lev_vec = pos_lev_pde(l,:);
     
-    Q = FG2DG{l}*f_FG;
-    fprintf('Level %d.  min(Q) = %e\n',l,min(Q));
+    Q = FG2DG{lev_vec(1),lev_vec(2)}*f_FG;
+    %fprintf('Lev = [%d,%d].  min(Q) = %e\n',lev_vec(1),lev_vec(2),min(Q));
     
     %Add elements if negative on this level
     if min(Q) < pos_tol
+        ele_before = numel(hash_table.elements_idx);
         hash_new = addHierNegativeElements(lev_vec,pde_lev_vec,opts,hash_table,Q,Ix{lev_vec(1)},Ix{lev_vec(2)},pos_tol);
-        A_new = global_matrix(pde,opts,hash_new);
-        break
+        ele_after = numel(hash_new.elements_idx);
+        if ele_before ~= ele_after
+            A_new = global_matrix(pde,opts,hash_new);
+            break
+        end
     end
 end
-
-
 
 
 end

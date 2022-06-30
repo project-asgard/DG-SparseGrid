@@ -532,7 +532,8 @@ persistent output
 BEFE = 0;
 
 pos_adapt = true;
-pos_tol = -1e-8;
+adapt = false;
+pos_tol = -5e-15;
 
 %Get quadrature points in realspace stiffness matrix calculation
 [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
@@ -629,12 +630,24 @@ else %%Trying imex deg 2 version
             moment_mat{i} = moment_reduced_matrix(opts,pde,A_data,hash_table,i);
         end
     end
-    init_dof = numel(f0);
     
     f0_hash = hash;
     
     %Explicit step
     f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
+    
+    %Adapt solution
+    if adapt 
+        [pde,hash_new,~,A_new,ele_added] = adapt_stripped(pde,opts,hash,f_2s,'r');
+        if numel(ele_added) > 0
+            fprintf('ADAPT:   Adaptivity on f_2s added %d elements.\n',numel(ele_added));
+            f0 = fill_from_hash_table(pde,opts,hash,hash_new,f0);
+            hash = hash_new;
+            A_data = A_new;
+            f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
+            [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+        end
+    end
     
     if isempty(B)
         [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
@@ -651,23 +664,25 @@ else %%Trying imex deg 2 version
     %f_2s = md_eval_function(opts, opts.deg, pde.dimensions, ...
     %pde.params, {one}, hash_table, pde.transform_blocks, t);
     
+    dof = numel(f_2s);
     Q = B0*f_2s;
-    fprintf('min(B0*f_2s) = %e.  ',min(Q))
+    fprintf('POS:     min(B0*f_2s) = %e.  Negative on %d elements.\n',min(Q),sum(Q < pos_tol))
     if pos_adapt
         pos_bool = true;
         while pos_bool
         %%% Adaptivity stuff       
             if min(Q) < pos_tol
-                %[hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
-                [hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_2s,hash,A_data,-1e-10);
-                fprintf('Add %d dof.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
+                [hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                %[hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_2s,hash,A_data,pos_tol);
+                fprintf('POS:     --> Added %d dof.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
             else
                 pos_bool = false;
                 hash_pos = hash;
+                break
             end
             %Check to see if hash_table has changed
             if numel(hash.elements_idx) ~= numel(hash_pos.elements_idx)
-                f0 = fill_from_hash_table(pde,opts,f0_hash,hash_pos,f0);
+                f0 = fill_from_hash_table(pde,opts,hash,hash_pos,f0);
                 f0_hash = hash_pos;
                 hash = hash_pos;
                 A_data = A_pos;
@@ -682,13 +697,14 @@ else %%Trying imex deg 2 version
                 hash_table_1D = hash_table_2D_to_1D(hash,opts);
                 f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
                 Q = B0*f_2s;
-                fprintf('Updated f_2s: min(B0*f_2s) = %e.  ',min(Q));
+                fprintf('Updated f_2s: min(B0*f_2s) = %e.\n',min(Q));
             else
+                fprintf('Updated f_2s: min(B0*f_2s) = %e.\n',min(Q));
                 pos_bool = false;
             end
         end
     end
-    fprintf('\n');
+    fprintf('POS:     Positity presreving req for f_2s added a total of %d elements\n',numel(f_2s)-dof);
     
     output.data_vec = [output.data_vec;numel(hash.elements_idx)];
     output.min_vec = [output.min_vec;min(Q)];
@@ -756,24 +772,41 @@ else %%Trying imex deg 2 version
     
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
               + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
-          
+    
+    %Adapt solution
+    if adapt 
+        [pde,hash_new,~,A_new,ele_added] = adapt_stripped(pde,opts,hash,f_3s,'r');
+        if numel(ele_added) > 0
+            fprintf('ADAPT:   Adaptivity on f_3s added %d elements.\n',numel(ele_added));
+            f0 = fill_from_hash_table(pde,opts,hash,hash_new,f0);
+            f_2 = fill_from_hash_table(pde,opts,hash,hash_new,f_2);
+            hash = hash_new;
+            A_data = A_new;
+            f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
+                      + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
+            [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+        end
+    end
+    
+    dof = numel(f_3s);
     Q = B0*f_3s;
-    fprintf('min(B0*f_3s) = %e.  ',min(Q))    
+    fprintf('POS:     min(B0*f_3s) = %e. Negative on %d elements.\n',min(Q),sum(Q < pos_tol));
     if pos_adapt
         pos_bool = true;
         while pos_bool
             if min(Q) < pos_tol
                 [hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
-                fprintf('Adding %d elements.    ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
+                %[hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_3s,hash,A_data,pos_tol);
+                fprintf('POS:     ---> Added %d elements.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
             else
                 hash_pos = hash;
                 pos_bool = false;
+                break
             end
             %Check to see if hash_table has changed
             if numel(hash.elements_idx) ~= numel(hash_pos.elements_idx)
                 f_2 = fill_from_hash_table(pde,opts,hash,hash_pos,f_2);
-                f0  = fill_from_hash_table(pde,opts,f0_hash,hash_pos,f0);
-                f0_hash = hash_pos;
+                f0  = fill_from_hash_table(pde,opts,hash,hash_pos,f0);
                 hash = hash_pos;
                 A_data = A_pos;
                 [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
@@ -788,13 +821,14 @@ else %%Trying imex deg 2 version
                 f_3s = f0  + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
                            + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
                 Q = B0*f_3s;
-                fprintf('Updated f_3s: min(B0*f_3s) = %e.  ',min(Q));
+                fprintf('Updated f_3s: min(B0*f_3s) = %e.\n',min(Q));
             else
+                fprintf('Updated f_3s: min(B0*f_3s) = %e.\n',min(Q));
                 pos_bool = false;
             end
         end
     end
-    fprintf('\n');
+    fprintf('Positity presreving req for f_3s added a total of %d elements\n',numel(f_3s)-dof);
     
     output.data_vec = [output.data_vec;numel(hash.elements_idx)];
     output.min_vec = [output.min_vec;min(Q)];
@@ -892,17 +926,39 @@ else %%Trying imex deg 2 version
         end
     end
     
-    if pos_adapt && 0
-        [pde,hash_new,f1,A_data] = adapt_stripped(pde,opts,hash,f1,'c');
+    if adapt
+        [pde,hash_new,f1_cull,A_data,elements_dropped] = adapt_stripped(pde,opts,hash,f1,'c');
         %Check to see if hash has changed
         if numel(hash_new.elements_idx) ~= numel(hash.elements_idx)
             fprintf('Coarsened mesh by %d elements\n',numel(hash.elements_idx)-numel(hash_new.elements_idx));
+            hash_bc = hash;
+            f1_bc = f1;
             hash = hash_new;
+            f1 = f1_cull;
             [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+        end
+        Q = B0*f1;
+        fprintf('POS:     min(B0*f1) = %e. Negative on %d elements.\n',min(Q),sum(Q < pos_tol));
+        if pos_adapt
+            while min(Q) < pos_tol
+                %[hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                [hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f1,hash,A_data,pos_tol);
+                [f1,hash_pos,A_pos] = fill_from_hash_table(pde,opts,hash,hash_pos,f1,f1_bc,elements_dropped,A_pos);
+                fprintf('POS:     ---> Added %d elements.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
+                hash = hash_pos;
+                A_data = A_pos;
+                [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+                Q = B0*f1;
+                fprintf('Updated f1: min(B0*f1) = %e.\n',min(Q));
+            end
         end
     end
     
     hash_table = hash;
+end
+
+if t+dt > dt*opts.num_steps - dt/10
+    []; 
 end
 
 end
