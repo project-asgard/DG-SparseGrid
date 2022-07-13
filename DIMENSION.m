@@ -14,11 +14,18 @@ classdef DIMENSION
     
     methods
         
-        function dim = DIMENSION(min,max)
+        function dim = DIMENSION(min,max,lev)
             
-            if nargin == 2
-               dim.min = min;
-               dim.max = max;
+            if exist( 'min', 'var' )
+                dim.min = min;
+            end
+            
+            if exist( 'max', 'var' )
+                dim.max = max;
+            end
+            
+            if exist( 'lev', 'var' )
+                dim.lev = lev;
             end
             
         end
