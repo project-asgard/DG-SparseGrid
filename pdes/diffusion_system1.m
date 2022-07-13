@@ -7,7 +7,7 @@ function pde_system = diffusion_system1( opts )
 
 %% Define the dimensionality:
 
-dim_x = DIMENSION(0,1);
+dim_x = DIMENSION(0,1,opts.lev(1));
 dim_x.moment_dV = @(x,p,t,dat) 0*x+1;
 dimensions = {dim_x};
 num_dims = numel(dimensions);
