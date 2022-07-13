@@ -22,7 +22,7 @@ classdef EULER_1D
             assert( numel(dimensions) == 1, 'Only One Spatial Dimension' )
             
             euler_1D.dim = dimensions{1};
-            euler_1D.lev = opts.lev;
+            euler_1D.lev = dimensions{1}.lev;
             euler_1D.deg = opts.deg;
             
             if exist( 'BCs', 'var' )
