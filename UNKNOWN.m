@@ -3,7 +3,6 @@ classdef UNKNOWN < handle
     properties
         dimensions = {};
         deg;
-        lev;
         type = 'evolution';
         params = {};
         analytic_solutions = {};
@@ -54,12 +53,11 @@ classdef UNKNOWN < handle
             
             unknown.dimensions         = dimensions;
             unknown.deg                = opts.deg;
-            unknown.lev                = opts.lev;
             unknown.analytic_solutions = analytic_solutions;
             unknown.initial_conditions = initial_conditions;
             
             for i=1:numel(unknown.dimensions)
-                unknown.dimensions{i}.lev = opts.lev;
+                unknown.dimensions{i}.lev = opts.lev(i);
             end
             
             [ unknown.hash_table.elements, unknown.hash_table.elements_idx ]...
@@ -67,7 +65,16 @@ classdef UNKNOWN < handle
             
             [ ~, unknown.transform_blocks ] = OperatorTwoScale_wavelet2( opts.deg, opts.max_lev ); % Why max_lev here?
             
-            [ unknown.FMWT, ~ ] = OperatorTwoScale_wavelet2( opts.deg, opts.lev );
+            switch numel(unknown.dimensions)
+                case 1
+                    [ unknown.FMWT, ~ ] = OperatorTwoScale_wavelet2( unknown.deg, unknown.dimensions{1}.lev );
+                case 2
+                    [ FMWT_x, ~ ]       = OperatorTwoScale_wavelet2( unknown.deg, unknown.dimensions{1}.lev );
+                    [ FMWT_v, ~ ]       = OperatorTwoScale_wavelet2( unknown.deg, unknown.dimensions{2}.lev );
+                    unknown.FMWT        = kron( FMWT_x, FMWT_v );
+                otherwise
+                    assert(false,'UKNOWN implemented for dimension<3')
+            end
             
             compute_dimension_mass_mat( opts, unknown );
             
