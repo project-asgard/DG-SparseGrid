@@ -531,8 +531,9 @@ persistent output
 
 BEFE = 0;
 
-pos_adapt = true;
-adapt = false;
+pos_adapt = false;
+adapt = true;
+limit = false;
 pos_tol = -5e-15;
 
 %Get quadrature points in realspace stiffness matrix calculation
@@ -631,7 +632,13 @@ else %%Trying imex deg 2 version
         end
     end
     
+    if isempty(B)
+        [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+    end
+    
     f0_hash = hash;
+    
+    %[hash_new,A_new,~] = addLimitElements(pde,opts,hash,B*f0,f0,0.1);
     
     %Explicit step
     f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
@@ -649,10 +656,6 @@ else %%Trying imex deg 2 version
         end
     end
     
-    if isempty(B)
-        [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
-    end
-    
     if isempty(output)
         output.data_vec = numel(hash.elements_idx);
         output.min_vec = min(B0*f0);
@@ -663,7 +666,6 @@ else %%Trying imex deg 2 version
     %one = new_md_func(2,{@(x,p,t,dat) 0*x+1,@(v,t,p,dat) 0*v+1, @(t,p) 0*t+1});
     %f_2s = md_eval_function(opts, opts.deg, pde.dimensions, ...
     %pde.params, {one}, hash_table, pde.transform_blocks, t);
-    
     dof = numel(f_2s);
     Q = B0*f_2s;
     fprintf('POS:     min(B0*f_2s) = %e.  Negative on %d elements.\n',min(Q),sum(Q < pos_tol))
@@ -671,9 +673,11 @@ else %%Trying imex deg 2 version
         pos_bool = true;
         while pos_bool
         %%% Adaptivity stuff       
+            QQ = B*f_2s; QQ = reshape(QQ,2^pde.dimensions{1}.lev,[]); QQ = flipud(QQ); QQ = (QQ < pos_tol);
+            %figure(16); imagesc(QQ); title(sprintf('Negative Elements = %4d',sum(QQ(:))));
             if min(Q) < pos_tol
-                [hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
-                %[hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_2s,hash,A_data,pos_tol);
+                %[hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                [hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_2s,hash,A_data,pos_tol);
                 fprintf('POS:     --> Added %d dof.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
             else
                 pos_bool = false;
@@ -702,10 +706,24 @@ else %%Trying imex deg 2 version
                 fprintf('Updated f_2s: min(B0*f_2s) = %e.\n',min(Q));
                 pos_bool = false;
             end
+            
         end
     end
-    fprintf('POS:     Positity presreving req for f_2s added a total of %d elements\n',numel(f_2s)-dof);
+    fprintf('POS:     Positivity preserving req for f_2s added a total of %d elements\n',(numel(f_2s)-dof)/opts.deg^2);
+    fprintf('LIM     Pre  limited f_2s has cell average min of %e\n',min(Q));
     
+    if limit
+        Q = B*f_2s;
+        [hash_new,A_new,f_2s] = addLimitElements(pde,opts,hash,Q,f_2s,1,0);
+        f0 = fill_from_hash_table(pde,opts,hash,hash_new,f0);
+        fprintf('LIM:     Limiter Added %d elements\n',numel(hash_new.elements_idx)-numel(hash.elements_idx));
+        hash = hash_new; A_data = A_new;
+        [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+        figure(20); plotVec(x,v,1,B*f_2s,[],0);
+    end
+    
+    Q = B0*f_2s;
+    fprintf('LIM     Post limited f_2s has cell average min of %e\n',min(Q));
     output.data_vec = [output.data_vec;numel(hash.elements_idx)];
     output.min_vec = [output.min_vec;min(Q)];
     output.max_vec = [output.max_vec;max(Q)];
@@ -795,8 +813,8 @@ else %%Trying imex deg 2 version
         pos_bool = true;
         while pos_bool
             if min(Q) < pos_tol
-                [hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
-                %[hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_3s,hash,A_data,pos_tol);
+                %[hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
+                [hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f_3s,hash,A_data,pos_tol);
                 fprintf('POS:     ---> Added %d elements.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
             else
                 hash_pos = hash;
@@ -828,8 +846,20 @@ else %%Trying imex deg 2 version
             end
         end
     end
-    fprintf('Positity presreving req for f_3s added a total of %d elements\n',numel(f_3s)-dof);
+    fprintf('Positivity preserving req for f_3s added a total of %d elements\n',(numel(f_3s)-dof)/opts.deg^2);
+    fprintf('LIM     Pre  limited f_3s has cell average min of %e\n',min(Q));
     
+    if limit
+        Q = B*f_3s;
+        [hash_new,A_new,f_3s] = addLimitElements(pde,opts,hash,Q,f_3s,1,0);
+        fprintf('LIM:     Limiter Added %d elements\n',numel(hash_new.elements_idx)-numel(hash.elements_idx));
+        hash = hash_new; A_data = A_new;
+        [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+        figure(20); plotVec(x,v,1,B*f_3s,[],0);
+    end
+    
+    Q = B0*f_3s;
+    fprintf('LIM     Post limited f_3s has cell average min of %e\n',min(Q));
     output.data_vec = [output.data_vec;numel(hash.elements_idx)];
     output.min_vec = [output.min_vec;min(Q)];
     output.max_vec = [output.max_vec;max(Q)];
@@ -856,7 +886,7 @@ else %%Trying imex deg 2 version
     %Update coefficients
     pde = get_coeff_mats(pde,opts,t,0);
 
-    [f_3,flag,relres,iter2] = bicgstabl(@(x) x - 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f0));
+    [f_3,flag,relres,iter2] = bicgstabl(@(x) x - 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,1e-12,numel(f_3s));
     %[f_3,flag,relres,iter2] = gmres(@(x) x - 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,x,'I'),f_3s,10,1e-12,numel(f_3s)/10);
     if flag ~= 0
         fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
@@ -940,18 +970,34 @@ else %%Trying imex deg 2 version
         Q = B0*f1;
         fprintf('POS:     min(B0*f1) = %e. Negative on %d elements.\n',min(Q),sum(Q < pos_tol));
         if pos_adapt
-            while min(Q) < pos_tol
+            pos_bool = (min(Q) < pos_tol);
+            while pos_bool
                 %[hash_pos,A_pos] = addNegativeElements(pde,opts,hash,Q,pos_tol);
                 [hash_pos,A_pos] = hierarchicalPostivity(pde,opts,f1,hash,A_data,pos_tol);
                 [f1,hash_pos,A_pos] = fill_from_hash_table(pde,opts,hash,hash_pos,f1,f1_bc,elements_dropped,A_pos);
                 fprintf('POS:     ---> Added %d elements.  ',numel(hash_pos.elements_idx)-numel(hash.elements_idx));
+                if numel(hash.elements_idx) == numel(hash_pos.elements_idx)
+                    pos_bool = false;
+                end
                 hash = hash_pos;
                 A_data = A_pos;
                 [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
                 Q = B0*f1;
                 fprintf('Updated f1: min(B0*f1) = %e.\n',min(Q));
+                if min(Q) >= pos_tol
+                    pos_bool = false;
+                end
             end
         end
+    end
+    
+    if limit
+        Q = B*f1;
+        [hash_new,A_new,f1] = addLimitElements(pde,opts,hash,Q,f1,1,0);
+        fprintf('LIM:     Limiter Added %d elements\n',numel(hash_new.elements_idx)-numel(hash.elements_idx));
+        hash = hash_new; A_data = A_new;
+        [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
+        figure(20); plotVec(x,v,1,B*f1,[],0);
     end
     
     hash_table = hash;

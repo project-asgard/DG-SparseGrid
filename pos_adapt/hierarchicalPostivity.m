@@ -22,6 +22,9 @@ if isempty(FG2DG)
     for l=1:pde_lev_vec(1) %Level 0 is always in the space.
         for k=1:pde_lev_vec(2)
             lev_vec = [l k];
+            
+            dx = (pde.dimensions{1}.max-pde.dimensions{1}.min)/2^lev_vec(1);
+            dv = (pde.dimensions{2}.max-pde.dimensions{2}.min)/2^lev_vec(2);
         
             %Build restriction matrices to lower level space
             R_x = speye(2^lev_vec(1)*deg,2^pde_lev_vec(1)*deg);
@@ -31,7 +34,7 @@ if isempty(FG2DG)
             FMWT_v = OperatorTwoScale_wavelet2(deg,lev_vec(2));
             FMWT_2D = kron(FMWT_x',FMWT_v');
             fg2dg    = kronrealspace2DtoDG(lev_vec,deg,1)*FMWT_2D;
-            FG2DG{l,k} = fg2dg*R*sqrt(2^(lev_vec(1)-1)*2^(lev_vec(2)-1));
+            FG2DG{l,k} = fg2dg*R*sqrt(1/(dx*dv));
 
 
         end
@@ -87,6 +90,8 @@ for l=1:size(pos_lev_pde,1)
     
     %Add elements if negative on this level
     if min(Q) < pos_tol
+        %%Plot negative areas
+        %figure(20); QQ = reshape(Q,2^lev_vec(2),[]); QQ = flipud(QQ); QQ = (QQ < pos_tol); imagesc(QQ); title(sprintf('HB: lev-vec = [%d,%d]  Negative Elements = %4d',lev_vec(1),lev_vec(2),sum(QQ(:))));
         ele_before = numel(hash_table.elements_idx);
         hash_new = addHierNegativeElements(lev_vec,pde_lev_vec,opts,hash_table,Q,Ix{lev_vec(1)},Ix{lev_vec(2)},pos_tol);
         ele_after = numel(hash_new.elements_idx);

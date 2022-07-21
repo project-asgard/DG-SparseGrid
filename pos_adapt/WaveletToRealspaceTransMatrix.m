@@ -5,6 +5,8 @@ function [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data)
 persistent FG2DG FG2DG0
 
 assert(numel(pde.dimensions) == 2,'Works for 2 dimensions only');
+dx = (pde.dimensions{1}.max-pde.dimensions{1}.min)/2^pde.dimensions{1}.lev;
+dv = (pde.dimensions{2}.max-pde.dimensions{2}.min)/2^pde.dimensions{2}.lev;
 
 [perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
 I = speye(numel(iperm));
@@ -21,7 +23,7 @@ if isempty(FG2DG)
 end
 
 %Get constant coeffs data
-B0 = FG2DG0*I_FG*sqrt(2^(pde.dimensions{1}.lev-1)*2^(pde.dimensions{2}.lev-1));
+B0 = FG2DG0*I_FG*sqrt(1/(dx*dv));
 %B0_2 = kronrealspace2DtoDG(pde,opts,1)*FMWT_2D'*I_FG;
 %Convert to cell average
 %B0 = B0_2*sqrt(2^(pde.dimensions{1}.lev-1)*2^(pde.dimensions{2}.lev-1));
