@@ -118,9 +118,7 @@ Euler = EULER_1D( opts, dimensions_Macro, 'PERIODIC', 'LLF', 1, 0.0 );
 
 F_1 = @( opts, Q, t ) Euler.evaluate_rhs_1( opts, Q, t );
 
-descriptor = {F_1};
-
-term_rho_1 = TERM( rho_1, {rho_1,rho_2,rho_3}, descriptor, false );
+term_rho_1 = TERM( rho_1, {rho_1,rho_2,rho_3}, {F_1}, false );
 
 equation_rho_1 = EQUATION( rho_1, {term_rho_1}, 'evolution', '' );
 
@@ -128,9 +126,7 @@ equation_rho_1 = EQUATION( rho_1, {term_rho_1}, 'evolution', '' );
 
 F_2 = @( opts, Q, t ) Euler.evaluate_rhs_2( opts, Q, t );
 
-descriptor = {F_2};
-
-term_rho_2 = TERM( rho_2, {rho_1,rho_2,rho_3}, descriptor, false );
+term_rho_2 = TERM( rho_2, {rho_1,rho_2,rho_3}, {F_2}, false );
 
 equation_rho_2 = EQUATION( rho_2, {term_rho_2}, 'evolution', '' );
 
@@ -138,29 +134,50 @@ equation_rho_2 = EQUATION( rho_2, {term_rho_2}, 'evolution', '' );
 
 F_3 = @( opts, Q, t ) Euler.evaluate_rhs_3( opts, Q, t );
 
-descriptor = {F_3};
-
-term_rho_3 = TERM( rho_3, {rho_1,rho_2,rho_3}, descriptor, false );
+term_rho_3 = TERM( rho_3, {rho_1,rho_2,rho_3}, {F_3}, false );
 
 equation_rho_3 = EQUATION( rho_3, {term_rho_3}, 'evolution', '' );
 
 %
-% Define the terms of the Macro system:
+% Define the terms of the Micro system:
 
 MicroMacro = MICRO_MACRO_1X1V( opts, dimensions_Micro );
 
+dV = @(x,p,t,dat) 0*x+1;
+m1 = @(x,p,t,dat) 0*x-1;
+xp = @(x,p,t,dat) x.*(x>0);
+xm = @(x,p,t,dat) x.*(x<0);
+
+% - (vg)_x (for v>0):
+
+term_x = SD_TERM({DIV(num_dims_Micro,m1,'',-1,'P','P','','','',dV)});
+term_v = SD_TERM({MASS(xp,'','',dV)});
+md_term_p = MD_TERM(num_dims_Micro,{term_x,term_v});
+
+term_g_1 = TERM( g, {g}, {md_term_p}, true );
+
+% - (vg)_x (for v<0):
+
+term_x = SD_TERM({DIV(num_dims_Micro,m1,'',+1,'P','P','','','',dV)});
+term_v = SD_TERM({MASS(xm,'','',dV)});
+md_term_m = MD_TERM(num_dims_Micro,{term_x,term_v});
+
+term_g_2 = TERM( g, {g}, {md_term_m}, true );
+
 % M(rho):
 
-term_MM_1 = @( opts, Q, t ) MicroMacro.evaluate_rhs_Maxwellian( opts, Q, t );
+term_MM_3 = @( opts, Q, t ) MicroMacro.evaluate_rhs_Maxwellian( opts, Q, t );
 
-term_g_1 = TERM( g, {rho_1,rho_2,rho_3}, {term_MM_1}, false );
+term_g_3 = TERM( g, {rho_1,rho_2,rho_3}, {term_MM_3}, false );
 
 % (vM(rho))_x:
 
-term_MM_2 = @( opts, Q, t ) MicroMacro.evaluate_rhs_vDotGradMaxwellian( opts, Q, t );
+term_MM_4 = @( opts, Q, t ) MicroMacro.evaluate_rhs_vDotGradMaxwellian( opts, Q, t );
 
-term_g_2 = TERM( g, {rho_1,rho_2,rho_3}, {term_MM_2}, false );
+term_g_4 = TERM( g, {rho_1,rho_2,rho_3}, {term_MM_4}, false );
 
+%% Turning off nonlinear terms while working to add linear terms to moment equations.
+%equation_g = EQUATION( g, {term_g_1,term_g_2,term_g_3,term_g_4}, 'evolution', '' );
 equation_g = EQUATION( g, {term_g_1,term_g_2}, 'evolution', '' );
 
     function [ dt ] = set_dt( pde_system, CFL )
