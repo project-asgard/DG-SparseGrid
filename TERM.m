@@ -12,6 +12,28 @@ classdef TERM < handle
     
     methods
         
+        function obj = TERM( output_unknown, input_unknowns, descriptor, linear, time_dependent, IMEX )
+            
+            obj.output_unknown = output_unknown;
+            obj.input_unknowns = input_unknowns;
+            obj.descriptor     = descriptor;
+            
+            if exist( 'linear', 'var' )
+                assert( (linear==true | linear==false), 'linear must be boolean' );
+                obj.linear = linear;
+            end
+            
+            if exist( 'time_dependent', 'var' )
+                assert( (time_dependent==true | time_dependent==false), 'time_dependent must be boolean' );
+                obj.time_dependent = time_dependent;
+            end
+            
+            if exist( 'IMEX', 'var' )
+                obj.IMEX = IMEX;
+            end
+            
+        end
+        
         function [ F ] = driver( obj, opts, Q, t )
             
             assert( numel(Q) == numel(obj.input_unknowns) )
@@ -139,28 +161,6 @@ classdef TERM < handle
 
             % Store M for use in application to the BC
 
-        end
-        
-        function term = TERM( output_unknown, input_unknowns, descriptor, linear, time_dependent, IMEX )
-            
-            term.output_unknown = output_unknown;
-            term.input_unknowns = input_unknowns;
-            term.descriptor     = descriptor;
-            
-            if exist( 'linear', 'var' )
-                assert( (linear==true | linear==false), 'linear must be boolean' );
-                term.linear = linear;
-            end
-            
-            if exist( 'time_dependent', 'var' )
-                assert( (time_dependent==true | time_dependent==false), 'time_dependent must be boolean' );
-                term.time_dependent = time_dependent;
-            end
-            
-            if exist( 'IMEX', 'var' )
-                term.IMEX = IMEX;
-            end
-            
         end
         
     end
