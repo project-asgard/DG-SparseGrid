@@ -67,7 +67,7 @@ if opts.fast_FG_matrix_assembly
 
         f_F = zeros(size(perm,1),1);
         f_F(pvec) = f(perm(pvec));
-        Af_F = md_term.terms_1D{2}.mat * reshape(f_F,size(md_term.terms_1D{1}.mat,1),[]) * (md_term.terms_1D{1}.mat');
+        Af_F = md_term.terms_1D{2}.mat * reshape(f_F,size(md_term.terms_1D{2}.mat,1),[]) * (md_term.terms_1D{1}.mat');
         Af_F = reshape(Af_F,[],1);
 
         Af = Af_F(iperm);
