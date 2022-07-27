@@ -16,6 +16,37 @@ classdef UNKNOWN < handle
     
     methods
         
+        function obj = UNKNOWN( opts, dimensions, analytic_solutions, initial_conditions )
+            
+            obj.dimensions         = dimensions;
+            obj.deg                = opts.deg;
+            obj.analytic_solutions = analytic_solutions;
+            obj.initial_conditions = initial_conditions;
+            
+            for i=1:numel(obj.dimensions)
+                obj.dimensions{i}.lev = opts.lev(i);
+            end
+            
+            [ obj.hash_table.elements, obj.hash_table.elements_idx ]...
+                = hash_table_sparse_nD( obj.get_lev_vec, opts.max_lev, opts.grid_type );
+            
+            [ ~, obj.transform_blocks ] = OperatorTwoScale_wavelet2( opts.deg, opts.max_lev ); % Why max_lev here?
+            
+            switch numel(obj.dimensions)
+                case 1
+                    [ obj.FMWT, ~ ] = OperatorTwoScale_wavelet2( obj.deg, obj.dimensions{1}.lev );
+                case 2
+                    [ FMWT_x, ~ ]   = OperatorTwoScale_wavelet2( obj.deg, obj.dimensions{1}.lev );
+                    [ FMWT_v, ~ ]   = OperatorTwoScale_wavelet2( obj.deg, obj.dimensions{2}.lev );
+                    obj.FMWT        = kron( FMWT_x, FMWT_v );
+                otherwise
+                    assert(false,'UKNOWN implemented for dimension<3')
+            end
+            
+            compute_dimension_mass_mat( opts, obj );
+            
+        end
+        
         function [ sz ] = size( obj )
             
             num_dims = numel(obj.dimensions);
@@ -46,37 +77,6 @@ classdef UNKNOWN < handle
                                        obj.transform_blocks, t );
             
             fval_error = sqrt( mean( ( fval_A(:) - fval_N(:) ).^2 ) );
-            
-        end
-        
-        function unknown = UNKNOWN( opts, dimensions, analytic_solutions, initial_conditions )
-            
-            unknown.dimensions         = dimensions;
-            unknown.deg                = opts.deg;
-            unknown.analytic_solutions = analytic_solutions;
-            unknown.initial_conditions = initial_conditions;
-            
-            for i=1:numel(unknown.dimensions)
-                unknown.dimensions{i}.lev = opts.lev(i);
-            end
-            
-            [ unknown.hash_table.elements, unknown.hash_table.elements_idx ]...
-                = hash_table_sparse_nD( unknown.get_lev_vec, opts.max_lev, opts.grid_type );
-            
-            [ ~, unknown.transform_blocks ] = OperatorTwoScale_wavelet2( opts.deg, opts.max_lev ); % Why max_lev here?
-            
-            switch numel(unknown.dimensions)
-                case 1
-                    [ unknown.FMWT, ~ ] = OperatorTwoScale_wavelet2( unknown.deg, unknown.dimensions{1}.lev );
-                case 2
-                    [ FMWT_x, ~ ]       = OperatorTwoScale_wavelet2( unknown.deg, unknown.dimensions{1}.lev );
-                    [ FMWT_v, ~ ]       = OperatorTwoScale_wavelet2( unknown.deg, unknown.dimensions{2}.lev );
-                    unknown.FMWT        = kron( FMWT_x, FMWT_v );
-                otherwise
-                    assert(false,'UKNOWN implemented for dimension<3')
-            end
-            
-            compute_dimension_mass_mat( opts, unknown );
             
         end
         
