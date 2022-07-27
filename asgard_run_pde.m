@@ -14,7 +14,7 @@ if opts.time_independent_A || opts.time_independent_build_A || strcmp(opts.times
 end
 
 %% Reset fast multiply
-clear fast_2d_matrix_apply addNegativeElements WaveletToRealspaceTransMatrix hierarchicalPostivity
+clear fast_2d_matrix_apply addNegativeElements WaveletToRealspaceTransMatrix hierarchicalPostivity addLimitElements addHierLimitElements
 
 %% Set time step.
 dt = pde.set_dt(pde,opts.CFL);

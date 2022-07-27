@@ -27,8 +27,13 @@ num_dims = numel(dimensions);
 
 %soln_x = @(x,p,t) (x-t > 0).*(x-t < 0.25);
 %soln_y = @(y,p,t) (y-t > -0.25).*(y-t < 0);
+%  Box Support
 soln_x = @(x,p,t) (keep_bound(x-t) > 0).*(keep_bound(x-t) < 0.25);
 soln_y = @(y,p,t) (keep_bound(y-t) > -0.25).*(keep_bound(y-t) < 0);
+%  
+%theta = 0.5;
+%soln_x = @(x,p,t) exp(-(keep_bound(x-t)/theta).^2);
+%soln_y = @(x,p,t) exp(-(keep_bound(x-t)/theta).^2);
 %soln_x = @(x,p,t) x;
 %soln_y = @(y,p,t) 0*y+1;
 soln_t = @(t,p) 0*t+1;

@@ -1,30 +1,151 @@
-function [hash_new,A_new,f_new,lQ] = addLimitElements(pde,opts,hash_table,Q,f,M,m,tol)
+function [hash_table,A_data,f_new] = addHierLimitElements(pde,opts,hash_table,A_data,f,M,m)
 %Q represents the polynomial coefficents in the realspace tensor DG space.
 
-persistent Ix Iv FG2DG
+persistent Ix FG2DG 
 
 assert(numel(pde.dimensions) == 2);
 assert(opts.deg == 2); %Stick with linear polynomials for now
-num_dims = numel(pde.dimensions);
 
-limiter = 'Pos';
+pde_lev_vec = [pde.dimensions{1}.lev,pde.dimensions{2}.lev];
+pde_lev_max = max(pde_lev_vec);
+deg = opts.deg;
+
+pos_tol = 1e-14;
 
 %% Create kron 2 DG transformation matrix.  This is independent of adaptivity
 if isempty(FG2DG)
-    FMWT_x = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{1}.lev);
-    FMWT_v = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{2}.lev);
-    FMWT_2D = kron(FMWT_x,FMWT_v);
+    FG2DG = cell(max(pde_lev_vec));
+    Ix = cell(max(pde_lev_vec),1);
+    
+    
+    for l=1:pde_lev_vec(1) %Level 0 is always in the space.
+        for k=1:pde_lev_vec(2)
+            lev_vec = [l k];
+            
+            dx = (pde.dimensions{1}.max-pde.dimensions{1}.min)/2^lev_vec(1);
+            dv = (pde.dimensions{2}.max-pde.dimensions{2}.min)/2^lev_vec(2);
+        
+            %Build restriction matrices to lower level space
+            R_x = speye(2^lev_vec(1)*deg,2^pde_lev_vec(1)*deg);
+            R_v = speye(2^lev_vec(2)*deg,2^pde_lev_vec(2)*deg);
+            R   = kron(R_x,R_v);
+            FMWT_x = OperatorTwoScale_wavelet2(deg,lev_vec(1));
+            FMWT_v = OperatorTwoScale_wavelet2(deg,lev_vec(2));
+            FMWT_2D = kron(FMWT_x',FMWT_v');
+            fg2dg    = kronrealspace2DtoDG(lev_vec,deg,deg)*FMWT_2D;
+            FG2DG{l,k} = fg2dg*R;
+            
 
-    lev_vec = [pde.dimensions{1}.lev,pde.dimensions{2}.lev];
-    FG2DG  = kronrealspace2DtoDG(lev_vec,opts.deg,opts.deg)*FMWT_2D';
+
+        end
+        %Lastly construst wavelet passthrough for representing local
+        %elements in the hierarchical wavelet space
+        [Ix{l},~] = find(OperatorTwoScale_wavelet2(1,l));
+    end 
+    B0 = kronrealspace2DtoDG(pde_lev_vec,deg,1)*FMWT_2D;
 end
 
-%%
 
-n_v = uint64(2^pde.dimensions{2}.lev);
-lev_x = pde.dimensions{1}.lev;
-lev_v = pde.dimensions{2}.lev;
-max_lev = max([lev_x,lev_v]);
+
+%% Map SG to FG space
+[perm,~,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+
+f_FG = zeros(size(pvec));
+f_FG(pvec) = f(perm(pvec));
+
+
+%% Create hierarchical order 
+
+[A,B] = meshgrid(1:pde_lev_vec(1),1:pde_lev_vec(2));
+C = cat(2,A',B');
+C = reshape(C,[],2);
+
+%Sort method 1
+% [s_sort,I] = sort(sum(C,2));
+% pos_lev_pde = C(I,:);
+% pos_lev_pde(s_sort <= max(pde_lev_vec),:) = [];
+
+%Sort method 2
+[~,I] = sort(sum(C,2)*(pde_lev_max+1)+abs(diff(C,1,2)));
+pos_lev_pde = C(I,:);
+pos_lev_pde(max(pos_lev_pde,[],2) ~= pde_lev_max,:) = [];
+pos_lev_pde(min(pos_lev_pde,[],2) < 4,:) = [];
+
+x_F = pde.dimensions{1}.min:(pde.dimensions{1}.max-pde.dimensions{1}.min)/2^pde_lev_vec(1):pde.dimensions{1}.max;
+v_F = pde.dimensions{2}.min:(pde.dimensions{2}.max-pde.dimensions{2}.min)/2^pde_lev_vec(2):pde.dimensions{2}.max;
+
+
+%% Loop over hierarchy
+for l=1:size(pos_lev_pde,1)
+    %Get current level
+    lev_vec = pos_lev_pde(l,:);
+    fprintf('Lev = [%d,%d].\n',lev_vec(1),lev_vec(2));
+    
+    %Transform to DG realspace
+    Q = FG2DG{lev_vec(1),lev_vec(2)}*f_FG;
+    
+    %Need higher-level perturbation that is not affected by the limiter
+    perturb = f_FG - FG2DG{lev_vec(1),lev_vec(2)}'*Q;
+    
+    %Useful for debugging 
+    x = [pde.dimensions{1}.min:(pde.dimensions{1}.max-pde.dimensions{1}.min)/2^lev_vec(1):pde.dimensions{1}.max];
+    v = [pde.dimensions{2}.min:(pde.dimensions{2}.max-pde.dimensions{2}.min)/2^lev_vec(2):pde.dimensions{2}.max];
+    
+    figure(19);
+    subplot(2,2,1); plotVec(x_F,v_F,1,FG2DG{pde_lev_vec(1),pde_lev_vec(2)}*f_FG)
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Fine Grid Function';title({mytitle,old_title});
+    subplot(2,2,2); plotVec(x_F,v_F,0,B0*f_FG)
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Fine Grid Cell Average';title({mytitle,old_title});
+    subplot(2,2,3); plotVec(x,v,1,Q)
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Projected Function';title({mytitle,old_title});
+    subplot(2,2,4); plotVec(x,v,0,Q(1:4:end))
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Projected Cell Average';title({mytitle,old_title});
+    sgtitle(sprintf('Before Limiting on lev = [%d,%d]',lev_vec(1),lev_vec(2)));
+    %Add elements if negative on this level
+    [limited,hash_table,Q] = hierLimit(pde,lev_vec,pde_lev_vec,opts,hash_table,Q,Ix{lev_vec(1)},Ix{lev_vec(2)},M,m,pos_tol);
+    if limited
+        %Update f
+        f_FG = FG2DG{lev_vec(1),lev_vec(2)}'*Q + perturb;
+    end
+    figure(20);
+    subplot(2,2,1); plotVec(x_F,v_F,1,FG2DG{pde_lev_vec(1),pde_lev_vec(2)}*f_FG)
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Fine Grid Function';title({mytitle,old_title});
+    subplot(2,2,2); plotVec(x_F,v_F,0,B0*f_FG)
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Fine Grid Cell Average';title({mytitle,old_title});
+    subplot(2,2,3); plotVec(x,v,1,Q)
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Projected Function';title({mytitle,old_title});
+    subplot(2,2,4); plotVec(x,v,0,Q(1:4:end))
+    h1 = get(gca,'title');old_title = get(h1,'string');mytitle = 'Projected Cell Average';title({mytitle,old_title});
+    sgtitle(sprintf('After Limiting on lev = [%d,%d]',lev_vec(1),lev_vec(2)));
+end
+
+
+
+
+
+%% Modify coordinates to produce limited f
+
+%Get A_data for new hash table
+A_data = global_matrix(pde,opts,hash_table);
+
+%Get SG to FG transformation
+[~,iperm,~] = sg_to_fg_mapping_2d(pde,opts,A_data);
+
+%Now to adpative space
+f_new = f_FG(iperm);
+end
+
+function [limited,hash_new,lQ] = hierLimit(pde,lev_vec,pde_lev_vec,opts,hash_table,Q,Ix,Iv,M,m,tol)
+
+%%
+limiter = 'Pos';
+
+
+n_v = uint64(2^lev_vec(2));
+lev_x = lev_vec(1);
+lev_v = lev_vec(2);
+max_lev = max(pde_lev_vec);
+num_dims = numel(lev_vec);
 
 %%% Limiter data  %%%%%%%%%%%%%%%%%%
 dx = (pde.dimensions{1}.max-pde.dimensions{1}.min)/2^lev_x;
@@ -38,17 +159,10 @@ evalmat = [1 1 1 1;1 1 -1 -1;1 -1 1 -1; 1 -1 -1 1];
 %Vector for cell average
 e1 = zeros(4,1); e1(1) = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-xx = pde.dimensions{1}.min:dx:pde.dimensions{1}.max;
-vv = pde.dimensions{2}.min:dv:pde.dimensions{2}.max;
-
-if isempty(Ix)
-    [Ix,~] = find(OperatorTwoScale_wavelet2(1,lev_x));
-    [Iv,~] = find(OperatorTwoScale_wavelet2(1,lev_v));
-end
 
 I = [];
-flag = false;
 lQ = Q; %%Limited Q
+limited = true;
 %% Limit solution %%%%%%%%%%%%%%%%%%
 num_x = 2^lev_x; num_v = 2^lev_v; k = 1;
 
@@ -122,13 +236,7 @@ elseif strcmp(limiter,'Pos') %%%%% Maximum Principle Limiter %%%%%%%%%%%%%
         for j=1:num_v
             start = ((i-1)*num_v+(j-1))*(k+1)^2;
             curr = L*Q(start+1:start+(k+1)^2);
-            
-            %if norm(curr) < 1e-14
-            %    continue
-            %end
-            %Make cell average positive if negative 
-            %curr(1) = max([curr(1),0]);
-            
+
             %Need max and min for must happen at verticies of rectangle
             uval = evalmat*curr;
             u_M = max(uval);
@@ -136,42 +244,28 @@ elseif strcmp(limiter,'Pos') %%%%% Maximum Principle Limiter %%%%%%%%%%%%%
             %Limiter modifier
             if u_M > M+tol || u_m < m-tol
                 %curr(1) = max([curr(1),0]);
-                if curr(1) < m
-                    theta = 0;
-                else    
-                    theta = min(abs([1,((M+tol)-curr(1))/(u_M-curr(1)),((m-tol)-curr(1))/(u_m-curr(1))]));
-                end
+                theta = min(abs([1,((M+tol)-curr(1))/(u_M-curr(1)),((m-tol)-curr(1))/(u_m-curr(1))]));
                 %if abs(theta-1) > 5e-15 %Need to limit
                 %fprintf('Limiting on cell (%d,%d) with err %e\n',i,j,abs(theta-1));
                 %fprintf('--> Theta_vec = [%f,%f,%f]\n',abs([1,(M-curr(1))/(u_M-curr(1)),(m-curr(1))/(u_m-curr(1))]));
                 I = [I;uint64((i-1)*num_v+(j-1)+1)];
                 u_avg = curr(1)*e1;
                 curr = theta*(curr-u_avg)+u_avg;
-                fprintf('LIM-2:   Limiting on cell (%d,%d): [%f,%f]x[%f,%f]\n',i,j,xx(i),xx(i+1),vv(j),vv(j+1));
-                fprintf('             avg = %4.3e, u_m = %4.3e, u_M = %4.3e, theta = %4.3e\n',u_avg(1),u_m,u_M,theta);
-                uval = evalmat*curr;
-                u_M = max(uval);
-                u_m = min(uval);
-                fprintf('           Values After limiting\n');
-                fprintf('             avg = %4.3e, u_m = %4.3e, u_M = %4.3e, theta = %4.3e\n',u_avg(1),u_m,u_M,theta);
-                %flag = true;
                 lQ(start+1:start+(k+1)^2) = Linv*curr;
             end
-            %if flag; break; end
+            
         end
-        %if flag; break; end
     end
 end
 
 if isempty(I)
-    hash_new = hash_table;
-    A_new = global_matrix(pde,opts,hash_new);
-    f_new = f;
+    limited = false;
+    lQ = Q;
     return
 end
+    
 
 %% Get elements to represent 1 on that cell
-
 %Get x and v indicies of I
 x_idx = idivide(I-1,n_v) + 1;
 v_idx = mod(I-1,n_v) + 1;
@@ -220,45 +314,11 @@ for i=1:numel(idx_vec)
     
 end
 
-%Get A_data for new hash table
-A_new = global_matrix(pde,opts,hash_new);
 
-
-%% Modify coordinates to produce limited f
-
-%Get SG to FG transformation
-[~,iperm,~] = sg_to_fg_mapping_2d(pde,opts,A_new);
-fperm = 1:numel(lQ); fperm(iperm) = [];
-
-%Transfer to wavelet space
-f_new = FG2DG'*lQ;
-fprintf('LIM-2:    FG norm of elements not active: %4.3e\n',norm(f_new(fperm)));
-assert(norm(f_new(fperm)) < 5e-16)
-
-%Now to adpative space
-f_new = f_new(iperm);
-
-%% Cull elements that are not used by limiter
-% cell_dofs = opts.deg^numel(pde.dimensions);
-% eps_tol = 5e-16;
-% eles_to_remove = [];
-% dofs_to_remove = [];
-% for i=numel(hash_table.elements_idx)+1:numel(hash_new.elements_idx)
-%     idx = cell_dofs*(i-1)+1:cell_dofs*i;
-%     if norm(f_new(idx)) < eps_tol
-%         eles_to_remove = [eles_to_remove;i];
-%         dofs_to_remove = [dofs_to_remove;idx'];
-%     end
-% end
-% for ele=eles_to_remove
-%     hash_new.elements.lev_p1(hash_new.elements_idx(ele),:) = 0;
-%     hash_new.elements.pos_p1(hash_new.elements_idx(ele),:) = 0;
-%     hash_new.elements.type(hash_new.elements_idx(ele))= 0;
-% end
-% hash_new.elements_idx(eles_to_remove) = [];
-% f_new(dofs_to_remove) = [];
-% A_new = global_matrix(pde,opts,hash_new);
 end
+
+
+
 
 function z = minmod(a,b,c)
     if abs(sign(a)+sign(b)+sign(c)) == 3 %Equiv to sign(a) = sign(b) = sign(c)
