@@ -10,6 +10,7 @@ classdef UNKNOWN < handle
         hash_table;
         FMWT;
         transform_blocks;
+        A_data;
         lo_global; % Start index of unknown in global solution vector
         hi_global; % End   index of unknown in global solution vector
     end
@@ -42,6 +43,8 @@ classdef UNKNOWN < handle
                 otherwise
                     assert(false,'UKNOWN implemented for dimension<3')
             end
+            
+            obj.A_data = matrix_assembly_data( obj );
             
             compute_dimension_mass_mat( opts, obj );
             

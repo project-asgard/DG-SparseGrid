@@ -7,7 +7,6 @@ classdef TERM < handle
         output_unknown;
         input_unknowns;
         descriptor;
-        A_data;
     end
     
     methods
@@ -46,9 +45,15 @@ classdef TERM < handle
                 
                 for i = 1 : numel(obj.input_unknowns)
                     
-                    obj.A_data{i} = matrix_assembly_data( obj.input_unknowns{i}, obj.output_unknown, opts );
+                    if( isa( obj.descriptor{i}, 'MD_TERM' ) )
                     
-                    F = F + apply_A_term( opts, obj.descriptor{i}, obj.A_data{i}, Q{i}, obj.output_unknown.deg );
+                        F = F + apply_A_term( opts, obj.descriptor{i}, obj.output_unknown.A_data, Q{i}, obj.output_unknown.deg );
+                        
+                    elseif( isa( obj.descriptor{i}, 'VELOCITY_MOMENT_MD_TERM' ) )
+                        
+                        F = F + obj.descriptor{i}.moment_mat * Q{i};
+                        
+                    end
                     
                 end
                 
@@ -82,6 +87,16 @@ classdef TERM < handle
                         
                         obj.descriptor{i} = obj.get_coeff_MATS( opts, obj.descriptor{i}, t ); % Needs to have same cell structure as input unknowns
                         
+                    end
+                
+                elseif( isa( obj.descriptor{i}, 'VELOCITY_MOMENT_MD_TERM' ) )
+                    
+                    if( or( obj.time_dependent, isempty(obj.descriptor{i}.moment_mat) ) )
+                       
+                        obj.descriptor{i}.create_g_func( opts, obj.input_unknowns{i} )
+                        
+                        obj.descriptor{i}.moment_reduced_matrix( obj.input_unknowns{i} )
+                       
                     end
                     
                 end
