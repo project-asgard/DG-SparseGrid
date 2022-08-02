@@ -17,7 +17,28 @@ dimensions_Macro = {dim_x};
 num_dims_Macro = numel(dimensions_Macro);
 
 %
-%% First unknown (rho_1):
+%% First unknown (rho_0):
+
+%% Define the analytic solution (optional).
+
+soln_x = @(x,p,t) 1.+.5*sin(2*pi*(x-t));
+soln_t = @(t,p)   0.*t+1;
+soln   = new_md_func(num_dims_Macro,{soln_x,soln_t});
+
+%% Initial conditions
+
+initial_conditions = {soln};
+
+%% Analytic solution
+
+analytic_solution = {soln};
+
+%% Solution Vector
+
+rho_0 = UNKNOWN( opts, dimensions_Macro, analytic_solution, initial_conditions );
+
+%
+%% Second unknown (rho_1):
 
 %% Define the analytic solution (optional).
 
@@ -38,28 +59,7 @@ analytic_solution = {soln};
 rho_1 = UNKNOWN( opts, dimensions_Macro, analytic_solution, initial_conditions );
 
 %
-%% Second unknown (rho_2):
-
-%% Define the analytic solution (optional).
-
-soln_x = @(x,p,t) 1.+.5*sin(2*pi*(x-t));
-soln_t = @(t,p)   0.*t+1;
-soln   = new_md_func(num_dims_Macro,{soln_x,soln_t});
-
-%% Initial conditions
-
-initial_conditions = {soln};
-
-%% Analytic solution
-
-analytic_solution = {soln};
-
-%% Solution Vector
-
-rho_2 = UNKNOWN( opts, dimensions_Macro, analytic_solution, initial_conditions );
-
-%
-%% Third unknown (rho_3):
+%% Third unknown (rho_2):
 
 %% Define the analytic solution (optional).
 
@@ -77,7 +77,7 @@ analytic_solution = {soln};
 
 %% Solution Vector
 
-rho_3 = UNKNOWN( opts, dimensions_Macro, analytic_solution, initial_conditions );
+rho_2 = UNKNOWN( opts, dimensions_Macro, analytic_solution, initial_conditions );
 
 %
 %% Micro Unknowns (g and q)
@@ -140,7 +140,7 @@ Euler = EULER_1D( opts, dimensions_Macro, 'PERIODIC', 'LLF', 1, 0.0 );
 
 F_1 = @( opts, Q, t ) Euler.evaluate_rhs_1( opts, Q, t );
 
-term_rho_1 = TERM( rho_1, {rho_1,rho_2,rho_3}, {F_1}, false );
+term_rho_0 = TERM( rho_0, {rho_0,rho_1,rho_2}, {F_1}, false );
 
 % < e_0 q >_v:
 
@@ -149,15 +149,15 @@ e0 = @(x,p,t)     0*x+1;
 
 term_q = VELOCITY_MOMENT_MD_TERM( e0, dV );
 
-term_rho_1_q = TERM( rho_1, {q}, {term_q}, true );
+term_rho_0_q = TERM( rho_0, {q}, {term_q}, true );
 
-equation_rho_1 = EQUATION( rho_1, {term_rho_1,term_rho_1_q}, 'evolution', '' );
+equation_rho_0 = EQUATION( rho_0, {term_rho_0,term_rho_0_q}, 'evolution', '' );
 
 % F_2(rho)_x:
 
 F_2 = @( opts, Q, t ) Euler.evaluate_rhs_2( opts, Q, t );
 
-term_rho_2 = TERM( rho_2, {rho_1,rho_2,rho_3}, {F_2}, false );
+term_rho_1 = TERM( rho_1, {rho_0,rho_1,rho_2}, {F_2}, false );
 
 % < e_1 q >_v:
 
@@ -165,15 +165,15 @@ e_1 = @(x,p,t) x;
 
 term_q = VELOCITY_MOMENT_MD_TERM( e_1, dV );
 
-term_rho_2_q = TERM( rho_2, {q}, {term_q}, true );
+term_rho_1_q = TERM( rho_1, {q}, {term_q}, true );
 
-equation_rho_2 = EQUATION( rho_2, {term_rho_2,term_rho_2_q}, 'evolution', '' );
+equation_rho_1 = EQUATION( rho_1, {term_rho_1,term_rho_1_q}, 'evolution', '' );
 
 % F_3(rho)_x:
 
 F_3 = @( opts, Q, t ) Euler.evaluate_rhs_3( opts, Q, t );
 
-term_rho_3 = TERM( rho_3, {rho_1,rho_2,rho_3}, {F_3}, false );
+term_rho_2 = TERM( rho_2, {rho_0,rho_1,rho_2}, {F_3}, false );
 
 % < e_2 q >_v:
 
@@ -181,9 +181,9 @@ e_2 = @(x,p,t) .5*x.^2;
 
 term_q = VELOCITY_MOMENT_MD_TERM( e_2, dV );
 
-term_rho_3_q = TERM( rho_3, {q}, {term_q}, true );
+term_rho_2_q = TERM( rho_2, {q}, {term_q}, true );
 
-equation_rho_3 = EQUATION( rho_3, {term_rho_3,term_rho_3_q}, 'evolution', '' );
+equation_rho_2 = EQUATION( rho_2, {term_rho_2,term_rho_2_q}, 'evolution', '' );
 
 %
 %% Define the terms of the Micro system:
@@ -208,13 +208,13 @@ term_g_1 = TERM( g, {q}, {term_MM_1}, true );
 
 term_MM_2 = @( opts, Q, t ) MicroMacro.evaluate_rhs_Maxwellian( opts, Q, t );
 
-term_g_2 = TERM( g, {rho_1,rho_2,rho_3}, {term_MM_2}, false );
+term_g_2 = TERM( g, {rho_0,rho_1,rho_2}, {term_MM_2}, false );
 
 % (vM(rho))_x:
 
 term_MM_3 = @( opts, Q, t ) MicroMacro.evaluate_rhs_vDotGradMaxwellian( opts, Q, t );
 
-term_g_3 = TERM( g, {rho_1,rho_2,rho_3}, {term_MM_3}, false );
+term_g_3 = TERM( g, {rho_0,rho_1,rho_2}, {term_MM_3}, false );
 
 % equation_g = EQUATION( g, {term_g_1,term_g_2,term_g_3}, 'evolution', '' );
 equation_g = EQUATION( g, {term_g_1}, 'evolution', '' );%Temporarily turn off Maxwellian terms
@@ -256,6 +256,6 @@ equation_q = EQUATION( q, {term_q_1,term_q_2}, 'closure', '' );
 
 %% Create the PDE System:
 
-pde_system = PDE_SYSTEM( opts, {equation_rho_1,equation_rho_2,equation_rho_3,equation_g,equation_q}, @set_dt );
+pde_system = PDE_SYSTEM( opts, {equation_rho_0,equation_rho_1,equation_rho_2,equation_g,equation_q}, @set_dt );
 
 end
