@@ -40,6 +40,7 @@ else %We only need to add element data from f_bc
             %Get idx of cell
             idx = elements_removed(1,loc(i));
             f(start+(count-1)*cell_dof+1:start+count*cell_dof) = f_bc((idx-1)*cell_dof+1:idx*cell_dof);
+            %f(start+(count-1)*cell_dof+1) = f_bc((idx-1)*cell_dof+1);
         else
             %Remove element from hash_table
             cells_not_added = [cells_not_added,num_ele_old+i];

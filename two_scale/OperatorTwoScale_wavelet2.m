@@ -37,8 +37,8 @@ end
 % not critical to computations
 % ---------------------------------------------
 tol = 10^4 * eps;
-H0(find(abs(H0) < tol))=0; 
-G0(find(abs(G0) < tol))=0;
+%H0(find(abs(H0) < tol))=0; 
+%G0(find(abs(G0) < tol))=0;
 
 H1 = zeros(deg,deg);
 G1 = zeros(deg,deg);

@@ -1,11 +1,13 @@
-function [hash_new,A_new,f_new,lQ] = addLimitElements(pde,opts,hash_table,Q,f,M,m,tol)
+function [hash_new,A_new,f_new,lQ] = addLimitElements(pde,opts,hash_table,A_data,Q,f,M,m,tol)
 %Q represents the polynomial coefficents in the realspace tensor DG space.
 
-persistent Ix Iv FG2DG
+persistent Ix Iv FG2DG FG2DG_inv FMWT_2D evalmatref
 
 assert(numel(pde.dimensions) == 2);
-assert(opts.deg == 2); %Stick with linear polynomials for now
+assert(opts.deg <= 3);
+%assert(opts.deg == 2); %Stick with linear polynomials for now
 num_dims = numel(pde.dimensions);
+k = opts.deg-1;
 
 limiter = 'Pos';
 
@@ -16,7 +18,11 @@ if isempty(FG2DG)
     FMWT_2D = kron(FMWT_x,FMWT_v);
 
     lev_vec = [pde.dimensions{1}.lev,pde.dimensions{2}.lev];
-    FG2DG  = kronrealspace2DtoDG(lev_vec,opts.deg,opts.deg)*FMWT_2D';
+    [I,~,~] = find(kronrealspace2DtoDG(lev_vec,opts.deg,opts.deg));
+    FG2DG_inv = I;
+    FG2DG = zeros(numel(I),1);
+    FG2DG(FG2DG_inv) = 1:numel(I);
+    %FG2DG  = kronrealspace2DtoDG(lev_vec,opts.deg,opts.deg)*FMWT_2D';
 end
 
 %%
@@ -30,13 +36,30 @@ max_lev = max([lev_x,lev_v]);
 dx = (pde.dimensions{1}.max-pde.dimensions{1}.min)/2^lev_x;
 dv = (pde.dimensions{2}.max-pde.dimensions{2}.min)/2^lev_v;
 %Transformation from DG basis to Limiter basis
-L = diag([sqrt(1/(dx*dv)),sqrt(3/(dx*dv)),sqrt(3/(dx*dv)),3*sqrt(1/(dx*dv))]);
+coeff = [sqrt(1/2);sqrt(3/2);sqrt(45/8)];
+L = 2/sqrt(dx*dv)*diag(reshape(coeff(1:k+1)*coeff(1:k+1)',[],1));
+%L = diag([sqrt(1/(dx*dv)),sqrt(3/(dx*dv)),sqrt(3/(dx*dv)),3*sqrt(1/(dx*dv))]);
 %Transformation from Limiter basis to DG basis
 Linv = inv(L);
-%Evaluate the function at the verticies of the rectangle
-evalmat = [1 1 1 1;1 1 -1 -1;1 -1 1 -1; 1 -1 -1 1];
+if isempty(evalmatref)
+    q = @(x) [1;x;x.^2-1/3];
+    oned_vals = {q(-1),q(-sqrt(3/7)),q(0),q(sqrt(3/7)),q(1)};
+    %oned_vals = {q(-1),q(1)};
+    sz1 = numel(oned_vals);
+    evalmatref = zeros(sz1^2,9);
+    for i=1:sz1
+        for j=1:sz1
+            evalmatref(sz1*(i-1)+j,:) = reshape(oned_vals{j}*oned_vals{i}',[],1)';
+        end
+    end
+end
+if k == 1
+    evalmat = evalmatref(:,[1 2 4 5]);
+elseif k == 2
+    evalmat = evalmatref;
+end          
 %Vector for cell average
-e1 = zeros(4,1); e1(1) = 1;
+e1 = zeros((k+1)^2,1); e1(1) = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 xx = pde.dimensions{1}.min:dx:pde.dimensions{1}.max;
 vv = pde.dimensions{2}.min:dv:pde.dimensions{2}.max;
@@ -48,10 +71,16 @@ end
 
 I = [];
 flag = false;
+
+[perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_data);
+f_FG = zeros(size(perm));f_FG(pvec) = f(perm(pvec));
+Q = FMWT_2D'*f_FG;
+Q = Q(FG2DG);
+
 lQ = Q; %%Limited Q
 %% Limit solution %%%%%%%%%%%%%%%%%%
-num_x = 2^lev_x; num_v = 2^lev_v; k = 1;
-
+num_x = 2^lev_x; num_v = 2^lev_v;
+%fprintf('LIM-2:   Before Limiting.  Min Cell Average of %e\n',min(lQ(1:(k+1)^2:end))/sqrt(dx*dv))
 if strcmp(limiter,'TVD') %%%%% TVD Limiter %%%%%%%%%%%%%%%%
     for i=1:num_x
         for j=1:num_v
@@ -123,23 +152,17 @@ elseif strcmp(limiter,'Pos') %%%%% Maximum Principle Limiter %%%%%%%%%%%%%
             start = ((i-1)*num_v+(j-1))*(k+1)^2;
             curr = L*Q(start+1:start+(k+1)^2);
             
-            %if norm(curr) < 1e-14
-            %    continue
-            %end
-            %Make cell average positive if negative 
-            %curr(1) = max([curr(1),0]);
-            
-            %Need max and min for must happen at verticies of rectangle
+            %Need max and min at quadrature points
             uval = evalmat*curr;
             u_M = max(uval);
             u_m = min(uval);
+            %fprintf('             avg = %4.3e, u_m = %4.3e, u_M = %4.3e\n',curr(1),u_m,u_M);
             %Limiter modifier
             if u_M > M+tol || u_m < m-tol
-                %curr(1) = max([curr(1),0]);
-                if curr(1) < m
+                if curr(1) < m || curr(1) > M
                     theta = 0;
                 else    
-                    theta = min(abs([1,((M+tol)-curr(1))/(u_M-curr(1)),((m-tol)-curr(1))/(u_m-curr(1))]));
+                    theta = min(abs([1,(M-curr(1))/(u_M-curr(1)),(m-curr(1))/(u_m-curr(1))]));
                 end
                 %if abs(theta-1) > 5e-15 %Need to limit
                 %fprintf('Limiting on cell (%d,%d) with err %e\n',i,j,abs(theta-1));
@@ -147,14 +170,14 @@ elseif strcmp(limiter,'Pos') %%%%% Maximum Principle Limiter %%%%%%%%%%%%%
                 I = [I;uint64((i-1)*num_v+(j-1)+1)];
                 u_avg = curr(1)*e1;
                 curr = theta*(curr-u_avg)+u_avg;
-                fprintf('LIM-2:   Limiting on cell (%d,%d): [%f,%f]x[%f,%f]\n',i,j,xx(i),xx(i+1),vv(j),vv(j+1));
-                fprintf('             avg = %4.3e, u_m = %4.3e, u_M = %4.3e, theta = %4.3e\n',u_avg(1),u_m,u_M,theta);
-                uval = evalmat*curr;
-                u_M = max(uval);
-                u_m = min(uval);
-                fprintf('           Values After limiting\n');
-                fprintf('             avg = %4.3e, u_m = %4.3e, u_M = %4.3e, theta = %4.3e\n',u_avg(1),u_m,u_M,theta);
-                %flag = true;
+%                 fprintf('LIM-2:   Limiting on cell (%d,%d): [%f,%f]x[%f,%f]\n',i,j,xx(i),xx(i+1),vv(j),vv(j+1));
+%                 fprintf('             avg = %4.3e, u_m = %4.3e, u_M = %4.3e, theta = %4.3e\n',u_avg(1),u_m,u_M,theta);
+%                 uval = evalmat*curr;
+%                 u_M = max(uval);
+%                 u_m = min(uval);
+%                 fprintf('           Values After limiting\n');
+%                 fprintf('             avg = %4.3e, u_m = %4.3e, u_M = %4.3e, theta = %4.3e\n',u_avg(1),u_m,u_M,theta);
+%                 flag = true;
                 lQ(start+1:start+(k+1)^2) = Linv*curr;
             end
             %if flag; break; end
@@ -162,6 +185,7 @@ elseif strcmp(limiter,'Pos') %%%%% Maximum Principle Limiter %%%%%%%%%%%%%
         %if flag; break; end
     end
 end
+%fprintf('LIM-2:   After  Limiting.  Min Cell Average of %e\n',min(lQ(1:(k+1)^2:end))/sqrt(dx*dv))
 
 if isempty(I)
     hash_new = hash_table;
@@ -227,16 +251,20 @@ A_new = global_matrix(pde,opts,hash_new);
 %% Modify coordinates to produce limited f
 
 %Get SG to FG transformation
-[~,iperm,~] = sg_to_fg_mapping_2d(pde,opts,A_new);
-fperm = 1:numel(lQ); fperm(iperm) = [];
+[perm,iperm,pvec] = sg_to_fg_mapping_2d(pde,opts,A_new);
+nperm = 1:numel(lQ); nperm(iperm) = [];
 
 %Transfer to wavelet space
-f_new = FG2DG'*lQ;
-fprintf('LIM-2:    FG norm of elements not active: %4.3e\n',norm(f_new(fperm)));
-assert(norm(f_new(fperm)) < 5e-16)
+f_new = FMWT_2D*lQ(FG2DG_inv);
+%fprintf('LIM-2:    FG norm of elements not active: %4.3e\n',norm(f_new(nperm)));
+%assert(norm(f_new(nperm),inf) < 1e-15)
 
 %Now to adpative space
 f_new = f_new(iperm);
+
+%f_FG = zeros(size(perm)); f_FG(pvec) = f_new(perm(pvec));
+%lQ_new(FG2DG_inv) = FMWT_2D'*f_FG; 
+%fprintf('LIM-2:   After  Limiting Transform.  Min Cell Average of %e\n',min(lQ_new(1:(k+1)^2:end)))
 
 %% Cull elements that are not used by limiter
 % cell_dofs = opts.deg^numel(pde.dimensions);

@@ -1,4 +1,4 @@
-function [hash_new,A_new] = hierarchicalPostivity(pde,opts,f,hash_table,A_data,pos_tol)
+function [hash_new,A_new] = hierarchicalPostivity(pde,opts,f,hash_table,A_data,M,m,pos_tol)
 %Hierarchical adaptivity for positivity
 
 persistent FG2DG Ix
@@ -89,11 +89,11 @@ for l=1:size(pos_lev_pde,1)
     %fprintf('Lev = [%d,%d].  min(Q) = %e\n',lev_vec(1),lev_vec(2),min(Q));
     
     %Add elements if negative on this level
-    if min(Q) < pos_tol
+    if (min(Q) < (m-pos_tol)) || (max(Q) > (M+pos_tol))
         %%Plot negative areas
         %figure(20); QQ = reshape(Q,2^lev_vec(2),[]); QQ = flipud(QQ); QQ = (QQ < pos_tol); imagesc(QQ); title(sprintf('HB: lev-vec = [%d,%d]  Negative Elements = %4d',lev_vec(1),lev_vec(2),sum(QQ(:))));
         ele_before = numel(hash_table.elements_idx);
-        hash_new = addHierNegativeElements(lev_vec,pde_lev_vec,opts,hash_table,Q,Ix{lev_vec(1)},Ix{lev_vec(2)},pos_tol);
+        hash_new = addHierNegativeElements(lev_vec,pde_lev_vec,opts,hash_table,Q,Ix{lev_vec(1)},Ix{lev_vec(2)},M,m,pos_tol);
         ele_after = numel(hash_new.elements_idx);
         if ele_before ~= ele_after
             A_new = global_matrix(pde,opts,hash_new);
@@ -105,7 +105,7 @@ end
 
 end
 
-function hash_table = addHierNegativeElements(lev_vec,pde_lev_vec,opts,hash_table,Q,Ix,Iv,pos_tol)
+function hash_table = addHierNegativeElements(lev_vec,pde_lev_vec,opts,hash_table,Q,Ix,Iv,M,m,pos_tol)
 %Q represents the constant polynomial coefficients of the function on the
 %full grid.  If the value is negative, this function adds the hierarchical
 %basis functions to the new hash to hopefully perserve positivity of the
@@ -118,7 +118,8 @@ lev_x = lev_vec(1);
 lev_v = lev_vec(2);
 max_lev = max(pde_lev_vec);
 
-[I] = uint64(find(Q < pos_tol));
+lit = ( Q < (m-pos_tol) ) | ( Q > (M+pos_tol) );
+[I] = uint64(find(lit));
 
 x_idx = idivide(I-1,n_v) + 1;
 v_idx = mod(I-1,n_v) + 1;
