@@ -9,6 +9,10 @@ classdef UNKNOWN < handle
         initial_conditions = {};
         hash_table;
         FMWT;
+        A_kron_rs_to_DG;
+        perm;
+        iperm;
+        pvec;
         transform_blocks;
         A_data;
         lo_global; % Start index of unknown in global solution vector
@@ -45,7 +49,11 @@ classdef UNKNOWN < handle
             end
             
             obj.A_data = matrix_assembly_data( obj );
+
+            obj.A_kron_rs_to_DG = kron_realspace_to_DG( obj.get_lev_vec(), obj.deg );
             
+            [ obj.perm, obj.iperm, obj.pvec ] = sg_to_fg_unknown_mapping( obj );
+
             compute_dimension_mass_mat( opts, obj );
             
         end
@@ -98,13 +106,14 @@ classdef UNKNOWN < handle
         
         function f_rs = convert_to_realspace( obj, f_w )
             
-            f_rs = obj.FMWT' * f_w;
+            f_rs = obj.A_kron_rs_to_DG * ( obj.FMWT' * f_w(obj.perm(obj.pvec)) );
             
         end
         
         function f_w = convert_to_wavelet( obj, f_rs )
             
-            f_w = obj.FMWT * f_rs;
+            f_w = obj.FMWT * ( obj.A_kron_rs_to_DG' * f_rs );
+            f_w = f_w(obj.iperm);
             
         end
         
