@@ -1,6 +1,6 @@
 %% MATLAB (reference) version of the ASGarD pde system solver
 
-function [ err, opts ] = asgard_pde_system( pde_system_handle, varargin )
+function [ err, opts, pde_system ] = asgard_pde_system( pde_system_handle, varargin )
 
     format short e
     folder = fileparts(which(mfilename));
