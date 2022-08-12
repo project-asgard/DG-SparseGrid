@@ -69,12 +69,12 @@ classdef MICRO_MACRO_1X1V
             dof   = dof_x * dof_v;
             dof_K = obj.deg^2;
             
-            dx = ( obj.dim_x.max - obj.dim_v.min ) / N_x;
+            dx = ( obj.dim_x.max - obj.dim_x.min ) / N_x;
             dv = ( obj.dim_v.max - obj.dim_v.min ) / N_v;
             
-            rho_1_q = obj.Phi * reshape( Q{1}, [ obj.deg, N_x ] );
-            rho_2_q = obj.Phi * reshape( Q{2}, [ obj.deg, N_x ] );
-            rho_3_q = obj.Phi * reshape( Q{3}, [ obj.deg, N_x ] );
+            rho_1_q = ( obj.Phi / sqrt( dx ) ) * reshape( Q{1}, [ obj.deg, N_x ] );
+            rho_2_q = ( obj.Phi / sqrt( dx ) ) * reshape( Q{2}, [ obj.deg, N_x ] );
+            rho_3_q = ( obj.Phi / sqrt( dx ) ) * reshape( Q{3}, [ obj.deg, N_x ] );
             
             [ D_q, U_q, T_q ] = Primitive( rho_1_q, rho_2_q, rho_3_q, obj.T_min );
             
@@ -85,8 +85,8 @@ classdef MICRO_MACRO_1X1V
             w_q = kron( obj.quad_w, obj.quad_w ); % Move to initialization?
             
             %% 2D Basis Functions Evaluated in Quadrature Points on Local Element
-            
-            Phi_q = kron( obj.Phi, obj.Phi ); % Move to initialization?
+
+            Phi_q = kron( obj.Phi, obj.Phi ) / sqrt( dx * dv ); % Move to initialization?
             
             i_K = 0;
             for i_x = 1 : N_x
@@ -99,7 +99,7 @@ classdef MICRO_MACRO_1X1V
                 M_q = Maxwellian_q( D_q(:,i_x), U_q(:,i_x), T_q(:,i_x), v_q );
                 
                 rhs_Maxwellian((i_K-1)*dof_K+1:i_K*dof_K)...
-                    = ( w_q .* M_q )' * Phi_q;
+                    = 0.25 * dx * dv * ( ( w_q .* M_q )' * Phi_q );
                 
             end
             end
