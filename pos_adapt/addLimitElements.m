@@ -1,13 +1,21 @@
 function [hash_new,A_new,f_new,lQ] = addLimitElements(pde,opts,hash_table,A_data,Q,f,M,m,tol)
 %Q represents the polynomial coefficents in the realspace tensor DG space.
 
-persistent Ix Iv FG2DG FG2DG_inv FMWT_2D evalmatref
+persistent Ix Iv FG2DG FG2DG_inv FMWT_2D evalmat
 
 assert(numel(pde.dimensions) == 2);
-assert(opts.deg <= 3);
+%assert(opts.deg <= 3);
 %assert(opts.deg == 2); %Stick with linear polynomials for now
 num_dims = numel(pde.dimensions);
 k = opts.deg-1;
+
+if k == 0
+    hash_new = hash_table;
+    A_new = A_data;
+    f_new = f;
+    lQ = Q;
+    return
+end
 
 limiter = 'Pos';
 
@@ -36,28 +44,36 @@ max_lev = max([lev_x,lev_v]);
 dx = (pde.dimensions{1}.max-pde.dimensions{1}.min)/2^lev_x;
 dv = (pde.dimensions{2}.max-pde.dimensions{2}.min)/2^lev_v;
 %Transformation from DG basis to Limiter basis
-coeff = [sqrt(1/2);sqrt(3/2);sqrt(45/8)];
+%coeff = [sqrt(1/2);sqrt(3/2);sqrt(45/8)];
+coeff = [sqrt(1/2);sqrt(3/2);sqrt(5/2);sqrt(7/2)];
 L = 2/sqrt(dx*dv)*diag(reshape(coeff(1:k+1)*coeff(1:k+1)',[],1));
 %L = diag([sqrt(1/(dx*dv)),sqrt(3/(dx*dv)),sqrt(3/(dx*dv)),3*sqrt(1/(dx*dv))]);
 %Transformation from Limiter basis to DG basis
 Linv = inv(L);
-if isempty(evalmatref)
-    q = @(x) [1;x;x.^2-1/3];
+if isempty(evalmat)
+    %q = @(x) [1;x;x.^2-1/3];
+    q = @(x) [1;x;0.5*(3*x.^2-1);0.5*(5*x.^3-3*x)];
     oned_vals = {q(-1),q(-sqrt(3/7)),q(0),q(sqrt(3/7)),q(1)};
     %oned_vals = {q(-1),q(1)};
     sz1 = numel(oned_vals);
-    evalmatref = zeros(sz1^2,9);
+    num_polys = numel(oned_vals{1});
+    evalmatref = zeros(sz1^2,num_polys^2);
     for i=1:sz1
         for j=1:sz1
             evalmatref(sz1*(i-1)+j,:) = reshape(oned_vals{j}*oned_vals{i}',[],1)';
         end
     end
+    
+    %Detemrine which polynomials to extract
+    box = reshape((1:num_polys^2)',num_polys,[]);
+    kept_cols = reshape(box(1:k+1,1:k+1),[],1)';
+    evalmat = evalmatref(:,kept_cols);
 end
-if k == 1
-    evalmat = evalmatref(:,[1 2 4 5]);
-elseif k == 2
-    evalmat = evalmatref;
-end          
+%if k == 1
+%    evalmat = evalmatref(:,[1 2 4 5]);
+%elseif k == 2
+%    evalmat = evalmatref;
+%end          
 %Vector for cell average
 e1 = zeros((k+1)^2,1); e1(1) = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

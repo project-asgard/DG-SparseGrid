@@ -52,6 +52,11 @@ else %We only need to add element data from f_bc
     
     %Remove hash_table elements that didnt get added
     if ~isempty(cells_not_added)
+         for ele=cells_not_added
+             hash_table.elements.lev_p1(hash_table.elements_idx(ele),:) = 0;
+             hash_table.elements.pos_p1(hash_table.elements_idx(ele),:) = 0;
+             hash_table.elements.type(hash_table.elements_idx(ele))= 0;
+        end
         hash_table.elements_idx(cells_not_added) = []; 
         A_data = global_matrix(pde,opts,hash_table);
     end

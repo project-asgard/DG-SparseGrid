@@ -715,6 +715,9 @@ else %%Trying imex deg 2 version
         output.min_vec = min(B0*f0);
         output.max_vec = max(B0*f0);
         output.T = 0;
+        output.cull_data = [];
+        output.pos_data = [];
+        output.final_data = [];
     end
     
     %one = new_md_func(2,{@(x,p,t,dat) 0*x+1,@(v,t,p,dat) 0*v+1, @(t,p) 0*t+1});
@@ -1024,7 +1027,13 @@ else %%Trying imex deg 2 version
 
         end
     end
-    
+    if mod(fix(t/dt),opts.plot_freq) == 0
+        figure(20); subplot(2,2,1); plotVec(x,v,opts.deg-1,B*f1,[],1);zlim([m-lim_tol,m]);view([0 90]);colorbar;caxis([m-lim_tol,m])
+        ele_coords = get_sparse_grid_coordinates(pde,opts,hash);
+        hold on
+        scatter(ele_coords(:,1),ele_coords(:,2),'+','k')
+        hold off
+    end
     if adapt
         fprintf('         Pre-coarsened element count: %d\n',numel(hash.elements_idx));
         [pde,hash_new,f1_cull,A_data,elements_dropped] = adapt_stripped(pde,opts,hash,f1,'c');
@@ -1038,8 +1047,16 @@ else %%Trying imex deg 2 version
         f1_bc = f1;
         f1 = f1_cull;
         Q = B0*f1;
+        if mod(fix(t/dt),opts.plot_freq) == 0
+            figure(20); subplot(2,2,2); plotVec(x,v,opts.deg-1,B*f1,[],1);zlim([m-lim_tol,m]);view([0 90]);colorbar;caxis([m-lim_tol,m])
+            ele_coords = get_sparse_grid_coordinates(pde,opts,hash);
+            hold on
+            scatter(ele_coords(:,1),ele_coords(:,2),'+','k')
+            hold off
+        end
         num_ele = numel(hash.elements_idx);
-        fprintf('POS:     min(B0*f1) = %e. Negative on %d elements.\n',min(Q),sum(Q < pos_tol));
+        fprintf('POS:     min(B0*f1) = %e. Negative on %d elements.\n',min(Q),sum(Q < m-pos_tol));
+        output.cull_data = [output.cull_data;num_ele];
         if pos_adapt
             pos_bool = (min(Q) < (m-pos_tol)) || (max(Q) > (M+pos_tol));
             while pos_bool
@@ -1061,8 +1078,17 @@ else %%Trying imex deg 2 version
             end
             fprintf('POS:     min(B0*f1) = %e. Added a total of %d elements.\n',min(Q),numel(hash.elements_idx)-num_ele);
         end
+        if mod(fix(t/dt),opts.plot_freq) == 0
+            figure(20); subplot(2,2,3); plotVec(x,v,opts.deg-1,B*f1,[],1);zlim([m-lim_tol,m]);view([0 90]);colorbar;caxis([m-lim_tol,m])
+            ele_coords = get_sparse_grid_coordinates(pde,opts,hash);
+            hold on
+            scatter(ele_coords(:,1),ele_coords(:,2),'+','k')
+            hold off
+            sgtitle(sprintf('dt = 0.0025, lev = 5, deg = 2, time = %4.3f',t+dt));
+        end
     end
     
+    output.pos_data = [output.pos_data;numel(hash.elements_idx)];
     if limit
         Q = B*f1;
         [hash_new,A_new,f1] = addLimitElements(pde,opts,hash,A_data,Q,f1,M,m,lim_tol);
@@ -1071,26 +1097,36 @@ else %%Trying imex deg 2 version
         fprintf('LIM:     Limiter Added %d elements\n',numel(hash_new.elements_idx)-numel(hash.elements_idx));
         hash = hash_new; A_data = A_new;
         [B,B0] = WaveletToRealspaceTransMatrix(pde,opts,A_data);
-        %figure(20); plotVec(x,v,opts.deg-1,B*f1,[],1);view([0 90]);colorbar;
+        if mod(fix(t/dt),opts.plot_freq) == 0
+            figure(20); subplot(2,2,4); plotVec(x,v,opts.deg-1,B*f1,[],1);zlim([m-lim_tol,m]);view([0 90]);colorbar;caxis([m-lim_tol,m])
+            ele_coords = get_sparse_grid_coordinates(pde,opts,hash);
+            hold on
+            scatter(ele_coords(:,1),ele_coords(:,2),'+','k')
+            hold off
+        end
     end
+    output.final_data = [output.final_data;numel(hash.elements_idx)];
     fprintf('------------------------------------------------------------------\n')
     fprintf('------------------------------------------------------------------\n')
-    fprintf('Total active elemnts and end of timestep: %d.\n',numel(hash.elements_idx));
+    fprintf('Total active elements at time %f: %d.\n',t+dt,numel(hash.elements_idx));
     fprintf('------------------------------------------------------------------\n')
     fprintf('------------------------------------------------------------------\n')
     
     hash_table = hash;
 end
 
-if mod(fix(t/dt),20) == 0
+if mod(fix(t/dt),opts.plot_freq) == 0
     figure(19);
     subplot(3,1,1);plot(output.T,output.data_vec);
     subplot(3,1,2);plot(output.T,output.min_vec-m);title(sprintf('Min Value = %e',min(output.min_vec)));
     subplot(3,1,3);plot(output.T,M-output.max_vec);title(sprintf('Max Value = %e',max(output.max_vec)));
 end
 
-if t+dt > dt*opts.num_steps - dt/10
-    []; 
+if t+dt > dt*opts.num_steps - dt/10 
+    FIGH = figure(21); plotVec(x,v,opts.deg-1,B*f1,[],0);view([0 90]);colorbar;
+    caxis([m-lim_tol,M+lim_tol])
+    savefig(FIGH,sprintf('output_adapt_1e8_lim_1e11_k_%1d.fig',opts.deg-1));
+    [];
 end
 
 end
