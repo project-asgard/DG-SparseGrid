@@ -39,6 +39,9 @@ classdef EULER_1D
                 euler_1D.RiemannSolver = RiemannSolver;
                 
             end
+
+            assert( any(strcmp(euler_1D.RiemannSolver,{'LLF','KiU'})),...
+                    'RiemannSolver Must be Obe of: LLF,KiU' )
             
             if exist( 'dim_v', 'var' )
                 
@@ -116,8 +119,6 @@ classdef EULER_1D
                 
                 [ D_L, U_L, T_L ] = Primitive( u_1_L, u_2_L, u_3_L, obj.dim_v, obj.T_min );
                 
-                Lambda_L = MaxAbsEigenvalue( D_L, U_L, T_L, obj.dim_v );
-                
                 F_1_L = Flux_1( D_L, U_L, T_L, obj.dim_v );
                 
                 % --- Right State ---
@@ -128,13 +129,22 @@ classdef EULER_1D
                 
                 [ D_R, U_R, T_R ] = Primitive( u_1_R, u_2_R, u_3_R, obj.dim_v, obj.T_min );
                 
-                Lambda_R = MaxAbsEigenvalue( D_R, U_R, T_R, obj.dim_v );
-                
                 F_1_R = Flux_1( D_R, U_R, T_R, obj.dim_v );
                 
-                alpha = max( [ Lambda_L, Lambda_R ] );
-                
-                F_1_Num(i) = NumericalFlux_LLF( u_1_L, u_1_R, F_1_L, F_1_R, alpha );
+                if( strcmp( obj.RiemannSolver, 'LLF' ) )
+
+                    Lambda_L = MaxAbsEigenvalue( D_L, U_L, T_L, obj.dim_v );
+                    Lambda_R = MaxAbsEigenvalue( D_R, U_R, T_R, obj.dim_v );
+
+                    alpha = max( [ Lambda_L, Lambda_R ] );
+                    
+                    F_1_Num(i) = NumericalFlux_LLF( u_1_L, u_1_R, F_1_L, F_1_R, alpha );
+
+                else
+
+                    F_1_Num(i) = NumericalFlux_KiU_1( D_L, U_L, T_L, F_1_L, D_R, U_R, T_R, F_1_R );
+
+                end
                 
             end
             
@@ -207,8 +217,6 @@ classdef EULER_1D
                 
                 [ D_L, U_L, T_L ] = Primitive( u_1_L, u_2_L, u_3_L, obj.dim_v, obj.T_min );
                 
-                Lambda_L = MaxAbsEigenvalue( D_L, U_L, T_L, obj.dim_v );
-                
                 F_2_L = Flux_2( D_L, U_L, T_L, obj.dim_v );
                 
                 % --- Right State ---
@@ -219,13 +227,22 @@ classdef EULER_1D
                 
                 [ D_R, U_R, T_R ] = Primitive( u_1_R, u_2_R, u_3_R, obj.dim_v, obj.T_min );
                 
-                Lambda_R = MaxAbsEigenvalue( D_R, U_R, T_R, obj.dim_v );
-                
                 F_2_R = Flux_2( D_R, U_R, T_R, obj.dim_v );
+
+                if( strcmp( obj.RiemannSolver, 'LLF' ) )
                 
-                alpha = max( [ Lambda_L, Lambda_R ] );
+                    Lambda_L = MaxAbsEigenvalue( D_L, U_L, T_L, obj.dim_v );
+                    Lambda_R = MaxAbsEigenvalue( D_R, U_R, T_R, obj.dim_v );
+
+                    alpha = max( [ Lambda_L, Lambda_R ] );
                 
-                F_2_Num(i) = NumericalFlux_LLF( u_2_L, u_2_R, F_2_L, F_2_R, alpha );
+                    F_2_Num(i) = NumericalFlux_LLF( u_2_L, u_2_R, F_2_L, F_2_R, alpha );
+
+                else
+
+                    F_2_Num(i) = NumericalFlux_KiU_2( D_L, U_L, T_L, F_2_L, D_R, U_R, T_R, F_2_R );
+
+                end
                 
             end
             
@@ -298,8 +315,6 @@ classdef EULER_1D
                 
                 [ D_L, U_L, T_L ] = Primitive( u_1_L, u_2_L, u_3_L, obj.dim_v, obj.T_min );
                 
-                Lambda_L = MaxAbsEigenvalue( D_L, U_L, T_L, obj.dim_v );
-                
                 F_3_L = Flux_3( D_L, U_L, T_L, obj.dim_v );
                 
                 % --- Right State ---
@@ -310,13 +325,22 @@ classdef EULER_1D
                 
                 [ D_R, U_R, T_R ] = Primitive( u_1_R, u_2_R, u_3_R, obj.dim_v, obj.T_min );
                 
-                Lambda_R = MaxAbsEigenvalue( D_R, U_R, T_R, obj.dim_v );
-                
                 F_3_R = Flux_3( D_R, U_R, T_R, obj.dim_v );
                 
-                alpha = max( [ Lambda_L, Lambda_R ] );
+                if( strcmp( obj.RiemannSolver, 'LLF' ) )
+
+                    Lambda_L = MaxAbsEigenvalue( D_L, U_L, T_L, obj.dim_v );
+                    Lambda_R = MaxAbsEigenvalue( D_R, U_R, T_R, obj.dim_v );
                 
-                F_3_Num(i) = NumericalFlux_LLF( u_3_L, u_3_R, F_3_L, F_3_R, alpha );
+                    alpha = max( [ Lambda_L, Lambda_R ] );
+                    
+                    F_3_Num(i) = NumericalFlux_LLF( u_3_L, u_3_R, F_3_L, F_3_R, alpha );
+
+                else
+
+                    F_3_Num(i) = NumericalFlux_KiU_3( D_L, U_L, T_L, F_3_L, D_R, U_R, T_R, F_3_R );
+
+                end
                 
             end
             
@@ -416,5 +440,83 @@ end
 function [ F ] = NumericalFlux_LLF( u_L, u_R, F_L, F_R, alpha )
 
     F = 0.5 * ( F_L + F_R - alpha * ( u_R - u_L ) );
+
+end
+
+function [ F ] = NumericalFlux_KiU_1( D_L, U_L, T_L, F_L, D_R, U_R, T_R, F_R )
+
+    M_L = MaxwellMoment_1( D_L, U_L, T_L );
+    M_R = MaxwellMoment_1( D_R, U_R, T_R );
+
+    F = 0.5 * ( F_R + F_L - ( M_R - M_L ) );
+
+end
+
+function [ F ] = NumericalFlux_KiU_2( D_L, U_L, T_L, F_L, D_R, U_R, T_R, F_R )
+
+    M_L = MaxwellMoment_2( D_L, U_L, T_L );
+    M_R = MaxwellMoment_2( D_R, U_R, T_R );
+
+    F = 0.5 * ( F_R + F_L - ( M_R - M_L ) );
+
+end
+
+function [ F ] = NumericalFlux_KiU_3( D_L, U_L, T_L, F_L, D_R, U_R, T_R, F_R )
+
+    M_L = MaxwellMoment_3( D_L, U_L, T_L );
+    M_R = MaxwellMoment_3( D_R, U_R, T_R );
+
+    F = 0.5 * ( F_R + F_L - ( M_R - M_L ) );
+
+end
+
+function [ M_1 ] = MaxwellMoment_1( D, U, T )
+
+    % --- Note: Assumes d_v = 1 ---
+
+    assert( D > 0.0, 'MaxwellMoment_1: D<=0' )
+    assert( T > 0.0, 'MaxwellMoment_1: T<=0' )
+
+    term_a = sqrt( 2.0 * pi * T );
+    term_b = D / term_a;
+    term_c = U / sqrt( 2.0 * T );
+    term_d = exp( - term_c^2 );
+    term_e = erf(   term_c   );
+
+    M_1 = term_b * ( 2.0 * T * term_d + U * term_a * term_e );
+
+end
+
+function [ M_2 ] = MaxwellMoment_2( D, U, T )
+
+    % --- Note: Assumes d_v = 1 ---
+
+    assert( D > 0.0, 'MaxwellMoment_2: D<=0' )
+    assert( T > 0.0, 'MaxwellMoment_2: T<=0' )
+
+    term_a = sqrt( 2.0 * pi * T );
+    term_b = D / term_a;
+    term_c = U / sqrt( 2.0 * T );
+    term_d = exp( - term_c^2 );
+    term_e = erf(   term_c   );
+
+    M_2 = term_b * ( 2.0 * T * U * term_d + (U^2+T) * term_a * term_e );
+
+end
+
+function [ M_3 ] = MaxwellMoment_3( D, U, T )
+
+    % --- Note: Assumes d_v = 1 ---
+
+    assert( D > 0.0, 'MaxwellMoment_3: D<=0' )
+    assert( T > 0.0, 'MaxwellMoment_3: T<=0' )
+
+    term_a = sqrt( 2.0 * pi * T );
+    term_b = D / term_a;
+    term_c = U / sqrt( 2.0 * T );
+    term_d = exp( - term_c^2 );
+    term_e = erf(   term_c   );
+
+    M_3 = term_b * ( 2.0 * T * (0.5*U^2+T) * term_d + 0.5 * (U^2+3.0*T) * U * term_a * term_e );
 
 end

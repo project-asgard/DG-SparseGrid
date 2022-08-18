@@ -42,7 +42,7 @@ classdef MICRO_MACRO_1X1V
                 
             end
             
-            obj.n_quad = 2 * obj.deg + 1;
+            obj.n_quad = 2 * obj.deg + 1; % --- May need adjustment to accurately integrate Maxwellian in v when velocity grid is coarse.
             
             [ obj.quad_x, obj.quad_w ] = lgwt( obj.n_quad, -1, +1 );
             
@@ -124,12 +124,12 @@ classdef MICRO_MACRO_1X1V
             dof   = dof_x * dof_v;
             dof_K = obj.deg^2;
             
-            dx = ( obj.dim_x.max - obj.dim_v.min ) / N_x;
+            dx = ( obj.dim_x.max - obj.dim_x.min ) / N_x;
             dv = ( obj.dim_v.max - obj.dim_v.min ) / N_v;
             
-            rho_1_q = obj.Phi * reshape( Q{1}, [ obj.deg, N_x ] );
-            rho_2_q = obj.Phi * reshape( Q{2}, [ obj.deg, N_x ] );
-            rho_3_q = obj.Phi * reshape( Q{3}, [ obj.deg, N_x ] );
+            rho_1_q = ( obj.Phi / sqrt( dx ) ) * reshape( Q{1}, [ obj.deg, N_x ] );
+            rho_2_q = ( obj.Phi / sqrt( dx ) ) * reshape( Q{2}, [ obj.deg, N_x ] );
+            rho_3_q = ( obj.Phi / sqrt( dx ) ) * reshape( Q{3}, [ obj.deg, N_x ] );
             
             [ D_q, U_q, T_q ] = Primitive( rho_1_q, rho_2_q, rho_3_q, obj.T_min );
             
@@ -141,7 +141,7 @@ classdef MICRO_MACRO_1X1V
             
             %% Defivative of 2D Basis Functions Evaluated in Quadrature Points on Local Element
             
-            dPhi_q = kron( obj.dPhi, obj.Phi ); % Move to initialization?
+            dPhi_q = kron( obj.dPhi, obj.Phi ) / sqrt( dx * dv ) / ( dx / 2 ); % Move to initialization?
             
             % --- Volume Term ---
             
@@ -158,7 +158,7 @@ classdef MICRO_MACRO_1X1V
                 v_q = kron( ones(obj.n_quad,1), v_q );
                 
                 rhs_vDotGradMaxwellian((i_K-1)*dof_K+1:i_K*dof_K)...
-                    = - ( w_q .* v_q .* M_q )' * dPhi_q;
+                    = 0.25 * dx * dv * ( w_q .* v_q .* M_q )' * dPhi_q;
                 
             end
             end
@@ -180,16 +180,16 @@ classdef MICRO_MACRO_1X1V
                 left  = GetIndices_L( i_x, obj.deg, N_x, obj.BCs_X, first, last );
                 right = GetIndices_R( i_x, obj.deg, N_x, obj.BCs_X, first, last );
                 
-                rho_1_L = obj.PhiUp * Q{1}(left);
-                rho_2_L = obj.PhiUp * Q{2}(left);
-                rho_3_L = obj.PhiUp * Q{3}(left);
+                rho_1_L = ( obj.PhiUp / sqrt( dx ) ) * Q{1}(left);
+                rho_2_L = ( obj.PhiUp / sqrt( dx ) ) * Q{2}(left);
+                rho_3_L = ( obj.PhiUp / sqrt( dx ) ) * Q{3}(left);
                 
                 [ D_L(i_x), U_L(i_x), T_L(i_x) ]...
                     = Primitive( rho_1_L, rho_2_L, rho_3_L, obj.T_min );
                 
-                rho_1_R = obj.PhiDn * Q{1}(right);
-                rho_2_R = obj.PhiDn * Q{2}(right);
-                rho_3_R = obj.PhiDn * Q{3}(right);
+                rho_1_R = ( obj.PhiDn / sqrt( dx ) ) * Q{1}(right);
+                rho_2_R = ( obj.PhiDn / sqrt( dx ) ) * Q{2}(right);
+                rho_3_R = ( obj.PhiDn / sqrt( dx ) ) * Q{3}(right);
                 
                 [ D_R(i_x), U_R(i_x), T_R(i_x) ]...
                     = Primitive( rho_1_R, rho_2_R, rho_3_R, obj.T_min );
@@ -222,8 +222,8 @@ classdef MICRO_MACRO_1X1V
             
             % --- Surface Term ---
             
-            PhiDn_q = kron( obj.PhiDn, obj.Phi );
-            PhiUp_q = kron( obj.PhiUp, obj.Phi );
+            PhiDn_q = kron( obj.PhiDn, obj.Phi ) / sqrt( dx * dv );
+            PhiUp_q = kron( obj.PhiUp, obj.Phi ) / sqrt( dx * dv );
             
             i_K = 0;
             for i_x = 1 : N_x
@@ -233,8 +233,8 @@ classdef MICRO_MACRO_1X1V
                 
                 rhs_vDotGradMaxwellian((i_K-1)*dof_K+1:i_K*dof_K)...
                     = rhs_vDotGradMaxwellian((i_K-1)*dof_K+1:i_K*dof_K)...
-                    + (   PhiUp_q' * ( obj.quad_w .* F_num(:,i_v,i_x+1) )...
-                        - PhiDn_q' * ( obj.quad_w .* F_num(:,i_v,i_x  ) ) );
+                    - 0.5 * dv * (   PhiUp_q' * ( obj.quad_w .* F_num(:,i_v,i_x+1) )...
+                                   - PhiDn_q' * ( obj.quad_w .* F_num(:,i_v,i_x  ) ) );
                 
             end
             end
