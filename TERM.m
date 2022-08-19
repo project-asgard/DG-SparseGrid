@@ -48,11 +48,7 @@ classdef TERM < handle
                     if( isa( obj.descriptor{i}, 'MD_TERM' ) )
                     
                         F = F + apply_A_term( opts, obj.descriptor{i}, obj.input_unknowns{i}, obj.output_unknown, Q{i} );
-                        
-                    elseif( isa( obj.descriptor{i}, 'VELOCITY_MOMENT_MD_TERM' ) )
-                        
-                        F = F + obj.descriptor{i}.moment_mat * Q{i};
-                        
+                                              
                     end
                     
                 end
@@ -89,16 +85,6 @@ classdef TERM < handle
                         
                     end
                 
-                elseif( isa( obj.descriptor{i}, 'VELOCITY_MOMENT_MD_TERM' ) )
-                    
-                    if( or( obj.time_dependent, isempty(obj.descriptor{i}.moment_mat) ) )
-                       
-                        obj.descriptor{i}.create_g_func( opts, obj.input_unknowns{i} )
-                        
-                        obj.descriptor{i}.moment_reduced_matrix( obj.input_unknowns{i} )
-                       
-                    end
-                    
                 end
                 
             end
