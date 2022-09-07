@@ -106,7 +106,7 @@ switch TEST
         T_min = 1.0e-8;
 end
 
-Euler = EULER_1D( opts, dimensions, BCs, 'LLF', 1, T_min );
+Euler = EULER_1D( opts, dimensions, BCs, 'KiU', 1, T_min );
 
 % f_1(u)_x:
 
@@ -151,90 +151,6 @@ equation_u_3 = EQUATION( u_3, {term_u_3}, 'evolution', '' );
 %% Create the PDE System:
 
 pde_system = PDE_SYSTEM( opts, {equation_u_1,equation_u_2,equation_u_3}, @set_dt );
-
-%%% Hack to plot initial condition %%%
-% 
-% for d=1:num_dims
-%     num_fixed_grid = 257;
-%     nodes_nodups{d}...
-%         = linspace( pde_system.unknowns{1}.dimensions{d}.min,...
-%                     pde_system.unknowns{1}.dimensions{d}.max,...
-%                     num_fixed_grid );
-%     [ Meval{d}, nodes{d}, nodes_count{d} ]...
-%         = matrix_plot_D( pde_system.unknowns{1}, pde_system.opts,...
-%                          pde_system.unknowns{1}.dimensions{d},...
-%                          nodes_nodups{d} );
-% end
-% 
-% close all
-% 
-% x_A  = nodes{1}';
-% u_1_A = u_1.analytic_solutions{1}{1}(x_A,1.0,0.0).*u_1.analytic_solutions{1}{2}(0.0,1);
-% u_2_A = u_2.analytic_solutions{1}{1}(x_A,1.0,0.0).*u_2.analytic_solutions{1}{2}(0.0,1);
-% u_3_A = u_3.analytic_solutions{1}{1}(x_A,1.0,0.0).*u_3.analytic_solutions{1}{2}(0.0,1);
-% 
-% % --- Exact Solution to Riemann Problem ---
-% 
-% [ x_E, D_E, U_E, T_E, ~ ] = ReadAnalyticRiemann( 'RiemannProblemExact.out' );
-% u_1_E = D_E;
-% u_2_E = D_E .* U_E;
-% u_3_E = 0.5 .* D_E .* ( U_E.^2 + T_E );
-% 
-% lo = pde_system.solution_vector.lbounds(1);
-% hi = pde_system.solution_vector.ubounds(1);
-% u_1_N...
-%   = wavelet_to_realspace( pde_system.unknowns{1}, pde_system.opts, Meval,...
-%                           pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{1}.hash_table );
-% lo = pde_system.solution_vector.lbounds(2);
-% hi = pde_system.solution_vector.ubounds(2);
-% u_2_N...
-%   = wavelet_to_realspace( pde_system.unknowns{2}, pde_system.opts, Meval,...
-%                           pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{2}.hash_table );
-% lo = pde_system.solution_vector.lbounds(3);
-% hi = pde_system.solution_vector.ubounds(3);
-% u_3_N...
-%   = wavelet_to_realspace( pde_system.unknowns{3}, pde_system.opts, Meval,...
-%                           pde_system.solution_vector.fvec(lo:hi), pde_system.unknowns{3}.hash_table );
-% 
-% fig_1 = figure( 1 );
-% 
-% subplot(3,1,1)
-% 
-% plot( x_A     , u_1_A, ':k', 'linewidth', 2 ); hold on
-% if(strcmp(TEST,'Riemann'))
-% plot( x_E     , u_1_E, '-r', 'linewidth', 2 )
-% end
-% plot( nodes{1}, u_1_N, '-k', 'linewidth', 2 )
-% title( '$u_{1}$', 'interpreter', 'latex' )
-% 
-% subplot(3,1,2)
-% 
-% plot( x_A     , u_2_A, ':k', 'linewidth', 2 ); hold on
-% if(strcmp(TEST,'Riemann'))
-% plot( x_E     , u_2_E, '-r', 'linewidth', 2 )
-% end
-% plot( nodes{1}, u_2_N, '-k', 'linewidth', 2 )
-% title( '$u_2$', 'interpreter', 'latex' )
-% 
-% subplot(3,1,3)
-% 
-% plot( x_A     , u_3_A, ':k', 'linewidth', 2 ); hold on
-% if(strcmp(TEST,'Riemann'))
-% plot( x_E     , u_3_E, '-r', 'linewidth', 2 )
-% end
-% plot( nodes{1}, u_3_N, '-k', 'linewidth', 2 )
-% title( '$u_3$', 'interpreter', 'latex' )
-% 
-% exportgraphics( fig_1, 'euler_system1.pdf' )
-% 
-% format long
-% 
-% [norm( u_1_N - u_1_A )/numel(nodes{1}),...
-%  norm( u_2_N - u_2_A )/numel(nodes{1}),...
-%  norm( u_3_N - u_3_A )/numel(nodes{1}),...
-%  t]
-%
-%%% End Hack %%%
 
 end
 
