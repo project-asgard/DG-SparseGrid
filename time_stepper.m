@@ -21,6 +21,18 @@ function [] = time_stepper( pde_system, t, dt )
         case 'CN'
             
             CrankNicolson( pde_system, t, dt );
+
+        case 'mM_FE'
+
+            mM_ForwardEuler( pde_system, t, dt );
+
+        case 'mM_SSPRK2'
+
+            mM_SSPRK2( pde_system, t, dt )
+
+        case 'mM_Dummy'
+
+            mM_Dummy( pde_system, t, dt )
             
     end
 
@@ -118,6 +130,147 @@ function [] = CrankNicolson( pde_system, t, dt )
     
     sv.insert_evolution_unknowns( u );
     
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
+
+end
+
+function [] = mM_ForwardEuler( pde_system, t, dt )
+
+    i_rho_0 = 1;
+    i_rho_1 = 2;
+    i_rho_2 = 3;
+    i_g     = 4;
+
+    mM = MICRO_MACRO_1X1V( pde_system.opts, pde_system.unknowns{i_g}.dimensions );
+
+    sv = pde_system.solution_vector;
+
+    % --- Macro Moments at t^n ---
+
+    rho_0 = {sv.unknowns{i_rho_0}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_0):sv.ubounds(i_rho_0)) ),...
+             sv.unknowns{i_rho_1}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_1):sv.ubounds(i_rho_1)) ),...
+             sv.unknowns{i_rho_2}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_2):sv.ubounds(i_rho_2)) )};
+
+    % --- Maxwellian at t^n ---
+
+    M_0 = sv.unknowns{i_g}.convert_to_wavelet( mM.evaluate_rhs_Maxwellian( pde_system.opts, rho_0, t ) );
+
+    u = sv.copy_evolution_unknowns();
+
+    % --- Evaluate RHS ---
+
+    RHS = ComputeRHS_Explicit( pde_system, u, t );
+
+    u = u + dt * RHS;
+
+    sv.insert_evolution_unknowns( u );
+
+    % --- Macro Moments at t^n+1 ---
+
+    rho_1 = {sv.unknowns{i_rho_0}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_0):sv.ubounds(i_rho_0)) ),...
+             sv.unknowns{i_rho_1}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_1):sv.ubounds(i_rho_1)) ),...
+             sv.unknowns{i_rho_2}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_2):sv.ubounds(i_rho_2)) )};
+
+    % --- Maxwellian at t^n+1 ---
+    
+    M_1 = sv.unknowns{i_g}.convert_to_wavelet( mM.evaluate_rhs_Maxwellian( pde_system.opts, rho_1, t + dt ) );
+    
+    % --- Add M^n - M^n+1 to g^n+1 ---
+
+    sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        = sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        + pde_system.equations{i_g}.MultiplyInverseMassMatrix( pde_system.opts, M_0 - M_1, t + dt );
+
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
+
+end
+
+function [] = mM_SSPRK2( pde_system, t, dt )
+
+    i_rho_0 = 1;
+    i_rho_1 = 2;
+    i_rho_2 = 3;
+    i_g     = 4;
+
+    mM = MICRO_MACRO_1X1V( pde_system.opts, pde_system.unknowns{i_g}.dimensions );
+
+    sv = pde_system.solution_vector;
+
+    rho = {sv.unknowns{i_rho_0}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_0):sv.ubounds(i_rho_0)) ),...
+           sv.unknowns{i_rho_1}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_1):sv.ubounds(i_rho_1)) ),...
+           sv.unknowns{i_rho_2}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_2):sv.ubounds(i_rho_2)) )};
+
+    M_n = sv.unknowns{i_g}.convert_to_wavelet( mM.evaluate_rhs_Maxwellian( pde_system.opts, rho, t ) );
+
+    u_n = sv.copy_evolution_unknowns();
+
+    RHS_n = ComputeRHS_Explicit( pde_system, u_n, t );
+
+    u_1 = u_n + dt * RHS_n;
+
+    sv.insert_evolution_unknowns( u_1 );
+
+    rho = {sv.unknowns{i_rho_0}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_0):sv.ubounds(i_rho_0)) ),...
+           sv.unknowns{i_rho_1}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_1):sv.ubounds(i_rho_1)) ),...
+           sv.unknowns{i_rho_2}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_2):sv.ubounds(i_rho_2)) )};
+
+    M_1 = sv.unknowns{i_g}.convert_to_wavelet( mM.evaluate_rhs_Maxwellian( pde_system.opts, rho, t ) );
+
+    sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        = sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        - pde_system.equations{i_g}.MultiplyInverseMassMatrix( pde_system.opts, ( M_1 - M_n ), t + dt );
+
+    u_1 = sv.copy_evolution_unknowns();
+
+    RHS_1 = ComputeRHS_Explicit( pde_system, u_1, t+dt );
+
+    u = u_n + 0.5 * dt * ( RHS_n + RHS_1 );
+
+    sv.insert_evolution_unknowns( u );
+
+    rho = {sv.unknowns{i_rho_0}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_0):sv.ubounds(i_rho_0)) ),...
+           sv.unknowns{i_rho_1}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_1):sv.ubounds(i_rho_1)) ),...
+           sv.unknowns{i_rho_2}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_2):sv.ubounds(i_rho_2)) )};
+
+    M = sv.unknowns{i_g}.convert_to_wavelet( mM.evaluate_rhs_Maxwellian( pde_system.opts, rho, t ) );
+
+    sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        = sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        - pde_system.equations{i_g}.MultiplyInverseMassMatrix( pde_system.opts, ( M - M_n ), t + dt );
+
+    [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
+
+end
+
+function [] = mM_Dummy( pde_system, t, dt )
+
+    i_rho_0 = 1;
+    i_rho_1 = 2;
+    i_rho_2 = 3;
+    i_g     = 4;
+
+    mM = MICRO_MACRO_1X1V( pde_system.opts, pde_system.unknowns{i_g}.dimensions );
+
+    sv = pde_system.solution_vector;
+
+    rho = {sv.unknowns{i_rho_0}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_0):sv.ubounds(i_rho_0)) ),...
+           sv.unknowns{i_rho_1}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_1):sv.ubounds(i_rho_1)) ),...
+           sv.unknowns{i_rho_2}.convert_to_realspace( sv.fvec(sv.lbounds(i_rho_2):sv.ubounds(i_rho_2)) )};
+
+    M = sv.unknowns{i_g}.convert_to_wavelet( mM.evaluate_rhs_Maxwellian( pde_system.opts, rho, t ) );
+
+    u = sv.copy_evolution_unknowns();
+
+    RHS = ComputeRHS_Explicit( pde_system, u, t );
+
+    u = u + dt * RHS;
+
+    sv.insert_evolution_unknowns( u );
+
+    sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        = sv.fvec(sv.lbounds(i_g):sv.ubounds(i_g))...
+        + pde_system.equations{i_g}.MultiplyInverseMassMatrix( pde_system.opts, M, t + dt );
+
     [ sv ] = EvaluateClosure( pde_system, sv, t + dt );
 
 end
