@@ -3,8 +3,8 @@ function pde_system = velocity_moments( opts )
 %% Parameters:
 
 n     = 1.0;
-u     = 0.0;
-theta = 0.4;
+u     = 1.0;
+theta = 1.0;
 
 %% Define the dimensionality:
 
