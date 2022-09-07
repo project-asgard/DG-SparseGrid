@@ -1,5 +1,10 @@
 function pde_system = micro_macro_spatial_divergence( opts )
 
+n     = @(x) 1.+.5*sin(2*pi*x);
+u     = 1.0;
+theta = 1.0;
+Vmax  = 12.0;
+
 % d_t rho = 0             , rho = (rho_0,rho_1,rho_2)^T
 % d_t u = - d_x F(rho)    , u = (u_0,u_1,u_2)^T         , u(t=0) = 0
 % d_t f = - d_x vM[rho](v), f=f(x,v)                    , f(t=0) = 0
@@ -12,7 +17,7 @@ dim_x.moment_dV = @(x,p,t,dat) 0.*x+1;
 dimensions_x    = {dim_x};
 num_dims_x      = numel(dimensions_x);
 
-dim_v = DIMENSION(-6,+6,opts.lev(2));
+dim_v = DIMENSION(-Vmax,+Vmax,opts.lev(2));
 dim_v.moment_dV = @(v,p,t,dat) 0.*v+1;
 dimensions_xv   = {dim_x,dim_v};
 num_dims_xv     = numel(dimensions_xv);
@@ -21,12 +26,11 @@ num_dims_xv     = numel(dimensions_xv);
 %% Unknowns:
 
 %
-%% rho_0, rho_1, rho_2:
-%% Specify n=n(x), u(x)=1, and theta(x)=1 so that rho_0=rho_1=rho_2
+%% rho_0:
 
 %% Define the analytic solution (optional).
 
-soln_x = @(x,p,t) 1+.1*sin(2*pi*x);
+soln_x = @(x,p,t) n(x);
 soln_t = @(t,p)   0.*t+1;
 soln   = new_md_func(num_dims_x,{soln_x,soln_t});
 
@@ -41,7 +45,47 @@ analytic_solution = {soln};
 %% Solution Vector
 
 rho_0 = UNKNOWN( opts, dimensions_x, analytic_solution, initial_conditions );
+
+%
+%% rho_1:
+
+%% Define the analytic solution (optional).
+
+soln_x = @(x,p,t) n(x).*u;
+soln_t = @(t,p)   0.*t+1;
+soln   = new_md_func(num_dims_x,{soln_x,soln_t});
+
+%% Initial conditions
+
+initial_conditions = {soln};
+
+%% Analytic solution
+
+analytic_solution = {soln};
+
+%% Solution Vector
+
 rho_1 = UNKNOWN( opts, dimensions_x, analytic_solution, initial_conditions );
+
+%
+%% rho_2:
+
+%% Define the analytic solution (optional).
+
+soln_x = @(x,p,t) 0.5*n(x)*(u^2+theta);
+soln_t = @(t,p)   0.*t+1;
+soln   = new_md_func(num_dims_x,{soln_x,soln_t});
+
+%% Initial conditions
+
+initial_conditions = {soln};
+
+%% Analytic solution
+
+analytic_solution = {soln};
+
+%% Solution Vector
+
 rho_2 = UNKNOWN( opts, dimensions_x, analytic_solution, initial_conditions );
 
 %
@@ -162,7 +206,7 @@ equation_f = EQUATION( f, {term_f}, 'evolution', '' );
 %
 %% m_0, m_1, m_2 equations:
 
-dV  = @(x,p,t) 0.*x+1;
+dV  = @(x,p,t,dat) 0.*x+1;
 One = @(x,p,t,dat) 0.*x+1;
 e_0 = @(x,p,t) 0.*x+1;
 e_1 = @(x,p,t) x;
