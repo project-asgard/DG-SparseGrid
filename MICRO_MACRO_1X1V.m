@@ -20,7 +20,7 @@ classdef MICRO_MACRO_1X1V
     
     methods
         
-        function obj = MICRO_MACRO_1X1V( opts, dimensions, BCs_X, BCs_V )
+        function obj = MICRO_MACRO_1X1V( opts, dimensions, BCs_X, BCs_V, T_min, n_quad )
             
             assert( numel(dimensions) == 2, 'Only Two Dimensions (1X and 1V)' )
             
@@ -30,19 +30,33 @@ classdef MICRO_MACRO_1X1V
             obj.dim_v = dimensions{2};
             obj.lev_v = dimensions{2}.lev;
             
-            if exist( 'BCs_X', 'var' )
+            if exist( 'BCs_X', 'var' ) && ~ isempty( BCs_X )
                 
                 obj.BCs_X = BCs_X;
                 
             end
             
-            if exist( 'BCs_V', 'var' )
+            if exist( 'BCs_V', 'var' ) && ~ isempty( BCs_V )
                 
                 obj.BCs_V = BCs_V;
                 
             end
+
+            if exist( 'T_min', 'var' ) && ~isempty( T_min )
+
+                obj.T_min = T_min;
+
+            end
+
+            if exist( 'n_quad', 'var' ) && ~ isempty( n_quad )
+
+                obj.n_quad = n_quad;
+
+            else
             
-            obj.n_quad = max( 10, 2 * obj.deg + 1 ); % --- May need adjustment to accurately integrate Maxwellian in v.
+                obj.n_quad = max( 10, 2 * obj.deg + 1 ); % --- May need adjustment to accurately integrate Maxwellian in v.
+
+            end
             
             [ obj.quad_x, obj.quad_w ] = lgwt( obj.n_quad, -1, +1 );
             
@@ -150,7 +164,7 @@ classdef MICRO_MACRO_1X1V
             for i_v = 1 : N_v
                 
                 i_K = i_K + 1;
-                
+
                 v_q = obj.dim_v.min + ((i_v-1)+.5*(1.+obj.quad_x)) * dv;
                 
                 M_q = Maxwellian_q( D_q(:,i_x), U_q(:,i_x), T_q(:,i_x), v_q );
@@ -205,7 +219,7 @@ classdef MICRO_MACRO_1X1V
                 
                 if    ( all( v_q <  0 ) )
                     
-                    M_q = Maxwellian_q( D_R(i_x), U_R(i_x), T_q(i_x), v_q );
+                    M_q = Maxwellian_q( D_R(i_x), U_R(i_x), T_R(i_x), v_q );
                     
                 elseif( all( v_q >= 0 ) )
                     
