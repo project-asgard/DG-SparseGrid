@@ -36,7 +36,7 @@ function pde = fokkerplanck1_pitch_C(opts)
             P2 = P_m(1,:)';
             P = P_0(:,l);
             assert(norm(P-P2)<1e-8); 
-            
+view            
             ret = ret + h(l) * P * exp(-L*(L+1)*t);
             
         end

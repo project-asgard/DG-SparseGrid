@@ -44,9 +44,9 @@ params = fokkerplanck_parameters(opts);
 %% Setup the dimensions
 
 dim_p = DIMENSION(0,+10);
-dim_p.moment_dV = @(x,p,t) x.^2;
+dim_p.moment_dV = @(p,parm,t) p.^2;
 dim_z = DIMENSION(-1,+1);
-dim_z.moment_dV = @(x,p,t) 0*x+1;
+dim_z.moment_dV = @(z,p,t) 0*z+1;
 dimensions = {dim_p,dim_z};
 num_dims = numel(dimensions);
 

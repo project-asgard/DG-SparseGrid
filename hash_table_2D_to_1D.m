@@ -3,7 +3,7 @@ function [hash_table_1D] = hash_table_2D_to_1D(hash_table,opts)
 %be a full grid space, but this will eventually be modified to make a 4D
 %table into a 2D table. 
 
-assert(size(hash_table.elements.lev_p1,2) == 2);
+%assert(size(hash_table.elements.lev_p1,2) == 2);
 
 %num_basis = numel(hash_table.elements_idx);
 %x_dim = 1;

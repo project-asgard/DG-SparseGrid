@@ -1,19 +1,44 @@
 function pde = fokkerplanck2_C_cory(opts)
-% Vlasov with pitch angle scatting.  1x2v.
-%    velocity is spherial coordiates: p - radial.  z = cos(theta) polar
+% Combining momentum and pitch angle dynamics
 %
-% PDE:
-%   f_t + div_x(pzf) = div_v(grad_z f)
+% Problems 6.1, 6.2, and 6.3 from the RE paper.
+%
+% d/dt f(p,z,t) == div( A^2*F_C1 + F_C2 )
 %
 % where
-%   \grad_z f = 1/p d/dz f \hat{z}
+%
+% \F_C1 = grad(f) and \F_C2 = C_F(p)f\hat{p}
+%
+% Here 
+%
+%     div(F_p\hat{p} + F_z\hat{z}) = 1/p^2*d/dp(p^2F_p)
+%                                               + 1/p*d/dz(sqrt(1-z^2)F_z)
 % and
-%   div( A_p \hat{p} + A_z \hat{z} ) = 1/p^2 d/dp( p^2A_p )
-%                                         + 1/p d/dz( (1-z^2)A_z )
+%
+%     grad(f) = df/dp*hat{p} + 1/p*sqrt(1-z^2)*df/dz*hat{z}.
+%
+% The diffusion tensor A^2 is given by
+%
+% A\hat{p} = sqrt(C_A(p))\hat{p} and A\hat{z} = 1/p*sqrt(C_B(p))\hat{z}.
+%
+% MIXED formulation:
+%
+% d/dt f(p,z,t) == -div( A*q + Gamma_C2 )
+%
+% q = A*grad(f) = q_p\hat{p} + q_z\hat{z}
+%
+% Run with
+%
+% explicit
+% asgard(@fokkerplanck2_C,'CFL',0.01,'case',1)
 %
 % implicit
-% asgard(@fokkerplanck2_C_cory,'lev',4,'deg',2,'dt',0.1,'timestep_method','BE','num_steps',10,'output_grid','interp','update_params_each_timestep',true)
+% asgard(@fokkerplanck2_C,'timestep_method','BE','num_steps',20,'CFL',1.0,'deg',3,'lev',4,'case',1)
 %
+% case = 1 % step function in momentum
+% case = 2 %
+% case = 3 % 
+
 params = fokkerplanck_parameters(opts);
 
 %% Setup the dimensions
@@ -36,37 +61,35 @@ solutions = {};
 
 %% Define Moments
 
+%zeroth moment
 moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
-                                    @(x,p,t) 0*x+2*pi,...
                                     @(x,p,t) 0*x+1,...
+                                    @(x,p,t) 0*x+1,...
+                                    @(p,t)   0*t+1});
+moment0 = MOMENT({moment_func});
+
+%first moment
+moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
+                                    @(x,p,t) x,...
+                                    @(x,p,t) x,...
                                     @(p,t)   0*t+1});
 moment1 = MOMENT({moment_func});
 
+%second moment
 moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
-                                    @(x,p,t) 2*pi*x,...
-                                    @(x,p,t) x,...
+                                    @(x,p,t) x.^2,...
+                                    @(x,p,t) 0*x+1,...
                                     @(p,t)   0*t+1});
 moment2 = MOMENT({moment_func});
 
+%third moment
 moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
-                                    @(x,p,t) 2*pi*x.^2,...
-                                    @(x,p,t) 0*x+1,...
+                                    @(x,p,t) x.^2,...
+                                    @(x,p,t) x.^2,...
                                     @(p,t)   0*t+1});
 moment3 = MOMENT({moment_func});
 
-moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
-                                    @(x,p,t) 2*pi*x.^2,...
-                                    @(x,p,t) x.^2,...
-                                    @(p,t)   0*t+1});
-moment4 = MOMENT({moment_func});
-
-moment_func = new_md_func(num_dims,{@(x,p,t) 0*x+1,...
-                                    @(x,p,t) pi*x.^3,...
-                                    @(x,p,t) x,...
-                                    @(p,t)   0*t+1});
-moment5 = MOMENT({moment_func});
-
-moments = {moment1,moment2,moment3,moment4,moment5};
+moments = {moment0,moment1,moment2,moment3};
 
 %% Define the initial conditions
 
@@ -78,19 +101,14 @@ initial_conditions = {ic1};
 
 %% Define fluid variables
 
-params.n      = @(x) 0*x+1;
-params.u_z    = @(x) 0*x+1;
-params.th     = @(x) 0*x+1;
-params.Sig_zz = @(x) 0*x+1;
-params.q_z    = @(x) 0*x+1;
+params.n = @(x) 0*x+1;
+params.u_z = @(x) 0*x;
+pa
 
 %% Define the boundary conditions
 
-% BCs for advection piece
-Adv_BCL = ic1;
-Adv_BCR = ic1;
-
 %% Define the terms of the PDE
+
 
 %% div(flux_E) == termE1 + termE2
 
@@ -111,7 +129,7 @@ dV_z = @(x,p,t,dat) 0*x+1;
 % Term for z>0, then |z| = z and we use standard upwinding.  
 
 g1 = @(x,p,t,dat) 0*x-1;
-pterm1   =  DIV(num_dims,g1,'',-1,'D','N',Adv_BCL,'','',dV_x); %flux = g*{f} + C*|g|*0.5[f] where C=-1.
+pterm1   =  DIV(num_dims,g1,'',-1,'D','N','','','',dV_x); %flux = g*{f} + C*|g|*0.5[f] where C=-1.
 term_adv_x = SD_TERM({pterm1});
 
 % For hyperbolic problem: D - inflow, N - outflow/free boundary
@@ -140,7 +158,7 @@ term_adv_pos = MD_TERM(num_dims,{term_adv_x,term_adv_p,term_adv_z});
 % So we downwind in p when z is negative.
 
 g1 = @(x,p,t,dat) 0*x-1;
-pterm1   =  DIV(num_dims,g1,'',+1,'N','D','',Adv_BCR,'',dV_x); 
+pterm1   =  DIV(num_dims,g1,'',+1,'N','D','','','',dV_x); 
 term_adv_x = SD_TERM({pterm1});
 
 g1 = @(x,p,t,dat) x;
