@@ -8,6 +8,7 @@ classdef LENARD_BERNSTEIN_1X1V
         lev_v;
         BCs_X = 'PERIODIC';
         BCs_V = 'ZEROFLUX';
+        CollFreq = 1.0;
         T_min = 0.0;
         n_quad;
         alpha = 0.5;
@@ -21,7 +22,7 @@ classdef LENARD_BERNSTEIN_1X1V
 
     methods
 
-        function obj = LENARD_BERNSTEIN_1X1V( opts, dimensions, BCs_X, BCs_V, T_min, n_quad, alpha_diffusion_flux )
+        function obj = LENARD_BERNSTEIN_1X1V( opts, dimensions, BCs_X, BCs_V, CollFreq, T_min, n_quad, alpha_diffusion_flux )
             
             assert( numel(dimensions) == 2, 'Only Two Dimensions (1X and 1V)' )
 
@@ -41,6 +42,12 @@ classdef LENARD_BERNSTEIN_1X1V
                 
                 obj.BCs_V = BCs_V;
                 
+            end
+
+            if exist( 'CollFreq', 'var' ) && ~isempty( CollFreq )
+
+                obj.CollFreq = CollFreq;
+
             end
 
             if exist( 'T_min', 'var' ) && ~isempty( T_min )
@@ -293,6 +300,9 @@ classdef LENARD_BERNSTEIN_1X1V
 
             end
             end
+
+            rhs_collision_operator...
+                = obj.CollFreq .* rhs_collision_operator;
 
         end
 
