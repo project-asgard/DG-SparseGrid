@@ -17,17 +17,17 @@ classdef TERM < handle
             obj.input_unknowns = input_unknowns;
             obj.descriptor     = descriptor;
             
-            if exist( 'linear', 'var' )
+            if exist( 'linear', 'var' ) && ~isempty( linear )
                 assert( (linear==true | linear==false), 'linear must be boolean' );
                 obj.linear = linear;
             end
             
-            if exist( 'time_dependent', 'var' )
+            if exist( 'time_dependent', 'var' ) && ~isempty( time_dependent )
                 assert( (time_dependent==true | time_dependent==false), 'time_dependent must be boolean' );
                 obj.time_dependent = time_dependent;
             end
             
-            if exist( 'IMEX', 'var' )
+            if exist( 'IMEX', 'var' ) && ~isempty( IMEX )
                 obj.IMEX = IMEX;
             end
             
