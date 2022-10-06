@@ -5,11 +5,11 @@ function pde_system = relaxation_LB( opts )
 % q       = sqrt(theta[rho])d_v f
 % d_t rho = 0
 
-
 n     = 1.0;
 u     = 1.0;
 theta = 0.5;
 Vmax  = 6.0;
+nu    = 1.0;
 
 alpha_diffusion_flux = 0.5;
 
@@ -135,7 +135,7 @@ analytic_solution = {soln};
 
 rho_f_2 = UNKNOWN( opts, dimensions_x, analytic_solution, initial_conditions );
 
-LB = LENARD_BERNSTEIN_1X1V( opts, dimensions_xv, 'PERIODIC', 'ZEROFLUX', 0.0, [], alpha_diffusion_flux );
+LB = LENARD_BERNSTEIN_1X1V( opts, dimensions_xv, 'PERIODIC', 'ZEROFLUX', nu, 0.0, [], alpha_diffusion_flux );
 
 %% Terms for f equation.
 
