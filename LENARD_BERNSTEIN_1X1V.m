@@ -20,6 +20,7 @@ classdef LENARD_BERNSTEIN_1X1V
     end
 
     methods
+
         function obj = LENARD_BERNSTEIN_1X1V( opts, dimensions, BCs_X, BCs_V, T_min, n_quad, alpha_diffusion_flux )
             
             assert( numel(dimensions) == 2, 'Only Two Dimensions (1X and 1V)' )
@@ -74,8 +75,6 @@ classdef LENARD_BERNSTEIN_1X1V
         end
 
         function rhs_diffusion = evaluate_rhs_diffusion_LB( obj, opts, Q, t )
-
-            tic
 
             N_x   = 2^obj.lev_x;
             N_v   = 2^obj.lev_v;
@@ -173,8 +172,6 @@ classdef LENARD_BERNSTEIN_1X1V
 
             end
             end
-
-            toc
 
         end
 
