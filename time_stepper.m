@@ -14,7 +14,7 @@ function [] = time_stepper( pde_system, t, dt )
             
             SSP_RK3( pde_system, t, dt );
             
-        case 'BE'
+        case {'BE','BE_LB'}
             
             BackwardEuler( pde_system, t, dt );
             
@@ -388,7 +388,15 @@ end
 
 function [] = BackwardEuler_Solve( pde_system, sv, t, dt )
 
-    Ax = @(x) BE_LHS( pde_system, x, t, dt );
+    if strcmp( pde_system.opts.timestep_method, 'BE_LB' )
+
+        Ax = @(x) BE_LHS_LB( pde_system, sv, x, t, dt );
+
+    else
+
+        Ax = @(x) BE_LHS( pde_system, sv, x, t, dt );
+
+    end
     
     b = sv.zeros();
     
@@ -408,14 +416,16 @@ function [] = BackwardEuler_Solve( pde_system, sv, t, dt )
         end
         
     end
+
+    x_0 = sv.copy();
     
-    [ sv.fvec, ~, relres, iter ] = bicgstabl( Ax, b, 1e-10, numel(b) );
-    
+    [ sv.fvec, ~, relres, iter ] = bicgstabl( Ax, b, 1e-10, numel(b), [], [], x_0 );
+
     assert( relres < 1e-7, 'BackwardEuler: bicgstabl failed' )
 
 end
 
-function [ Ax ] = BE_LHS( pde_system, x, t, dt )
+function [ Ax ] = BE_LHS( pde_system, sv, x, t, dt )
 
     opts = pde_system.opts;
     
@@ -424,8 +434,8 @@ function [ Ax ] = BE_LHS( pde_system, x, t, dt )
         
         equation = pde_system.equations{i};
         
-        lo = pde_system.solution_vector.lbounds(i);
-        hi = pde_system.solution_vector.ubounds(i);
+        lo = sv.lbounds(i);
+        hi = sv.ubounds(i);
         
         Ax(lo:hi) = equation.LHS_term.driver( opts, {x(lo:hi)}, t+dt );
         
@@ -438,7 +448,71 @@ function [ Ax ] = BE_LHS( pde_system, x, t, dt )
             
             term = equation.terms{j};
             
-            Q = pde_system.solution_vector.get_input_unknowns( term.input_unknowns, x );
+            Q = sv.get_input_unknowns( term.input_unknowns, x );
+            
+            Ax(lo:hi) = Ax(lo:hi) - alpha * term.driver( opts, Q, t+dt );
+            
+        end
+        
+    end
+    
+end
+
+function [ Ax ] = BE_LHS_LB( pde_system, sv, x, t, dt )
+
+    opts = pde_system.opts;
+    
+    Ax = zeros(size(x));
+    for i = 1 : pde_system.num_eqs
+        
+        equation = pde_system.equations{i};
+        
+        lo = sv.lbounds(i);
+        hi = sv.ubounds(i);
+        
+        Ax(lo:hi) = equation.LHS_term.driver( opts, {x(lo:hi)}, t+dt );
+        
+        alpha = dt;
+        if( strcmp( equation.type, 'closure' ) )
+            alpha = 1.0;
+        end
+        
+        for j = 1 : numel(equation.terms)
+            
+            term = equation.terms{j};
+            
+            if     isequal( functions(term.descriptor{1}).function, '@(opts,Q,t)LB.evaluate_rhs_collision_operator_LB(opts,Q,t)' )
+                
+                num_Q = numel(term.input_unknowns);
+
+                assert( num_Q == 5 )
+
+                Q = cell(num_Q,1);
+
+                Q{1} = sv.get_input_unknown( term.input_unknowns, 1, x );
+                Q{2} = sv.get_input_unknown( term.input_unknowns, 2, x );
+                Q{3} = sv.get_input_unknown( term.input_unknowns, 3 );
+                Q{4} = sv.get_input_unknown( term.input_unknowns, 4 );
+                Q{5} = sv.get_input_unknown( term.input_unknowns, 5 );
+
+            elseif isequal( functions(term.descriptor{1}).function, '@(opts,Q,t)LB.evaluate_rhs_diffusion_LB(opts,Q,t)' )
+                
+                num_Q = numel(term.input_unknowns);
+
+                assert( num_Q == 4 )
+
+                Q = cell(num_Q,1);
+
+                Q{1} = sv.get_input_unknown( term.input_unknowns, 1, x );
+                Q{2} = sv.get_input_unknown( term.input_unknowns, 2 );
+                Q{3} = sv.get_input_unknown( term.input_unknowns, 3 );
+                Q{4} = sv.get_input_unknown( term.input_unknowns, 4 );
+
+            else
+
+                Q = sv.get_input_unknowns( term.input_unknowns, x );
+
+            end
             
             Ax(lo:hi) = Ax(lo:hi) - alpha * term.driver( opts, Q, t+dt );
             
