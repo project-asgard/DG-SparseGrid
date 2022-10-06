@@ -135,6 +135,25 @@ classdef GLOBAL_SOLUTION_VECTOR < handle
             out = zeros(obj.size_evolution_unknowns(),1);
             
         end
+
+        function [ Qvec ] = get_input_unknown( obj, Q, i, x )
+
+            if( nargin < 4 )
+                use_input_vector = false;
+            else
+                use_input_vector = true;
+            end
+
+            lo = Q{i}.lo_global;
+            hi = Q{i}.hi_global;
+
+            if use_input_vector
+                Qvec = x(lo:hi);
+            else
+                Qvec = obj.fvec(lo:hi);
+            end
+
+        end
         
         function [ Qvec ] = get_input_unknowns( obj, Q, x )
             
