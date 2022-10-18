@@ -7,6 +7,8 @@ end
 
 function asgard_diffusion_system1_explicit_test(testCase)
     addpath(genpath(pwd));
+    disp( 'UNKNOWN_test' )
+    UNKNOWN_test();
     disp( 'Testing diffusion_system1 (SSPRK3)' );
     [ err ] = asgard_pde_system...
                 ( @diffusion_system1, 'lev', 4, 'deg', 3, 'CFL', 0.1, 'quiet', true, 'grid_type', 'FG',...
