@@ -421,6 +421,8 @@ function [] = BackwardEuler_Solve( pde_system, sv, t, dt )
     
     [ sv.fvec, ~, relres, iter ] = bicgstabl( Ax, b, 1e-10, numel(b), [], [], x_0 );
 
+    if ~pde_system.opts.quiet; disp(['    Backward Euler Solve (iter=',num2str(iter),')']); end
+
     assert( relres < 1e-7, 'BackwardEuler: bicgstabl failed' )
 
 end
