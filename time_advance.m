@@ -498,10 +498,6 @@ end
 
 function f1 = imex(pde,opts,A_data,f0,t,dt,deg,hash_table,Vmax,Emax)
 
-persistent pde_1d
-persistent nodes
-persistent Meval
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% C++ Implementation Notes %%%%%%%%%%%%%%%%%%%%%%%
 
@@ -516,6 +512,10 @@ persistent Meval
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+persistent hash_table_FG A_data_FG perm_FG iperm_FG pvec_FG
+persistent perm_SG iperm_SG pvec_SG
+persistent per iper %Conversion for limiters
+persistent FMWT_2D
 
 %Switch for IMEX iteration: 
 % 1 : Backward Euler in explicit terms 'E',
@@ -526,16 +526,27 @@ persistent Meval
 
 BEFE = 0;
 
-if isempty(Meval)
-    %Compute everything that will not change per time iteration
+%Get quadrature points in realspace stiffness matrix calculation
+[Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
 
-    %Get quadrature points in realspace stiffness matrix calculation
-    [Meval,nodes] = matrix_plot_D(pde,opts,pde.dimensions{1});
-    
-    %Make fake pde file for use in physical realspace transformation
-    pde_1d.dimensions = pde.dimensions(1);
-        
+%Make fake pde file for use in physical realspace transformation
+pde_1d.dimensions = pde.dimensions(1);
+
+if isempty(hash_table_FG)
+    %hash_table_FG = hash_table_nD(pde.get_lev_vec(),'FG');
+    [hash_table_FG.elements, hash_table_FG.elements_idx]  = hash_table_sparse_nD (pde.get_lev_vec, opts.max_lev, 'FG');
+    A_data_FG = global_matrix(pde,opts,hash_table_FG);
+    [perm_FG,iperm_FG,pvec_FG] = sg_to_fg_mapping_2d(pde,opts,A_data_FG);
+    [perm_SG,iperm_SG,pvec_SG] = sg_to_fg_mapping_2d(pde,opts,A_data);
+    x = pde.dimensions{1}.min:(pde.dimensions{1}.max-pde.dimensions{1}.min)/2^pde.dimensions{1}.lev:pde.dimensions{1}.max;
+    v = pde.dimensions{2}.min:(pde.dimensions{2}.max-pde.dimensions{2}.min)/2^pde.dimensions{2}.lev:pde.dimensions{2}.max;
+    per = reshape(convertVectoMat(x,v,opts.deg-1,1:(numel(x)-1)*(numel(v)-1)*(opts.deg)^2),[],1);
+    iper(per) = 1:numel(per);
+    FMWT_x = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{1}.lev);
+    FMWT_v = OperatorTwoScale_wavelet2(opts.deg,pde.dimensions{2}.lev);
+    FMWT_2D = kron(FMWT_x,FMWT_v);
 end
+
 
 %Create moment matrices that take DG function in (x,v) and transfer it
 %to DG function in x.
@@ -546,6 +557,12 @@ if numel(pde.dimensions) >= 2
     end
 end
 
+%if isempty(P)   
+%    M = [moment_mat{1};moment_mat{2};moment_mat{3}];
+%    [~,S,V] = svd(full(M),'econ');
+%    P = V(:,1:sum(diag(S) > 1e-12));
+%end
+    
 hash_table_1D = hash_table_2D_to_1D(hash_table,opts);
 
 assert(isempty(pde.termsLHS),'LHS terms currently not supported by IMEX');
@@ -612,7 +629,16 @@ else %%Trying imex deg 2 version
     %%%%%
     
     %Explicit step
-    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');
+    f_2s = f0 + dt*fast_2d_matrix_apply(opts,pde,A_data,f0,'E');  
+    %f_2s = f0;
+    %f_2sl = zeros(size(pvec_SG)); f_2sl(pvec_SG) = f_2s(perm_SG(pvec_SG)); f_2sl = f_2sl(iperm_FG);
+    
+    %%%%%% Testing slope limiters for SG functions.  
+    %%%%%%  C++ do not implement %%%%%%%%%
+    %f_2sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_2s);
+    %%%%%% END %%%%%%
+    
+    
     
     %Create rho_2s
     mom0 = moment_mat{1}*f_2s; %integral of (f,1)_v
@@ -626,6 +652,26 @@ else %%Trying imex deg 2 version
     mom2 = moment_mat{3}*f_2s; %integral of (f,v^2)_v
     mom2_real = wavelet_to_realspace(pde_1d,opts,{Meval},mom2,hash_table_1D);
     pde.params.th = @(x) interp1(nodes,mom2_real,x,'nearest','extrap')./pde.params.n(x) - pde.params.u(x).^2;
+    
+            %Plot moments
+%     if ~opts.quiet || 1
+%         
+%         fig1 = figure(1000);
+%         fig1.Units = 'Normalized';
+%         fig1.Position = [0.5 0.5 0.3 0.3];
+%         subplot(2,2,1);
+%         plot(nodes,pde.params.n(nodes));
+%         title('n_f');
+%         subplot(2,2,2);
+%         plot(nodes,pde.params.u(nodes));
+%         title('u_f');
+%         subplot(2,2,3);
+%         plot(nodes,pde.params.th(nodes));
+%         title('th_f');
+%         sgtitle("Fluid Variables. t = "+num2str(t+dt));
+%         drawnow
+%         
+%     end
         
     %Update coefficients
     pde = get_coeff_mats(pde,opts,t,0);
@@ -636,6 +682,7 @@ else %%Trying imex deg 2 version
         fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
         assert(relres < 1e-10)
     end
+    %f_2 = f_2 - P*(P'*(f_2-f_2s));
     
     %%%%%
     %%% Third stage
@@ -643,6 +690,8 @@ else %%Trying imex deg 2 version
     
     f_3s = f0 + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f0+f_2,'E') ...
               + 0.5*dt*fast_2d_matrix_apply(opts,pde,A_data,f_2,'I');
+    %f_3sl = limitWrapper(pde,opts,perm_FG,iperm_FG,pvec_FG,perm_SG,iperm_SG,pvec_SG,per,iper,FMWT_2D,f_3s);
+    %f_3s = f0;
     
     %Create rho_3s
     mom0 = moment_mat{1}*f_3s; %integral of (f,1)_v
@@ -666,12 +715,51 @@ else %%Trying imex deg 2 version
         fprintf('BICGSTABL did not converge.  flag = %d, relres = %5.4e\n',flag,relres);
         assert(relres < 1e-10)
     end
+    %f_3 = f_3 - P*(P'*(f_3-f_3s));
     
     %Update timestep to final stage
     f1 = f_3;
     
-    %Plot moments
-    if ~opts.quiet || 1
+    time = t+dt;
+    if opts.case_ == 2 && (abs(pde.params.nu) < 1e-8)
+        %Get analytic solution at t_{n+1}
+
+        fval_analytic = exact_solution_vector(pde,opts,hash_table,time);
+        %fval_analytic = exact_solution_vector(pde,opts,hash_table,t);
+        
+        %Get analytic moments
+        
+        %n 
+        mom0_a = moment_mat{1}*fval_analytic;
+        mom0_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom0_a,hash_table_1D);
+        analytic_moments.n = mom0_a_r;
+        
+        %u
+        mom1_a = moment_mat{2}*fval_analytic;
+        mom1_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom1_a,hash_table_1D);
+        analytic_moments.u = mom1_a_r./mom0_a_r;
+        
+        %T
+        mom2_a = moment_mat{3}*fval_analytic;
+        mom2_a_r = wavelet_to_realspace(pde_1d,opts,{Meval},mom2_a,hash_table_1D);
+        analytic_moments.T = mom2_a_r./mom0_a_r - (analytic_moments.u).^2;
+        
+        fig1 = figure(1000);
+        fig1.Units = 'Normalized';
+        fig1.Position = [0.5 0.5 0.3 0.3];
+        subplot(2,2,1);
+        plot(nodes,pde.params.n(nodes)-analytic_moments.n');
+        title('n_f');
+        subplot(2,2,2);
+        plot(nodes,pde.params.u(nodes)-analytic_moments.u');
+        title('u_f');
+        subplot(2,2,3);
+        plot(nodes,pde.params.th(nodes)-analytic_moments.T');
+        title('th_f');
+        sgtitle("Fluid Variables. t = "+num2str(time));
+        drawnow
+    else
+        %Plot moments
         
         fig1 = figure(1000);
         fig1.Units = 'Normalized';
@@ -685,10 +773,12 @@ else %%Trying imex deg 2 version
         subplot(2,2,3);
         plot(nodes,pde.params.th(nodes));
         title('th_f');
-        sgtitle("Fluid Variables. t = "+num2str(t+dt));
+        sgtitle("Fluid Variables. t = "+num2str(time));
         drawnow
         
     end
+    
+    %fprintf("Norm Check t = %f, |f1|_2 = %f\n",t+dt,norm(f1));
     
 end
 

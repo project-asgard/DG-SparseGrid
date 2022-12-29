@@ -13,6 +13,12 @@ if isempty(pterm.LHS_mass_mat)
     [M,M_not_rotated] = coeff_matrix(deg,t,dim,lhs_mass_pterm,params,FMWT_blocks,coeff_level); 
     pterm.LHS_mass_mat = full(M);
     pterm.LHS_mass_mat_unrotated = full(M_not_rotated);
+    identity_ref = norm(pterm.LHS_mass_mat-eye(size(M)),'fro');
+    if identity_ref < 1e-11 %%Checking for identity mass matrix
+        %fprintf('Replacing mass mat with identity.  Error = %e\n',identity_ref);
+        pterm.LHS_mass_mat = speye(size(M));
+        pterm.LHS_mass_mat_unrotated = speye(size(M));
+    end
 end
 
 % Move M to the RHS

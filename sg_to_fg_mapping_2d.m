@@ -46,8 +46,10 @@ num_sparse_ele = numel(A_data.element_local_index_D{1}); %Number of sparse eleme
 iperm = zeros(num_sparse_ele*deg^2,1);
 
 %Get FG_dof for each direction
-max_x_dof = size(pde.terms{1}.terms_1D{1}.mat,1);
-max_y_dof = size(pde.terms{1}.terms_1D{2}.mat,1);
+%max_x_dof = size(pde.terms{1}.terms_1D{1}.mat,1);
+%max_y_dof = size(pde.terms{1}.terms_1D{2}.mat,1);
+max_x_dof = 2^pde.dimensions{1}.lev*deg;
+max_y_dof = 2^pde.dimensions{2}.lev*deg;
 perm = nan(max_x_dof*max_y_dof,1);
 
 idx = 1; %Keep track of index
