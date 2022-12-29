@@ -2,7 +2,8 @@ function [M] = moment_reduced_matrix(opts,pde,A_data,hash_table,moment_idx)
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CURRENTLY ONLY WORKS FOR 1x-1v or 1x-2v system
+% CURRENTLY ONLY WORKS FOR 1x-1v,
+%         1x-2v, or 1x-3v system
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %
