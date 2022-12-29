@@ -56,7 +56,7 @@ elseif num_dims == 3 % 1x-2v
     
     x_dim   = 1; %Hardcoded for now.  Needs to change in multi-dim
     v_dim_1 = 2; %Hardcoded for now.  Needs to change in multi-dim
-    v_dim_2 = 2; %Hardcoded for now.  Needs to change in multi-dim
+    v_dim_2 = 3; %Hardcoded for now.  Needs to change in multi-dim
     
     %Get row-dim of M -- Assuming a full grid output here
     rows = deg*2^ceil(log2(max(A_data.element_local_index_D{x_dim})));
@@ -73,21 +73,21 @@ elseif num_dims == 3 % 1x-2v
     for i=1:num_ele %loop through all elements lit up
         
         %Get local dof for element
-        l_dof = [A_data.element_local_index_D{x_dim  }(i)-1,...
-                 A_data.element_local_index_D{v_dim_1}(i)-1,...
-                 A_data.element_local_index_D{v_dim_2}(i)-1];
+        l_dof_x = A_data.element_local_index_D{x_dim  }(i)-1;
+        l_dof_v = [A_data.element_local_index_D{v_dim_1}(i)-1,...
+                   A_data.element_local_index_D{v_dim_2}(i)-1];
                  
         for xdeg=1:deg
             %The row of the matrix is given by the x-dof
-            row_idx = l_dof(1)*deg+xdeg;
+            row_idx = l_dof_x*deg+xdeg;
             for vdeg1=1:deg
                 for vdeg2=1:deg
                     %Get column entry based on degree index
                     col_idx = (i-1)*deg^3 + (xdeg-1)*deg^2 + (vdeg1-1)*deg + vdeg2;
                     %Get entry (which is the product of the 1d elements of
                     %g_vec)
-                    val = g_vec_1((A_data.element_local_index_D{v_dim_1}(i)-1)*deg+vdeg1) * ...
-                          g_vec_2((A_data.element_local_index_D{v_dim_2}(i)-1)*deg+vdeg2);
+                    val = g_vec_1(l_dof_v(1)*deg+vdeg1) * ...
+                          g_vec_2(l_dof_v(2)*deg+vdeg2);
                     I(count+1) = row_idx;
                     J(count+1) = col_idx;
                     S(count+1) = val;
@@ -99,7 +99,62 @@ elseif num_dims == 3 % 1x-2v
     
     %Construct sparse matrix
     M = sparse(I,J,S,rows,deg^3*num_ele);
+   
+
+elseif num_dims == 4 % 1x-3v
+
+    x_dim   = 1; %Hardcoded for now.  Needs to change in multi-dim
+    v_dim_1 = 2; %Hardcoded for now.  Needs to change in multi-dim
+    v_dim_2 = 3; %Hardcoded for now.  Needs to change in multi-dim
+    v_dim_3 = 4; %Hardcoded for now.  Needs to change in multi-dim
     
+    %Get row-dim of M -- Assuming a full grid output here
+    rows = deg*2^ceil(log2(max(A_data.element_local_index_D{x_dim})));
+
+    %Containers for sparse matrix
+    I = zeros(deg^4*num_ele,1);
+    J = zeros(deg^4*num_ele,1);
+    S = zeros(deg^4*num_ele,1);
+    
+    g_vec_1 = pde.moments{moment_idx}.fList{v_dim_1};
+    g_vec_2 = pde.moments{moment_idx}.fList{v_dim_2};
+    g_vec_3 = pde.moments{moment_idx}.fList{v_dim_3};
+    
+    count = 0;
+    for i=1:num_ele %loop through all elements lit up
+        
+        %Get local dof for element
+        l_dof_x = A_data.element_local_index_D{x_dim  }(i)-1;
+        l_dof_v = [A_data.element_local_index_D{v_dim_1}(i)-1,...
+                   A_data.element_local_index_D{v_dim_2}(i)-1,...
+                   A_data.element_local_index_D{v_dim_3}(i)-1];
+                 
+        for xdeg=1:deg
+            %The row of the matrix is given by the x-dof
+            row_idx = l_dof_x*deg+xdeg;
+            for vdeg1=1:deg
+                for vdeg2=1:deg
+                    for vdeg3=1:deg
+                        %Get column entry based on degree index
+                        col_idx = (i-1)*deg^4 + (xdeg-1)*deg^3 + (vdeg1-1)*deg^2 + (vdeg2-1)*deg + vdeg3;
+                        %Get entry (which is the product of the 1d elements of
+                        %g_vec)
+                        val = g_vec_1(l_dof_v(1)*deg+vdeg1) * ...
+                              g_vec_2(l_dof_v(2)*deg+vdeg2) * ...
+                              g_vec_3(l_dof_v(3)*deg+vdeg3);
+                        I(count+1) = row_idx;
+                        J(count+1) = col_idx;
+                        S(count+1) = val;
+                        count = count + 1;
+                    end
+                end
+            end
+        end
+    end
+    
+    %Construct sparse matrix
+    M = sparse(I,J,S,rows,deg^4*num_ele);
+
 end
 
 
