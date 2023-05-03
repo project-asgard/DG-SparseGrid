@@ -1,5 +1,14 @@
 function pde_system = relaxation_LB( opts )
 
+switch opts.case_
+    case 1
+        Initial_Condition = 'Maxwellian';
+    case 2
+        Initial_Condition = 'TopHat';
+    otherwise
+        Initial_Condition = 'Maxwellian';
+end
+
 %% Solving the PDE system:
 % d_t f   = nu d_v ( (v-u[rho]) f + sqrt(theta[rho]) q )
 % q       = sqrt(theta[rho])d_v f
@@ -7,8 +16,8 @@ function pde_system = relaxation_LB( opts )
 
 n     = 1.0;
 u     = 1.0;
-theta = 0.5;
-Vmax  = 6.0;
+theta = 4/3;
+Vmax  = 8.0;
 nu    = 1.0;
 
 alpha_diffusion_flux = 0.5;
@@ -34,7 +43,15 @@ num_dims_xv = numel(dimensions_xv);
 %% Define the analytic solution (optional).
 
 soln_x = @(x,p,t) 0*x+1;
-soln_v = @(v,p,t) exp(-(v-u).^2./(2*theta)).*n./sqrt(2*pi*theta);
+switch Initial_Condition
+    case 'Maxwellian'
+        soln_v = @(v,p,t) exp(-(v-u).^2./(2*theta)).*n./sqrt(2*pi*theta);
+    case 'TopHat'
+        H=n/sqrt(12*theta);
+        C=u;
+        W=sqrt(12*theta);
+        soln_v = @(v,p,t) H * ( ( (v>=C-0.5*W)+(v<=C+0.5*W) ) - 1.0 );
+end
 soln_t = @(t,p)   0*t+1;
 soln   = new_md_func(num_dims_xv,{soln_x,soln_v,soln_t});
 
